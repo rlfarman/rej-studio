@@ -64,7 +64,7 @@ export default function GeneSplitterInput() {
             leaveTo="opacity-0"
             // afterLeave={() => setQuery('')}
           >
-            <Combobox.Options className="absolute mt-1 max-h-96 w-full overflow-auto rounded-md bg-white dark:bg-black pt-1 text-base shadow-lg ring-1 ring-black dark:ring-white ring-opacity-5 focus:outline-none sm:text-sm">
+            <Combobox.Options className="z-10 absolute mt-1 max-h-96 w-full overflow-auto rounded-md bg-white dark:bg-black pt-1 text-base shadow-lg ring-1 ring-black dark:ring-white ring-opacity-5 focus:outline-none sm:text-sm">
               {state.genes.length === 0 && state.query !== '' ? (
                 <div className="relative cursor-default select-none py-2 px-4 text-gray-700">
                   Nothing found.
