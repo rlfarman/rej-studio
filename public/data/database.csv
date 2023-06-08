@@ -1,4 +1,4 @@
-,Symbol,Name,ENSG,ENST,Chromosome,Length,log10(Length),Disease Associated,Oversized,Search Name,Species,path_CDS,path_REJ.N,path_REJ.C
+ID,Symbol,Name,ENSG,ENST,Chromosome,Length,log10(Length),Disease Associated,Oversized,Search Name,Species,path_CDS,path_REJ.N,path_REJ.C
 20218,ABCA1,ATP binding cassette subfamily A member 1,ENSG00000165029,ENST00000374736,9,6786,3.831613855309099,True,True,ABCA1 [ENST00000374736],Human,data/coding_sequences/ENST00000374736_CDS.fasta,data/coding_sequences/ENST00000374736_REJ.N.fasta,data/coding_sequences/ENST00000374736_REJ.C.fasta
 109058,ABCA1,ATP binding cassette subfamily A member 1,ENSG00000165029,ENST00000678995,9,6792,3.831997677235896,True,True,ABCA1 [ENST00000678995],Human,data/coding_sequences/ENST00000678995_CDS.fasta,data/coding_sequences/ENST00000678995_REJ.N.fasta,data/coding_sequences/ENST00000678995_REJ.C.fasta
 7442,ABCA10,ATP binding cassette subfamily A member 10,ENSG00000154263,ENST00000269081,17,4632,3.66576855071938,False,True,ABCA10 [ENST00000269081],Human,data/coding_sequences/ENST00000269081_CDS.fasta,data/coding_sequences/ENST00000269081_REJ.N.fasta,data/coding_sequences/ENST00000269081_REJ.C.fasta
