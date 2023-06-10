@@ -1,7 +1,5 @@
 import { Provider } from '@/context/context'
-import GeneSplitterList from './gene-splitter-list'
-import GeneSplitterInput from './gene-splitter-input'
-import GeneSplitterForm from './gene-splitter-form'
+import GeneSplitterForm from '@/components/gene-splitter-form'
 
 export default function Home() {
   return (

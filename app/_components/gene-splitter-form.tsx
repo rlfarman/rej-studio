@@ -6,24 +6,27 @@ import Checkbox from '@/components/checkbox'
 
 interface FormValues {
   codingSequence: string
+  species: 'none' | 'homoSapiens' | 'musMusculus'
   removeCrypticSpliceSites: boolean
   induceOptimalSpliceSites: boolean
-  "5'StimulatoryIntron": boolean
-  "5'PFSWithNMD": boolean
-  "3'StimulatoryIntron": boolean
-  "3'PFSWithNMD": boolean
+  '5PrimeStimulatoryIntron': boolean
+  '5PrimePFSWithNMD': boolean
+  '3PrimeStimulatoryIntron': boolean
+  '3PrimePFSWithNMD': boolean
 }
 
 const validationSchema = object().shape({
   codingSequence: string()
     .required('Coding sequence is required.')
-    .matches(/^[ACGTacgt]+$/, 'Invalid coding sequence.'),
-  removeCrypticSpliceSites: boolean(),
-  induceOptimalSpliceSites: boolean(),
-  "5'StimulatoryIntron": boolean(),
-  "5'PFSWithNMD": boolean(),
-  "3'StimulatoryIntron": boolean(),
-  "3'PFSWithNMD": boolean(),
+    .matches(/^[ACGTacgt]+$/, 'Invalid coding sequence.')
+    .default(''),
+  species: string().oneOf(['none', 'homoSapiens', 'musMusculus']),
+  removeCrypticSpliceSites: boolean().default(true),
+  induceOptimalSpliceSites: boolean().default(true),
+  '5PrimeStimulatoryIntron': boolean().default(true),
+  '5PrimePFSWithNMD': boolean().default(true),
+  '3PrimeStimulatoryIntron': boolean().default(true),
+  '3PrimePFSWithNMD': boolean().default(true),
 })
 
 function CodingSequenceInput() {
@@ -50,11 +53,28 @@ function CodingSequenceInput() {
   )
 }
 
+function SpeciesSelect() {
+  const { register } = useFormContext<FormValues>()
+  return (
+    <>
+      <label htmlFor="species" className="text-sm">
+        Species
+      </label>
+      <select id="species" {...register('species')} className="text-black">
+        <option value="none">None</option>
+        <option value="homoSapiens">Homo sapiens</option>
+        <option value="musMusculus">Mus musculus</option>
+      </select>
+    </>
+  )
+}
+
 function CodonOptimizationOptions() {
   const { register } = useFormContext<FormValues>()
   return (
     <>
       <span>Codon Optimization</span>
+      <SpeciesSelect />
       <Checkbox
         id="removeCrypticSpliceSites"
         label="Remove cryptic splice sites"
@@ -75,14 +95,14 @@ function FiveFragmentOptions() {
     <>
       <span>3&apos; Fragment options</span>
       <Checkbox
-        id="3'StimulatoryIntron"
+        id="3PrimeStimulatoryIntron"
         label="3' Stimulatory Intron"
-        {...register("3'StimulatoryIntron")}
+        {...register('3PrimeStimulatoryIntron')}
       />
       <Checkbox
-        id="3'PFSWithNMD"
+        id="3PrimePFSWithNMD"
         label="Protein Fragment Suppression with Nonstop Mediated Decay"
-        {...register("3'PFSWithNMD")}
+        {...register('3PrimePFSWithNMD')}
       />
     </>
   )
@@ -94,14 +114,14 @@ function ThreeFragmentOptions() {
     <>
       <span>5&apos; Fragment options</span>
       <Checkbox
-        id="5'StimulatoryIntron"
+        id="5PrimeStimulatoryIntron"
         label="5' Stimulatory Intron"
-        {...register("5'StimulatoryIntron")}
+        {...register('5PrimeStimulatoryIntron')}
       />
       <Checkbox
-        id="5'PFSWithNMD"
+        id="5PrimePFSWithNMD"
         label="Protein Fragment Suppression with Nonstop Mediated Decay"
-        {...register("5'PFSWithNMD")}
+        {...register('5PrimePFSWithNMD')}
       />
     </>
   )
@@ -114,11 +134,22 @@ function SubmitButton() {
 export default function GeneSplitterForm() {
   const methods = useForm<FormValues>({
     resolver: yupResolver(validationSchema),
+    defaultValues: validationSchema.getDefault(),
   })
 
   return (
     <FormProvider {...methods}>
-      <form onSubmit={methods.handleSubmit((data) => console.log(data))}>
+      <form
+        onSubmit={methods.handleSubmit((data) =>
+          window.alert(
+            `Hello and congratulations on clicking submit. Here are the options you selected:\n${JSON.stringify(
+              data,
+              null,
+              2
+            )}`
+          )
+        )}
+      >
         <div className="flex flex-col gap-4">
           <CodingSequenceInput />
           <CodonOptimizationOptions />

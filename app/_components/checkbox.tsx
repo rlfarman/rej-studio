@@ -1,24 +1,32 @@
+'use client'
+import { forwardRef } from 'react'
+
 interface CheckboxProps {
   id: string
   label: string
+  name: string
   helperText?: string
-  name?: string
   onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void
   onBlur?: (event: React.FocusEvent<HTMLInputElement>) => void
   ref?: React.Ref<HTMLInputElement>
 }
 
-export default function Checkbox({
-  id,
-  label,
-  helperText,
-  ...props
-}: CheckboxProps) {
-  console.log(props)
+function Checkbox(
+  { id, label, helperText, name, onChange, onBlur }: CheckboxProps,
+  ref: React.Ref<HTMLInputElement>
+) {
   return (
     <div className="flex">
       <div className="flex items-center h-5">
-        <input id={id} aria-describedby={`${id}-helper-text`} type="checkbox" />
+        <input
+          id={id}
+          aria-describedby={`${id}-helper-text`}
+          type="checkbox"
+          name={name}
+          onChange={onChange}
+          onBlur={onBlur}
+          ref={ref}
+        />
       </div>
       <div className="pl-2 text-sm">
         <label htmlFor={id}>{label}</label>
@@ -31,3 +39,5 @@ export default function Checkbox({
     </div>
   )
 }
+
+export default forwardRef<HTMLInputElement, CheckboxProps>(Checkbox)
