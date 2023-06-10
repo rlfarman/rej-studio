@@ -24,6 +24,7 @@ function Tag({ children, bgColor }: TagProps) {
 
 export default function GeneSplitterList() {
   const state = useContext(StateContext)
+  console.log(state)
   return (
     <div className="flex flex-col gap-4">
       {state.selected.map((gene) => (

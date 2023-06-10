@@ -1,4 +1,4 @@
-interface Gene {
+interface Isomorph {
   id: number
   symbol: string
   name: string

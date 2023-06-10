@@ -1,5 +1,5 @@
 {
-  "name": "gene-splitter",
+  "name": "rna-end-joining-design-tool",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -11,6 +11,7 @@
   "dependencies": {
     "@headlessui/react": "^1.7.14",
     "@heroicons/react": "^2.0.18",
+    "@hookform/resolvers": "^3.1.0",
     "@types/node": "20.2.3",
     "@types/papaparse": "^5.3.7",
     "@types/react": "18.2.6",
@@ -26,8 +27,10 @@
     "postcss": "8.4.23",
     "react": "18.2.0",
     "react-dom": "18.2.0",
+    "react-hook-form": "^7.44.3",
     "react-window": "^1.8.9",
     "tailwindcss": "3.3.2",
-    "typescript": "5.0.4"
+    "typescript": "5.0.4",
+    "yup": "^1.2.0"
   }
 }

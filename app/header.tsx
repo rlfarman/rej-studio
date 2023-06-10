@@ -1,17 +1,17 @@
-import { Bangers } from 'next/font/google'
+import { Tilt_Warp } from 'next/font/google'
+import cx from 'classnames'
 
-const bangers = Bangers({
+const tiltWarp = Tilt_Warp({
   subsets: ['latin'],
-  weight: '400',
 })
 
 export default function Header() {
   return (
     <header className="container py-8 px-4">
-      <h1 className={`text-6xl md:text-8xl ${bangers.className}`}>
-        <span className="text-emerald-500">Gene</span>{' '}
-        <span className="text-sky-500">Splitter</span>
+      <h1 className={cx('text-4xl md:text-8xl', tiltWarp.className)}>
+        <span className="text-emerald-500">RNA End-joining</span>{' '}
       </h1>
+      <span className="text-2xl md:text-4xl text-sky-500">Design Tool</span>
     </header>
   )
 }

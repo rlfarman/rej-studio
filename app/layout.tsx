@@ -5,7 +5,7 @@ import Header from './header'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata = {
-  title: 'Gene Splitter',
+  title: 'RNA End-joining Design Tool',
   description: 'RNA End-joining made easy',
 }
 
