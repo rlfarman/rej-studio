@@ -1,4 +1,3 @@
-'use client'
 import { StateContext } from '@/context/context'
 import cx from 'classnames'
 import { Fragment, useContext } from 'react'

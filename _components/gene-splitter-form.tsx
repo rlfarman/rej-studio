@@ -1,8 +1,7 @@
-'use client'
 import { FormProvider, useForm, useFormContext } from 'react-hook-form'
 import { boolean, object, string } from 'yup'
 import { yupResolver } from '@hookform/resolvers/yup'
-import Checkbox from '@/components/checkbox'
+import Checkbox from './checkbox'
 
 interface FormValues {
   codingSequence: string
