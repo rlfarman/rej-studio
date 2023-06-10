@@ -12,8 +12,8 @@ const HEADERS_MAP = {
   ID: 'id',
   Symbol: 'symbol',
   Name: 'name',
-  ENSG: 'ensg',
-  ENST: 'enst',
+  ENSG: 'ENSG',
+  ENST: 'ENST',
   Chromosome: 'chromosome',
   Length: 'length',
   'log10(Length)': 'log10Length',
@@ -35,12 +35,12 @@ interface QueryAction {
 
 interface SelectAction {
   type: 'select'
-  payload: Gene[]
+  payload: Isomorph[]
 }
 
 interface LoadAction {
   type: 'load'
-  payload: Gene[]
+  payload: Isomorph[]
 }
 
 interface FilterAction {
@@ -52,9 +52,9 @@ interface FilterAction {
 }
 
 interface InitialState {
-  selected: Gene[]
-  genes: Gene[]
-  initialGenes: Gene[]
+  selected: Isomorph[]
+  isomorphs: Isomorph[]
+  initialIsomorphs: Isomorph[]
   query: string
 }
 
@@ -62,8 +62,8 @@ type DispatchActions = QueryAction | SelectAction | LoadAction
 
 export const StateContext = createContext<InitialState>({
   selected: [],
-  initialGenes: [],
-  genes: [],
+  initialIsomorphs: [],
+  isomorphs: [],
   query: '',
 })
 
@@ -71,11 +71,11 @@ export const DispatchContext = createContext<Dispatch<DispatchActions>>(
   () => null
 )
 
-export function useGenes() {
+export function useIsomorphs() {
   return useContext(StateContext)
 }
 
-export function useGenesDispatch() {
+export function useIsomorphsDispatch() {
   return useContext(DispatchContext)
 }
 
@@ -83,20 +83,22 @@ function parseString(s: string): string {
   return s.toLowerCase().replace(/\s+/g, '')
 }
 
-function getMatch(gene: Gene, query: string) {
+function getMatch(isomorph: Isomorph, query: string) {
   return (
-    parseString(gene.searchName).includes(parseString(query)) ||
-    parseString(gene.name).includes(parseString(query))
+    parseString(isomorph.searchName).includes(parseString(query)) ||
+    parseString(isomorph.name).includes(parseString(query))
   )
 }
 
-function genesReducer(state: InitialState, action: DispatchActions) {
+function isomorphsReducer(state: InitialState, action: DispatchActions) {
   switch (action.type) {
     case 'query': {
       const payload = action.payload
       return {
         ...state,
-        genes: state.initialGenes.filter((gene) => getMatch(gene, payload)),
+        isomorphs: state.initialIsomorphs.filter((isomorph) =>
+          getMatch(isomorph, payload)
+        ),
         query: payload,
       }
     }
@@ -111,22 +113,22 @@ function genesReducer(state: InitialState, action: DispatchActions) {
       const payload = action.payload
       return {
         ...state,
-        genes: payload,
-        initialGenes: payload,
+        isomorphs: payload,
+        initialIsomorphs: payload,
       }
     }
   }
 }
 
-interface GeneProviderProperties {
+interface IsomorphProviderProperties {
   children: React.ReactNode
 }
 
-export function Provider({ children }: GeneProviderProperties) {
-  const [state, dispatch] = useReducer(genesReducer, {
+export function Provider({ children }: IsomorphProviderProperties) {
+  const [state, dispatch] = useReducer(isomorphsReducer, {
     selected: [],
-    initialGenes: [],
-    genes: [],
+    initialIsomorphs: [],
+    isomorphs: [],
     query: '',
   })
 
@@ -134,11 +136,11 @@ export function Provider({ children }: GeneProviderProperties) {
     fetch('/data/database.csv')
       .then((response) => response.text())
       .then((v) =>
-        Papa.parse<Gene>(v, {
+        Papa.parse<Isomorph>(v, {
           header: true,
           dynamicTyping: true,
           transformHeader(header: keyof typeof HEADERS_MAP, index) {
-            return HEADERS_MAP[header]
+            return HEADERS_MAP[header] ?? header
           },
           complete(results, file) {
             dispatch({
