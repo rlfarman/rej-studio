@@ -29,8 +29,13 @@
     "react-dom": "18.2.0",
     "react-hook-form": "^7.44.3",
     "react-window": "^1.8.9",
+    "swr": "^2.1.5",
     "tailwindcss": "3.3.2",
     "typescript": "5.0.4",
     "yup": "^1.2.0"
+  },
+  "devDependencies": {
+    "prettier": "^2.8.8",
+    "prettier-plugin-tailwindcss": "^0.3.0"
   }
 }
