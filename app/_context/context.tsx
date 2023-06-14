@@ -35,7 +35,7 @@ interface QueryAction {
 
 interface SelectAction {
   type: 'select'
-  payload: FuckFace[]
+  payload: Gene[]
 }
 
 interface LoadAction {
