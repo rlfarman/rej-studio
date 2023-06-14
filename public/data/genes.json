@@ -114,21 +114,6 @@
   ]
  },
  {
-  "symbol": "ABCA13",
-  "name": "Atp binding cassette subfamily a member 13",
-  "ENSG": "ENSG00000179869",
-  "chromosome": "7",
-  "isoforms": [
-   {
-    "ENST": "ENST00000544596",
-    "length": 7101,
-    "packagability": 2,
-    "species": "Human"
-   }
-  ],
-  "diseaseAssociations": null
- },
- {
   "symbol": "ABCA2",
   "name": "Atp binding cassette subfamily a member 2",
   "ENSG": "ENSG00000107331",
@@ -149,12 +134,6 @@
    {
     "ENST": "ENST00000614293",
     "length": 7401,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000479446",
-    "length": 4326,
     "packagability": 2,
     "species": "Human"
    }
@@ -309,15 +288,9 @@
  {
   "symbol": "ABCC1",
   "name": "Atp binding cassette subfamily c member 1",
-  "ENSG": "ENSG00000278183",
-  "chromosome": "CHR_HSCHR16_1_CTG1",
+  "ENSG": "ENSG00000103222",
+  "chromosome": "16",
   "isoforms": [
-   {
-    "ENST": "ENST00000621659",
-    "length": 4323,
-    "packagability": 2,
-    "species": "Human"
-   },
    {
     "ENST": "ENST00000399408",
     "length": 4626,
@@ -1238,12 +1211,6 @@
     "species": "Human"
    },
    {
-    "ENST": "ENST00000449420",
-    "length": 4056,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000370728",
     "length": 4380,
     "packagability": 2,
@@ -1368,30 +1335,6 @@
    }
   ],
   "diseaseAssociations": null
- },
- {
-  "symbol": "ADGRV1",
-  "name": "Adhesion g protein-coupled receptor v1",
-  "ENSG": "ENSG00000164199",
-  "chromosome": "5",
-  "isoforms": [
-   {
-    "ENST": "ENST00000425867",
-    "length": 7875,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000640403",
-    "length": 6115,
-    "packagability": 2,
-    "species": "Human"
-   }
-  ],
-  "diseaseAssociations": [
-   "Usher syndrome, type 2C",
-   "Usher syndrome, type 2C, GPR98/PDZD7 digenic"
-  ]
  },
  {
   "symbol": "ADPRHL1",
@@ -1698,12 +1641,6 @@
   "chromosome": "15",
   "isoforms": [
    {
-    "ENST": "ENST00000559362",
-    "length": 5236,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000361243",
     "length": 8454,
     "packagability": 3,
@@ -1824,12 +1761,6 @@
     "species": "Human"
    },
    {
-    "ENST": "ENST00000394534",
-    "length": 4716,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000680952",
     "length": 11484,
     "packagability": 3,
@@ -1899,32 +1830,8 @@
   "chromosome": "2",
   "isoforms": [
    {
-    "ENST": "ENST00000684590",
-    "length": 6573,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000682801",
-    "length": 11559,
-    "packagability": 3,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000684656",
-    "length": 8577,
-    "packagability": 3,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000614410",
     "length": 11580,
-    "packagability": 3,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000684460",
-    "length": 9408,
     "packagability": 3,
     "species": "Human"
    }
@@ -2068,12 +1975,6 @@
   "ENSG": "ENSG00000153107",
   "chromosome": "2",
   "isoforms": [
-   {
-    "ENST": "ENST00000427997",
-    "length": 4359,
-    "packagability": 2,
-    "species": "Human"
-   },
    {
     "ENST": "ENST00000341068",
     "length": 5835,
@@ -2439,12 +2340,6 @@
     "species": "Human"
    },
    {
-    "ENST": "ENST00000504454",
-    "length": 5191,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000673334",
     "length": 11463,
     "packagability": 3,
@@ -2523,12 +2418,6 @@
     "species": "Human"
    },
    {
-    "ENST": "ENST00000671882",
-    "length": 11625,
-    "packagability": 3,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000672045",
     "length": 5640,
     "packagability": 2,
@@ -2546,12 +2435,6 @@
   "ENSG": "ENSG00000151150",
   "chromosome": "10",
   "isoforms": [
-   {
-    "ENST": "ENST00000610321",
-    "length": 4932,
-    "packagability": 2,
-    "species": "Human"
-   },
    {
     "ENST": "ENST00000373827",
     "length": 5586,
@@ -2608,12 +2491,6 @@
   "ENSG": "ENSG00000131503",
   "chromosome": "5",
   "isoforms": [
-   {
-    "ENST": "ENST00000421134",
-    "length": 4696,
-    "packagability": 2,
-    "species": "Human"
-   },
    {
     "ENST": "ENST00000360839",
     "length": 7629,
@@ -2694,12 +2571,6 @@
   "ENSG": "ENSG00000132466",
   "chromosome": "4",
   "isoforms": [
-   {
-    "ENST": "ENST00000558247",
-    "length": 7464,
-    "packagability": 2,
-    "species": "Human"
-   },
    {
     "ENST": "ENST00000509867",
     "length": 7473,
@@ -3182,12 +3053,6 @@
     "length": 4476,
     "packagability": 2,
     "species": "Human"
-   },
-   {
-    "ENST": "ENST00000616767",
-    "length": 4818,
-    "packagability": 2,
-    "species": "Human"
    }
   ],
   "diseaseAssociations": null
@@ -3540,12 +3405,6 @@
     "length": 5709,
     "packagability": 2,
     "species": "Human"
-   },
-   {
-    "ENST": "ENST00000636219",
-    "length": 5712,
-    "packagability": 2,
-    "species": "Human"
    }
   ],
   "diseaseAssociations": [
@@ -3573,18 +3432,6 @@
    {
     "ENST": "ENST00000635849",
     "length": 4440,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000414678",
-    "length": 5277,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000635957",
-    "length": 4048,
     "packagability": 2,
     "species": "Human"
    },
@@ -3624,20 +3471,8 @@
   "chromosome": "12",
   "isoforms": [
    {
-    "ENST": "ENST00000422737",
-    "length": 5289,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000334344",
     "length": 5508,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000444670",
-    "length": 4356,
     "packagability": 2,
     "species": "Human"
    }
@@ -3953,12 +3788,6 @@
     "length": 5817,
     "packagability": 2,
     "species": "Human"
-   },
-   {
-    "ENST": "ENST00000418259",
-    "length": 5229,
-    "packagability": 2,
-    "species": "Human"
    }
   ],
   "diseaseAssociations": null
@@ -4208,12 +4037,6 @@
    {
     "ENST": "ENST00000350721",
     "length": 7935,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000656590",
-    "length": 6582,
     "packagability": 2,
     "species": "Human"
    }
@@ -4618,21 +4441,6 @@
   ]
  },
  {
-  "symbol": "BIRC6",
-  "name": "Baculoviral iap repeat containing 6",
-  "ENSG": "ENSG00000115760",
-  "chromosome": "2",
-  "isoforms": [
-   {
-    "ENST": "ENST00000648282",
-    "length": 11527,
-    "packagability": 3,
-    "species": "Human"
-   }
-  ],
-  "diseaseAssociations": null
- },
- {
   "symbol": "BIVM-ERCC5",
   "name": "Bivm-ercc5 readthrough",
   "ENSG": "ENSG00000270181",
@@ -4687,51 +4495,6 @@
   "diseaseAssociations": [
    "Bloom syndrome"
   ]
- },
- {
-  "symbol": "BLTP1",
-  "name": "Bridge-like lipid transfer protein family member 1",
-  "ENSG": "ENSG00000138688",
-  "chromosome": "4",
-  "isoforms": [
-   {
-    "ENST": "ENST00000306802",
-    "length": 4146,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000438707",
-    "length": 5025,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000446180",
-    "length": 4344,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000686836",
-    "length": 5646,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000419325",
-    "length": 4917,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000688248",
-    "length": 5508,
-    "packagability": 2,
-    "species": "Human"
-   }
-  ],
-  "diseaseAssociations": null
  },
  {
   "symbol": "BLTP2",
@@ -4832,24 +4595,6 @@
    {
     "ENST": "ENST00000424123",
     "length": 8295,
-    "packagability": 3,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000644067",
-    "length": 9009,
-    "packagability": 3,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000544778",
-    "length": 7372,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000342579",
-    "length": 8580,
     "packagability": 3,
     "species": "Human"
    },
@@ -5188,12 +4933,6 @@
    {
     "ENST": "ENST00000245907",
     "length": 4992,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000695654",
-    "length": 4017,
     "packagability": 2,
     "species": "Human"
    }
@@ -7440,12 +7179,6 @@
   "chromosome": "1",
   "isoforms": [
    {
-    "ENST": "ENST00000336415",
-    "length": 4677,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000366544",
     "length": 4461,
     "packagability": 2,
@@ -7518,18 +7251,6 @@
     "species": "Human"
    },
    {
-    "ENST": "ENST00000511820",
-    "length": 6231,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000510237",
-    "length": 5796,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000325971",
     "length": 6189,
     "packagability": 2,
@@ -7594,12 +7315,6 @@
    {
     "ENST": "ENST00000673058",
     "length": 7317,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000547691",
-    "length": 4410,
     "packagability": 2,
     "species": "Human"
    },
@@ -7775,12 +7490,6 @@
   "chromosome": "12",
   "isoforms": [
    {
-    "ENST": "ENST00000637336",
-    "length": 6204,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000524981",
     "length": 9291,
     "packagability": 3,
@@ -7870,12 +7579,6 @@
     "length": 4017,
     "packagability": 2,
     "species": "Human"
-   },
-   {
-    "ENST": "ENST00000426809",
-    "length": 4316,
-    "packagability": 2,
-    "species": "Human"
    }
   ],
   "diseaseAssociations": [
@@ -7943,12 +7646,6 @@
     "species": "Human"
    },
    {
-    "ENST": "ENST00000672838",
-    "length": 4072,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000700753",
     "length": 6345,
     "packagability": 2,
@@ -7990,18 +7687,6 @@
     "species": "Human"
    },
    {
-    "ENST": "ENST00000642594",
-    "length": 5670,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000644289",
-    "length": 5007,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000544040",
     "length": 5739,
     "packagability": 2,
@@ -8032,12 +7717,6 @@
     "species": "Human"
    },
    {
-    "ENST": "ENST00000643815",
-    "length": 4455,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000645022",
     "length": 5718,
     "packagability": 2,
@@ -8052,12 +7731,6 @@
    {
     "ENST": "ENST00000643335",
     "length": 5712,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000646608",
-    "length": 4665,
     "packagability": 2,
     "species": "Human"
    },
@@ -8149,12 +7822,6 @@
    {
     "ENST": "ENST00000645929",
     "length": 6909,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000555935",
-    "length": 5448,
     "packagability": 2,
     "species": "Human"
    },
@@ -8276,12 +7943,6 @@
    {
     "ENST": "ENST00000678652",
     "length": 4827,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000392520",
-    "length": 4923,
     "packagability": 2,
     "species": "Human"
    },
@@ -8692,20 +8353,8 @@
     "species": "Human"
    },
    {
-    "ENST": "ENST00000686219",
-    "length": 5421,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000373855",
     "length": 6978,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000685839",
-    "length": 5373,
     "packagability": 2,
     "species": "Human"
    },
@@ -8828,12 +8477,6 @@
    {
     "ENST": "ENST00000549811",
     "length": 5211,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000443138",
-    "length": 4872,
     "packagability": 2,
     "species": "Human"
    },
@@ -9525,21 +9168,9 @@
   "chromosome": "5",
   "isoforms": [
    {
-    "ENST": "ENST00000509849",
-    "length": 5670,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000651892",
     "length": 9756,
     "packagability": 3,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000514429",
-    "length": 6792,
-    "packagability": 2,
     "species": "Human"
    },
    {
@@ -9852,12 +9483,6 @@
     "length": 10695,
     "packagability": 3,
     "species": "Human"
-   },
-   {
-    "ENST": "ENST00000335551",
-    "length": 8904,
-    "packagability": 3,
-    "species": "Human"
    }
   ],
   "diseaseAssociations": null
@@ -9895,12 +9520,6 @@
   "ENSG": "ENSG00000164796",
   "chromosome": "8",
   "isoforms": [
-   {
-    "ENST": "ENST00000339701",
-    "length": 8934,
-    "packagability": 3,
-    "species": "Human"
-   },
    {
     "ENST": "ENST00000297405",
     "length": 11124,
@@ -10190,12 +9809,6 @@
     "length": 4344,
     "packagability": 2,
     "species": "Human"
-   },
-   {
-    "ENST": "ENST00000412726",
-    "length": 4275,
-    "packagability": 2,
-    "species": "Human"
    }
   ],
   "diseaseAssociations": [
@@ -10467,12 +10080,6 @@
     "species": "Human"
    },
    {
-    "ENST": "ENST00000647343",
-    "length": 4453,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000651528",
     "length": 4812,
     "packagability": 2,
@@ -10717,12 +10324,6 @@
     "length": 4671,
     "packagability": 2,
     "species": "Human"
-   },
-   {
-    "ENST": "ENST00000381496",
-    "length": 4614,
-    "packagability": 2,
-    "species": "Human"
    }
   ],
   "diseaseAssociations": null
@@ -10953,12 +10554,6 @@
     "length": 11046,
     "packagability": 3,
     "species": "Human"
-   },
-   {
-    "ENST": "ENST00000358062",
-    "length": 5919,
-    "packagability": 2,
-    "species": "Human"
    }
   ],
   "diseaseAssociations": [
@@ -11024,23 +10619,6 @@
   ]
  },
  {
-  "symbol": "DNAH10",
-  "name": "Dynein axonemal heavy chain 10",
-  "ENSG": "ENSG00000281935",
-  "chromosome": "CHR_HSCHR12_6_CTG2_1",
-  "isoforms": [
-   {
-    "ENST": "ENST00000631855",
-    "length": 9591,
-    "packagability": 3,
-    "species": "Human"
-   }
-  ],
-  "diseaseAssociations": [
-   "Spermatogenic failure 56"
-  ]
- },
- {
   "symbol": "DNAH12",
   "name": "Dynein axonemal heavy chain 12",
   "ENSG": "ENSG00000174844",
@@ -11068,42 +10646,13 @@
   "chromosome": "1",
   "isoforms": [
    {
-    "ENST": "ENST00000327794",
-    "length": 4446,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000445597",
     "length": 10524,
     "packagability": 3,
     "species": "Human"
-   },
-   {
-    "ENST": "ENST00000638635",
-    "length": 4432,
-    "packagability": 2,
-    "species": "Human"
    }
   ],
   "diseaseAssociations": null
- },
- {
-  "symbol": "DNAH17",
-  "name": "Dynein axonemal heavy chain 17",
-  "ENSG": "ENSG00000187775",
-  "chromosome": "17",
-  "isoforms": [
-   {
-    "ENST": "ENST00000591369",
-    "length": 4692,
-    "packagability": 2,
-    "species": "Human"
-   }
-  ],
-  "diseaseAssociations": [
-   "Spermatogenic failure 39"
-  ]
  },
  {
   "symbol": "DNAJC13",
@@ -11313,20 +10862,8 @@
     "species": "Human"
    },
    {
-    "ENST": "ENST00000445943",
-    "length": 6000,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000437633",
     "length": 5901,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000423057",
-    "length": 4170,
     "packagability": 2,
     "species": "Human"
    }
@@ -11625,20 +11162,8 @@
   "chromosome": "21",
   "isoforms": [
    {
-    "ENST": "ENST00000617870",
-    "length": 5544,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000400454",
     "length": 6039,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000404019",
-    "length": 5241,
     "packagability": 2,
     "species": "Human"
    }
@@ -11716,18 +11241,6 @@
     "ENST": "ENST00000439203",
     "length": 9180,
     "packagability": 3,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000652573",
-    "length": 7151,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000651790",
-    "length": 4044,
-    "packagability": 2,
     "species": "Human"
    },
    {
@@ -12101,12 +11614,6 @@
   "chromosome": "15",
   "isoforms": [
    {
-    "ENST": "ENST00000560855",
-    "length": 4284,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000263791",
     "length": 4950,
     "packagability": 2,
@@ -12262,20 +11769,8 @@
     "species": "Human"
    },
    {
-    "ENST": "ENST00000693470",
-    "length": 5688,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000264211",
     "length": 4758,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000634879",
-    "length": 5325,
     "packagability": 2,
     "species": "Human"
    },
@@ -12546,12 +12041,6 @@
     "species": "Human"
    },
    {
-    "ENST": "ENST00000511671",
-    "length": 4116,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000506030",
     "length": 4260,
     "packagability": 2,
@@ -12732,12 +12221,6 @@
   "ENSG": "ENSG00000110723",
   "chromosome": "11",
   "isoforms": [
-   {
-    "ENST": "ENST00000526312",
-    "length": 5200,
-    "packagability": 2,
-    "species": "Human"
-   },
    {
     "ENST": "ENST00000265843",
     "length": 5970,
@@ -12994,12 +12477,6 @@
     "length": 4356,
     "packagability": 2,
     "species": "Human"
-   },
-   {
-    "ENST": "ENST00000676013",
-    "length": 4244,
-    "packagability": 2,
-    "species": "Human"
    }
   ],
   "diseaseAssociations": [
@@ -13030,38 +12507,14 @@
   "chromosome": "14",
   "isoforms": [
    {
-    "ENST": "ENST00000696685",
-    "length": 4557,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000696641",
-    "length": 4063,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000696675",
     "length": 4296,
     "packagability": 2,
     "species": "Human"
    },
    {
-    "ENST": "ENST00000696683",
-    "length": 4776,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000267430",
     "length": 6147,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000696664",
-    "length": 4980,
     "packagability": 2,
     "species": "Human"
    },
@@ -13074,18 +12527,6 @@
    {
     "ENST": "ENST00000696649",
     "length": 5991,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000696684",
-    "length": 4209,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000554809",
-    "length": 4464,
     "packagability": 2,
     "species": "Human"
    },
@@ -13654,12 +13095,6 @@
   "chromosome": "6",
   "isoforms": [
    {
-    "ENST": "ENST00000329629",
-    "length": 5373,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000297267",
     "length": 5685,
     "packagability": 2,
@@ -13821,12 +13256,6 @@
   "chromosome": "X",
   "isoforms": [
    {
-    "ENST": "ENST00000439554",
-    "length": 5277,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000683843",
     "length": 5334,
     "packagability": 2,
@@ -13862,12 +13291,6 @@
    {
     "ENST": "ENST00000675598",
     "length": 5289,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000672869",
-    "length": 4018,
     "packagability": 2,
     "species": "Human"
    },
@@ -13928,12 +13351,6 @@
     "species": "Human"
    },
    {
-    "ENST": "ENST00000641795",
-    "length": 4692,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000358350",
     "length": 9042,
     "packagability": 3,
@@ -13942,12 +13359,6 @@
    {
     "ENST": "ENST00000507711",
     "length": 4662,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000514617",
-    "length": 4366,
     "packagability": 2,
     "species": "Human"
    }
@@ -14412,42 +13823,6 @@
     "species": "Human"
    },
    {
-    "ENST": "ENST00000695120",
-    "length": 8208,
-    "packagability": 3,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000491690",
-    "length": 8598,
-    "packagability": 3,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000695006",
-    "length": 8604,
-    "packagability": 3,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000694979",
-    "length": 8613,
-    "packagability": 3,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000694973",
-    "length": 8880,
-    "packagability": 3,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000694977",
-    "length": 8901,
-    "packagability": 3,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000695018",
     "length": 9009,
     "packagability": 3,
@@ -14484,38 +13859,8 @@
     "species": "Human"
    },
    {
-    "ENST": "ENST00000694974",
-    "length": 7974,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000695014",
-    "length": 7974,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000695015",
-    "length": 7974,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000695119",
-    "length": 7947,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000472475",
     "length": 9306,
-    "packagability": 3,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000695036",
-    "length": 8376,
     "packagability": 3,
     "species": "Human"
    }
@@ -14835,12 +14180,6 @@
     "length": 6141,
     "packagability": 2,
     "species": "Human"
-   },
-   {
-    "ENST": "ENST00000538864",
-    "length": 4800,
-    "packagability": 2,
-    "species": "Human"
    }
   ],
   "diseaseAssociations": null
@@ -14910,23 +14249,6 @@
    }
   ],
   "diseaseAssociations": null
- },
- {
-  "symbol": "HECTD4",
-  "name": "Hect domain e3 ubiquitin protein ligase 4",
-  "ENSG": "ENSG00000173064",
-  "chromosome": "12",
-  "isoforms": [
-   {
-    "ENST": "ENST00000651701",
-    "length": 5487,
-    "packagability": 2,
-    "species": "Human"
-   }
-  ],
-  "diseaseAssociations": [
-   "Neurodevelopmental disorder with seizures, spasticity, and complete or partial agenesis of the corpus callosum"
-  ]
  },
  {
   "symbol": "HECW1",
@@ -15046,29 +14368,6 @@
    }
   ],
   "diseaseAssociations": null
- },
- {
-  "symbol": "HERC2",
-  "name": "Hect and rld domain containing e3 ubiquitin protein ligase 2",
-  "ENSG": "ENSG00000128731",
-  "chromosome": "15",
-  "isoforms": [
-   {
-    "ENST": "ENST00000650509",
-    "length": 4365,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000632916",
-    "length": 6246,
-    "packagability": 2,
-    "species": "Human"
-   }
-  ],
-  "diseaseAssociations": [
-   "Intellectual developmental disorder, autosomal recessive 38"
-  ]
  },
  {
   "symbol": "HFM1",
@@ -15635,12 +14934,6 @@
     "length": 4467,
     "packagability": 2,
     "species": "Human"
-   },
-   {
-    "ENST": "ENST00000706952",
-    "length": 4626,
-    "packagability": 2,
-    "species": "Human"
    }
   ],
   "diseaseAssociations": [
@@ -15744,27 +15037,9 @@
     "species": "Human"
    },
    {
-    "ENST": "ENST00000648038",
-    "length": 6039,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000443694",
     "length": 8232,
     "packagability": 3,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000648016",
-    "length": 4647,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000648212",
-    "length": 5220,
-    "packagability": 2,
     "species": "Human"
    },
    {
@@ -15777,12 +15052,6 @@
     "ENST": "ENST00000456211",
     "length": 8088,
     "packagability": 3,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000648431",
-    "length": 5457,
-    "packagability": 2,
     "species": "Human"
    },
    {
@@ -15939,12 +15208,6 @@
     "species": "Human"
    },
    {
-    "ENST": "ENST00000354186",
-    "length": 8868,
-    "packagability": 3,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000360013",
     "length": 8961,
     "packagability": 3,
@@ -16031,20 +15294,8 @@
     "species": "Human"
    },
    {
-    "ENST": "ENST00000649817",
-    "length": 4698,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000265713",
     "length": 6015,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000648335",
-    "length": 5032,
     "packagability": 2,
     "species": "Human"
    }
@@ -16415,12 +15666,6 @@
    {
     "ENST": "ENST00000541639",
     "length": 4713,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000440077",
-    "length": 4429,
     "packagability": 2,
     "species": "Human"
    },
@@ -16945,12 +16190,6 @@
     "species": "Human"
    },
    {
-    "ENST": "ENST00000648047",
-    "length": 4335,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000650053",
     "length": 5073,
     "packagability": 2,
@@ -17123,12 +16362,6 @@
     "species": "Human"
    },
    {
-    "ENST": "ENST00000636569",
-    "length": 4962,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000541463",
     "length": 4866,
     "packagability": 2,
@@ -17246,12 +16479,6 @@
     "length": 5184,
     "packagability": 2,
     "species": "Human"
-   },
-   {
-    "ENST": "ENST00000629409",
-    "length": 5865,
-    "packagability": 2,
-    "species": "Human"
    }
   ],
   "diseaseAssociations": null
@@ -17320,12 +16547,6 @@
     "species": "Human"
    },
    {
-    "ENST": "ENST00000649878",
-    "length": 4902,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000389506",
     "length": 11910,
     "packagability": 3,
@@ -17335,24 +16556,6 @@
     "ENST": "ENST00000534358",
     "length": 11919,
     "packagability": 3,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000685397",
-    "length": 5279,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000689424",
-    "length": 5051,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000686370",
-    "length": 5381,
-    "packagability": 2,
     "species": "Human"
    },
    {
@@ -17402,114 +16605,6 @@
   "ENSG": "ENSG00000055609",
   "chromosome": "7",
   "isoforms": [
-   {
-    "ENST": "ENST00000683159",
-    "length": 4764,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000683670",
-    "length": 6456,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000681033",
-    "length": 8151,
-    "packagability": 3,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000683625",
-    "length": 5883,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000680877",
-    "length": 9636,
-    "packagability": 3,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000679560",
-    "length": 9624,
-    "packagability": 3,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000684261",
-    "length": 9621,
-    "packagability": 3,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000684307",
-    "length": 4416,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000418061",
-    "length": 5379,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000360104",
-    "length": 10431,
-    "packagability": 3,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000684398",
-    "length": 6309,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000683502",
-    "length": 5370,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000680969",
-    "length": 8856,
-    "packagability": 3,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000683178",
-    "length": 5298,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000682176",
-    "length": 6174,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000683397",
-    "length": 4503,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000424877",
-    "length": 5301,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000684649",
-    "length": 5382,
-    "packagability": 2,
-    "species": "Human"
-   },
    {
     "ENST": "ENST00000684550",
     "length": 4131,
@@ -17574,12 +16669,6 @@
    {
     "ENST": "ENST00000346991",
     "length": 7029,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000526913",
-    "length": 4086,
     "packagability": 2,
     "species": "Human"
    },
@@ -17687,12 +16776,6 @@
     "ENST": "ENST00000399516",
     "length": 9834,
     "packagability": 3,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000649721",
-    "length": 6597,
-    "packagability": 2,
     "species": "Human"
    },
    {
@@ -18153,23 +17236,6 @@
   ]
  },
  {
-  "symbol": "LRP2",
-  "name": "Ldl receptor related protein 2",
-  "ENSG": "ENSG00000081479",
-  "chromosome": "2",
-  "isoforms": [
-   {
-    "ENST": "ENST00000649153",
-    "length": 4086,
-    "packagability": 2,
-    "species": "Human"
-   }
-  ],
-  "diseaseAssociations": [
-   "Donnai-Barrow syndrome"
-  ]
- },
- {
   "symbol": "LRP4",
   "name": "Ldl receptor related protein 4",
   "ENSG": "ENSG00000134569",
@@ -18215,12 +17281,6 @@
   "chromosome": "CHR_HG1362_PATCH",
   "isoforms": [
    {
-    "ENST": "ENST00000625211",
-    "length": 4437,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000628182",
     "length": 4842,
     "packagability": 2,
@@ -18235,12 +17295,6 @@
    {
     "ENST": "ENST00000261349",
     "length": 4842,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000538239",
-    "length": 4437,
     "packagability": 2,
     "species": "Human"
    },
@@ -18744,12 +17798,6 @@
     "length": 4149,
     "packagability": 2,
     "species": "Human"
-   },
-   {
-    "ENST": "ENST00000697241",
-    "length": 4224,
-    "packagability": 2,
-    "species": "Human"
    }
   ],
   "diseaseAssociations": [
@@ -18769,26 +17817,8 @@
     "species": "Human"
    },
    {
-    "ENST": "ENST00000672812",
-    "length": 6440,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000530275",
     "length": 5004,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000530262",
-    "length": 6086,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000683517",
-    "length": 6831,
     "packagability": 2,
     "species": "Human"
    }
@@ -18979,12 +18009,6 @@
   "ENSG": "ENSG00000204740",
   "chromosome": "10",
   "isoforms": [
-   {
-    "ENST": "ENST00000377266",
-    "length": 4461,
-    "packagability": 2,
-    "species": "Human"
-   },
    {
     "ENST": "ENST00000454679",
     "length": 6471,
@@ -19367,12 +18391,6 @@
     "species": "Human"
    },
    {
-    "ENST": "ENST00000443808",
-    "length": 5043,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000403666",
     "length": 7305,
     "packagability": 2,
@@ -19550,12 +18568,6 @@
     "species": "Human"
    },
    {
-    "ENST": "ENST00000693391",
-    "length": 4485,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000374102",
     "length": 6543,
     "packagability": 2,
@@ -19593,12 +18605,6 @@
   "ENSG": "ENSG00000144893",
   "chromosome": "3",
   "isoforms": [
-   {
-    "ENST": "ENST00000686666",
-    "length": 4673,
-    "packagability": 2,
-    "species": "Human"
-   },
    {
     "ENST": "ENST00000273432",
     "length": 5430,
@@ -19648,18 +18654,6 @@
    {
     "ENST": "ENST00000650226",
     "length": 6669,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000549786",
-    "length": 4638,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000649607",
-    "length": 4818,
     "packagability": 2,
     "species": "Human"
    },
@@ -19815,12 +18809,6 @@
     "length": 9345,
     "packagability": 3,
     "species": "Human"
-   },
-   {
-    "ENST": "ENST00000570161",
-    "length": 7723,
-    "packagability": 2,
-    "species": "Human"
    }
   ],
   "diseaseAssociations": null
@@ -19835,12 +18823,6 @@
     "ENST": "ENST00000475668",
     "length": 8262,
     "packagability": 3,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000632195",
-    "length": 6039,
-    "packagability": 2,
     "species": "Human"
    },
    {
@@ -20076,12 +19058,6 @@
   "ENSG": "ENSG00000133030",
   "chromosome": "17",
   "isoforms": [
-   {
-    "ENST": "ENST00000313485",
-    "length": 5385,
-    "packagability": 2,
-    "species": "Human"
-   },
    {
     "ENST": "ENST00000651222",
     "length": 7278,
@@ -20392,33 +19368,6 @@
     "ENST": "ENST00000379458",
     "length": 9972,
     "packagability": 3,
-    "species": "Human"
-   }
-  ],
-  "diseaseAssociations": null
- },
- {
-  "symbol": "MUC4",
-  "name": "Mucin 4, cell surface associated",
-  "ENSG": "ENSG00000278303",
-  "chromosome": "CHR_HSCHR3_5_CTG3",
-  "isoforms": [
-   {
-    "ENST": "ENST00000619402",
-    "length": 6417,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000612020",
-    "length": 6417,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000618077",
-    "length": 6417,
-    "packagability": 2,
     "species": "Human"
    }
   ],
@@ -20825,12 +19774,6 @@
     "length": 5826,
     "packagability": 2,
     "species": "Human"
-   },
-   {
-    "ENST": "ENST00000618182",
-    "length": 5949,
-    "packagability": 2,
-    "species": "Human"
    }
   ],
   "diseaseAssociations": null
@@ -21195,12 +20138,6 @@
   "chromosome": "18",
   "isoforms": [
    {
-    "ENST": "ENST00000697219",
-    "length": 5283,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000285039",
     "length": 5547,
     "packagability": 2,
@@ -21242,12 +20179,6 @@
    {
     "ENST": "ENST00000458637",
     "length": 6528,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000458169",
-    "length": 4074,
     "packagability": 2,
     "species": "Human"
    },
@@ -21304,12 +20235,6 @@
     "species": "Human"
    },
    {
-    "ENST": "ENST00000561618",
-    "length": 4197,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000356056",
     "length": 7647,
     "packagability": 2,
@@ -21341,12 +20266,6 @@
    {
     "ENST": "ENST00000595618",
     "length": 6069,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000595641",
-    "length": 6215,
     "packagability": 2,
     "species": "Human"
    },
@@ -21463,12 +20382,6 @@
   "ENSG": "ENSG00000078177",
   "chromosome": "4",
   "isoforms": [
-   {
-    "ENST": "ENST00000513269",
-    "length": 4203,
-    "packagability": 2,
-    "species": "Human"
-   },
    {
     "ENST": "ENST00000261435",
     "length": 5313,
@@ -21713,26 +20626,8 @@
   "chromosome": "2",
   "isoforms": [
    {
-    "ENST": "ENST00000700061",
-    "length": 5103,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000281513",
     "length": 7116,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000700062",
-    "length": 4431,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000442506",
-    "length": 4260,
     "packagability": 2,
     "species": "Human"
    }
@@ -21755,27 +20650,9 @@
     "species": "Human"
    },
    {
-    "ENST": "ENST00000688626",
-    "length": 6687,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000400445",
     "length": 8841,
     "packagability": 3,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000629018",
-    "length": 4485,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000688363",
-    "length": 6597,
-    "packagability": 2,
     "species": "Human"
    }
   ],
@@ -21820,12 +20697,6 @@
     "ENST": "ENST00000651747",
     "length": 8163,
     "packagability": 3,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000416683",
-    "length": 6129,
-    "packagability": 2,
     "species": "Human"
    },
    {
@@ -22154,32 +21025,14 @@
   "chromosome": "12",
   "isoforms": [
    {
-    "ENST": "ENST00000458234",
-    "length": 4354,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000405201",
     "length": 7545,
     "packagability": 2,
     "species": "Human"
    },
    {
-    "ENST": "ENST00000356219",
-    "length": 6240,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000404621",
     "length": 7377,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000404121",
-    "length": 6189,
     "packagability": 2,
     "species": "Human"
    },
@@ -22191,30 +21044,6 @@
    }
   ],
   "diseaseAssociations": null
- },
- {
-  "symbol": "NEB",
-  "name": "Nebulin",
-  "ENSG": "ENSG00000183091",
-  "chromosome": "2",
-  "isoforms": [
-   {
-    "ENST": "ENST00000413693",
-    "length": 9024,
-    "packagability": 3,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000690043",
-    "length": 7284,
-    "packagability": 2,
-    "species": "Human"
-   }
-  ],
-  "diseaseAssociations": [
-   "Arthrogryposis multiplex congenita 6",
-   "Nemaline myopathy 2, autosomal recessive"
-  ]
  },
  {
   "symbol": "NEO1",
@@ -22271,12 +21100,6 @@
   "chromosome": "17",
   "isoforms": [
    {
-    "ENST": "ENST00000571887",
-    "length": 4292,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000570460",
     "length": 4617,
     "packagability": 2,
@@ -22291,12 +21114,6 @@
    {
     "ENST": "ENST00000671847",
     "length": 4689,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000673278",
-    "length": 4292,
     "packagability": 2,
     "species": "Human"
    },
@@ -22356,18 +21173,6 @@
   "ENSG": "ENSG00000196712",
   "chromosome": "17",
   "isoforms": [
-   {
-    "ENST": "ENST00000456735",
-    "length": 7509,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000579081",
-    "length": 4971,
-    "packagability": 2,
-    "species": "Human"
-   },
    {
     "ENST": "ENST00000691014",
     "length": 8550,
@@ -22515,12 +21320,6 @@
    {
     "ENST": "ENST00000382043",
     "length": 4134,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000389869",
-    "length": 4746,
     "packagability": 2,
     "species": "Human"
    },
@@ -23778,12 +22577,6 @@
     "length": 5406,
     "packagability": 2,
     "species": "Human"
-   },
-   {
-    "ENST": "ENST00000460683",
-    "length": 4566,
-    "packagability": 2,
-    "species": "Human"
    }
   ],
   "diseaseAssociations": null
@@ -23879,12 +22672,6 @@
     "species": "Human"
    },
    {
-    "ENST": "ENST00000423351",
-    "length": 4382,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000409057",
     "length": 4905,
     "packagability": 2,
@@ -23974,12 +22761,6 @@
    {
     "ENST": "ENST00000616114",
     "length": 5028,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000642496",
-    "length": 4083,
     "packagability": 2,
     "species": "Human"
    },
@@ -24115,12 +22896,6 @@
     "length": 10011,
     "packagability": 3,
     "species": "Human"
-   },
-   {
-    "ENST": "ENST00000695528",
-    "length": 4044,
-    "packagability": 2,
-    "species": "Human"
    }
   ],
   "diseaseAssociations": [
@@ -24185,12 +22960,6 @@
   "ENSG": "ENSG00000099139",
   "chromosome": "9",
   "isoforms": [
-   {
-    "ENST": "ENST00000424854",
-    "length": 4683,
-    "packagability": 2,
-    "species": "Human"
-   },
    {
     "ENST": "ENST00000674117",
     "length": 5664,
@@ -24916,27 +23685,6 @@
   ]
  },
  {
-  "symbol": "PKD1L2",
-  "name": "Polycystin 1 like 2 (gene/pseudogene)",
-  "ENSG": "ENSG00000166473",
-  "chromosome": "16",
-  "isoforms": [
-   {
-    "ENST": "ENST00000533478",
-    "length": 5324,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000525539",
-    "length": 7379,
-    "packagability": 2,
-    "species": "Human"
-   }
-  ],
-  "diseaseAssociations": null
- },
- {
   "symbol": "PKD1L3",
   "name": "Polycystin 1 like 3, transient receptor potential channel interacting",
   "ENSG": "ENSG00000277481",
@@ -25015,12 +23763,6 @@
     "length": 4344,
     "packagability": 2,
     "species": "Human"
-   },
-   {
-    "ENST": "ENST00000404858",
-    "length": 4341,
-    "packagability": 2,
-    "species": "Human"
    }
   ],
   "diseaseAssociations": null
@@ -25070,24 +23812,6 @@
    {
     "ENST": "ENST00000371385",
     "length": 5883,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000676102",
-    "length": 4111,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000692286",
-    "length": 6694,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000674827",
-    "length": 4584,
     "packagability": 2,
     "species": "Human"
    }
@@ -26208,12 +24932,6 @@
   "chromosome": "9",
   "isoforms": [
    {
-    "ENST": "ENST00000426088",
-    "length": 7155,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000443509",
     "length": 9189,
     "packagability": 3,
@@ -26249,12 +24967,6 @@
    {
     "ENST": "ENST00000674005",
     "length": 4671,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000676076",
-    "length": 4248,
     "packagability": 2,
     "species": "Human"
    }
@@ -26549,12 +25261,6 @@
    {
     "ENST": "ENST00000438120",
     "length": 5697,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000429895",
-    "length": 4662,
     "packagability": 2,
     "species": "Human"
    }
@@ -27197,12 +25903,6 @@
     "length": 5622,
     "packagability": 2,
     "species": "Human"
-   },
-   {
-    "ENST": "ENST00000430436",
-    "length": 5223,
-    "packagability": 2,
-    "species": "Human"
    }
   ],
   "diseaseAssociations": null
@@ -27240,12 +25940,6 @@
   "ENSG": "ENSG00000153201",
   "chromosome": "2",
   "isoforms": [
-   {
-    "ENST": "ENST00000697745",
-    "length": 4566,
-    "packagability": 2,
-    "species": "Human"
-   },
    {
     "ENST": "ENST00000697740",
     "length": 4350,
@@ -27398,12 +26092,6 @@
    {
     "ENST": "ENST00000348022",
     "length": 5277,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000646282",
-    "length": 5279,
     "packagability": 2,
     "species": "Human"
    }
@@ -28316,12 +27004,6 @@
     "length": 4008,
     "packagability": 2,
     "species": "Human"
-   },
-   {
-    "ENST": "ENST00000697423",
-    "length": 4062,
-    "packagability": 2,
-    "species": "Human"
    }
   ],
   "diseaseAssociations": null
@@ -28450,12 +27132,6 @@
     "species": "Human"
    },
    {
-    "ENST": "ENST00000677824",
-    "length": 4080,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000255674",
     "length": 6603,
     "packagability": 2,
@@ -28506,24 +27182,6 @@
    "Congenital myopathy 1A, autosomal dominant, with susceptibility to malignant hyperthermia",
    "Congenital myopathy 1B, autosomal recessive",
    "King-Denborough syndrome"
-  ]
- },
- {
-  "symbol": "RYR2",
-  "name": "Ryanodine receptor 2",
-  "ENSG": "ENSG00000198626",
-  "chromosome": "1",
-  "isoforms": [
-   {
-    "ENST": "ENST00000659194",
-    "length": 7077,
-    "packagability": 2,
-    "species": "Human"
-   }
-  ],
-  "diseaseAssociations": [
-   "Ventricular arrhythmias due to cardiac ryanodine receptor calcium release deficiency syndrome",
-   "Ventricular tachycardia, catecholaminergic polymorphic, 1"
   ]
  },
  {
@@ -28775,12 +27433,6 @@
    {
     "ENST": "ENST00000675281",
     "length": 5625,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000688344",
-    "length": 5157,
     "packagability": 2,
     "species": "Human"
    }
@@ -29453,12 +28105,6 @@
   "chromosome": "9",
   "isoforms": [
    {
-    "ENST": "ENST00000371706",
-    "length": 6441,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000313050",
     "length": 7074,
     "packagability": 2,
@@ -29599,92 +28245,14 @@
   "chromosome": "3",
   "isoforms": [
    {
-    "ENST": "ENST00000685505",
-    "length": 4119,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000409792",
     "length": 7695,
     "packagability": 2,
     "species": "Human"
    },
    {
-    "ENST": "ENST00000445387",
-    "length": 5028,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000686876",
-    "length": 4413,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000685005",
-    "length": 7461,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000690157",
-    "length": 4050,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000638947",
     "length": 7563,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000685399",
-    "length": 4059,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000330022",
-    "length": 4098,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000692883",
-    "length": 4119,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000412450",
-    "length": 4021,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000686773",
-    "length": 4059,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000690461",
-    "length": 5433,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000688290",
-    "length": 4065,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000693321",
-    "length": 4059,
     "packagability": 2,
     "species": "Human"
    }
@@ -30231,12 +28799,6 @@
   "chromosome": "5",
   "isoforms": [
    {
-    "ENST": "ENST00000404867",
-    "length": 4182,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000332966",
     "length": 4593,
     "packagability": 2,
@@ -30365,12 +28927,6 @@
     "species": "Human"
    },
    {
-    "ENST": "ENST00000643995",
-    "length": 4368,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000645460",
     "length": 4842,
     "packagability": 2,
@@ -30454,12 +29010,6 @@
     "species": "Human"
    },
    {
-    "ENST": "ENST00000577880",
-    "length": 4167,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000320876",
     "length": 6018,
     "packagability": 2,
@@ -30480,12 +29030,6 @@
    {
     "ENST": "ENST00000446231",
     "length": 10986,
-    "packagability": 3,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000565324",
-    "length": 10656,
     "packagability": 3,
     "species": "Human"
    }
@@ -30562,12 +29106,6 @@
   "chromosome": "2",
   "isoforms": [
    {
-    "ENST": "ENST00000652267",
-    "length": 4127,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000323853",
     "length": 6411,
     "packagability": 2,
@@ -30620,12 +29158,6 @@
    {
     "ENST": "ENST00000300278",
     "length": 6912,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000436227",
-    "length": 4365,
     "packagability": 2,
     "species": "Human"
    }
@@ -30858,12 +29390,6 @@
     "length": 10995,
     "packagability": 3,
     "species": "Human"
-   },
-   {
-    "ENST": "ENST00000704274",
-    "length": 6513,
-    "packagability": 2,
-    "species": "Human"
    }
   ],
   "diseaseAssociations": [
@@ -31026,12 +29552,6 @@
     "species": "Human"
    },
    {
-    "ENST": "ENST00000704206",
-    "length": 5040,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000704203",
     "length": 7470,
     "packagability": 2,
@@ -31052,12 +29572,6 @@
    {
     "ENST": "ENST00000704202",
     "length": 7521,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000704204",
-    "length": 6960,
     "packagability": 2,
     "species": "Human"
    },
@@ -31243,12 +29757,6 @@
     "species": "Human"
    },
    {
-    "ENST": "ENST00000483083",
-    "length": 4833,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000411466",
     "length": 9693,
     "packagability": 3,
@@ -31353,21 +29861,6 @@
    {
     "ENST": "ENST00000388887",
     "length": 7656,
-    "packagability": 2,
-    "species": "Human"
-   }
-  ],
-  "diseaseAssociations": null
- },
- {
-  "symbol": "STARD9",
-  "name": "Star related lipid transfer domain containing 9",
-  "ENSG": "ENSG00000159433",
-  "chromosome": "15",
-  "isoforms": [
-   {
-    "ENST": "ENST00000562619",
-    "length": 4761,
     "packagability": 2,
     "species": "Human"
    }
@@ -31528,12 +30021,6 @@
   "chromosome": "6",
   "isoforms": [
    {
-    "ENST": "ENST00000367257",
-    "length": 4068,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000367248",
     "length": 4302,
     "packagability": 2,
@@ -31546,12 +30033,6 @@
     "species": "Human"
    },
    {
-    "ENST": "ENST00000367251",
-    "length": 4965,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000367253",
     "length": 5178,
     "packagability": 2,
@@ -31560,12 +30041,6 @@
    {
     "ENST": "ENST00000672122",
     "length": 4275,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000673281",
-    "length": 4585,
     "packagability": 2,
     "species": "Human"
    }
@@ -31761,12 +30236,6 @@
   "chromosome": "X",
   "isoforms": [
    {
-    "ENST": "ENST00000276072",
-    "length": 4914,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000683202",
     "length": 5634,
     "packagability": 2,
@@ -31781,12 +30250,6 @@
    {
     "ENST": "ENST00000683782",
     "length": 5724,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000683668",
-    "length": 4797,
     "packagability": 2,
     "species": "Human"
    },
@@ -32145,12 +30608,6 @@
    {
     "ENST": "ENST00000643257",
     "length": 4470,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000650162",
-    "length": 4076,
     "packagability": 2,
     "species": "Human"
    }
@@ -32826,12 +31283,6 @@
     "species": "Human"
    },
    {
-    "ENST": "ENST00000494733",
-    "length": 4416,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000561311",
     "length": 7629,
     "packagability": 2,
@@ -32864,12 +31315,6 @@
    {
     "ENST": "ENST00000409663",
     "length": 4830,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000240487",
-    "length": 4164,
     "packagability": 2,
     "species": "Human"
    },
@@ -32932,12 +31377,6 @@
    {
     "ENST": "ENST00000350763",
     "length": 6606,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000705192",
-    "length": 5565,
     "packagability": 2,
     "species": "Human"
    },
@@ -33098,12 +31537,6 @@
   "chromosome": "22",
   "isoforms": [
    {
-    "ENST": "ENST00000446273",
-    "length": 4176,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000335727",
     "length": 5172,
     "packagability": 2,
@@ -33139,12 +31572,6 @@
     "species": "Human"
    },
    {
-    "ENST": "ENST00000588061",
-    "length": 5223,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000636222",
     "length": 5835,
     "packagability": 2,
@@ -33174,12 +31601,6 @@
    {
     "ENST": "ENST00000171887",
     "length": 5208,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000651849",
-    "length": 5484,
     "packagability": 2,
     "species": "Human"
    },
@@ -33269,42 +31690,6 @@
    }
   ],
   "diseaseAssociations": null
- },
- {
-  "symbol": "TNXB",
-  "name": "Tenascin xb",
-  "ENSG": "ENSG00000168477",
-  "chromosome": "6",
-  "isoforms": [
-   {
-    "ENST": "ENST00000611016",
-    "length": 5889,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000451159",
-    "length": 6841,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000424713",
-    "length": 9891,
-    "packagability": 3,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000412618",
-    "length": 6450,
-    "packagability": 2,
-    "species": "Human"
-   }
-  ],
-  "diseaseAssociations": [
-   "Ehlers-Danlos syndrome, classic-like, 1 606408",
-   "Vesicoureteral reflux 8"
-  ]
  },
  {
   "symbol": "TOGARAM1",
@@ -33570,12 +31955,6 @@
     "species": "Human"
    },
    {
-    "ENST": "ENST00000513206",
-    "length": 7641,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000344204",
     "length": 9294,
     "packagability": 3,
@@ -33619,12 +31998,6 @@
    {
     "ENST": "ENST00000267622",
     "length": 5940,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000554357",
-    "length": 5088,
     "packagability": 2,
     "species": "Human"
    }
@@ -33717,12 +32090,6 @@
     "length": 6204,
     "packagability": 2,
     "species": "Human"
-   },
-   {
-    "ENST": "ENST00000704584",
-    "length": 5331,
-    "packagability": 2,
-    "species": "Human"
    }
   ],
   "diseaseAssociations": [
@@ -33769,26 +32136,8 @@
     "species": "Human"
    },
    {
-    "ENST": "ENST00000617515",
-    "length": 4812,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000558445",
     "length": 4929,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000558768",
-    "length": 4581,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000618210",
-    "length": 4812,
     "packagability": 2,
     "species": "Human"
    },
@@ -33976,12 +32325,6 @@
     "species": "Human"
    },
    {
-    "ENST": "ENST00000360902",
-    "length": 4035,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000446306",
     "length": 11547,
     "packagability": 3,
@@ -33997,12 +32340,6 @@
     "ENST": "ENST00000359863",
     "length": 11580,
     "packagability": 3,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000704588",
-    "length": 5814,
-    "packagability": 2,
     "species": "Human"
    },
    {
@@ -34031,12 +32368,6 @@
    {
     "ENST": "ENST00000642936",
     "length": 5292,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000644399",
-    "length": 5346,
     "packagability": 2,
     "species": "Human"
    },
@@ -34091,12 +32422,6 @@
    {
     "ENST": "ENST00000643088",
     "length": 5217,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000642365",
-    "length": 4080,
     "packagability": 2,
     "species": "Human"
    },
@@ -34157,12 +32482,6 @@
   "ENSG": "ENSG00000100154",
   "chromosome": "22",
   "isoforms": [
-   {
-    "ENST": "ENST00000612946",
-    "length": 7065,
-    "packagability": 2,
-    "species": "Human"
-   },
    {
     "ENST": "ENST00000397906",
     "length": 7446,
@@ -34422,21 +32741,6 @@
    {
     "ENST": "ENST00000272793",
     "length": 5667,
-    "packagability": 2,
-    "species": "Human"
-   }
-  ],
-  "diseaseAssociations": null
- },
- {
-  "symbol": "UBR4",
-  "name": "Ubiquitin protein ligase e3 component n-recognin 4",
-  "ENSG": "ENSG00000127481",
-  "chromosome": "1",
-  "isoforms": [
-   {
-    "ENST": "ENST00000417040",
-    "length": 6175,
     "packagability": 2,
     "species": "Human"
    }
@@ -34812,12 +33116,6 @@
     "species": "Human"
    },
    {
-    "ENST": "ENST00000698200",
-    "length": 4047,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000453664",
     "length": 4119,
     "packagability": 2,
@@ -35000,12 +33298,6 @@
   "chromosome": "X",
   "isoforms": [
    {
-    "ENST": "ENST00000704654",
-    "length": 4545,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000324545",
     "length": 7713,
     "packagability": 2,
@@ -35145,12 +33437,6 @@
    {
     "ENST": "ENST00000331397",
     "length": 4044,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000682216",
-    "length": 4267,
     "packagability": 2,
     "species": "Human"
    },
@@ -35331,29 +33617,6 @@
   ]
  },
  {
-  "symbol": "VPS13D",
-  "name": "Vacuolar protein sorting 13 homolog d",
-  "ENSG": "ENSG00000048707",
-  "chromosome": "1",
-  "isoforms": [
-   {
-    "ENST": "ENST00000646917",
-    "length": 4671,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000011700",
-    "length": 9633,
-    "packagability": 3,
-    "species": "Human"
-   }
-  ],
-  "diseaseAssociations": [
-   "Spinocerebellar ataxia, autosomal recessive 4"
-  ]
- },
- {
   "symbol": "VPS8",
   "name": "Vps8 subunit of corvet complex",
   "ENSG": "ENSG00000156931",
@@ -35471,12 +33734,6 @@
   "ENSG": "ENSG00000163625",
   "chromosome": "4",
   "isoforms": [
-   {
-    "ENST": "ENST00000514711",
-    "length": 9021,
-    "packagability": 3,
-    "species": "Human"
-   },
    {
     "ENST": "ENST00000295888",
     "length": 10581,
@@ -35737,12 +33994,6 @@
     "species": "Human"
    },
    {
-    "ENST": "ENST00000676347",
-    "length": 4596,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000535572",
     "length": 6405,
     "packagability": 2,
@@ -35793,12 +34044,6 @@
    {
     "ENST": "ENST00000297954",
     "length": 6894,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000411624",
-    "length": 5322,
     "packagability": 2,
     "species": "Human"
    }
@@ -35957,12 +34202,6 @@
   "chromosome": "14",
   "isoforms": [
    {
-    "ENST": "ENST00000549293",
-    "length": 4788,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000552421",
     "length": 4323,
     "packagability": 2,
@@ -36073,15 +34312,9 @@
  {
   "symbol": "ZDBF2",
   "name": "Zinc finger dbf-type containing 2",
-  "ENSG": "ENSG00000204186",
-  "chromosome": "2",
+  "ENSG": "ENSG00000283649",
+  "chromosome": "CHR_HSCHR2_6_CTG7_2",
   "isoforms": [
-   {
-    "ENST": "ENST00000649525",
-    "length": 4273,
-    "packagability": 2,
-    "species": "Human"
-   },
    {
     "ENST": "ENST00000637549",
     "length": 7059,
@@ -36091,12 +34324,6 @@
    {
     "ENST": "ENST00000649768",
     "length": 7065,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000650133",
-    "length": 4273,
     "packagability": 2,
     "species": "Human"
    },
@@ -36208,12 +34435,6 @@
     "ENST": "ENST00000651372",
     "length": 10851,
     "packagability": 3,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000523885",
-    "length": 4996,
-    "packagability": 2,
     "species": "Human"
    }
   ],
@@ -36484,12 +34705,6 @@
   "chromosome": "6",
   "isoforms": [
    {
-    "ENST": "ENST00000699914",
-    "length": 6989,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
     "ENST": "ENST00000339907",
     "length": 8157,
     "packagability": 3,
@@ -36582,12 +34797,6 @@
    {
     "ENST": "ENST00000277225",
     "length": 7521,
-    "packagability": 2,
-    "species": "Human"
-   },
-   {
-    "ENST": "ENST00000374686",
-    "length": 4350,
     "packagability": 2,
     "species": "Human"
    },
