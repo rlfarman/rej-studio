@@ -35,12 +35,12 @@ interface QueryAction {
 
 interface SelectAction {
   type: 'select'
-  payload: Isomorph[]
+  payload: FuckFace[]
 }
 
 interface LoadAction {
   type: 'load'
-  payload: Isomorph[]
+  payload: Isoform[]
 }
 
 interface FilterAction {
@@ -52,9 +52,9 @@ interface FilterAction {
 }
 
 interface InitialState {
-  selected: Isomorph[]
-  isomorphs: Isomorph[]
-  initialIsomorphs: Isomorph[]
+  selected: Isoform[]
+  isoforms: Isoform[]
+  initialIsoforms: Isoform[]
   query: string
 }
 
@@ -62,8 +62,8 @@ type DispatchActions = QueryAction | SelectAction | LoadAction
 
 export const StateContext = createContext<InitialState>({
   selected: [],
-  initialIsomorphs: [],
-  isomorphs: [],
+  initialIsoforms: [],
+  isoforms: [],
   query: '',
 })
 
@@ -71,11 +71,11 @@ export const DispatchContext = createContext<Dispatch<DispatchActions>>(
   () => null
 )
 
-export function useIsomorphs() {
+export function useIsoforms() {
   return useContext(StateContext)
 }
 
-export function useIsomorphsDispatch() {
+export function useIsoformsDispatch() {
   return useContext(DispatchContext)
 }
 
@@ -83,21 +83,21 @@ function parseString(s: string): string {
   return s.toLowerCase().replace(/\s+/g, '')
 }
 
-function getMatch(isomorph: Isomorph, query: string) {
+function getMatch(isoform: Isoform, query: string) {
   return (
-    parseString(isomorph.searchName).includes(parseString(query)) ||
-    parseString(isomorph.name).includes(parseString(query))
+    parseString(isoform.searchName).includes(parseString(query)) ||
+    parseString(isoform.name).includes(parseString(query))
   )
 }
 
-function isomorphsReducer(state: InitialState, action: DispatchActions) {
+function isoformsReducer(state: InitialState, action: DispatchActions) {
   switch (action.type) {
     case 'query': {
       const payload = action.payload
       return {
         ...state,
-        isomorphs: state.initialIsomorphs.filter((isomorph) =>
-          getMatch(isomorph, payload)
+        isoforms: state.initialIsoforms.filter((isoform) =>
+          getMatch(isoform, payload)
         ),
         query: payload,
       }
@@ -113,22 +113,22 @@ function isomorphsReducer(state: InitialState, action: DispatchActions) {
       const payload = action.payload
       return {
         ...state,
-        isomorphs: payload,
-        initialIsomorphs: payload,
+        isoforms: payload,
+        initialIsoforms: payload,
       }
     }
   }
 }
 
-interface IsomorphProviderProperties {
+interface IsoformProviderProperties {
   children: React.ReactNode
 }
 
-export function Provider({ children }: IsomorphProviderProperties) {
-  const [state, dispatch] = useReducer(isomorphsReducer, {
+export function Provider({ children }: IsoformProviderProperties) {
+  const [state, dispatch] = useReducer(isoformsReducer, {
     selected: [],
-    initialIsomorphs: [],
-    isomorphs: [],
+    initialIsoforms: [],
+    isoforms: [],
     query: '',
   })
 
@@ -136,7 +136,7 @@ export function Provider({ children }: IsomorphProviderProperties) {
     fetch('/data/database.csv')
       .then((response) => response.text())
       .then((v) =>
-        Papa.parse<Isomorph>(v, {
+        Papa.parse<Isoform>(v, {
           header: true,
           dynamicTyping: true,
           transformHeader(header: keyof typeof HEADERS_MAP, index) {
@@ -150,7 +150,7 @@ export function Provider({ children }: IsomorphProviderProperties) {
           },
         })
       )
-      .catch((err) => console.log(err))
+      .catch((err) => console.error(err))
   }, [])
 
   return (

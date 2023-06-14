@@ -1,8 +1,8 @@
 import '@/styles/globals.css'
-import { Inter } from 'next/font/google'
+import { Open_Sans } from 'next/font/google'
 import Header from '@/components/header'
 
-const inter = Inter({ subsets: ['latin'] })
+const openSans = Open_Sans({ subsets: ['latin'] })
 
 export const metadata = {
   title: 'RNA End-joining Design Tool',
@@ -17,10 +17,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head />
-      <body className={inter.className}>
-        <div className="flex min-h-screen flex-col items-center">
+      <body className={openSans.className}>
+        <div className="container flex min-h-screen flex-col items-center px-12 py-6 md:items-start">
           <Header />
-          {children}
+          <div className="w-full pt-4">{children}</div>
         </div>
       </body>
     </html>

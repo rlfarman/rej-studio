@@ -1,4 +1,7 @@
 {
   "editor.defaultFormatter": "esbenp.prettier-vscode",
-  "prettier.configPath": ".prettierrc"
+  "prettier.configPath": "prettier.config.js",
+  "editor.quickSuggestions": {
+    "strings": "on"
+  }
 }

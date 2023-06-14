@@ -3,6 +3,8 @@ import { FormProvider, useForm, useFormContext } from 'react-hook-form'
 import { boolean, object, string } from 'yup'
 import { yupResolver } from '@hookform/resolvers/yup'
 import Checkbox from '@/components/checkbox'
+import downloadZip from '@/lib/downloadFile'
+import Button from './button'
 
 interface FormValues {
   codingSequence: string
@@ -18,7 +20,15 @@ interface FormValues {
 const validationSchema = object().shape({
   codingSequence: string()
     .required('Coding sequence is required.')
-    .matches(/^[ACGTacgt]+$/, 'Invalid coding sequence.')
+    .matches(
+      /^[ACGTacgt]+$/,
+      'Invalid coding sequence. Must contain only A, C, G, or T.'
+    )
+    .test(
+      'is-multiple-of-three',
+      'Invalid coding sequence. Must be a multiple of 3.',
+      (value) => value.length % 3 === 0
+    )
     .default(''),
   species: string().oneOf(['none', 'homoSapiens', 'musMusculus']),
   removeCrypticSpliceSites: boolean().default(true),
@@ -35,29 +45,31 @@ function CodingSequenceInput() {
     formState: { errors },
   } = useFormContext<FormValues>()
   return (
-    <>
-      <label htmlFor="codingSequence">Coding Sequence</label>
+    <div>
+      <label htmlFor="codingSequence" className="block">
+        Enter your own coding sequence
+      </label>
       <input
         type="text"
         id="codingSequence"
         aria-invalid={errors.codingSequence ? 'true' : 'false'}
         {...register('codingSequence')}
-        className="text-black"
+        className="w-full text-black"
       />
       {typeof errors.codingSequence?.message === 'string' && (
         <span role="alert" className="block text-xs italic text-red-500">
           {errors.codingSequence.message}
         </span>
       )}
-    </>
+    </div>
   )
 }
 
 function SpeciesSelect() {
   const { register } = useFormContext<FormValues>()
   return (
-    <>
-      <label htmlFor="species" className="text-sm">
+    <div>
+      <label htmlFor="species" className="block text-sm">
         Species
       </label>
       <select id="species" {...register('species')} className="text-black">
@@ -65,7 +77,7 @@ function SpeciesSelect() {
         <option value="homoSapiens">Homo sapiens</option>
         <option value="musMusculus">Mus musculus</option>
       </select>
-    </>
+    </div>
   )
 }
 
@@ -128,7 +140,7 @@ function ThreeFragmentOptions() {
 }
 
 function SubmitButton() {
-  return <button type="submit">Submit</button>
+  return <Button type="submit">Submit</Button>
 }
 
 export default function GeneSplitterForm() {
@@ -137,19 +149,16 @@ export default function GeneSplitterForm() {
     defaultValues: validationSchema.getDefault(),
   })
 
+  function handleSubmitForm(data: FormValues) {
+    fetch('/api/form', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }).then((res) => downloadZip(res))
+  }
+
   return (
     <FormProvider {...methods}>
-      <form
-        onSubmit={methods.handleSubmit((data) =>
-          window.alert(
-            `Hello and congratulations on clicking submit. Here are the options you selected:\n${JSON.stringify(
-              data,
-              null,
-              2
-            )}`
-          )
-        )}
-      >
+      <form onSubmit={methods.handleSubmit(handleSubmitForm)}>
         <div className="flex flex-col gap-4">
           <CodingSequenceInput />
           <CodonOptimizationOptions />
