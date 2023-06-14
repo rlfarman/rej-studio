@@ -1,8 +1,7 @@
 'use client'
-import { ChangeEvent, Fragment, useContext, useState } from 'react'
+import { Fragment, useState } from 'react'
 import { Combobox, Transition } from '@headlessui/react'
 import { CheckIcon, ChevronUpDownIcon } from '@heroicons/react/20/solid'
-import { DispatchContext, StateContext } from '@/context/context'
 import genes from '@/public/data/genes.json'
 import { useRouter } from 'next/navigation'
 
