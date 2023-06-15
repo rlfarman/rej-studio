@@ -1,6 +1,6 @@
 from flask import Flask
 app = Flask(__name__)
 
-@app.route("/api/hello-world")
+@app.route("/hello-world")
 def hello_world():
     return "Hello world!"
