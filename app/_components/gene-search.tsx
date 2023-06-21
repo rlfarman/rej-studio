@@ -47,7 +47,7 @@ export default function GeneSearch({ defaultGene }: GeneSearchProperties) {
           </Combobox.Label>
           <div className="relative inline-block cursor-default overflow-hidden">
             <Combobox.Input
-              className="text-black"
+              className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-sky-500 focus:ring-sky-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-sky-500 dark:focus:ring-sky-500"
               displayValue={(gene: Gene) =>
                 query !== '' ? query : gene.symbol
               }
@@ -79,7 +79,7 @@ export default function GeneSearch({ defaultGene }: GeneSearchProperties) {
             leaveFrom="opacity-100"
             leaveTo="opacity-0"
           >
-            <Combobox.Options className="absolute mt-1 max-h-96 overflow-auto bg-white text-black">
+            <Combobox.Options className="absolute z-10 mt-1 max-h-96 w-full max-w-sm divide-y divide-gray-100 overflow-auto rounded-lg bg-white py-2 text-sm text-gray-700 shadow dark:bg-gray-700 dark:text-gray-200">
               {filteredGenes.length === 0 && query !== '' ? (
                 <div className="relative cursor-default select-none px-4 py-2 text-gray-700">
                   Nothing found.
@@ -90,8 +90,8 @@ export default function GeneSearch({ defaultGene }: GeneSearchProperties) {
                     <Combobox.Option
                       key={gene.symbol}
                       className={({ active }) =>
-                        `relative cursor-default select-none py-2 pl-10 pr-4 ${
-                          active ? 'bg-emerald-600 text-white' : 'text-gray-900'
+                        `relative w-full select-none px-4 py-2 text-sm text-gray-700 dark:text-gray-400 ${
+                          active && 'bg-sky-50 dark:bg-sky-800'
                         }`
                       }
                       value={gene}
@@ -112,25 +112,13 @@ export default function GeneSearch({ defaultGene }: GeneSearchProperties) {
                           >
                             {gene.name}
                           </span>
-                          {selected ? (
-                            <span
-                              className={`absolute inset-y-0 left-0 flex items-center pl-3 ${
-                                active ? 'text-white' : 'text-emerald-600'
-                              }`}
-                            >
-                              <CheckIcon
-                                className="h-5 w-5"
-                                aria-hidden="true"
-                              />
-                            </span>
-                          ) : null}
                         </>
                       )}
                     </Combobox.Option>
                   ))}
                   {filteredGenes.length > 100 && (
-                    <div className="relative cursor-default select-none bg-gray-50 px-4 py-2 text-gray-700">
-                      Only showing the first 100 results.
+                    <div className="relative cursor-default select-none bg-gray-50 px-4 py-2 text-gray-700 dark:bg-gray-700 dark:text-white">
+                      Refine your search to show more results
                     </div>
                   )}
                 </>

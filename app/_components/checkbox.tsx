@@ -26,12 +26,21 @@ function Checkbox(
           onChange={onChange}
           onBlur={onBlur}
           ref={ref}
+          className="h-4 w-4 rounded border-gray-300 bg-gray-100 text-sky-600 focus:ring-2 focus:ring-sky-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-sky-600"
         />
       </div>
       <div className="pl-2 text-sm">
-        <label htmlFor={id}>{label}</label>
+        <label
+          htmlFor={id}
+          className="font-medium text-gray-900 dark:text-gray-300"
+        >
+          {label}
+        </label>
         {helperText && (
-          <span id={`${id}-helper-text`} className="block text-sm">
+          <span
+            id={`${id}-helper-text`}
+            className="text-xs font-normal text-gray-500 dark:text-gray-300"
+          >
             {helperText}
           </span>
         )}
