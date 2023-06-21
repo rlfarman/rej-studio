@@ -13,7 +13,6 @@ export default function DashboardLayout({
   params: { symbol },
 }: GenePageLayoutProperties) {
   const defaultGene = (genes as Gene[]).find((gene) => gene.symbol === symbol)
-  console.log(defaultGene)
   return (
     <section className="w-full">
       <GeneSearch defaultGene={defaultGene} />
