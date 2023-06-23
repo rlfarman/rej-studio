@@ -18,7 +18,7 @@ export default function RootLayout({
     <html lang="en">
       <head />
       <body className={openSans.className}>
-        <div className="container flex min-h-screen flex-col items-center px-12 py-6 md:items-start">
+        <div className="container max-w-screen-lg mx-auto flex min-h-screen flex-col items-center px-12 py-6 md:items-start">
           <Header />
           <div className="w-full pt-4">{children}</div>
         </div>

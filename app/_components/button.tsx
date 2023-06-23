@@ -1,3 +1,4 @@
+import classnames from 'classnames'
 import Link from 'next/link'
 
 interface SharedButtonProperties {
@@ -6,6 +7,7 @@ interface SharedButtonProperties {
   variant?: 'primary' | 'secondary' | 'tertiary'
   size?: 'small' | 'medium' | 'large'
   disabled?: boolean
+  className?: string
 }
 
 type LinkButtonProperties = SharedButtonProperties & {
@@ -72,6 +74,7 @@ export default function Button({
   href,
   onClick,
   download = false,
+  className,
 }: ButtonProperties) {
   return (
     <>
@@ -81,7 +84,7 @@ export default function Button({
         </LinkButton>
       ) : (
         <button
-          className={CLASSES}
+          className={classnames(CLASSES, className)}
           type={type}
           onClick={onClick}
           disabled={disabled}

@@ -4,6 +4,7 @@ import { Combobox, Transition } from '@headlessui/react'
 import { CheckIcon, ChevronUpDownIcon } from '@heroicons/react/20/solid'
 import genes from '@/public/data/genes.json'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 
 const getMatch = (gene: Gene, query: string) => {
   return [
@@ -43,9 +44,12 @@ export default function GeneSearch({ defaultGene }: GeneSearchProperties) {
       {({ open }) => (
         <div className="relative">
           <Combobox.Label className="block">
-            Search for a gene by name or symbol
+            Search for a gene by name or symbol, or{' '}
+            <Link href="/design-tool" className="font-medium underline decoration-gray-400">
+              design your own  
+            </Link>
           </Combobox.Label>
-          <div className="relative inline-block cursor-default overflow-hidden">
+          <div className="relative inline-block cursor-default overflow-hidden pt-2">
             <Combobox.Input
               className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-sky-500 focus:ring-sky-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-sky-500 dark:focus:ring-sky-500"
               displayValue={(gene: Gene) =>

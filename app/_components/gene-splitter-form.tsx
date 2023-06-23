@@ -57,7 +57,7 @@ function CodingSequenceInput() {
         id="codingSequence"
         aria-invalid={errors.codingSequence ? 'true' : 'false'}
         {...register('codingSequence')}
-        className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-sky-500 focus:ring-sky-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-sky-500 dark:focus:ring-sky-500"
+        className="block w-full max-w-xl rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-sky-500 focus:ring-sky-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-sky-500 dark:focus:ring-sky-500"
         placeholder="ATGATTACA..."
       />
       {typeof errors.codingSequence?.message === 'string' && (
@@ -85,7 +85,7 @@ function SpeciesSelect() {
       <select
         id="species"
         {...register('species')}
-        className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-sky-500 focus:ring-sky-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-sky-500 dark:focus:ring-sky-500"
+        className="block rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-sky-500 focus:ring-sky-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-sky-500 dark:focus:ring-sky-500"
       >
         <option value="none">None</option>
         <option value="homoSapiens">Homo sapiens</option>
@@ -154,7 +154,7 @@ function ThreeFragmentOptions() {
 }
 
 function SubmitButton() {
-  return <Button type="submit">Submit</Button>
+  return <Button type="submit" className="inline">Submit</Button>
 }
 
 export default function GeneSplitterForm() {
@@ -178,6 +178,8 @@ export default function GeneSplitterForm() {
           <CodonOptimizationOptions />
           <FiveFragmentOptions />
           <ThreeFragmentOptions />
+        </div>
+        <div className="mt-4">
           <SubmitButton />
         </div>
       </form>

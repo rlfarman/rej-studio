@@ -14,7 +14,7 @@ export default function Page({ params }: { params: { symbol: string } }) {
   }
 
   return (
-    <div className="container pt-4">
+    <div className="pt-4">
       <div>
         <h1 className="text-xl">
           <strong>{gene.symbol}</strong>
