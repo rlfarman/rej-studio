@@ -1,7 +1,7 @@
 export default function Footer() {
   return (
-    <div className="pt-4">
-      <span className="block text-gray-400 dark:text-gray-600">
+    <div className="flex flex-col pt-4">
+      <span className="text-gray-400 dark:text-gray-600">
         Created by{' '}
         <a
           href="https://github.com/ryanusahk"
@@ -17,7 +17,7 @@ export default function Footer() {
           rlfarman
         </a>
       </span>
-      <span className="block text-xs text-gray-400 hover:underline dark:text-gray-800">
+      <span className="text-xs text-gray-400 hover:underline dark:text-gray-800">
         <a href="https://www.salk.edu/">
           PFAFF Lab at the Salk Institute for Biological Studies
         </a>
