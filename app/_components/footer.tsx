@@ -18,7 +18,9 @@ export default function Footer() {
         </a>
       </span>
       <span className="block text-xs text-gray-200 hover:underline dark:text-gray-800">
-        <a href="">PFAFF Lab at the Salk Institute for Biological Studies</a>
+        <a href="https://www.salk.edu/">
+          PFAFF Lab at the Salk Institute for Biological Studies
+        </a>
       </span>
     </div>
   )
