@@ -115,7 +115,7 @@ function CodonOptimizationOptions() {
   )
 }
 
-function FiveFragmentOptions() {
+function ThreeFragmentOptions() {
   const { register } = useFormContext<FormValues>()
   return (
     <>
@@ -134,7 +134,7 @@ function FiveFragmentOptions() {
   )
 }
 
-function ThreeFragmentOptions() {
+function FiveFragmentOptions() {
   const { register } = useFormContext<FormValues>()
   return (
     <>
@@ -154,7 +154,11 @@ function ThreeFragmentOptions() {
 }
 
 function SubmitButton() {
-  return <Button type="submit" className="inline">Submit</Button>
+  return (
+    <Button type="submit" className="inline">
+      Submit
+    </Button>
+  )
 }
 
 export default function GeneSplitterForm() {
