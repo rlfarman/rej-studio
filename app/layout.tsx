@@ -1,6 +1,7 @@
 import '@/styles/globals.css'
 import { Open_Sans } from 'next/font/google'
 import Header from '@/components/header'
+import Footer from '@/components/footer'
 
 const openSans = Open_Sans({ subsets: ['latin'] })
 
@@ -18,9 +19,12 @@ export default function RootLayout({
     <html lang="en">
       <head />
       <body className={openSans.className}>
-        <div className="container mx-auto flex min-h-screen max-w-screen-lg flex-col items-center px-4 py-4 sm:px-12 sm:py-6 md:items-start">
-          <Header />
-          <div className="w-full pt-4">{children}</div>
+        <div className="container mx-auto flex min-h-screen max-w-screen-lg flex-col justify-between px-4 py-4 sm:px-12">
+          <div>
+            <Header />
+            <div className="w-full pt-4">{children}</div>
+          </div>
+          <Footer />
         </div>
       </body>
     </html>
