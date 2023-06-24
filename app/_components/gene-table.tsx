@@ -9,7 +9,7 @@ interface GeneTableProperties {
 
 export default function GeneTable({ gene }: GeneTableProperties) {
   return (
-    <div className="overflow-x-auto shadow-md sm:rounded-lg">
+    <div className="overflow-x-auto rounded-lg shadow-md">
       <table className="w-full table-auto text-left text-sm text-gray-500 dark:text-gray-400">
         <thead className="bg-gray-50 text-xs text-gray-700 dark:bg-gray-700 dark:text-gray-400">
           <tr>
