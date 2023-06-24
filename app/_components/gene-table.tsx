@@ -14,7 +14,7 @@ export default function GeneTable({ gene }: GeneTableProperties) {
         <thead className="bg-gray-50 text-xs text-gray-700 dark:bg-gray-700 dark:text-gray-400">
           <tr>
             <th scope="col" className={TABLE_HEAD_CELL_CLASSES}>
-              Transcription ID
+              Transcript ID
             </th>
             <td scope="col" className={TABLE_HEAD_CELL_CLASSES}>
               Length (bp)
