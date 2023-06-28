@@ -127,7 +127,7 @@ function ThreeFragmentOptions() {
       />
       <Checkbox
         id="3PrimePFSWithNMD"
-        label="Protein Fragment Suppression with Nonstop Mediated Decay"
+        label="Protein Fragment Suppression with Nonsense Mediated Decay"
         {...register('3PrimePFSWithNMD')}
       />
     </>
