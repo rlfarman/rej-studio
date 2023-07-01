@@ -1,10 +1,11 @@
 'use client'
 import { FormProvider, useForm, useFormContext } from 'react-hook-form'
 import { boolean, object, string } from 'yup'
+import Image from 'next/image'
 import { yupResolver } from '@hookform/resolvers/yup'
 import Checkbox from '@/components/checkbox'
 import downloadZip from '@/lib/downloadFile'
-import Button from './button'
+import Button from '@/components/button'
 
 interface FormValues {
   codingSequence: string
@@ -178,6 +179,12 @@ export default function GeneSplitterForm() {
     <FormProvider {...methods}>
       <form onSubmit={methods.handleSubmit(handleSubmitForm)}>
         <div className="flex flex-col gap-4">
+          <Image
+            src="/images/omg.png"
+            alt="A diagram showing how the different options of the form affect the result of RNA end-joining"
+            width={800}
+            height={176}
+          />
           <CodingSequenceInput />
           <CodonOptimizationOptions />
           <FiveFragmentOptions />
