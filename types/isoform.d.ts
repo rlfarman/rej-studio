@@ -1,12 +1,20 @@
-type Species = 'Human' | 'Mouse'
+enum Species {
+  Human = 'Human',
+  Mouse = 'Mouse',
+}
 
-type ENST = `ENST${number}`
+type HumanENST = `ENST${number}`
+type MouseENST = `ENSMUST${number}`
 
 type SearchName = `${string} [${ENST}]`
 
 interface Isoform {
-  ENST: ENST
+  ENST: HumanENST | MouseENST
   length: number
   packagability: number
   species: Species
+  codingSequence?: string
+  proteinSequence?: string
 }
+
+Isoform

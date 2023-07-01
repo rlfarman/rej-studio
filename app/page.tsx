@@ -1,8 +1,19 @@
+import Link from 'next/link'
 import GeneSearch from './_components/gene-search'
-import Button from '@/components/button'
 
 export default function Home() {
   return (
-    <GeneSearch />
+    <div>
+      <p>
+        Search for a gene by name or symbol, or{' '}
+        <Link
+          href="/design-tool"
+          className="font-medium underline decoration-gray-400"
+        >
+          design your own
+        </Link>
+      </p>
+      <GeneSearch />
+    </div>
   )
 }
