@@ -57,8 +57,8 @@ export default async function Page({ params }: { params: { symbol: string } }) {
         <dd>{gene.name}</dd>
         <dt className="hidden">ENSG:</dt>
         <dd>{gene.ENSG}</dd>
-        <dt className="inline">Chromosome:</dt>{' '}
-        <dd className="inline">{gene.chromosome}</dd>
+        <dt className="hidden">Chromosome:</dt>
+        <dd className="inline">Chromosome {gene.chromosome}</dd>
       </dl>
       {gene.diseaseAssociations?.length ? (
         <>
