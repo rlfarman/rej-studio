@@ -1,12 +1,4 @@
-import classnames from 'classnames'
-
-const TABLE_HEAD_CELL_CLASSES = 'break-words'
-
-interface GeneTableProperties {
-  gene: Gene
-}
-
-export default function GeneTable() {
+export default function IsoformListLoading() {
   return (
     <div className="flex flex-col gap-4 pt-6">
       <div className="block rounded-lg border border-gray-200 bg-white px-6 pb-4 pt-6 shadow dark:border-gray-700 dark:bg-gray-800">
@@ -23,16 +15,16 @@ export default function GeneTable() {
           <table className="mt-4 w-full max-w-xl table-auto text-left text-sm text-gray-500 dark:text-gray-400">
             <thead className="text-sm">
               <tr>
-                <td scope="col" className={TABLE_HEAD_CELL_CLASSES}>
+                <td scope="col" className="break-words">
                   <div className="h-3.5 w-48 max-w-[4rem] rounded-full bg-gray-200 dark:bg-gray-700"></div>
                 </td>
-                <td scope="col" className={TABLE_HEAD_CELL_CLASSES}>
+                <td scope="col" className="break-words">
                   <div className="h-3.5 w-48 max-w-[4rem] rounded-full bg-gray-200 dark:bg-gray-700"></div>
                 </td>
-                <td scope="col" className={TABLE_HEAD_CELL_CLASSES}>
+                <td scope="col" className="break-words">
                   <div className="h-3.5 w-48 max-w-[4rem] rounded-full bg-gray-200 dark:bg-gray-700"></div>
                 </td>
-                <td scope="col" className={classnames(TABLE_HEAD_CELL_CLASSES)}>
+                <td scope="col" className="break-words">
                   <div className="h-3.5 w-48 max-w-[6rem] rounded-full bg-gray-200 dark:bg-gray-700"></div>
                 </td>
               </tr>

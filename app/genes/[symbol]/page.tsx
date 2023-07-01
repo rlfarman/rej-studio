@@ -2,7 +2,7 @@ import genes from '@/public/data/genes.json'
 import { notFound } from 'next/navigation'
 import path from 'node:path'
 import { promises as fs } from 'fs'
-import GeneTable from './_components/gene-table'
+import IsoformList from './_components/isoform-list'
 
 const getData = async (symbol: string): Promise<Gene | undefined> => {
   const gene = (genes as Gene[]).find((gene) => gene.symbol === symbol)
@@ -13,22 +13,27 @@ const getData = async (symbol: string): Promise<Gene | undefined> => {
     ...gene,
     isoforms: await Promise.all(
       gene.isoforms.map(async (isoform) => {
-        const fileName = `${isoform.ENST}.txt`
-        const basePath = path.join(process.cwd(), 'public', 'data')
-        const [codingSequence, proteinSequence] = await Promise.all([
-          await fs.readFile(
-            path.join(basePath, 'coding_sequences', fileName),
-            'utf8'
-          ),
-          await fs.readFile(
-            path.join(basePath, 'protein_sequences', fileName),
-            'utf8'
-          ),
-        ])
-        return {
-          ...isoform,
-          codingSequence,
-          proteinSequence,
+        try {
+          const fileName = `${isoform.ENST}.txt`
+          const basePath = path.join(process.cwd(), 'public', 'data')
+          const [codingSequence, proteinSequence] = await Promise.all([
+            await fs.readFile(
+              path.join(basePath, 'coding_sequences', fileName),
+              'utf8'
+            ),
+            await fs.readFile(
+              path.join(basePath, 'protein_sequences', fileName),
+              'utf8'
+            ),
+          ])
+          return {
+            ...isoform,
+            codingSequence,
+            proteinSequence,
+          }
+        } catch (error) {
+          console.error(error)
+          return isoform
         }
       })
     ),
@@ -65,7 +70,7 @@ export default async function Page({ params }: { params: { symbol: string } }) {
           </ul>
         </>
       ) : null}
-      <GeneTable gene={gene} />
+      <IsoformList gene={gene} />
     </div>
   )
 }

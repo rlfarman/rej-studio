@@ -1,34 +1,54 @@
 'use client'
 import { ClipboardIcon } from '@heroicons/react/20/solid'
 import copy from 'copy-to-clipboard'
+import { Tooltip } from 'react-tooltip'
+
+interface CopyButtonProperties {
+  children: string
+  label: string
+}
+
+function CopyButton({ children, label }: CopyButtonProperties) {
+  function handleClick() {
+    copy(children)
+  }
+
+  return (
+    <div className="flex items-center">
+      <button
+        data-tooltip-id="my-tooltip"
+        data-tooltip-content="Copied!"
+        data-tooltip-place="right"
+        type="button"
+        className="group mt-1 flex items-center rounded-lg text-center text-sm font-medium text-gray-400 decoration-gray-500 hover:underline dark:text-gray-600"
+        onClick={handleClick}
+      >
+        <span className="inline-block max-w-[12rem] select-all truncate">
+          {children}
+        </span>
+        <ClipboardIcon className="-mr-1 ml-1 h-3.5 w-3.5 opacity-0 transition-opacity duration-100 group-hover:visible group-hover:opacity-100" />
+      </button>
+      <Tooltip
+        noArrow
+        id="my-tooltip"
+        className="!rounded-lg !bg-transparent !px-2 !py-1 !text-gray-400 dark:!bg-gray-800 dark:!text-white"
+        openOnClick
+        closeOnScroll
+        closeOnEsc
+      />
+    </div>
+  )
+}
 
 export default function CopyButtons({ isoform }: { isoform: Isoform }) {
   return (
     <div>
-      <button
-        className="mt-1 flex items-center rounded-lg text-center text-sm font-medium hover:underline focus:outline-none focus:ring-4 focus:ring-sky-300 dark:focus:ring-sky-800"
-        onClick={() => copy(isoform.codingSequence ?? '')}
-      >
-        <span className="hidden max-w-[12rem] truncate text-gray-400 dark:text-gray-600 sm:inline-block">
-          {isoform.codingSequence}
-        </span>
-        <span className="inline-flex items-center text-gray-700 dark:text-gray-300">
-          Copy coding sequence
-          <ClipboardIcon className="-mr-1 ml-1 h-4 w-4" />
-        </span>
-      </button>
-      <button
-        className="mt-2 flex items-center rounded-lg text-center text-sm font-medium hover:underline focus:outline-none focus:ring-4 focus:ring-sky-300 dark:focus:ring-sky-800"
-        onClick={() => copy(isoform.proteinSequence ?? '')}
-      >
-        <span className="hidden max-w-[12rem] truncate text-gray-400 dark:text-gray-600 sm:inline-block">
-          {isoform.proteinSequence}
-        </span>
-        <span className="inline-flex items-center text-gray-700 dark:text-gray-300">
-          Copy protein sequence
-          <ClipboardIcon className="-mr-1 ml-1 h-4 w-4" />
-        </span>
-      </button>
+      {Boolean(isoform.codingSequence) && (
+        <CopyButton label="Coding Sequence">{`${isoform.codingSequence}`}</CopyButton>
+      )}
+      {Boolean(isoform.proteinSequence) && (
+        <CopyButton>{`${isoform.proteinSequence}`}</CopyButton>
+      )}
     </div>
   )
 }

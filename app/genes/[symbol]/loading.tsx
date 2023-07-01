@@ -1,4 +1,4 @@
-import GeneTable from './_components/gene-table-loading'
+import IsoformListLoading from './_components/isoform-list-loading'
 
 export default function Loading() {
   return (
@@ -10,7 +10,7 @@ export default function Loading() {
         <div className="mb-2.5 h-3.5 max-w-[192px] rounded-full bg-gray-300 dark:bg-gray-700"></div>
         <span className="sr-only">Loading...</span>
       </div>
-      <GeneTable />
+      <IsoformListLoading />
     </div>
   )
 }
