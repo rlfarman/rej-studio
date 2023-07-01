@@ -5,10 +5,9 @@ import { Tooltip } from 'react-tooltip'
 
 interface CopyButtonProperties {
   children: string
-  label: string
 }
 
-function CopyButton({ children, label }: CopyButtonProperties) {
+function CopyButton({ children }: CopyButtonProperties) {
   function handleClick() {
     copy(children)
   }
@@ -44,7 +43,7 @@ export default function CopyButtons({ isoform }: { isoform: Isoform }) {
   return (
     <div>
       {Boolean(isoform.codingSequence) && (
-        <CopyButton label="Coding Sequence">{`${isoform.codingSequence}`}</CopyButton>
+        <CopyButton>{`${isoform.codingSequence}`}</CopyButton>
       )}
       {Boolean(isoform.proteinSequence) && (
         <CopyButton>{`${isoform.proteinSequence}`}</CopyButton>
