@@ -4,17 +4,17 @@ export default function Footer() {
       <span className="text-gray-400 dark:text-gray-500">
         Created by{' '}
         <a
-          href="https://github.com/ryanusahk"
+          href="https://www.linkedin.com/in/ryan-hsu-18647295/"
           className="text-gray-500 hover:underline dark:text-gray-400"
         >
-          ryanusahk
+          Ryan Hsu
         </a>{' '}
         and{' '}
         <a
-          href="https://github.com/rlfarman"
+          href="https://www.linkedin.com/in/rlfarman/"
           className="text-gray-500 hover:underline dark:text-gray-400"
         >
-          rlfarman
+          Richie Farman
         </a>
       </span>
       <span className="text-sm text-gray-400 hover:underline dark:text-gray-500">
