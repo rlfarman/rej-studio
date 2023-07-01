@@ -14,13 +14,13 @@ export default function Header() {
           <div>
             <h1
               className={cx(
-                'text-4xl text-emerald-500 dark:text-emerald-400 md:text-7xl lg:text-8xl',
+                'text-4xl text-emerald-500 dark:text-emerald-400 md:text-5xl',
                 tiltWarp.className
               )}
             >
               RNA End-joining
             </h1>
-            <span className="text-2xl text-sky-500 dark:text-sky-400 md:text-4xl">
+            <span className="text-2xl text-sky-500 dark:text-sky-400 md:text-3xl">
               Design Tool
             </span>
           </div>
