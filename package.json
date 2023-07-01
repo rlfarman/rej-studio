@@ -3,8 +3,6 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "flask-dev": "pip3 install -r requirements.txt && python3 -m flask --app api/index run -p 5328 --debug",
-    "next-dev": "next dev",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
@@ -21,7 +19,6 @@
     "@types/react-window": "^1.8.5",
     "autoprefixer": "10.4.14",
     "classnames": "^2.3.2",
-    "concurrently": "^8.2.0",
     "copy-to-clipboard": "^3.3.3",
     "csv-loader": "^3.0.5",
     "eslint": "8.41.0",
