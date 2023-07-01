@@ -6,7 +6,10 @@ import genes from '@/public/data/genes.json'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
-const getMatch = (gene: Gene, query: string) => {
+const getMatch = (gene: Gene, query: string, species: Isoform['species']) => {
+  if (!gene.isoforms.some((isoform) => isoform.species === species)) {
+    return false
+  }
   return [
     gene.symbol,
     gene.name,
@@ -26,6 +29,7 @@ interface GeneSearchProperties {
 export default function GeneSearch({ defaultGene }: GeneSearchProperties) {
   const [selected, setSelected] = useState<Gene | undefined>(defaultGene)
   const [query, setQuery] = useState('')
+  const [species, setSpecies] = useState('')
   const router = useRouter()
 
   const handleChange = (gene: Gene) => {

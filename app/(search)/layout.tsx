@@ -2,17 +2,17 @@ import GeneSearch from '@/components/gene-search'
 import genes from '@/public/data/genes.json'
 import Link from 'next/link'
 
-interface GenePageLayoutProperties {
+interface GeneSearchLayoutProperties {
   children: React.ReactNode
   params: {
     symbol: string
   }
 }
 
-export default function DashboardLayout({
+export default function GeneSearchLayout({
   children,
   params: { symbol },
-}: GenePageLayoutProperties) {
+}: GeneSearchLayoutProperties) {
   const defaultGene = (genes as Gene[]).find((gene) => gene.symbol === symbol)
   return (
     <section className="w-full">
@@ -26,7 +26,6 @@ export default function DashboardLayout({
         </Link>
       </p>
       <GeneSearch defaultGene={defaultGene} />
-      <hr className="my-8 h-px border-0 bg-gray-300 dark:bg-gray-700" />
       {children}
     </section>
   )
