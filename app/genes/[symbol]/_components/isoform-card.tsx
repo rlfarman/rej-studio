@@ -16,8 +16,8 @@ export default function IsoformCard({
     >
       <h2 className="text-lg font-semibold">{isoform.ENST}</h2>
       <CopyButtons isoform={isoform} />
-      <table className="mt-2 w-full max-w-xl table-auto text-left text-sm text-gray-500 dark:text-gray-400">
-        <thead className="text-sm">
+      <table className="mt-2 w-full max-w-xl table-auto text-left text-sm">
+        <thead className="text-sm text-gray-500 dark:text-gray-400">
           <tr>
             <td scope="col" className="break-words">
               Length (bp)

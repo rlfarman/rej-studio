@@ -19,7 +19,7 @@ function CopyButton({ children }: CopyButtonProperties) {
         data-tooltip-content="Copied!"
         data-tooltip-place="right"
         type="button"
-        className="group mt-1 flex items-center rounded-lg text-center text-sm font-medium text-gray-400 decoration-gray-500 hover:underline dark:text-gray-600"
+        className="group mt-1 flex items-center rounded-lg text-center text-sm hover:underline "
         onClick={handleClick}
       >
         <span className="inline-block max-w-[12rem] select-all truncate">
@@ -42,9 +42,15 @@ function CopyButton({ children }: CopyButtonProperties) {
 export default function CopyButtons({ isoform }: { isoform: Isoform }) {
   return (
     <div>
+      <span className="text-sm text-gray-500 dark:text-gray-400">
+        Coding sequence
+      </span>
       {Boolean(isoform.codingSequence) && (
         <CopyButton>{`${isoform.codingSequence}`}</CopyButton>
       )}
+      <span className="text-sm text-gray-500 dark:text-gray-400">
+        Protein sequence
+      </span>
       {Boolean(isoform.proteinSequence) && (
         <CopyButton>{`${isoform.proteinSequence}`}</CopyButton>
       )}
