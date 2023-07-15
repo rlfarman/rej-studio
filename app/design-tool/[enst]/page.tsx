@@ -1,0 +1,45 @@
+import GeneSplitterForm from '@/components/gene-splitter-form'
+import Link from 'next/link'
+import path from 'node:path'
+import { promises as fs } from 'node:fs'
+
+const getData = async (enst: string): Promise<string | undefined> => {
+  try {
+    const fileName = `${enst}.txt`
+    const basePath = path.join(process.cwd(), 'public', 'data')
+    const codingSequence = await fs.readFile(
+      path.join(basePath, 'coding_sequences', fileName),
+      'utf8'
+    )
+    return codingSequence
+  } catch (error) {
+    console.error(error)
+    return ''
+  }
+}
+
+export default async function DesignToolPage({
+  params,
+}: {
+  params: { enst: string }
+}) {
+  const defaultCodingSequence = params.enst ? await getData(params.enst) : ''
+  console.log(params.enst)
+  return (
+    <div>
+      <span>
+        Design your own, or{' '}
+        <Link
+          href="/"
+          className="font-medium text-sky-600 hover:underline dark:text-sky-500"
+        >
+          search for a gene
+        </Link>
+      </span>
+      <hr className="my-8 h-px border-0 bg-gray-300 dark:bg-gray-700" />
+      <div className="pt-4">
+        <GeneSplitterForm defaultCodingSequence={defaultCodingSequence} />
+      </div>
+    </div>
+  )
+}

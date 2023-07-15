@@ -1,7 +1,7 @@
 import genes from '@/public/data/genes.json'
 import { notFound } from 'next/navigation'
 import path from 'node:path'
-import { promises as fs } from 'fs'
+import { promises as fs } from 'node:fs'
 import IsoformList from './_components/isoform-list'
 
 const getData = async (symbol: string): Promise<Gene | undefined> => {
@@ -40,7 +40,11 @@ const getData = async (symbol: string): Promise<Gene | undefined> => {
   }
 }
 
-export default async function Page({ params }: { params: { symbol: string } }) {
+export default async function GeneSymbolPage({
+  params,
+}: {
+  params: { symbol: string }
+}) {
   const gene = await getData(params.symbol)
 
   if (!gene) {
