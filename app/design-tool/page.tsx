@@ -8,7 +8,7 @@ function DesignToolPage() {
         Design your own, or{' '}
         <Link
           href="/"
-          className="font-medium underline decoration-gray-500 dark:decoration-gray-400"
+          className="font-medium text-sky-600 hover:underline dark:text-sky-500"
         >
           search for a gene
         </Link>
