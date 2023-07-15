@@ -8,7 +8,7 @@ export default function Home() {
         Search for a gene by name or symbol, or{' '}
         <Link
           href="/design-tool"
-          className="font-medium underline decoration-gray-400"
+          className="font-medium text-sky-600 hover:underline dark:text-sky-500"
         >
           design your own
         </Link>
