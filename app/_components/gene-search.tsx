@@ -44,7 +44,7 @@ export default function GeneSearch({ defaultGene }: GeneSearchProperties) {
         <div className="relative">
           <div className="relative inline-block cursor-default overflow-hidden pt-2">
             <Combobox.Input
-              className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-sky-500 focus:ring-sky-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-sky-500 dark:focus:ring-sky-500"
+              className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
               displayValue={(gene: Gene) =>
                 query !== '' ? query : gene.symbol
               }
@@ -65,7 +65,7 @@ export default function GeneSearch({ defaultGene }: GeneSearchProperties) {
             />
             <Combobox.Button className="absolute inset-y-0 right-0 flex items-center pr-2">
               <ChevronUpDownIcon
-                className="h-4 w-4 text-black"
+                className="mt-1.5 h-4 w-4 text-black"
                 aria-hidden="true"
               />
             </Combobox.Button>
