@@ -49,7 +49,7 @@ export default function IsoformCard({
           href={`/data/precomputed/REJ_${geneSymbol}_${isoform.ENST}.zip`}
           download
         >
-          Download RNA end-joined sequences
+          Download predesigned sequences
         </Button>
         <Link
           href={`/design-tool/${isoform.ENST}`}
