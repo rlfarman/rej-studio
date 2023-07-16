@@ -7,6 +7,10 @@ import Checkbox from '@/components/checkbox'
 import downloadZip from '@/lib/downloadFile'
 import Button from '@/components/button'
 
+interface GeneSplitterFormProperties {
+  defaultCodingSequence?: string
+}
+
 interface FormValues {
   codingSequence: string
   species: 'none' | 'homoSapiens' | 'musMusculus'
@@ -162,10 +166,15 @@ function SubmitButton() {
   )
 }
 
-export default function GeneSplitterForm() {
+export default function GeneSplitterForm({
+  defaultCodingSequence,
+}: GeneSplitterFormProperties) {
   const methods = useForm<FormValues>({
     resolver: yupResolver(validationSchema),
-    defaultValues: validationSchema.getDefault(),
+    defaultValues: {
+      ...validationSchema.getDefault(),
+      codingSequence: defaultCodingSequence,
+    },
   })
 
   function handleSubmitForm(data: FormValues) {

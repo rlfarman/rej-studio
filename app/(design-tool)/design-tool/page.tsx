@@ -1,16 +1,16 @@
-import GeneSplitterForm from '@/components/gene-splitter-form'
+import GeneSplitterForm from '@/design-tool/components/gene-splitter-form'
 import Link from 'next/link'
 
 function DesignToolPage() {
   return (
     <div>
       <span>
-        Design your own, or{' '}
+        Provide your own sequence, or{' '}
         <Link
           href="/"
-          className="font-medium underline decoration-gray-500 dark:decoration-gray-400"
+          className="font-medium text-sky-600 hover:underline dark:text-sky-500"
         >
-          search for a gene
+          search by gene or Ensemble Transcript ID (ENST)
         </Link>
       </span>
       <hr className="my-8 h-px border-0 bg-gray-300 dark:bg-gray-700" />

@@ -1,4 +1,6 @@
+import Button from '@/components/button'
 import CopyButtons from './copy-buttons'
+import Link from 'next/link'
 
 interface IsoformCardProperties {
   isoform: Isoform
@@ -16,8 +18,8 @@ export default function IsoformCard({
     >
       <h2 className="text-lg font-semibold">{isoform.ENST}</h2>
       <CopyButtons isoform={isoform} />
-      <table className="mt-2 w-full max-w-xl table-auto text-left text-sm text-gray-500 dark:text-gray-400">
-        <thead className="text-sm">
+      <table className="mt-2 w-full max-w-xl table-auto text-left">
+        <thead className="text-sm text-gray-500 dark:text-gray-400">
           <tr>
             <td scope="col" className="break-words">
               Length (bp)
@@ -42,14 +44,19 @@ export default function IsoformCard({
           </tr>
         </tbody>
       </table>
-      <div className="pt-4">
-        <a
+      <div className="flex items-center gap-4 pt-4">
+        <Button
           href={`/data/precomputed/REJ_${geneSymbol}_${isoform.ENST}.zip`}
           download
+        >
+          Download predesigned sequences
+        </Button>
+        <Link
+          href={`/design-tool/${isoform.ENST}`}
           className="font-medium text-sky-600 hover:underline dark:text-sky-500"
         >
-          Download RNA end-joined sequences
-        </a>
+          Open in design tool
+        </Link>
       </div>
     </div>
   )

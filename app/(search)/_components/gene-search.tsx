@@ -5,10 +5,7 @@ import { ChevronUpDownIcon } from '@heroicons/react/20/solid'
 import genes from '@/public/data/genes.json'
 import { useRouter } from 'next/navigation'
 
-const getMatch = (gene: Gene, query: string, species: Isoform['species']) => {
-  if (!gene.isoforms.some((isoform) => isoform.species === species)) {
-    return false
-  }
+const getMatch = (gene: Gene, query: string) => {
   return [
     gene.symbol,
     gene.name,
@@ -28,7 +25,6 @@ interface GeneSearchProperties {
 export default function GeneSearch({ defaultGene }: GeneSearchProperties) {
   const [selected, setSelected] = useState<Gene | undefined>(defaultGene)
   const [query, setQuery] = useState('')
-  const [species, setSpecies] = useState('')
   const router = useRouter()
 
   const handleChange = (gene: Gene) => {

@@ -1,4 +1,4 @@
-import GeneSearch from '@/components/gene-search'
+import GeneSearch from './_components/gene-search'
 import genes from '@/public/data/genes.json'
 import Link from 'next/link'
 
@@ -17,12 +17,12 @@ export default function GeneSearchLayout({
   return (
     <section className="w-full">
       <p>
-        Search for a gene by name or symbol, or{' '}
+        Search for a sequence by gene or Ensemble Transcript ID (ENST), or{' '}
         <Link
           href="/design-tool"
-          className="font-medium underline decoration-gray-400"
+          className="font-medium text-sky-600 hover:underline dark:text-sky-500"
         >
-          design your own
+          provide your own
         </Link>
       </p>
       <GeneSearch defaultGene={defaultGene} />

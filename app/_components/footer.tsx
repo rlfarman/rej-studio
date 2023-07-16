@@ -1,6 +1,6 @@
 export default function Footer() {
   return (
-    <div className="flex flex-col pt-4">
+    <div className="flex flex-col pt-12">
       <span className="text-gray-400 dark:text-gray-500">
         Created by{' '}
         <a
