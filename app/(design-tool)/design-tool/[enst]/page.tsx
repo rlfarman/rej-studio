@@ -1,5 +1,4 @@
 import GeneSplitterForm from '@/design-tool/components/gene-splitter-form'
-import Link from 'next/link'
 import path from 'node:path'
 import { promises as fs } from 'node:fs'
 
@@ -25,10 +24,8 @@ export default async function DesignToolPage({
 }) {
   const defaultCodingSequence = params.enst ? await getData(params.enst) : ''
   return (
-    <div>
-      <div className="pt-4">
-        <GeneSplitterForm defaultCodingSequence={defaultCodingSequence} />
-      </div>
+    <div className="pt-4">
+      <GeneSplitterForm defaultCodingSequence={defaultCodingSequence} />
     </div>
   )
 }
