@@ -1,6 +1,7 @@
 import { Tilt_Warp } from 'next/font/google'
 import cx from 'classnames'
 import Link from 'next/link'
+import Image from 'next/image'
 
 const tiltWarp = Tilt_Warp({
   subsets: ['latin'],
@@ -9,7 +10,13 @@ const tiltWarp = Tilt_Warp({
 export default function Header() {
   return (
     <header className="w-full">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center">
+        <Image
+          src="/logo.svg"
+          alt="RNA End-joining Logo"
+          width={96}
+          height={96}
+        />
         <Link href="/">
           <div>
             <h1
