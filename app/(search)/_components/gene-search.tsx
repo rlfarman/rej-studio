@@ -19,11 +19,11 @@ const getMatch = (gene: Gene, query: string) => {
 }
 
 interface GeneSearchProperties {
-  defaultGene?: Gene
+  defaultGene: Gene | ''
 }
 
 export default function GeneSearch({ defaultGene }: GeneSearchProperties) {
-  const [selected, setSelected] = useState<Gene | undefined>(defaultGene)
+  const [selected, setSelected] = useState<Gene | ''>(defaultGene ?? '')
   const [query, setQuery] = useState('')
   const router = useRouter()
 
@@ -42,9 +42,9 @@ export default function GeneSearch({ defaultGene }: GeneSearchProperties) {
     <Combobox value={selected} onChange={handleChange}>
       {({ open }) => (
         <div className="relative">
-          <div className="relative inline-block cursor-default overflow-hidden pt-2">
+          <div className="relative mt-2 inline-block cursor-default overflow-hidden">
             <Combobox.Input
-              className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
+              className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-3 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
               displayValue={(gene: Gene) =>
                 query !== '' ? query : gene.symbol
               }
@@ -63,9 +63,9 @@ export default function GeneSearch({ defaultGene }: GeneSearchProperties) {
                 }
               }}
             />
-            <Combobox.Button className="absolute inset-y-0 right-0 flex items-center pr-2">
+            <Combobox.Button className="absolute inset-y-0 right-0 top-0 flex items-center pr-2">
               <ChevronUpDownIcon
-                className="mt-1.5 h-4 w-4 text-black"
+                className="dark: h-4 w-4 text-gray-500 dark:text-gray-400"
                 aria-hidden="true"
               />
             </Combobox.Button>
