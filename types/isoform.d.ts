@@ -12,9 +12,7 @@ interface Isoform {
   ENST: HumanENST | MouseENST
   length: number
   packagability: number
-  species: Species
+  species: Species[Human] | Species[Mouse]
   codingSequence?: string
   proteinSequence?: string
 }
-
-Isoform
