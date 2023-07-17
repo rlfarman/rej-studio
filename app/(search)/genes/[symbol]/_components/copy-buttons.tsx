@@ -19,7 +19,7 @@ function CopyButton({ children }: CopyButtonProperties) {
         data-tooltip-content="Copied!"
         data-tooltip-place="right"
         type="button"
-        className="group mt-1 flex items-center rounded-lg text-center text-sm hover:underline "
+        className="group flex items-center rounded-lg text-center text-sm hover:underline "
         onClick={handleClick}
       >
         <span className="inline-block max-w-[12rem] select-all truncate">
