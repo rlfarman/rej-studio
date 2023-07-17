@@ -67,7 +67,7 @@ function NameInput() {
     <div>
       <label
         htmlFor="name"
-        className="mb-2 block text-sm font-medium text-gray-900 dark:text-white"
+        className="mb-2 block text-sm font-medium text-neutral-900 dark:text-white"
       >
         Enter a name for your custom coding sequence
       </label>
@@ -76,7 +76,7 @@ function NameInput() {
         id="name"
         aria-invalid={errors.name ? 'true' : 'false'}
         {...register('name')}
-        className="block w-full max-w-xl rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-sky-500 focus:ring-sky-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-sky-500 dark:focus:ring-sky-500"
+        className="block w-full max-w-xl rounded-lg border border-neutral-300 bg-neutral-50 p-2.5 text-sm text-neutral-900 focus:border-sky-500 focus:ring-sky-500 dark:border-neutral-600 dark:bg-neutral-700 dark:text-white dark:placeholder-neutral-400 dark:focus:border-sky-500 dark:focus:ring-sky-500"
         placeholder="ABC123..."
       />
       {typeof errors.name?.message === 'string' && (
@@ -100,7 +100,7 @@ function CodingSequenceInput() {
     <div>
       <label
         htmlFor="codingSequence"
-        className="mb-2 block text-sm font-medium text-gray-900 dark:text-white"
+        className="mb-2 block text-sm font-medium text-neutral-900 dark:text-white"
       >
         Enter your custom coding sequence
       </label>
@@ -109,7 +109,7 @@ function CodingSequenceInput() {
         id="codingSequence"
         aria-invalid={errors.codingSequence ? 'true' : 'false'}
         {...register('codingSequence')}
-        className="block w-full max-w-xl rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-sky-500 focus:ring-sky-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-sky-500 dark:focus:ring-sky-500"
+        className="block w-full max-w-xl rounded-lg border border-neutral-300 bg-neutral-50 p-2.5 text-sm text-neutral-900 focus:border-sky-500 focus:ring-sky-500 dark:border-neutral-600 dark:bg-neutral-700 dark:text-white dark:placeholder-neutral-400 dark:focus:border-sky-500 dark:focus:ring-sky-500"
         placeholder="ATGATTACA..."
       />
       {typeof errors.codingSequence?.message === 'string' && (
@@ -130,14 +130,14 @@ function SpeciesSelect() {
     <div>
       <label
         htmlFor="species"
-        className="mb-2 block text-sm text-gray-900 dark:text-white"
+        className="mb-2 block text-sm text-neutral-900 dark:text-white"
       >
         Species
       </label>
       <select
         id="species"
         {...register('species')}
-        className="block rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-sky-500 focus:ring-sky-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-sky-500 dark:focus:ring-sky-500"
+        className="block rounded-lg border border-neutral-300 bg-neutral-50 p-2.5 text-sm text-neutral-900 focus:border-sky-500 focus:ring-sky-500 dark:border-neutral-600 dark:bg-neutral-700 dark:text-white dark:placeholder-neutral-400 dark:focus:border-sky-500 dark:focus:ring-sky-500"
       >
         <option value={SpeciesOptions['All']}>{SpeciesOptions['All']}</option>
         <option value={SpeciesOptions['Human']}>
@@ -254,7 +254,7 @@ export default function GeneSplitterForm({
       <form onSubmit={methods.handleSubmit(handleSubmitForm)}>
         <div className="flex flex-col gap-4">
           <Image
-            src="/images/omg.png"
+            src="/images/example-diagram.png"
             alt="A diagram showing how the different options of the form affect the result of RNA end-joining"
             width={800}
             height={176}

@@ -44,7 +44,7 @@ export default function GeneSearch({ defaultGene }: GeneSearchProperties) {
         <div className="relative">
           <div className="relative mt-2 inline-block cursor-default overflow-hidden">
             <Combobox.Input
-              className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-3 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
+              className="block w-full rounded-lg border border-neutral-300 bg-neutral-50 p-3 text-sm text-neutral-900 dark:border-neutral-600 dark:bg-neutral-700 dark:text-white dark:placeholder-neutral-400"
               displayValue={(gene: Gene) =>
                 query !== '' ? query : gene.symbol
               }
@@ -65,7 +65,7 @@ export default function GeneSearch({ defaultGene }: GeneSearchProperties) {
             />
             <Combobox.Button className="absolute inset-y-0 right-0 top-0 flex items-center pr-2">
               <ChevronUpDownIcon
-                className="dark: h-4 w-4 text-gray-500 dark:text-gray-400"
+                className="dark: h-4 w-4 text-neutral-500 dark:text-neutral-400"
                 aria-hidden="true"
               />
             </Combobox.Button>
@@ -76,9 +76,9 @@ export default function GeneSearch({ defaultGene }: GeneSearchProperties) {
             leaveFrom="opacity-100"
             leaveTo="opacity-0"
           >
-            <Combobox.Options className="absolute z-10 mt-1 max-h-96 w-full max-w-sm divide-y divide-gray-100 overflow-auto rounded-lg bg-white py-2 shadow dark:bg-gray-700">
+            <Combobox.Options className="absolute z-10 mt-1 max-h-96 w-full max-w-sm divide-y divide-neutral-100 overflow-auto rounded-lg bg-white py-2 shadow dark:bg-neutral-700">
               {filteredGenes.length === 0 && query !== '' ? (
-                <div className="relative cursor-default select-none px-4 py-2 text-gray-700">
+                <div className="relative cursor-default select-none px-4 py-2 text-neutral-700">
                   Nothing found.
                 </div>
               ) : (
@@ -103,7 +103,7 @@ export default function GeneSearch({ defaultGene }: GeneSearchProperties) {
                             {gene.symbol}
                           </span>
                           <span
-                            className={`block truncate text-sm text-gray-500 dark:text-gray-300 ${
+                            className={`block truncate text-sm text-neutral-500 dark:text-neutral-300 ${
                               selected ? 'font-bold' : 'font-normal'
                             }`}
                           >
@@ -114,7 +114,7 @@ export default function GeneSearch({ defaultGene }: GeneSearchProperties) {
                     </Combobox.Option>
                   ))}
                   {filteredGenes.length > 100 && (
-                    <div className="relative cursor-default select-none bg-gray-50 px-4 py-2 text-gray-700 dark:bg-gray-700 dark:text-white">
+                    <div className="relative cursor-default select-none bg-neutral-50 px-4 py-2 text-neutral-700 dark:bg-neutral-700 dark:text-white">
                       Refine your search to show more results
                     </div>
                   )}

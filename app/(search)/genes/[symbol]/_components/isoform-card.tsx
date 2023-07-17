@@ -14,12 +14,12 @@ export default function IsoformCard({
   return (
     <div
       key={isoform.ENST}
-      className="block rounded-lg border border-gray-200 bg-white px-6 pb-4 pt-6 shadow  dark:border-gray-700 dark:bg-gray-800"
+      className="block rounded-lg border border-neutral-200 bg-white px-6 pb-4 pt-6 shadow  dark:border-neutral-700 dark:bg-neutral-800"
     >
       <h2 className="text-lg font-semibold">{isoform.ENST}</h2>
       <CopyButtons isoform={isoform} />
       <table className="mt-2 w-full max-w-xl table-auto text-left">
-        <thead className="text-sm text-gray-500 dark:text-gray-400">
+        <thead className="text-sm text-neutral-500 dark:text-neutral-400">
           <tr>
             <td scope="col" className="break-words">
               Length (bp)

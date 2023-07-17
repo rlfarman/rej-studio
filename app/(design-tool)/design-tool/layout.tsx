@@ -16,7 +16,7 @@ function DesignToolLayout({ children }: DesignToolLayoutProperties) {
           search by gene or Ensemble Transcript ID (ENST)
         </Link>
       </span>
-      <hr className="my-8 h-px border-0 bg-gray-300 dark:bg-gray-700" />
+      <hr className="my-8 h-px border-0 bg-neutral-300 dark:bg-neutral-700" />
       {children}
     </div>
   )

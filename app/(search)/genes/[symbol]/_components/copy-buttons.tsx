@@ -30,7 +30,7 @@ function CopyButton({ children }: CopyButtonProperties) {
       <Tooltip
         noArrow
         id="my-tooltip"
-        className="!rounded-lg !bg-transparent !px-2 !py-1 !font-normal !text-gray-400 dark:!bg-gray-800 dark:!text-white"
+        className="!rounded-lg !bg-transparent !px-2 !py-1 !font-normal !text-neutral-400 dark:!bg-neutral-800 dark:!text-white"
         openOnClick
         closeOnScroll
         closeOnEsc
@@ -42,13 +42,13 @@ function CopyButton({ children }: CopyButtonProperties) {
 export default function CopyButtons({ isoform }: { isoform: Isoform }) {
   return (
     <div>
-      <span className="text-sm text-gray-500 dark:text-gray-400">
+      <span className="text-sm text-neutral-500 dark:text-neutral-400">
         Coding sequence
       </span>
       {Boolean(isoform.codingSequence) && (
         <CopyButton>{`${isoform.codingSequence}`}</CopyButton>
       )}
-      <span className="text-sm text-gray-500 dark:text-gray-400">
+      <span className="text-sm text-neutral-500 dark:text-neutral-400">
         Protein sequence
       </span>
       {Boolean(isoform.proteinSequence) && (
