@@ -6,14 +6,18 @@ import { yupResolver } from '@hookform/resolvers/yup'
 import downloadZip from '@/design-tool/lib/download-zip'
 import Checkbox from '@/components/checkbox'
 import Button from '@/components/button'
+import { SpeciesOptions } from '@/design-tool/types/species-options'
 
 interface GeneSplitterFormProperties {
   defaultCodingSequence?: string
+  defaultName?: string
+  defaultSpecies?: SpeciesOptions
 }
 
 interface FormValues {
+  name: string
   codingSequence: string
-  species: 'none' | 'homoSapiens' | 'musMusculus'
+  species: SpeciesOptions
   removeCrypticSpliceSites: boolean
   induceOptimalSpliceSites: boolean
   '5PrimeStimulatoryIntron': boolean
@@ -26,16 +30,26 @@ const validationSchema = object().shape({
   codingSequence: string()
     .required('Coding sequence is required.')
     .matches(
-      /^[ACGTacgt]+$/,
-      'Invalid coding sequence. Must contain only A, C, G, or T.'
+      /^[ACGTUacgtu]+$/,
+      'Invalid coding sequence. Must contain only A, C, G, T, or U.'
     )
     .test(
       'is-multiple-of-three',
       'Invalid coding sequence. Must be a multiple of 3.',
       (value) => value.length % 3 === 0
-    )
-    .default(''),
-  species: string().oneOf(['none', 'homoSapiens', 'musMusculus']),
+    ),
+  name: string()
+    .required('A name is required.')
+    .test(
+      'len',
+      'Must be less than 250 characters',
+      (val) => val.length <= 250
+    ),
+  species: string().oneOf([
+    SpeciesOptions.All,
+    SpeciesOptions.Human,
+    SpeciesOptions.Mouse,
+  ]),
   removeCrypticSpliceSites: boolean().default(true),
   induceOptimalSpliceSites: boolean().default(true),
   '5PrimeStimulatoryIntron': boolean().default(true),
@@ -43,6 +57,39 @@ const validationSchema = object().shape({
   '3PrimeStimulatoryIntron': boolean().default(true),
   '3PrimePFSWithNMD': boolean().default(true),
 })
+
+function NameInput() {
+  const {
+    register,
+    formState: { errors },
+  } = useFormContext<FormValues>()
+  return (
+    <div>
+      <label
+        htmlFor="name"
+        className="mb-2 block text-sm font-medium text-gray-900 dark:text-white"
+      >
+        Enter a name for your custom coding sequence
+      </label>
+      <input
+        type="text"
+        id="name"
+        aria-invalid={errors.name ? 'true' : 'false'}
+        {...register('name')}
+        className="block w-full max-w-xl rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-sky-500 focus:ring-sky-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-sky-500 dark:focus:ring-sky-500"
+        placeholder="ABC123..."
+      />
+      {typeof errors.name?.message === 'string' && (
+        <span
+          role="alert"
+          className="mt-2 text-sm text-red-600 dark:text-red-500"
+        >
+          {errors.name.message}
+        </span>
+      )}
+    </div>
+  )
+}
 
 function CodingSequenceInput() {
   const {
@@ -55,7 +102,7 @@ function CodingSequenceInput() {
         htmlFor="codingSequence"
         className="mb-2 block text-sm font-medium text-gray-900 dark:text-white"
       >
-        Enter your own coding sequence
+        Enter your custom coding sequence
       </label>
       <input
         type="text"
@@ -83,7 +130,7 @@ function SpeciesSelect() {
     <div>
       <label
         htmlFor="species"
-        className="mb-2 block text-sm font-medium text-gray-900 dark:text-white"
+        className="mb-2 block text-sm text-gray-900 dark:text-white"
       >
         Species
       </label>
@@ -92,11 +139,25 @@ function SpeciesSelect() {
         {...register('species')}
         className="block rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-sky-500 focus:ring-sky-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-sky-500 dark:focus:ring-sky-500"
       >
-        <option value="none">None</option>
-        <option value="homoSapiens">Homo sapiens</option>
-        <option value="musMusculus">Mus musculus</option>
+        <option value={SpeciesOptions['All']}>{SpeciesOptions['All']}</option>
+        <option value={SpeciesOptions['Human']}>
+          {SpeciesOptions['Human']}
+        </option>
+        <option value={SpeciesOptions['Mouse']}>
+          {SpeciesOptions['Mouse']}
+        </option>
       </select>
     </div>
+  )
+}
+
+function CustomizationOptions() {
+  return (
+    <>
+      <span>Customize your sequence</span>
+      <NameInput />
+      <CodingSequenceInput />
+    </>
   )
 }
 
@@ -168,12 +229,16 @@ function SubmitButton() {
 
 export default function GeneSplitterForm({
   defaultCodingSequence,
+  defaultName,
+  defaultSpecies,
 }: GeneSplitterFormProperties) {
   const methods = useForm<FormValues>({
     resolver: yupResolver(validationSchema),
     defaultValues: {
       ...validationSchema.getDefault(),
-      codingSequence: defaultCodingSequence,
+      codingSequence: defaultCodingSequence ?? '',
+      name: defaultName ?? '',
+      species: defaultSpecies ?? SpeciesOptions.All,
     },
   })
 
@@ -194,7 +259,7 @@ export default function GeneSplitterForm({
             width={800}
             height={176}
           />
-          <CodingSequenceInput />
+          <CustomizationOptions />
           <CodonOptimizationOptions />
           <FiveFragmentOptions />
           <ThreeFragmentOptions />

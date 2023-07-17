@@ -18,7 +18,7 @@ export default function GeneSearchLayout({
           href="/design-tool"
           className="font-medium text-sky-600 hover:underline dark:text-sky-500"
         >
-          provide your own
+          customize your own
         </Link>
       </p>
       {children}

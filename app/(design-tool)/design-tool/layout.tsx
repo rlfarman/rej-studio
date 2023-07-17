@@ -1,4 +1,3 @@
-import GeneSplitterForm from '@/design-tool/components/gene-splitter-form'
 import Link from 'next/link'
 
 interface DesignToolLayoutProperties {

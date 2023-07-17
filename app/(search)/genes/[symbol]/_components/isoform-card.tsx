@@ -4,11 +4,11 @@ import Link from 'next/link'
 
 interface IsoformCardProperties {
   isoform: Isoform
-  geneSymbol: string
+  symbol: string
 }
 
 export default function IsoformCard({
-  geneSymbol,
+  symbol,
   isoform,
 }: IsoformCardProperties) {
   return (
@@ -46,16 +46,16 @@ export default function IsoformCard({
       </table>
       <div className="flex flex-col gap-2 pt-4 md:flex-row md:items-center md:gap-4">
         <Button
-          href={`/data/precomputed/REJ_${geneSymbol}_${isoform.ENST}.zip`}
+          href={`/data/precomputed/REJ_${symbol}_${isoform.ENST}.zip`}
           download
         >
           Download predesigned sequences
         </Button>
         <Link
-          href={`/design-tool/${isoform.ENST}`}
+          href={`/design-tool/${symbol}_${isoform.ENST}`}
           className="block font-medium text-sky-600 hover:underline dark:text-sky-500"
         >
-          Open in design tool
+          Customize with design tool
         </Link>
       </div>
     </div>

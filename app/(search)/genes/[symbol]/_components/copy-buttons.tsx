@@ -19,10 +19,10 @@ function CopyButton({ children }: CopyButtonProperties) {
         data-tooltip-content="Copied!"
         data-tooltip-place="right"
         type="button"
-        className="group flex items-center rounded-lg text-center text-sm hover:underline "
+        className="group flex items-center rounded-lg text-center text-sm hover:underline"
         onClick={handleClick}
       >
-        <span className="inline-block max-w-[12rem] select-all truncate">
+        <span className="inline-block max-w-[12rem] select-all truncate font-medium">
           {children}
         </span>
         <ClipboardIcon className="-mr-1 ml-1 h-3.5 w-3.5 opacity-0 transition-opacity duration-100 group-hover:visible group-hover:opacity-100" />
@@ -30,7 +30,7 @@ function CopyButton({ children }: CopyButtonProperties) {
       <Tooltip
         noArrow
         id="my-tooltip"
-        className="!rounded-lg !bg-transparent !px-2 !py-1 !text-gray-400 dark:!bg-gray-800 dark:!text-white"
+        className="!rounded-lg !bg-transparent !px-2 !py-1 !font-normal !text-gray-400 dark:!bg-gray-800 dark:!text-white"
         openOnClick
         closeOnScroll
         closeOnEsc

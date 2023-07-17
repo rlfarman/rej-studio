@@ -11,7 +11,7 @@ export default function IsoformList({ gene }: IsoformListProperties) {
         <IsoformCard
           key={isoform.ENST}
           isoform={isoform}
-          geneSymbol={gene.symbol}
+          symbol={gene.symbol}
         />
       ))}
     </div>

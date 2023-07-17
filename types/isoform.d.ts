@@ -1,6 +1,6 @@
 enum Species {
-  Human = 'Human',
-  Mouse = 'Mouse',
+  Human,
+  Mouse,
 }
 
 type HumanENST = `ENST${number}`
