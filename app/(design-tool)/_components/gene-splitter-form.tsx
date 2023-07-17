@@ -3,8 +3,8 @@ import { FormProvider, useForm, useFormContext } from 'react-hook-form'
 import { boolean, object, string } from 'yup'
 import Image from 'next/image'
 import { yupResolver } from '@hookform/resolvers/yup'
+import downloadZip from '@/design-tool/lib/download-zip'
 import Checkbox from '@/components/checkbox'
-import downloadZip from '@/lib/downloadFile'
 import Button from '@/components/button'
 
 interface GeneSplitterFormProperties {

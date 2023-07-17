@@ -21,7 +21,9 @@
     ],
     "paths": {
       "@/*": ["./app/_*"],
-      "@/public/*": ["./public/*"]
+      "@/public/*": ["./public/*"],
+      "@/design-tool/*": ["./app/(design-tool)/_*"],
+      "@/search/*": ["./app/(search)/_*"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
