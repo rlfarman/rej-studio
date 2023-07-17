@@ -1,5 +1,3 @@
-import GeneSearch from './_components/gene-search'
-import genes from '@/public/data/genes.json'
 import Link from 'next/link'
 
 interface GeneSearchLayoutProperties {
@@ -11,9 +9,7 @@ interface GeneSearchLayoutProperties {
 
 export default function GeneSearchLayout({
   children,
-  params: { symbol },
 }: GeneSearchLayoutProperties) {
-  const defaultGene = (genes as Gene[]).find((gene) => gene.symbol === symbol)
   return (
     <section className="w-full">
       <p>
@@ -25,7 +21,6 @@ export default function GeneSearchLayout({
           provide your own
         </Link>
       </p>
-      <GeneSearch defaultGene={defaultGene} />
       {children}
     </section>
   )
