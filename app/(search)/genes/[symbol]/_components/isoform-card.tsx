@@ -39,7 +39,7 @@ export default function IsoformCard({
           <tr key={isoform.ENST}>
             <td>{isoform.length}</td>
             <td>{isoform.length / 3}</td>
-            <td> {isoform.species}</td>
+            <td>{isoform.species}</td>
             <td>{isoform.packagability}</td>
           </tr>
         </tbody>

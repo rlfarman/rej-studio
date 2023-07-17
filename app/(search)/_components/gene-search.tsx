@@ -93,7 +93,7 @@ export default function GeneSearch({ defaultGene }: GeneSearchProperties) {
                       }
                       value={gene}
                     >
-                      {({ selected, active }) => (
+                      {({ selected }) => (
                         <>
                           <span
                             className={`block truncate ${
