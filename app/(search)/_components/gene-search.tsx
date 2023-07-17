@@ -19,7 +19,7 @@ const getMatch = (gene: Gene, query: string) => {
 }
 
 interface GeneSearchProperties {
-  defaultGene: Gene | ''
+  defaultGene?: Gene
 }
 
 export default function GeneSearch({ defaultGene }: GeneSearchProperties) {
