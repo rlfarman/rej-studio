@@ -253,13 +253,13 @@ export default function GeneSplitterForm({
     <FormProvider {...methods}>
       <form onSubmit={methods.handleSubmit(handleSubmitForm)}>
         <div className="flex flex-col gap-4">
+          <CustomizationOptions />
           <Image
             src="/images/example-diagram.png"
             alt="A diagram showing how the different options of the form affect the result of RNA end-joining"
             width={800}
             height={176}
           />
-          <CustomizationOptions />
           <CodonOptimizationOptions />
           <FiveFragmentOptions />
           <ThreeFragmentOptions />
