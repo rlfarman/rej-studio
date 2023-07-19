@@ -11,7 +11,7 @@ function DesignToolLayout({ children }: DesignToolLayoutProperties) {
         Design a custom sequence, or{' '}
         <Link
           href="/"
-          className="font-medium text-sky-600 hover:underline dark:text-sky-500"
+          className="font-medium text-sky-600 underline-offset-2 hover:underline dark:text-sky-500"
         >
           search by gene or Ensemble Transcript ID (ENST)
         </Link>

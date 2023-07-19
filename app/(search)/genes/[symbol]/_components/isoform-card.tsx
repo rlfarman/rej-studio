@@ -53,7 +53,7 @@ export default function IsoformCard({
         </Button>
         <Link
           href={`/design-tool/${symbol}_${isoform.ENST}`}
-          className="block font-medium text-sky-600 hover:underline dark:text-sky-500"
+          className="block font-medium text-sky-600 underline-offset-2 underline-offset-2 hover:underline dark:text-sky-500"
         >
           Customize with design tool
         </Link>

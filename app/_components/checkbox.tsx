@@ -26,7 +26,7 @@ function Checkbox(
           onChange={onChange}
           onBlur={onBlur}
           ref={ref}
-          className="h-4 w-4 rounded border-neutral-300 bg-neutral-100 text-sky-600 focus:ring-2 focus:ring-sky-500 dark:border-neutral-600 dark:bg-neutral-700 dark:ring-offset-neutral-800 dark:focus:ring-sky-600"
+          className="h-4 w-4 rounded border-neutral-300 bg-neutral-100 text-sky-600 dark:border-neutral-600 dark:bg-neutral-700"
         />
       </div>
       <div className="pl-2 text-sm">

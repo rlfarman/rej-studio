@@ -154,7 +154,7 @@ function SpeciesSelect() {
 function CustomizationOptions() {
   return (
     <>
-      <span>Customize your sequence</span>
+      <h3 className="font-semibold">Customize your sequence</h3>
       <NameInput />
       <CodingSequenceInput />
     </>
@@ -165,7 +165,7 @@ function CodonOptimizationOptions() {
   const { register } = useFormContext<FormValues>()
   return (
     <>
-      <span>Codon Optimization</span>
+      <h3 className="font-semibold">Codon Optimization</h3>
       <SpeciesSelect />
       <Checkbox
         id="removeCrypticSpliceSites"
@@ -185,7 +185,7 @@ function ThreeFragmentOptions() {
   const { register } = useFormContext<FormValues>()
   return (
     <>
-      <span>3&apos; Fragment options</span>
+      <h3 className="font-semibold">3&apos; Fragment options</h3>
       <Checkbox
         id="3PrimeStimulatoryIntron"
         label="3' Stimulatory Intron"
@@ -204,7 +204,7 @@ function FiveFragmentOptions() {
   const { register } = useFormContext<FormValues>()
   return (
     <>
-      <span>5&apos; Fragment options</span>
+      <h3 className="font-semibold">5&apos; Fragment options</h3>
       <Checkbox
         id="5PrimeStimulatoryIntron"
         label="5' Stimulatory Intron"
@@ -253,13 +253,13 @@ export default function GeneSplitterForm({
     <FormProvider {...methods}>
       <form onSubmit={methods.handleSubmit(handleSubmitForm)}>
         <div className="flex flex-col gap-4">
+          <CustomizationOptions />
           <Image
             src="/images/example-diagram.png"
             alt="A diagram showing how the different options of the form affect the result of RNA end-joining"
             width={800}
             height={176}
           />
-          <CustomizationOptions />
           <CodonOptimizationOptions />
           <FiveFragmentOptions />
           <ThreeFragmentOptions />
