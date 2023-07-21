@@ -66,7 +66,7 @@ export default async function GeneSymbolPage({
       </dl>
       {gene.diseaseAssociations?.length ? (
         <>
-          <div className="text-sm">Diseases Associated:</div>
+          <div className="text-sm">Associated dieseases:</div>
           <ul className="list-inside list-disc space-y-1 text-sm">
             {gene.diseaseAssociations?.map((disease) => (
               <li key={disease}>{disease}</li>
