@@ -9,14 +9,16 @@ const tiltWarp = Tilt_Warp({
 
 export default function Header() {
   return (
-    <header className="w-full">
+    <header className="mx-auto max-w-screen-md pt-4">
       <div className="flex items-center">
-        <Image
-          src="/logo.svg"
-          alt="RNA End-joining Logo"
-          width={96}
-          height={96}
-        />
+        <div className="relative h-16 w-16 sm:h-24 sm:w-24">
+          <Image
+            src="/logo.svg"
+            alt="RNA End-joining Logo"
+            fill
+            sizes="(max-width: 768px) 6rem, 4rem"
+          />
+        </div>
         <Link href="/">
           <div>
             <h1
