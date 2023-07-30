@@ -46,7 +46,7 @@ const validationSchema = object().shape({
       (val) => val.length <= 250
     ),
   species: string().oneOf([
-    SpeciesOptions.All,
+    SpeciesOptions.None,
     SpeciesOptions.Human,
     SpeciesOptions.Mouse,
   ]),
@@ -139,7 +139,7 @@ function SpeciesSelect() {
         {...register('species')}
         className="block rounded-lg border border-neutral-300 bg-neutral-50 p-2.5 text-sm text-neutral-900 focus:border-sky-500 focus:ring-sky-500 dark:border-neutral-600 dark:bg-neutral-700 dark:text-white dark:placeholder-neutral-400 dark:focus:border-sky-500 dark:focus:ring-sky-500"
       >
-        <option value={SpeciesOptions['All']}>{SpeciesOptions['All']}</option>
+        <option value={SpeciesOptions['None']}>{SpeciesOptions['None']}</option>
         <option value={SpeciesOptions['Human']}>
           {SpeciesOptions['Human']}
         </option>
@@ -245,7 +245,7 @@ export default function GeneSplitterForm({
       ...validationSchema.getDefault(),
       codingSequence: defaultCodingSequence ?? '',
       name: defaultName ?? '',
-      species: defaultSpecies ?? SpeciesOptions.All,
+      species: defaultSpecies ?? SpeciesOptions.None,
     },
   })
 

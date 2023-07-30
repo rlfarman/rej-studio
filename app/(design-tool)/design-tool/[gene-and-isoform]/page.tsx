@@ -29,7 +29,7 @@ function getSpeciesFromEnst(enst: string): SpeciesOptions {
   if (enst.startsWith('ENSMUST')) {
     return SpeciesOptions.Mouse
   }
-  return SpeciesOptions.All
+  return SpeciesOptions.None
 }
 
 export default async function DesignToolPage({

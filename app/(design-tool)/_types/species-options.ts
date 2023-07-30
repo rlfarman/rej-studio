@@ -1,5 +1,5 @@
 export enum SpeciesOptions {
-  All = 'All',
+  None = 'None',
   Human = 'Human',
   Mouse = 'Mouse',
 }
