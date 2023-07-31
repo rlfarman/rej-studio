@@ -18,14 +18,16 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head />
-      <body className={openSans.className}>
-        <div className="container mx-auto flex min-h-screen max-w-screen-md flex-col justify-between px-4 py-4 sm:px-12">
-          <div>
-            <Header />
-            <div className="w-full pt-4">{children}</div>
+      <body
+        className={`${openSans.className} mx-auto flex min-h-screen flex-col justify-between pb-4`}
+      >
+        <div>
+          <Header />
+          <div className="container mx-auto mt-4 w-full max-w-screen-md flex-col px-4">
+            {children}
           </div>
-          <Footer />
         </div>
+        <Footer />
       </body>
     </html>
   )

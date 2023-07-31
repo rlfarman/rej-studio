@@ -44,7 +44,7 @@ export default function IsoformCard({
           </tr>
         </tbody>
       </table>
-      <div className="flex flex-col gap-2 pt-4 md:flex-row md:items-center md:gap-4">
+      <div className="mt-4 flex flex-col gap-2 md:flex-row md:items-center md:gap-4">
         <Button
           href={`/data/precomputed/REJ_${symbol}_${isoform.ENST}.zip`}
           download
@@ -53,9 +53,9 @@ export default function IsoformCard({
         </Button>
         <Link
           href={`/design-tool/${symbol}_${isoform.ENST}`}
-          className="block font-medium text-sky-600 underline-offset-2 underline-offset-2 hover:underline dark:text-sky-500"
+          className="block font-medium text-sky-600  hover:underline dark:text-sky-500"
         >
-          Customize with design tool
+          Open with design tool
         </Link>
       </div>
     </div>

@@ -12,16 +12,13 @@ export default function GeneSearchLayout({
 }: GeneSearchLayoutProperties) {
   return (
     <section className="w-full">
-      <p>
-        Search for a sequence by gene or Ensemble Transcript ID (ENST), or{' '}
-        <Link
-          href="/design-tool"
-          className="font-medium text-sky-600 underline-offset-2 hover:underline dark:text-sky-500"
-        >
-          customize your own
-        </Link>
+      <h2 className="text-2xl font-bold">Find a known sequence</h2>
+      <p className="mt-2 max-w-prose text-lg text-gray-500 dark:text-gray-400">
+        You can find any known genetic sequence for humans and mice by searching
+        for the symbol of the gene (ex: OBSCN), the name of the gene (ex:
+        Obscurin), or an Ensembl Transcript ID (ENST, ex: ENST00000366704).
       </p>
-      {children}
+      <div className="mt-2">{children}</div>
     </section>
   )
 }

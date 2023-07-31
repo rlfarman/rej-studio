@@ -29,7 +29,7 @@ function getSpeciesFromEnst(enst: string): SpeciesOptions {
   if (enst.startsWith('ENSMUST')) {
     return SpeciesOptions.Mouse
   }
-  return SpeciesOptions.All
+  return SpeciesOptions.None
 }
 
 export default async function DesignToolPage({
@@ -39,7 +39,7 @@ export default async function DesignToolPage({
   const defaultCodingSequence = enst ? await getData(enst) : ''
   const defaultSpecies = getSpeciesFromEnst(enst)
   return (
-    <div className="pt-4">
+    <div className="mt-4">
       <GeneSplitterForm
         defaultName={symbol}
         defaultCodingSequence={defaultCodingSequence}

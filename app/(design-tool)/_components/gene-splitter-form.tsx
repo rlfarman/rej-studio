@@ -46,7 +46,7 @@ const validationSchema = object().shape({
       (val) => val.length <= 250
     ),
   species: string().oneOf([
-    SpeciesOptions.All,
+    SpeciesOptions.None,
     SpeciesOptions.Human,
     SpeciesOptions.Mouse,
   ]),
@@ -69,7 +69,7 @@ function NameInput() {
         htmlFor="name"
         className="mb-2 block text-sm font-medium text-neutral-900 dark:text-white"
       >
-        Enter a name for your custom coding sequence
+        Choose a name for your coding sequence
       </label>
       <input
         type="text"
@@ -102,7 +102,7 @@ function CodingSequenceInput() {
         htmlFor="codingSequence"
         className="mb-2 block text-sm font-medium text-neutral-900 dark:text-white"
       >
-        Enter your custom coding sequence
+        Enter your coding sequence
       </label>
       <input
         type="text"
@@ -127,10 +127,10 @@ function CodingSequenceInput() {
 function SpeciesSelect() {
   const { register } = useFormContext<FormValues>()
   return (
-    <div>
+    <div className="pb-2">
       <label
         htmlFor="species"
-        className="mb-2 block text-sm text-neutral-900 dark:text-white"
+        className="mb-1 block text-sm font-medium text-neutral-900 dark:text-white"
       >
         Species
       </label>
@@ -139,7 +139,7 @@ function SpeciesSelect() {
         {...register('species')}
         className="block rounded-lg border border-neutral-300 bg-neutral-50 p-2.5 text-sm text-neutral-900 focus:border-sky-500 focus:ring-sky-500 dark:border-neutral-600 dark:bg-neutral-700 dark:text-white dark:placeholder-neutral-400 dark:focus:border-sky-500 dark:focus:ring-sky-500"
       >
-        <option value={SpeciesOptions['All']}>{SpeciesOptions['All']}</option>
+        <option value={SpeciesOptions['None']}>{SpeciesOptions['None']}</option>
         <option value={SpeciesOptions['Human']}>
           {SpeciesOptions['Human']}
         </option>
@@ -153,72 +153,79 @@ function SpeciesSelect() {
 
 function CustomizationOptions() {
   return (
-    <>
-      <h3 className="font-semibold">Customize your sequence</h3>
-      <NameInput />
-      <CodingSequenceInput />
-    </>
+    <div className="mt-4">
+      <h3 className="pb-2 text-lg font-semibold">Customize your sequence</h3>
+      <div className="flex flex-col gap-2">
+        <NameInput />
+        <CodingSequenceInput />
+      </div>
+    </div>
   )
 }
 
 function CodonOptimizationOptions() {
   const { register } = useFormContext<FormValues>()
   return (
-    <>
-      <h3 className="font-semibold">Codon Optimization</h3>
+    <div className="mt-4">
+      <h3 className="pb-2 text-lg font-semibold">Codon Optimization</h3>
       <SpeciesSelect />
-      <Checkbox
-        id="removeCrypticSpliceSites"
-        label="Remove cryptic splice sites"
-        {...register('removeCrypticSpliceSites')}
-      />
-      <Checkbox
-        id="induceOptimalSpliceSites"
-        label="Induce optimal splice sites"
-        {...register('induceOptimalSpliceSites')}
-      />
-    </>
-  )
-}
-
-function ThreeFragmentOptions() {
-  const { register } = useFormContext<FormValues>()
-  return (
-    <>
-      <h3 className="font-semibold">3&apos; Fragment options</h3>
-      <Checkbox
-        id="3PrimeStimulatoryIntron"
-        label="3' Stimulatory Intron"
-        {...register('3PrimeStimulatoryIntron')}
-      />
-      <Checkbox
-        id="3PrimePFSWithNMD"
-        label="Protein Fragment Suppression with Nonsense Mediated Decay"
-        {...register('3PrimePFSWithNMD')}
-      />
-    </>
+      <div className="mt-1 flex flex-col gap-1">
+        <Checkbox
+          id="removeCrypticSpliceSites"
+          label="Remove cryptic splice sites"
+          {...register('removeCrypticSpliceSites')}
+        />
+        <Checkbox
+          id="induceOptimalSpliceSites"
+          label="Induce optimal splice sites"
+          {...register('induceOptimalSpliceSites')}
+        />
+      </div>
+    </div>
   )
 }
 
 function FiveFragmentOptions() {
   const { register } = useFormContext<FormValues>()
   return (
-    <>
-      <h3 className="font-semibold">5&apos; Fragment options</h3>
-      <Checkbox
-        id="5PrimeStimulatoryIntron"
-        label="5' Stimulatory Intron"
-        {...register('5PrimeStimulatoryIntron')}
-      />
-      <Checkbox
-        id="5PrimePFSWithNMD"
-        label="Protein Fragment Suppression with Nonstop Mediated Decay"
-        {...register('5PrimePFSWithNMD')}
-      />
-    </>
+    <div className="mt-4">
+      <h3 className="pb-2 text-lg font-semibold">5&apos; Fragment options</h3>
+      <div className="flex flex-col gap-1">
+        <Checkbox
+          id="5PrimeStimulatoryIntron"
+          label="5' Stimulatory Intron"
+          {...register('5PrimeStimulatoryIntron')}
+        />
+        <Checkbox
+          id="5PrimePFSWithNMD"
+          label="Protein Fragment Suppression with Nonstop Mediated Decay"
+          {...register('5PrimePFSWithNMD')}
+        />
+      </div>
+    </div>
   )
 }
 
+function ThreeFragmentOptions() {
+  const { register } = useFormContext<FormValues>()
+  return (
+    <div className="mt-4">
+      <h3 className="pb-2 text-lg font-semibold">3&apos; Fragment options</h3>
+      <div className="flex flex-col gap-1">
+        <Checkbox
+          id="3PrimeStimulatoryIntron"
+          label="3' Stimulatory Intron"
+          {...register('3PrimeStimulatoryIntron')}
+        />
+        <Checkbox
+          id="3PrimePFSWithNMD"
+          label="Protein Fragment Suppression with Nonsense Mediated Decay"
+          {...register('3PrimePFSWithNMD')}
+        />
+      </div>
+    </div>
+  )
+}
 function SubmitButton() {
   return (
     <Button type="submit" className="inline">
@@ -238,7 +245,7 @@ export default function GeneSplitterForm({
       ...validationSchema.getDefault(),
       codingSequence: defaultCodingSequence ?? '',
       name: defaultName ?? '',
-      species: defaultSpecies ?? SpeciesOptions.All,
+      species: defaultSpecies ?? SpeciesOptions.None,
     },
   })
 
@@ -252,18 +259,19 @@ export default function GeneSplitterForm({
   return (
     <FormProvider {...methods}>
       <form onSubmit={methods.handleSubmit(handleSubmitForm)}>
-        <div className="flex flex-col gap-4">
-          <CustomizationOptions />
+        <CustomizationOptions />
+        <div className="pt-8">
           <Image
             src="/images/example-diagram.png"
             alt="A diagram showing how the different options of the form affect the result of RNA end-joining"
-            width={800}
-            height={176}
+            width={827}
+            height={220}
+            quality={100}
           />
-          <CodonOptimizationOptions />
-          <FiveFragmentOptions />
-          <ThreeFragmentOptions />
         </div>
+        <CodonOptimizationOptions />
+        <FiveFragmentOptions />
+        <ThreeFragmentOptions />
         <div className="mt-4">
           <SubmitButton />
         </div>
