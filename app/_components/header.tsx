@@ -35,8 +35,8 @@ export default function Header() {
               Design Tool
             </span>
           </div>
-        </Link>
-      </div>
+        </div>
+      </Link>
     </header>
   )
 }

@@ -94,24 +94,14 @@ export default function GeneSearch({ defaultGene }: GeneSearchProperties) {
                       }
                       value={gene}
                     >
-                      {({ selected }) => (
-                        <>
-                          <span
-                            className={`block truncate ${
-                              selected ? 'font-bold' : 'font-normal'
-                            }`}
-                          >
-                            {gene.symbol}
-                          </span>
-                          <span
-                            className={`block truncate text-sm text-neutral-500 dark:text-neutral-300 ${
-                              selected ? 'font-bold' : 'font-normal'
-                            }`}
-                          >
-                            {gene.name}
-                          </span>
-                        </>
-                      )}
+                      <>
+                        <span className="block truncate font-medium">
+                          {gene.symbol}
+                        </span>
+                        <span className="block truncate text-sm text-neutral-500 dark:text-neutral-300">
+                          {gene.name}
+                        </span>
+                      </>
                     </Combobox.Option>
                   ))}
                   {filteredGenes.length > 100 && (
