@@ -56,7 +56,7 @@ export default async function GeneSymbolPage({
       <h1 className="text-xl">
         <strong>{gene.symbol}</strong>
       </h1>
-      <dl className="text-sm">
+      <dl className="mt-2 text-lg text-gray-500 dark:text-gray-400">
         <dt className="hidden">Gene name:</dt>
         <dd>{gene.name}</dd>
         <dt className="hidden">ENSG:</dt>
@@ -64,15 +64,16 @@ export default async function GeneSymbolPage({
         <dt className="hidden">Chromosome:</dt>
         <dd className="inline">Chromosome {gene.chromosome}</dd>
       </dl>
+
       {gene.diseaseAssociations?.length ? (
-        <>
-          <div className="text-sm">Diseases Associated:</div>
-          <ul className="list-inside list-disc space-y-1 text-sm">
+        <div className="text-lg text-gray-500 dark:text-gray-400">
+          <div>Diseases Associated</div>
+          <ul className="list-outside list-disc space-y-1 pl-4">
             {gene.diseaseAssociations?.map((disease) => (
               <li key={disease}>{disease}</li>
             ))}
           </ul>
-        </>
+        </div>
       ) : null}
       <IsoformList gene={gene} />
     </div>

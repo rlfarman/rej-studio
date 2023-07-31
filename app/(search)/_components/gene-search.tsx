@@ -41,9 +41,9 @@ export default function GeneSearch({ defaultGene }: GeneSearchProperties) {
   return (
     <Combobox value={selected} onChange={handleChange}>
       {({ open }) => (
-        <div className="relative">
+        <div className="relative mt-2">
           <Combobox.Label className="block">Search for a gene</Combobox.Label>
-          <div className="relative mt-2 inline-block cursor-default overflow-hidden">
+          <div className="relative inline-block cursor-default overflow-hidden">
             <Combobox.Input
               className="block w-full rounded-lg border border-neutral-300 bg-neutral-50 p-3 text-sm text-neutral-900 dark:border-neutral-600 dark:bg-neutral-700 dark:text-white dark:placeholder-neutral-400"
               displayValue={(gene: Gene) =>
