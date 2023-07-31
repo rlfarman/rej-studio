@@ -127,7 +127,7 @@ function CodingSequenceInput() {
 function SpeciesSelect() {
   const { register } = useFormContext<FormValues>()
   return (
-    <div className="pb-1">
+    <div className="pb-2">
       <label
         htmlFor="species"
         className="mb-1 block text-sm font-medium text-neutral-900 dark:text-white"
@@ -154,7 +154,7 @@ function SpeciesSelect() {
 function CustomizationOptions() {
   return (
     <div className="mt-4">
-      <h3 className="pb-1 text-lg font-semibold">Customize your sequence</h3>
+      <h3 className="pb-2 text-lg font-semibold">Customize your sequence</h3>
       <div className="flex flex-col gap-2">
         <NameInput />
         <CodingSequenceInput />
@@ -167,7 +167,7 @@ function CodonOptimizationOptions() {
   const { register } = useFormContext<FormValues>()
   return (
     <div className="mt-4">
-      <h3 className="pb-1 text-lg font-semibold">Codon Optimization</h3>
+      <h3 className="pb-2 text-lg font-semibold">Codon Optimization</h3>
       <SpeciesSelect />
       <div className="mt-1 flex flex-col gap-1">
         <Checkbox
@@ -189,7 +189,7 @@ function FiveFragmentOptions() {
   const { register } = useFormContext<FormValues>()
   return (
     <div className="mt-4">
-      <h3 className="pb-1 text-lg font-semibold">5&apos; Fragment options</h3>
+      <h3 className="pb-2 text-lg font-semibold">5&apos; Fragment options</h3>
       <div className="flex flex-col gap-1">
         <Checkbox
           id="5PrimeStimulatoryIntron"
@@ -210,7 +210,7 @@ function ThreeFragmentOptions() {
   const { register } = useFormContext<FormValues>()
   return (
     <div className="mt-4">
-      <h3 className="pb-1 text-lg font-semibold">3&apos; Fragment options</h3>
+      <h3 className="pb-2 text-lg font-semibold">3&apos; Fragment options</h3>
       <div className="flex flex-col gap-1">
         <Checkbox
           id="3PrimeStimulatoryIntron"
