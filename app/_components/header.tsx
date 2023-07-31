@@ -11,14 +11,16 @@ export default function Header() {
   return (
     <header className="mx-auto max-w-screen-md pt-4">
       <div className="flex items-center">
-        <div className="relative h-16 w-16 sm:h-24 sm:w-24">
-          <Image
-            src="/logo.svg"
-            alt="RNA End-joining Logo"
-            fill
-            sizes="(max-width: 768px) 6rem, 4rem"
-          />
-        </div>
+        <Link href="/">
+          <div className="relative h-16 w-16 sm:h-24 sm:w-24">
+            <Image
+              src="/logo.svg"
+              alt="RNA End-joining Logo"
+              fill
+              sizes="(max-width: 768px) 6rem, 4rem"
+            />
+          </div>
+        </Link>
         <Link href="/">
           <div>
             <h1
