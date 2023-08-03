@@ -53,10 +53,8 @@ export default async function GeneSymbolPage({
 
   return (
     <div>
-      <h1 className="text-xl">
-        <strong>{gene.symbol}</strong>
-      </h1>
-      <dl className="mt-2 text-lg text-gray-500 dark:text-gray-400">
+      <h1 className="text-xl font-bold">{gene.symbol}</h1>
+      <dl className="mt-1 text-lg text-gray-500 dark:text-gray-400">
         <dt className="hidden">Gene name:</dt>
         <dd>{gene.name}</dd>
         <dt className="hidden">ENSG:</dt>
@@ -75,6 +73,7 @@ export default async function GeneSymbolPage({
           </ul>
         </div>
       ) : null}
+      <h2 className="mt-4 text-lg font-bold">Isoforms</h2>
       <IsoformList gene={gene} />
     </div>
   )

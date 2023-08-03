@@ -6,7 +6,7 @@ interface IsoformListProperties {
 
 export default function IsoformList({ gene }: IsoformListProperties) {
   return (
-    <div className="flex flex-col gap-4 pt-6">
+    <div className="mt-2 flex flex-col gap-4">
       {gene.isoforms.map((isoform) => (
         <IsoformCard
           key={isoform.ENST}

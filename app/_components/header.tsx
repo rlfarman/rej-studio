@@ -23,14 +23,14 @@ export default function Header() {
         </Link>
         <Link href="/">
           <div>
-            <h1
+            <span
               className={cx(
-                'text-4xl text-emerald-500 dark:text-emerald-400 md:text-5xl',
+                'block text-4xl text-emerald-500 dark:text-emerald-400 md:text-5xl',
                 tiltWarp.className
               )}
             >
               RNA End-joining
-            </h1>
+            </span>
             <span className="text-2xl text-sky-500 dark:text-sky-400 md:text-3xl">
               Design Tool
             </span>
