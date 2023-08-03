@@ -9,7 +9,7 @@ export default function Footer() {
         >
           Ryan Hsu
         </a>{' '}
-        and{' '}
+        en and{' '}
         <a
           href="https://www.linkedin.com/in/rlfarman/"
           className="text-neutral-500 hover:underline dark:text-neutral-400"

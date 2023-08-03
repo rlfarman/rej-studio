@@ -54,7 +54,7 @@ export default async function GeneSymbolPage({
   return (
     <div>
       <h1 className="text-xl font-bold">{gene.symbol}</h1>
-      <dl className="mt-1 text-lg text-gray-500 dark:text-gray-400">
+      <dl className="mt-1 text-lg text-neutral-500 dark:text-neutral-400">
         <dt className="hidden">Gene name:</dt>
         <dd>{gene.name}</dd>
         <dt className="hidden">ENSG:</dt>
@@ -64,7 +64,7 @@ export default async function GeneSymbolPage({
       </dl>
 
       {gene.diseaseAssociations?.length ? (
-        <div className="text-lg text-gray-500 dark:text-gray-400">
+        <div className="text-lg text-neutral-500 dark:text-neutral-400">
           <div>Diseases Associated</div>
           <ul className="list-outside list-disc space-y-1 pl-4">
             {gene.diseaseAssociations?.map((disease) => (

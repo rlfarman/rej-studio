@@ -6,7 +6,7 @@ function DesignToolLayout({ children }: DesignToolLayoutProperties) {
   return (
     <div>
       <h2 className="text-2xl font-bold">Design a custom sequence</h2>
-      <p className="mt-2 max-w-prose text-lg text-gray-500 dark:text-gray-400">
+      <p className="mt-2 max-w-prose text-lg text-neutral-500 dark:text-neutral-400">
         Design your RNA end-joining sequences with options for codon
         optimization and fragment suppression and stimulatory introns for
         5&apos; and 3&apos; sequences.

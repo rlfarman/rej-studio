@@ -24,8 +24,10 @@ function Contributor({
         />
       </div>
       <h2 className="mt-4 text-xl font-semibold">{name}</h2>
-      <span className="text-gray-500 dark:text-gray-400">{title}</span>
-      <p className="mt-2 text-gray-500 dark:text-gray-400">{description}</p>
+      <span className="text-neutral-500 dark:text-neutral-400">{title}</span>
+      <p className="mt-2 text-neutral-500 dark:text-neutral-400">
+        {description}
+      </p>
     </li>
   )
 }
@@ -35,7 +37,7 @@ export default function AboutUsPage() {
     <div className="grid grid-cols-1 gap-y-16">
       <div>
         <h2 className="text-2xl font-bold">About us</h2>
-        <p className="mt-4 max-w-prose text-lg text-gray-500 dark:text-gray-400">
+        <p className="mt-4 max-w-prose text-lg text-neutral-500 dark:text-neutral-400">
           Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
           eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad
           minim veniam, quis nostrud exercitation ullamco laboris nisi ut

@@ -13,7 +13,7 @@ export default function GeneSearchLayout({
   return (
     <section className="w-full">
       <h2 className="text-2xl font-bold">Find a known sequence</h2>
-      <p className="mt-2 max-w-prose text-lg text-gray-500 dark:text-gray-400">
+      <p className="mt-2 max-w-prose text-lg text-neutral-500 dark:text-neutral-400">
         You can find any known genetic sequence for humans and mice by searching
         for the symbol of the gene (ex: OBSCN), the name of the gene (ex:
         Obscurin), or an Ensembl Transcript ID (ENST, ex: ENST00000366704).

@@ -260,7 +260,7 @@ export default function GeneSplitterForm({
     <FormProvider {...methods}>
       <form onSubmit={methods.handleSubmit(handleSubmitForm)}>
         <CustomizationOptions />
-        <div className="pt-8">
+        <div className="mt-8 p-2 dark:bg-neutral-200">
           <Image
             src="/images/example-diagram.png"
             alt="A diagram showing how the different options of the form affect the result of RNA end-joining"
