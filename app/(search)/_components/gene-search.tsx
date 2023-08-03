@@ -42,10 +42,12 @@ export default function GeneSearch({ defaultGene }: GeneSearchProperties) {
     <Combobox value={selected} onChange={handleChange}>
       {({ open }) => (
         <div className="relative mt-2">
-          <Combobox.Label className="block">Search for a gene</Combobox.Label>
-          <div className="relative inline-block cursor-default overflow-hidden">
+          <Combobox.Label className="block text-sm">
+            Search for a gene
+          </Combobox.Label>
+          <div className="relative mt-1 inline-block cursor-default overflow-hidden">
             <Combobox.Input
-              className="block w-full rounded-lg border border-neutral-300 bg-neutral-50 p-3 text-sm text-neutral-900 dark:border-neutral-600 dark:bg-neutral-700 dark:text-white dark:placeholder-neutral-400"
+              className="block w-full rounded-lg border border-neutral-300 bg-neutral-50 p-3 text-neutral-900 dark:border-neutral-600 dark:bg-neutral-700 dark:text-white dark:placeholder-neutral-400"
               displayValue={(gene: Gene) =>
                 query !== '' ? query : gene.symbol
               }
@@ -88,7 +90,7 @@ export default function GeneSearch({ defaultGene }: GeneSearchProperties) {
                     <Combobox.Option
                       key={gene.symbol}
                       className={({ active }) =>
-                        `relative w-full select-none px-4 py-2 text-sm ${
+                        `relative w-full select-none px-4 py-2 ${
                           active && 'bg-sky-50 dark:bg-sky-800'
                         }`
                       }

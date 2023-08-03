@@ -17,7 +17,7 @@ function Checkbox(
 ) {
   return (
     <div className="flex">
-      <div className="flex h-5 items-center">
+      <div className="flex h-6 items-center">
         <input
           id={id}
           aria-describedby={`${id}-helper-text`}
@@ -29,7 +29,7 @@ function Checkbox(
           className="h-4 w-4 rounded border-neutral-300 bg-neutral-100 text-sky-600 dark:border-neutral-600 dark:bg-neutral-700"
         />
       </div>
-      <div className="pl-2 text-sm">
+      <div className="pl-2">
         <label
           htmlFor={id}
           className="font-medium text-neutral-900 dark:text-neutral-300"
@@ -39,7 +39,7 @@ function Checkbox(
         {helperText && (
           <span
             id={`${id}-helper-text`}
-            className="text-xs font-normal text-neutral-500 dark:text-neutral-300"
+            className="text-sm font-normal text-neutral-500 dark:text-neutral-300"
           >
             {helperText}
           </span>
