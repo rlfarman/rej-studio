@@ -249,18 +249,26 @@ export default function GeneSplitterForm({
     },
   })
 
-  function handleSubmitForm(data: FormValues) {
-    fetch('/api/form', {
+  function handleSubmitForm({ codingSequence, ...options }: FormValues) {
+    fetch('https://rej-design-tool.wl.r.appspot.com', {
       method: 'POST',
-      body: JSON.stringify(data),
-    }).then((res) => downloadZip(res))
+      body: JSON.stringify({
+        cds: codingSequence,
+      }),
+    }).then((res) => {
+      if (!res.ok) {
+        throw new Error('Failed to fetch data')
+      }
+
+      return downloadZip(res)
+    })
   }
 
   return (
     <FormProvider {...methods}>
       <form onSubmit={methods.handleSubmit(handleSubmitForm)}>
         <CustomizationOptions />
-        <div className="mt-8 p-2 dark:bg-neutral-200">
+        <div className="mt-8 rounded-lg p-2 dark:bg-neutral-200">
           <Image
             src="/images/example-diagram.png"
             alt="A diagram showing how the different options of the form affect the result of RNA end-joining"
