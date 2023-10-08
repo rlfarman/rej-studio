@@ -227,8 +227,11 @@ function ThreeFragmentOptions() {
   )
 }
 function SubmitButton() {
+  const {
+    formState: { isSubmitting },
+  } = useFormContext<FormValues>()
   return (
-    <Button type="submit" className="inline">
+    <Button type="submit" className="inline" disabled={isSubmitting}>
       Submit
     </Button>
   )
@@ -259,7 +262,6 @@ export default function GeneSplitterForm({
       if (!res.ok) {
         throw new Error('Failed to fetch data')
       }
-
       return downloadZip(res)
     })
   }
@@ -282,6 +284,11 @@ export default function GeneSplitterForm({
         <ThreeFragmentOptions />
         <div className="mt-4">
           <SubmitButton />
+          {methods.formState.isSubmitting && (
+            <span className="ml-2 text-sm text-neutral-800 dark:text-neutral-200">
+              Submitting...
+            </span>
+          )}
         </div>
       </form>
     </FormProvider>
