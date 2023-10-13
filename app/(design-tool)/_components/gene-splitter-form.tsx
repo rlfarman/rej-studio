@@ -6,18 +6,21 @@ import { yupResolver } from '@hookform/resolvers/yup'
 import downloadZip from '@/design-tool/lib/download-zip'
 import Checkbox from '@/components/checkbox'
 import Button from '@/components/button'
-import { SpeciesOptions } from '@/design-tool/types/species-options'
+import {
+  SpeciesOptions,
+  SpeciesValues,
+} from '@/design-tool/types/species-options'
 
 interface GeneSplitterFormProperties {
   defaultCodingSequence?: string
   defaultName?: string
-  defaultSpecies?: SpeciesOptions
+  defaultSpecies?: SpeciesValues
 }
 
 interface FormValues {
   name: string
   codingSequence: string
-  species: SpeciesOptions
+  species: SpeciesValues
   removeCrypticSpliceSites: boolean
   induceOptimalSpliceSites: boolean
   '5PrimeStimulatoryIntron': boolean
@@ -46,9 +49,9 @@ const validationSchema = object().shape({
       (val) => val.length <= 250
     ),
   species: string().oneOf([
-    SpeciesOptions.None,
-    SpeciesOptions.Human,
-    SpeciesOptions.Mouse,
+    SpeciesValues.None,
+    SpeciesValues.Human,
+    SpeciesValues.Mouse,
   ]),
   removeCrypticSpliceSites: boolean().default(true),
   induceOptimalSpliceSites: boolean().default(true),
@@ -75,9 +78,9 @@ function NameInput() {
         type="text"
         id="name"
         aria-invalid={errors.name ? 'true' : 'false'}
-        {...register('name')}
         className="block w-full max-w-xl rounded-lg border border-neutral-300 bg-neutral-50 p-2.5 text-neutral-900 focus:border-sky-500 focus:ring-sky-500 dark:border-neutral-600 dark:bg-neutral-700 dark:text-white dark:placeholder-neutral-400 dark:focus:border-sky-500 dark:focus:ring-sky-500"
         placeholder="ABC123..."
+        {...register('name')}
       />
       {typeof errors.name?.message === 'string' && (
         <span
@@ -136,16 +139,14 @@ function SpeciesSelect() {
       </label>
       <select
         id="species"
-        {...register('species')}
         className="block rounded-lg border border-neutral-300 bg-neutral-50 p-2.5 text-neutral-900 focus:border-sky-500 focus:ring-sky-500 dark:border-neutral-600 dark:bg-neutral-700 dark:text-white dark:placeholder-neutral-400 dark:focus:border-sky-500 dark:focus:ring-sky-500"
+        {...register('species')}
       >
-        <option value={SpeciesOptions['None']}>{SpeciesOptions['None']}</option>
-        <option value={SpeciesOptions['Human']}>
-          {SpeciesOptions['Human']}
-        </option>
-        <option value={SpeciesOptions['Mouse']}>
-          {SpeciesOptions['Mouse']}
-        </option>
+        {SpeciesOptions.map(({ label, value }) => (
+          <option key={label} value={value}>
+            {label}
+          </option>
+        ))}
       </select>
     </div>
   )
@@ -248,21 +249,35 @@ export default function GeneSplitterForm({
       ...validationSchema.getDefault(),
       codingSequence: defaultCodingSequence ?? '',
       name: defaultName ?? '',
-      species: defaultSpecies ?? SpeciesOptions.None,
+      species: defaultSpecies ?? SpeciesValues.None,
     },
   })
 
   function handleSubmitForm({ codingSequence, ...options }: FormValues) {
-    fetch('https://rej-design-tool.wl.r.appspot.com', {
-      method: 'POST',
-      body: JSON.stringify({
-        cds: codingSequence,
-      }),
-    }).then((res) => {
-      if (!res.ok) {
-        throw new Error('Failed to fetch data')
-      }
-      return downloadZip(res)
+    return new Promise((resolve) => {
+      fetch(
+        process.env.NODE_ENV === 'production'
+          ? 'https://rej-design-tool.wl.r.appspot.com'
+          : 'http://localhost:3001',
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            cds: codingSequence,
+            options: {
+              codon_optimize: options.species,
+              remove_cryptic_ss: options.removeCrypticSpliceSites,
+              induce_optimal_ss: options.induceOptimalSpliceSites,
+              stim_5: options['5PrimeStimulatoryIntron'],
+              stim_3: options['3PrimeStimulatoryIntron'],
+            },
+          }),
+        }
+      ).then((res) => {
+        if (!res.ok) {
+          throw new Error('Failed to fetch data')
+        }
+        resolve(downloadZip(res))
+      })
     })
   }
 
