@@ -62,10 +62,9 @@ export default async function GeneSymbolPage({
         <dt className="hidden">Chromosome:</dt>
         <dd className="inline">Chromosome {gene.chromosome}</dd>
       </dl>
-
       {gene.diseaseAssociations?.length ? (
-        <div className="text-lg text-neutral-500 dark:text-neutral-400">
-          <div>Diseases Associated</div>
+        <div className="text-neutral-500 dark:text-neutral-400">
+          <div className="text-lg">Diseases Associated:</div>
           <ul className="list-outside list-disc space-y-1 pl-4">
             {gene.diseaseAssociations?.map((disease) => (
               <li key={disease}>{disease}</li>
