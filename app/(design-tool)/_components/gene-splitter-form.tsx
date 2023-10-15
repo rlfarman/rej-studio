@@ -233,7 +233,7 @@ function SubmitButton() {
   } = useFormContext<FormValues>()
   return (
     <Button type="submit" className="inline" disabled={isSubmitting}>
-      Submit
+      Download customized sequence
     </Button>
   )
 }
@@ -297,7 +297,7 @@ export default function GeneSplitterForm({
         <CodonOptimizationOptions />
         <FiveFragmentOptions />
         <ThreeFragmentOptions />
-        <div className="mt-4">
+        <div className="mt-8">
           <SubmitButton />
           {methods.formState.isSubmitting && (
             <span className="ml-2 text-sm text-neutral-800 dark:text-neutral-200">
