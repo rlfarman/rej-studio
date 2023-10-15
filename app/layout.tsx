@@ -19,7 +19,7 @@ export default function RootLayout({
     <html lang="en">
       <head />
       <body
-        className={`${openSans.className} mx-auto flex min-h-screen flex-col justify-between pb-4`}
+        className={`${openSans.className} mx-auto flex min-h-screen flex-col justify-between`}
       >
         <div>
           <Header />
