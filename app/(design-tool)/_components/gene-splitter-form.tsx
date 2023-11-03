@@ -56,10 +56,22 @@ const validationSchema = object().shape({
   removeCrypticSpliceSites: boolean().default(true),
   induceOptimalSpliceSites: boolean().default(true),
   '5PrimeStimulatoryIntron': boolean().default(true),
-  '5PrimePFSWithNMD': boolean().default(true),
+  '5PrimePFSWithNMD': boolean().default(false),
   '3PrimeStimulatoryIntron': boolean().default(true),
-  '3PrimePFSWithNMD': boolean().default(true),
+  '3PrimePFSWithNMD': boolean().default(false),
 })
+
+const ComingSoon = () => (
+  <>
+    Coming soon! Support our research by donating to{' '}
+    <a
+      className="text-sky-600 hover:underline dark:text-sky-500"
+      href="https://www.salk.edu/scientist/samuel-pfaff/?form=MainDonate"
+    >
+      The Salk Institute
+    </a>
+  </>
+)
 
 function NameInput() {
   const {
@@ -200,6 +212,8 @@ function FiveFragmentOptions() {
         <Checkbox
           id="5PrimePFSWithNMD"
           label="Protein Fragment Suppression with Nonstop Mediated Decay"
+          helperText={<ComingSoon />}
+          disabled
           {...register('5PrimePFSWithNMD')}
         />
       </div>
@@ -221,6 +235,8 @@ function ThreeFragmentOptions() {
         <Checkbox
           id="3PrimePFSWithNMD"
           label="Protein Fragment Suppression with Nonsense Mediated Decay"
+          helperText={<ComingSoon />}
+          disabled
           {...register('3PrimePFSWithNMD')}
         />
       </div>

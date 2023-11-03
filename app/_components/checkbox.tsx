@@ -1,18 +1,20 @@
 'use client'
-import { forwardRef } from 'react'
+import classnames from 'classnames'
+import { ReactNode, forwardRef } from 'react'
 
 interface CheckboxProps {
   id: string
   label: string
   name: string
-  helperText?: string
+  helperText?: ReactNode
+  disabled?: boolean
   onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void
   onBlur?: (event: React.FocusEvent<HTMLInputElement>) => void
   ref?: React.Ref<HTMLInputElement>
 }
 
 function Checkbox(
-  { id, label, helperText, name, onChange, onBlur }: CheckboxProps,
+  { id, label, helperText, name, disabled, onChange, onBlur }: CheckboxProps,
   ref: React.Ref<HTMLInputElement>
 ) {
   return (
@@ -23,6 +25,7 @@ function Checkbox(
           aria-describedby={`${id}-helper-text`}
           type="checkbox"
           name={name}
+          disabled={disabled}
           onChange={onChange}
           onBlur={onBlur}
           ref={ref}
@@ -32,14 +35,24 @@ function Checkbox(
       <div className="pl-2">
         <label
           htmlFor={id}
-          className="font-medium text-neutral-900 dark:text-neutral-300"
+          className={classnames(
+            'font-medium text-neutral-900 dark:text-neutral-300',
+            {
+              'text-neutral-500 dark:text-neutral-600': disabled,
+            }
+          )}
         >
           {label}
         </label>
         {helperText && (
           <span
             id={`${id}-helper-text`}
-            className="text-sm font-normal text-neutral-500 dark:text-neutral-300"
+            className={classnames(
+              'block text-sm font-normal text-neutral-500 dark:text-neutral-300',
+              {
+                'text-neutral-500 dark:text-neutral-600': disabled,
+              }
+            )}
           >
             {helperText}
           </span>
