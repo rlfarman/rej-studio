@@ -1,15 +1,8 @@
-import Link from 'next/link'
-
-interface GeneSearchLayoutProperties {
-  children: React.ReactNode
-  params: {
-    symbol: string
-  }
-}
-
-export default function GeneSearchLayout({
+export default async function GeneSearchLayout({
   children,
-}: GeneSearchLayoutProperties) {
+}: {
+  children: React.ReactNode
+}) {
   return (
     <section className="w-full">
       <h2 className="text-2xl font-bold">Find a known sequence</h2>
