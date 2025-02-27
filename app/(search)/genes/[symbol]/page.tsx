@@ -40,11 +40,12 @@ const getData = async (symbol: string): Promise<Gene | undefined> => {
   }
 }
 
-export default async function GeneSymbolPage({
-  params,
-}: {
-  params: { symbol: string }
-}) {
+export default async function GeneSymbolPage(
+  props: {
+    params: Promise<{ symbol: string }>
+  }
+) {
+  const params = await props.params;
   const gene = await getData(params.symbol)
 
   if (!gene) {

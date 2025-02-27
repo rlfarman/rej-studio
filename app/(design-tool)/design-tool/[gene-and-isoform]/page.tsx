@@ -4,7 +4,7 @@ import { promises as fs } from 'node:fs'
 import { SpeciesOptions } from '@/design-tool/types/species-options'
 
 interface DesignToolPageProperties {
-  params: { ['gene-and-isoform']: `${Gene['symbol']}_${Isoform['ENST']}` }
+  params: Promise<{ ['gene-and-isoform']: `${Gene['symbol']}_${Isoform['ENST']}` }>
 }
 
 async function getData(enst: string): Promise<string | undefined> {
@@ -32,9 +32,8 @@ function getSpeciesFromEnst(enst: string): SpeciesOptions {
   return SpeciesOptions.None
 }
 
-export default async function DesignToolPage({
-  params,
-}: DesignToolPageProperties) {
+export default async function DesignToolPage(props: DesignToolPageProperties) {
+  const params = await props.params;
   const [symbol, enst] = params['gene-and-isoform'].split('_')
   const defaultCodingSequence = enst ? await getData(enst) : ''
   const defaultSpecies = getSpeciesFromEnst(enst)

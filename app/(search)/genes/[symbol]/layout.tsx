@@ -3,15 +3,22 @@ import genes from '@/public/data/genes.json'
 
 interface GeneSymbolPageLayout {
   children: React.ReactNode
-  params: {
+  params: Promise<{
     symbol: string
-  }
+  }>
 }
 
-export default function GeneSymbolPageLayout({
-  children,
-  params: { symbol },
-}: GeneSymbolPageLayout) {
+export default async function GeneSymbolPageLayout(props: GeneSymbolPageLayout) {
+  const params = await props.params;
+
+  const {
+    symbol
+  } = params;
+
+  const {
+    children
+  } = props;
+
   const defaultGene = (genes as Gene[]).find((gene) => gene.symbol === symbol)
   return (
     <div>

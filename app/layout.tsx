@@ -7,7 +7,7 @@ const openSans = Open_Sans({ subsets: ['latin'] })
 
 export const metadata = {
   title: 'RNA End-joining Design Tool',
-  description: 'RNA End-joining made easy',
+  description: 'RNA End-joining made easy'
 }
 
 export default function RootLayout({
