@@ -35,7 +35,7 @@ type ButtonProperties =
   | SubmitButtonProperties
 
 const CLASSES =
-  'inline-block text-center text-white bg-sky-700 hover:bg-sky-800 font-medium rounded px-4 py-2 mr-2 dark:bg-sky-600 disabled:dark:bg-neutral-900 disabled:bg-neutral-400 disabled:cursor-not-allowed disabled:pointer-events-none'
+  'inline-block text-center text-white bg-sky-700 hover:bg-sky-800 font-medium rounded-sm px-4 py-2 mr-2 dark:bg-sky-600 dark:disabled:bg-neutral-900 disabled:bg-neutral-400 disabled:cursor-not-allowed disabled:pointer-events-none'
 
 function getLinkButtonContainer(
   href: string,

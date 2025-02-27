@@ -30,7 +30,7 @@ function CopyButton({ children }: CopyButtonProperties) {
       <Tooltip
         noArrow
         id="my-tooltip"
-        className="!rounded-lg !bg-transparent !px-2 !py-1 !font-normal !text-neutral-400 dark:!bg-neutral-800 dark:!text-white"
+        className="rounded-lg! bg-transparent! px-2! py-1! font-normal! text-neutral-400! dark:bg-neutral-800! dark:text-white!"
         openOnClick
         closeOnScroll
         closeOnEsc

@@ -14,7 +14,7 @@ export default function IsoformCard({
   return (
     <div
       key={isoform.ENST}
-      className="block rounded-lg border border-neutral-200 bg-white px-6 pb-4 pt-6 shadow  dark:border-neutral-700 dark:bg-neutral-800"
+      className="block rounded-lg border border-neutral-200 bg-white px-6 pb-4 pt-6 shadow-sm  dark:border-neutral-700 dark:bg-neutral-800"
     >
       <h2 className="text-lg font-semibold">{isoform.ENST}</h2>
       <CopyButtons isoform={isoform} />

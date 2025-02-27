@@ -23,7 +23,7 @@ export default function RootLayout({
       >
         <div>
           <Header />
-          <div className="container mx-auto mt-4 w-full max-w-screen-md flex-col px-4">
+          <div className="container mx-auto mt-4 w-full max-w-(--breakpoint-md) flex-col px-4">
             {children}
           </div>
         </div>

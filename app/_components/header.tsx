@@ -9,7 +9,7 @@ const tiltWarp = Tilt_Warp({
 
 export default function Header() {
   return (
-    <header className="mx-auto max-w-screen-md pt-4">
+    <header className="mx-auto max-w-(--breakpoint-md) pt-4">
       <div className="flex items-center">
         <Link href="/">
           <div className="relative h-16 w-16 sm:h-24 sm:w-24">

@@ -1,7 +1,7 @@
 export default function IsoformListLoading() {
   return (
     <div className="flex flex-col gap-4 pt-6">
-      <div className="block rounded-lg border border-neutral-200 bg-white px-6 pb-4 pt-6 shadow dark:border-neutral-700 dark:bg-neutral-800">
+      <div className="block rounded-lg border border-neutral-200 bg-white px-6 pb-4 pt-6 shadow-sm dark:border-neutral-700 dark:bg-neutral-800">
         <div className="animate-pulse ">
           <div className="mb-3 h-5 w-full max-w-[12rem] rounded-full bg-neutral-200 dark:bg-neutral-700" />
           <div className="mb-2 h-3 w-full max-w-[8rem] rounded-full bg-neutral-200 dark:bg-neutral-700" />

@@ -79,7 +79,7 @@ export default function GeneSearch({ defaultGene }: GeneSearchProperties) {
             leaveFrom="opacity-100"
             leaveTo="opacity-0"
           >
-            <Combobox.Options className="absolute z-10 mt-1 max-h-96 w-full max-w-sm divide-y divide-neutral-100 overflow-auto rounded-lg bg-white py-2 shadow dark:bg-neutral-700">
+            <Combobox.Options className="absolute z-10 mt-1 max-h-96 w-full max-w-sm divide-y divide-neutral-100 overflow-auto rounded-lg bg-white py-2 shadow-sm dark:bg-neutral-700">
               {filteredGenes.length === 0 && query !== '' ? (
                 <div className="relative cursor-default select-none px-4 py-2 text-neutral-700">
                   Nothing found.

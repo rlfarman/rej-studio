@@ -15,7 +15,7 @@ function Contributor({
 }: ContributorProperties) {
   return (
     <li>
-      <div className="relative aspect-[3/2] sm:aspect-square">
+      <div className="relative aspect-3/2 sm:aspect-square">
         <Image
           src={image}
           alt={`Portrait of ${name}`}

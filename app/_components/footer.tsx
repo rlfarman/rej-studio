@@ -1,6 +1,6 @@
 export default function Footer() {
   return (
-    <div className="container mx-auto flex max-w-screen-md flex-col px-4 pb-4 pt-12">
+    <div className="container mx-auto flex max-w-(--breakpoint-md) flex-col px-4 pb-4 pt-12">
       <span className="mt-2 text-neutral-400 dark:text-neutral-500">
         Created by{' '}
         <a
