@@ -1,13 +1,11 @@
 import '@/styles/globals.css'
-import { Open_Sans } from 'next/font/google'
 import Header from '@/components/header'
-import Footer from '@/components/footer'
-
-const openSans = Open_Sans({ subsets: ['latin'] })
+import { GeistSans } from 'geist/font/sans'
+import { GeistMono } from 'geist/font/mono'
 
 export const metadata = {
   title: 'RNA End-joining Design Tool',
-  description: 'RNA End-joining made easy'
+  description: 'RNA End-joining made easy',
 }
 
 export default function RootLayout({
@@ -16,18 +14,24 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`}>
       <head />
       <body
-        className={`${openSans.className} mx-auto flex min-h-screen flex-col justify-between`}
+        className={`${GeistSans.className} mx-auto flex min-h-screen flex-col justify-between`}
       >
-        <div>
+        <div className="relative flex min-h-screen flex-col pb-6">
           <Header />
-          <div className="container mx-auto mt-4 w-full max-w-(--breakpoint-md) flex-col px-4">
-            {children}
-          </div>
+          {children}
+          <footer className="mx-auto mt-auto max-w-4xl px-4 text-center sm:px-6 lg:px-8">
+            <h1 className="text-muted-foreground mt-2">REJ</h1>
+            <p className="text-muted-foreground text-xs">
+              PREVIEW - SALK INSTITUTE EYES ONLY
+            </p>
+            <p className="text-muted-foreground text-xs">
+              Created by Richie Farman and Ryan Hsu.
+            </p>
+          </footer>
         </div>
-        <Footer />
       </body>
     </html>
   )

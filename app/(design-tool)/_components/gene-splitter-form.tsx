@@ -1,15 +1,40 @@
 'use client'
-import { FormProvider, useForm, useFormContext } from 'react-hook-form'
-import { boolean, object, string } from 'yup'
-import Image from 'next/image'
-import { yupResolver } from '@hookform/resolvers/yup'
+import { useState } from 'react'
+import { z } from 'zod'
 import downloadZip from '@/design-tool/lib/download-zip'
-import Checkbox from '@/components/checkbox'
-import Button from '@/components/button'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Button } from '@/components/ui/button'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import {
   SpeciesOptions,
   SpeciesValues,
 } from '@/design-tool/types/species-options'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import DNASplicer from './dna-splicer'
+import {
+  Form,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+  FormField,
+  FormDescription,
+} from '@/components/ui/form'
+import { useForm, useFormContext, Controller } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import {
+  Accordion,
+  AccordionItem,
+  AccordionTrigger,
+  AccordionContent,
+} from '@/components/ui/accordion'
+import { Slider } from '@/components/ui/slider'
 
 interface GeneSplitterFormProperties {
   defaultCodingSequence?: string
@@ -17,238 +42,290 @@ interface GeneSplitterFormProperties {
   defaultSpecies?: SpeciesValues
 }
 
-interface FormValues {
-  name: string
-  codingSequence: string
-  species: SpeciesValues
-  removeCrypticSpliceSites: boolean
-  induceOptimalSpliceSites: boolean
-  '5PrimeStimulatoryIntron': boolean
-  '5PrimePFSWithNMD': boolean
-  '3PrimeStimulatoryIntron': boolean
-  '3PrimePFSWithNMD': boolean
-}
-
-const validationSchema = object().shape({
-  codingSequence: string()
-    .required('Coding sequence is required.')
-    .matches(
+const validationSchema = z.object({
+  codingSequence: z
+    .string()
+    .nonempty('Coding sequence is required.')
+    .regex(
       /^[ACGTUacgtu]+$/,
       'Invalid coding sequence. Must contain only A, C, G, T, or U.'
     )
-    .test(
-      'is-multiple-of-three',
-      'Invalid coding sequence. Must be a multiple of 3.',
-      (value) => value.length % 3 === 0
-    ),
-  name: string()
-    .required('A name is required.')
-    .test(
-      'len',
-      'Must be less than 250 characters',
-      (val) => val.length <= 250
-    ),
-  species: string().oneOf([
+    .refine((value) => value.length % 3 === 0, {
+      message: 'Invalid coding sequence. Must be a multiple of 3.',
+    }),
+  name: z
+    .string()
+    .nonempty('A name is required.')
+    .max(250, 'Must be less than 250 characters'),
+  species: z.enum([
     SpeciesValues.None,
     SpeciesValues.Human,
     SpeciesValues.Mouse,
   ]),
-  removeCrypticSpliceSites: boolean().default(true),
-  induceOptimalSpliceSites: boolean().default(true),
-  '5PrimeStimulatoryIntron': boolean().default(true),
-  '5PrimePFSWithNMD': boolean().default(false),
-  '3PrimeStimulatoryIntron': boolean().default(true),
-  '3PrimePFSWithNMD': boolean().default(false),
+  removeCrypticSpliceSites: z.boolean(),
+  removeCrypticSpliceSitesWeight: z.number().min(0).max(1).default(0.5),
+  induceOptimalSpliceSites: z.boolean().default(true),
+  induceOptimalSpliceSitesWeight: z.number().min(0).max(1).default(0.5),
+  '5PrimeStimulatoryIntron': z.boolean().default(true),
+  '3PrimeStimulatoryIntron': z.boolean().default(true),
 })
-
-const ComingSoon = () => (
-  <>
-    Coming soon! Support our research by donating to{' '}
-    <a
-      className="text-sky-600 hover:underline dark:text-sky-500"
-      href="https://www.salk.edu/scientist/samuel-pfaff/?form=MainDonate"
-    >
-      The Salk Institute
-    </a>
-  </>
-)
+type FormValues = z.infer<typeof validationSchema>
 
 function NameInput() {
-  const {
-    register,
-    formState: { errors },
-  } = useFormContext<FormValues>()
+  const { control } = useFormContext<FormValues>()
   return (
-    <div>
-      <label
-        htmlFor="name"
-        className="mb-2 block text-sm font-medium text-neutral-900 dark:text-white"
-      >
-        Choose a name for your coding sequence
-      </label>
-      <input
-        type="text"
-        id="name"
-        aria-invalid={errors.name ? 'true' : 'false'}
-        className="block w-full max-w-xl rounded-lg border border-neutral-300 bg-neutral-50 p-2.5 text-neutral-900 focus:border-sky-500 focus:ring-sky-500 dark:border-neutral-600 dark:bg-neutral-700 dark:text-white dark:placeholder-neutral-400 dark:focus:border-sky-500 dark:focus:ring-sky-500"
-        placeholder="ABC123..."
-        {...register('name')}
-      />
-      {typeof errors.name?.message === 'string' && (
-        <span
-          role="alert"
-          className="mt-2 text-sm text-red-600 dark:text-red-500"
-        >
-          {errors.name.message}
-        </span>
+    <FormField
+      name="name"
+      control={control}
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>Choose a name for your coding sequence</FormLabel>
+          <FormControl>
+            <input
+              type="text"
+              placeholder="ABC123..."
+              className="block w-full max-w-xl rounded-lg border border-neutral-300 bg-neutral-50 p-2.5 text-neutral-900 focus:border-sky-500 focus:ring-sky-500 dark:border-neutral-600 dark:bg-neutral-700 dark:text-white dark:placeholder-neutral-400 dark:focus:border-sky-500 dark:focus:ring-sky-500"
+              {...field}
+            />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
       )}
-    </div>
+    />
   )
 }
 
 function CodingSequenceInput() {
-  const {
-    register,
-    formState: { errors },
-  } = useFormContext<FormValues>()
+  const { control } = useFormContext<FormValues>()
   return (
-    <div>
-      <label
-        htmlFor="codingSequence"
-        className="mb-2 block text-sm font-medium text-neutral-900 dark:text-white"
-      >
-        Enter your coding sequence
-      </label>
-      <input
-        type="text"
-        id="codingSequence"
-        aria-invalid={errors.codingSequence ? 'true' : 'false'}
-        {...register('codingSequence')}
-        className="block w-full max-w-xl rounded-lg border border-neutral-300 bg-neutral-50 p-2.5 text-neutral-900 focus:border-sky-500 focus:ring-sky-500 dark:border-neutral-600 dark:bg-neutral-700 dark:text-white dark:placeholder-neutral-400 dark:focus:border-sky-500 dark:focus:ring-sky-500"
-        placeholder="ATGATTACA..."
-      />
-      {typeof errors.codingSequence?.message === 'string' && (
-        <span
-          role="alert"
-          className="mt-2 text-sm text-red-600 dark:text-red-500"
-        >
-          {errors.codingSequence.message}
-        </span>
+    <FormField
+      name="codingSequence"
+      control={control}
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>Enter your coding sequence</FormLabel>
+          <FormControl>
+            <input
+              type="text"
+              placeholder="ATGATTACA..."
+              className="block w-full rounded-lg border border-neutral-300 bg-neutral-50 p-2.5 text-neutral-900 focus:border-sky-500 focus:ring-sky-500 dark:border-neutral-600 dark:bg-neutral-700 dark:text-white dark:placeholder-neutral-400 dark:focus:border-sky-500 dark:focus:ring-sky-500"
+              {...field}
+            />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
       )}
-    </div>
+    />
   )
 }
 
 function SpeciesSelect() {
-  const { register } = useFormContext<FormValues>()
+  const { control } = useFormContext<FormValues>()
   return (
-    <div className="pb-2">
-      <label
-        htmlFor="species"
-        className="mb-1 block text-sm font-medium text-neutral-900 dark:text-white"
-      >
-        Species
-      </label>
-      <select
-        id="species"
-        className="block rounded-lg border border-neutral-300 bg-neutral-50 p-2.5 text-neutral-900 focus:border-sky-500 focus:ring-sky-500 dark:border-neutral-600 dark:bg-neutral-700 dark:text-white dark:placeholder-neutral-400 dark:focus:border-sky-500 dark:focus:ring-sky-500"
-        {...register('species')}
-      >
-        {SpeciesOptions.map(({ label, value }) => (
-          <option key={label} value={value}>
-            {label}
-          </option>
-        ))}
-      </select>
-    </div>
+    <FormField
+      name="species"
+      control={control}
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>Codon optimization for species</FormLabel>
+          <FormControl>
+            <RadioGroup className="flex gap-4" {...field}>
+              {SpeciesOptions.map(({ label, value }) => (
+                <div key={value} className="flex items-center space-x-2">
+                  <RadioGroupItem id={value} value={value} />
+                  <label
+                    htmlFor={value}
+                    className="text-sm font-medium text-neutral-900 dark:text-white"
+                  >
+                    {label}
+                  </label>
+                </div>
+              ))}
+            </RadioGroup>
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
   )
 }
 
 function CustomizationOptions() {
   return (
-    <div className="mt-4">
-      <h3 className="pb-2 text-lg font-semibold">Customize your sequence</h3>
-      <div className="flex flex-col gap-2">
+    <div>
+      <div className="grid grid-rows-2 gap-4">
         <NameInput />
         <CodingSequenceInput />
+        <SpeciesSelect />
       </div>
     </div>
   )
 }
 
-function CodonOptimizationOptions() {
-  const { register } = useFormContext<FormValues>()
+function RemoveCrypticSpliceSitesWeight() {
+  const { control, watch } = useFormContext<FormValues>()
+  const removeCrypticSpliceSites = watch('removeCrypticSpliceSites')
+
   return (
-    <div className="mt-4">
-      <h3 className="pb-2 text-lg font-semibold">Codon Optimization</h3>
-      <SpeciesSelect />
-      <div className="mt-1 flex flex-col gap-1">
-        <Checkbox
-          id="removeCrypticSpliceSites"
-          label="Remove cryptic splice sites"
-          {...register('removeCrypticSpliceSites')}
+    <FormField
+      name="removeCrypticSpliceSitesWeight"
+      control={control}
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>
+            Adjust priority for removing cryptic splice sites
+          </FormLabel>
+          <FormControl>
+            <Slider
+              value={[field.value]}
+              onValueChange={(value) => field.onChange(value[0])}
+              min={0}
+              max={1}
+              step={0.1}
+              disabled={!removeCrypticSpliceSites}
+            />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  )
+}
+
+function InduceOptimalSpliceSitesWeight() {
+  const { control, watch } = useFormContext<FormValues>()
+  const induceOptimalSpliceSites = watch('induceOptimalSpliceSites')
+
+  return (
+    <FormField
+      name="induceOptimalSpliceSitesWeight"
+      control={control}
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>
+            Adjust priority for inducing optimal splice sites
+          </FormLabel>
+          <FormControl>
+            <Slider
+              value={[field.value]}
+              onValueChange={(value) => field.onChange(value[0])}
+              min={0}
+              max={1}
+              step={0.1}
+              disabled={!induceOptimalSpliceSites}
+            />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  )
+}
+
+function CodonOptimizationOptions() {
+  const { control } = useFormContext<FormValues>()
+  return (
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <div className="space-y-4">
+        <Controller
+          name="removeCrypticSpliceSites"
+          control={control}
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+              <FormControl>
+                <Checkbox
+                  id="removeCrypticSpliceSites"
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                />
+              </FormControl>
+              <FormLabel>Remove cryptic splice sites</FormLabel>
+            </FormItem>
+          )}
         />
-        <Checkbox
-          id="induceOptimalSpliceSites"
-          label="Induce optimal splice sites"
-          {...register('induceOptimalSpliceSites')}
+        <RemoveCrypticSpliceSitesWeight />
+      </div>
+      <div className="space-y-4">
+        <Controller
+          name="induceOptimalSpliceSites"
+          control={control}
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+              <FormControl>
+                <Checkbox
+                  id="induceOptimalSpliceSites"
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                />
+              </FormControl>
+              <FormLabel>Induce optimal splice sites</FormLabel>
+            </FormItem>
+          )}
         />
+        <InduceOptimalSpliceSitesWeight />
       </div>
     </div>
   )
 }
 
 function FiveFragmentOptions() {
-  const { register } = useFormContext<FormValues>()
+  const { control } = useFormContext<FormValues>()
   return (
-    <div className="mt-4">
-      <h3 className="pb-2 text-lg font-semibold">5&apos; Fragment options</h3>
-      <div className="flex flex-col gap-1">
-        <Checkbox
-          id="5PrimeStimulatoryIntron"
-          label="5' Stimulatory Intron"
-          {...register('5PrimeStimulatoryIntron')}
-        />
-        <Checkbox
-          id="5PrimePFSWithNMD"
-          label="Protein Fragment Suppression with Nonstop Mediated Decay"
-          helperText={<ComingSoon />}
-          disabled
-          {...register('5PrimePFSWithNMD')}
-        />
-      </div>
-    </div>
+    <Controller
+      name="5PrimeStimulatoryIntron"
+      control={control}
+      render={({ field }) => (
+        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+          <FormControl>
+            <Checkbox
+              id="5PrimeStimulatoryIntron"
+              checked={field.value}
+              onCheckedChange={field.onChange}
+            />
+          </FormControl>
+          <div>
+            <FormLabel>5' Stimulatory Intron</FormLabel>
+            <FormDescription>
+              Add a 5' stimulatory intron to the sequence
+            </FormDescription>
+          </div>
+        </FormItem>
+      )}
+    />
   )
 }
 
 function ThreeFragmentOptions() {
-  const { register } = useFormContext<FormValues>()
+  const { control } = useFormContext<FormValues>()
   return (
-    <div className="mt-4">
-      <h3 className="pb-2 text-lg font-semibold">3&apos; Fragment options</h3>
-      <div className="flex flex-col gap-1">
-        <Checkbox
-          id="3PrimeStimulatoryIntron"
-          label="3' Stimulatory Intron"
-          {...register('3PrimeStimulatoryIntron')}
-        />
-        <Checkbox
-          id="3PrimePFSWithNMD"
-          label="Protein Fragment Suppression with Nonsense Mediated Decay"
-          helperText={<ComingSoon />}
-          disabled
-          {...register('3PrimePFSWithNMD')}
-        />
-      </div>
-    </div>
+    <Controller
+      name="3PrimeStimulatoryIntron"
+      control={control}
+      render={({ field }) => (
+        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+          <FormControl>
+            <Checkbox
+              id="3PrimeStimulatoryIntron"
+              checked={field.value}
+              onCheckedChange={field.onChange}
+            />
+          </FormControl>
+          <div>
+            <FormLabel>3' Stimulatory Intron</FormLabel>
+            <FormDescription>
+              Add a 3' stimulatory intron to the sequence
+            </FormDescription>
+          </div>
+        </FormItem>
+      )}
+    />
   )
 }
+
 function SubmitButton() {
-  const {
-    formState: { isSubmitting },
-  } = useFormContext<FormValues>()
+  const { formState } = useFormContext<FormValues>()
   return (
-    <Button type="submit" className="inline" disabled={isSubmitting}>
+    <Button type="submit" className="inline" disabled={formState.isSubmitting}>
       Download customized sequence
     </Button>
   )
@@ -260,9 +337,14 @@ export default function GeneSplitterForm({
   defaultSpecies,
 }: GeneSplitterFormProperties) {
   const methods = useForm<FormValues>({
-    resolver: yupResolver(validationSchema),
+    resolver: zodResolver(validationSchema),
     defaultValues: {
-      ...validationSchema.getDefault(),
+      removeCrypticSpliceSites: true,
+      induceOptimalSpliceSites: true,
+      '5PrimeStimulatoryIntron': true,
+      '3PrimeStimulatoryIntron': true,
+      removeCrypticSpliceSitesWeight: 0.5,
+      induceOptimalSpliceSitesWeight: 0.5,
       codingSequence: defaultCodingSequence ?? '',
       name: defaultName ?? '',
       species: defaultSpecies ?? SpeciesValues.None,
@@ -282,7 +364,9 @@ export default function GeneSplitterForm({
             options: {
               codon_optimize: options.species,
               remove_cryptic_ss: options.removeCrypticSpliceSites,
+              remove_cryptic_ss_weight: options.removeCrypticSpliceSitesWeight,
               induce_optimal_ss: options.induceOptimalSpliceSites,
+              induce_optimal_ss_weight: options.induceOptimalSpliceSitesWeight,
               stim_5: options['5PrimeStimulatoryIntron'],
               stim_3: options['3PrimeStimulatoryIntron'],
             },
@@ -297,31 +381,90 @@ export default function GeneSplitterForm({
     })
   }
 
+  const [dnaLength, setDnaLength] = useState(4600)
+  const [selectedPosition, setSelectedPosition] = useState(2300)
+  const [customLength, setCustomLength] = useState('')
+
+  const handleLengthChange = () => {
+    const length = Number.parseInt(customLength)
+    if (!isNaN(length) && length > 0) {
+      setDnaLength(length)
+      setSelectedPosition(Math.floor(length / 2))
+    }
+  }
+
   return (
-    <FormProvider {...methods}>
-      <form onSubmit={methods.handleSubmit(handleSubmitForm)}>
-        <CustomizationOptions />
-        <div className="mt-8 rounded-lg p-2 dark:bg-neutral-200">
-          <Image
-            src="/images/example-diagram.png"
-            alt="A diagram showing how the different options of the form affect the result of RNA end-joining"
-            width={827}
-            height={220}
-            quality={100}
-          />
-        </div>
-        <CodonOptimizationOptions />
-        <FiveFragmentOptions />
-        <ThreeFragmentOptions />
-        <div className="mt-8">
-          <SubmitButton />
-          {methods.formState.isSubmitting && (
-            <span className="ml-2 text-sm text-neutral-800 dark:text-neutral-200">
-              Submitting...
-            </span>
-          )}
-        </div>
-      </form>
-    </FormProvider>
+    <Card>
+      <CardHeader>
+        <CardTitle>RNA End-Joining Design Tool</CardTitle>
+        <CardDescription>
+          Design a custom RNA sequence for end-joining experiments
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Form {...methods}>
+          <form onSubmit={methods.handleSubmit(handleSubmitForm)}>
+            <CustomizationOptions />
+            <Accordion type="multiple" className="mt-4">
+              <AccordionItem value="codon-optimization">
+                <AccordionTrigger>
+                  <div>
+                    <p>Customize codon optimization</p>
+                    <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                      By default, the sequence will be codon optimized for the
+                      selected species.
+                    </p>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <CodonOptimizationOptions />
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="fragment-options">
+                <AccordionTrigger>
+                  <div>
+                    <p>Customize fragment options</p>
+                    <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                      Adjust settings for 5' and 3' stimulatory introns.
+                    </p>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <FiveFragmentOptions />
+                    <ThreeFragmentOptions />
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="dna-splicer">
+                <AccordionTrigger>
+                  <div>
+                    <p>Customize splice junction</p>
+                    <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                      Adjust the splice junction position.
+                    </p>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <DNASplicer
+                    dnaLength={dnaLength}
+                    defaultPosition={selectedPosition}
+                    onChange={setSelectedPosition}
+                  />
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+            <div className="mt-8 flex justify-self-end">
+              <SubmitButton />
+              {methods.formState.isSubmitting && (
+                <span className="ml-2 text-sm text-neutral-800 dark:text-neutral-200">
+                  Submitting...
+                </span>
+              )}
+            </div>
+          </form>
+        </Form>
+      </CardContent>
+    </Card>
   )
 }

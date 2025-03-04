@@ -1,42 +1,51 @@
-import { Tilt_Warp } from 'next/font/google'
-import cx from 'classnames'
+'use client'
 import Link from 'next/link'
-import Image from 'next/image'
-
-const tiltWarp = Tilt_Warp({
-  subsets: ['latin'],
-})
+import { WandSparkles } from 'lucide-react'
+import SpeciesSelect from '@/components/species-select'
+import GeneSearch from '@/search/components/gene-search'
+import { searchGenes } from '@/actions'
+import { usePathname } from 'next/navigation'
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from '@/components/ui/tooltip'
 
 export default function Header() {
+  const pathname = usePathname()
+  const isHomePage = pathname === '/'
+
+  // Extract the gene symbol from the path
+  const geneSymbolMatch = pathname.match(/\/genes\/([^/]+)/)
+  const geneSymbol = geneSymbolMatch ? geneSymbolMatch[1] : undefined
+
   return (
-    <header className="mx-auto max-w-(--breakpoint-md) pt-4">
+    <div className="sticky top-0 z-10 mb-1.5 flex items-center justify-between bg-white p-3 font-semibold md:px-6">
       <div className="flex items-center">
-        <Link href="/">
-          <div className="relative h-16 w-16 sm:h-24 sm:w-24">
-            <Image
-              src="/logo.svg"
-              alt="RNA End-joining Logo"
-              fill
-              sizes="(max-width: 768px) 6rem, 4rem"
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Link
+              href="/design-tool"
+              className="mr-4 p-2 text-gray-600 hover:text-gray-800"
+            >
+              <WandSparkles className="h-6 w-6" />
+            </Link>
+          </TooltipTrigger>
+          <TooltipContent>Go to Design Tool</TooltipContent>
+        </Tooltip>
+        <SpeciesSelect />
+      </div>
+      <div className="absolute left-1/2 -translate-x-1/2 transform">
+        {!isHomePage && (
+          <div>
+            <GeneSearch
+              searchGenes={searchGenes}
+              hideByDefault={!isHomePage}
+              defaultQuery={geneSymbol}
             />
           </div>
-        </Link>
-        <Link href="/">
-          <div>
-            <span
-              className={cx(
-                'block text-4xl text-emerald-500 dark:text-emerald-400 md:text-5xl',
-                tiltWarp.className
-              )}
-            >
-              RNA End-joining
-            </span>
-            <span className="text-2xl text-sky-500 dark:text-sky-400 md:text-3xl">
-              Design Tool
-            </span>
-          </div>
-        </Link>
+        )}
       </div>
-    </header>
+    </div>
   )
 }

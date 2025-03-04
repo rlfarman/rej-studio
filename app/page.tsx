@@ -1,32 +1,29 @@
-import GeneSearch from '@/search/components/gene-search'
-import Button from '@/components/button'
+import Link from 'next/link'
+import GeneSearch from './(search)/_components/gene-search'
+import { searchGenes } from '@/actions'
 
 export default function HomePage() {
   return (
-    <div className="grid grid-cols-1 gap-y-16">
-      <div>
-        <h2 className="text-2xl font-bold">
-          Start by finding a known sequence
-        </h2>
-        <p className="mt-2 max-w-prose text-lg text-neutral-500 dark:text-neutral-400">
-          You can find any known genetic sequence for humans and mice by
-          searching for the symbol of the gene (ex: OBSCN), the name of the gene
-          (ex: Obscurin), or an Ensembl Transcript ID (ENST, ex:
-          ENST00000366704).
+    <div className="flex flex-grow flex-col justify-center py-24 lg:py-32">
+      <div className="mx-auto mt-0 w-full max-w-4xl px-4 text-center sm:px-6 lg:px-8">
+        <div className="mb-4 flex items-center justify-center"></div>
+        <h1 className="text-primary text-3xl font-bold sm:text-4xl">
+          What gene are you optimizing?
+        </h1>
+        <p className="text-muted-foreground mt-3">
+          Try searching for a gene, or{' '}
+          <Link
+            href="/design-tool"
+            className="text-sky-600 hover:underline dark:text-sky-500"
+          >
+            design your own
+          </Link>
+          .
         </p>
-        <div className="mt-4">
-          <GeneSearch />
-        </div>
-        <h2 className="mt-8 text-2xl font-bold">
-          Or, design with your own sequence
-        </h2>
-        <p className="mt-2 max-w-prose text-lg text-neutral-500 dark:text-neutral-400">
-          Design your RNA end-joining sequences with options for codon
-          optimization, and fragment suppression and stimulatory introns for
-          5&apos; and 3&apos; sequences.
-        </p>
-        <div className="mt-4">
-          <Button href="/design-tool">Design with a custom sequence</Button>
+      </div>
+      <div className="mx-auto mt-10 w-full max-w-2xl px-4 sm:px-6 lg:px-8">
+        <div className="relative">
+          <GeneSearch searchGenes={searchGenes} />
         </div>
       </div>
     </div>

@@ -1,6 +1,7 @@
 export default function Footer() {
   return (
-    <div className="container mx-auto flex max-w-(--breakpoint-md) flex-col px-4 pb-4 pt-12">
+    <div className="max-w-(--breakpoint-md) container mx-auto flex flex-col px-4 pb-4 pt-12">
+      <h1 className="mt-2 text-neutral-400 dark:text-neutral-500">REJ</h1>
       <span className="mt-2 text-neutral-400 dark:text-neutral-500">
         Created by{' '}
         <a
