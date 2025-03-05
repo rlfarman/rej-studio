@@ -75,6 +75,7 @@ export function GeneSearch({
             hasSearched={hasSearched}
             searchResults={searchResults}
             isLoading={isLoading}
+            setIsOpen={setIsOpen}
             handleSelect={handleSelect}
           />
         </CommandDialog>
@@ -90,6 +91,7 @@ export function GeneSearch({
         hasSearched={hasSearched}
         searchResults={searchResults}
         isLoading={isLoading}
+        setIsOpen={setIsOpen}
         handleSelect={handleSelect}
       />
     </div>

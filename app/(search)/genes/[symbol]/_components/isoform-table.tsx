@@ -10,6 +10,7 @@ import { Download, ExternalLink } from 'lucide-react'
 import { getIsoformsByGene } from '@/actions'
 import { Skeleton } from '@/components/ui/skeleton'
 import Link from 'next/link'
+import { Button } from '@/components/ui/button'
 
 interface IsoformListProps {
   geneId: string
@@ -36,17 +37,16 @@ export default async function IsoformTable({ geneId }: IsoformListProps) {
             <TableCell>{isoform.species}</TableCell>
             <TableCell className="font-mono">{isoform.enst}</TableCell>
             <TableCell className="text-right">
-              <button className="text-muted-foreground hover:bg-muted rounded p-2">
+              <Button variant="ghost" size="icon">
                 <Download />
-              </button>
+              </Button>
             </TableCell>
             <TableCell className="text-right">
-              <Link
-                href="/design-tool"
-                className="text-muted-foreground hover:bg-muted inline-block rounded p-2"
-              >
-                <ExternalLink />
-              </Link>
+              <Button variant="ghost" size="icon" asChild>
+                <Link href={`/design-tool?isoform=${isoform.id}`}>
+                  <ExternalLink />
+                </Link>
+              </Button>
             </TableCell>
           </TableRow>
         ))}

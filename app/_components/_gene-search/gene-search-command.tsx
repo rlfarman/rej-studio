@@ -36,6 +36,7 @@ interface GeneSearchInputProps {
   hasSearched: boolean
   searchResults: Array<Pick<GeneSearchResult, 'symbol' | 'id' | 'name'>>
   isLoading: boolean
+  setIsOpen: (isLoading: boolean) => void
   handleSelect: (gene: Pick<GeneSearchResult, 'symbol' | 'id' | 'name'>) => void
 }
 
@@ -45,6 +46,7 @@ export function GeneSearchCommand({
   hasSearched,
   searchResults,
   isLoading,
+  setIsOpen,
   handleSelect,
 }: GeneSearchInputProps) {
   return (
@@ -73,7 +75,8 @@ export function GeneSearchCommand({
                   No results found.{' '}
                   <Link
                     href="/design-tool"
-                    className="text-sky-600 hover:underline dark:text-sky-500"
+                    className="text-primary font-medium underline underline-offset-4"
+                    onClick={() => setIsOpen(false)}
                   >
                     Try entering a custom genetic sequence instead.
                   </Link>

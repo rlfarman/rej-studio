@@ -30,6 +30,7 @@ import {
 } from '@/components/ui/accordion'
 import { Slider } from '@/components/ui/slider'
 import { SpeciesSelect } from './species-select'
+import { Input } from '@/components/ui/input'
 
 interface GeneSplitterFormProperties {
   defaultCodingSequence?: string
@@ -78,12 +79,7 @@ function NameInput() {
         <FormItem>
           <FormLabel>Choose a name for your coding sequence</FormLabel>
           <FormControl>
-            <input
-              type="text"
-              placeholder="ABC123..."
-              className="block w-full max-w-xl rounded-lg border border-neutral-300 bg-neutral-50 p-2.5 text-neutral-900 focus:border-sky-500 focus:ring-sky-500 dark:border-neutral-600 dark:bg-neutral-700 dark:text-white dark:placeholder-neutral-400 dark:focus:border-sky-500 dark:focus:ring-sky-500"
-              {...field}
-            />
+            <Input type="text" placeholder="ABC123..." {...field} />
           </FormControl>
           <FormMessage />
         </FormItem>
@@ -102,12 +98,7 @@ function CodingSequenceInput() {
         <FormItem>
           <FormLabel>Enter your coding sequence</FormLabel>
           <FormControl>
-            <input
-              type="text"
-              placeholder="ATGATTACA..."
-              className="block w-full rounded-lg border border-neutral-300 bg-neutral-50 p-2.5 font-mono tracking-wide text-neutral-900 focus:border-sky-500 focus:ring-sky-500 dark:border-neutral-600 dark:bg-neutral-700 dark:text-white dark:placeholder-neutral-400 dark:focus:border-sky-500 dark:focus:ring-sky-500"
-              {...field}
-            />
+            <Input type="text" placeholder="ATGATTACA..." {...field} />
           </FormControl>
           <FormMessage />
         </FormItem>

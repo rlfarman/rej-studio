@@ -11,17 +11,17 @@ import {
   TooltipContent,
 } from '@/components/ui/tooltip'
 import { Suspense } from 'react'
+import { Button } from '@/components/ui/button'
 
 function GeneSearchTooltip() {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <Link
-          href="/design-tool"
-          className="hover:bg-muted text-muted-foreground mr-4 rounded-md p-2"
-        >
-          <WandSparkles className="h-6 w-6" />
-        </Link>
+        <Button variant="ghost" asChild>
+          <Link href="/design-tool">
+            <WandSparkles className="size-5" />
+          </Link>
+        </Button>
       </TooltipTrigger>
       <TooltipContent>Go to Design Tool</TooltipContent>
     </Tooltip>
