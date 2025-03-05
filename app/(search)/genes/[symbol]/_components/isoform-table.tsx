@@ -68,7 +68,7 @@ export function IsoformTableLoading() {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {[1, 2, 3, 4, 5].map((index) => (
+        {[...Array(5)].map((_, index) => (
           <TableRow key={index}>
             <TableCell>
               <Skeleton className="h-4 w-16 rounded" />
@@ -77,17 +77,13 @@ export function IsoformTableLoading() {
               <Skeleton className="h-4 w-16 rounded" />
             </TableCell>
             <TableCell>
-              <Skeleton className="h-4 w-48 rounded" />
+              <Skeleton className="h-6 w-48 rounded" />
             </TableCell>
-            <TableCell>
-              <div className="flex justify-end">
-                <Skeleton className="h-4 w-16 rounded" />
-              </div>
+            <TableCell className="text-right">
+              <Skeleton className="size-8 inline-block" />
             </TableCell>
-            <TableCell>
-              <div className="flex justify-end">
-                <Skeleton className="h-4 w-16 rounded" />
-              </div>
+            <TableCell className="text-right">
+              <Skeleton className="size-8 inline-block" />
             </TableCell>
           </TableRow>
         ))}
