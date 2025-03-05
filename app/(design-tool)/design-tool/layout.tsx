@@ -5,7 +5,7 @@ interface DesignToolLayoutProperties {
 function DesignToolLayout({ children }: DesignToolLayoutProperties) {
   return (
     <div>
-      <div className="container mx-auto pb-6 md:px-4">{children}</div>
+      <div className="container mx-auto pb-6 sm:px-4">{children}</div>
     </div>
   )
 }
