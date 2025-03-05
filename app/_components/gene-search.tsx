@@ -1,13 +1,12 @@
 'use client'
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import { CommandDialog } from '@/components/ui/command'
 import { useRouter } from 'next/navigation'
 import type { GeneSearchResult } from '@/actions'
 import { Button } from './ui/button'
 import { SearchIcon } from 'lucide-react'
 import { useGeneSearch } from '@/hooks/useGeneSearch'
-import { Skeleton } from './ui/skeleton'
-import { GeneSearchCommand } from './gene-search/gene-search-command'
+import { GeneSearchCommand } from './_gene-search/gene-search-command'
 
 interface GeneSearchProperties {
   searchGenes: (

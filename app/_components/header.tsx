@@ -1,7 +1,7 @@
 'use client'
 import Link from 'next/link'
 import { WandSparkles } from 'lucide-react'
-import { SpeciesSelect } from '@/components/species-select'
+import { SpeciesSelect } from '@/components/_header/species-select'
 import { GeneSearch } from '@/components/gene-search'
 import { searchGenes } from '@/actions'
 import { usePathname } from 'next/navigation'
@@ -18,7 +18,7 @@ function GeneSearchTooltip() {
       <TooltipTrigger asChild>
         <Link
           href="/design-tool"
-          className="hover:bg-muted mr-4 rounded-md p-2 text-gray-600 hover:text-gray-800"
+          className="hover:bg-muted text-muted-foreground mr-4 rounded-md p-2"
         >
           <WandSparkles className="h-6 w-6" />
         </Link>
@@ -38,7 +38,7 @@ export function Header() {
   const geneSymbol = geneSymbolMatch ? geneSymbolMatch[1] : undefined
 
   return (
-    <div className="sticky top-0 z-10 mb-1.5 flex items-center justify-between bg-white p-3 md:px-6">
+    <div className="sticky top-0 z-10 mb-1.5 flex items-center justify-between p-3 md:px-6">
       <div className="flex w-full items-center justify-between lg:justify-normal">
         <GeneSearchTooltip />
         {!isDesignToolPage && (

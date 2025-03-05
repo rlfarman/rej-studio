@@ -98,7 +98,7 @@ export function GeneSearchCommand({
                   </TooltipContent>
                 </Tooltip>
                 <div className="space-y-1">
-                  <p className="text-sm text-gray-800">{gene.name}</p>
+                  <p className="text-sm">{gene.name}</p>
                 </div>
               </CommandItem>
             ))}
