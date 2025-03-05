@@ -6,9 +6,7 @@ import { openai } from '@/lib/openai'
 import { desc, sql, cosineDistance, gt, eq } from 'drizzle-orm'
 import { embed } from 'ai'
 
-export type GeneSearchResult = Pick<SelectGene, 'id' | 'name' | 'symbol'> & {
-  similarity: number
-}
+export type GeneSearchResult = Pick<SelectGene, 'id' | 'name' | 'symbol'>
 
 export async function searchGenes(
   query: string
@@ -16,6 +14,19 @@ export async function searchGenes(
   try {
     if (query.trim().length === 0) return []
 
+    // Check if the query is an ENST or ENSMUST
+    if (/^(ENST|ENSMUST)\d+$/.test(query)) {
+      const gene = await searchGeneByENST(query)
+      return gene ? [gene] : []
+    }
+
+    // Check if the query is an ENSG or ENSMUSG
+    if (/^(ENSG|ENSMUG)\d+$/.test(query)) {
+      const gene = await searchGeneByENSG(query)
+      return gene ? [gene] : []
+    }
+
+    // Default search using cosine distance
     const embedding = await generateEmbedding(query)
     const vectorQuery = `[${embedding.join(',')}]`
 
@@ -29,12 +40,63 @@ export async function searchGenes(
         id: genes.id,
         name: genes.name,
         symbol: genes.symbol,
-        similarity,
       })
       .from(genes)
       .where(gt(similarity, 0.25))
       .orderBy((t) => desc(t.similarity))
       .limit(6)
+
+    return gene
+  } catch (error) {
+    console.error(error)
+    throw error
+  }
+}
+
+async function searchGeneByENST(
+  enst: string
+): Promise<GeneSearchResult | undefined> {
+  try {
+    const [isoform] = await db
+      .select({
+        geneId: isoforms.geneId,
+      })
+      .from(isoforms)
+      .where(eq(isoforms.ENST, enst))
+      .limit(1)
+
+    if (!isoform) return undefined
+
+    const [gene] = await db
+      .select({
+        id: genes.id,
+        name: genes.name,
+        symbol: genes.symbol,
+      })
+      .from(genes)
+      .where(eq(genes.id, isoform.geneId))
+      .limit(1)
+
+    return gene
+  } catch (error) {
+    console.error(error)
+    throw error
+  }
+}
+
+async function searchGeneByENSG(
+  ensg: string
+): Promise<GeneSearchResult | undefined> {
+  try {
+    const [gene] = await db
+      .select({
+        id: genes.id,
+        name: genes.name,
+        symbol: genes.symbol,
+      })
+      .from(genes)
+      .where(eq(genes.ENSG, ensg))
+      .limit(1)
 
     return gene
   } catch (error) {
