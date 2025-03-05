@@ -35,13 +35,16 @@ export default async function IsoformTable({ geneId }: IsoformListProps) {
             <TableCell className="font-mono">{isoform.length}</TableCell>
             <TableCell>{isoform.species}</TableCell>
             <TableCell className="font-mono">{isoform.enst}</TableCell>
-            <TableCell>
-              <button className="text-green-500 hover:text-green-700">
+            <TableCell className="text-right">
+              <button className="text-muted-foreground hover:bg-muted rounded p-2">
                 <Download />
               </button>
             </TableCell>
-            <TableCell>
-              <Link href="/design-tool" className="mr-2">
+            <TableCell className="text-right">
+              <Link
+                href="/design-tool"
+                className="text-muted-foreground hover:bg-muted inline-block rounded p-2"
+              >
                 <ExternalLink />
               </Link>
             </TableCell>
