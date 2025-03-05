@@ -2,7 +2,7 @@
 import Link from 'next/link'
 import { WandSparkles } from 'lucide-react'
 import { SpeciesSelect } from '@/components/species-select'
-import { GeneSearch } from '@/components/gene-search-alt'
+import { GeneSearch } from '@/components/gene-search'
 import { searchGenes } from '@/actions'
 import { usePathname } from 'next/navigation'
 import {
@@ -53,6 +53,7 @@ export function Header() {
             searchGenes={searchGenes}
             hideByDefault={!isHomePage}
             defaultQuery={geneSymbol}
+            isDialog
           />
         )}
       </div>
