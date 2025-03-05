@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "db:seed": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' drizzle/seed.ts",
-    "build": "drizzle-kit push && next build",
+    "build": "next build",
     "start": "next start",
     "lint": "next lint"
   },
