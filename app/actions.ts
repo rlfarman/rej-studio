@@ -6,7 +6,9 @@ import { openai } from '@/lib/openai'
 import { desc, sql, cosineDistance, gt, eq } from 'drizzle-orm'
 import { embed } from 'ai'
 
-export type GeneSearchResult = Pick<SelectGene, 'id' | 'name' | 'symbol'>
+export type GeneSearchResult = Pick<SelectGene, 'id' | 'name' | 'symbol'> & {
+  similarity?: number
+}
 
 export async function searchGenes(
   query: string
@@ -40,6 +42,7 @@ export async function searchGenes(
         id: genes.id,
         name: genes.name,
         symbol: genes.symbol,
+        similarity,
       })
       .from(genes)
       .where(gt(similarity, 0.25))
