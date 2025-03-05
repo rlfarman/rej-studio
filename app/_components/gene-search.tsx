@@ -17,6 +17,7 @@ import { Button } from './ui/button'
 import { SearchIcon } from 'lucide-react'
 import { useGeneSearch } from '@/hooks/useGeneSearch'
 import { Skeleton } from './ui/skeleton'
+import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
 
 export function GeneSearchSkeleton() {
   return (
@@ -130,9 +131,16 @@ export function GeneSearch({
                 className="grid grid-cols-[72px_1fr] items-center gap-3 py-3"
                 onSelect={() => handleSelect(gene)}
               >
-                <Badge className="w-[72px] truncate font-mono">
-                  {gene.symbol}
-                </Badge>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Badge className="block w-[72px] truncate text-center font-mono">
+                      {gene.symbol}
+                    </Badge>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <div className="text-center text-xs">{gene.symbol}</div>
+                  </TooltipContent>
+                </Tooltip>
                 <div className="space-y-1">
                   <p className="truncate text-sm text-gray-800">{gene.name}</p>
                 </div>

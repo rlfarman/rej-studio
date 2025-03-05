@@ -51,7 +51,6 @@ export function Header() {
         {!isHomePage && (
           <GeneSearch
             searchGenes={searchGenes}
-            hideByDefault={!isHomePage}
             defaultQuery={geneSymbol}
             isDialog
           />
