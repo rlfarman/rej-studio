@@ -18,6 +18,7 @@ import { SearchIcon } from 'lucide-react'
 import { useGeneSearch } from '@/hooks/useGeneSearch'
 import { Skeleton } from './ui/skeleton'
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
+import { GeneSearchCommand } from './gene-search/gene-search-command'
 
 export function GeneSearchSkeleton() {
   return (
@@ -90,68 +91,6 @@ export function GeneSearch({
     return () => document.removeEventListener('keydown', down)
   }, [])
 
-  const renderSearchInput = () => (
-    <Command
-      className="rounded-lg border md:min-w-[450px]"
-      shouldFilter={false}
-    >
-      <CommandInput
-        id="search"
-        ref={inputRef}
-        placeholder="Search for Genes"
-        className="border-0 text-base outline-0 ring-0 focus:border-0 focus:ring-0 active:border-0 active:ring-0 sm:text-sm"
-        value={query}
-        onValueChange={(q) => setQuery(q)}
-        autoFocus
-      />
-      <CommandList className="max-h-[300px] overflow-y-auto">
-        {isLoading ? (
-          <GeneSearchSkeleton />
-        ) : (
-          <>
-            <CommandEmpty>
-              {query.trim() === '' || !hasSearched ? (
-                'Start typing to search for genes.'
-              ) : (
-                <div>
-                  No results found.{' '}
-                  <Link
-                    href="/design-tool"
-                    className="text-sky-600 hover:underline dark:text-sky-500"
-                  >
-                    Try entering a custom genetic sequence instead.
-                  </Link>
-                </div>
-              )}
-            </CommandEmpty>
-            {searchResults.map((gene) => (
-              <CommandItem
-                key={gene.id}
-                value={gene.name}
-                className="grid grid-cols-[72px_1fr] items-center gap-3 py-3"
-                onSelect={() => handleSelect(gene)}
-              >
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Badge className="block w-[72px] truncate text-center font-mono">
-                      {gene.symbol}
-                    </Badge>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <div className="text-center text-xs">{gene.symbol}</div>
-                  </TooltipContent>
-                </Tooltip>
-                <div className="space-y-1">
-                  <p className="text-sm text-gray-800">{gene.name}</p>
-                </div>
-              </CommandItem>
-            ))}
-          </>
-        )}
-      </CommandList>
-    </Command>
-  )
-
   if (isDialog) {
     return (
       <>
@@ -172,7 +111,14 @@ export function GeneSearch({
           </p>
         </Button>
         <CommandDialog open={isOpen} onOpenChange={setIsOpen}>
-          {renderSearchInput()}
+          <GeneSearchCommand
+            query={query}
+            setQuery={setQuery}
+            hasSearched={hasSearched}
+            searchResults={searchResults}
+            isLoading={isLoading}
+            handleSelect={handleSelect}
+          />
         </CommandDialog>
       </>
     )
@@ -180,7 +126,14 @@ export function GeneSearch({
 
   return (
     <div className="absolute left-1/2 -translate-x-1/2 transform">
-      {renderSearchInput()}
+      <GeneSearchCommand
+        query={query}
+        setQuery={setQuery}
+        hasSearched={hasSearched}
+        searchResults={searchResults}
+        isLoading={isLoading}
+        handleSelect={handleSelect}
+      />
     </div>
   )
 }

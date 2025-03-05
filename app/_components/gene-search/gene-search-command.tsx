@@ -7,9 +7,29 @@ import {
 } from '@/components/ui/command'
 import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
-import { GeneSearchSkeleton } from './gene-search-skeleton'
 import type { GeneSearchResult } from '@/actions'
+import { Skeleton } from '@/components/ui/skeleton'
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from '@/components/ui/tooltip'
 
+export function GeneResultsSkeleton() {
+  return (
+    <div>
+      {[...Array(5)].map((_, index) => (
+        <div
+          key={index}
+          className="grid grid-cols-[72px_1fr] items-center gap-3 px-2 py-3"
+        >
+          <Skeleton className="h-6 w-[72px]" />
+          <Skeleton className="h-4 w-full" />
+        </div>
+      ))}
+    </div>
+  )
+}
 interface GeneSearchInputProps {
   query: string
   setQuery: (query: string) => void
@@ -17,19 +37,15 @@ interface GeneSearchInputProps {
   searchResults: Array<Pick<GeneSearchResult, 'symbol' | 'id' | 'name'>>
   isLoading: boolean
   handleSelect: (gene: Pick<GeneSearchResult, 'symbol' | 'id' | 'name'>) => void
-  inputRef?: React.RefObject<HTMLInputElement>
-  hideByDefault?: boolean
 }
 
-export function GeneSearchInput({
+export function GeneSearchCommand({
   query,
   setQuery,
   hasSearched,
   searchResults,
   isLoading,
   handleSelect,
-  inputRef,
-  hideByDefault,
 }: GeneSearchInputProps) {
   return (
     <Command
@@ -38,16 +54,15 @@ export function GeneSearchInput({
     >
       <CommandInput
         id="search"
-        ref={inputRef}
         placeholder="Search for Genes"
         className="border-0 text-base outline-0 ring-0 focus:border-0 focus:ring-0 active:border-0 active:ring-0 sm:text-sm"
         value={query}
         onValueChange={(q) => setQuery(q)}
-        autoFocus={!hideByDefault}
+        autoFocus
       />
       <CommandList className="max-h-[300px] overflow-y-auto">
         {isLoading ? (
-          <GeneSearchSkeleton />
+          <GeneResultsSkeleton />
         ) : (
           <>
             <CommandEmpty>
@@ -72,11 +87,18 @@ export function GeneSearchInput({
                 className="grid grid-cols-[72px_1fr] items-center gap-3 py-3"
                 onSelect={() => handleSelect(gene)}
               >
-                <Badge className="w-[72px] truncate font-mono">
-                  {gene.symbol}
-                </Badge>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Badge className="block w-[72px] truncate text-center font-mono">
+                      {gene.symbol}
+                    </Badge>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <div className="text-center text-xs">{gene.symbol}</div>
+                  </TooltipContent>
+                </Tooltip>
                 <div className="space-y-1">
-                  <p className="truncate text-sm text-gray-800">{gene.name}</p>
+                  <p className="text-sm text-gray-800">{gene.name}</p>
                 </div>
               </CommandItem>
             ))}
