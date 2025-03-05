@@ -7,11 +7,11 @@ export default function HomePage() {
     <div className="flex flex-col lg:pt-36">
       <div className="mx-auto mt-0 w-full max-w-4xl px-4 text-center sm:px-6 lg:px-8">
         <div className="mb-4 flex items-center justify-center"></div>
-        <div className="font-mono">RNA END JOINING</div>
-        <h1 className="text-primary text-3xl font-bold sm:text-4xl">
+        <div className="pb-2 font-mono">RNA END JOINING</div>
+        <h1 className="text-primary pb-2 text-3xl font-bold sm:text-4xl">
           What gene are you optimizing?
         </h1>
-        <p className="text-muted-foreground mt-3">
+        <p className="text-muted-foreground">
           Try searching for a gene, or{' '}
           <Link
             href={{
