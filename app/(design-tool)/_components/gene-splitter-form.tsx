@@ -1,14 +1,8 @@
 'use client'
-import { useState } from 'react'
 import { z } from 'zod'
-import downloadZip from '@/design-tool/lib/download-zip'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import {
-  SpeciesOptions,
-  SpeciesValues,
-} from '@/design-tool/types/species-options'
+import { SpeciesValues } from '@/design-tool/types/species-options'
 import {
   Card,
   CardContent,
@@ -16,7 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import DNASplicer from './dna-splicer'
+import { DNASplicer } from './dna-splicer'
 import {
   Form,
   FormItem,
@@ -35,6 +29,7 @@ import {
   AccordionContent,
 } from '@/components/ui/accordion'
 import { Slider } from '@/components/ui/slider'
+import { SpeciesSelect } from './species-select'
 
 interface GeneSplitterFormProperties {
   defaultCodingSequence?: string
@@ -68,8 +63,10 @@ const validationSchema = z.object({
   induceOptimalSpliceSitesWeight: z.number().min(0).max(1).default(0.5),
   '5PrimeStimulatoryIntron': z.boolean().default(true),
   '3PrimeStimulatoryIntron': z.boolean().default(true),
+  spliceJunctionPosition: z.number().min(1),
 })
-type FormValues = z.infer<typeof validationSchema>
+
+export type FormValues = z.infer<typeof validationSchema>
 
 function NameInput() {
   const { control } = useFormContext<FormValues>()
@@ -108,40 +105,9 @@ function CodingSequenceInput() {
             <input
               type="text"
               placeholder="ATGATTACA..."
-              className="block w-full rounded-lg border border-neutral-300 bg-neutral-50 p-2.5 text-neutral-900 focus:border-sky-500 focus:ring-sky-500 dark:border-neutral-600 dark:bg-neutral-700 dark:text-white dark:placeholder-neutral-400 dark:focus:border-sky-500 dark:focus:ring-sky-500"
+              className="block w-full rounded-lg border border-neutral-300 bg-neutral-50 p-2.5 font-mono tracking-wide text-neutral-900 focus:border-sky-500 focus:ring-sky-500 dark:border-neutral-600 dark:bg-neutral-700 dark:text-white dark:placeholder-neutral-400 dark:focus:border-sky-500 dark:focus:ring-sky-500"
               {...field}
             />
-          </FormControl>
-          <FormMessage />
-        </FormItem>
-      )}
-    />
-  )
-}
-
-function SpeciesSelect() {
-  const { control } = useFormContext<FormValues>()
-  return (
-    <FormField
-      name="species"
-      control={control}
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel>Codon optimization for species</FormLabel>
-          <FormControl>
-            <RadioGroup className="flex gap-4" {...field}>
-              {SpeciesOptions.map(({ label, value }) => (
-                <div key={value} className="flex items-center space-x-2">
-                  <RadioGroupItem id={value} value={value} />
-                  <label
-                    htmlFor={value}
-                    className="text-sm font-medium text-neutral-900 dark:text-white"
-                  >
-                    {label}
-                  </label>
-                </div>
-              ))}
-            </RadioGroup>
           </FormControl>
           <FormMessage />
         </FormItem>
@@ -331,7 +297,7 @@ function SubmitButton() {
   )
 }
 
-export default function GeneSplitterForm({
+export function GeneSplitterForm({
   defaultCodingSequence,
   defaultName,
   defaultSpecies,
@@ -348,49 +314,14 @@ export default function GeneSplitterForm({
       codingSequence: defaultCodingSequence ?? '',
       name: defaultName ?? '',
       species: defaultSpecies ?? SpeciesValues.None,
+      spliceJunctionPosition: defaultCodingSequence
+        ? parseInt((defaultCodingSequence.length / 2).toString())
+        : 0,
     },
   })
 
   function handleSubmitForm({ codingSequence, ...options }: FormValues) {
-    return new Promise((resolve) => {
-      fetch(
-        process.env.NODE_ENV === 'production'
-          ? 'https://rej-design-tool.wl.r.appspot.com'
-          : 'http://localhost:3001',
-        {
-          method: 'POST',
-          body: JSON.stringify({
-            cds: codingSequence,
-            options: {
-              codon_optimize: options.species,
-              remove_cryptic_ss: options.removeCrypticSpliceSites,
-              remove_cryptic_ss_weight: options.removeCrypticSpliceSitesWeight,
-              induce_optimal_ss: options.induceOptimalSpliceSites,
-              induce_optimal_ss_weight: options.induceOptimalSpliceSitesWeight,
-              stim_5: options['5PrimeStimulatoryIntron'],
-              stim_3: options['3PrimeStimulatoryIntron'],
-            },
-          }),
-        }
-      ).then((res) => {
-        if (!res.ok) {
-          throw new Error('Failed to fetch data')
-        }
-        resolve(downloadZip(res))
-      })
-    })
-  }
-
-  const [dnaLength, setDnaLength] = useState(4600)
-  const [selectedPosition, setSelectedPosition] = useState(2300)
-  const [customLength, setCustomLength] = useState('')
-
-  const handleLengthChange = () => {
-    const length = Number.parseInt(customLength)
-    if (!isNaN(length) && length > 0) {
-      setDnaLength(length)
-      setSelectedPosition(Math.floor(length / 2))
-    }
+    console.log(codingSequence, options)
   }
 
   return (
@@ -416,7 +347,7 @@ export default function GeneSplitterForm({
                     </p>
                   </div>
                 </AccordionTrigger>
-                <AccordionContent>
+                <AccordionContent className="pb-8 pt-4">
                   <CodonOptimizationOptions />
                 </AccordionContent>
               </AccordionItem>
@@ -429,7 +360,7 @@ export default function GeneSplitterForm({
                     </p>
                   </div>
                 </AccordionTrigger>
-                <AccordionContent>
+                <AccordionContent className="pb-8 pt-4">
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <FiveFragmentOptions />
                     <ThreeFragmentOptions />
@@ -445,12 +376,8 @@ export default function GeneSplitterForm({
                     </p>
                   </div>
                 </AccordionTrigger>
-                <AccordionContent>
-                  <DNASplicer
-                    dnaLength={dnaLength}
-                    defaultPosition={selectedPosition}
-                    onChange={setSelectedPosition}
-                  />
+                <AccordionContent className="pb-8 pt-4">
+                  <DNASplicer />
                 </AccordionContent>
               </AccordionItem>
             </Accordion>

@@ -64,7 +64,8 @@ export async function getIsoformsByGene(geneId: string) {
       })
       .from(isoforms)
       .where(eq(isoforms.geneId, geneId))
-      .orderBy(isoforms.species)
+      // Order by descending enst
+      .orderBy(isoforms.ENST)
 
     return isoformData
   } catch (error) {

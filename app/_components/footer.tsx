@@ -1,28 +1,13 @@
-export default function Footer() {
+export function Footer() {
   return (
-    <div className="max-w-(--breakpoint-md) container mx-auto flex flex-col px-4 pb-4 pt-12">
-      <h1 className="mt-2 text-neutral-400 dark:text-neutral-500">REJ</h1>
-      <span className="mt-2 text-neutral-400 dark:text-neutral-500">
-        Created by{' '}
-        <a
-          href="https://www.linkedin.com/in/ryan-hsu-18647295/"
-          className="text-sky-600 hover:underline dark:text-sky-500"
-        >
-          Ryan Hsu
-        </a>{' '}
-        and{' '}
-        <a
-          href="https://www.linkedin.com/in/rlfarman/"
-          className="text-sky-600 hover:underline dark:text-sky-500"
-        >
-          Richie Farman
-        </a>
-      </span>
-      <span className="text-xs text-sky-600 hover:underline dark:text-sky-500">
-        <a href="https://www.salk.edu/">
-          PFAFF Lab at the Salk Institute for Biological Studies
-        </a>
-      </span>
-    </div>
+    <footer className="mx-auto mt-auto max-w-4xl px-4 text-center sm:px-6 lg:px-8">
+      <h1 className="font-geist-mono text-muted-foreground mt-2">REJ</h1>
+      <p className="text-muted-foreground text-xs">
+        PREVIEW - SALK INSTITUTE EYES ONLY
+      </p>
+      <p className="text-muted-foreground text-xs">
+        Created by Richie Farman and Ryan Hsu.
+      </p>
+    </footer>
   )
 }

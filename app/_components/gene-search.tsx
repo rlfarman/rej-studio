@@ -7,7 +7,6 @@ import {
   CommandItem,
   CommandList,
 } from '@/components/ui/command'
-import type { genes as SelectGene } from '@/drizzle/schema'
 import { useDebounce } from 'use-debounce'
 import { useRouter } from 'next/navigation'
 import type { GeneSearchResult } from '@/actions'
@@ -17,6 +16,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import Link from 'next/link'
+import { Badge } from '@/components/ui/badge'
 
 interface GeneSearchProperties {
   defaultQuery?: string
@@ -26,7 +26,7 @@ interface GeneSearchProperties {
   ) => Promise<Array<Pick<GeneSearchResult, 'symbol' | 'id' | 'name'>>>
 }
 
-export default function GeneSearch({
+export function GeneSearch({
   searchGenes,
   defaultQuery,
   hideByDefault = false,
@@ -35,15 +35,12 @@ export default function GeneSearch({
   const [query, setQuery] = useState(defaultQuery ?? '')
   const [hasSearched, setHasSearched] = useState(false)
   const [searchResults, setSearchResults] = useState<
-    Array<
-      Pick<typeof SelectGene, 'symbol' | 'id' | 'name'> & {
-        similarity?: number
-      }
-    >
+    Array<Pick<GeneSearchResult, 'symbol' | 'id' | 'name'>>
   >([])
   const [debouncedQuery] = useDebounce(query, 200)
-  const [isFocused, setIsFocused] = useState(false)
+  const [isOpen, setIsOpen] = useState(false)
   const commandRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
   const [commandWidth, setCommandWidth] = useState<number | undefined>(
     undefined
   )
@@ -80,27 +77,36 @@ export default function GeneSearch({
     }
   }, [debouncedQuery, searchGenes])
 
-  const handleSelect = (gene: GeneSearchResult) => {
+  const handleSelect = (
+    gene: Pick<GeneSearchResult, 'symbol' | 'id' | 'name'>
+  ) => {
+    setIsOpen(false)
     router.push(`/genes/${gene.symbol}`)
     setQuery(gene.symbol)
+
+    if (inputRef.current) {
+      inputRef.current.blur()
+    }
   }
 
   return (
-    <Popover open={!hideByDefault || isFocused}>
+    <Popover open={!hideByDefault || isOpen} onOpenChange={setIsOpen}>
       <div ref={commandRef}>
         <Command
-          className="rounded-lg border shadow-md md:min-w-[450px]"
+          className="rounded-lg border md:min-w-[450px]"
           shouldFilter={false}
         >
           <PopoverTrigger asChild>
             <CommandInput
               id="search"
+              ref={inputRef}
               placeholder="Search for Genes"
               className="border-0 text-base outline-0 ring-0 focus:border-0 focus:ring-0 active:border-0 active:ring-0 sm:text-sm"
               value={query}
               onValueChange={(q) => setQuery(q)}
-              onFocus={() => setIsFocused(true)}
-              onBlur={() => setIsFocused(false)}
+              onFocus={() => setIsOpen(true)}
+              onBlur={() => setIsOpen(false)}
+              autoFocus={!hideByDefault}
             />
           </PopoverTrigger>
           <PopoverContent
@@ -134,18 +140,16 @@ export default function GeneSearch({
                 <CommandItem
                   key={gene.id}
                   value={gene.name}
-                  className="flex items-center justify-between py-3"
+                  className="grid grid-cols-[72px_1fr] items-center gap-3 py-3"
                   onSelect={() => handleSelect(gene)}
                 >
-                  <div className="flex items-center space-x-4">
-                    <div className="rounded bg-zinc-100 p-0.5 font-mono text-xs">
-                      {gene.symbol}
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-sm text-gray-800">
-                        {gene.name.substring(0, 90)}
-                      </p>
-                    </div>
+                  <Badge className="w-[72px] truncate font-mono">
+                    {gene.symbol}
+                  </Badge>
+                  <div className="space-y-1">
+                    <p className="truncate text-sm text-gray-800">
+                      {gene.name}
+                    </p>
                   </div>
                 </CommandItem>
               ))}

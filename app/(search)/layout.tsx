@@ -3,5 +3,5 @@ export default async function GeneSearchLayout({
 }: {
   children: React.ReactNode
 }) {
-  return <div>{children}</div>
+  return <div className="container mx-auto pb-6">{children}</div>
 }
