@@ -1,40 +1,14 @@
 'use client'
 import { useEffect, useState, useRef } from 'react'
-import {
-  Command,
-  CommandDialog,
-  CommandEmpty,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from '@/components/ui/command'
-import { useDebounce } from 'use-debounce'
+import { CommandDialog } from '@/components/ui/command'
 import { useRouter } from 'next/navigation'
 import type { GeneSearchResult } from '@/actions'
-import Link from 'next/link'
-import { Badge } from '@/components/ui/badge'
 import { Button } from './ui/button'
 import { SearchIcon } from 'lucide-react'
 import { useGeneSearch } from '@/hooks/useGeneSearch'
 import { Skeleton } from './ui/skeleton'
-import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
 import { GeneSearchCommand } from './gene-search/gene-search-command'
 
-export function GeneSearchSkeleton() {
-  return (
-    <div>
-      {[...Array(5)].map((_, index) => (
-        <div
-          key={index}
-          className="grid grid-cols-[72px_1fr] items-center gap-3 px-2 py-3"
-        >
-          <Skeleton className="h-6 w-[72px]" />
-          <Skeleton className="h-4 w-full" />
-        </div>
-      ))}
-    </div>
-  )
-}
 interface GeneSearchProperties {
   searchGenes: (
     content: string
@@ -54,22 +28,7 @@ export function GeneSearch({
       searchGenes,
       defaultQuery,
     })
-  const [debouncedQuery] = useDebounce(query, 500)
   const [isOpen, setIsOpen] = useState(false)
-  const inputRef = useRef<HTMLInputElement>(null)
-
-  useEffect(() => {
-    let current = true
-    if (debouncedQuery.trim().length > 0) {
-      searchGenes(debouncedQuery).then((results) => {
-        if (current) {
-        }
-      })
-    }
-    return () => {
-      current = false
-    }
-  }, [debouncedQuery, searchGenes])
 
   const handleSelect = (
     gene: Pick<GeneSearchResult, 'symbol' | 'id' | 'name'>
