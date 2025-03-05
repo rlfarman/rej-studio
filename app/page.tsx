@@ -18,14 +18,14 @@ export default function HomePage() {
               pathname: '/design-tool',
               query: { gene: 'ATM' },
             }}
-            className="text-sky-600 hover:underline dark:text-sky-500"
+            className="text-primary font-medium underline underline-offset-4"
           >
             design your own
           </Link>
           .
         </p>
       </div>
-      <div className="mx-auto mt-10 w-full max-w-2xl px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto mt-8 w-full max-w-2xl px-4 sm:px-6 lg:px-8">
         <GeneSearch searchGenes={searchGenes} />
       </div>
     </div>
