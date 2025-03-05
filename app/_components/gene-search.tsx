@@ -142,7 +142,7 @@ export function GeneSearch({
                   </TooltipContent>
                 </Tooltip>
                 <div className="space-y-1">
-                  <p className="truncate text-sm text-gray-800">{gene.name}</p>
+                  <p className="text-sm text-gray-800">{gene.name}</p>
                 </div>
               </CommandItem>
             ))}
