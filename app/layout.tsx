@@ -3,6 +3,7 @@ import { Header } from '@/components/header'
 import { GeistSans } from 'geist/font/sans'
 import { GeistMono } from 'geist/font/mono'
 import { Footer } from '@/components/footer'
+import { ThemeProvider } from '@/components/theme-provider'
 
 export const metadata = {
   title: 'RNA End-joining Design Tool',
@@ -15,14 +16,25 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`}>
+    <html
+      lang="en"
+      className={`${GeistSans.variable} ${GeistMono.variable}`}
+      suppressHydrationWarning
+    >
       <head />
       <body className="mx-auto flex min-h-screen flex-col justify-between">
-        <div className="relative flex min-h-screen flex-col pb-6">
-          <Header />
-          {children}
-          <Footer />
-        </div>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <div className="relative flex min-h-screen flex-col pb-6">
+            <Header />
+            {children}
+            <Footer />
+          </div>
+        </ThemeProvider>
       </body>
     </html>
   )
