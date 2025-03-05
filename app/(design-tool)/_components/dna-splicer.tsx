@@ -18,10 +18,6 @@ export function DNASplicer() {
   const spliceJunctionPosition = watch('spliceJunctionPosition')
   const [percentage, setPercentage] = useState(50)
 
-  console.log('codingSequence', codingSequence)
-  console.log('spliceJunctionPosition', spliceJunctionPosition)
-  console.log('percentage', percentage)
-
   useEffect(() => {
     // If new coding sequence length is less than the current splice junction position, reset the splice junction position to the percentage of the new coding sequence length
     // Set the value of the spliceJunctionPosition equal to the previous percentage with the new coding sequence length
@@ -29,7 +25,7 @@ export function DNASplicer() {
       'spliceJunctionPosition',
       Math.floor((Number(percentage) / 100) * codingSequence.length)
     )
-  }, [spliceJunctionPosition, codingSequence.length])
+  }, [spliceJunctionPosition, codingSequence.length, percentage, setValue])
 
   const handleSliderChange = (value: number[]) => {
     const newPosition = Math.floor(value[0])

@@ -10,6 +10,7 @@ import {
   TooltipTrigger,
   TooltipContent,
 } from '@/components/ui/tooltip'
+import { Suspense } from 'react'
 
 function GeneSearchTooltip() {
   return (
@@ -40,7 +41,11 @@ export function Header() {
     <div className="sticky top-0 z-10 mb-1.5 flex items-center justify-between bg-white p-3 md:px-6">
       <div className="flex w-full items-center justify-between lg:justify-normal">
         <GeneSearchTooltip />
-        {!isDesignToolPage && <SpeciesSelect />}
+        {!isDesignToolPage && (
+          <Suspense>
+            <SpeciesSelect />
+          </Suspense>
+        )}
       </div>
       <div className="absolute left-1/2 -translate-x-1/2 transform">
         {!isHomePage && (

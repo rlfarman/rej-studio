@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "db:seed": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' drizzle/seed.ts",
-    "build": "drizzle-kit push && pnpm db:seed && next build",
+    "build": "drizzle-kit push && next build",
     "start": "next start",
     "lint": "next lint"
   },
@@ -68,7 +68,7 @@
   },
   "devDependencies": {
     "dotenv": "^16.4.5",
-    "drizzle-kit": "^0.22.0",
+    "drizzle-kit": "^0.30.5",
     "prettier": "^2.8.8",
     "prettier-plugin-tailwindcss": "^0.3.0"
   },
