@@ -25,7 +25,7 @@ export default function RootLayout({
       <body className="mx-auto flex min-h-screen flex-col justify-between">
         <ThemeProvider
           attribute="class"
-          defaultTheme="dark"
+          defaultTheme="system"
           enableSystem
           disableTransitionOnChange
         >
