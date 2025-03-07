@@ -284,7 +284,7 @@ export async function createSearch({
   }
 }
 
-export async function getSearchedGenes({ userId }: { userId: string }) {
+export async function getRecentSearchedGenes({ userId }: { userId: string }) {
   try {
     return db
       .selectDistinctOn([searches.geneId], {
@@ -325,7 +325,7 @@ export const createJob = async ({
   }
 }
 
-export const getJobs = async ({ userId }: { userId: string }) => {
+export const getRecentJobs = async ({ userId }: { userId: string }) => {
   try {
     return db
       .select({
@@ -338,6 +338,7 @@ export const getJobs = async ({ userId }: { userId: string }) => {
       .from(jobs)
       .where(eq(jobs.userId, userId))
       .orderBy((t) => desc(t.createdAt))
+      .limit(6)
   } catch (error) {
     console.error(error)
     throw error

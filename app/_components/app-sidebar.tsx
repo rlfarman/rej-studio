@@ -12,15 +12,15 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from '@/components/ui/sidebar'
-import { getJobs, getSearchedGenes, getFavorites } from '@/actions'
+import { getRecentJobs, getRecentSearchedGenes, getFavorites } from '@/actions'
 import Link from 'next/link'
 import { Badge } from './ui/badge'
 
 export async function AppSidebar({
   ...props
 }: React.ComponentProps<typeof Sidebar>) {
-  const searchedGenes = await getSearchedGenes({ userId: 'abcd1234' })
-  const jobs = await getJobs({ userId: 'abcd1234' })
+  const searchedGenes = await getRecentSearchedGenes({ userId: 'abcd1234' })
+  const jobs = await getRecentJobs({ userId: 'abcd1234' })
   const favoriteGenes = await getFavorites({ userId: 'abcd1234' })
 
   return (
