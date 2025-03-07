@@ -24,17 +24,19 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <head />
-      <body className="flex min-h-screen flex-col">
+      <body className="mx-auto flex min-h-screen flex-col justify-between">
         <ThemeProvider attribute="class" enableSystem disableTransitionOnChange>
           <SidebarProvider>
-            <div className="flex flex-1">
-              <AppSidebar />
-              <div className="flex flex-1 flex-col">
-                <Header />
-                <main className="flex-1">{children}</main>
+            <AppSidebar />
+            <SidebarInset>
+              <Header />
+              <div className="relative flex min-h-screen flex-col pb-6">
+                <div className="flex">
+                  <main className="flex-1">{children}</main>
+                </div>
                 <Footer />
               </div>
-            </div>
+            </SidebarInset>
           </SidebarProvider>
         </ThemeProvider>
       </body>
