@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import { CommandDialog } from '@/components/ui/command'
 import { useRouter } from 'next/navigation'
-import type { GeneSearchResult } from '@/actions'
+import { createSearch, type GeneSearchResult } from '@/actions'
 import { Button } from './ui/button'
 import { SearchIcon } from 'lucide-react'
 import { useGeneSearch } from '@/hooks/useGeneSearch'
@@ -33,6 +33,11 @@ export function GeneSearch({
     gene: Pick<GeneSearchResult, 'symbol' | 'id' | 'name'>
   ) => {
     setIsOpen(false)
+    createSearch({
+      query,
+      geneId: gene.id,
+      userId: 'abcd1234',
+    })
     router.push(`/genes/${gene.symbol}`)
     setQuery(gene.symbol)
   }
@@ -55,7 +60,7 @@ export function GeneSearch({
         <Button
           variant="outline"
           onClick={() => setIsOpen(true)}
-          className="text-muted-foreground hover:text-muted-foreground min-w-42 sm:min-w-96 md:min-w-112 w-full cursor-pointer justify-between"
+          className="text-muted-foreground hover:text-muted-foreground min-w-42 sm:min-w-96 md:min-w-72 xl:min-w-108 w-full cursor-pointer justify-between"
         >
           <div className="flex items-center gap-2">
             <SearchIcon className="h-5 w-5" />
@@ -84,16 +89,14 @@ export function GeneSearch({
   }
 
   return (
-    <div className="absolute left-1/2 -translate-x-1/2 transform">
-      <GeneSearchCommand
-        query={query}
-        setQuery={setQuery}
-        hasSearched={hasSearched}
-        searchResults={searchResults}
-        isLoading={isLoading}
-        setIsOpen={setIsOpen}
-        handleSelect={handleSelect}
-      />
-    </div>
+    <GeneSearchCommand
+      query={query}
+      setQuery={setQuery}
+      hasSearched={hasSearched}
+      searchResults={searchResults}
+      isLoading={isLoading}
+      setIsOpen={setIsOpen}
+      handleSelect={handleSelect}
+    />
   )
 }

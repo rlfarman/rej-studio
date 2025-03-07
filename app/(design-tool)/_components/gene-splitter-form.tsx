@@ -29,8 +29,9 @@ import {
   AccordionContent,
 } from '@/components/ui/accordion'
 import { Slider } from '@/components/ui/slider'
-import { SpeciesSelect } from './species-select'
 import { Input } from '@/components/ui/input'
+import { createJob } from '@/actions'
+import { SpeciesOptions } from './species-options'
 
 interface GeneSplitterFormProperties {
   defaultCodingSequence?: string
@@ -113,7 +114,7 @@ function CustomizationOptions() {
       <div className="grid grid-rows-2 gap-4">
         <NameInput />
         <CodingSequenceInput />
-        <SpeciesSelect />
+        <SpeciesOptions />
       </div>
     </div>
   )
@@ -311,8 +312,16 @@ export function GeneSplitterForm({
     },
   })
 
-  function handleSubmitForm({ codingSequence, ...options }: FormValues) {
-    console.log(codingSequence, options)
+  async function handleSubmitForm({ codingSequence, ...options }: FormValues) {
+    try {
+      await createJob({
+        userId: 'abcd1234',
+        name: options.name,
+        sequence: codingSequence,
+      })
+    } catch (error) {
+      console.error('Error creating job:', error)
+    }
   }
 
   return (

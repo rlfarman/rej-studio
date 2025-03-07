@@ -4,6 +4,8 @@ import { GeistSans } from 'geist/font/sans'
 import { GeistMono } from 'geist/font/mono'
 import { Footer } from '@/components/footer'
 import { ThemeProvider } from '@/components/theme-provider'
+import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
+import { AppSidebar } from './_components/app-sidebar'
 
 export const metadata = {
   title: 'RNA End-joining Design Tool',
@@ -22,18 +24,18 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <head />
-      <body className="mx-auto flex min-h-screen flex-col justify-between">
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <div className="relative flex min-h-screen flex-col pb-6">
-            <Header />
-            {children}
-            <Footer />
-          </div>
+      <body className="flex min-h-screen flex-col">
+        <ThemeProvider attribute="class" enableSystem disableTransitionOnChange>
+          <SidebarProvider>
+            <div className="flex flex-1">
+              <AppSidebar />
+              <div className="flex flex-1 flex-col">
+                <Header />
+                <main className="flex-1">{children}</main>
+                <Footer />
+              </div>
+            </div>
+          </SidebarProvider>
         </ThemeProvider>
       </body>
     </html>

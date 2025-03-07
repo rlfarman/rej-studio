@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/tooltip'
 import { Suspense } from 'react'
 import { Button } from '@/components/ui/button'
+import { SidebarTrigger } from './ui/sidebar'
 
 function GeneSearchTooltip() {
   return (
@@ -19,7 +20,7 @@ function GeneSearchTooltip() {
       <TooltipTrigger asChild>
         <Button variant="ghost" asChild>
           <Link href="/design-tool">
-            <WandSparkles className="size-5" />
+            <WandSparkles className="size-5 " />
           </Link>
         </Button>
       </TooltipTrigger>
@@ -38,9 +39,12 @@ export function Header() {
   const geneSymbol = geneSymbolMatch ? geneSymbolMatch[1] : undefined
 
   return (
-    <div className="sticky top-0 z-10 mb-1.5 flex items-center justify-between p-3 md:px-6">
-      <div className="flex w-full items-center justify-between lg:justify-normal">
-        <GeneSearchTooltip />
+    <div className="bg-background sticky top-0 z-10 mb-1.5 flex items-center justify-between p-3 md:px-6">
+      <div className="flex w-full items-center justify-between xl:justify-normal">
+        <div>
+          <SidebarTrigger size="lg" />
+          <GeneSearchTooltip />
+        </div>
         {!isDesignToolPage && (
           <Suspense>
             <SpeciesSelect />

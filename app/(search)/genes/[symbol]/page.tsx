@@ -1,10 +1,11 @@
 import { notFound } from 'next/navigation'
 import { Separator } from '@/components/ui/separator'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { getGeneBySymbol } from '@/actions'
+import { getGeneBySymbol, isFavoriteGene } from '@/actions'
 import IsoformTable, { IsoformTableLoading } from './_components/isoform-table'
 import { getAllGeneSymbols } from './_actions'
 import { Suspense } from 'react'
+import { FavoriteGeneButton } from './_components/favorite-gene-button'
 
 export async function generateStaticParams() {
   const genes = await getAllGeneSymbols()
@@ -15,7 +16,6 @@ export async function generateStaticParams() {
 
 export default async function GeneSymbolPage({
   params,
-  ...rest
 }: {
   params: Promise<{ symbol: string }>
 }) {
@@ -26,12 +26,18 @@ export default async function GeneSymbolPage({
     notFound()
   }
 
+  const isFavorite = await isFavoriteGene({
+    geneId: gene.id,
+    userId: 'abcd1234',
+  })
+
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center gap-4">
         <CardTitle className="font-mono text-2xl font-bold">
           {gene.symbol}
         </CardTitle>
+        <FavoriteGeneButton geneId={gene.id} isFavorite={isFavorite} />
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 gap-4">

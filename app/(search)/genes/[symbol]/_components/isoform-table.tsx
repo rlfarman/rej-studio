@@ -25,7 +25,10 @@ export default async function IsoformTable({ geneId }: IsoformListProps) {
         <TableRow>
           <TableHead className="w-[100px]">Length</TableHead>
           <TableHead>Species</TableHead>
-          <TableHead>ENST</TableHead>
+          <TableHead>
+            <span className="hidden sm:inline">Ensembl Transcript ID</span>
+            <span className="sm:hidden">ENST</span>
+          </TableHead>
           <TableHead className="text-right">Download</TableHead>
           <TableHead className="text-right">Customize</TableHead>
         </TableRow>

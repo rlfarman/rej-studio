@@ -100,6 +100,7 @@ export function DNASplicer() {
                 style={{ width: `${String(percentage).length + 1.5}ch` }}
                 min={0}
                 max={100}
+                step={0.1} // Allow decimal values
               />
               <span className="text-muted-foreground ml-1 text-sm font-normal">
                 %

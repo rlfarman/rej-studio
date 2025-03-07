@@ -7,11 +7,11 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { useFormContext } from 'react-hook-form'
-import { SpeciesOptions } from '../_types/species-options'
+import { SpeciesOptions as SpeciesOptionsType } from '../_types/species-options'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { FormValues } from './gene-splitter-form'
 
-export function SpeciesSelect() {
+export function SpeciesOptions() {
   const { control } = useFormContext<FormValues>()
   return (
     <FormField
@@ -26,13 +26,10 @@ export function SpeciesSelect() {
               value={field.value}
               onValueChange={field.onChange}
             >
-              {SpeciesOptions.map(({ label, value }) => (
+              {SpeciesOptionsType.map(({ label, value }) => (
                 <div key={value} className="flex items-center space-x-2">
                   <RadioGroupItem id={value} value={value} />
-                  <label
-                    htmlFor={value}
-                    className="text-sm font-medium text-neutral-900 dark:text-white"
-                  >
+                  <label htmlFor={value} className="text-sm font-medium">
                     {label}
                   </label>
                 </div>
