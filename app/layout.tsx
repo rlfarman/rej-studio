@@ -1,9 +1,11 @@
 import '@/styles/globals.css'
-import { Open_Sans } from 'next/font/google'
-import Header from '@/components/header'
-import Footer from '@/components/footer'
-
-const openSans = Open_Sans({ subsets: ['latin'] })
+import { Header } from '@/components/header'
+import { GeistSans } from 'geist/font/sans'
+import { GeistMono } from 'geist/font/mono'
+import { Footer } from '@/components/footer'
+import { ThemeProvider } from '@/components/theme-provider'
+import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
+import { AppSidebar } from './_components/app-sidebar'
 
 export const metadata = {
   title: 'RNA End-joining Design Tool',
@@ -16,18 +18,25 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html
+      lang="en"
+      className={`${GeistSans.variable} ${GeistMono.variable}`}
+      suppressHydrationWarning
+    >
       <head />
-      <body
-        className={`${openSans.className} mx-auto flex min-h-screen flex-col justify-between`}
-      >
-        <div>
-          <Header />
-          <div className="container mx-auto mt-4 w-full max-w-screen-md flex-col px-4">
-            {children}
-          </div>
-        </div>
-        <Footer />
+      <body className="flex min-h-screen flex-col">
+        <ThemeProvider attribute="class" enableSystem disableTransitionOnChange>
+          <SidebarProvider>
+            <div className="flex flex-1">
+              <AppSidebar />
+              <div className="flex flex-1 flex-col">
+                <Header />
+                <main className="flex-1">{children}</main>
+                <Footer />
+              </div>
+            </div>
+          </SidebarProvider>
+        </ThemeProvider>
       </body>
     </html>
   )

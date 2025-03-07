@@ -1,42 +1,65 @@
-import { Tilt_Warp } from 'next/font/google'
-import cx from 'classnames'
+'use client'
 import Link from 'next/link'
-import Image from 'next/image'
+import { WandSparkles } from 'lucide-react'
+import { SpeciesSelect } from '@/components/_header/species-select'
+import { GeneSearch } from '@/components/gene-search'
+import { searchGenes } from '@/actions'
+import { usePathname } from 'next/navigation'
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from '@/components/ui/tooltip'
+import { Suspense } from 'react'
+import { Button } from '@/components/ui/button'
+import { SidebarTrigger } from './ui/sidebar'
 
-const tiltWarp = Tilt_Warp({
-  subsets: ['latin'],
-})
-
-export default function Header() {
+function GeneSearchTooltip() {
   return (
-    <header className="mx-auto max-w-screen-md pt-4">
-      <div className="flex items-center">
-        <Link href="/">
-          <div className="relative h-16 w-16 sm:h-24 sm:w-24">
-            <Image
-              src="/logo.svg"
-              alt="RNA End-joining Logo"
-              fill
-              sizes="(max-width: 768px) 6rem, 4rem"
-            />
-          </div>
-        </Link>
-        <Link href="/">
-          <div>
-            <span
-              className={cx(
-                'block text-4xl text-emerald-500 dark:text-emerald-400 md:text-5xl',
-                tiltWarp.className
-              )}
-            >
-              RNA End-joining
-            </span>
-            <span className="text-2xl text-sky-500 dark:text-sky-400 md:text-3xl">
-              Design Tool
-            </span>
-          </div>
-        </Link>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button variant="ghost" asChild>
+          <Link href="/design-tool">
+            <WandSparkles className="size-5 " />
+          </Link>
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent>Go to Design Tool</TooltipContent>
+    </Tooltip>
+  )
+}
+
+export function Header() {
+  const pathname = usePathname()
+  const isHomePage = pathname === '/'
+  const isDesignToolPage = pathname === '/design-tool'
+
+  // Extract the gene symbol from the path
+  const geneSymbolMatch = pathname.match(/\/genes\/([^/]+)/)
+  const geneSymbol = geneSymbolMatch ? geneSymbolMatch[1] : undefined
+
+  return (
+    <div className="bg-background sticky top-0 z-10 mb-1.5 flex items-center justify-between p-3 md:px-6">
+      <div className="flex w-full items-center justify-between xl:justify-normal">
+        <div>
+          <SidebarTrigger size="lg" />
+          <GeneSearchTooltip />
+        </div>
+        {!isDesignToolPage && (
+          <Suspense>
+            <SpeciesSelect />
+          </Suspense>
+        )}
       </div>
-    </header>
+      <div className="absolute left-1/2 -translate-x-1/2 transform">
+        {!isHomePage && (
+          <GeneSearch
+            searchGenes={searchGenes}
+            defaultQuery={geneSymbol}
+            isDialog
+          />
+        )}
+      </div>
+    </div>
   )
 }

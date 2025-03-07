@@ -1,79 +1,71 @@
-import genes from '@/public/data/genes.json'
 import { notFound } from 'next/navigation'
-import path from 'node:path'
-import { promises as fs } from 'node:fs'
-import IsoformList from './_components/isoform-list'
+import { Separator } from '@/components/ui/separator'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { getGeneBySymbol, isFavoriteGene } from '@/actions'
+import IsoformTable, { IsoformTableLoading } from './_components/isoform-table'
+import { getAllGeneSymbols } from './_actions'
+import { Suspense } from 'react'
+import { FavoriteGeneButton } from './_components/favorite-gene-button'
 
-const getData = async (symbol: string): Promise<Gene | undefined> => {
-  const gene = (genes as Gene[]).find((gene) => gene.symbol === symbol)
-  if (!gene) {
-    return gene
-  }
-  return {
-    ...gene,
-    isoforms: await Promise.all(
-      gene.isoforms.map(async (isoform) => {
-        try {
-          const fileName = `${isoform.ENST}.txt`
-          const basePath = path.join(process.cwd(), 'public', 'data')
-          const [codingSequence, proteinSequence] = await Promise.all([
-            await fs.readFile(
-              path.join(basePath, 'coding_sequences', fileName),
-              'utf8'
-            ),
-            await fs.readFile(
-              path.join(basePath, 'protein_sequences', fileName),
-              'utf8'
-            ),
-          ])
-          return {
-            ...isoform,
-            codingSequence,
-            proteinSequence,
-          }
-        } catch (error) {
-          console.error(error)
-          return isoform
-        }
-      })
-    ),
-  }
+export async function generateStaticParams() {
+  const genes = await getAllGeneSymbols()
+  return genes.map((gene) => ({
+    symbol: gene.symbol,
+  }))
 }
 
 export default async function GeneSymbolPage({
   params,
 }: {
-  params: { symbol: string }
+  params: Promise<{ symbol: string }>
 }) {
-  const gene = await getData(params.symbol)
+  const { symbol } = await params
+  const gene = await getGeneBySymbol(symbol)
 
   if (!gene) {
     notFound()
   }
 
+  const isFavorite = await isFavoriteGene({
+    geneId: gene.id,
+    userId: 'abcd1234',
+  })
+
   return (
-    <div>
-      <h1 className="text-xl font-bold">{gene.symbol}</h1>
-      <dl className="mt-1 text-lg text-neutral-500 dark:text-neutral-400">
-        <dt className="hidden">Gene name:</dt>
-        <dd>{gene.name}</dd>
-        <dt className="hidden">ENSG:</dt>
-        <dd>{gene.ENSG}</dd>
-        <dt className="hidden">Chromosome:</dt>
-        <dd className="inline">Chromosome {gene.chromosome}</dd>
-      </dl>
-      {gene.diseaseAssociations?.length ? (
-        <div className="text-neutral-500 dark:text-neutral-400">
-          <div className="text-lg">Diseases Associated:</div>
-          <ul className="list-outside list-disc space-y-1 pl-4">
-            {gene.diseaseAssociations?.map((disease) => (
-              <li key={disease}>{disease}</li>
-            ))}
-          </ul>
+    <Card>
+      <CardHeader className="flex flex-row items-center gap-4">
+        <CardTitle className="font-mono text-2xl font-bold">
+          {gene.symbol}
+        </CardTitle>
+        <FavoriteGeneButton geneId={gene.id} isFavorite={isFavorite} />
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-1 gap-4">
+          <div>
+            <div className="text-muted-foreground text-sm font-semibold">
+              Gene name
+            </div>
+            <div>{gene.name}</div>
+          </div>
+          <div>
+            <div className="text-muted-foreground text-sm font-semibold">
+              Ensembl Gene ID
+            </div>
+            <div className="font-mono">{gene.ENSG}</div>
+          </div>
+          <div>
+            <div className="text-muted-foreground text-sm font-semibold">
+              Chromosome
+            </div>
+            <div className="font-mono">{gene.chromosome}</div>
+          </div>
         </div>
-      ) : null}
-      <h2 className="mt-4 text-lg font-bold">Isoforms</h2>
-      <IsoformList gene={gene} />
-    </div>
+        <Separator className="my-4" />
+        <h2 className="font-bold">Isoforms</h2>
+        <Suspense fallback={<IsoformTableLoading />}>
+          <IsoformTable geneId={gene.id} />
+        </Suspense>
+      </CardContent>
+    </Card>
   )
 }
