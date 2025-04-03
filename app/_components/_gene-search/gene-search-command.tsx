@@ -92,7 +92,7 @@ export function GeneSearchCommand({
               >
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Badge className="block w-[72px] truncate text-center font-mono">
+                    <Badge className="block w-[72px] overflow-x-hidden overflow-y-hidden truncate text-center font-mono">
                       {gene.symbol}
                     </Badge>
                   </TooltipTrigger>

@@ -27,7 +27,7 @@ export async function AppSidebar({
     <Sidebar {...props}>
       <SidebarHeader>
         <span className="ml-2 mt-2 font-mono text-lg font-semibold">
-          RNA End Joining
+          REJ Studio
         </span>
       </SidebarHeader>
       <SidebarContent>
@@ -42,7 +42,7 @@ export async function AppSidebar({
                       <Link href={`/genes/${gene.symbol}`}>
                         <Badge
                           variant="outline"
-                          className="inline-block w-16 truncate text-center font-mono"
+                          className="inline-block w-16 overflow-x-hidden overflow-y-hidden truncate text-center font-mono"
                         >
                           {gene.symbol}
                         </Badge>

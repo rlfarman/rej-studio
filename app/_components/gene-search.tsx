@@ -56,7 +56,7 @@ export function GeneSearch({
 
   if (isDialog) {
     return (
-      <>
+      <div>
         <Button
           variant="outline"
           onClick={() => setIsOpen(true)}
@@ -84,7 +84,7 @@ export function GeneSearch({
             handleSelect={handleSelect}
           />
         </CommandDialog>
-      </>
+      </div>
     )
   }
 

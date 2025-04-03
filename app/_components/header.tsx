@@ -41,7 +41,7 @@ export function Header() {
   return (
     <div className="bg-background sticky top-0 z-10 mb-1.5 flex items-center justify-between p-3 md:px-6">
       <div className="flex w-full items-center justify-between xl:justify-normal">
-        <div>
+        <div className="flex items-center">
           <SidebarTrigger size="lg" />
           <GeneSearchTooltip />
         </div>
@@ -51,7 +51,7 @@ export function Header() {
           </Suspense>
         )}
       </div>
-      <div className="absolute left-1/2 -translate-x-1/2 transform">
+      <div className="absolute left-1/2 flex w-full -translate-x-1/2 transform justify-center">
         {!isHomePage && (
           <GeneSearch
             searchGenes={searchGenes}
