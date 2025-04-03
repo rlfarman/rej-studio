@@ -5,9 +5,12 @@ import { SpeciesValues } from '../_types/species-options'
 async function DesignToolPage({
   searchParams,
 }: {
-  searchParams: { isoform?: string }
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
-  const isoformId = searchParams.isoform
+  const params = await searchParams
+  const isoformId = Array.isArray(params.isoform)
+    ? params.isoform[0]
+    : params.isoform
 
   if (!isoformId) {
     return (
@@ -18,7 +21,9 @@ async function DesignToolPage({
     )
   }
 
-  const result = await getIsoformAndGeneByIsoformId(isoformId)
+  const result = isoformId
+    ? await getIsoformAndGeneByIsoformId(isoformId)
+    : undefined
 
   if (!result) {
     return <GeneSplitterForm />
