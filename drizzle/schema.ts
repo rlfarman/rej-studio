@@ -76,8 +76,6 @@ export const jobs = pgTable('jobs', {
     .notNull()
     .$default(() => 'pending'), // 'pending', 'processing', 'completed', 'failed'
   errorMessage: text('errorMessage'), // If the job fails, store the error message
-  // parameters: jsonb('parameters').notNull(), // Algorithm parameters (JSON)
-  // result: jsonb('result'), // Stores computed result (JSON) or a reference to an external file
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 })

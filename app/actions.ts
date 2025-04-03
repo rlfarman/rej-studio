@@ -180,6 +180,44 @@ export async function getIsoformsByGene(geneId: string) {
   }
 }
 
+// Get isoform and gene by ID
+export async function getIsoformAndGeneByIsoformId(isoformId: string) {
+  try {
+    const [isoform] = await db
+      .select({
+        id: isoforms.id,
+        enst: isoforms.ENST,
+        length: isoforms.length,
+        species: isoforms.species,
+        geneId: isoforms.geneId,
+      })
+      .from(isoforms)
+      .where(eq(isoforms.id, isoformId))
+      .limit(1)
+
+    if (isoform === undefined) {
+      return undefined
+    }
+
+    const [gene] = await db
+      .select({
+        id: genes.id,
+        name: genes.name,
+        symbol: genes.symbol,
+        ENSG: genes.ENSG,
+        chromosome: genes.chromosome,
+      })
+      .from(genes)
+      .where(eq(genes.id, isoform.geneId))
+      .limit(1)
+
+    return { isoform, gene }
+  } catch (error) {
+    console.error(error)
+    throw error
+  }
+}
+
 export async function getGeneBySymbol(symbol: string) {
   try {
     const [gene] = await db

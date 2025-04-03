@@ -313,12 +313,36 @@ export function GeneSplitterForm({
   })
 
   async function handleSubmitForm({ codingSequence, ...options }: FormValues) {
+    console.log('SUBMIT')
     try {
-      await createJob({
-        userId: 'abcd1234',
-        name: options.name,
-        sequence: codingSequence,
+      // await createJob({
+      //   userId: 'abcd1234',
+      //   name: options.name,
+      //   sequence: codingSequence,
+      // })
+      console.log('Creating job with options:', options)
+      const response = await fetch('/api/py/process', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          CDS: codingSequence,
+          name: options.name,
+        }),
       })
+      // Download the resulting FileResponse
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.style.display = 'none'
+      a.href = url
+      a.download = `${options.name}.zip`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      a.remove()
+      console.log('Job created successfully')
     } catch (error) {
       console.error('Error creating job:', error)
     }

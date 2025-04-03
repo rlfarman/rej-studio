@@ -3,7 +3,9 @@
   "version": "0.2.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "fastapi-dev": "pip3 install -r requirements.txt && python3 -m uvicorn api.index:app --reload",
+    "next-dev": "next dev",
+    "dev": "concurrently \"npm run next-dev\" \"npm run fastapi-dev\"",
     "db:seed": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' drizzle/seed.ts",
     "build": "next build",
     "start": "next start",
@@ -39,6 +41,7 @@
     "classnames": "^2.5.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.4",
+    "concurrently": "^9.1.2",
     "copy-to-clipboard": "^3.3.3",
     "csv-loader": "^3.0.5",
     "drizzle-orm": "^0.40.0",
