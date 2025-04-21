@@ -19,9 +19,9 @@ export function RecentGenes() {
       <SidebarGroupLabel>Recent Searches</SidebarGroupLabel>
       <SidebarGroupContent>
         {recentGenes.length > 0 ? (
-          recentGenes.map((gene) => (
-            <SidebarMenu>
-              <SidebarMenuItem key={gene.id}>
+          <SidebarMenu>
+            {recentGenes.map((gene) => (
+              <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <Link href={`/genes/${gene.symbol}`}>
                     <Badge
@@ -34,8 +34,8 @@ export function RecentGenes() {
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-            </SidebarMenu>
-          ))
+            ))}
+          </SidebarMenu>
         ) : (
           <div className="text-muted-foreground p-4 text-xs">
             No recent searches yet. Search for genes to see them here!
