@@ -23,12 +23,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-export async function generateStaticParams() {
-  const genes = await getAllGeneSymbols()
-  return genes.map((gene) => ({
-    symbol: gene.symbol,
-  }))
-}
+// export async function generateStaticParams() {
+//   const genes = await getAllGeneSymbols()
+//   return genes.map((gene) => ({
+//     symbol: gene.symbol,
+//   }))
+// }
 
 export default async function GeneSymbolPage({ params }: Props) {
   const { symbol } = await params
