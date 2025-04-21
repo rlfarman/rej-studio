@@ -1,6 +1,12 @@
 import { getIsoformAndGeneByIsoformId } from '@/actions'
 import { GeneSplitterForm } from '@/design-tool/components/gene-splitter-form'
 import { SpeciesValues } from '../_types/species-options'
+import { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Design Tool | REJ Studio',
+  description: 'Design your own gene with the REJ Studio design tool.',
+}
 
 async function DesignToolPage({
   searchParams,

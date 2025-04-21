@@ -6,6 +6,22 @@ import IsoformTable, { IsoformTableLoading } from './_components/isoform-table'
 import { getAllGeneSymbols } from './_actions'
 import { Suspense } from 'react'
 import { FavoriteGeneButton } from './_components/favorite-gene-button'
+import { Metadata } from 'next'
+
+type Props = {
+  params: Promise<{ symbol: string }>
+}
+
+// Todo: cache metadata
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const symbol = (await params).symbol
+
+  return {
+    title: `${symbol} | REJ Studio`,
+    description: `View all isoforms for ${symbol} and download pre-optimized sequences or customize your own.`,
+  }
+}
 
 export async function generateStaticParams() {
   const genes = await getAllGeneSymbols()
@@ -14,11 +30,7 @@ export async function generateStaticParams() {
   }))
 }
 
-export default async function GeneSymbolPage({
-  params,
-}: {
-  params: Promise<{ symbol: string }>
-}) {
+export default async function GeneSymbolPage({ params }: Props) {
   const { symbol } = await params
   const gene = await getGeneBySymbol(symbol)
 

@@ -10,6 +10,7 @@ import {
 import { useFavoriteGenes } from '@/context/favorite-genes-context'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
+import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip'
 
 export function FavoriteGenes() {
   const { favoriteGenes } = useFavoriteGenes()
@@ -24,12 +25,17 @@ export function FavoriteGenes() {
               <SidebarMenuItem key={gene.id}>
                 <SidebarMenuButton asChild>
                   <Link href={`/genes/${gene.symbol}`}>
-                    <Badge
-                      variant="outline"
-                      className="inline-block w-16 truncate text-center font-mono"
-                    >
-                      {gene.symbol}
-                    </Badge>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Badge
+                          variant="outline"
+                          className="inline-block w-16 truncate text-center font-mono"
+                        >
+                          {gene.symbol}
+                        </Badge>
+                      </TooltipTrigger>
+                      <TooltipContent>{gene.symbol}</TooltipContent>
+                    </Tooltip>
                     <span className="text-xs">{gene.name}</span>
                   </Link>
                 </SidebarMenuButton>

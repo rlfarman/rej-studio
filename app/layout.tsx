@@ -13,7 +13,7 @@ import { SpeciesProvider } from './_context/species-context'
 import { cookies } from 'next/headers'
 
 export const metadata = {
-  title: 'RNA End-joining Design Tool',
+  title: 'REJ Studio',
   description: 'RNA End-joining made easy',
 }
 

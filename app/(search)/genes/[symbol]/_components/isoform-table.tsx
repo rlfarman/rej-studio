@@ -139,7 +139,10 @@ export default function IsoformTable({ isoforms }: IsoformListProps) {
           ))
         ) : (
           <TableRow>
-            <TableCell colSpan={7} className="text-center">
+            <TableCell
+              colSpan={7}
+              className="text-muted-foreground text-center"
+            >
               No isoforms found for the selected species.
             </TableCell>
           </TableRow>

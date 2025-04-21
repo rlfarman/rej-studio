@@ -117,9 +117,7 @@ export function GeneSearchCommand({
                         <span className="truncate">{gene.symbol}</span>
                       </Badge>
                     </TooltipTrigger>
-                    <TooltipContent>
-                      <div className="text-center text-xs">{gene.symbol}</div>
-                    </TooltipContent>
+                    <TooltipContent>{gene.symbol}</TooltipContent>
                   </Tooltip>
                   <div className="ml-4 space-y-1">
                     <p className="text-sm">{gene.name}</p>
