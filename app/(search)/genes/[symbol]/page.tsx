@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import { Separator } from '@/components/ui/separator'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { getGeneBySymbol, isFavoriteGene } from '@/actions'
+import { getGeneBySymbol, getIsoformsByGene, isFavoriteGene } from '@/actions'
 import IsoformTable, { IsoformTableLoading } from './_components/isoform-table'
 import { getAllGeneSymbols } from './_actions'
 import { Suspense } from 'react'
@@ -26,10 +26,7 @@ export default async function GeneSymbolPage({
     notFound()
   }
 
-  const isFavorite = await isFavoriteGene({
-    geneId: gene.id,
-    userId: 'abcd1234',
-  })
+  const isoforms = await getIsoformsByGene(gene.id)
 
   return (
     <Card>
@@ -37,7 +34,7 @@ export default async function GeneSymbolPage({
         <CardTitle className="font-mono text-2xl font-bold">
           {gene.symbol}
         </CardTitle>
-        <FavoriteGeneButton geneId={gene.id} isFavorite={isFavorite} />
+        <FavoriteGeneButton gene={gene} />
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 gap-4">
@@ -53,17 +50,19 @@ export default async function GeneSymbolPage({
             </div>
             <div className="font-mono">{gene.ENSG}</div>
           </div>
-          <div>
-            <div className="text-muted-foreground text-sm font-semibold">
-              Chromosome
+          {gene.chromosome && (
+            <div>
+              <div className="text-muted-foreground text-sm font-semibold">
+                Chromosome
+              </div>
+              <div className="font-mono">{gene.chromosome}</div>
             </div>
-            <div className="font-mono">{gene.chromosome}</div>
-          </div>
+          )}
         </div>
         <Separator className="my-4" />
         <h2 className="font-bold">Isoforms</h2>
         <Suspense fallback={<IsoformTableLoading />}>
-          <IsoformTable geneId={gene.id} />
+          <IsoformTable isoforms={isoforms} />
         </Suspense>
       </CardContent>
     </Card>

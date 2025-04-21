@@ -1,6 +1,5 @@
 'use client'
-import React, { useEffect, useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import React, { useEffect, useState, createContext, useContext } from 'react'
 import {
   Select,
   SelectTrigger,
@@ -10,57 +9,22 @@ import {
   SelectLabel,
   SelectItem,
 } from '@/components/ui/select'
-import { User, RatIcon } from 'lucide-react'
+import { SpeciesIcon } from '../species-icon'
+import { useSpeciesContext } from '@/context/species-context'
 
 export function SpeciesSelect() {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const [value, setValue] = useState<string | undefined>(undefined)
-
-  useEffect(() => {
-    const species = searchParams.get('species')
-    setValue(species ?? 'both')
-  }, [searchParams])
-
-  const handleSelectChange = (value: string) => {
-    const url = new URL(window.location.href)
-    url.searchParams.set('species', value)
-    router.push(url.toString())
-  }
-
-  const renderIcon = (value: string | undefined) => {
-    switch (value) {
-      case 'humans':
-        return <User className="size-5 mx-2.5" />
-      case 'mice':
-        return <RatIcon className="size-5 mx-2.5" />
-      case 'both':
-        return (
-          <div className="flex">
-            <User className="size-5" />
-            <RatIcon className="size-5" />
-          </div>
-        )
-      default:
-        return (
-          <div className="flex">
-            <User className="size-5" />
-            <RatIcon className="size-5" />
-          </div>
-        )
-    }
-  }
+  const { species, handleSpeciesChange } = useSpeciesContext()
 
   return (
-    <Select onValueChange={handleSelectChange} value={value}>
-      <SelectTrigger className="hover:bg-accent lg:w-51 w-22 cursor-pointer border-none font-semibold shadow-none">
+    <Select onValueChange={handleSpeciesChange} value={species}>
+      <SelectTrigger className="hover:bg-accent lg:w-51 w-22 z-10 cursor-pointer border-none font-semibold shadow-none">
         <SelectValue>
           <div className="flex items-center">
-            {renderIcon(value)}
+            <SpeciesIcon species={species} />
             <span className="ml-3 hidden lg:block">
-              {value === 'mice'
+              {species === 'mouse'
                 ? 'Mice'
-                : value === 'humans'
+                : species === 'human'
                 ? 'Humans'
                 : 'Humans & Mice'}
             </span>
@@ -72,7 +36,7 @@ export function SpeciesSelect() {
           <SelectLabel>Choose a species</SelectLabel>
           <SelectItem value="both">
             <div className="flex items-center justify-between">
-              {renderIcon('both')}
+              <SpeciesIcon species="both" />
               <div className="ml-4">
                 <span>Humans & Mice</span>
                 <p className="text-muted-foreground">
@@ -81,9 +45,9 @@ export function SpeciesSelect() {
               </div>
             </div>
           </SelectItem>
-          <SelectItem value="humans">
+          <SelectItem value="human">
             <div className="flex items-center justify-between">
-              {renderIcon('humans')}
+              <SpeciesIcon species="human" />
               <div className="ml-4">
                 <span>Humans</span>
                 <p className="text-muted-foreground">
@@ -92,9 +56,9 @@ export function SpeciesSelect() {
               </div>
             </div>
           </SelectItem>
-          <SelectItem value="mice">
+          <SelectItem value="mouse">
             <div className="flex items-center justify-between">
-              {renderIcon('mice')}
+              <SpeciesIcon species="mouse" />
               <div className="ml-4">
                 <span>Mice</span>
                 <p className="text-muted-foreground">

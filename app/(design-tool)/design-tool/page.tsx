@@ -13,12 +13,7 @@ async function DesignToolPage({
     : params.isoform
 
   if (!isoformId) {
-    return (
-      <GeneSplitterForm
-        defaultName="ABCD"
-        defaultCodingSequence="GATACAGATACA"
-      />
-    )
+    return <GeneSplitterForm />
   }
 
   const result = isoformId
@@ -30,10 +25,12 @@ async function DesignToolPage({
   }
 
   const { isoform, gene } = result
+
   return (
     <GeneSplitterForm
       defaultName={`Custom ${gene.symbol}`}
       defaultSpecies={isoform.species as SpeciesValues}
+      defaultCodingSequence={isoform.codingSequence}
     />
   )
 }

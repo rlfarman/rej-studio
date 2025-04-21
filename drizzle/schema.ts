@@ -1,11 +1,4 @@
-import {
-  integer,
-  pgTable,
-  text,
-  vector,
-  timestamp,
-  serial,
-} from 'drizzle-orm/pg-core'
+import { integer, pgTable, text, vector, timestamp } from 'drizzle-orm/pg-core'
 import { randomUUID } from 'crypto'
 
 export const genes = pgTable('genes', {
@@ -14,9 +7,11 @@ export const genes = pgTable('genes', {
     .notNull()
     .$defaultFn(() => randomUUID()),
   symbol: text('symbol').notNull(),
+  alternateSymbols: text('alternate_symbols').array(),
   name: text('name').notNull(),
   ENSG: text('ENSG').notNull(),
-  chromosome: text('chromosome').notNull(),
+  species: text('species').notNull().default(''),
+  chromosome: text('chromosome'),
   diseaseAssociations: text('disease_associations').array(),
   embedding: vector('embedding', { dimensions: 1536 }),
 })
@@ -32,10 +27,20 @@ export const isoforms = pgTable('isoforms', {
     .notNull()
     .references(() => genes.id),
   ENST: text('ENST').notNull(),
-  length: integer('length').notNull(),
-  packagability: integer('packagability').notNull(),
+  codingSequenceLength: integer('coding_sequence_length').notNull(),
+  proteinSequenceLength: integer('protein_sequence_length')
+    .notNull()
+    .default(0),
   species: text('species').notNull(),
   embedding: vector('embedding', { dimensions: 1536 }),
+  codingSequence: text('coding_sequence').notNull().default(''),
+  proteinSequence: text('protein_sequence').notNull().default(''),
+  defaultThreePrimeSequence: text('default_three_prime_sequence')
+    .notNull()
+    .default(''),
+  defaultFivePrimeSequence: text('default_five_prime_sequence')
+    .notNull()
+    .default(''),
 })
 
 export type SelectIsoform = typeof isoforms.$inferSelect
@@ -72,6 +77,7 @@ export const jobs = pgTable('jobs', {
     .references(() => users.id, { onDelete: 'cascade' }),
   name: text('name').notNull(),
   sequence: text('sequence').notNull(),
+  options: text('options').notNull(), // JSON string
   status: text('status')
     .notNull()
     .$default(() => 'pending'), // 'pending', 'processing', 'completed', 'failed'
@@ -111,8 +117,6 @@ export const searches = pgTable('searches', {
     .references(() => genes.id),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 })
-
-// Create favorites table for users to track favorite genes and favorite isoforms
 
 export const favorites = pgTable('favorites', {
   id: text('id')

@@ -15,37 +15,19 @@ app = FastAPI(docs_url="/api/py/docs", openapi_url="/api/py/openapi.json")
 class ProcessRequest(BaseModel):
     CDS: str  # Coding sequence
     name: str  # Name identifier for the output files
-    # options: Dict[str, Any]  # Optimization options
+    options: Dict[str, Any]  # Optimization options
 
 @app.post("/api/py/process")
 def process_gene(request: ProcessRequest):
     # Define results folder
     results_folder = "results"
-    OPTIONS = {
-        'codon_optimize': 'human',
-        'codon_optimize_weight': 1.0,
-        'remove_cryptic_ss': True,
-        'remove_cryptic_ss_weight': 1.0,
-        'minimize_CpGs': True,
-        'minimize_CpGs_weight': 1.0,
-        'reduce_kmer_complexity': True,
-        'reduce_kmer_complexity_k': 10,  # Changed from 15 to 10 as requested
-        'reduce_kmer_complexity_weight': 1.0, # 
-        'enforce_gc': True,         # Enforce GC content between 35% and 60%  // USE THIS + ^
-        'induce_optimal_ss': True,  # Option remains (but not used)
-        'stim_5': True,             # Option for stimulatory intron 5' // USE THIS
-        'stim_3': True,             # Option for stimulatory intron 3' // USE THIS
-        'split_point': 500,         # This value will be overridden per gene  // USE THIS
-        'ensure_wggw': True,        # Ensure WGGW motif near split points
-        'wggw_threshold': 300       # Distance threshold for WGGW from split point
-    }
 
     # Call the process_single_request function
     try:
         report_filename, sequences_filename = process_single_request(
             CDS=request.CDS,
             name=request.name,
-            OPTIONS=OPTIONS,
+            OPTIONS=request.options,
             results_folder=results_folder,
         )
     except Exception as e:
