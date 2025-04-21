@@ -21,7 +21,7 @@ export function RecentGenes() {
         {recentGenes.length > 0 ? (
           <SidebarMenu>
             {recentGenes.map((gene) => (
-              <SidebarMenuItem>
+              <SidebarMenuItem key={gene.id}>
                 <SidebarMenuButton asChild>
                   <Link href={`/genes/${gene.symbol}`}>
                     <Badge
