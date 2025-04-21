@@ -32,21 +32,22 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <head />
-      <body className="mx-auto flex min-h-screen flex-col justify-between">
+      <body>
         <ThemeProvider attribute="class" enableSystem disableTransitionOnChange>
           <FavoriteGenesProvider>
             <RecentGenesProvider>
               <SpeciesProvider>
-                <SidebarProvider defaultOpen={defaultOpen}>
+                <SidebarProvider
+                  defaultOpen={defaultOpen}
+                  className="relative flex h-full w-full flex-row overflow-hidden"
+                >
                   <AppSidebar />
-                  <SidebarInset>
+                  <SidebarInset className="relative flex h-full min-h-screen max-w-full flex-1 flex-col overflow-hidden">
                     <Header />
-                    <div className="relative flex min-h-screen flex-col pb-6">
-                      <div className="flex">
-                        <main className="flex-1">{children}</main>
-                      </div>
-                      <Footer />
+                    <div className="relative h-full w-full flex-1 overflow-auto">
+                      {children}
                     </div>
+                    <Footer />
                   </SidebarInset>
                 </SidebarProvider>
                 <Toaster />

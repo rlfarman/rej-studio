@@ -10,7 +10,7 @@ import { RecentGenes } from './recent-genes'
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
-    <Sidebar variant="inset" {...props}>
+    <Sidebar {...props}>
       <SidebarHeader>
         <span className="ml-2 mt-2 font-mono text-lg font-semibold">
           REJ Studio
