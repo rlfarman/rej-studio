@@ -120,6 +120,7 @@ async function searchGeneByENST(
         id: genes.id,
         name: genes.name,
         symbol: genes.symbol,
+        species: genes.species,
       })
       .from(genes)
       .where(eq(genes.id, isoform.geneId))
@@ -142,6 +143,7 @@ async function searchGeneByENSG(
         id: genes.id,
         name: genes.name,
         symbol: genes.symbol,
+        species: genes.species,
       })
       .from(genes)
       .where(eq(genes.ENSG, ensg))

@@ -34,7 +34,7 @@ export function GeneSearch({
   const { addRecentGene } = useRecentGenes()
 
   const handleSelect = (
-    gene: Pick<GeneSearchResult, 'symbol' | 'id' | 'name'>
+    gene: Pick<GeneSearchResult, 'symbol' | 'id' | 'name' | 'species'>
   ) => {
     setIsOpen(false)
     // createSearch({

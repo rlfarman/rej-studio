@@ -20,7 +20,7 @@ export function useGeneSearch({
   const [query, setQuery] = useState(defaultQuery ?? '')
   const [hasSearched, setHasSearched] = useState(false)
   const [searchResults, setSearchResults] = useState<
-    Array<Pick<GeneSearchResult, 'symbol' | 'id' | 'name'>>
+    Array<Pick<GeneSearchResult, 'symbol' | 'id' | 'name' | 'species'>>
   >([])
   const [debouncedQuery] = useDebounce(query, 250)
   const [isLoading, setIsLoading] = useState(false)
