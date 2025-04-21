@@ -40,9 +40,9 @@ def process_gene(request: ProcessRequest):
     # Create an in-memory zip file
     zip_buffer = io.BytesIO()
     # Write the report and sequences files to the zip file
-    # with zipfile.ZipFile(zip_buffer, "w") as zip_file:
-    #     zip_file.write(report_filename, arcname=f"{request.name}_report.txt")
-    #     zip_file.write(sequences_filename, arcname=f"{request.name}_sequences.txt")
+    with zipfile.ZipFile(zip_buffer, "w") as zip_file:
+        zip_file.write(report_filename, arcname=f"{request.name}_report.txt")
+        zip_file.write(sequences_filename, arcname=f"{request.name}_sequences.txt")
 
     # Prepare the zip file for download
     zip_buffer.seek(0)

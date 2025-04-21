@@ -853,7 +853,7 @@ def process_all_genes(OPTIONS, max_files=300, suppress_stderr=True, randomize=Tr
     
     return results
 
-def process_single_request(CDS, name, OPTIONS, results_folder="results"):
+def process_single_request(CDS, name, OPTIONS, results_folder="/tmp/results"):
     """
     Process a single coding sequence directly (without reading from a file).
     Created for the web application.
