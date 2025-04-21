@@ -20,7 +20,7 @@ class ProcessRequest(BaseModel):
 @app.post("/api/py/process")
 def process_gene(request: ProcessRequest):
     # Define results folder
-    results_folder = "results"
+    results_folder = "/tmp/results"
 
     # Call the process_single_request function
     try:
