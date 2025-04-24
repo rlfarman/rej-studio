@@ -1,7 +1,7 @@
 'use client'
 import Link from 'next/link'
 import { WandSparkles } from 'lucide-react'
-import { SpeciesSelect } from '@/components/_header/species-select'
+import { SpeciesSelect } from '@/components/header/species-select'
 import { GeneSearch } from '@/components/gene-search'
 import { searchGenes } from '@/actions'
 import { usePathname } from 'next/navigation'
@@ -39,9 +39,9 @@ export function Header() {
   const geneSymbol = geneSymbolMatch ? geneSymbolMatch[1] : undefined
 
   return (
-    <div className="bg-background sticky top-0 z-10 mb-1.5 flex items-center justify-between p-3 md:px-6">
+    <header className="bg-background sticky top-0 z-10 mb-1.5 flex items-center justify-between p-3 md:px-6">
       <div className="flex w-full items-center justify-between xl:justify-normal">
-        <div>
+        <div className="z-10 flex items-center">
           <SidebarTrigger size="lg" />
           <GeneSearchTooltip />
         </div>
@@ -51,7 +51,7 @@ export function Header() {
           </Suspense>
         )}
       </div>
-      <div className="absolute left-1/2 -translate-x-1/2 transform">
+      <div className="absolute left-1/2 flex w-full -translate-x-1/2 transform justify-center">
         {!isHomePage && (
           <GeneSearch
             searchGenes={searchGenes}
@@ -60,6 +60,6 @@ export function Header() {
           />
         )}
       </div>
-    </div>
+    </header>
   )
 }

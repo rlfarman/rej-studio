@@ -10,10 +10,10 @@ import {
   searches,
   sessions,
 } from '@/drizzle/schema'
-import { openai } from '@/lib/openai'
-import { desc, sql, cosineDistance, gt, eq, and } from 'drizzle-orm'
+import { openai } from './_lib/openai'
+import { desc, sql, cosineDistance, gt, eq, and, or } from 'drizzle-orm'
 import { embed } from 'ai'
-import { ENST_REGEX, ENSG_REGEX } from '@/lib/regex'
+import { ENST_REGEX, ENSG_REGEX } from './_lib/regex'
 import { SignJWT, jwtVerify } from 'jose'
 import { cookies } from 'next/headers'
 
@@ -44,13 +44,16 @@ export async function decrypt(session: string | undefined = '') {
   }
 }
 
-export type GeneSearchResult = Pick<SelectGene, 'id' | 'name' | 'symbol'> & {
-  similarity?: number
-}
+export type GeneSearchResult = Pick<
+  SelectGene,
+  'id' | 'name' | 'symbol' | 'species'
+>
 
 export async function searchGenes(
-  query: string
+  query: string,
+  species: string = 'both' // Default to 'both' if no species is provided
 ): Promise<Array<GeneSearchResult>> {
+  console.log('Searching for genes with query:', query, species)
   try {
     const trimmedQuery = query.trim()
     if (trimmedQuery.length === 0) return []
@@ -67,28 +70,30 @@ export async function searchGenes(
       return gene ? [gene] : []
     }
 
-    // Default search using cosine distance
-    const embedding = await generateEmbedding(trimmedQuery)
-    const vectorQuery = `[${embedding.join(',')}]`
-
-    const similarity = sql<number>`1 - (${cosineDistance(
-      genes.embedding,
-      vectorQuery
-    )})`
-
-    const gene = await db
+    // Build the base query
+    const genesResult = db
       .select({
         id: genes.id,
         name: genes.name,
         symbol: genes.symbol,
-        similarity,
+        species: genes.species,
       })
       .from(genes)
-      .where(gt(similarity, 0.25))
-      .orderBy((t) => desc(t.similarity))
+      .where(
+        and(
+          or(
+            sql`LOWER(${genes.name}) LIKE LOWER(${`%${trimmedQuery}%`})`,
+            sql`LOWER(${genes.symbol}) LIKE LOWER(${`%${trimmedQuery}%`})`,
+            sql`${`%${trimmedQuery}%`} = ANY(${genes.alternateSymbols})` // Check alternateSymbols
+          ),
+          species !== 'both' ? eq(genes.species, species) : sql`TRUE`
+        )
+      )
+      .groupBy(genes.id) // Ensure unique genes
+      .orderBy(genes.name) // Order by name
       .limit(6)
 
-    return gene
+    return genesResult
   } catch (error) {
     console.error(error)
     throw error
@@ -98,6 +103,7 @@ export async function searchGenes(
 async function searchGeneByENST(
   enst: string
 ): Promise<GeneSearchResult | undefined> {
+  console.log('Searching for gene by ENST:', enst)
   try {
     const [isoform] = await db
       .select({
@@ -114,7 +120,7 @@ async function searchGeneByENST(
         id: genes.id,
         name: genes.name,
         symbol: genes.symbol,
-        similarity: sql<number>`1`, // Set similarity to 1 for exact match
+        species: genes.species,
       })
       .from(genes)
       .where(eq(genes.id, isoform.geneId))
@@ -130,13 +136,14 @@ async function searchGeneByENST(
 async function searchGeneByENSG(
   ensg: string
 ): Promise<GeneSearchResult | undefined> {
+  console.log('Searching for gene by ENSG:', ensg)
   try {
     const [gene] = await db
       .select({
         id: genes.id,
         name: genes.name,
         symbol: genes.symbol,
-        similarity: sql<number>`1`, // Set similarity to 1 for exact match
+        species: genes.species,
       })
       .from(genes)
       .where(eq(genes.ENSG, ensg))
@@ -165,7 +172,9 @@ export async function getIsoformsByGene(geneId: string) {
       .select({
         id: isoforms.id,
         enst: isoforms.ENST,
-        length: isoforms.length,
+        codingSequenceLength: isoforms.codingSequenceLength,
+        codingSequence: isoforms.codingSequence,
+        proteinSequence: isoforms.proteinSequence,
         species: isoforms.species,
       })
       .from(isoforms)
@@ -174,6 +183,44 @@ export async function getIsoformsByGene(geneId: string) {
       .orderBy(isoforms.ENST)
 
     return isoformData
+  } catch (error) {
+    console.error(error)
+    throw error
+  }
+}
+
+// Get isoform and gene by ID
+export async function getIsoformAndGeneByIsoformId(isoformId: string) {
+  try {
+    const [isoform] = await db
+      .select({
+        id: isoforms.id,
+        enst: isoforms.ENST,
+        species: isoforms.species,
+        geneId: isoforms.geneId,
+        codingSequence: isoforms.codingSequence,
+      })
+      .from(isoforms)
+      .where(eq(isoforms.id, isoformId))
+      .limit(1)
+
+    if (isoform === undefined) {
+      return undefined
+    }
+
+    const [gene] = await db
+      .select({
+        id: genes.id,
+        name: genes.name,
+        symbol: genes.symbol,
+        ENSG: genes.ENSG,
+        chromosome: genes.chromosome,
+      })
+      .from(genes)
+      .where(eq(genes.id, isoform.geneId))
+      .limit(1)
+
+    return { isoform, gene }
   } catch (error) {
     console.error(error)
     throw error
@@ -308,16 +355,21 @@ export const createJob = async ({
   userId,
   name,
   sequence,
+  options,
 }: {
   userId: string
   name: string
   sequence: string
+  options?: {
+    [key: string]: any
+  }
 }) => {
   try {
     await db.insert(jobs).values({
       userId,
       name,
       sequence,
+      options: JSON.stringify(options),
     })
   } catch (error) {
     console.error(error)

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useFormContext } from 'react-hook-form'
 import { Slider } from '@/components/ui/slider'
+import { Input } from '@/components/ui/input' // Import Input from shadCN
 import {
   FormItem,
   FormLabel,
@@ -92,7 +93,7 @@ export function DNASplicer() {
           <FormLabel>Percentage</FormLabel>
           <FormControl>
             <span>
-              <input
+              <Input
                 type="number"
                 value={percentage}
                 onChange={handlePercentageChange}

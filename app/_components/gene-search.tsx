@@ -2,16 +2,19 @@
 import { useEffect, useState } from 'react'
 import { CommandDialog } from '@/components/ui/command'
 import { useRouter } from 'next/navigation'
-import { createSearch, type GeneSearchResult } from '@/actions'
+import { type GeneSearchResult } from '@/actions'
 import { Button } from './ui/button'
 import { SearchIcon } from 'lucide-react'
-import { useGeneSearch } from '@/hooks/useGeneSearch'
-import { GeneSearchCommand } from './_gene-search/gene-search-command'
+import { useGeneSearch } from '../_hooks/use-gene-search'
+import { GeneSearchCommand } from './gene-search/gene-search-command'
+import { useRecentGenes } from '@/context/recent-genes-context'
 
 interface GeneSearchProperties {
   searchGenes: (
     content: string
-  ) => Promise<Array<Pick<GeneSearchResult, 'symbol' | 'id' | 'name'>>>
+  ) => Promise<
+    Array<Pick<GeneSearchResult, 'symbol' | 'id' | 'name' | 'species'>>
+  >
   defaultQuery?: string
   isDialog?: boolean
 }
@@ -28,15 +31,21 @@ export function GeneSearch({
       defaultQuery,
     })
   const [isOpen, setIsOpen] = useState(false)
+  const { addRecentGene } = useRecentGenes()
 
   const handleSelect = (
-    gene: Pick<GeneSearchResult, 'symbol' | 'id' | 'name'>
+    gene: Pick<GeneSearchResult, 'symbol' | 'id' | 'name' | 'species'>
   ) => {
     setIsOpen(false)
-    createSearch({
-      query,
-      geneId: gene.id,
-      userId: 'abcd1234',
+    // createSearch({
+    //   query,
+    //   geneId: gene.id,
+    //   userId: 'abcd1234',
+    // })
+    addRecentGene({
+      id: gene.id,
+      name: gene.name,
+      symbol: gene.symbol,
     })
     router.push(`/genes/${gene.symbol}`)
     setQuery(gene.symbol)
@@ -56,7 +65,7 @@ export function GeneSearch({
 
   if (isDialog) {
     return (
-      <>
+      <div>
         <Button
           variant="outline"
           onClick={() => setIsOpen(true)}
@@ -84,7 +93,7 @@ export function GeneSearch({
             handleSelect={handleSelect}
           />
         </CommandDialog>
-      </>
+      </div>
     )
   }
 
