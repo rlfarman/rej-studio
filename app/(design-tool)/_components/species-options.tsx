@@ -19,7 +19,7 @@ export function SpeciesOptions() {
       control={control}
       render={({ field }) => (
         <FormItem>
-          <FormLabel>Codon optimization for species</FormLabel>
+          <FormLabel>Harmonize codon usage for species</FormLabel>
           <FormControl>
             <RadioGroup
               className="flex gap-6"

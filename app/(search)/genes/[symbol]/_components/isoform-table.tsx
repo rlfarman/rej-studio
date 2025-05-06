@@ -18,7 +18,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { toast } from 'sonner' // Import the toast function
+import { toast } from 'sonner'
 
 const SPECIES_DISPLAY_NAME: Record<string, string> = {
   human: 'Human',

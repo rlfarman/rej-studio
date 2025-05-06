@@ -28,11 +28,9 @@ import {
   AccordionTrigger,
   AccordionContent,
 } from '@/components/ui/accordion'
-import { Slider } from '@/components/ui/slider'
 import { Input } from '@/components/ui/input'
 import { createJob } from '@/actions'
 import { SpeciesOptions } from './species-options'
-import { spec } from 'node:test/reporters'
 import { toast } from 'sonner'
 
 interface GeneSplitterFormProperties {
@@ -61,13 +59,25 @@ const validationSchema = z.object({
     SpeciesValues.Human,
     SpeciesValues.Mouse,
   ]),
-  codonOptimizeWeight: z.number().min(0).max(1).default(0.5),
+  codonOptimizeWeight: z
+    .number()
+    .min(0)
+    .max(Number.MAX_SAFE_INTEGER)
+    .default(1),
   removeCrypticSpliceSites: z.boolean(),
-  removeCrypticSpliceSitesWeight: z.number().min(0).max(1).default(0.5),
+  removeCrypticSpliceSitesWeight: z
+    .number()
+    .min(0)
+    .max(Number.MAX_SAFE_INTEGER)
+    .default(1),
   minimizeCpgs: z.boolean().default(true),
-  minimizeCpgsWeight: z.number().min(0).max(1).default(0.5),
+  minimizeCpgsWeight: z.number().min(0).max(Number.MAX_SAFE_INTEGER).default(1),
   reduceKmerComplexity: z.boolean().default(true),
-  reduceKmerComplexityWeight: z.number().min(0).max(1).default(0.5),
+  reduceKmerComplexityWeight: z
+    .number()
+    .min(0)
+    .max(Number.MAX_SAFE_INTEGER)
+    .default(1),
   enforceGcContent: z.boolean().default(true),
   '5PrimeStimulatoryIntron': z.boolean().default(true),
   '3PrimeStimulatoryIntron': z.boolean().default(true),
@@ -143,8 +153,8 @@ function CodonOptimizeWeight() {
               value={field.value}
               onChange={(e) => field.onChange(Number(e.target.value))}
               min={0}
-              max={1}
-              step={0.1}
+              max={Number.MAX_SAFE_INTEGER}
+              step={1}
               disabled={species === SpeciesValues.None}
             />
           </FormControl>
@@ -179,8 +189,8 @@ function RemoveCrypticSpliceSitesWeight() {
               value={field.value}
               onChange={(e) => field.onChange(Number(e.target.value))}
               min={0}
-              max={1}
-              step={0.1}
+              max={Number.MAX_SAFE_INTEGER}
+              step={1}
               disabled={!removeCrypticSpliceSites}
             />
           </FormControl>
@@ -213,8 +223,8 @@ function MinimizeCpGsWeight() {
               value={field.value}
               onChange={(e) => field.onChange(Number(e.target.value))}
               min={0}
-              max={1}
-              step={0.1}
+              max={Number.MAX_SAFE_INTEGER}
+              step={1}
               disabled={!minimizeCpgs}
             />
           </FormControl>
@@ -247,8 +257,8 @@ function ReduceKmerComplexityWeight() {
               value={field.value}
               onChange={(e) => field.onChange(Number(e.target.value))}
               min={0}
-              max={1}
-              step={0.1}
+              max={Number.MAX_SAFE_INTEGER}
+              step={1}
               disabled={!reduceKmerComplexity}
             />
           </FormControl>
@@ -283,7 +293,8 @@ function CodonOptimizationOptions() {
             <div>
               <FormLabel>Remove cryptic splice sites</FormLabel>
               <FormDescription>
-                Remove cryptic splice sites from the sequence
+                Remove cryptic splice donors and cryptic splice acceptors from
+                sequence
               </FormDescription>
             </div>
           </FormItem>
@@ -302,9 +313,9 @@ function CodonOptimizationOptions() {
               />
             </FormControl>
             <div>
-              <FormLabel>Minimize CPG sites</FormLabel>
+              <FormLabel>Minimize CpG sites</FormLabel>
               <FormDescription>
-                Minimize the number of CPG sites in the sequence
+                Minimize the number of CpG sites in the sequence
               </FormDescription>
             </div>
           </FormItem>
@@ -345,9 +356,10 @@ function CodonOptimizationOptions() {
               />
             </FormControl>
             <div>
-              <FormLabel>Enforce GC Content</FormLabel>
+              <FormLabel>Enforce 35-60% GC Content</FormLabel>
               <FormDescription>
-                Enforce a specific GC content in the sequence
+                GC content of the sequence will be enforced to be between 35%
+                and 60%
               </FormDescription>
             </div>
           </FormItem>
@@ -375,7 +387,7 @@ function FiveFragmentOptions() {
           <div>
             <FormLabel>5' Stimulatory Intron</FormLabel>
             <FormDescription>
-              Add a 5' stimulatory intron to the sequence
+              Add a stimulatory intron to the 5’ REJ RNA sequence
             </FormDescription>
           </div>
         </FormItem>
@@ -402,7 +414,7 @@ function ThreeFragmentOptions() {
           <div>
             <FormLabel>3' Stimulatory Intron</FormLabel>
             <FormDescription>
-              Add a 3' stimulatory intron to the sequence
+              Add a stimulatory intron to the 3’ REJ RNA
             </FormDescription>
           </div>
         </FormItem>
@@ -431,12 +443,12 @@ export function GeneSplitterForm({
       removeCrypticSpliceSites: true,
       '5PrimeStimulatoryIntron': true,
       '3PrimeStimulatoryIntron': true,
-      codonOptimizeWeight: 0.5,
-      removeCrypticSpliceSitesWeight: 0.5,
+      codonOptimizeWeight: 1,
+      removeCrypticSpliceSitesWeight: 1,
       minimizeCpgs: true,
-      minimizeCpgsWeight: 0.5,
+      minimizeCpgsWeight: 1,
       reduceKmerComplexity: true,
-      reduceKmerComplexityWeight: 0.5,
+      reduceKmerComplexityWeight: 1,
       enforceGcContent: true,
       codingSequence: defaultCodingSequence ?? '',
       name: defaultName ?? '',
@@ -557,7 +569,7 @@ export function GeneSplitterForm({
               <AccordionItem value="fragment-options">
                 <AccordionTrigger>
                   <div>
-                    <p>Customize fragment options</p>
+                    <p>Customize stimulatory introns</p>
                     <p className="text-sm text-neutral-500 dark:text-neutral-400">
                       Adjust settings for 5' and 3' stimulatory introns.
                     </p>
