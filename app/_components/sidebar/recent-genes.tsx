@@ -12,8 +12,6 @@ import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip'
 import { Button } from '@/components/ui/button' // Import the Button component
-import { XIcon } from 'lucide-react' // Optional: for a clear icon
-
 export function RecentGenes() {
   const { recentGenes, clearRecentGenes } = useRecentGenes()
 
