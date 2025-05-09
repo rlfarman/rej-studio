@@ -15,6 +15,7 @@ import {
   TooltipContent,
 } from '@/components/ui/tooltip'
 import { SpeciesIcon } from '@/components/species-icon' // Import the SpeciesIcon component
+import { useState } from 'react'
 
 export function GeneResultsSkeleton() {
   return (
@@ -54,12 +55,15 @@ export function GeneSearchCommand({
   setIsOpen,
   handleSelect,
 }: GeneSearchInputProps) {
-  console.log('GeneSearchCommand', {
-    query,
-    hasSearched,
-    searchResults,
-    isLoading,
-  })
+  const [showList, setShowList] = useState(true)
+
+  const internalHandleSelect = (
+    gene: Pick<GeneSearchResult, 'symbol' | 'id' | 'name' | 'species'>
+  ) => {
+    setShowList(false)
+    handleSelect(gene)
+  }
+
   return (
     <Command
       className="rounded-lg border md:min-w-[450px]"
@@ -70,64 +74,74 @@ export function GeneSearchCommand({
         placeholder="Search for Genes"
         className="border-0 text-base outline-0 ring-0 focus:border-0 focus:ring-0 active:border-0 active:ring-0 sm:text-sm"
         value={query}
-        onValueChange={(q) => setQuery(q)}
+        onValueChange={(q) => {
+          setQuery(q)
+          if (!showList) {
+            setShowList(true)
+          }
+        }}
         autoFocus
       />
-      <CommandList className="max-h-[300px] overflow-y-auto">
-        {isLoading ? (
-          <GeneResultsSkeleton />
-        ) : (
-          <>
-            <CommandEmpty>
-              {query.trim() === '' || !hasSearched ? (
-                'Start typing to search for genes.'
-              ) : (
-                <div>
-                  No results found.{' '}
-                  <Link
-                    href="/design-tool"
-                    className="text-primary font-medium underline underline-offset-4"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    Try entering a custom genetic sequence instead.
-                  </Link>
-                </div>
-              )}
-            </CommandEmpty>
-            {searchResults.map((gene) => (
-              <CommandItem
-                key={gene.id}
-                value={gene.id}
-                onSelect={() => handleSelect(gene)}
-              >
-                <div
-                  className="grid items-center"
-                  style={{ gridTemplateColumns: '96px 1fr' }}
-                >
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Badge
-                        className="grid w-[96px] items-center gap-2 overflow-hidden truncate font-mono"
-                        style={{ gridTemplateColumns: '24px 1fr' }}
-                      >
-                        <SpeciesIcon
-                          species={gene.species} // Pass the species prop
-                          className="text-secondary h-4 w-4"
-                        />
-                        <span className="truncate">{gene.symbol}</span>
-                      </Badge>
-                    </TooltipTrigger>
-                    <TooltipContent>{gene.symbol}</TooltipContent>
-                  </Tooltip>
-                  <div className="ml-4 space-y-1">
-                    <p className="text-sm">{gene.name}</p>
+      {showList && (
+        <CommandList className="max-h-[300px] overflow-y-auto">
+          {isLoading ? (
+            <GeneResultsSkeleton />
+          ) : (
+            <>
+              <CommandEmpty>
+                {query.trim() === '' || !hasSearched ? (
+                  'Start typing to search for genes.'
+                ) : (
+                  <div>
+                    No results found.{' '}
+                    <Link
+                      href="/design-tool"
+                      className="text-primary font-medium underline underline-offset-4"
+                      onClick={() => {
+                        setIsOpen(false)
+                        setShowList(false)
+                      }}
+                    >
+                      Try entering a custom genetic sequence instead.
+                    </Link>
                   </div>
-                </div>
-              </CommandItem>
-            ))}
-          </>
-        )}
-      </CommandList>
+                )}
+              </CommandEmpty>
+              {searchResults.map((gene) => (
+                <CommandItem
+                  key={gene.id}
+                  value={gene.id}
+                  onSelect={() => internalHandleSelect(gene)}
+                >
+                  <div
+                    className="grid items-center"
+                    style={{ gridTemplateColumns: '96px 1fr' }}
+                  >
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Badge
+                          className="grid w-[96px] items-center gap-2 overflow-hidden truncate font-mono"
+                          style={{ gridTemplateColumns: '24px 1fr' }}
+                        >
+                          <SpeciesIcon
+                            species={gene.species}
+                            className="text-secondary h-4 w-4"
+                          />
+                          <span className="truncate">{gene.symbol}</span>
+                        </Badge>
+                      </TooltipTrigger>
+                      <TooltipContent>{gene.symbol}</TooltipContent>
+                    </Tooltip>
+                    <div className="ml-4 space-y-1">
+                      <p className="text-sm">{gene.name}</p>
+                    </div>
+                  </div>
+                </CommandItem>
+              ))}
+            </>
+          )}
+        </CommandList>
+      )}
     </Command>
   )
 }
