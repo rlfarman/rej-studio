@@ -1,13 +1,22 @@
 import Link from 'next/link'
 import { GeneSearch } from './_components/gene-search'
 import { searchGenes } from '@/actions'
+import Image from 'next/image'
 
 export default function HomePage() {
   return (
     <div className="flex flex-col lg:pt-36">
       <div className="mx-auto mt-0 w-full max-w-4xl px-4 text-center sm:px-6 lg:px-8">
-        <div className="mb-4 flex items-center justify-center"></div>
-        <div className="pb-2 font-mono">RNA END JOINING</div>
+        <div className="mb-4 flex items-center justify-center">
+          <Image
+            src="/images/dna.svg"
+            alt="REJ Studio Logo"
+            width={24}
+            height={24}
+            className="ml-2 mt-2 invert dark:invert"
+          />
+        </div>
+        <div className="pb-2 font-mono">RNA END-JOINING (REJ) Studio</div>
         <h1 className="text-primary pb-2 text-3xl font-bold sm:text-4xl">
           What gene are you optimizing?
         </h1>
