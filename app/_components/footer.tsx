@@ -20,11 +20,11 @@ A combinatorial system for gene expression using RNA-fragment end joining (REJ).
             onClick={handleClick}
             className="text-muted-foreground flex-col text-sm hover:underline"
           >
-            <span className="text-xs group-hover:underline">
+            <span className="block text-[0.5rem] group-hover:underline sm:text-xs">
               Bachmann L, Hsu RH, Hermann K, Williams CE, Farman RL, Criales N,
               Kramer S, Lettieri K, Pfaff SL.
             </span>
-            <span className="mt-1 text-sm group-hover:underline">
+            <span className="mt-1 block text-[0.5rem] group-hover:underline sm:text-sm">
               A combinatorial system for gene expression using RNA-fragment end
               joining (REJ). In preparation. (2025)
             </span>
