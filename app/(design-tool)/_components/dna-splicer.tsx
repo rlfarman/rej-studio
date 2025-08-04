@@ -11,7 +11,7 @@ import {
   FormMessage,
   FormField,
 } from '@/components/ui/form'
-import { FormValues } from './gene-splitter-form'
+import { FormValues } from './form-schema'
 
 export function DNASplicer() {
   const { control, setValue, watch } = useFormContext<FormValues>()
