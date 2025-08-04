@@ -9,7 +9,7 @@ import {
 import { useFormContext } from 'react-hook-form'
 import { SpeciesOptions as SpeciesOptionsType } from '../_types/species-options'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { FormValues } from './gene-splitter-form'
+import { FormValues } from './form-schema'
 
 export function SpeciesOptions() {
   const { control } = useFormContext<FormValues>()
