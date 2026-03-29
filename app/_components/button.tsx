@@ -4,8 +4,6 @@ import Link from 'next/link'
 interface SharedButtonProperties {
   children: React.ReactNode
   type?: 'button' | 'submit' | 'reset'
-  variant?: 'primary' | 'secondary' | 'tertiary'
-  size?: 'small' | 'medium' | 'large'
   disabled?: boolean
   className?: string
 }
@@ -68,8 +66,6 @@ function LinkButton({
 export default function Button({
   children,
   type = 'button',
-  variant = 'primary',
-  size = 'medium',
   disabled = false,
   href,
   onClick,

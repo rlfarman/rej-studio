@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { FormProvider, useForm, useFormContext } from 'react-hook-form'
 import { boolean, object, string } from 'yup'
 import Image from 'next/image'
@@ -260,6 +260,10 @@ export default function GeneSplitterForm({
   defaultSpecies,
 }: GeneSplitterFormProperties) {
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const showError = useCallback((message: string) => {
+    setSubmitError(message)
+    setTimeout(() => setSubmitError(null), 5000)
+  }, [])
   const methods = useForm<FormValues>({
     resolver: yupResolver(validationSchema),
     defaultValues: {
@@ -290,7 +294,7 @@ export default function GeneSplitterForm({
         }),
       })
       if (!res.ok) {
-        setSubmitError(
+        showError(
           'Something went wrong generating your sequences. Please try again.'
         )
         return
@@ -298,7 +302,7 @@ export default function GeneSplitterForm({
       await downloadZip(res)
     } catch (error) {
       console.error('Form submission failed:', error)
-      setSubmitError(
+      showError(
         'Could not reach the server. Please check your connection and try again.'
       )
     }

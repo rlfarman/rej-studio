@@ -26,6 +26,7 @@ export default function GeneSearch({ defaultGene }: GeneSearchProperties) {
   const [query, setQuery] = useState('')
   const [active, setActive] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(false)
   const [results, setResults] = useState<SearchResult>({
     genes: [],
     hasMore: false,
@@ -42,6 +43,7 @@ export default function GeneSearch({ defaultGene }: GeneSearchProperties) {
 
     const controller = new AbortController()
     setLoading(true)
+    setError(false)
 
     debounceTimer.current = setTimeout(() => {
       const params = new URLSearchParams(query ? { q: query } : {})
@@ -54,6 +56,7 @@ export default function GeneSearch({ defaultGene }: GeneSearchProperties) {
         .catch(() => {
           if (!controller.signal.aborted) {
             setLoading(false)
+            setError(true)
           }
         })
     }, 250)
@@ -107,7 +110,11 @@ export default function GeneSearch({ defaultGene }: GeneSearchProperties) {
           transition
           className="absolute z-10 mt-1 max-h-96 w-full max-w-sm divide-y divide-neutral-100 overflow-auto rounded-lg bg-white py-2 shadow transition duration-100 ease-in data-[leave]:opacity-0 dark:bg-neutral-700"
         >
-          {loading ? (
+          {error ? (
+            <div className="px-4 py-2 text-sm text-red-600 dark:text-red-400">
+              Search failed. Please try again.
+            </div>
+          ) : loading ? (
             <div className="px-4 py-2 text-sm text-neutral-500 dark:text-neutral-400">
               Searching...
             </div>

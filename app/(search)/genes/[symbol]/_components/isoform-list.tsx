@@ -12,9 +12,16 @@ export default async function IsoformList({ gene }: IsoformListProperties) {
       hasPrecomputedZip(gene.symbol, isoform.ENST)
     )
   )
-  const precomputedChecks = precomputedResults.map(
-    (r) => r.status === 'fulfilled' && r.value
-  )
+  const precomputedChecks = precomputedResults.map((r, i) => {
+    if (r.status === 'rejected') {
+      console.error(
+        `Failed to check precomputed zip for ${gene.isoforms[i].ENST}:`,
+        r.reason
+      )
+      return false
+    }
+    return r.value
+  })
 
   return (
     <div className="mt-2 flex flex-col gap-4">
