@@ -1,26 +1,41 @@
 'use client'
 
-export default function Error({
+import { useEffect } from 'react'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import Link from 'next/link'
+
+export default function ErrorPage({
+  error,
   reset,
 }: {
-  error: Error & { digest?: string }
+  error: Error
   reset: () => void
 }) {
+  useEffect(() => {
+    console.error(error)
+  }, [error])
+
   return (
-    <div className="flex flex-col items-center justify-center py-24">
-      <h1 className="text-6xl font-bold text-neutral-300 dark:text-neutral-700">
-        Error
-      </h1>
-      <h2 className="mt-4 text-xl font-semibold">Something went wrong</h2>
-      <p className="mt-2 text-neutral-500 dark:text-neutral-400">
-        An unexpected error occurred. Please try again.
-      </p>
-      <button
-        onClick={reset}
-        className="mt-6 font-medium text-sky-600 hover:underline dark:text-sky-500"
-      >
-        Try again
-      </button>
+    <div className="flex min-h-screen items-center justify-center">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle className="text-center text-3xl font-bold">
+            Something went wrong
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center">
+            <p className="mb-4 text-lg">An unexpected error has occurred.</p>
+            <Button onClick={() => reset()} className="mr-2">
+              Try Again
+            </Button>
+            <Link href="/">
+              <Button variant="outline">Go Home</Button>
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }

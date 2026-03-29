@@ -1,59 +1,62 @@
 import '@/styles/globals.css'
-import type { Metadata, Viewport } from 'next'
-import { Open_Sans } from 'next/font/google'
-import { Analytics } from '@vercel/analytics/react'
-import { SpeedInsights } from '@vercel/speed-insights/next'
-import Header from '@/components/header'
-import Footer from '@/components/footer'
+import { Header } from '@/components/header'
+import { GeistSans } from 'geist/font/sans'
+import { GeistMono } from 'geist/font/mono'
+import { Footer } from '@/components/footer'
+import { ThemeProvider } from '@/components/theme-provider'
+import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
+import { AppSidebar } from '@/components/sidebar/app-sidebar'
+import { Toaster } from '@/components/ui/sonner'
+import { FavoriteGenesProvider } from '@/context/favorite-genes-context'
+import { RecentGenesProvider } from '@/context/recent-genes-context'
+import { SpeciesProvider } from './_context/species-context'
+import { cookies } from 'next/headers'
+import { Analytics } from '@vercel/analytics/next'
 
-const openSans = Open_Sans({ subsets: ['latin'] })
-
-export const metadata: Metadata = {
-  title: {
-    default: 'RNA End-joining Design Tool',
-    template: '%s | REJ Studio',
-  },
-  description:
-    'Design optimized RNA end-joining sequences for gene therapy research. Search genes, explore isoforms, and generate codon-optimized constructs.',
-  openGraph: {
-    title: 'RNA End-joining Design Tool',
-    description:
-      'Design optimized RNA end-joining sequences for gene therapy research.',
-    type: 'website',
-    siteName: 'REJ Studio',
-  },
-  twitter: {
-    card: 'summary',
-    title: 'RNA End-joining Design Tool',
-    description:
-      'Design optimized RNA end-joining sequences for gene therapy research.',
-  },
+export const metadata = {
+  title: 'REJ Studio',
+  description: 'RNA End-joining made easy',
 }
 
-export const viewport: Viewport = {
-  width: 'device-width',
-  initialScale: 1,
-}
-
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const cookieStore = await cookies()
+  const defaultOpen = cookieStore.get('sidebar_state')?.value === 'true'
+
   return (
-    <html lang="en">
-      <body
-        className={`${openSans.className} mx-auto flex min-h-screen flex-col justify-between`}
-      >
-        <div>
-          <Header />
-          <main className="container mx-auto mt-4 w-full max-w-screen-md flex-col px-4">
-            {children}
-          </main>
-        </div>
-        <Footer />
+    <html
+      lang="en"
+      className={`${GeistSans.variable} ${GeistMono.variable}`}
+      suppressHydrationWarning
+    >
+      <head />
+      <body>
+        <ThemeProvider attribute="class" enableSystem disableTransitionOnChange>
+          <FavoriteGenesProvider>
+            <RecentGenesProvider>
+              <SpeciesProvider>
+                <SidebarProvider
+                  defaultOpen={defaultOpen}
+                  className="relative flex h-full w-full flex-row overflow-hidden"
+                >
+                  <AppSidebar />
+                  <SidebarInset className="relative flex h-full min-h-screen max-w-full flex-1 flex-col overflow-hidden">
+                    <Header />
+                    <div className="relative h-full w-full flex-1 overflow-auto">
+                      {children}
+                    </div>
+                    <Footer />
+                  </SidebarInset>
+                </SidebarProvider>
+                <Toaster />
+              </SpeciesProvider>
+            </RecentGenesProvider>
+          </FavoriteGenesProvider>
+        </ThemeProvider>
         <Analytics />
-        <SpeedInsights />
       </body>
     </html>
   )

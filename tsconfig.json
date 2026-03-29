@@ -1,6 +1,5 @@
 {
   "compilerOptions": {
-    "target": "es2022",
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
@@ -9,7 +8,7 @@
     "noEmit": true,
     "esModuleInterop": true,
     "module": "esnext",
-    "moduleResolution": "bundler",
+    "moduleResolution": "node",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
@@ -22,10 +21,12 @@
     "paths": {
       "@/*": ["./app/_*"],
       "@/public/*": ["./public/*"],
-      "@/types/*": ["./types/*"],
       "@/design-tool/*": ["./app/(design-tool)/_*"],
-      "@/search/*": ["./app/(search)/_*"]
-    }
+      "@/search/*": ["./app/(search)/_*"],
+      "@/drizzle/*": ["./drizzle/*"],
+      "@/actions": ["./app/actions.ts"]
+    },
+    "target": "ES2017"
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
   "exclude": ["node_modules"]

@@ -1,19 +1,11 @@
-interface GeneSearchLayoutProperties {
-  children: React.ReactNode
-}
-
-export default function GeneSearchLayout({
+export default async function GeneSearchLayout({
   children,
-}: GeneSearchLayoutProperties) {
+}: {
+  children: React.ReactNode
+}) {
   return (
-    <section className="w-full">
-      <h2 className="text-2xl font-bold">Find a known sequence</h2>
-      <p className="mt-2 max-w-prose text-lg text-neutral-500 dark:text-neutral-400">
-        You can find any known genetic sequence for humans and mice by searching
-        for the symbol of the gene (ex: OBSCN), the name of the gene (ex:
-        Obscurin), or an Ensembl Transcript ID (ENST, ex: ENST00000366704).
-      </p>
-      <div className="mt-2">{children}</div>
-    </section>
+    <div className="container mx-auto overflow-hidden pb-6 sm:px-4">
+      {children}
+    </div>
   )
 }

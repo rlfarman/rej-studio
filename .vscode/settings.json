@@ -3,5 +3,6 @@
   "prettier.configPath": "prettier.config.js",
   "editor.quickSuggestions": {
     "strings": "on"
-  }
+  },
+  "cSpell.words": ["ENSG", "ENSMUSG", "ENSMUST", "enst", "isoform", "isoforms"]
 }

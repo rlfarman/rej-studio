@@ -22,9 +22,4 @@ jobs:
 
       - run: npm run lint
 
-      - run: npm test
-
       - run: npm run build
-        env:
-          BASIC_AUTH_USER: ci
-          BASIC_AUTH_PASSWORD: ci

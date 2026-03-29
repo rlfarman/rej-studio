@@ -1,0 +1,42 @@
+'use client'
+import { Button } from '@/components/ui/button'
+import { Heart } from 'lucide-react'
+import { useFavoriteGenes } from '@/context/favorite-genes-context'
+import { useEffect, useState } from 'react'
+
+interface FavoriteButtonProps {
+  gene: {
+    id: string
+    name: string
+    symbol: string
+  }
+}
+
+export function FavoriteGeneButton({ gene }: FavoriteButtonProps) {
+  const { addFavoriteGene, removeFavoriteGene, isFavoriteGene } =
+    useFavoriteGenes()
+  const [isFavorite, setIsFavorite] = useState(isFavoriteGene(gene.id))
+
+  const handleFavoriteClick = () => {
+    if (isFavorite) {
+      removeFavoriteGene(gene.id)
+    } else {
+      addFavoriteGene(gene)
+    }
+    setIsFavorite(!isFavorite)
+  }
+
+  useEffect(() => {
+    setIsFavorite(isFavoriteGene(gene.id))
+  }, [gene.id, isFavoriteGene])
+
+  return (
+    <Button onClick={handleFavoriteClick} variant="ghost" size="icon">
+      <Heart
+        className={`size-5 ${
+          isFavorite ? 'text-destructive' : 'text-muted-foreground'
+        }`}
+      />
+    </Button>
+  )
+}

@@ -1,33 +1,41 @@
-import GeneSearch from '@/search/components/gene-search'
-import Button from '@/components/button'
+import Link from 'next/link'
+import { GeneSearch } from './_components/gene-search'
+import { searchGenes } from '@/actions'
+import Image from 'next/image'
 
 export default function HomePage() {
   return (
-    <div className="grid grid-cols-1 gap-y-16">
-      <div>
-        <h2 className="text-2xl font-bold">
-          Start by finding a known sequence
-        </h2>
-        <p className="mt-2 max-w-prose text-lg text-neutral-500 dark:text-neutral-400">
-          You can find any known genetic sequence for humans and mice by
-          searching for the symbol of the gene (ex: OBSCN), the name of the gene
-          (ex: Obscurin), or an Ensembl Transcript ID (ENST, ex:
-          ENST00000366704).
-        </p>
-        <div className="mt-4">
-          <GeneSearch />
+    <div className="flex flex-col lg:pt-36">
+      <div className="mx-auto mt-0 w-full max-w-4xl px-4 text-center sm:px-6 lg:px-8">
+        <div className="mb-4 flex items-center justify-center">
+          <Image
+            src="/images/dna.svg"
+            alt="REJ Studio Logo"
+            width={24}
+            height={24}
+            className="ml-2 mt-2 invert dark:invert"
+          />
         </div>
-        <h2 className="mt-8 text-2xl font-bold">
-          Or, design with your own sequence
-        </h2>
-        <p className="mt-2 max-w-prose text-lg text-neutral-500 dark:text-neutral-400">
-          Design your RNA end-joining sequences with options for codon
-          optimization, and fragment suppression and stimulatory introns for
-          5&apos; and 3&apos; sequences.
+        <div className="pb-2 font-mono">RNA END-JOINING (REJ) Studio</div>
+        <h1 className="text-primary pb-2 text-3xl font-bold sm:text-4xl">
+          What gene are you optimizing?
+        </h1>
+        <p className="text-muted-foreground">
+          Try searching for a gene, or{' '}
+          <Link
+            href={{
+              pathname: '/design-tool',
+              query: { gene: 'ATM' },
+            }}
+            className="text-primary font-medium underline underline-offset-4"
+          >
+            design your own
+          </Link>
+          .
         </p>
-        <div className="mt-4">
-          <Button href="/design-tool">Design with a custom sequence</Button>
-        </div>
+      </div>
+      <div className="mx-auto mt-8 w-full max-w-2xl px-4 sm:px-6 lg:px-8">
+        <GeneSearch searchGenes={searchGenes} />
       </div>
     </div>
   )

@@ -1,22 +1,31 @@
-import Link from 'next/link'
+'use client'
 
-export default function NotFound() {
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+
+export default function NotFoundPage() {
+  const router = useRouter()
+
   return (
-    <div className="flex flex-col items-center justify-center py-24">
-      <h1 className="text-6xl font-bold text-neutral-300 dark:text-neutral-700">
-        404
-      </h1>
-      <h2 className="mt-4 text-xl font-semibold">Page not found</h2>
-      <p className="mt-2 text-neutral-500 dark:text-neutral-400">
-        The page you&apos;re looking for doesn&apos;t exist or may have been
-        moved.
-      </p>
-      <Link
-        href="/"
-        className="mt-6 font-medium text-sky-600 hover:underline dark:text-sky-500"
-      >
-        Go back home
-      </Link>
+    <div className="flex min-h-screen items-center justify-center">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle className="text-center text-3xl font-bold">404</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center">
+            <p className="mb-4 text-lg">Page Not Found</p>
+            <div className="flex justify-center gap-2">
+              <Button onClick={() => router.back()}>Go Back</Button>
+              <Link href="/">
+                <Button variant="outline">Go Home</Button>
+              </Link>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }
