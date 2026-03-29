@@ -1,18 +1,34 @@
+import type { Metadata } from 'next'
 import GeneSearch from '@/search/components/gene-search'
-import genes from '@/public/data/genes.json'
+import { findGeneBySymbol } from '@/lib/genes'
 
 interface GeneSymbolPageLayout {
   children: React.ReactNode
-  params: {
+  params: Promise<{
     symbol: string
+  }>
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ symbol: string }>
+}): Promise<Metadata> {
+  const { symbol } = await params
+  const gene = findGeneBySymbol(symbol)
+  if (!gene) return { title: 'Gene Not Found' }
+  return {
+    title: `${gene.symbol} – ${gene.name}`,
+    description: `Explore isoforms and design RNA end-joining sequences for ${gene.symbol} (${gene.name}) on chromosome ${gene.chromosome}.`,
   }
 }
 
-export default function GeneSymbolPageLayout({
+export default async function GeneSymbolPageLayout({
   children,
-  params: { symbol },
+  params,
 }: GeneSymbolPageLayout) {
-  const defaultGene = (genes as Gene[]).find((gene) => gene.symbol === symbol)
+  const { symbol } = await params
+  const defaultGene = findGeneBySymbol(symbol)
   return (
     <div>
       <div className="mt-4">

@@ -1,51 +1,14 @@
-import genes from '@/public/data/genes.json'
 import { notFound } from 'next/navigation'
-import path from 'node:path'
-import { promises as fs } from 'node:fs'
+import { getGeneWithSequences } from '@/lib/genes'
 import IsoformList from './_components/isoform-list'
-
-const getData = async (symbol: string): Promise<Gene | undefined> => {
-  const gene = (genes as Gene[]).find((gene) => gene.symbol === symbol)
-  if (!gene) {
-    return gene
-  }
-  return {
-    ...gene,
-    isoforms: await Promise.all(
-      gene.isoforms.map(async (isoform) => {
-        try {
-          const fileName = `${isoform.ENST}.txt`
-          const basePath = path.join(process.cwd(), 'public', 'data')
-          const [codingSequence, proteinSequence] = await Promise.all([
-            await fs.readFile(
-              path.join(basePath, 'coding_sequences', fileName),
-              'utf8'
-            ),
-            await fs.readFile(
-              path.join(basePath, 'protein_sequences', fileName),
-              'utf8'
-            ),
-          ])
-          return {
-            ...isoform,
-            codingSequence,
-            proteinSequence,
-          }
-        } catch (error) {
-          console.error(error)
-          return isoform
-        }
-      })
-    ),
-  }
-}
 
 export default async function GeneSymbolPage({
   params,
 }: {
-  params: { symbol: string }
+  params: Promise<{ symbol: string }>
 }) {
-  const gene = await getData(params.symbol)
+  const { symbol } = await params
+  const gene = getGeneWithSequences(symbol)
 
   if (!gene) {
     notFound()

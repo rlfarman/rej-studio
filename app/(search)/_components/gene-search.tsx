@@ -1,21 +1,20 @@
 'use client'
-import { Fragment, useState } from 'react'
-import { Combobox, Transition } from '@headlessui/react'
+import type { Gene } from '@/types/gene'
+import { useEffect, useRef, useState } from 'react'
+import {
+  Combobox,
+  ComboboxButton,
+  ComboboxInput,
+  ComboboxOption,
+  ComboboxOptions,
+  Label,
+} from '@headlessui/react'
 import { ChevronUpDownIcon } from '@heroicons/react/20/solid'
-import genes from '@/public/data/genes.json'
 import { useRouter } from 'next/navigation'
 
-const getMatch = (gene: Gene, query: string) => {
-  return [
-    gene.symbol,
-    gene.name,
-    ...gene.isoforms.map((isoform) => isoform.ENST),
-  ].some((s) =>
-    s
-      .toLowerCase()
-      .replace(/\s+/g, '')
-      .includes(query.toLowerCase().replace(/\s+/g, ''))
-  )
+interface SearchResult {
+  genes: Gene[]
+  hasMore: boolean
 }
 
 interface GeneSearchProperties {
@@ -23,100 +22,124 @@ interface GeneSearchProperties {
 }
 
 export default function GeneSearch({ defaultGene }: GeneSearchProperties) {
-  const [selected, setSelected] = useState<Gene | ''>(defaultGene ?? '')
+  const [selected, setSelected] = useState<Gene | null>(defaultGene ?? null)
   const [query, setQuery] = useState('')
+  const [active, setActive] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [results, setResults] = useState<SearchResult>({
+    genes: [],
+    hasMore: false,
+  })
   const router = useRouter()
+  const debounceTimer = useRef<ReturnType<typeof setTimeout>>(null)
 
-  const handleChange = (gene: Gene) => {
+  useEffect(() => {
+    if (!active) return
+
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current)
+    }
+
+    const controller = new AbortController()
+    setLoading(true)
+
+    debounceTimer.current = setTimeout(() => {
+      const params = new URLSearchParams(query ? { q: query } : {})
+      fetch(`/api/genes/search?${params}`, { signal: controller.signal })
+        .then((res) => res.json())
+        .then((data: SearchResult) => {
+          setResults(data)
+          setLoading(false)
+        })
+        .catch(() => {
+          if (!controller.signal.aborted) {
+            setLoading(false)
+          }
+        })
+    }, 250)
+
+    return () => {
+      if (debounceTimer.current) clearTimeout(debounceTimer.current)
+      controller.abort()
+    }
+  }, [query, active])
+
+  const handleChange = (gene: Gene | null) => {
+    if (!gene) return
     setSelected(gene)
     setQuery(gene.symbol)
     router.push(`/genes/${gene.symbol}`)
   }
 
-  const filteredGenes =
-    query === ''
-      ? (genes as Gene[])
-      : (genes as Gene[]).filter((gene) => getMatch(gene, query))
+  function handleFocus() {
+    if (!active) setActive(true)
+  }
 
   return (
-    <Combobox value={selected} onChange={handleChange}>
-      {({ open }) => (
-        <div className="relative mt-2">
-          <Combobox.Label className="block text-sm">
-            Search for a gene
-          </Combobox.Label>
-          <div className="relative mt-1 inline-block cursor-default overflow-hidden">
-            <Combobox.Input
-              className="block w-full rounded-lg border border-neutral-300 bg-neutral-50 p-3 text-neutral-900 dark:border-neutral-600 dark:bg-neutral-700 dark:text-white dark:placeholder-neutral-400"
-              displayValue={(gene: Gene) =>
-                query !== '' ? query : gene.symbol
-              }
-              onChange={(event) => setQuery(event.target.value)}
-              // Hack to make the combobox open when clicking on the input
-              onClick={(event: any) => {
-                if (
-                  event.relatedTarget?.id?.includes(
-                    'headlessui-combobox-button'
-                  )
-                ) {
-                  return
-                }
-                if (!open) {
-                  event.target.nextSibling.click()
-                }
-              }}
+    <Combobox
+      value={selected}
+      onChange={handleChange}
+      onClose={() => {
+        setQuery('')
+        setSelected(defaultGene ?? null)
+      }}
+    >
+      <div className="relative mt-2">
+        <Label className="block text-sm">Search for a gene</Label>
+        <div className="relative mt-1 inline-block cursor-default">
+          <ComboboxInput
+            className="block w-full rounded-lg border border-neutral-300 bg-neutral-50 p-3 text-neutral-900 dark:border-neutral-600 dark:bg-neutral-700 dark:text-white dark:placeholder-neutral-400"
+            placeholder="Search by symbol, name, or ENST..."
+            displayValue={(gene: Gene | null) =>
+              query !== '' ? query : (gene?.symbol ?? '')
+            }
+            onChange={(event) => setQuery(event.target.value)}
+            onFocus={handleFocus}
+          />
+          <ComboboxButton className="absolute inset-y-0 right-0 top-0 flex items-center pr-2">
+            <ChevronUpDownIcon
+              className="h-4 w-4 text-neutral-500 dark:text-neutral-400"
+              aria-hidden="true"
             />
-            <Combobox.Button className="absolute inset-y-0 right-0 top-0 flex items-center pr-2">
-              <ChevronUpDownIcon
-                className="dark: h-4 w-4 text-neutral-500 dark:text-neutral-400"
-                aria-hidden="true"
-              />
-            </Combobox.Button>
-          </div>
-          <Transition
-            as={Fragment}
-            leave="transition ease-in duration-100"
-            leaveFrom="opacity-100"
-            leaveTo="opacity-0"
-          >
-            <Combobox.Options className="absolute z-10 mt-1 max-h-96 w-full max-w-sm divide-y divide-neutral-100 overflow-auto rounded-lg bg-white py-2 shadow dark:bg-neutral-700">
-              {filteredGenes.length === 0 && query !== '' ? (
-                <div className="relative cursor-default select-none px-4 py-2 text-neutral-700">
-                  Nothing found.
-                </div>
-              ) : (
-                <>
-                  {filteredGenes.slice(0, 100).map((gene) => (
-                    <Combobox.Option
-                      key={gene.symbol}
-                      className={({ active }) =>
-                        `relative w-full select-none px-4 py-2 ${
-                          active && 'bg-sky-50 dark:bg-sky-800'
-                        }`
-                      }
-                      value={gene}
-                    >
-                      <>
-                        <span className="block truncate font-medium">
-                          {gene.symbol}
-                        </span>
-                        <span className="block truncate text-sm text-neutral-500 dark:text-neutral-300">
-                          {gene.name}
-                        </span>
-                      </>
-                    </Combobox.Option>
-                  ))}
-                  {filteredGenes.length > 100 && (
-                    <div className="relative cursor-default select-none bg-neutral-50 px-4 py-2 text-neutral-700 dark:bg-neutral-700 dark:text-white">
-                      Refine your search to show more results
-                    </div>
-                  )}
-                </>
-              )}
-            </Combobox.Options>
-          </Transition>
+          </ComboboxButton>
         </div>
-      )}
+        <ComboboxOptions
+          transition
+          className="absolute z-10 mt-1 max-h-96 w-full max-w-sm divide-y divide-neutral-100 overflow-auto rounded-lg bg-white py-2 shadow transition duration-100 ease-in data-[leave]:opacity-0 dark:bg-neutral-700"
+        >
+          {loading ? (
+            <div className="px-4 py-2 text-sm text-neutral-500 dark:text-neutral-400">
+              Searching...
+            </div>
+          ) : results.genes.length === 0 && query !== '' ? (
+            <div className="relative cursor-default select-none px-4 py-2 text-neutral-700">
+              Nothing found.
+            </div>
+          ) : (
+            <>
+              {results.genes.map((gene) => (
+                <ComboboxOption
+                  key={gene.symbol}
+                  className="relative w-full select-none px-4 py-2 data-[focus]:bg-sky-50 data-[focus]:dark:bg-sky-800"
+                  value={gene}
+                >
+                  <span className="block truncate font-medium">
+                    {gene.symbol}
+                  </span>
+                  <span className="block truncate text-sm text-neutral-500 dark:text-neutral-300">
+                    {gene.name}
+                  </span>
+                </ComboboxOption>
+              ))}
+              {results.hasMore && (
+                <div className="relative cursor-default select-none bg-neutral-50 px-4 py-2 text-neutral-700 dark:bg-neutral-700 dark:text-white">
+                  Refine your search to show more results
+                </div>
+              )}
+            </>
+          )}
+        </ComboboxOptions>
+      </div>
     </Combobox>
   )
 }

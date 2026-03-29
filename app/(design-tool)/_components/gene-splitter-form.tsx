@@ -1,4 +1,5 @@
 'use client'
+import { useState } from 'react'
 import { FormProvider, useForm, useFormContext } from 'react-hook-form'
 import { boolean, object, string } from 'yup'
 import Image from 'next/image'
@@ -48,11 +49,10 @@ const validationSchema = object().shape({
       'Must be less than 250 characters',
       (val) => val.length <= 250
     ),
-  species: string().oneOf([
-    SpeciesValues.None,
-    SpeciesValues.Human,
-    SpeciesValues.Mouse,
-  ]),
+  species: string()
+    .oneOf([SpeciesValues.None, SpeciesValues.Human, SpeciesValues.Mouse])
+    .required()
+    .default(SpeciesValues.None),
   removeCrypticSpliceSites: boolean().default(true),
   induceOptimalSpliceSites: boolean().default(true),
   '5PrimeStimulatoryIntron': boolean().default(true),
@@ -259,6 +259,7 @@ export default function GeneSplitterForm({
   defaultName,
   defaultSpecies,
 }: GeneSplitterFormProperties) {
+  const [submitError, setSubmitError] = useState<string | null>(null)
   const methods = useForm<FormValues>({
     resolver: yupResolver(validationSchema),
     defaultValues: {
@@ -269,32 +270,38 @@ export default function GeneSplitterForm({
     },
   })
 
-  function handleSubmitForm({ codingSequence, ...options }: FormValues) {
-    return new Promise((resolve) => {
-      fetch(
-        process.env.NODE_ENV === 'production'
-          ? 'https://rej-design-tool.wl.r.appspot.com'
-          : 'http://localhost:3001',
-        {
-          method: 'POST',
-          body: JSON.stringify({
-            cds: codingSequence,
-            options: {
-              codon_optimize: options.species,
-              remove_cryptic_ss: options.removeCrypticSpliceSites,
-              induce_optimal_ss: options.induceOptimalSpliceSites,
-              stim_5: options['5PrimeStimulatoryIntron'],
-              stim_3: options['3PrimeStimulatoryIntron'],
-            },
-          }),
-        }
-      ).then((res) => {
-        if (!res.ok) {
-          throw new Error('Failed to fetch data')
-        }
-        resolve(downloadZip(res))
+  async function handleSubmitForm({ codingSequence, ...options }: FormValues) {
+    setSubmitError(null)
+    const apiUrl =
+      process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'
+    try {
+      const res = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cds: codingSequence,
+          options: {
+            codon_optimize: options.species,
+            remove_cryptic_ss: options.removeCrypticSpliceSites,
+            induce_optimal_ss: options.induceOptimalSpliceSites,
+            stim_5: options['5PrimeStimulatoryIntron'],
+            stim_3: options['3PrimeStimulatoryIntron'],
+          },
+        }),
       })
-    })
+      if (!res.ok) {
+        setSubmitError(
+          'Something went wrong generating your sequences. Please try again.'
+        )
+        return
+      }
+      await downloadZip(res)
+    } catch (error) {
+      console.error('Form submission failed:', error)
+      setSubmitError(
+        'Could not reach the server. Please check your connection and try again.'
+      )
+    }
   }
 
   return (
@@ -307,7 +314,6 @@ export default function GeneSplitterForm({
             alt="A diagram showing how the different options of the form affect the result of RNA end-joining"
             width={827}
             height={220}
-            quality={100}
           />
         </div>
         <CodonOptimizationOptions />
@@ -319,6 +325,11 @@ export default function GeneSplitterForm({
             <span className="ml-2 text-sm text-neutral-800 dark:text-neutral-200">
               Submitting...
             </span>
+          )}
+          {submitError && (
+            <p role="alert" className="mt-2 text-sm text-red-600 dark:text-red-500">
+              {submitError}
+            </p>
           )}
         </div>
       </form>

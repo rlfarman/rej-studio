@@ -1,6 +1,6 @@
 'use client'
-import classnames from 'classnames'
-import { ReactNode, forwardRef } from 'react'
+import clsx from 'clsx'
+import { ReactNode } from 'react'
 
 interface CheckboxProps {
   id: string
@@ -13,10 +13,16 @@ interface CheckboxProps {
   ref?: React.Ref<HTMLInputElement>
 }
 
-function Checkbox(
-  { id, label, helperText, name, disabled, onChange, onBlur }: CheckboxProps,
-  ref: React.Ref<HTMLInputElement>
-) {
+export default function Checkbox({
+  id,
+  label,
+  helperText,
+  name,
+  disabled,
+  onChange,
+  onBlur,
+  ref,
+}: CheckboxProps) {
   return (
     <div className="flex">
       <div className="flex h-6 items-center">
@@ -35,19 +41,16 @@ function Checkbox(
       <div className="pl-2">
         <label
           htmlFor={id}
-          className={classnames(
-            'font-medium text-neutral-900 dark:text-neutral-300',
-            {
-              'text-neutral-500 dark:text-neutral-600': disabled,
-            }
-          )}
+          className={clsx('font-medium text-neutral-900 dark:text-neutral-300', {
+            'text-neutral-500 dark:text-neutral-600': disabled,
+          })}
         >
           {label}
         </label>
         {helperText && (
           <span
             id={`${id}-helper-text`}
-            className={classnames(
+            className={clsx(
               'block text-sm font-normal text-neutral-500 dark:text-neutral-300',
               {
                 'text-neutral-500 dark:text-neutral-600': disabled,
@@ -61,5 +64,3 @@ function Checkbox(
     </div>
   )
 }
-
-export default forwardRef<HTMLInputElement, CheckboxProps>(Checkbox)

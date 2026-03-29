@@ -1,4 +1,4 @@
-import classnames from 'classnames'
+import clsx from 'clsx'
 import Link from 'next/link'
 
 interface SharedButtonProperties {
@@ -84,7 +84,7 @@ export default function Button({
         </LinkButton>
       ) : (
         <button
-          className={classnames(CLASSES, className)}
+          className={clsx(CLASSES, className)}
           type={type}
           onClick={onClick}
           disabled={disabled}

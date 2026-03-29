@@ -1,10 +1,5 @@
-import Link from 'next/link'
-
 interface GeneSearchLayoutProperties {
   children: React.ReactNode
-  params: {
-    symbol: string
-  }
 }
 
 export default function GeneSearchLayout({
