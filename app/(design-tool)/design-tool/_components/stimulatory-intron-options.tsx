@@ -27,7 +27,9 @@ export function FiveFragmentOptions() {
           <div>
             <FormLabel>5' Stimulatory Intron</FormLabel>
             <FormDescription>
-              Add a stimulatory intron to the 5' REJ RNA sequence
+              Inserts a stimulatory intron upstream of the main split point to
+              boost expression of the 5&apos; fragment. Placed ~150 bp before
+              the junction at the nearest compatible splice site.
             </FormDescription>
           </div>
         </FormItem>
@@ -54,7 +56,9 @@ export function ThreeFragmentOptions() {
           <div>
             <FormLabel>3' Stimulatory Intron</FormLabel>
             <FormDescription>
-              Add a stimulatory intron to the 3' REJ RNA
+              Inserts a stimulatory intron downstream of the main split point to
+              boost expression of the 3&apos; fragment. Placed ~150 bp after
+              the junction at the nearest compatible splice site.
             </FormDescription>
           </div>
         </FormItem>

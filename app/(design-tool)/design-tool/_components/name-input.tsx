@@ -9,9 +9,15 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { FormValues } from './form-schema'
+import { cn } from '@/lib/utils'
+
+const MAX_NAME_LENGTH = 250
 
 export function NameInput() {
-  const { control } = useFormContext<FormValues>()
+  const { control, watch } = useFormContext<FormValues>()
+  const value = watch('name')
+  const length = value?.length ?? 0
+
   return (
     <FormField
       name="name"
@@ -27,10 +33,25 @@ export function NameInput() {
               type="text"
               placeholder="ABC123..."
               aria-required="true"
+              maxLength={MAX_NAME_LENGTH}
               {...field}
             />
           </FormControl>
-          <FormAssistiveText reserveSpace />
+          <FormAssistiveText>
+            <span className="flex min-h-5 items-start justify-between gap-4">
+              <span />
+              <span
+                className={cn(
+                  'shrink-0 tabular-nums',
+                  length > MAX_NAME_LENGTH
+                    ? 'text-destructive-foreground'
+                    : 'text-muted-foreground',
+                )}
+              >
+                {length.toLocaleString()} / {MAX_NAME_LENGTH.toLocaleString()}
+              </span>
+            </span>
+          </FormAssistiveText>
         </FormItem>
       )}
     />

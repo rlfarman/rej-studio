@@ -28,8 +28,10 @@ export function CodonOptimizationOptions() {
             <div>
               <FormLabel>Remove cryptic splice sites</FormLabel>
               <FormDescription>
-                Remove cryptic splice donors and cryptic splice acceptors from
-                sequence
+                Prevents unintended mRNA splicing in mammalian cells by
+                eliminating sequences resembling splice donor and acceptor
+                motifs. Trade-off: constrains codon choices, which may slightly
+                reduce codon optimization.
               </FormDescription>
             </div>
           </FormItem>
@@ -50,7 +52,9 @@ export function CodonOptimizationOptions() {
             <div>
               <FormLabel>Minimize CpG sites</FormLabel>
               <FormDescription>
-                Minimize the number of CpG sites in the sequence
+                Reduces silencing risk from DNA methylation by minimizing CpG
+                dinucleotides. Trade-off: may push GC content below the optimal
+                range.
               </FormDescription>
             </div>
           </FormItem>
@@ -71,8 +75,9 @@ export function CodonOptimizationOptions() {
             <div>
               <FormLabel>Reduce k-mer complexity</FormLabel>
               <FormDescription>
-                Reduce the complexity of the sequence by minimizing repetitive
-                k-mers
+                Reduces synthesis complexity and repetitive regions by
+                diversifying 10-mer sequences. Trade-off: limits codon
+                flexibility, which may compete with other objectives.
               </FormDescription>
             </div>
           </FormItem>
@@ -93,8 +98,9 @@ export function CodonOptimizationOptions() {
             <div>
               <FormLabel>Enforce 35-60% GC Content</FormLabel>
               <FormDescription>
-                GC content of the sequence will be enforced to be between 35%
-                and 60%
+                Keeps GC content within the 35-60% range optimal for mRNA
+                stability and expression. This is a hard constraint: the
+                optimizer will not produce a sequence outside this range.
               </FormDescription>
             </div>
           </FormItem>
