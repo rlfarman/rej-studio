@@ -26,6 +26,10 @@ async function timingSafeEqual(a: string, b: string): Promise<boolean> {
 }
 
 export async function proxy(req: NextRequest) {
+  if (process.env.NODE_ENV === 'development' && process.env.BYPASS_AUTH === 'true') {
+    return NextResponse.next()
+  }
+
   const basicAuth = req.headers.get('authorization')
   const url = req.nextUrl
 

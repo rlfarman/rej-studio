@@ -23,7 +23,7 @@ export function CodonOptimizeWeight() {
       render={({ field }) => (
         <FormItem>
           <FormLabel className={disabled ? 'text-muted-foreground' : undefined}>
-            Adjust priority for codon optimization
+            Codon optimization weight
           </FormLabel>
           <FormControl>
             <Input
@@ -45,7 +45,7 @@ export function CodonOptimizeWeight() {
               >
                 Select a species
               </button>{' '}
-              to enable codon optimization.
+              above to enable codon optimization.
             </FormDescription>
           )}
           <FormMessage />
@@ -67,7 +67,7 @@ export function RemoveCrypticSpliceSitesWeight() {
       render={({ field }) => (
         <FormItem>
           <FormLabel className={disabled ? 'text-muted-foreground' : undefined}>
-            Adjust priority for removing cryptic splice sites
+            Cryptic splice site removal weight
           </FormLabel>
           <FormControl>
             <Input
@@ -87,9 +87,9 @@ export function RemoveCrypticSpliceSitesWeight() {
                 className="text-primary underline-offset-2 hover:underline"
                 onClick={() => setValue('removeCrypticSpliceSites', true)}
               >
-                Enable &ldquo;Remove cryptic splice sites&rdquo;
+                Enable cryptic splice site removal
               </button>{' '}
-              to customize this weight.
+              above to set this weight.
             </FormDescription>
           )}
           <FormMessage />
@@ -111,7 +111,7 @@ export function MinimizeCpGsWeight() {
       render={({ field }) => (
         <FormItem>
           <FormLabel className={disabled ? 'text-muted-foreground' : undefined}>
-            Adjust priority for minimizing CpG sites
+            CpG minimization weight
           </FormLabel>
           <FormControl>
             <Input
@@ -131,9 +131,9 @@ export function MinimizeCpGsWeight() {
                 className="text-primary underline-offset-2 hover:underline"
                 onClick={() => setValue('minimizeCpgs', true)}
               >
-                Enable &ldquo;Minimize CpG sites&rdquo;
+                Enable CpG minimization
               </button>{' '}
-              to customize this weight.
+              above to set this weight.
             </FormDescription>
           )}
           <FormMessage />
@@ -155,7 +155,7 @@ export function ReduceKmerComplexityWeight() {
       render={({ field }) => (
         <FormItem>
           <FormLabel className={disabled ? 'text-muted-foreground' : undefined}>
-            Adjust priority for reducing k-mer complexity
+            k-mer complexity reduction weight
           </FormLabel>
           <FormControl>
             <Input
@@ -175,9 +175,9 @@ export function ReduceKmerComplexityWeight() {
                 className="text-primary underline-offset-2 hover:underline"
                 onClick={() => setValue('reduceKmerComplexity', true)}
               >
-                Enable &ldquo;Reduce k-mer complexity&rdquo;
+                Enable k-mer complexity reduction
               </button>{' '}
-              to customize this weight.
+              above to set this weight.
             </FormDescription>
           )}
           <FormMessage />

@@ -19,12 +19,12 @@ export async function GeneSearchResults({
   if (results.length === 0) {
     return (
       <div className="text-muted-foreground py-8 text-center text-sm">
-        No results found for &ldquo;{query}&rdquo;.{' '}
+        No genes match &ldquo;{query}&rdquo;.{' '}
         <Link
           href="/design-tool"
           className="text-primary font-medium underline underline-offset-4"
         >
-          Try entering a custom genetic sequence instead.
+          Enter a custom sequence instead.
         </Link>
       </div>
     )

@@ -1,7 +1,9 @@
 'use client'
 import { Button } from '@/components/ui/button'
-import { Heart } from 'lucide-react'
+import { Star } from 'lucide-react'
 import { useFavoriteGenes } from '@/context/favorite-genes-context'
+import { AnimatePresence, m } from 'motion/react'
+import { popSpring } from '@/lib/motion'
 
 interface FavoriteButtonProps {
   gene: {
@@ -31,11 +33,22 @@ export function FavoriteGeneButton({ gene }: FavoriteButtonProps) {
       size="icon"
       aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
     >
-      <Heart
-        className={`size-5 ${
-          isFavorite ? 'text-destructive' : 'text-muted-foreground'
-        }`}
-      />
+      <AnimatePresence mode="wait" initial={false}>
+        <m.div
+          key={isFavorite ? 'filled' : 'empty'}
+          initial={{ scale: 0.8 }}
+          animate={{ scale: 1 }}
+          transition={popSpring}
+        >
+          <Star
+            className={`size-5 transition-colors duration-200 ${
+              isFavorite
+                ? 'fill-yellow-400 text-yellow-400'
+                : 'text-muted-foreground'
+            }`}
+          />
+        </m.div>
+      </AnimatePresence>
     </Button>
   )
 }

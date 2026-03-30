@@ -13,13 +13,9 @@ import { Skeleton } from '@/components/ui/skeleton'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { useSpeciesContext } from '@/context/species-context'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
-import { toast } from 'sonner'
 import { SPECIES_DISPLAY_NAME } from '@/lib/species'
+import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
+import { CopyableText } from '@/components/copyable-text'
 
 interface Isoform {
   id: string
@@ -36,6 +32,7 @@ interface IsoformListProps {
 
 export default function IsoformTable({ isoforms }: IsoformListProps) {
   const { species } = useSpeciesContext()
+  const { copy, isCopied } = useCopyToClipboard({ showToast: false })
 
   const filteredIsoforms = useMemo(
     () =>
@@ -45,15 +42,6 @@ export default function IsoformTable({ isoforms }: IsoformListProps) {
       }),
     [species, isoforms],
   )
-
-  const handleCopy = async (text: string) => {
-    try {
-      await navigator.clipboard.writeText(text)
-      toast.success('Sequence copied to clipboard!')
-    } catch {
-      toast.error('Failed to copy to clipboard.')
-    }
-  }
 
   return (
     <Table>
@@ -72,59 +60,53 @@ export default function IsoformTable({ isoforms }: IsoformListProps) {
       </TableHeader>
       <TableBody>
         {filteredIsoforms.length > 0 ? (
-          filteredIsoforms.map((isoform) => (
-            <TableRow key={isoform.id}>
-              <TableCell className="font-mono">
-                {isoform.codingSequenceLength}
-              </TableCell>
-              <TableCell className="hidden md:table-cell">
-                {SPECIES_DISPLAY_NAME[isoform.species as keyof typeof SPECIES_DISPLAY_NAME] ?? 'Unknown'}
-              </TableCell>
-              <TableCell className="font-mono">{isoform.enst}</TableCell>
-              <TableCell className="hidden sm:table-cell">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      className="hover:text-muted-foreground hover:underline"
-                      onClick={() => handleCopy(isoform.codingSequence)}
-                      aria-label="Copy coding sequence"
-                    >
-                      {isoform.codingSequence.slice(0, 20)}...
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent>Click to copy</TooltipContent>
-                </Tooltip>
-              </TableCell>
-              <TableCell className="hidden lg:table-cell">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      onClick={() => handleCopy(isoform.proteinSequence)}
-                      className="hover:text-muted-foreground hover:underline"
-                      aria-label="Copy protein sequence"
-                    >
-                      {isoform.proteinSequence.slice(0, 20)}...
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent>Click to copy</TooltipContent>
-                </Tooltip>
-              </TableCell>
-              <TableCell className="text-right">
-                <Button variant="ghost" size="icon" asChild>
-                  <Link href={`/design-tool?isoform=${isoform.id}`} aria-label={`Customize ${isoform.enst}`}>
-                    <ExternalLink />
-                  </Link>
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))
+          filteredIsoforms.map((isoform) => {
+            const cdsId = `cds-${isoform.id}`
+            const protId = `prot-${isoform.id}`
+            return (
+              <TableRow key={isoform.id}>
+                <TableCell className="font-mono">
+                  {isoform.codingSequenceLength}
+                </TableCell>
+                <TableCell className="hidden md:table-cell">
+                  {SPECIES_DISPLAY_NAME[isoform.species as keyof typeof SPECIES_DISPLAY_NAME] ?? 'Unknown'}
+                </TableCell>
+                <TableCell className="font-mono">{isoform.enst}</TableCell>
+                <TableCell className="hidden sm:table-cell">
+                  <CopyableText
+                    label="Copy coding sequence"
+                    copied={isCopied(cdsId)}
+                    onCopy={() => copy(isoform.codingSequence, cdsId)}
+                  >
+                    {isoform.codingSequence.slice(0, 20)}...
+                  </CopyableText>
+                </TableCell>
+                <TableCell className="hidden lg:table-cell">
+                  <CopyableText
+                    label="Copy protein sequence"
+                    copied={isCopied(protId)}
+                    onCopy={() => copy(isoform.proteinSequence, protId)}
+                  >
+                    {isoform.proteinSequence.slice(0, 20)}...
+                  </CopyableText>
+                </TableCell>
+                <TableCell className="text-right">
+                  <Button variant="ghost" size="icon" asChild>
+                    <Link href={`/design-tool?isoform=${isoform.id}`} aria-label={`Customize ${isoform.enst}`}>
+                      <ExternalLink />
+                    </Link>
+                  </Button>
+                </TableCell>
+              </TableRow>
+            )
+          })
         ) : (
           <TableRow>
             <TableCell
               colSpan={6}
               className="text-muted-foreground text-center"
             >
-              No isoforms found for the selected species.
+              No isoforms available for this species. Try selecting a different species filter.
             </TableCell>
           </TableRow>
         )}

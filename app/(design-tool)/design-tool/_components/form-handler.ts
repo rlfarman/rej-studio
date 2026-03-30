@@ -17,7 +17,7 @@ export async function handleSubmitForm({
   '5PrimeStimulatoryIntron': stim5,
   '3PrimeStimulatoryIntron': stim3,
 }: FormValues) {
-  const toastId = toast.loading('Submitting your request...')
+  const toastId = toast.loading('Processing your sequence...')
   const options = {
     codon_optimize: species !== 'none' ? species : null,
     codon_optimize_weight: codonOptimizeWeight,
@@ -48,7 +48,7 @@ export async function handleSubmitForm({
     })
 
     if (!response.ok) {
-      let detail = 'Failed to process the request.'
+      let detail = 'Something went wrong while processing your sequence.'
       try {
         const body = await response.json()
         if (body.detail) detail = body.detail
@@ -71,12 +71,11 @@ export async function handleSubmitForm({
       a.remove()
       window.URL.revokeObjectURL(url)
     }
-    toast.success(
-      'Sequence processed successfully! Your download will start shortly.',
-      { id: toastId },
-    )
+    toast.success('Sequence ready — your download has started.', {
+      id: toastId,
+    })
   } catch (error) {
-    let message = 'An unexpected error occurred. Please try again.'
+    let message = 'Something went wrong. Please try again.'
     if (error instanceof TypeError && error.message === 'Failed to fetch') {
       message =
         'Unable to reach the server. Please check your connection and try again.'
