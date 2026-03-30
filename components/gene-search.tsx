@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState, useSyncExternalStore } from 'react'
 import { CommandDialog } from '@/components/ui/command'
 import { useRouter } from 'next/navigation'
 import { type GeneSearchResult } from '@/actions/genes'
@@ -19,6 +19,18 @@ interface GeneSearchProperties {
   isDialog?: boolean
 }
 
+function subscribeToPlatformStore() {
+  return () => {}
+}
+
+function getPlatformSnapshot() {
+  return /Mac|iPod|iPhone|iPad/.test(window.navigator.userAgent)
+}
+
+function getPlatformServerSnapshot() {
+  return false
+}
+
 export function GeneSearch({
   searchGenes,
   defaultQuery,
@@ -32,9 +44,10 @@ export function GeneSearch({
     })
   const [isOpen, setIsOpen] = useState(false)
   const { addRecentGene } = useRecentGenes()
-  const isMac = useMemo(
-    () => typeof navigator !== 'undefined' && /Mac|iPod|iPhone|iPad/.test(navigator.userAgent),
-    [],
+  const isMac = useSyncExternalStore(
+    subscribeToPlatformStore,
+    getPlatformSnapshot,
+    getPlatformServerSnapshot,
   )
 
   const handleSelect = (gene: GeneSearchResult) => {

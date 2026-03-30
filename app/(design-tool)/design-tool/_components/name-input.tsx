@@ -5,7 +5,7 @@ import {
   FormItem,
   FormLabel,
   FormControl,
-  FormMessage,
+  FormAssistiveText,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { FormValues } from './form-schema'
@@ -22,7 +22,7 @@ export function NameInput() {
           <FormControl>
             <Input type="text" placeholder="ABC123..." aria-required="true" {...field} />
           </FormControl>
-          <FormMessage />
+          <FormAssistiveText reserveSpace />
         </FormItem>
       )}
     />

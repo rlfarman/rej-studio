@@ -5,8 +5,7 @@ import {
   FormItem,
   FormLabel,
   FormControl,
-  FormDescription,
-  FormMessage,
+  FormAssistiveText,
 } from '@/components/ui/form'
 import { FormValues } from './form-schema'
 import { cn } from '@/lib/utils'
@@ -39,10 +38,10 @@ export function CodingSequenceInput() {
               )}
             />
           </FormControl>
-          <div className="flex items-start justify-between gap-4">
-            <FormDescription>
+          <div className="flex min-h-5 items-start justify-between gap-4">
+            <FormAssistiveText className="min-w-0">
               Valid characters: A, C, G, T, U. Length must be a multiple of 3.
-            </FormDescription>
+            </FormAssistiveText>
             <span
               className={cn(
                 'text-muted-foreground shrink-0 text-xs tabular-nums',
@@ -52,7 +51,6 @@ export function CodingSequenceInput() {
               {length.toLocaleString()} / {MAX_LENGTH.toLocaleString()}
             </span>
           </div>
-          <FormMessage />
         </FormItem>
       )}
     />

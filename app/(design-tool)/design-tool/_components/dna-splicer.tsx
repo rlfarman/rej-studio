@@ -8,7 +8,7 @@ import {
   FormItem,
   FormLabel,
   FormControl,
-  FormMessage,
+  FormAssistiveText,
   FormField,
 } from '@/components/ui/form'
 import { FormValues } from './form-schema'
@@ -160,7 +160,7 @@ export function DNASplicer() {
                   max={seqLength - 1}
                 />
               </FormControl>
-              <FormMessage />
+              <FormAssistiveText reserveSpace />
             </FormItem>
           )}
         />

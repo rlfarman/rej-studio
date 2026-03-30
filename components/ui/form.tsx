@@ -129,9 +129,45 @@ function FormDescription({ className, ...props }: React.ComponentProps<'p'>) {
     <p
       data-slot="form-description"
       id={formDescriptionId}
-      className={cn('text-muted-foreground text-sm', className)}
+      className={cn('text-muted-foreground text-sm leading-5', className)}
       {...props}
     />
+  )
+}
+
+type FormAssistiveTextProps = React.ComponentProps<'p'> & {
+  reserveSpace?: boolean
+}
+
+function FormAssistiveText({
+  className,
+  children,
+  reserveSpace = false,
+  ...props
+}: FormAssistiveTextProps) {
+  const { error, formDescriptionId, formMessageId } = useFormField()
+  const body = error ? String(error?.message ?? '') : children
+
+  if (!body && !reserveSpace) {
+    return null
+  }
+
+  return (
+    <p
+      data-slot="form-assistive-text"
+      id={error ? formMessageId : formDescriptionId}
+      aria-live={error ? 'polite' : undefined}
+      className={cn(
+        'text-sm leading-5',
+        error ? 'text-destructive-foreground' : 'text-muted-foreground',
+        reserveSpace && 'min-h-5',
+        !body && 'invisible',
+        className,
+      )}
+      {...props}
+    >
+      {body || '\u00A0'}
+    </p>
   )
 }
 
@@ -147,7 +183,7 @@ function FormMessage({ className, ...props }: React.ComponentProps<'p'>) {
     <p
       data-slot="form-message"
       id={formMessageId}
-      className={cn('text-destructive-foreground text-sm', className)}
+      className={cn('text-destructive-foreground text-sm leading-5', className)}
       {...props}
     >
       {body}
@@ -162,6 +198,7 @@ export {
   FormLabel,
   FormControl,
   FormDescription,
+  FormAssistiveText,
   FormMessage,
   FormField,
 }
