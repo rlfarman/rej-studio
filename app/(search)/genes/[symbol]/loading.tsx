@@ -38,7 +38,7 @@ export default function Loading() {
           </div>
         </div>
         <Separator className="my-4" />
-        <h2 className="font-bold">Isoforms</h2>
+        <h2 className="text-lg font-semibold tracking-tight">Isoforms</h2>
         <Skeleton className="h-8 w-24" />
       </CardContent>
     </Card>

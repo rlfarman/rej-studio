@@ -68,7 +68,7 @@ export function GeneSplitterForm({
   return (
     <Card>
       <CardHeader>
-        <h1 className="leading-none font-semibold">REJ Studio Design Tool</h1>
+        <h1 className="text-2xl leading-none font-bold tracking-tight">REJ Studio Design Tool</h1>
         <CardDescription>
           Design a custom RNA sequence for end-joining experiments
         </CardDescription>

@@ -38,7 +38,7 @@ export default async function GeneSymbolPage({ params }: Props) {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center gap-4">
-        <h1 className="font-mono text-2xl font-bold leading-none">{gene.symbol}</h1>
+        <h1 className="font-mono text-2xl font-bold leading-none tracking-tight">{gene.symbol}</h1>
         <FavoriteGeneButton gene={gene} />
       </CardHeader>
       <CardContent>
@@ -65,7 +65,7 @@ export default async function GeneSymbolPage({ params }: Props) {
           )}
         </div>
         <Separator className="my-4" />
-        <h2 className="font-bold">Isoforms</h2>
+        <h2 className="text-lg font-semibold tracking-tight">Isoforms</h2>
         <Suspense fallback={<IsoformTableLoading />}>
           <IsoformTable isoforms={isoforms} />
         </Suspense>
