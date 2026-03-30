@@ -18,7 +18,7 @@ export default function HomePage() {
             RNA END-JOINING (REJ) Studio
           </HeroItem>
           <HeroItem>
-            <h1 className="text-primary pb-2 text-3xl font-bold sm:text-4xl">
+            <h1 className="text-primary pb-2 text-3xl font-bold tracking-tight sm:text-4xl">
               What gene are you optimizing?
             </h1>
           </HeroItem>

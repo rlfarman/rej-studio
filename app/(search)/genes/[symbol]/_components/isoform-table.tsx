@@ -64,7 +64,7 @@ export default function IsoformTable({ isoforms }: IsoformListProps) {
             const protId = `prot-${isoform.id}`
             return (
               <TableRow key={isoform.id}>
-                <TableCell className="font-mono">
+                <TableCell className="font-mono tabular-nums">
                   {isoform.codingSequenceLength}
                 </TableCell>
                 <TableCell className="hidden md:table-cell">
