@@ -11,6 +11,7 @@ import {
 import { ExternalLink } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
+import { SpeciesSelect } from '@/components/header/species-select'
 import { useSpeciesContext } from '@/context/species-context'
 import { SPECIES_DISPLAY_NAME } from '@/lib/species'
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
@@ -42,6 +43,17 @@ export default function IsoformTable({ isoforms }: IsoformListProps) {
     [species, isoforms],
   )
 
+  if (filteredIsoforms.length === 0) {
+    return (
+      <div className="flex flex-col items-center gap-4 py-8 text-center">
+        <p className="text-muted-foreground max-w-lg text-sm">
+          No isoforms available for this species. Try selecting a different species filter.
+        </p>
+        <SpeciesSelect />
+      </div>
+    )
+  }
+
   return (
     <Table>
       <TableHeader>
@@ -58,57 +70,46 @@ export default function IsoformTable({ isoforms }: IsoformListProps) {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {filteredIsoforms.length > 0 ? (
-          filteredIsoforms.map((isoform) => {
-            const cdsId = `cds-${isoform.id}`
-            const protId = `prot-${isoform.id}`
-            return (
-              <TableRow key={isoform.id}>
-                <TableCell className="font-mono tabular-nums">
-                  {isoform.codingSequenceLength}
-                </TableCell>
-                <TableCell className="hidden md:table-cell">
-                  {SPECIES_DISPLAY_NAME[isoform.species as keyof typeof SPECIES_DISPLAY_NAME] ?? 'Unknown'}
-                </TableCell>
-                <TableCell className="font-mono">{isoform.enst}</TableCell>
-                <TableCell className="hidden sm:table-cell">
-                  <CopyableText
-                    label="Copy coding sequence"
-                    copied={isCopied(cdsId)}
-                    onCopy={() => copy(isoform.codingSequence, cdsId)}
-                  >
-                    {isoform.codingSequence.slice(0, 20)}...
-                  </CopyableText>
-                </TableCell>
-                <TableCell className="hidden lg:table-cell">
-                  <CopyableText
-                    label="Copy protein sequence"
-                    copied={isCopied(protId)}
-                    onCopy={() => copy(isoform.proteinSequence, protId)}
-                  >
-                    {isoform.proteinSequence.slice(0, 20)}...
-                  </CopyableText>
-                </TableCell>
-                <TableCell className="text-right">
-                  <Button variant="ghost" size="icon" asChild>
-                    <Link href={`/design-tool?isoform=${isoform.id}`} aria-label={`Customize ${isoform.enst}`}>
-                      <ExternalLink />
-                    </Link>
-                  </Button>
-                </TableCell>
-              </TableRow>
-            )
-          })
-        ) : (
-          <TableRow>
-            <TableCell
-              colSpan={6}
-              className="text-muted-foreground text-center"
-            >
-              No isoforms available for this species. Try selecting a different species filter.
-            </TableCell>
-          </TableRow>
-        )}
+        {filteredIsoforms.map((isoform) => {
+          const cdsId = `cds-${isoform.id}`
+          const protId = `prot-${isoform.id}`
+          return (
+            <TableRow key={isoform.id}>
+              <TableCell className="font-mono tabular-nums">
+                {isoform.codingSequenceLength}
+              </TableCell>
+              <TableCell className="hidden md:table-cell">
+                {SPECIES_DISPLAY_NAME[isoform.species as keyof typeof SPECIES_DISPLAY_NAME] ?? 'Unknown'}
+              </TableCell>
+              <TableCell className="font-mono">{isoform.enst}</TableCell>
+              <TableCell className="hidden sm:table-cell">
+                <CopyableText
+                  label="Copy coding sequence"
+                  copied={isCopied(cdsId)}
+                  onCopy={() => copy(isoform.codingSequence, cdsId)}
+                >
+                  {isoform.codingSequence.slice(0, 20)}...
+                </CopyableText>
+              </TableCell>
+              <TableCell className="hidden lg:table-cell">
+                <CopyableText
+                  label="Copy protein sequence"
+                  copied={isCopied(protId)}
+                  onCopy={() => copy(isoform.proteinSequence, protId)}
+                >
+                  {isoform.proteinSequence.slice(0, 20)}...
+                </CopyableText>
+              </TableCell>
+              <TableCell className="text-right">
+                <Button variant="ghost" size="icon" asChild>
+                  <Link href={`/design-tool?isoform=${isoform.id}`} aria-label={`Customize ${isoform.enst}`}>
+                    <ExternalLink />
+                  </Link>
+                </Button>
+              </TableCell>
+            </TableRow>
+          )
+        })}
       </TableBody>
     </Table>
   )
