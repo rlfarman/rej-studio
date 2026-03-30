@@ -48,7 +48,19 @@ export async function handleSubmitForm({
     })
 
     if (!response.ok) {
-      let detail = 'Something went wrong while processing your sequence.'
+      let detail: string
+      switch (response.status) {
+        case 422:
+          detail =
+            'The sequence failed server-side validation. Check that codons are in-frame and the protein is translatable.'
+          break
+        case 504:
+          detail =
+            'Optimization timed out. Try a shorter sequence or fewer optimization objectives.'
+          break
+        default:
+          detail = 'Something went wrong while processing your sequence.'
+      }
       try {
         const body = await response.json()
         if (body.detail) detail = body.detail
