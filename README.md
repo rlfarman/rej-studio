@@ -1,34 +1,130 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# REJ Studio
+
+A web application for RNA End-Joining sequence design and optimization. Scientists can search human and mouse gene databases, view isoforms, and run codon-optimized sequence designs through an interactive design tool.
+
+## Features
+
+- **Gene Search** — Full-text search across human and mouse genes by symbol, name, or Ensembl ID (ENSG/ENST). Species filtering and autocomplete.
+- **Gene Detail & Isoforms** — View gene metadata, browse transcript isoforms, and inspect coding/protein sequences.
+- **Design Tool** — Submit coding sequences for optimization with configurable parameters:
+  - Codon optimization
+  - Cryptic splice site removal
+  - CpG minimization
+  - K-mer complexity reduction
+  - GC content enforcement
+  - WGGW motif insertion
+  - Stimulatory intron options
+- **User Features** — Favorite genes, search history, dark/light theme.
+
+## Tech Stack
+
+| Layer     | Technology                                      |
+| --------- | ----------------------------------------------- |
+| Frontend  | Next.js 16, React 19, TypeScript, Tailwind CSS  |
+| UI        | shadcn/ui, Radix UI primitives                  |
+| Backend   | FastAPI (Python) with dnachisel                  |
+| Database  | PostgreSQL (Vercel Postgres / Neon), Drizzle ORM |
+| Hosting   | Vercel                                          |
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 20+
+- Python 3.11+
+- PostgreSQL database (or a Vercel Postgres / Neon instance)
+
+### Setup
+
+1. **Install dependencies**
+
+   ```bash
+   npm install
+   python3 -m venv venv
+   source venv/bin/activate
+   pip install -r requirements.txt
+   ```
+
+2. **Configure environment**
+
+   Copy `.env.example` to `.env.local` and fill in the values:
+
+   ```bash
+   cp .env.example .env.local
+   ```
+
+   | Variable              | Description                              |
+   | --------------------- | ---------------------------------------- |
+   | `POSTGRES_URL`        | PostgreSQL connection string              |
+   | `SESSION_SECRET`      | Random hex string for JWT signing         |
+   | `BASIC_AUTH_USER`     | Basic auth username for landing page      |
+   | `BASIC_AUTH_PASSWORD`  | Basic auth password                      |
+   | `BLOB_READ_WRITE_TOKEN` | Vercel Blob token (optional)           |
+
+3. **Seed the database**
+
+   ```bash
+   npm run db:seed
+   ```
+
+### Development
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+This starts both the Next.js dev server (port 3000) and the FastAPI server (port 8000) concurrently. API requests to `/api/py/*` are proxied to FastAPI in development.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+To run them individually:
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+```bash
+npm run next-dev      # Next.js only
+npm run fastapi-dev   # FastAPI only
+```
 
-## Learn More
+### Scripts
 
-To learn more about Next.js, take a look at the following resources:
+| Command             | Description                        |
+| ------------------- | ---------------------------------- |
+| `npm run dev`       | Start both servers concurrently    |
+| `npm run build`     | Production build (Next.js)         |
+| `npm run start`     | Start production server            |
+| `npm run lint`      | Run ESLint                         |
+| `npm run lint:fix`  | Auto-fix lint issues               |
+| `npm run format`    | Format with Prettier               |
+| `npm run type-check`| TypeScript type checking           |
+| `npm run db:seed`   | Seed gene data into the database   |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Project Structure
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+```
+app/
+├── (search)/              # Gene search & detail pages
+│   ├── genes/             # Search results
+│   └── genes/[symbol]/    # Gene detail with isoforms
+├── (design-tool)/         # Sequence design tool
+└── api/                   # Next.js API routes (auth)
 
-## Deploy on Vercel
+api/                       # FastAPI backend
+├── index.py               # Endpoints (POST /api/py/process)
+└── algorithm.py           # DNA optimization algorithms
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+actions/                   # Next.js server actions
+components/                # React components (+ shadcn/ui)
+context/                   # React context providers
+drizzle/                   # Database schema, migrations, seed
+hooks/                     # Custom React hooks
+lib/                       # Shared utilities
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+## API
+
+The FastAPI backend exposes a single optimization endpoint:
+
+- **`POST /api/py/process`** — Accepts a coding sequence and optimization options, returns a ZIP file containing a report and optimized sequences.
+
+Swagger docs are available at `/docs` in development.
+
+## License
+
+Private.

@@ -6,7 +6,6 @@ import {
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle,
 } from '@/components/ui/card'
 import { DNASplicer } from './dna-splicer'
 import { Form } from '@/components/ui/form'
@@ -69,7 +68,7 @@ export function GeneSplitterForm({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>REJ Studio Design Tool</CardTitle>
+        <h1 className="leading-none font-semibold">REJ Studio Design Tool</h1>
         <CardDescription>
           Design a custom RNA sequence for end-joining experiments
         </CardDescription>
