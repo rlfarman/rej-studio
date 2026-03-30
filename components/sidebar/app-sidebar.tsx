@@ -16,9 +16,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader>
         <Link
           href="/"
-          className="hover:text-primary flex items-center hover:underline"
+          className="hover:text-primary group flex items-center hover:underline"
         >
-          <DnaIcon className="mt-2 ml-2 size-6" />
+          <DnaIcon className="mt-2 ml-2 size-6 transition-transform duration-300 group-hover:rotate-12" />
           <span className="mt-2 ml-2 font-mono text-lg font-semibold">
             REJ Studio
           </span>

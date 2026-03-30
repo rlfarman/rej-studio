@@ -9,14 +9,21 @@ export default function NotFoundPage() {
   const router = useRouter()
 
   return (
-    <div className="flex min-h-screen items-center justify-center">
+    <div className="flex min-h-screen items-center justify-center px-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-center text-3xl font-bold">404</CardTitle>
+          <CardTitle className="text-center text-5xl font-bold tracking-tight font-mono">
+            404
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-center">
-            <p className="mb-4 text-lg">Page Not Found</p>
+            <p className="text-muted-foreground mb-1 text-lg">
+              This sequence doesn&apos;t map to anything.
+            </p>
+            <p className="text-muted-foreground mb-6 text-sm">
+              The page you&apos;re looking for may have been spliced out.
+            </p>
             <div className="flex justify-center gap-2">
               <Button onClick={() => router.back()}>Go Back</Button>
               <Link href="/">

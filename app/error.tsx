@@ -11,22 +11,29 @@ export default function ErrorPage({
   reset: () => void
 }) {
   return (
-    <div className="flex min-h-screen items-center justify-center">
+    <div className="flex min-h-screen items-center justify-center px-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-center text-3xl font-bold">
+          <CardTitle className="text-center text-2xl font-bold">
             Something went wrong
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-center">
-            <p className="mb-4 text-lg">An unexpected error has occurred.</p>
-            <Button onClick={() => reset()} className="mr-2">
-              Try Again
-            </Button>
-            <Link href="/">
-              <Button variant="outline">Go Home</Button>
-            </Link>
+            <p className="text-muted-foreground mb-1 text-base">
+              An unexpected mutation occurred in our process.
+            </p>
+            <p className="text-muted-foreground mb-6 text-sm">
+              Don&apos;t worry — no sequences were harmed.
+            </p>
+            <div className="flex justify-center gap-2">
+              <Button onClick={() => reset()}>
+                Try Again
+              </Button>
+              <Link href="/">
+                <Button variant="outline">Go Home</Button>
+              </Link>
+            </div>
           </div>
         </CardContent>
       </Card>
