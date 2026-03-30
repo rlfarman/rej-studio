@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import { useFormContext } from 'react-hook-form'
 import { Button } from '@/components/ui/button'
-import { Loader2, Check } from 'lucide-react'
+import { Loader2, Check, Download } from 'lucide-react'
 import { FormValues } from './form-schema'
 import { AnimatePresence, m } from 'motion/react'
 import { quickFade, softSpring } from '@/lib/motion'
@@ -60,7 +60,9 @@ export function SubmitButton() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={quickFade}
+            className="inline-flex items-center gap-2"
           >
+            <Download className="size-4" />
             Download customized sequence
           </m.span>
         )}
