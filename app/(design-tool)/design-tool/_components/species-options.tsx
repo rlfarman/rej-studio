@@ -7,7 +7,7 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { useFormContext } from 'react-hook-form'
-import { SpeciesOptions as SpeciesOptionsType } from '../_types/species-options'
+import { DESIGN_TOOL_SPECIES_OPTIONS } from '../_types/species-options'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { FormValues } from './form-schema'
 
@@ -26,7 +26,7 @@ export function SpeciesOptions() {
               value={field.value}
               onValueChange={field.onChange}
             >
-              {SpeciesOptionsType.map(({ label, value }) => (
+              {DESIGN_TOOL_SPECIES_OPTIONS.map(({ label, value }) => (
                 <div key={value} className="flex items-center space-x-2">
                   <RadioGroupItem id={value} value={value} />
                   <label htmlFor={value} className="text-sm font-medium">

@@ -14,7 +14,7 @@ import {
   TooltipTrigger,
   TooltipContent,
 } from '@/components/ui/tooltip'
-import { SpeciesIcon } from '@/components/species-icon' // Import the SpeciesIcon component
+import { SpeciesIcon } from '@/components/species-icon'
 import { useState } from 'react'
 
 export function GeneResultsSkeleton() {
@@ -36,14 +36,10 @@ interface GeneSearchInputProps {
   query: string
   setQuery: (query: string) => void
   hasSearched: boolean
-  searchResults: Array<
-    Pick<GeneSearchResult, 'symbol' | 'id' | 'name' | 'species'>
-  >
+  searchResults: GeneSearchResult[]
   isLoading: boolean
   setIsOpen: (isLoading: boolean) => void
-  handleSelect: (
-    gene: Pick<GeneSearchResult, 'symbol' | 'id' | 'name' | 'species'>,
-  ) => void
+  handleSelect: (gene: GeneSearchResult) => void
   error: string | null
 }
 
@@ -59,9 +55,7 @@ export function GeneSearchCommand({
 }: GeneSearchInputProps) {
   const [showList, setShowList] = useState(true)
 
-  const internalHandleSelect = (
-    gene: Pick<GeneSearchResult, 'symbol' | 'id' | 'name' | 'species'>,
-  ) => {
+  const internalHandleSelect = (gene: GeneSearchResult) => {
     setShowList(false)
     handleSelect(gene)
   }

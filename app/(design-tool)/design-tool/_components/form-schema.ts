@@ -1,5 +1,4 @@
 import { z } from 'zod'
-import { SpeciesValues } from '@/design-tool/types/species-options'
 
 export const validationSchema = z.object({
   codingSequence: z
@@ -17,11 +16,7 @@ export const validationSchema = z.object({
     .string()
     .nonempty('A name is required.')
     .max(250, 'Must be less than 250 characters'),
-  species: z.enum([
-    SpeciesValues.None,
-    SpeciesValues.Human,
-    SpeciesValues.Mouse,
-  ]),
+  species: z.enum(['none', 'human', 'mouse']),
   codonOptimizeWeight: z.number().min(0).max(100),
   removeCrypticSpliceSites: z.boolean(),
   removeCrypticSpliceSitesWeight: z.number().min(0).max(100),

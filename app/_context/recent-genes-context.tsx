@@ -1,6 +1,7 @@
 'use client'
 
-import { createLocalStorageContext } from '@/lib/create-local-storage-context'
+import { createContext, useContext, useCallback, ReactNode } from 'react'
+import { useLocalStorage } from '@/lib/use-local-storage'
 
 interface RecentGene {
   id: string
@@ -8,36 +9,54 @@ interface RecentGene {
   symbol: string
 }
 
-const {
-  Provider: RecentGenesStorageProvider,
-  useValue: useRecentGenesStorage,
-} = createLocalStorageContext<RecentGene[]>({
-  key: 'recentGenes',
-  initialValue: [],
-  errorMessage: 'useRecentGenes must be used within a RecentGenesProvider',
-})
+interface RecentGenesContextValue {
+  recentGenes: RecentGene[]
+  addRecentGene: (gene: RecentGene) => void
+  clearRecentGenes: () => void
+}
+
+const RecentGenesContext = createContext<RecentGenesContextValue | undefined>(
+  undefined,
+)
+
+const EMPTY: RecentGene[] = []
 
 export function RecentGenesProvider({
   children,
 }: {
-  children: React.ReactNode
+  children: ReactNode
 }) {
-  return <RecentGenesStorageProvider>{children}</RecentGenesStorageProvider>
+  const [recentGenes, setRecentGenes] = useLocalStorage<RecentGene[]>(
+    'recentGenes',
+    EMPTY,
+  )
+
+  const addRecentGene = useCallback(
+    (gene: RecentGene) => {
+      setRecentGenes((prev) =>
+        [gene, ...prev.filter((r) => r.id !== gene.id)].slice(0, 10),
+      )
+    },
+    [setRecentGenes],
+  )
+
+  const clearRecentGenes = useCallback(() => {
+    setRecentGenes([])
+  }, [setRecentGenes])
+
+  return (
+    <RecentGenesContext.Provider
+      value={{ recentGenes, addRecentGene, clearRecentGenes }}
+    >
+      {children}
+    </RecentGenesContext.Provider>
+  )
 }
 
 export function useRecentGenes() {
-  const { value: recentGenes, setValue: setRecentGenes } =
-    useRecentGenesStorage()
-
-  const addRecentGene = (gene: RecentGene) => {
-    setRecentGenes((prev) =>
-      [gene, ...prev.filter((r) => r.id !== gene.id)].slice(0, 10),
-    )
+  const context = useContext(RecentGenesContext)
+  if (!context) {
+    throw new Error('useRecentGenes must be used within a RecentGenesProvider')
   }
-
-  const clearRecentGenes = () => {
-    setRecentGenes([])
-  }
-
-  return { recentGenes, addRecentGene, clearRecentGenes }
+  return context
 }

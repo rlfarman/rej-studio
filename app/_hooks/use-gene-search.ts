@@ -1,15 +1,14 @@
 import { useEffect, useState } from 'react'
 import { useDebounce } from 'use-debounce'
 import type { GeneSearchResult } from '@/actions/genes'
+import type { SpeciesFilter } from '@/lib/species'
 import { useSpeciesContext } from '@/context/species-context'
 
 interface UseGeneSearchProps {
   searchGenes: (
     content: string,
-    species?: string, // Add species parameter
-  ) => Promise<
-    Array<Pick<GeneSearchResult, 'symbol' | 'id' | 'name' | 'species'>>
-  >
+    species?: SpeciesFilter,
+  ) => Promise<GeneSearchResult[]>
   defaultQuery?: string
 }
 
@@ -19,9 +18,7 @@ export function useGeneSearch({
 }: UseGeneSearchProps) {
   const [query, setQuery] = useState(defaultQuery ?? '')
   const [hasSearched, setHasSearched] = useState(false)
-  const [searchResults, setSearchResults] = useState<
-    Array<Pick<GeneSearchResult, 'symbol' | 'id' | 'name' | 'species'>>
-  >([])
+  const [searchResults, setSearchResults] = useState<GeneSearchResult[]>([])
   const [debouncedQuery] = useDebounce(query, 250)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)

@@ -8,13 +8,13 @@ import { SearchIcon } from 'lucide-react'
 import { useGeneSearch } from '@/hooks/use-gene-search'
 import { GeneSearchCommand } from './gene-search/gene-search-command'
 import { useRecentGenes } from '@/context/recent-genes-context'
+import type { SpeciesFilter } from '@/lib/species'
 
 interface GeneSearchProperties {
   searchGenes: (
     content: string,
-  ) => Promise<
-    Array<Pick<GeneSearchResult, 'symbol' | 'id' | 'name' | 'species'>>
-  >
+    species?: SpeciesFilter,
+  ) => Promise<GeneSearchResult[]>
   defaultQuery?: string
   isDialog?: boolean
 }
@@ -33,9 +33,7 @@ export function GeneSearch({
   const [isOpen, setIsOpen] = useState(false)
   const { addRecentGene } = useRecentGenes()
 
-  const handleSelect = (
-    gene: Pick<GeneSearchResult, 'symbol' | 'id' | 'name' | 'species'>,
-  ) => {
+  const handleSelect = (gene: GeneSearchResult) => {
     setIsOpen(false)
     addRecentGene({
       id: gene.id,

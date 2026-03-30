@@ -1,5 +1,4 @@
 import { toast } from 'sonner'
-import { SpeciesValues } from '@/design-tool/types/species-options'
 import { FormValues } from './form-schema'
 
 export async function handleSubmitForm({
@@ -20,8 +19,7 @@ export async function handleSubmitForm({
 }: FormValues) {
   const toastId = toast.loading('Submitting your request...')
   const options = {
-    codon_optimize:
-      species !== SpeciesValues.None ? species.toLowerCase() : null,
+    codon_optimize: species !== 'none' ? species : null,
     codon_optimize_weight: codonOptimizeWeight,
     remove_cryptic_ss: removeCrypticSpliceSites,
     remove_cryptic_ss_weight: removeCrypticSpliceSitesWeight,

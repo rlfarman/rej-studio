@@ -19,11 +19,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { toast } from 'sonner'
-
-const SPECIES_DISPLAY_NAME: Record<string, string> = {
-  human: 'Human',
-  mouse: 'Mouse',
-}
+import { SPECIES_DISPLAY_NAME } from '@/lib/species'
 
 interface Isoform {
   id: string
@@ -78,7 +74,7 @@ export default function IsoformTable({ isoforms }: IsoformListProps) {
                 {isoform.codingSequenceLength}
               </TableCell>
               <TableCell>
-                {SPECIES_DISPLAY_NAME[isoform.species] ?? 'Unknown'}
+                {SPECIES_DISPLAY_NAME[isoform.species as keyof typeof SPECIES_DISPLAY_NAME] ?? 'Unknown'}
               </TableCell>
               <TableCell className="font-mono">{isoform.enst}</TableCell>
               <TableCell>

@@ -9,7 +9,6 @@ import {
   FormDescription,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import { SpeciesValues } from '@/design-tool/types/species-options'
 import { FormValues } from './form-schema'
 
 export function CodonOptimizeWeight() {
@@ -31,10 +30,10 @@ export function CodonOptimizeWeight() {
               min={0}
               max={Number.MAX_SAFE_INTEGER}
               step={1}
-              disabled={species === SpeciesValues.None}
+              disabled={species === 'none'}
             />
           </FormControl>
-          {species === SpeciesValues.None && (
+          {species === 'none' && (
             <FormDescription>
               Please select a species to enable codon optimization.
             </FormDescription>

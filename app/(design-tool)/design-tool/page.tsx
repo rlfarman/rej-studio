@@ -1,6 +1,7 @@
 import { getIsoformAndGeneByIsoformId } from '@/actions/isoforms'
 import { GeneSplitterForm } from '@/design-tool/components/gene-splitter-form'
-import { SpeciesValues } from './_types/species-options'
+import type { DesignToolSpecies } from './_types/species-options'
+import { isSpecies } from '@/lib/species'
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -31,11 +32,9 @@ async function DesignToolPage({
   }
 
   const { isoform, gene } = result
-  const validSpecies = Object.values(SpeciesValues).includes(
-    isoform.species as SpeciesValues,
-  )
-    ? (isoform.species as SpeciesValues)
-    : SpeciesValues.None
+  const validSpecies: DesignToolSpecies = isSpecies(isoform.species)
+    ? isoform.species
+    : 'none'
 
   return (
     <GeneSplitterForm

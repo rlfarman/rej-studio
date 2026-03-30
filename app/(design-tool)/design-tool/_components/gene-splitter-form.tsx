@@ -16,7 +16,7 @@ import {
   AccordionTrigger,
   AccordionContent,
 } from '@/components/ui/accordion'
-import { SpeciesValues } from '@/design-tool/types/species-options'
+import type { DesignToolSpecies } from '@/design-tool/types/species-options'
 import { validationSchema, FormValues } from './form-schema'
 import { handleSubmitForm } from './form-handler'
 import { CustomizationOptions } from './customization-options'
@@ -36,7 +36,7 @@ import { SubmitButton } from './submit-button'
 interface GeneSplitterFormProperties {
   defaultCodingSequence?: string
   defaultName?: string
-  defaultSpecies?: SpeciesValues
+  defaultSpecies?: DesignToolSpecies
 }
 
 export function GeneSplitterForm({
@@ -59,7 +59,7 @@ export function GeneSplitterForm({
       enforceGcContent: true,
       codingSequence: defaultCodingSequence ?? '',
       name: defaultName ?? '',
-      species: defaultSpecies ?? SpeciesValues.None,
+      species: defaultSpecies ?? 'none',
       spliceJunctionPosition: defaultCodingSequence
         ? Math.floor(defaultCodingSequence.length / 2)
         : 1,
@@ -77,6 +77,7 @@ export function GeneSplitterForm({
       <CardContent>
         <Form {...methods}>
           <form onSubmit={methods.handleSubmit(handleSubmitForm)}>
+            <fieldset disabled={methods.formState.isSubmitting} className="space-y-0">
             <CustomizationOptions />
             <Accordion type="multiple" className="mt-4">
               <AccordionItem value="codon-optimization">
@@ -144,6 +145,7 @@ export function GeneSplitterForm({
             <div className="mt-8 flex justify-self-end">
               <SubmitButton />
             </div>
+            </fieldset>
           </form>
         </Form>
       </CardContent>

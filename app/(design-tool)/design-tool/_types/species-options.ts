@@ -1,26 +1,12 @@
-export enum SpeciesValues {
-  None = 'none',
-  Human = 'human',
-  Mouse = 'mouse',
-}
+import type { Species } from '@/lib/species'
 
-export enum SpeciesLabels {
-  None = 'None',
-  Human = 'Human',
-  Mouse = 'Mouse',
-}
+export type DesignToolSpecies = Species | 'none'
 
-export const SpeciesOptions = [
-  {
-    value: SpeciesValues.None,
-    label: SpeciesLabels.None,
-  },
-  {
-    value: SpeciesValues.Human,
-    label: SpeciesLabels.Human,
-  },
-  {
-    value: SpeciesValues.Mouse,
-    label: SpeciesLabels.Mouse,
-  },
+export const DESIGN_TOOL_SPECIES_OPTIONS: Array<{
+  value: DesignToolSpecies
+  label: string
+}> = [
+  { value: 'none', label: 'None' },
+  { value: 'human', label: 'Human' },
+  { value: 'mouse', label: 'Mouse' },
 ] as const

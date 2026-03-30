@@ -1,13 +1,12 @@
 'use client'
 
 import { createContext, useContext, useState, ReactNode } from 'react'
-
-const VALID_SPECIES = ['human', 'mouse', 'both']
+import { type SpeciesFilter, isSpeciesFilter } from '@/lib/species'
 
 const SpeciesContext = createContext<
   | {
-      species: string
-      handleSpeciesChange: (value: string) => void
+      species: SpeciesFilter
+      handleSpeciesChange: (value: SpeciesFilter) => void
     }
   | undefined
 >(undefined)
@@ -21,22 +20,22 @@ export function useSpeciesContext() {
 }
 
 export function SpeciesProvider({ children }: { children: ReactNode }) {
-  const [species, setSpecies] = useState<string>(() => {
+  const [species, setSpecies] = useState<SpeciesFilter>(() => {
     if (typeof window === 'undefined') return 'both'
     const storedSpecies = localStorage.getItem('species')
-    if (storedSpecies && VALID_SPECIES.includes(storedSpecies)) {
+    if (storedSpecies && isSpeciesFilter(storedSpecies)) {
       return storedSpecies
     }
     const speciesFromQuery = new URLSearchParams(window.location.search).get(
       'species',
     )
-    if (speciesFromQuery && VALID_SPECIES.includes(speciesFromQuery)) {
+    if (speciesFromQuery && isSpeciesFilter(speciesFromQuery)) {
       return speciesFromQuery
     }
     return 'both'
   })
 
-  const handleSpeciesChange = (value: string) => {
+  const handleSpeciesChange = (value: SpeciesFilter) => {
     setSpecies(value)
     localStorage.setItem('species', value)
     const url = new URL(window.location.href)
