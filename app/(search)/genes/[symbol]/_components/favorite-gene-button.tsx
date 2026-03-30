@@ -4,13 +4,10 @@ import { Star } from 'lucide-react'
 import { useFavoriteGenes } from '@/context/favorite-genes-context'
 import { AnimatePresence, m } from 'motion/react'
 import { popSpring } from '@/lib/motion'
+import type { SavedGene } from '@/lib/domain-types'
 
 interface FavoriteButtonProps {
-  gene: {
-    id: string
-    name: string
-    symbol: string
-  }
+  gene: SavedGene
 }
 
 export function FavoriteGeneButton({ gene }: FavoriteButtonProps) {

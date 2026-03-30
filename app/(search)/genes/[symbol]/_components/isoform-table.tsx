@@ -16,18 +16,10 @@ import { useSpeciesContext } from '@/context/species-context'
 import { SPECIES_DISPLAY_NAME } from '@/lib/species'
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
 import { CopyableText } from '@/components/copyable-text'
-
-interface Isoform {
-  id: string
-  enst: string
-  codingSequence: string
-  proteinSequence: string
-  codingSequenceLength: number
-  species: string
-}
+import type { IsoformListItem } from '@/lib/domain-types'
 
 interface IsoformListProps {
-  isoforms: Isoform[]
+  isoforms: IsoformListItem[]
 }
 
 export default function IsoformTable({ isoforms }: IsoformListProps) {
