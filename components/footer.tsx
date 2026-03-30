@@ -4,7 +4,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
 
 const CITATION = `Bachmann L, Hsu RH, Hermann K, Williams CE, Farman RL, Criales N, Kramer S, Lettieri K, Pfaff SL
-A combinatorial system for gene expression using RNA-fragment end joining (REJ). In preparation. (2025)`
+A combinatorial system for gene expression using RNA-fragment end joining (REJ). In preparation. (2026)`
 
 export function Footer() {
   const { copy, isCopied } = useCopyToClipboard({ showToast: false })
@@ -28,7 +28,7 @@ export function Footer() {
             </span>
             <span className="mt-1 block text-xs sm:text-sm">
               A combinatorial system for gene expression using RNA-fragment end
-              joining (REJ). In preparation. (2025)
+              joining (REJ). In preparation. (2026)
             </span>
           </button>
         </TooltipTrigger>
