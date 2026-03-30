@@ -44,3 +44,6 @@ notes.md
 
 # temporary files
 /tmp
+
+# claude
+.claude/
