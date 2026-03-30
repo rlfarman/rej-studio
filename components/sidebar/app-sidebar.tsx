@@ -5,9 +5,11 @@ import {
   SidebarContent,
   SidebarHeader,
   SidebarRail,
+  SidebarFooter,
 } from '@/components/ui/sidebar'
 import { FavoriteGenes } from './favorite-genes'
 import { RecentGenes } from './recent-genes'
+import { ThemeToggle } from '@/components/theme-toggle'
 import Link from 'next/link'
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -28,6 +30,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <RecentGenes />
         <FavoriteGenes />
       </SidebarContent>
+      <SidebarFooter>
+        <ThemeToggle />
+      </SidebarFooter>
       <SidebarRail />
     </Sidebar>
   )

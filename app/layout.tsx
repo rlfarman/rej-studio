@@ -34,7 +34,7 @@ export default async function RootLayout({
     >
       <head />
       <body>
-        <ThemeProvider attribute="class" enableSystem disableTransitionOnChange>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <FavoriteGenesProvider>
             <RecentGenesProvider>
               <SpeciesProvider>
