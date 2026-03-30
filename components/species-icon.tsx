@@ -1,4 +1,4 @@
-import { User, RatIcon } from 'lucide-react'
+import { User, RatIcon, Dna } from 'lucide-react'
 import type { SpeciesFilter } from '@/lib/species'
 
 export function SpeciesIcon({
@@ -14,11 +14,6 @@ export function SpeciesIcon({
     case 'mouse':
       return <RatIcon className={`size-5 ${className}`} />
     default:
-      return (
-        <div className={`flex ${className}`}>
-          <User className="size-5" />
-          <RatIcon className="size-5" />
-        </div>
-      )
+      return <Dna className={`size-5 ${className}`} />
   }
 }
