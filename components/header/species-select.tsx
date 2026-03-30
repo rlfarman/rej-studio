@@ -25,7 +25,7 @@ export function SpeciesSelect() {
                 ? 'Mice'
                 : species === 'human'
                   ? 'Humans'
-                  : 'Humans & Mice'}
+                  : 'All Species'}
             </span>
           </div>
         </SelectValue>
@@ -37,7 +37,7 @@ export function SpeciesSelect() {
             <div className="flex items-center justify-between">
               <SpeciesIcon species="both" />
               <div className="ml-4">
-                <span>Humans & Mice</span>
+                <span>All Species</span>
                 <p className="text-muted-foreground">
                   Show all genes and isoforms
                 </p>
