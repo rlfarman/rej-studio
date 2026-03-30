@@ -18,13 +18,13 @@ A web application for RNA End-Joining sequence design and optimization. Scientis
 
 ## Tech Stack
 
-| Layer     | Technology                                      |
-| --------- | ----------------------------------------------- |
-| Frontend  | Next.js 16, React 19, TypeScript, Tailwind CSS  |
-| UI        | shadcn/ui, Radix UI primitives                  |
-| Backend   | FastAPI (Python) with dnachisel                  |
-| Database  | PostgreSQL (Vercel Postgres / Neon), Drizzle ORM |
-| Hosting   | Vercel                                          |
+| Layer    | Technology                                       |
+| -------- | ------------------------------------------------ |
+| Frontend | Next.js 16, React 19, TypeScript, Tailwind CSS   |
+| UI       | shadcn/ui, Radix UI primitives                   |
+| Backend  | FastAPI (Python) with dnachisel                  |
+| Database | PostgreSQL (Vercel Postgres / Neon), Drizzle ORM |
+| Hosting  | Vercel                                           |
 
 ## Getting Started
 
@@ -53,13 +53,13 @@ A web application for RNA End-Joining sequence design and optimization. Scientis
    cp .env.example .env.local
    ```
 
-   | Variable              | Description                              |
-   | --------------------- | ---------------------------------------- |
-   | `POSTGRES_URL`        | PostgreSQL connection string              |
-   | `SESSION_SECRET`      | Random hex string for JWT signing         |
-   | `BASIC_AUTH_USER`     | Basic auth username for landing page      |
-   | `BASIC_AUTH_PASSWORD`  | Basic auth password                      |
-   | `BLOB_READ_WRITE_TOKEN` | Vercel Blob token (optional)           |
+   | Variable                | Description                          |
+   | ----------------------- | ------------------------------------ |
+   | `POSTGRES_URL`          | PostgreSQL connection string         |
+   | `SESSION_SECRET`        | Random hex string for JWT signing    |
+   | `BASIC_AUTH_USER`       | Basic auth username for landing page |
+   | `BASIC_AUTH_PASSWORD`   | Basic auth password                  |
+   | `BLOB_READ_WRITE_TOKEN` | Vercel Blob token (optional)         |
 
 3. **Seed the database**
 
@@ -84,16 +84,16 @@ npm run fastapi-dev   # FastAPI only
 
 ### Scripts
 
-| Command             | Description                        |
-| ------------------- | ---------------------------------- |
-| `npm run dev`       | Start both servers concurrently    |
-| `npm run build`     | Production build (Next.js)         |
-| `npm run start`     | Start production server            |
-| `npm run lint`      | Run ESLint                         |
-| `npm run lint:fix`  | Auto-fix lint issues               |
-| `npm run format`    | Format with Prettier               |
-| `npm run type-check`| TypeScript type checking           |
-| `npm run db:seed`   | Seed gene data into the database   |
+| Command              | Description                      |
+| -------------------- | -------------------------------- |
+| `npm run dev`        | Start both servers concurrently  |
+| `npm run build`      | Production build (Next.js)       |
+| `npm run start`      | Start production server          |
+| `npm run lint`       | Run ESLint                       |
+| `npm run lint:fix`   | Auto-fix lint issues             |
+| `npm run format`     | Format with Prettier             |
+| `npm run type-check` | TypeScript type checking         |
+| `npm run db:seed`    | Seed gene data into the database |
 
 ## Project Structure
 

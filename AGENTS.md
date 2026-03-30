@@ -13,17 +13,17 @@ REJ Studio is a bioinformatics web app for RNA End-Joining sequence design. User
 
 ## Key Directories
 
-| Path | Purpose |
-|------|---------|
-| `app/` | Next.js pages and layouts (App Router) |
-| `api/` | FastAPI Python backend (`index.py`, `algorithm.py`) |
-| `actions/` | Next.js server actions (genes, isoforms, jobs, favorites, searches, session) |
-| `components/` | React components; `components/ui/` is shadcn/ui |
-| `context/` | React context providers (favorites, recent genes, species) |
-| `drizzle/` | DB schema, migrations, seed script, gene data |
-| `hooks/` | Custom React hooks |
-| `lib/` | Shared utilities (species types, regex, localStorage hook) |
-| `public/data/` | Static gene data and coding sequence files |
+| Path           | Purpose                                                                      |
+| -------------- | ---------------------------------------------------------------------------- |
+| `app/`         | Next.js pages and layouts (App Router)                                       |
+| `api/`         | FastAPI Python backend (`index.py`, `algorithm.py`)                          |
+| `actions/`     | Next.js server actions (genes, isoforms, jobs, favorites, searches, session) |
+| `components/`  | React components; `components/ui/` is shadcn/ui                              |
+| `context/`     | React context providers (favorites, recent genes, species)                   |
+| `drizzle/`     | DB schema, migrations, seed script, gene data                                |
+| `hooks/`       | Custom React hooks                                                           |
+| `lib/`         | Shared utilities (species types, regex, localStorage hook)                   |
+| `public/data/` | Static gene data and coding sequence files                                   |
 
 ## Development Commands
 
