@@ -12,7 +12,7 @@ export default function NotFoundPage() {
     <div className="flex min-h-screen items-center justify-center px-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-center text-5xl font-bold tracking-tight font-mono">
+          <CardTitle className="text-center font-mono text-5xl font-bold tracking-tight">
             404
           </CardTitle>
         </CardHeader>

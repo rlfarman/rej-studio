@@ -47,7 +47,8 @@ export default function IsoformTable({ isoforms }: IsoformListProps) {
     return (
       <div className="flex flex-col items-center gap-4 py-8 text-center">
         <p className="text-muted-foreground max-w-lg text-sm">
-          No isoforms available for this species. Try selecting a different species filter.
+          No isoforms available for this species. Try selecting a different
+          species filter.
         </p>
         <SpeciesSelect alwaysShowLabel />
       </div>
@@ -58,14 +59,18 @@ export default function IsoformTable({ isoforms }: IsoformListProps) {
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead className="w-[100px]">Length</TableHead>
+          <TableHead className="w-25">Length</TableHead>
           <TableHead className="hidden md:table-cell">Species</TableHead>
           <TableHead>
             <span className="hidden sm:inline">Ensembl Transcript ID</span>
             <span className="sm:hidden">ENST</span>
           </TableHead>
-          <TableHead className="hidden sm:table-cell">Coding Sequence</TableHead>
-          <TableHead className="hidden lg:table-cell">Protein Sequence</TableHead>
+          <TableHead className="hidden sm:table-cell">
+            Coding Sequence
+          </TableHead>
+          <TableHead className="hidden lg:table-cell">
+            Protein Sequence
+          </TableHead>
           <TableHead className="text-right">Customize</TableHead>
         </TableRow>
       </TableHeader>
@@ -79,7 +84,9 @@ export default function IsoformTable({ isoforms }: IsoformListProps) {
                 {isoform.codingSequenceLength}
               </TableCell>
               <TableCell className="hidden md:table-cell">
-                {SPECIES_DISPLAY_NAME[isoform.species as keyof typeof SPECIES_DISPLAY_NAME] ?? 'Unknown'}
+                {SPECIES_DISPLAY_NAME[
+                  isoform.species as keyof typeof SPECIES_DISPLAY_NAME
+                ] ?? 'Unknown'}
               </TableCell>
               <TableCell className="font-mono">{isoform.enst}</TableCell>
               <TableCell className="hidden sm:table-cell">
@@ -102,7 +109,10 @@ export default function IsoformTable({ isoforms }: IsoformListProps) {
               </TableCell>
               <TableCell className="text-right">
                 <Button variant="ghost" size="icon" asChild>
-                  <Link href={`/design-tool?isoform=${isoform.id}`} aria-label={`Customize ${isoform.enst}`}>
+                  <Link
+                    href={`/design-tool?isoform=${isoform.id}`}
+                    aria-label={`Customize ${isoform.enst}`}
+                  >
                     <ExternalLink />
                   </Link>
                 </Button>
@@ -126,17 +136,18 @@ export function IsoformTableLoading() {
             <span className="hidden sm:inline">Ensembl Transcript ID</span>
             <span className="sm:hidden">ENST</span>
           </TableHead>
-          <TableHead className="hidden sm:table-cell">Coding Sequence</TableHead>
-          <TableHead className="hidden lg:table-cell">Protein Sequence</TableHead>
+          <TableHead className="hidden sm:table-cell">
+            Coding Sequence
+          </TableHead>
+          <TableHead className="hidden lg:table-cell">
+            Protein Sequence
+          </TableHead>
           <TableHead className="text-right">Customize</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         <TableRow>
-          <TableCell
-            colSpan={6}
-            className="text-muted-foreground text-center"
-          >
+          <TableCell colSpan={6} className="text-muted-foreground text-center">
             Loading isoforms...
           </TableCell>
         </TableRow>

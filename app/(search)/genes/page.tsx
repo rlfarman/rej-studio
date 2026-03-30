@@ -1,6 +1,9 @@
 import { searchGenes } from '@/actions/genes'
 import { GeneSearch } from '@/components/gene-search'
-import { GeneSearchResults, GeneSearchResultsLoading } from '@/components/gene-search/gene-search-results'
+import {
+  GeneSearchResults,
+  GeneSearchResultsLoading,
+} from '@/components/gene-search/gene-search-results'
 import { isSpeciesFilter } from '@/lib/species'
 import type { SpeciesFilter } from '@/lib/species'
 import { Metadata } from 'next'
@@ -8,8 +11,7 @@ import { Suspense } from 'react'
 
 export const metadata: Metadata = {
   title: 'Search Genes | REJ Studio',
-  description:
-    'Search for genes to optimize with the REJ Studio design tool.',
+  description: 'Search for genes to optimize with the REJ Studio design tool.',
 }
 
 export default async function GeneSearchPage({
@@ -19,7 +21,8 @@ export default async function GeneSearchPage({
 }) {
   const params = await searchParams
   const query = typeof params.q === 'string' ? params.q : ''
-  const speciesParam = typeof params.species === 'string' ? params.species : 'both'
+  const speciesParam =
+    typeof params.species === 'string' ? params.species : 'both'
   const species: SpeciesFilter = isSpeciesFilter(speciesParam)
     ? speciesParam
     : 'both'
@@ -28,7 +31,10 @@ export default async function GeneSearchPage({
     <div className="flex flex-col gap-4">
       <GeneSearch searchGenes={searchGenes} defaultQuery={query} />
       {query.trim().length > 0 && (
-        <Suspense key={`${query}-${species}`} fallback={<GeneSearchResultsLoading />}>
+        <Suspense
+          key={`${query}-${species}`}
+          fallback={<GeneSearchResultsLoading />}
+        >
           <GeneSearchResults query={query} species={species} />
         </Suspense>
       )}

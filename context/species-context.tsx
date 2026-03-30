@@ -90,8 +90,6 @@ export function SpeciesProvider({ children }: { children: ReactNode }) {
   )
 
   return (
-    <SpeciesContext.Provider value={value}>
-      {children}
-    </SpeciesContext.Provider>
+    <SpeciesContext.Provider value={value}>{children}</SpeciesContext.Provider>
   )
 }

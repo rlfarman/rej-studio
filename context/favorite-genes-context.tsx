@@ -1,6 +1,12 @@
 'use client'
 
-import { createContext, useContext, useCallback, useMemo, ReactNode } from 'react'
+import {
+  createContext,
+  useContext,
+  useCallback,
+  useMemo,
+  ReactNode,
+} from 'react'
 import { useLocalStorage } from '@/lib/use-local-storage'
 
 interface FavoriteGene {
@@ -22,11 +28,7 @@ const FavoriteGenesContext = createContext<
 
 const EMPTY: FavoriteGene[] = []
 
-export function FavoriteGenesProvider({
-  children,
-}: {
-  children: ReactNode
-}) {
+export function FavoriteGenesProvider({ children }: { children: ReactNode }) {
   const [favoriteGenes, setFavoriteGenes] = useLocalStorage<FavoriteGene[]>(
     'favoriteGenes',
     EMPTY,
@@ -57,7 +59,12 @@ export function FavoriteGenesProvider({
   )
 
   const value = useMemo(
-    () => ({ favoriteGenes, addFavoriteGene, removeFavoriteGene, isFavoriteGene }),
+    () => ({
+      favoriteGenes,
+      addFavoriteGene,
+      removeFavoriteGene,
+      isFavoriteGene,
+    }),
     [favoriteGenes, addFavoriteGene, removeFavoriteGene, isFavoriteGene],
   )
 
@@ -71,7 +78,9 @@ export function FavoriteGenesProvider({
 export function useFavoriteGenes() {
   const context = useContext(FavoriteGenesContext)
   if (!context) {
-    throw new Error('useFavoriteGenes must be used within a FavoriteGenesProvider')
+    throw new Error(
+      'useFavoriteGenes must be used within a FavoriteGenesProvider',
+    )
   }
   return context
 }

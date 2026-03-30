@@ -14,17 +14,19 @@ const dnaFloat = {
 
 export function Hero({ children }: { children: ReactNode }) {
   return (
-    <m.div
-      variants={staggerContainer}
-      initial="hidden"
-      animate="visible"
-    >
+    <m.div variants={staggerContainer} initial="hidden" animate="visible">
       {children}
     </m.div>
   )
 }
 
-export function HeroItem({ children, className }: { children: ReactNode; className?: string }) {
+export function HeroItem({
+  children,
+  className,
+}: {
+  children: ReactNode
+  className?: string
+}) {
   return (
     <m.div variants={fadeUp} className={className}>
       {children}
@@ -32,7 +34,13 @@ export function HeroItem({ children, className }: { children: ReactNode; classNa
   )
 }
 
-export function DnaFloat({ children, className }: { children: ReactNode; className?: string }) {
+export function DnaFloat({
+  children,
+  className,
+}: {
+  children: ReactNode
+  className?: string
+}) {
   return (
     <m.div animate={dnaFloat} className={className}>
       {children}

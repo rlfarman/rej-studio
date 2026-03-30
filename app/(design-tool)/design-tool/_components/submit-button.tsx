@@ -23,11 +23,7 @@ export function SubmitButton() {
   }, [formState.isSubmitSuccessful, formState.isSubmitting])
 
   return (
-    <Button
-      type="submit"
-      className="inline"
-      disabled={formState.isSubmitting}
-    >
+    <Button type="submit" className="inline" disabled={formState.isSubmitting}>
       <AnimatePresence mode="wait" initial={false}>
         {formState.isSubmitting ? (
           <m.span

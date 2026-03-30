@@ -69,7 +69,9 @@ export function GeneSplitterForm({
   return (
     <Card>
       <CardHeader>
-        <h1 className="text-2xl leading-none font-bold tracking-tight">REJ Studio Design Tool</h1>
+        <h1 className="text-2xl leading-none font-bold tracking-tight">
+          REJ Studio Design Tool
+        </h1>
         <CardDescription>
           Design a custom RNA sequence for end-joining experiments
         </CardDescription>
@@ -78,73 +80,75 @@ export function GeneSplitterForm({
         <Form {...methods}>
           <form onSubmit={methods.handleSubmit(handleSubmitForm)}>
             <div className="space-y-0">
-            <CustomizationOptions />
-            <Accordion type="multiple" className="mt-4">
-              <AccordionItem value="codon-optimization">
-                <AccordionTrigger>
-                  <div>
-                    <p>Customize codon optimization</p>
-                    <p className="text-sm text-muted-foreground">
-                      By default, the sequence will be codon optimized for the
-                      selected species.
-                    </p>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="pt-4 pb-8">
-                  <CodonOptimizationOptions />
-                </AccordionContent>
-              </AccordionItem>
-              <AccordionItem value="fragment-options">
-                <AccordionTrigger>
-                  <div>
-                    <p>Customize stimulatory introns</p>
-                    <p className="text-sm text-muted-foreground">
-                      Adjust settings for 5' and 3' stimulatory introns.
-                    </p>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="pt-4 pb-8">
-                  <div className="flex flex-col space-y-4">
-                    <FiveFragmentOptions />
-                    <ThreeFragmentOptions />
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-              <AccordionItem value="dna-splicer">
-                <AccordionTrigger>
-                  <div>
-                    <p>Customize splice junction</p>
-                    <p className="text-sm text-muted-foreground">
-                      Set where the sequence splits into 5&apos; and 3&apos; fragments.
-                    </p>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="pt-4 pb-8">
-                  <DNASplicer />
-                </AccordionContent>
-              </AccordionItem>
-              <AccordionItem value="weights">
-                <AccordionTrigger>
-                  <div>
-                    <p>Customize parameter weights</p>
-                    <p className="text-sm text-muted-foreground">
-                      Control how much each optimization factor influences the result.
-                    </p>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="pt-4 pb-8">
-                  <div className="flex flex-col space-y-4">
-                    <CodonOptimizeWeight />
-                    <RemoveCrypticSpliceSitesWeight />
-                    <MinimizeCpGsWeight />
-                    <ReduceKmerComplexityWeight />
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-            <div className="mt-8 flex justify-self-end">
-              <SubmitButton />
-            </div>
+              <CustomizationOptions />
+              <Accordion type="multiple" className="mt-4">
+                <AccordionItem value="codon-optimization">
+                  <AccordionTrigger>
+                    <div>
+                      <p>Customize codon optimization</p>
+                      <p className="text-muted-foreground text-sm">
+                        By default, the sequence will be codon optimized for the
+                        selected species.
+                      </p>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pt-4 pb-8">
+                    <CodonOptimizationOptions />
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="fragment-options">
+                  <AccordionTrigger>
+                    <div>
+                      <p>Customize stimulatory introns</p>
+                      <p className="text-muted-foreground text-sm">
+                        Adjust settings for 5' and 3' stimulatory introns.
+                      </p>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pt-4 pb-8">
+                    <div className="flex flex-col space-y-4">
+                      <FiveFragmentOptions />
+                      <ThreeFragmentOptions />
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="dna-splicer">
+                  <AccordionTrigger>
+                    <div>
+                      <p>Customize splice junction</p>
+                      <p className="text-muted-foreground text-sm">
+                        Set where the sequence splits into 5&apos; and 3&apos;
+                        fragments.
+                      </p>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pt-4 pb-8">
+                    <DNASplicer />
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="weights">
+                  <AccordionTrigger>
+                    <div>
+                      <p>Customize parameter weights</p>
+                      <p className="text-muted-foreground text-sm">
+                        Control how much each optimization factor influences the
+                        result.
+                      </p>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pt-4 pb-8">
+                    <div className="flex flex-col space-y-4">
+                      <CodonOptimizeWeight />
+                      <RemoveCrypticSpliceSitesWeight />
+                      <MinimizeCpGsWeight />
+                      <ReduceKmerComplexityWeight />
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+              <div className="mt-8 flex justify-self-end">
+                <SubmitButton />
+              </div>
             </div>
           </form>
         </Form>

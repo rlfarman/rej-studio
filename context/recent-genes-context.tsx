@@ -1,6 +1,12 @@
 'use client'
 
-import { createContext, useContext, useCallback, useMemo, ReactNode } from 'react'
+import {
+  createContext,
+  useContext,
+  useCallback,
+  useMemo,
+  ReactNode,
+} from 'react'
 import { useLocalStorage } from '@/lib/use-local-storage'
 
 interface RecentGene {
@@ -21,11 +27,7 @@ const RecentGenesContext = createContext<RecentGenesContextValue | undefined>(
 
 const EMPTY: RecentGene[] = []
 
-export function RecentGenesProvider({
-  children,
-}: {
-  children: ReactNode
-}) {
+export function RecentGenesProvider({ children }: { children: ReactNode }) {
   const [recentGenes, setRecentGenes] = useLocalStorage<RecentGene[]>(
     'recentGenes',
     EMPTY,

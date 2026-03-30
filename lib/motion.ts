@@ -4,10 +4,18 @@ import type { Transition, Variants } from 'motion/react'
 export const quickFade: Transition = { duration: 0.15 }
 
 /** Spring for tactile interactions (favorites, success states) */
-export const popSpring: Transition = { type: 'spring', stiffness: 500, damping: 15 }
+export const popSpring: Transition = {
+  type: 'spring',
+  stiffness: 500,
+  damping: 15,
+}
 
 /** Gentler spring for larger elements */
-export const softSpring: Transition = { type: 'spring', stiffness: 500, damping: 25 }
+export const softSpring: Transition = {
+  type: 'spring',
+  stiffness: 500,
+  damping: 25,
+}
 
 /** Staggered entrance for hero-style layouts */
 export const staggerContainer: Variants = {
@@ -22,6 +30,9 @@ export const fadeUp: Variants = {
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] },
+    transition: {
+      duration: 0.5,
+      ease: [0.16, 1, 0.3, 1] as [number, number, number, number],
+    },
   },
 }

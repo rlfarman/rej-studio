@@ -1,4 +1,7 @@
-export function DnaIcon({ className, ...props }: React.SVGProps<SVGSVGElement>) {
+export function DnaIcon({
+  className,
+  ...props
+}: React.SVGProps<SVGSVGElement>) {
   return (
     <svg
       viewBox="0 -8 72 72"

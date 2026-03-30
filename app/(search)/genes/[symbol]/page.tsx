@@ -38,7 +38,9 @@ export default async function GeneSymbolPage({ params }: Props) {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center gap-4">
-        <h1 className="font-mono text-2xl font-bold leading-none tracking-tight">{gene.symbol}</h1>
+        <h1 className="font-mono text-2xl leading-none font-bold tracking-tight">
+          {gene.symbol}
+        </h1>
         <FavoriteGeneButton gene={gene} />
       </CardHeader>
       <CardContent>

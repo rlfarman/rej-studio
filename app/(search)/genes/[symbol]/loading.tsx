@@ -21,13 +21,17 @@ export default function Loading() {
             <div className="text-muted-foreground text-sm font-semibold">
               Ensembl Gene ID
             </div>
-            <div className="text-muted-foreground/60 font-mono text-sm">&mdash;</div>
+            <div className="text-muted-foreground/60 font-mono text-sm">
+              &mdash;
+            </div>
           </div>
           <div>
             <div className="text-muted-foreground text-sm font-semibold">
               Chromosome
             </div>
-            <div className="text-muted-foreground/60 font-mono text-sm">&mdash;</div>
+            <div className="text-muted-foreground/60 font-mono text-sm">
+              &mdash;
+            </div>
           </div>
         </div>
         <Separator className="my-4" />

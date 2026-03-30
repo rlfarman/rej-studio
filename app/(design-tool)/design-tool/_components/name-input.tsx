@@ -18,9 +18,17 @@ export function NameInput() {
       control={control}
       render={({ field }) => (
         <FormItem>
-          <FormLabel>Choose a name for your coding sequence <span aria-hidden="true">*</span></FormLabel>
+          <FormLabel>
+            Choose a name for your coding sequence{' '}
+            <span aria-hidden="true">*</span>
+          </FormLabel>
           <FormControl>
-            <Input type="text" placeholder="ABC123..." aria-required="true" {...field} />
+            <Input
+              type="text"
+              placeholder="ABC123..."
+              aria-required="true"
+              {...field}
+            />
           </FormControl>
           <FormAssistiveText reserveSpace />
         </FormItem>

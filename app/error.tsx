@@ -27,9 +27,7 @@ export default function ErrorPage({
               Don&apos;t worry — no sequences were harmed.
             </p>
             <div className="flex justify-center gap-2">
-              <Button onClick={() => reset()}>
-                Try Again
-              </Button>
+              <Button onClick={() => reset()}>Try Again</Button>
               <Link href="/">
                 <Button variant="outline">Go Home</Button>
               </Link>

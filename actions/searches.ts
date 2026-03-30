@@ -25,11 +25,7 @@ export async function createSearch({
   }
 }
 
-export async function getRecentSearchedGenes({
-  userId,
-}: {
-  userId: string
-}) {
+export async function getRecentSearchedGenes({ userId }: { userId: string }) {
   try {
     return db
       .selectDistinctOn([searches.geneId], {

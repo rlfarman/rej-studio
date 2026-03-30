@@ -40,10 +40,7 @@ export function useCopyToClipboard({
     [resetDelay, showToast],
   )
 
-  const isCopied = useCallback(
-    (id = 'default') => copiedId === id,
-    [copiedId],
-  )
+  const isCopied = useCallback((id = 'default') => copiedId === id, [copiedId])
 
   return { copy, isCopied } as const
 }

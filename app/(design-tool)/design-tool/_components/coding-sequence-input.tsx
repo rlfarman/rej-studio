@@ -23,7 +23,9 @@ export function CodingSequenceInput() {
       control={control}
       render={({ field }) => (
         <FormItem>
-          <FormLabel>Enter your coding sequence <span aria-hidden="true">*</span></FormLabel>
+          <FormLabel>
+            Enter your coding sequence <span aria-hidden="true">*</span>
+          </FormLabel>
           <FormControl>
             <textarea
               placeholder="ATGATTACA..."

@@ -27,7 +27,10 @@ export function DNASplicer() {
   React.useEffect(() => {
     if (seqLength !== prevSeqLengthRef.current) {
       const ratio = prevPositionRef.current / (prevSeqLengthRef.current || 1)
-      const newPosition = Math.max(1, Math.min(Math.round(ratio * seqLength), seqLength - 1))
+      const newPosition = Math.max(
+        1,
+        Math.min(Math.round(ratio * seqLength), seqLength - 1),
+      )
       prevSeqLengthRef.current = seqLength
       prevPositionRef.current = newPosition
       setValue('spliceJunctionPosition', newPosition)
@@ -53,7 +56,9 @@ export function DNASplicer() {
     setPosition(Number(event.target.value))
   }
 
-  const handlePercentageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePercentageChange = (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const pct = Math.min(Math.max(Number(event.target.value), 0), 100)
     setPosition(Math.round((pct / 100) * seqLength))
   }
@@ -177,7 +182,7 @@ export function DNASplicer() {
                 step={0.1}
                 className="pr-7"
               />
-              <span className="text-muted-foreground pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm">
+              <span className="text-muted-foreground pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-sm">
                 %
               </span>
             </div>

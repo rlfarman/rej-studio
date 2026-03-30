@@ -2,7 +2,11 @@ export type Species = 'human' | 'mouse'
 export type SpeciesFilter = Species | 'both'
 
 export const SPECIES_OPTIONS: Species[] = ['human', 'mouse']
-export const SPECIES_FILTER_OPTIONS: SpeciesFilter[] = ['human', 'mouse', 'both']
+export const SPECIES_FILTER_OPTIONS: SpeciesFilter[] = [
+  'human',
+  'mouse',
+  'both',
+]
 
 export const SPECIES_DISPLAY_NAME: Record<Species, string> = {
   human: 'Human',
