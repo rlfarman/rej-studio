@@ -16,7 +16,6 @@ import { FormValues } from './form-schema'
 export function DNASplicer() {
   const { control, setValue, watch } = useFormContext<FormValues>()
   const codingSequence = watch('codingSequence')
-  const spliceJunctionPosition = watch('spliceJunctionPosition')
   const [percentage, setPercentage] = useState(50)
 
   const prevSeqLengthRef = React.useRef(codingSequence.length || 1)
