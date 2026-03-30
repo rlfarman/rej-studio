@@ -11,6 +11,20 @@ import {
 import { Input } from '@/components/ui/input'
 import { FormValues } from './form-schema'
 
+const WEIGHT_HELP =
+  '1 = gentle nudge, 10 = strong preference, 50+ = aggressively prioritize over other objectives.'
+
+function WeightDescription({ text }: { text: string }) {
+  return (
+    <FormDescription>
+      <span className="text-muted-foreground block">{text}</span>
+      <span className="text-muted-foreground/70 block text-[11px]">
+        {WEIGHT_HELP}
+      </span>
+    </FormDescription>
+  )
+}
+
 export function CodonOptimizeWeight() {
   const { control, watch, setValue } = useFormContext<FormValues>()
   const species = watch('species')
@@ -36,7 +50,7 @@ export function CodonOptimizeWeight() {
               disabled={disabled}
             />
           </FormControl>
-          {disabled && (
+          {disabled ? (
             <FormDescription>
               <button
                 type="button"
@@ -47,6 +61,8 @@ export function CodonOptimizeWeight() {
               </button>{' '}
               above to enable codon optimization.
             </FormDescription>
+          ) : (
+            <WeightDescription text="How strongly to prefer codons favored by the target species." />
           )}
           <FormMessage />
         </FormItem>
@@ -80,7 +96,7 @@ export function RemoveCrypticSpliceSitesWeight() {
               disabled={disabled}
             />
           </FormControl>
-          {disabled && (
+          {disabled ? (
             <FormDescription>
               <button
                 type="button"
@@ -91,6 +107,8 @@ export function RemoveCrypticSpliceSitesWeight() {
               </button>{' '}
               above to set this weight.
             </FormDescription>
+          ) : (
+            <WeightDescription text="How aggressively to eliminate splice-like motifs. Higher values remove more sites but constrain codon choice." />
           )}
           <FormMessage />
         </FormItem>
@@ -124,7 +142,7 @@ export function MinimizeCpGsWeight() {
               disabled={disabled}
             />
           </FormControl>
-          {disabled && (
+          {disabled ? (
             <FormDescription>
               <button
                 type="button"
@@ -135,6 +153,8 @@ export function MinimizeCpGsWeight() {
               </button>{' '}
               above to set this weight.
             </FormDescription>
+          ) : (
+            <WeightDescription text="How strongly to avoid CpG dinucleotides. High values greatly reduce CpGs but may lower GC content." />
           )}
           <FormMessage />
         </FormItem>
@@ -168,7 +188,7 @@ export function ReduceKmerComplexityWeight() {
               disabled={disabled}
             />
           </FormControl>
-          {disabled && (
+          {disabled ? (
             <FormDescription>
               <button
                 type="button"
@@ -179,6 +199,8 @@ export function ReduceKmerComplexityWeight() {
               </button>{' '}
               above to set this weight.
             </FormDescription>
+          ) : (
+            <WeightDescription text="How strongly to diversify 10-mer repeats. Helps synthesis and reduces recombination risk." />
           )}
           <FormMessage />
         </FormItem>

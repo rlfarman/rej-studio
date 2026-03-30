@@ -1,4 +1,5 @@
 'use client'
+import { useCallback, useRef } from 'react'
 import { useFormContext } from 'react-hook-form'
 import {
   FormField,
@@ -7,15 +8,89 @@ import {
   FormControl,
   FormAssistiveText,
 } from '@/components/ui/form'
+import { Button } from '@/components/ui/button'
+import { Upload } from 'lucide-react'
 import { FormValues } from './form-schema'
 import { cn } from '@/lib/utils'
+import { cleanSequence, parseFasta } from '@/design-tool/lib/fasta'
+import { toast } from 'sonner'
 
 const MAX_LENGTH = 50_000
 
 export function CodingSequenceInput() {
-  const { control, watch } = useFormContext<FormValues>()
+  const { control, watch, setValue } = useFormContext<FormValues>()
   const value = watch('codingSequence')
   const length = value?.length ?? 0
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const applyCleanedSequence = useCallback(
+    (text: string, source: string) => {
+      const { cleaned, removedChars, removedHeaders } = cleanSequence(text)
+
+      if (cleaned.length === 0) {
+        toast.error('No valid nucleotide characters found.')
+        return
+      }
+
+      setValue('codingSequence', cleaned, { shouldValidate: true })
+
+      const parts: string[] = []
+      if (removedHeaders > 0)
+        parts.push(
+          `${removedHeaders} header${removedHeaders > 1 ? 's' : ''} stripped`,
+        )
+      if (removedChars > 0)
+        parts.push(`${removedChars} non-nucleotide character${removedChars > 1 ? 's' : ''} removed`)
+
+      if (parts.length > 0) {
+        toast.info(`${source}: ${parts.join(', ')}.`)
+      }
+    },
+    [setValue],
+  )
+
+  const handlePaste = useCallback(
+    (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+      const text = e.clipboardData.getData('text')
+      // Only intercept if the pasted text looks like it needs cleaning
+      // (has FASTA headers, line numbers, or significant non-nucleotide chars)
+      const hasHeaders = text.includes('>')
+      const nonNuc = text.replace(/[ACGTUacgtu\s\r\n]/g, '')
+      if (hasHeaders || nonNuc.length > 3) {
+        e.preventDefault()
+        applyCleanedSequence(text, 'Paste cleaned')
+      }
+    },
+    [applyCleanedSequence],
+  )
+
+  const handleFileUpload = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0]
+      if (!file) return
+
+      const reader = new FileReader()
+      reader.onload = () => {
+        const text = reader.result as string
+        const entries = parseFasta(text)
+
+        if (entries.length > 0 && entries[0].header) {
+          // Use FASTA header as name if name field is empty
+          const currentName = watch('name')
+          if (!currentName) {
+            setValue('name', entries[0].header.slice(0, 250))
+          }
+        }
+
+        applyCleanedSequence(text, 'FASTA imported')
+      }
+      reader.readAsText(file)
+
+      // Reset file input so re-selecting the same file triggers onChange
+      e.target.value = ''
+    },
+    [applyCleanedSequence, setValue, watch],
+  )
 
   return (
     <FormField
@@ -23,15 +98,35 @@ export function CodingSequenceInput() {
       control={control}
       render={({ field }) => (
         <FormItem>
-          <FormLabel>
-            Enter your coding sequence <span aria-hidden="true">*</span>
-          </FormLabel>
+          <div className="flex items-center justify-between">
+            <FormLabel>
+              Enter your coding sequence <span aria-hidden="true">*</span>
+            </FormLabel>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-7 gap-1.5 px-2 text-xs"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <Upload className="size-3" />
+              Upload FASTA
+            </Button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".fasta,.fa,.fna,.txt"
+              className="hidden"
+              onChange={handleFileUpload}
+            />
+          </div>
           <FormControl>
             <textarea
-              placeholder="ATGATTACA..."
+              placeholder="ATGATTACA... (paste sequence or upload FASTA)"
               rows={4}
               aria-required="true"
               {...field}
+              onPaste={handlePaste}
               className={cn(
                 'border-input file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground flex w-full min-w-0 rounded-md border bg-transparent px-3 py-2 font-mono text-sm shadow-xs transition-[color,box-shadow] outline-none disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
                 'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
@@ -43,6 +138,8 @@ export function CodingSequenceInput() {
           <div className="flex min-h-5 items-start justify-between gap-4">
             <FormAssistiveText className="min-w-0">
               Valid characters: A, C, G, T, U. Length must be a multiple of 3.
+              Paste or upload FASTA — headers and whitespace are stripped
+              automatically.
             </FormAssistiveText>
             <span
               className={cn(

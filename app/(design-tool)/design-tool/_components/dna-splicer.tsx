@@ -4,6 +4,8 @@ import * as React from 'react'
 import { useFormContext } from 'react-hook-form'
 import { Slider } from '@/components/ui/slider'
 import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import {
   FormItem,
   FormLabel,
@@ -12,6 +14,7 @@ import {
   FormField,
 } from '@/components/ui/form'
 import { FormValues } from './form-schema'
+import { assessFragmentBalance } from '@/design-tool/lib/sequence-utils'
 
 export function DNASplicer() {
   const { control, setValue, watch } = useFormContext<FormValues>()
@@ -74,6 +77,8 @@ export function DNASplicer() {
   )
 
   const hasSequence = codingSequence.length > 0
+  const balance = assessFragmentBalance(position, seqLength)
+  const midpoint = Math.floor(seqLength / 2)
 
   if (!hasSequence) {
     return (
@@ -104,6 +109,18 @@ export function DNASplicer() {
             </span>
           </div>
         </div>
+        {balance === 'imbalanced' && (
+          <p className="text-destructive text-xs">
+            Fragments are highly imbalanced. This may cause issues with AAV
+            packaging or expression.
+          </p>
+        )}
+        {balance === 'moderate' && (
+          <p className="text-muted-foreground text-xs">
+            Fragments are moderately imbalanced. Consider centering the split
+            for more even packaging.
+          </p>
+        )}
       </div>
 
       {/* Slider with tick marks */}
@@ -125,6 +142,12 @@ export function DNASplicer() {
           )}
         />
         <div className="relative h-4 w-full">
+          {/* Midpoint marker */}
+          <span
+            className="border-muted-foreground/30 absolute top-0 h-2 border-l border-dashed"
+            style={{ left: '50%' }}
+            title={`Midpoint: ${midpoint.toLocaleString()} bp`}
+          />
           {ticks.map((tick, i) => (
             <span
               key={tick.value}
@@ -143,6 +166,43 @@ export function DNASplicer() {
             </span>
           ))}
         </div>
+      </div>
+
+      {/* Quick actions */}
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-muted-foreground text-xs">Quick:</span>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-6 px-2 text-xs"
+          onClick={() => setPosition(midpoint)}
+        >
+          Center
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-6 px-2 text-xs"
+          onClick={() => setPosition(Math.round(seqLength * 0.6))}
+        >
+          Bias 5&apos;
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-6 px-2 text-xs"
+          onClick={() => setPosition(Math.round(seqLength * 0.4))}
+        >
+          Bias 3&apos;
+        </Button>
+        {position !== midpoint && (
+          <Badge variant="outline" className="text-[10px]">
+            {Math.abs(position - midpoint).toLocaleString()} bp from center
+          </Badge>
+        )}
       </div>
 
       {/* Inputs row */}

@@ -1,76 +1,92 @@
 import { toast } from 'sonner'
 import { FormValues } from './form-schema'
+import type { ProcessResult } from '@/design-tool/types/process-result'
 
-export async function handleSubmitForm({
-  codingSequence,
-  name,
-  species,
-  codonOptimizeWeight,
-  removeCrypticSpliceSites,
-  removeCrypticSpliceSitesWeight,
-  minimizeCpgs,
-  minimizeCpgsWeight,
-  reduceKmerComplexity,
-  reduceKmerComplexityWeight,
-  enforceGcContent,
-  spliceJunctionPosition,
-  '5PrimeStimulatoryIntron': stim5,
-  '3PrimeStimulatoryIntron': stim3,
-}: FormValues) {
-  const toastId = toast.loading('Processing your sequence...')
-  const options = {
-    codon_optimize: species !== 'none' ? species : null,
-    codon_optimize_weight: codonOptimizeWeight,
-    remove_cryptic_ss: removeCrypticSpliceSites,
-    remove_cryptic_ss_weight: removeCrypticSpliceSitesWeight,
-    minimize_CpGs: minimizeCpgs,
-    minimize_CpGs_weight: minimizeCpgsWeight,
-    reduce_kmer_complexity: reduceKmerComplexity,
-    reduce_kmer_complexity_weight: reduceKmerComplexityWeight,
-    enforce_gc: enforceGcContent,
-    stim_5: stim5,
-    stim_3: stim3,
-    split_point: spliceJunctionPosition,
-    ensure_wggw: true, // Always ensure WGGW motif
-    wggw_threshold: 300, // Default threshold for WGGW
+function buildOptions(values: FormValues) {
+  return {
+    codon_optimize: values.species !== 'none' ? values.species : null,
+    codon_optimize_weight: values.codonOptimizeWeight,
+    remove_cryptic_ss: values.removeCrypticSpliceSites,
+    remove_cryptic_ss_weight: values.removeCrypticSpliceSitesWeight,
+    minimize_CpGs: values.minimizeCpgs,
+    minimize_CpGs_weight: values.minimizeCpgsWeight,
+    reduce_kmer_complexity: values.reduceKmerComplexity,
+    reduce_kmer_complexity_weight: values.reduceKmerComplexityWeight,
+    enforce_gc: values.enforceGcContent,
+    stim_5: values['5PrimeStimulatoryIntron'],
+    stim_3: values['3PrimeStimulatoryIntron'],
+    split_point: values.spliceJunctionPosition,
+    ensure_wggw: true,
+    wggw_threshold: 300,
   }
-  try {
-    const response = await fetch('/api/py/process', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        CDS: codingSequence,
-        name,
-        options,
-      }),
-    })
+}
 
-    if (!response.ok) {
-      let detail = 'Something went wrong while processing your sequence.'
-      try {
-        const body = await response.json()
-        if (body.detail) detail = body.detail
-      } catch {}
-      throw new Error(detail)
-    }
+function buildBody(values: FormValues) {
+  return JSON.stringify({
+    CDS: values.codingSequence,
+    name: values.name,
+    options: buildOptions(values),
+  })
+}
 
-    // Download the resulting FileResponse
-    const blob = await response.blob()
-    const url = window.URL.createObjectURL(blob)
-    const a = document.createElement('a')
+export async function submitFormJson(
+  values: FormValues,
+): Promise<ProcessResult> {
+  const response = await fetch('/api/py/process-json', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: buildBody(values),
+  })
+
+  if (!response.ok) {
+    let detail = 'Something went wrong while processing your sequence.'
     try {
-      a.style.display = 'none'
-      a.href = url
-      const safeName = name.replace(/[^a-zA-Z0-9_\-. ]/g, '_')
-      a.download = `${safeName}.zip`
-      document.body.appendChild(a)
-      a.click()
-    } finally {
-      a.remove()
-      window.URL.revokeObjectURL(url)
-    }
+      const body = await response.json()
+      if (body.detail) detail = body.detail
+    } catch {}
+    throw new Error(detail)
+  }
+
+  return response.json()
+}
+
+export async function downloadZip(values: FormValues) {
+  const response = await fetch('/api/py/process', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: buildBody(values),
+  })
+
+  if (!response.ok) {
+    let detail = 'Something went wrong while downloading your sequence.'
+    try {
+      const body = await response.json()
+      if (body.detail) detail = body.detail
+    } catch {}
+    throw new Error(detail)
+  }
+
+  const blob = await response.blob()
+  const url = window.URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  try {
+    a.style.display = 'none'
+    a.href = url
+    const safeName = values.name.replace(/[^a-zA-Z0-9_\-. ]/g, '_')
+    a.download = `${safeName}.zip`
+    document.body.appendChild(a)
+    a.click()
+  } finally {
+    a.remove()
+    window.URL.revokeObjectURL(url)
+  }
+}
+
+/** Legacy handler kept for backward compatibility */
+export async function handleSubmitForm(values: FormValues) {
+  const toastId = toast.loading('Processing your sequence...')
+  try {
+    await downloadZip(values)
     toast.success('Sequence ready — your download has started.', {
       id: toastId,
     })

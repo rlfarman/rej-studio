@@ -950,6 +950,68 @@ def process_single_request(CDS, name, OPTIONS, results_folder="/tmp/results"):
             f.write(f"CDS: {CDS[:100]}... (truncated if longer than 100 characters)\n")
         return error_report, None    
 
+def process_single_request_json(CDS, name, OPTIONS):
+    """
+    Process a single coding sequence and return structured results as a dict.
+    Created for the web application JSON API.
+
+    Args:
+        CDS: The coding sequence string to process
+        name: Name identifier for the sequence
+        OPTIONS: Optimization options dictionary
+
+    Returns:
+        dict: Structured results including sequences, objectives, and WGGW info
+    """
+    import time as _time
+    start = _time.monotonic()
+
+    # Clean up the input sequence
+    CDS = CDS.strip().upper()
+
+    # Ensure the CDS is valid
+    if "N" in CDS:
+        raise ValueError("Coding sequence contains ambiguous 'N' nucleotides")
+    if len(CDS) % 3 != 0:
+        raise ValueError("Coding sequence length is not a multiple of 3")
+
+    # Create a copy of OPTIONS without modifying the original
+    options_copy = OPTIONS.copy()
+
+    # Run the optimization and splitting
+    seq5, seq3, obj_before, obj_after, optimized_seq = optimize_and_split(CDS, options_copy)
+
+    elapsed = _time.monotonic() - start
+
+    # Extract WGGW info, converting tuples to lists for JSON serialization
+    wggw_info_raw = options_copy.get('wggw_info')
+    wggw_info = None
+    if wggw_info_raw:
+        wggw_info = {}
+        for site_type, info in wggw_info_raw.items():
+            wggw_info[site_type] = {
+                'position': info['position'],
+                'motif': info['motif'],
+                'distance_from_split': info['distance_from_split'],
+                'original_codons': list(info['original_codons']),
+                'new_codons': list(info['new_codons']),
+            }
+
+    return {
+        'name': name,
+        'original_sequence': CDS,
+        'optimized_sequence': optimized_seq,
+        'seq5': seq5,
+        'seq3': seq3,
+        'split_point': options_copy.get('split_point', OPTIONS.get('split_point')),
+        'used_wggw_as_split': options_copy.get('used_wggw_as_split', False),
+        'objectives_before': obj_before,
+        'objectives_after': obj_after,
+        'wggw_info': wggw_info,
+        'processing_time_seconds': round(elapsed, 2),
+    }
+
+
 if __name__ == "__main__":
     OPTIONS = {
         'codon_optimize': 'human',

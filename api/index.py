@@ -5,8 +5,9 @@ import os
 import zipfile
 import io
 import re
+from typing import Any
 
-from .algorithm import process_single_request
+from .algorithm import process_single_request, process_single_request_json
 
 # Create FastAPI instance with custom docs and openapi URL
 app = FastAPI(docs_url="/api/py/docs", openapi_url="/api/py/openapi.json")
@@ -101,3 +102,39 @@ def process_gene(request: ProcessRequest):
         for f in [report_filename, sequences_filename]:
             if f and os.path.exists(f):
                 os.remove(f)
+
+
+class WggwSiteInfo(BaseModel):
+    position: int
+    motif: str
+    distance_from_split: int
+    original_codons: list[str]
+    new_codons: list[str]
+
+
+class ProcessResult(BaseModel):
+    name: str
+    original_sequence: str
+    optimized_sequence: str
+    seq5: str
+    seq3: str
+    split_point: int
+    used_wggw_as_split: bool
+    objectives_before: str
+    objectives_after: str
+    wggw_info: dict[str, WggwSiteInfo] | None = None
+    processing_time_seconds: float
+
+
+@app.post("/api/py/process-json", response_model=ProcessResult)
+def process_gene_json(request: ProcessRequest):
+    try:
+        result = process_single_request_json(
+            CDS=request.CDS,
+            name=request.name,
+            OPTIONS=request.options.model_dump(),
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error processing gene: {str(e)}")
+
+    return result
