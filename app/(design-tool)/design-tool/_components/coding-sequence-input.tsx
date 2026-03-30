@@ -8,6 +8,7 @@ import {
   FormAssistiveText,
 } from '@/components/ui/form'
 import { FormValues } from './form-schema'
+import { SequenceWarnings } from './sequence-warnings'
 import { cn } from '@/lib/utils'
 
 const MAX_LENGTH = 50_000
@@ -53,6 +54,7 @@ export function CodingSequenceInput() {
               {length.toLocaleString()} / {MAX_LENGTH.toLocaleString()}
             </span>
           </div>
+          <SequenceWarnings />
         </FormItem>
       )}
     />
