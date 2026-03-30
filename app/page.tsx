@@ -1,6 +1,6 @@
 import Link from 'next/link'
-import { GeneSearch } from './_components/gene-search'
-import { searchGenes } from '@/actions'
+import { GeneSearch } from '@/components/gene-search'
+import { searchGenes } from '@/actions/genes'
 import Image from 'next/image'
 
 export default function HomePage() {

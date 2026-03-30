@@ -33,14 +33,18 @@ export async function middleware(req: NextRequest) {
   const expectedPassword = process.env.BASIC_AUTH_PASSWORD
 
   if (basicAuth && expectedUser && expectedPassword) {
-    const authValue = basicAuth.split(' ')[1]
-    const [user, pwd] = atob(authValue).split(':')
+    try {
+      const authValue = basicAuth.split(' ')[1]
+      const [user, pwd] = atob(authValue).split(':')
 
-    const userMatch = await timingSafeEqual(user, expectedUser)
-    const pwdMatch = await timingSafeEqual(pwd, expectedPassword)
+      const userMatch = await timingSafeEqual(user, expectedUser)
+      const pwdMatch = await timingSafeEqual(pwd, expectedPassword)
 
-    if (userMatch && pwdMatch) {
-      return NextResponse.next()
+      if (userMatch && pwdMatch) {
+        return NextResponse.next()
+      }
+    } catch {
+      // Malformed Base64 in Authorization header
     }
   }
   url.pathname = '/api/auth'

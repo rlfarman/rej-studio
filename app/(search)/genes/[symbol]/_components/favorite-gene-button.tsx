@@ -25,7 +25,12 @@ export function FavoriteGeneButton({ gene }: FavoriteButtonProps) {
   }
 
   return (
-    <Button onClick={handleFavoriteClick} variant="ghost" size="icon">
+    <Button
+      onClick={handleFavoriteClick}
+      variant="ghost"
+      size="icon"
+      aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+    >
       <Heart
         className={`size-5 ${
           isFavorite ? 'text-destructive' : 'text-muted-foreground'

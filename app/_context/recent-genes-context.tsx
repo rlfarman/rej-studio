@@ -1,12 +1,6 @@
 'use client'
 
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  ReactNode,
-} from 'react'
+import { createLocalStorageContext } from '@/lib/create-local-storage-context'
 
 interface RecentGene {
   id: string
@@ -14,62 +8,36 @@ interface RecentGene {
   symbol: string
 }
 
-interface RecentGenesContextValue {
-  recentGenes: RecentGene[]
-  addRecentGene: (gene: RecentGene) => void
-  clearRecentGenes: () => void
-}
+const {
+  Provider: RecentGenesStorageProvider,
+  useValue: useRecentGenesStorage,
+} = createLocalStorageContext<RecentGene[]>({
+  key: 'recentGenes',
+  initialValue: [],
+  errorMessage: 'useRecentGenes must be used within a RecentGenesProvider',
+})
 
-const RecentGenesContext = createContext<RecentGenesContextValue | undefined>(
-  undefined,
-)
-
-export function RecentGenesProvider({ children }: { children: ReactNode }) {
-  const [recentGenes, setRecentGenes] = useState<RecentGene[]>([])
-
-  // Load recent searches from localStorage on mount
-  useEffect(() => {
-    const storedRecentGenes = localStorage.getItem('recentGenes')
-    if (storedRecentGenes) {
-      try {
-        setRecentGenes(JSON.parse(storedRecentGenes))
-      } catch (error) {
-        console.error('Failed to parse recent genes from localStorage:', error)
-      }
-    }
-  }, [])
-
-  // Add a gene to recent searches and store it in localStorage
-  const addRecentGene = (gene: RecentGene) => {
-    setRecentGenes((prevRecentGenes) => {
-      const updatedRecentGenes = [
-        gene,
-        ...prevRecentGenes.filter((recent) => recent.id !== gene.id),
-      ].slice(0, 10) // Limit to 10 recent searches
-      localStorage.setItem('recentGenes', JSON.stringify(updatedRecentGenes))
-      return updatedRecentGenes
-    })
-  }
-
-  // Clear all recent searches
-  const clearRecentGenes = () => {
-    setRecentGenes([])
-    localStorage.removeItem('recentGenes')
-  }
-
-  return (
-    <RecentGenesContext.Provider
-      value={{ recentGenes, addRecentGene, clearRecentGenes }}
-    >
-      {children}
-    </RecentGenesContext.Provider>
-  )
+export function RecentGenesProvider({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return <RecentGenesStorageProvider>{children}</RecentGenesStorageProvider>
 }
 
 export function useRecentGenes() {
-  const context = useContext(RecentGenesContext)
-  if (!context) {
-    throw new Error('useRecentGenes must be used within a RecentGenesProvider')
+  const { value: recentGenes, setValue: setRecentGenes } =
+    useRecentGenesStorage()
+
+  const addRecentGene = (gene: RecentGene) => {
+    setRecentGenes((prev) =>
+      [gene, ...prev.filter((r) => r.id !== gene.id)].slice(0, 10),
+    )
   }
-  return context
+
+  const clearRecentGenes = () => {
+    setRecentGenes([])
+  }
+
+  return { recentGenes, addRecentGene, clearRecentGenes }
 }

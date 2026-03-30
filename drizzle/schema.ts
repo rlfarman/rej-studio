@@ -3,7 +3,6 @@ import {
   integer,
   pgTable,
   text,
-  vector,
   timestamp,
 } from 'drizzle-orm/pg-core'
 import { randomUUID } from 'crypto'
@@ -22,7 +21,6 @@ export const genes = pgTable(
     species: text('species').notNull().default(''),
     chromosome: text('chromosome'),
     diseaseAssociations: text('disease_associations').array(),
-    embedding: vector('embedding', { dimensions: 1536 }),
   },
   (table) => [
     index('genes_symbol_idx').on(table.symbol),
@@ -49,7 +47,6 @@ export const isoforms = pgTable(
       .notNull()
       .default(0),
     species: text('species').notNull(),
-    embedding: vector('embedding', { dimensions: 1536 }),
     codingSequence: text('coding_sequence').notNull().default(''),
     proteinSequence: text('protein_sequence').notNull().default(''),
     defaultThreePrimeSequence: text('default_three_prime_sequence')

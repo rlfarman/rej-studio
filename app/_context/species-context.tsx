@@ -1,7 +1,9 @@
 'use client'
-import React, { useEffect, useState, createContext, useContext } from 'react'
 
-// Create a context for species
+import { createContext, useContext, useState, ReactNode } from 'react'
+
+const VALID_SPECIES = ['human', 'mouse', 'both']
+
 const SpeciesContext = createContext<
   | {
       species: string
@@ -18,24 +20,21 @@ export function useSpeciesContext() {
   return context
 }
 
-const VALID_SPECIES = ['human', 'mouse', 'both']
-
-export function SpeciesProvider({ children }: { children: React.ReactNode }) {
-  const [species, setSpecies] = useState<string>('both')
-
-  useEffect(() => {
+export function SpeciesProvider({ children }: { children: ReactNode }) {
+  const [species, setSpecies] = useState<string>(() => {
+    if (typeof window === 'undefined') return 'both'
     const storedSpecies = localStorage.getItem('species')
     if (storedSpecies && VALID_SPECIES.includes(storedSpecies)) {
-      setSpecies(storedSpecies)
-    } else {
-      const speciesFromQuery = new URLSearchParams(window.location.search).get(
-        'species',
-      )
-      if (speciesFromQuery && VALID_SPECIES.includes(speciesFromQuery)) {
-        setSpecies(speciesFromQuery)
-      }
+      return storedSpecies
     }
-  }, [])
+    const speciesFromQuery = new URLSearchParams(window.location.search).get(
+      'species',
+    )
+    if (speciesFromQuery && VALID_SPECIES.includes(speciesFromQuery)) {
+      return speciesFromQuery
+    }
+    return 'both'
+  })
 
   const handleSpeciesChange = (value: string) => {
     setSpecies(value)

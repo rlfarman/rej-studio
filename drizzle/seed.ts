@@ -1,13 +1,7 @@
 import 'dotenv/config'
 import { db } from './db'
 import { genes } from './schema'
-import { openai } from '../app/_lib/openai'
 import genesData from './genes.json'
-import { embed } from 'ai'
-
-if (!process.env.OPENAI_API_KEY) {
-  throw new Error('process.env.OPENAI_API_KEY is not defined. Please set it.')
-}
 
 if (!process.env.POSTGRES_URL) {
   throw new Error('process.env.POSTGRES_URL is not defined. Please set it.')
@@ -27,8 +21,6 @@ async function main() {
     throw error
   }
   for (const record of genesData as any) {
-    await new Promise((r) => setTimeout(r, 500)) // Wait 500ms between requests
-
     // Create the gene in the database
     const [gene] = await db.insert(genes).values(record).returning()
 
@@ -44,12 +36,3 @@ main()
 
     process.exit(1)
   })
-
-async function generateEmbedding(_input: string) {
-  const input = _input.replace(/\n/g, ' ')
-  const { embedding } = await embed({
-    model: openai.embedding('text-embedding-3-small'),
-    value: input,
-  })
-  return embedding
-}

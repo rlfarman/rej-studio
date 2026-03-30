@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useDebounce } from 'use-debounce'
-import type { GeneSearchResult } from '@/actions'
+import type { GeneSearchResult } from '@/actions/genes'
 import { useSpeciesContext } from '@/context/species-context'
 
 interface UseGeneSearchProps {
