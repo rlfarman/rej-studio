@@ -1,6 +1,6 @@
 import { searchGenes } from '@/actions/genes'
 import { GeneSearch } from '@/components/gene-search'
-import { GeneSearchResults, GeneSearchResultsSkeleton } from '@/components/gene-search/gene-search-results'
+import { GeneSearchResults, GeneSearchResultsLoading } from '@/components/gene-search/gene-search-results'
 import { isSpeciesFilter } from '@/lib/species'
 import type { SpeciesFilter } from '@/lib/species'
 import { Metadata } from 'next'
@@ -28,7 +28,7 @@ export default async function GeneSearchPage({
     <div className="flex flex-col gap-4">
       <GeneSearch searchGenes={searchGenes} defaultQuery={query} />
       {query.trim().length > 0 && (
-        <Suspense key={`${query}-${species}`} fallback={<GeneSearchResultsSkeleton />}>
+        <Suspense key={`${query}-${species}`} fallback={<GeneSearchResultsLoading />}>
           <GeneSearchResults query={query} species={species} />
         </Suspense>
       )}

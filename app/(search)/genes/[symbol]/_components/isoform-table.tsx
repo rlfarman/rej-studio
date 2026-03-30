@@ -9,7 +9,6 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { ExternalLink } from 'lucide-react'
-import { Skeleton } from '@/components/ui/skeleton'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { useSpeciesContext } from '@/context/species-context'
@@ -132,28 +131,14 @@ export function IsoformTableLoading() {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {[...Array(3)].map((_, index) => (
-          <TableRow key={index}>
-            <TableCell>
-              <Skeleton className="h-4 w-8 rounded" />
-            </TableCell>
-            <TableCell className="hidden md:table-cell">
-              <Skeleton className="h-4 w-8 rounded" />
-            </TableCell>
-            <TableCell>
-              <Skeleton className="h-4 w-24 rounded" />
-            </TableCell>
-            <TableCell className="hidden sm:table-cell">
-              <Skeleton className="h-4 w-24 rounded" />
-            </TableCell>
-            <TableCell className="hidden lg:table-cell">
-              <Skeleton className="h-4 w-24 rounded" />
-            </TableCell>
-            <TableCell className="text-right">
-              <Skeleton className="inline-block h-8 w-8 rounded-full" />
-            </TableCell>
-          </TableRow>
-        ))}
+        <TableRow>
+          <TableCell
+            colSpan={6}
+            className="text-muted-foreground text-center"
+          >
+            Loading isoforms...
+          </TableCell>
+        </TableRow>
       </TableBody>
     </Table>
   )

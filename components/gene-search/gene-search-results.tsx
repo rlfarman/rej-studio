@@ -3,7 +3,6 @@ import type { SpeciesFilter } from '@/lib/species'
 import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
 import { SpeciesIcon } from '@/components/species-icon'
-import { Skeleton } from '@/components/ui/skeleton'
 
 interface GeneSearchResultsProps {
   query: string
@@ -49,18 +48,10 @@ export async function GeneSearchResults({
   )
 }
 
-export function GeneSearchResultsSkeleton() {
+export function GeneSearchResultsLoading() {
   return (
-    <div className="divide-border divide-y rounded-lg border">
-      {[...Array(5)].map((_, index) => (
-        <div
-          key={index}
-          className="flex items-center gap-4 px-4 py-3"
-        >
-          <Skeleton className="h-6 w-[96px] rounded" />
-          <Skeleton className="h-4 w-full" />
-        </div>
-      ))}
+    <div className="text-muted-foreground py-8 text-center text-sm">
+      Searching...
     </div>
   )
 }
