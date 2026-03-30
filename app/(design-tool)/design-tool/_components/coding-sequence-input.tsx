@@ -11,6 +11,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Upload } from 'lucide-react'
 import { FormValues } from './form-schema'
+import { SequenceWarnings } from './sequence-warnings'
 import { cn } from '@/lib/utils'
 import { cleanSequence, parseFasta } from '@/design-tool/lib/fasta'
 import { toast } from 'sonner'
@@ -154,6 +155,7 @@ export function CodingSequenceInput() {
               </span>
             </span>
           </FormAssistiveText>
+          <SequenceWarnings />
         </FormItem>
       )}
     />
