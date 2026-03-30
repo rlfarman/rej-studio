@@ -1,5 +1,5 @@
 'use client'
-import { useCallback, useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import {
   Table,
   TableBody,
@@ -18,8 +18,9 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { toast } from 'sonner'
 import { SPECIES_DISPLAY_NAME } from '@/lib/species'
+import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
+import { AnimatePresence, motion } from 'motion/react'
 
 interface Isoform {
   id: string
@@ -34,8 +35,69 @@ interface IsoformListProps {
   isoforms: Isoform[]
 }
 
+function CopyableSequence({
+  sequence,
+  id,
+  label,
+  copy,
+  isCopied,
+}: {
+  sequence: string
+  id: string
+  label: string
+  copy: (text: string, id: string) => void
+  isCopied: (id: string) => boolean
+}) {
+  const copied = isCopied(id)
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button
+          className="hover:text-muted-foreground inline-flex items-center gap-1.5 hover:underline"
+          onClick={() => copy(sequence, id)}
+          aria-label={label}
+        >
+          <AnimatePresence mode="wait" initial={false}>
+            {copied ? (
+              <motion.span
+                key="check"
+                initial={{ opacity: 0, scale: 0.5 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.5 }}
+                transition={{ duration: 0.15 }}
+              >
+                <Check className="text-chart-2 size-3.5" />
+              </motion.span>
+            ) : (
+              <motion.span
+                key="text"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
+              >
+                <span className="hidden sm:inline">
+                  {sequence.slice(0, 20)}...
+                </span>
+                <span className="sm:hidden">
+                  {sequence.slice(0, 10)}...
+                </span>
+              </motion.span>
+            )}
+          </AnimatePresence>
+        </button>
+      </TooltipTrigger>
+      <TooltipContent>Click to copy</TooltipContent>
+    </Tooltip>
+  )
+}
+
 export default function IsoformTable({ isoforms }: IsoformListProps) {
   const { species } = useSpeciesContext()
+  const { copy, isCopied } = useCopyToClipboard({
+    successMessage: 'Sequence copied to clipboard!',
+  })
 
   const filteredIsoforms = useMemo(
     () =>
@@ -45,19 +107,6 @@ export default function IsoformTable({ isoforms }: IsoformListProps) {
       }),
     [species, isoforms],
   )
-
-  const [copiedId, setCopiedId] = useState<string | null>(null)
-
-  const handleCopy = useCallback(async (text: string, id: string) => {
-    try {
-      await navigator.clipboard.writeText(text)
-      setCopiedId(id)
-      toast.success('Sequence copied to clipboard!')
-      setTimeout(() => setCopiedId(null), 1500)
-    } catch {
-      toast.error('Failed to copy to clipboard.')
-    }
-  }, [])
 
   return (
     <Table>
@@ -86,54 +135,22 @@ export default function IsoformTable({ isoforms }: IsoformListProps) {
               </TableCell>
               <TableCell className="font-mono">{isoform.enst}</TableCell>
               <TableCell>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      className="hover:text-muted-foreground inline-flex items-center gap-1.5 hover:underline"
-                      onClick={() => handleCopy(isoform.codingSequence, `cds-${isoform.id}`)}
-                      aria-label="Copy coding sequence"
-                    >
-                      {copiedId === `cds-${isoform.id}` ? (
-                        <Check className="text-chart-2 size-3.5 animate-check-draw" />
-                      ) : (
-                        <>
-                          <span className="hidden sm:inline">
-                            {isoform.codingSequence.slice(0, 20)}...
-                          </span>
-                          <span className="sm:hidden">
-                            {isoform.codingSequence.slice(0, 10)}...
-                          </span>
-                        </>
-                      )}
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent>Click to copy</TooltipContent>
-                </Tooltip>
+                <CopyableSequence
+                  sequence={isoform.codingSequence}
+                  id={`cds-${isoform.id}`}
+                  label="Copy coding sequence"
+                  copy={copy}
+                  isCopied={isCopied}
+                />
               </TableCell>
               <TableCell>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      onClick={() => handleCopy(isoform.proteinSequence, `prot-${isoform.id}`)}
-                      className="hover:text-muted-foreground inline-flex items-center gap-1.5 hover:underline"
-                      aria-label="Copy protein sequence"
-                    >
-                      {copiedId === `prot-${isoform.id}` ? (
-                        <Check className="text-chart-2 size-3.5 animate-check-draw" />
-                      ) : (
-                        <>
-                          <span className="hidden sm:inline">
-                            {isoform.proteinSequence.slice(0, 20)}...
-                          </span>
-                          <span className="sm:hidden">
-                            {isoform.proteinSequence.slice(0, 10)}...
-                          </span>
-                        </>
-                      )}
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent>Click to copy</TooltipContent>
-                </Tooltip>
+                <CopyableSequence
+                  sequence={isoform.proteinSequence}
+                  id={`prot-${isoform.id}`}
+                  label="Copy protein sequence"
+                  copy={copy}
+                  isCopied={isCopied}
+                />
               </TableCell>
               <TableCell className="text-right">
                 <Button variant="ghost" size="icon" asChild>
