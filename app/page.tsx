@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { GeneSearch } from '@/components/gene-search'
 import { searchGenes } from '@/actions/genes'
-import Image from 'next/image'
+import { DnaIcon } from '@/components/dna-icon'
 import { Hero, HeroItem, DnaFloat } from './_components/hero'
 
 export default function HomePage() {
@@ -11,13 +11,7 @@ export default function HomePage() {
         <div className="mx-auto mt-0 w-full max-w-4xl px-4 text-center sm:px-6 lg:px-8">
           <HeroItem className="mb-4 flex items-center justify-center">
             <DnaFloat>
-              <Image
-                src="/images/dna.svg"
-                alt="REJ Studio Logo"
-                width={24}
-                height={24}
-                className="mt-2 ml-2 dark:invert"
-              />
+              <DnaIcon className="mt-2 ml-2 size-6" />
             </DnaFloat>
           </HeroItem>
           <HeroItem className="pb-2 font-mono">

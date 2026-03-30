@@ -20,7 +20,7 @@ function GeneSearchTooltip() {
     <Tooltip>
       <TooltipTrigger asChild>
         <Button variant="ghost" asChild>
-          <Link href="/design-tool">
+          <Link href="/design-tool" aria-label="Go to Design Tool">
             <WandSparkles className="size-5" />
           </Link>
         </Button>
@@ -52,7 +52,7 @@ export function Header() {
           </Suspense>
         )}
       </div>
-      <div className="absolute left-1/2 flex w-full -translate-x-1/2 transform justify-center">
+      <div className="absolute left-1/2 flex w-full max-w-[calc(100vw-2rem)] -translate-x-1/2 transform justify-center">
         {!isHomePage && (
           <GeneSearch
             searchGenes={searchGenes}

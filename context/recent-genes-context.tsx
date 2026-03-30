@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useCallback, ReactNode } from 'react'
+import { createContext, useContext, useCallback, useMemo, ReactNode } from 'react'
 import { useLocalStorage } from '@/lib/use-local-storage'
 
 interface RecentGene {
@@ -44,10 +44,13 @@ export function RecentGenesProvider({
     setRecentGenes([])
   }, [setRecentGenes])
 
+  const value = useMemo(
+    () => ({ recentGenes, addRecentGene, clearRecentGenes }),
+    [recentGenes, addRecentGene, clearRecentGenes],
+  )
+
   return (
-    <RecentGenesContext.Provider
-      value={{ recentGenes, addRecentGene, clearRecentGenes }}
-    >
+    <RecentGenesContext.Provider value={value}>
       {children}
     </RecentGenesContext.Provider>
   )

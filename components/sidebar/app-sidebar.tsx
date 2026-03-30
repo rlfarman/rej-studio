@@ -1,5 +1,5 @@
 'use client'
-import Image from 'next/image'
+import { DnaIcon } from '@/components/dna-icon'
 import {
   Sidebar,
   SidebarContent,
@@ -18,13 +18,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           href="/"
           className="hover:text-primary group flex items-center hover:underline"
         >
-          <Image
-            src="/images/dna.svg"
-            alt="REJ Studio Logo"
-            width={24}
-            height={24}
-            className="mt-2 ml-2 transition-transform duration-300 group-hover:rotate-12 dark:invert"
-          />
+          <DnaIcon className="mt-2 ml-2 size-6 transition-transform duration-300 group-hover:rotate-12" />
           <span className="mt-2 ml-2 font-mono text-lg font-semibold">
             REJ Studio
           </span>

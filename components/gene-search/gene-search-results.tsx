@@ -38,7 +38,7 @@ export async function GeneSearchResults({
           href={`/genes/${gene.symbol}`}
           className="hover:bg-accent flex items-center gap-4 px-4 py-3 transition-colors"
         >
-          <Badge className="grid w-[96px] shrink-0 items-center gap-2 font-mono" style={{ gridTemplateColumns: '24px 1fr' }}>
+          <Badge className="grid w-[96px] shrink-0 grid-cols-[24px_1fr] items-center gap-2 font-mono">
             <SpeciesIcon species={gene.species} className="h-4 w-4" />
             <span className="truncate">{gene.symbol}</span>
           </Badge>

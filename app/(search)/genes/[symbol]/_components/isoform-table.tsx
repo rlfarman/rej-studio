@@ -48,13 +48,13 @@ export default function IsoformTable({ isoforms }: IsoformListProps) {
       <TableHeader>
         <TableRow>
           <TableHead className="w-[100px]">Length</TableHead>
-          <TableHead>Species</TableHead>
+          <TableHead className="hidden md:table-cell">Species</TableHead>
           <TableHead>
             <span className="hidden sm:inline">Ensembl Transcript ID</span>
             <span className="sm:hidden">ENST</span>
           </TableHead>
-          <TableHead>Coding Sequence</TableHead>
-          <TableHead>Protein Sequence</TableHead>
+          <TableHead className="hidden sm:table-cell">Coding Sequence</TableHead>
+          <TableHead className="hidden lg:table-cell">Protein Sequence</TableHead>
           <TableHead className="text-right">Customize</TableHead>
         </TableRow>
       </TableHeader>
@@ -68,41 +68,31 @@ export default function IsoformTable({ isoforms }: IsoformListProps) {
                 <TableCell className="font-mono">
                   {isoform.codingSequenceLength}
                 </TableCell>
-                <TableCell>
+                <TableCell className="hidden md:table-cell">
                   {SPECIES_DISPLAY_NAME[isoform.species as keyof typeof SPECIES_DISPLAY_NAME] ?? 'Unknown'}
                 </TableCell>
                 <TableCell className="font-mono">{isoform.enst}</TableCell>
-                <TableCell>
+                <TableCell className="hidden sm:table-cell">
                   <CopyableText
                     label="Copy coding sequence"
                     copied={isCopied(cdsId)}
                     onCopy={() => copy(isoform.codingSequence, cdsId)}
                   >
-                    <span className="hidden sm:inline">
-                      {isoform.codingSequence.slice(0, 20)}...
-                    </span>
-                    <span className="sm:hidden">
-                      {isoform.codingSequence.slice(0, 10)}...
-                    </span>
+                    {isoform.codingSequence.slice(0, 20)}...
                   </CopyableText>
                 </TableCell>
-                <TableCell>
+                <TableCell className="hidden lg:table-cell">
                   <CopyableText
                     label="Copy protein sequence"
                     copied={isCopied(protId)}
                     onCopy={() => copy(isoform.proteinSequence, protId)}
                   >
-                    <span className="hidden sm:inline">
-                      {isoform.proteinSequence.slice(0, 20)}...
-                    </span>
-                    <span className="sm:hidden">
-                      {isoform.proteinSequence.slice(0, 10)}...
-                    </span>
+                    {isoform.proteinSequence.slice(0, 20)}...
                   </CopyableText>
                 </TableCell>
                 <TableCell className="text-right">
                   <Button variant="ghost" size="icon" asChild>
-                    <Link href={`/design-tool?isoform=${isoform.id}`}>
+                    <Link href={`/design-tool?isoform=${isoform.id}`} aria-label={`Customize ${isoform.enst}`}>
                       <ExternalLink />
                     </Link>
                   </Button>
@@ -131,13 +121,13 @@ export function IsoformTableLoading() {
       <TableHeader>
         <TableRow>
           <TableHead>Length</TableHead>
-          <TableHead>Species</TableHead>
+          <TableHead className="hidden md:table-cell">Species</TableHead>
           <TableHead>
             <span className="hidden sm:inline">Ensembl Transcript ID</span>
             <span className="sm:hidden">ENST</span>
           </TableHead>
-          <TableHead>Coding Sequence</TableHead>
-          <TableHead>Protein Sequence</TableHead>
+          <TableHead className="hidden sm:table-cell">Coding Sequence</TableHead>
+          <TableHead className="hidden lg:table-cell">Protein Sequence</TableHead>
           <TableHead className="text-right">Customize</TableHead>
         </TableRow>
       </TableHeader>
@@ -147,16 +137,16 @@ export function IsoformTableLoading() {
             <TableCell>
               <Skeleton className="h-4 w-8 rounded" />
             </TableCell>
-            <TableCell>
+            <TableCell className="hidden md:table-cell">
               <Skeleton className="h-4 w-8 rounded" />
             </TableCell>
             <TableCell>
               <Skeleton className="h-4 w-24 rounded" />
             </TableCell>
-            <TableCell>
+            <TableCell className="hidden sm:table-cell">
               <Skeleton className="h-4 w-24 rounded" />
             </TableCell>
-            <TableCell>
+            <TableCell className="hidden lg:table-cell">
               <Skeleton className="h-4 w-24 rounded" />
             </TableCell>
             <TableCell className="text-right">

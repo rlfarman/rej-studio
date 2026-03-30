@@ -51,9 +51,9 @@ export default async function RootLayout({
                   <AppSidebar />
                   <SidebarInset className="relative flex h-full min-h-screen max-w-full flex-1 flex-col overflow-hidden">
                     <Header />
-                    <div id="main-content" className="relative h-full w-full flex-1 overflow-auto">
+                    <main id="main-content" className="relative h-full w-full flex-1 overflow-auto">
                       {children}
-                    </div>
+                    </main>
                     <Footer />
                   </SidebarInset>
                 </SidebarProvider>

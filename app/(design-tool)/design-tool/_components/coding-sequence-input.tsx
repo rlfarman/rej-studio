@@ -18,11 +18,12 @@ export function CodingSequenceInput() {
       control={control}
       render={({ field }) => (
         <FormItem>
-          <FormLabel>Enter your coding sequence</FormLabel>
+          <FormLabel>Enter your coding sequence <span aria-hidden="true">*</span></FormLabel>
           <FormControl>
             <textarea
               placeholder="ATGATTACA..."
               rows={4}
+              aria-required="true"
               {...field}
               className={cn(
                 'border-input file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground flex w-full min-w-0 rounded-md border bg-transparent px-3 py-2 font-mono text-sm shadow-xs transition-[color,box-shadow] outline-none disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',

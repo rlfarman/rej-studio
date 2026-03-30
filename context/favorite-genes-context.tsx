@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useCallback, ReactNode } from 'react'
+import { createContext, useContext, useCallback, useMemo, ReactNode } from 'react'
 import { useLocalStorage } from '@/lib/use-local-storage'
 
 interface FavoriteGene {
@@ -56,10 +56,13 @@ export function FavoriteGenesProvider({
     [favoriteGenes],
   )
 
+  const value = useMemo(
+    () => ({ favoriteGenes, addFavoriteGene, removeFavoriteGene, isFavoriteGene }),
+    [favoriteGenes, addFavoriteGene, removeFavoriteGene, isFavoriteGene],
+  )
+
   return (
-    <FavoriteGenesContext.Provider
-      value={{ favoriteGenes, addFavoriteGene, removeFavoriteGene, isFavoriteGene }}
-    >
+    <FavoriteGenesContext.Provider value={value}>
       {children}
     </FavoriteGenesContext.Provider>
   )
