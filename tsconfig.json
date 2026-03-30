@@ -24,25 +24,10 @@
     ],
     "paths": {
       "@/*": [
-        "./app/_*"
-      ],
-      "@/components/*": [
-        "./components/*"
-      ],
-      "@/actions/*": [
-        "./app/_actions/*"
-      ],
-      "@/public/*": [
-        "./public/*"
+        "./*"
       ],
       "@/design-tool/*": [
         "./app/(design-tool)/design-tool/_*"
-      ],
-      "@/search/*": [
-        "./app/(search)/_*"
-      ],
-      "@/drizzle/*": [
-        "./drizzle/*"
       ]
     },
     "target": "ES2017"
