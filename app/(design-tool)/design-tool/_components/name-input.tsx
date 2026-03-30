@@ -31,7 +31,7 @@ export function NameInput() {
           <FormControl>
             <Input
               type="text"
-              placeholder="ABC123..."
+              placeholder="My Custom Sequence"
               aria-required="true"
               maxLength={MAX_NAME_LENGTH}
               {...field}
