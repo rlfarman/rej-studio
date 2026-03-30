@@ -5,13 +5,19 @@ import {
   FormItem,
   FormLabel,
   FormControl,
+  FormDescription,
   FormMessage,
 } from '@/components/ui/form'
 import { FormValues } from './form-schema'
 import { cn } from '@/lib/utils'
 
+const MAX_LENGTH = 50_000
+
 export function CodingSequenceInput() {
-  const { control } = useFormContext<FormValues>()
+  const { control, watch } = useFormContext<FormValues>()
+  const value = watch('codingSequence')
+  const length = value?.length ?? 0
+
   return (
     <FormField
       name="codingSequence"
@@ -33,6 +39,19 @@ export function CodingSequenceInput() {
               )}
             />
           </FormControl>
+          <div className="flex items-start justify-between gap-4">
+            <FormDescription>
+              Valid characters: A, C, G, T, U. Length must be a multiple of 3.
+            </FormDescription>
+            <span
+              className={cn(
+                'text-muted-foreground shrink-0 text-xs tabular-nums',
+                length > MAX_LENGTH && 'text-destructive',
+              )}
+            >
+              {length.toLocaleString()} / {MAX_LENGTH.toLocaleString()}
+            </span>
+          </div>
           <FormMessage />
         </FormItem>
       )}

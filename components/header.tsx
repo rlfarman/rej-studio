@@ -13,7 +13,6 @@ import {
 import { Suspense } from 'react'
 import { Button } from '@/components/ui/button'
 import { SidebarTrigger } from './ui/sidebar'
-import { Skeleton } from './ui/skeleton'
 
 function GeneSearchTooltip() {
   return (
@@ -47,7 +46,7 @@ export function Header() {
           <GeneSearchTooltip />
         </div>
         {!isDesignToolPage && (
-          <Suspense fallback={<Skeleton className="h-9 w-32 rounded-md" />}>
+          <Suspense fallback={<div className="h-9 w-32" />}>
             <SpeciesSelect />
           </Suspense>
         )}

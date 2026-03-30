@@ -24,13 +24,15 @@ export function DNASplicer() {
   )
 
   // When sequence length changes, maintain the relative position (percentage)
-  if (seqLength !== prevSeqLengthRef.current) {
-    const ratio = prevPositionRef.current / (prevSeqLengthRef.current || 1)
-    const newPosition = Math.max(1, Math.min(Math.floor(ratio * seqLength), seqLength - 1))
-    prevSeqLengthRef.current = seqLength
-    prevPositionRef.current = newPosition
-    setValue('spliceJunctionPosition', newPosition)
-  }
+  React.useEffect(() => {
+    if (seqLength !== prevSeqLengthRef.current) {
+      const ratio = prevPositionRef.current / (prevSeqLengthRef.current || 1)
+      const newPosition = Math.max(1, Math.min(Math.round(ratio * seqLength), seqLength - 1))
+      prevSeqLengthRef.current = seqLength
+      prevPositionRef.current = newPosition
+      setValue('spliceJunctionPosition', newPosition)
+    }
+  }, [seqLength, setValue])
 
   const position = watch('spliceJunctionPosition')
   const percentage = seqLength > 1 ? (position / seqLength) * 100 : 0
@@ -53,14 +55,18 @@ export function DNASplicer() {
 
   const handlePercentageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const pct = Math.min(Math.max(Number(event.target.value), 0), 100)
-    setPosition(Math.floor((pct / 100) * seqLength))
+    setPosition(Math.round((pct / 100) * seqLength))
   }
 
   const tickCount = 5
-  const ticks = Array.from({ length: tickCount + 1 }, (_, i) => {
+  const allTicks = Array.from({ length: tickCount + 1 }, (_, i) => {
     const frac = i / tickCount
-    return Math.floor(frac * seqLength)
+    return { value: Math.floor(frac * seqLength), frac }
   })
+  // Deduplicate ticks that map to the same value (happens with short sequences)
+  const ticks = allTicks.filter(
+    (tick, i, arr) => i === 0 || tick.value !== arr[i - 1].value,
+  )
 
   const hasSequence = codingSequence.length > 0
 
@@ -68,7 +74,7 @@ export function DNASplicer() {
     return (
       <div className="flex h-24 items-center justify-center rounded-md border border-dashed">
         <p className="text-muted-foreground text-sm">
-          Enter a coding sequence to configure the splice junction
+          Add a coding sequence above to configure the splice junction
         </p>
       </div>
     )
@@ -80,21 +86,17 @@ export function DNASplicer() {
       <div className="space-y-1.5">
         <div className="flex h-8 w-full overflow-hidden rounded-md border">
           <div
-            className="bg-primary/15 border-primary flex items-center justify-center border-r-2 transition-all duration-150"
+            className="bg-primary/15 border-primary flex min-w-0 items-center justify-center border-r-2 transition-all duration-150"
             style={{ width: `${percentage}%` }}
           >
-            {percentage > 15 && (
-              <span className="text-primary text-xs font-medium">
-                5&apos; &middot; {fivePrimeLength.toLocaleString()} bp
-              </span>
-            )}
+            <span className="text-primary truncate px-1.5 text-xs font-medium">
+              5&apos; &middot; {fivePrimeLength.toLocaleString()} bp
+            </span>
           </div>
-          <div className="bg-muted/50 flex flex-1 items-center justify-center transition-all duration-150">
-            {percentage < 85 && (
-              <span className="text-muted-foreground text-xs font-medium">
-                3&apos; &middot; {threePrimeLength.toLocaleString()} bp
-              </span>
-            )}
+          <div className="bg-muted/50 flex min-w-0 flex-1 items-center justify-center transition-all duration-150">
+            <span className="text-muted-foreground truncate px-1.5 text-xs font-medium">
+              3&apos; &middot; {threePrimeLength.toLocaleString()} bp
+            </span>
           </div>
         </div>
       </div>
@@ -118,21 +120,21 @@ export function DNASplicer() {
           )}
         />
         <div className="relative h-4 w-full">
-          {ticks.map((val, i) => (
+          {ticks.map((tick, i) => (
             <span
-              key={i}
+              key={tick.value}
               className="text-muted-foreground absolute text-[10px] tabular-nums"
               style={{
-                left: `${(i / tickCount) * 100}%`,
+                left: `${tick.frac * 100}%`,
                 transform:
                   i === 0
                     ? 'none'
-                    : i === tickCount
+                    : i === ticks.length - 1
                       ? 'translateX(-100%)'
                       : 'translateX(-50%)',
               }}
             >
-              {val.toLocaleString()}
+              {tick.value.toLocaleString()}
             </span>
           ))}
         </div>
@@ -168,7 +170,7 @@ export function DNASplicer() {
             <div className="relative">
               <Input
                 type="number"
-                value={parseFloat(percentage.toFixed(1))}
+                value={Math.round(percentage * 10) / 10}
                 onChange={handlePercentageChange}
                 min={0}
                 max={100}

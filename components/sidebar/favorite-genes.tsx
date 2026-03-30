@@ -44,7 +44,7 @@ export function FavoriteGenes() {
           </SidebarMenu>
         ) : (
           <div className="text-muted-foreground p-4 text-xs">
-            No favorite genes yet. Add some to see them here!
+            No favorites yet. Star a gene to save it here.
           </div>
         )}
       </SidebarGroupContent>
