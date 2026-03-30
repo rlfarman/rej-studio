@@ -45,6 +45,7 @@ export function GeneSplitterForm({
 }: GeneSplitterFormProperties) {
   const methods = useForm<FormValues>({
     resolver: zodResolver(validationSchema),
+    mode: 'onBlur',
     defaultValues: {
       removeCrypticSpliceSites: true,
       '5PrimeStimulatoryIntron': true,
@@ -76,7 +77,7 @@ export function GeneSplitterForm({
       <CardContent>
         <Form {...methods}>
           <form onSubmit={methods.handleSubmit(handleSubmitForm)}>
-            <fieldset disabled={methods.formState.isSubmitting} className="space-y-0">
+            <div className="space-y-0">
             <CustomizationOptions />
             <Accordion type="multiple" className="mt-4">
               <AccordionItem value="codon-optimization">
@@ -144,7 +145,7 @@ export function GeneSplitterForm({
             <div className="mt-8 flex justify-self-end">
               <SubmitButton />
             </div>
-            </fieldset>
+            </div>
           </form>
         </Form>
       </CardContent>

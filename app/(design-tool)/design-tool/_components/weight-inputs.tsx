@@ -12,8 +12,9 @@ import { Input } from '@/components/ui/input'
 import { FormValues } from './form-schema'
 
 export function CodonOptimizeWeight() {
-  const { control, watch } = useFormContext<FormValues>()
+  const { control, watch, setValue } = useFormContext<FormValues>()
   const species = watch('species')
+  const disabled = species === 'none'
 
   return (
     <FormField
@@ -21,21 +22,30 @@ export function CodonOptimizeWeight() {
       control={control}
       render={({ field }) => (
         <FormItem>
-          <FormLabel>Codon optimization weight</FormLabel>
+          <FormLabel className={disabled ? 'text-muted-foreground' : undefined}>
+            Codon optimization weight
+          </FormLabel>
           <FormControl>
             <Input
               type="number"
               value={field.value}
               onChange={(e) => field.onChange(Number(e.target.value))}
               min={0}
-              max={Number.MAX_SAFE_INTEGER}
+              max={100}
               step={1}
-              disabled={species === 'none'}
+              disabled={disabled}
             />
           </FormControl>
-          {species === 'none' && (
+          {disabled && (
             <FormDescription>
-              Select a species above to enable codon optimization.
+              <button
+                type="button"
+                className="text-primary underline-offset-2 hover:underline"
+                onClick={() => setValue('species', 'human')}
+              >
+                Select a species
+              </button>{' '}
+              above to enable codon optimization.
             </FormDescription>
           )}
           <FormMessage />
@@ -46,8 +56,9 @@ export function CodonOptimizeWeight() {
 }
 
 export function RemoveCrypticSpliceSitesWeight() {
-  const { control, watch } = useFormContext<FormValues>()
+  const { control, watch, setValue } = useFormContext<FormValues>()
   const removeCrypticSpliceSites = watch('removeCrypticSpliceSites')
+  const disabled = !removeCrypticSpliceSites
 
   return (
     <FormField
@@ -55,21 +66,30 @@ export function RemoveCrypticSpliceSitesWeight() {
       control={control}
       render={({ field }) => (
         <FormItem>
-          <FormLabel>Cryptic splice site removal weight</FormLabel>
+          <FormLabel className={disabled ? 'text-muted-foreground' : undefined}>
+            Cryptic splice site removal weight
+          </FormLabel>
           <FormControl>
             <Input
               type="number"
               value={field.value}
               onChange={(e) => field.onChange(Number(e.target.value))}
               min={0}
-              max={Number.MAX_SAFE_INTEGER}
+              max={100}
               step={1}
-              disabled={!removeCrypticSpliceSites}
+              disabled={disabled}
             />
           </FormControl>
-          {!removeCrypticSpliceSites && (
+          {disabled && (
             <FormDescription>
-              Enable cryptic splice site removal above to set this weight.
+              <button
+                type="button"
+                className="text-primary underline-offset-2 hover:underline"
+                onClick={() => setValue('removeCrypticSpliceSites', true)}
+              >
+                Enable cryptic splice site removal
+              </button>{' '}
+              above to set this weight.
             </FormDescription>
           )}
           <FormMessage />
@@ -80,8 +100,9 @@ export function RemoveCrypticSpliceSitesWeight() {
 }
 
 export function MinimizeCpGsWeight() {
-  const { control, watch } = useFormContext<FormValues>()
+  const { control, watch, setValue } = useFormContext<FormValues>()
   const minimizeCpgs = watch('minimizeCpgs')
+  const disabled = !minimizeCpgs
 
   return (
     <FormField
@@ -89,21 +110,30 @@ export function MinimizeCpGsWeight() {
       control={control}
       render={({ field }) => (
         <FormItem>
-          <FormLabel>CpG minimization weight</FormLabel>
+          <FormLabel className={disabled ? 'text-muted-foreground' : undefined}>
+            CpG minimization weight
+          </FormLabel>
           <FormControl>
             <Input
               type="number"
               value={field.value}
               onChange={(e) => field.onChange(Number(e.target.value))}
               min={0}
-              max={Number.MAX_SAFE_INTEGER}
+              max={100}
               step={1}
-              disabled={!minimizeCpgs}
+              disabled={disabled}
             />
           </FormControl>
-          {!minimizeCpgs && (
+          {disabled && (
             <FormDescription>
-              Enable CpG minimization above to set this weight.
+              <button
+                type="button"
+                className="text-primary underline-offset-2 hover:underline"
+                onClick={() => setValue('minimizeCpgs', true)}
+              >
+                Enable CpG minimization
+              </button>{' '}
+              above to set this weight.
             </FormDescription>
           )}
           <FormMessage />
@@ -114,8 +144,9 @@ export function MinimizeCpGsWeight() {
 }
 
 export function ReduceKmerComplexityWeight() {
-  const { control, watch } = useFormContext<FormValues>()
+  const { control, watch, setValue } = useFormContext<FormValues>()
   const reduceKmerComplexity = watch('reduceKmerComplexity')
+  const disabled = !reduceKmerComplexity
 
   return (
     <FormField
@@ -123,21 +154,30 @@ export function ReduceKmerComplexityWeight() {
       control={control}
       render={({ field }) => (
         <FormItem>
-          <FormLabel>k-mer complexity reduction weight</FormLabel>
+          <FormLabel className={disabled ? 'text-muted-foreground' : undefined}>
+            k-mer complexity reduction weight
+          </FormLabel>
           <FormControl>
             <Input
               type="number"
               value={field.value}
               onChange={(e) => field.onChange(Number(e.target.value))}
               min={0}
-              max={Number.MAX_SAFE_INTEGER}
+              max={100}
               step={1}
-              disabled={!reduceKmerComplexity}
+              disabled={disabled}
             />
           </FormControl>
-          {!reduceKmerComplexity && (
+          {disabled && (
             <FormDescription>
-              Enable k-mer complexity reduction above to set this weight.
+              <button
+                type="button"
+                className="text-primary underline-offset-2 hover:underline"
+                onClick={() => setValue('reduceKmerComplexity', true)}
+              >
+                Enable k-mer complexity reduction
+              </button>{' '}
+              above to set this weight.
             </FormDescription>
           )}
           <FormMessage />
