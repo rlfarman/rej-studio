@@ -9,14 +9,17 @@ import {
   SidebarMenuItem,
 } from '@/components/ui/sidebar'
 import { useRecentGenes } from '@/context/recent-genes-context'
+import { useFavoriteGenes } from '@/context/favorite-genes-context'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip'
 import { Button } from '@/components/ui/button'
-import { X } from 'lucide-react'
+import { Star, X } from 'lucide-react'
 
 export function RecentGenes() {
   const { recentGenes, removeRecentGene, clearRecentGenes } = useRecentGenes()
+  const { addFavoriteGene, removeFavoriteGene, isFavoriteGene } =
+    useFavoriteGenes()
 
   return (
     <SidebarGroup>
@@ -57,6 +60,20 @@ export function RecentGenes() {
                     <span className="truncate text-xs">{gene.name}</span>
                   </Link>
                 </SidebarMenuButton>
+                <SidebarMenuAction
+                  className={`right-6 ${isFavoriteGene(gene.id) ? 'opacity-100' : 'opacity-0 group-hover/item:opacity-100'}`}
+                  onClick={() => {
+                    if (isFavoriteGene(gene.id)) {
+                      removeFavoriteGene(gene.id)
+                    } else {
+                      addFavoriteGene(gene)
+                    }
+                  }}
+                >
+                  <Star
+                    className={`h-3 w-3 ${isFavoriteGene(gene.id) ? 'fill-yellow-400 text-yellow-400' : ''}`}
+                  />
+                </SidebarMenuAction>
                 <SidebarMenuAction
                   className="opacity-0 group-hover/item:opacity-100"
                   onClick={() => removeRecentGene(gene.id)}
