@@ -114,7 +114,7 @@ export function GeneSplitterForm({
                   <div>
                     <p>Customize splice junction</p>
                     <p className="text-sm text-muted-foreground">
-                      Adjust the splice junction position.
+                      Set where the sequence splits into 5&apos; and 3&apos; fragments.
                     </p>
                   </div>
                 </AccordionTrigger>
@@ -127,7 +127,7 @@ export function GeneSplitterForm({
                   <div>
                     <p>Customize parameter weights</p>
                     <p className="text-sm text-muted-foreground">
-                      Fine tune the inputs to the algorithm.
+                      Control how much each optimization factor influences the result.
                     </p>
                   </div>
                 </AccordionTrigger>

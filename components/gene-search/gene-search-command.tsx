@@ -90,10 +90,10 @@ export function GeneSearchCommand({
             <>
               <CommandEmpty>
                 {query.trim() === '' || !hasSearched ? (
-                  'Start typing to search for genes.'
+                  'Search by gene symbol or name.'
                 ) : (
                   <div>
-                    No results found.{' '}
+                    No genes match &ldquo;{query}&rdquo;.{' '}
                     <Link
                       href="/design-tool"
                       className="text-primary font-medium underline underline-offset-4"
@@ -102,7 +102,7 @@ export function GeneSearchCommand({
                         setShowList(false)
                       }}
                     >
-                      Try entering a custom genetic sequence instead.
+                      Enter a custom sequence instead.
                     </Link>
                   </div>
                 )}

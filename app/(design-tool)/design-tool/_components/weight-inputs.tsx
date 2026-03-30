@@ -21,7 +21,7 @@ export function CodonOptimizeWeight() {
       control={control}
       render={({ field }) => (
         <FormItem>
-          <FormLabel>Adjust priority for codon optimization</FormLabel>
+          <FormLabel>Codon optimization weight</FormLabel>
           <FormControl>
             <Input
               type="number"
@@ -35,7 +35,7 @@ export function CodonOptimizeWeight() {
           </FormControl>
           {species === 'none' && (
             <FormDescription>
-              Please select a species to enable codon optimization.
+              Select a species above to enable codon optimization.
             </FormDescription>
           )}
           <FormMessage />
@@ -55,9 +55,7 @@ export function RemoveCrypticSpliceSitesWeight() {
       control={control}
       render={({ field }) => (
         <FormItem>
-          <FormLabel>
-            Adjust priority for removing cryptic splice sites
-          </FormLabel>
+          <FormLabel>Cryptic splice site removal weight</FormLabel>
           <FormControl>
             <Input
               type="number"
@@ -71,7 +69,7 @@ export function RemoveCrypticSpliceSitesWeight() {
           </FormControl>
           {!removeCrypticSpliceSites && (
             <FormDescription>
-              Enable "Remove cryptic splice sites" to customize this weight.
+              Enable cryptic splice site removal above to set this weight.
             </FormDescription>
           )}
           <FormMessage />
@@ -91,7 +89,7 @@ export function MinimizeCpGsWeight() {
       control={control}
       render={({ field }) => (
         <FormItem>
-          <FormLabel>Adjust priority for minimizing CpG sites</FormLabel>
+          <FormLabel>CpG minimization weight</FormLabel>
           <FormControl>
             <Input
               type="number"
@@ -105,7 +103,7 @@ export function MinimizeCpGsWeight() {
           </FormControl>
           {!minimizeCpgs && (
             <FormDescription>
-              Enable "Minimize CpG sites" to customize this weight.
+              Enable CpG minimization above to set this weight.
             </FormDescription>
           )}
           <FormMessage />
@@ -125,7 +123,7 @@ export function ReduceKmerComplexityWeight() {
       control={control}
       render={({ field }) => (
         <FormItem>
-          <FormLabel>Adjust priority for reducing k-mer complexity</FormLabel>
+          <FormLabel>k-mer complexity reduction weight</FormLabel>
           <FormControl>
             <Input
               type="number"
@@ -139,7 +137,7 @@ export function ReduceKmerComplexityWeight() {
           </FormControl>
           {!reduceKmerComplexity && (
             <FormDescription>
-              Enable "Reduce k-mer complexity" to customize this weight.
+              Enable k-mer complexity reduction above to set this weight.
             </FormDescription>
           )}
           <FormMessage />
