@@ -74,7 +74,7 @@ export function GeneSearchCommand({
           {isLoading ? (
             <GeneResultsLoading />
           ) : error ? (
-            <div className="text-destructive p-4 text-center text-sm">
+            <div className="text-destructive-foreground p-4 text-center text-sm">
               {error}
             </div>
           ) : (
