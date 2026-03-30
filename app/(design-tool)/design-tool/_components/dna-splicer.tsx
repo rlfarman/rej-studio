@@ -109,8 +109,16 @@ export function DNASplicer() {
           {ticks.map((val, i) => (
             <span
               key={i}
-              className="text-muted-foreground absolute -translate-x-1/2 text-[10px] tabular-nums"
-              style={{ left: `${(i / tickCount) * 100}%` }}
+              className="text-muted-foreground absolute text-[10px] tabular-nums"
+              style={{
+                left: `${(i / tickCount) * 100}%`,
+                transform:
+                  i === 0
+                    ? 'none'
+                    : i === tickCount
+                      ? 'translateX(-100%)'
+                      : 'translateX(-50%)',
+              }}
             >
               {val.toLocaleString()}
             </span>
