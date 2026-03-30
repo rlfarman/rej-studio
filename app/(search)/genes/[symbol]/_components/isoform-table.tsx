@@ -60,13 +60,13 @@ export default function IsoformTable({ isoforms }: IsoformListProps) {
       <TableHeader>
         <TableRow>
           <TableHead className="w-[100px]">Length</TableHead>
-          <TableHead>Species</TableHead>
+          <TableHead className="hidden md:table-cell">Species</TableHead>
           <TableHead>
             <span className="hidden sm:inline">Ensembl Transcript ID</span>
             <span className="sm:hidden">ENST</span>
           </TableHead>
-          <TableHead>Coding Sequence</TableHead>
-          <TableHead>Protein Sequence</TableHead>
+          <TableHead className="hidden sm:table-cell">Coding Sequence</TableHead>
+          <TableHead className="hidden lg:table-cell">Protein Sequence</TableHead>
           <TableHead className="text-right">Customize</TableHead>
         </TableRow>
       </TableHeader>
@@ -77,11 +77,11 @@ export default function IsoformTable({ isoforms }: IsoformListProps) {
               <TableCell className="font-mono">
                 {isoform.codingSequenceLength}
               </TableCell>
-              <TableCell>
+              <TableCell className="hidden md:table-cell">
                 {SPECIES_DISPLAY_NAME[isoform.species as keyof typeof SPECIES_DISPLAY_NAME] ?? 'Unknown'}
               </TableCell>
               <TableCell className="font-mono">{isoform.enst}</TableCell>
-              <TableCell>
+              <TableCell className="hidden sm:table-cell">
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <button
@@ -100,7 +100,7 @@ export default function IsoformTable({ isoforms }: IsoformListProps) {
                   <TooltipContent>Click to copy</TooltipContent>
                 </Tooltip>
               </TableCell>
-              <TableCell>
+              <TableCell className="hidden lg:table-cell">
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <button
@@ -149,13 +149,13 @@ export function IsoformTableLoading() {
       <TableHeader>
         <TableRow>
           <TableHead>Length</TableHead>
-          <TableHead>Species</TableHead>
+          <TableHead className="hidden md:table-cell">Species</TableHead>
           <TableHead>
             <span className="hidden sm:inline">Ensembl Transcript ID</span>
             <span className="sm:hidden">ENST</span>
           </TableHead>
-          <TableHead>Coding Sequence</TableHead>
-          <TableHead>Protein Sequence</TableHead>
+          <TableHead className="hidden sm:table-cell">Coding Sequence</TableHead>
+          <TableHead className="hidden lg:table-cell">Protein Sequence</TableHead>
           <TableHead className="text-right">Customize</TableHead>
         </TableRow>
       </TableHeader>
@@ -165,16 +165,16 @@ export function IsoformTableLoading() {
             <TableCell>
               <Skeleton className="h-4 w-8 rounded" />
             </TableCell>
-            <TableCell>
+            <TableCell className="hidden md:table-cell">
               <Skeleton className="h-4 w-8 rounded" />
             </TableCell>
             <TableCell>
               <Skeleton className="h-4 w-24 rounded" />
             </TableCell>
-            <TableCell>
+            <TableCell className="hidden sm:table-cell">
               <Skeleton className="h-4 w-24 rounded" />
             </TableCell>
-            <TableCell>
+            <TableCell className="hidden lg:table-cell">
               <Skeleton className="h-4 w-24 rounded" />
             </TableCell>
             <TableCell className="text-right">
