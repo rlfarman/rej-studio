@@ -49,7 +49,7 @@ export default function IsoformTable({ isoforms }: IsoformListProps) {
         <p className="text-muted-foreground max-w-lg text-sm">
           No isoforms available for this species. Try selecting a different species filter.
         </p>
-        <SpeciesSelect />
+        <SpeciesSelect alwaysShowLabel />
       </div>
     )
   }

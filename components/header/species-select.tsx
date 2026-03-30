@@ -11,8 +11,18 @@ import {
 import { SpeciesIcon } from '../species-icon'
 import { useSpeciesContext } from '@/context/species-context'
 
-export function SpeciesSelect() {
+interface SpeciesSelectProps {
+  alwaysShowLabel?: boolean
+}
+
+export function SpeciesSelect({ alwaysShowLabel = false }: SpeciesSelectProps) {
   const { species, handleSpeciesChange } = useSpeciesContext()
+  const speciesLabel =
+    species === 'mouse'
+      ? 'Mice'
+      : species === 'human'
+        ? 'Humans'
+        : 'All Species'
 
   return (
     <Select onValueChange={handleSpeciesChange} value={species}>
@@ -20,12 +30,8 @@ export function SpeciesSelect() {
         <SelectValue>
           <div className="flex items-center">
             <SpeciesIcon species={species} />
-            <span className="ml-3 hidden lg:block">
-              {species === 'mouse'
-                ? 'Mice'
-                : species === 'human'
-                  ? 'Humans'
-                  : 'All Species'}
+            <span className={alwaysShowLabel ? 'ml-3' : 'ml-3 hidden lg:block'}>
+              {speciesLabel}
             </span>
           </div>
         </SelectValue>
