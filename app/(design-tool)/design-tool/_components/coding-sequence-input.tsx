@@ -135,21 +135,25 @@ export function CodingSequenceInput() {
               )}
             />
           </FormControl>
-          <div className="flex min-h-5 items-start justify-between gap-4">
-            <FormAssistiveText className="min-w-0">
-              Valid characters: A, C, G, T, U. Length must be a multiple of 3.
-              Paste or upload FASTA — headers and whitespace are stripped
-              automatically.
-            </FormAssistiveText>
-            <span
-              className={cn(
-                'text-muted-foreground shrink-0 text-xs tabular-nums',
-                length > MAX_LENGTH && 'text-destructive',
-              )}
-            >
-              {length.toLocaleString()} / {MAX_LENGTH.toLocaleString()}
+          <FormAssistiveText className="min-w-0">
+            <span className="flex min-h-5 items-start justify-between gap-4">
+              <span>
+                Valid characters: A, C, G, T, U. Length must be a multiple of 3.
+                Paste or upload FASTA — headers and whitespace are stripped
+                automatically.
+              </span>
+              <span
+                className={cn(
+                  'shrink-0 tabular-nums',
+                  length > MAX_LENGTH
+                    ? 'text-destructive-foreground'
+                    : 'text-muted-foreground',
+                )}
+              >
+                {length.toLocaleString()} / {MAX_LENGTH.toLocaleString()}
+              </span>
             </span>
-          </div>
+          </FormAssistiveText>
         </FormItem>
       )}
     />
