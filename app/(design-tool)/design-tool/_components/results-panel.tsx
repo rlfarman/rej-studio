@@ -60,6 +60,7 @@ function SequenceBlock({
         <div className="flex gap-1">
           {fastaName && (
             <Button
+              type="button"
               variant="ghost"
               size="sm"
               className="h-7 gap-1.5 px-2 text-xs"
@@ -79,6 +80,7 @@ function SequenceBlock({
             </Button>
           )}
           <Button
+            type="button"
             variant="ghost"
             size="sm"
             className="h-7 gap-1.5 px-2 text-xs"
@@ -278,7 +280,7 @@ function WggwDetails({
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       <span className="text-sm font-medium">WGGW Motif Details</span>
       <div className="overflow-auto rounded-md border">
         <Table>
@@ -353,6 +355,7 @@ export function ResultsPanel({ result, optionsUsed }: ResultsPanelProps) {
               </CardDescription>
             </div>
             <Button
+              type="button"
               variant="outline"
               size="sm"
               className="gap-1.5"
@@ -363,7 +366,7 @@ export function ResultsPanel({ result, optionsUsed }: ResultsPanelProps) {
             </Button>
           </div>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-8">
           <SplitVisualization
             seq5Length={seq5Clean.length}
             seq3Length={seq3Clean.length}
@@ -372,28 +375,28 @@ export function ResultsPanel({ result, optionsUsed }: ResultsPanelProps) {
 
           <Separator />
 
-          <SequenceBlock
-            label="5' Sequence"
-            sequence={result.seq5}
-            copyId="seq5"
-            fastaName={`${result.name}_5prime`}
-          />
+          <div className="space-y-6">
+            <SequenceBlock
+              label="5' Sequence"
+              sequence={result.seq5}
+              copyId="seq5"
+              fastaName={`${result.name}_5prime`}
+            />
 
-          <SequenceBlock
-            label="3' Sequence"
-            sequence={result.seq3}
-            copyId="seq3"
-            fastaName={`${result.name}_3prime`}
-          />
+            <SequenceBlock
+              label="3' Sequence"
+              sequence={result.seq3}
+              copyId="seq3"
+              fastaName={`${result.name}_3prime`}
+            />
 
-          <Separator />
-
-          <SequenceBlock
-            label="Optimized Full Sequence"
-            sequence={result.optimized_sequence}
-            copyId="optimized"
-            fastaName={`${result.name}_optimized`}
-          />
+            <SequenceBlock
+              label="Optimized Full Sequence"
+              sequence={result.optimized_sequence}
+              copyId="optimized"
+              fastaName={`${result.name}_optimized`}
+            />
+          </div>
 
           <Separator />
 

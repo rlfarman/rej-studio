@@ -99,7 +99,7 @@ export function AavResults({ seq5Length, seq3Length }: AavResultsProps) {
   const threeStatus = sizeStatus(threeTotal)
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       <span className="text-sm font-medium">AAV Packaging Estimate</span>
       <div className="grid grid-cols-2 gap-2">
         <div className="bg-muted/50 flex flex-col rounded-lg border p-3">

@@ -95,7 +95,7 @@ export function ComparisonPanel({ result }: ComparisonPanelProps) {
   if (!stats) return null
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       <span className="text-sm font-medium">Original vs Optimized</span>
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         <StatDelta
