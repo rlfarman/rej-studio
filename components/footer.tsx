@@ -2,17 +2,14 @@
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
 import { Check } from 'lucide-react'
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
-import { AnimatePresence, motion } from 'motion/react'
+import { AnimatePresence, m } from 'motion/react'
+import { popSpring } from '@/lib/motion'
 
 const CITATION = `Bachmann L, Hsu RH, Hermann K, Williams CE, Farman RL, Criales N, Kramer S, Lettieri K, Pfaff SL
 A combinatorial system for gene expression using RNA-fragment end joining (REJ). In preparation. (2025)`
 
 export function Footer() {
-  const { copy, isCopied } = useCopyToClipboard({
-    successMessage: 'Citation copied to clipboard!',
-    errorMessage: 'Failed to copy citation to clipboard.',
-  })
-
+  const { copy, isCopied } = useCopyToClipboard({ showToast: false })
   const copied = isCopied()
 
   return (
@@ -22,44 +19,35 @@ export function Footer() {
           <button
             onClick={() => copy(CITATION)}
             aria-label="Copy citation to clipboard"
-            className="text-muted-foreground flex-col text-sm hover:underline"
+            className="text-muted-foreground inline-flex items-center gap-2 text-sm hover:underline"
           >
-            <AnimatePresence mode="wait" initial={false}>
-              {copied ? (
-                <motion.span
-                  key="copied"
-                  initial={{ opacity: 0, y: 4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -4 }}
-                  transition={{ duration: 0.15 }}
-                  className="text-chart-2 inline-flex items-center gap-1.5 text-xs sm:text-sm"
+            <span>
+              <span className="block text-xs sm:text-sm">
+                Bachmann L, Hsu RH, Hermann K, Williams CE, Farman RL, Criales N,
+                Kramer S, Lettieri K, Pfaff SL.
+              </span>
+              <span className="mt-1 block text-xs sm:text-sm">
+                A combinatorial system for gene expression using RNA-fragment end
+                joining (REJ). In preparation. (2025)
+              </span>
+            </span>
+            <AnimatePresence>
+              {copied && (
+                <m.span
+                  initial={{ opacity: 0, scale: 0 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0 }}
+                  transition={popSpring}
+                  className="shrink-0"
                 >
-                  <Check className="size-3.5" />
-                  Citation copied
-                </motion.span>
-              ) : (
-                <motion.span
-                  key="citation"
-                  initial={{ opacity: 0, y: 4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -4 }}
-                  transition={{ duration: 0.15 }}
-                >
-                  <span className="block text-xs sm:text-sm">
-                    Bachmann L, Hsu RH, Hermann K, Williams CE, Farman RL, Criales N,
-                    Kramer S, Lettieri K, Pfaff SL.
-                  </span>
-                  <span className="mt-1 block text-xs sm:text-sm">
-                    A combinatorial system for gene expression using RNA-fragment end
-                    joining (REJ). In preparation. (2025)
-                  </span>
-                </motion.span>
+                  <Check className="text-chart-2 size-4" />
+                </m.span>
               )}
             </AnimatePresence>
           </button>
         </TooltipTrigger>
         <TooltipContent side="top">
-          Click to copy the citation to your clipboard.
+          {copied ? 'Copied!' : 'Click to copy the citation to your clipboard.'}
         </TooltipContent>
       </Tooltip>
     </footer>

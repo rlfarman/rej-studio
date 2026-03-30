@@ -8,19 +8,14 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { ExternalLink, Check } from 'lucide-react'
+import { ExternalLink } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { useSpeciesContext } from '@/context/species-context'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
 import { SPECIES_DISPLAY_NAME } from '@/lib/species'
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
-import { AnimatePresence, motion } from 'motion/react'
+import { CopyableText } from '@/components/copyable-text'
 
 interface Isoform {
   id: string
@@ -35,69 +30,9 @@ interface IsoformListProps {
   isoforms: Isoform[]
 }
 
-function CopyableSequence({
-  sequence,
-  id,
-  label,
-  copy,
-  isCopied,
-}: {
-  sequence: string
-  id: string
-  label: string
-  copy: (text: string, id: string) => void
-  isCopied: (id: string) => boolean
-}) {
-  const copied = isCopied(id)
-
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <button
-          className="hover:text-muted-foreground inline-flex items-center gap-1.5 hover:underline"
-          onClick={() => copy(sequence, id)}
-          aria-label={label}
-        >
-          <AnimatePresence mode="wait" initial={false}>
-            {copied ? (
-              <motion.span
-                key="check"
-                initial={{ opacity: 0, scale: 0.5 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.5 }}
-                transition={{ duration: 0.15 }}
-              >
-                <Check className="text-chart-2 size-3.5" />
-              </motion.span>
-            ) : (
-              <motion.span
-                key="text"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.15 }}
-              >
-                <span className="hidden sm:inline">
-                  {sequence.slice(0, 20)}...
-                </span>
-                <span className="sm:hidden">
-                  {sequence.slice(0, 10)}...
-                </span>
-              </motion.span>
-            )}
-          </AnimatePresence>
-        </button>
-      </TooltipTrigger>
-      <TooltipContent>Click to copy</TooltipContent>
-    </Tooltip>
-  )
-}
-
 export default function IsoformTable({ isoforms }: IsoformListProps) {
   const { species } = useSpeciesContext()
-  const { copy, isCopied } = useCopyToClipboard({
-    successMessage: 'Sequence copied to clipboard!',
-  })
+  const { copy, isCopied } = useCopyToClipboard({ showToast: false })
 
   const filteredIsoforms = useMemo(
     () =>
@@ -125,42 +60,56 @@ export default function IsoformTable({ isoforms }: IsoformListProps) {
       </TableHeader>
       <TableBody>
         {filteredIsoforms.length > 0 ? (
-          filteredIsoforms.map((isoform) => (
-            <TableRow key={isoform.id}>
-              <TableCell className="font-mono">
-                {isoform.codingSequenceLength}
-              </TableCell>
-              <TableCell>
-                {SPECIES_DISPLAY_NAME[isoform.species as keyof typeof SPECIES_DISPLAY_NAME] ?? 'Unknown'}
-              </TableCell>
-              <TableCell className="font-mono">{isoform.enst}</TableCell>
-              <TableCell>
-                <CopyableSequence
-                  sequence={isoform.codingSequence}
-                  id={`cds-${isoform.id}`}
-                  label="Copy coding sequence"
-                  copy={copy}
-                  isCopied={isCopied}
-                />
-              </TableCell>
-              <TableCell>
-                <CopyableSequence
-                  sequence={isoform.proteinSequence}
-                  id={`prot-${isoform.id}`}
-                  label="Copy protein sequence"
-                  copy={copy}
-                  isCopied={isCopied}
-                />
-              </TableCell>
-              <TableCell className="text-right">
-                <Button variant="ghost" size="icon" asChild>
-                  <Link href={`/design-tool?isoform=${isoform.id}`}>
-                    <ExternalLink />
-                  </Link>
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))
+          filteredIsoforms.map((isoform) => {
+            const cdsId = `cds-${isoform.id}`
+            const protId = `prot-${isoform.id}`
+            return (
+              <TableRow key={isoform.id}>
+                <TableCell className="font-mono">
+                  {isoform.codingSequenceLength}
+                </TableCell>
+                <TableCell>
+                  {SPECIES_DISPLAY_NAME[isoform.species as keyof typeof SPECIES_DISPLAY_NAME] ?? 'Unknown'}
+                </TableCell>
+                <TableCell className="font-mono">{isoform.enst}</TableCell>
+                <TableCell>
+                  <CopyableText
+                    label="Copy coding sequence"
+                    copied={isCopied(cdsId)}
+                    onCopy={() => copy(isoform.codingSequence, cdsId)}
+                  >
+                    <span className="hidden sm:inline">
+                      {isoform.codingSequence.slice(0, 20)}...
+                    </span>
+                    <span className="sm:hidden">
+                      {isoform.codingSequence.slice(0, 10)}...
+                    </span>
+                  </CopyableText>
+                </TableCell>
+                <TableCell>
+                  <CopyableText
+                    label="Copy protein sequence"
+                    copied={isCopied(protId)}
+                    onCopy={() => copy(isoform.proteinSequence, protId)}
+                  >
+                    <span className="hidden sm:inline">
+                      {isoform.proteinSequence.slice(0, 20)}...
+                    </span>
+                    <span className="sm:hidden">
+                      {isoform.proteinSequence.slice(0, 10)}...
+                    </span>
+                  </CopyableText>
+                </TableCell>
+                <TableCell className="text-right">
+                  <Button variant="ghost" size="icon" asChild>
+                    <Link href={`/design-tool?isoform=${isoform.id}`}>
+                      <ExternalLink />
+                    </Link>
+                  </Button>
+                </TableCell>
+              </TableRow>
+            )
+          })
         ) : (
           <TableRow>
             <TableCell

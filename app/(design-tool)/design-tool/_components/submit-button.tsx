@@ -4,15 +4,19 @@ import { useFormContext } from 'react-hook-form'
 import { Button } from '@/components/ui/button'
 import { Loader2, Check } from 'lucide-react'
 import { FormValues } from './form-schema'
-import { AnimatePresence, motion } from 'motion/react'
+import { AnimatePresence, m } from 'motion/react'
+import { quickFade, softSpring } from '@/lib/motion'
 
 export function SubmitButton() {
   const { formState } = useFormContext<FormValues>()
   const [showSuccess, setShowSuccess] = useState(false)
 
+  // Show a timed success flash after form submission completes.
+  // This is a legitimate effect: we're synchronizing a timed UI state
+  // with an external state change (react-hook-form's submitCount).
   useEffect(() => {
     if (formState.isSubmitSuccessful && !formState.isSubmitting) {
-      setShowSuccess(true)
+      setShowSuccess(true) // eslint-disable-line react-hooks/set-state-in-effect
       const timer = setTimeout(() => setShowSuccess(false), 2000)
       return () => clearTimeout(timer)
     }
@@ -26,39 +30,39 @@ export function SubmitButton() {
     >
       <AnimatePresence mode="wait" initial={false}>
         {formState.isSubmitting ? (
-          <motion.span
+          <m.span
             key="loading"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
+            transition={quickFade}
             className="inline-flex items-center gap-2"
           >
             <Loader2 className="animate-spin" />
             Processing sequence...
-          </motion.span>
+          </m.span>
         ) : showSuccess ? (
-          <motion.span
+          <m.span
             key="success"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ type: 'spring', stiffness: 500, damping: 25 }}
+            transition={softSpring}
             className="inline-flex items-center gap-2"
           >
             <Check className="size-4" />
             Sequence downloaded
-          </motion.span>
+          </m.span>
         ) : (
-          <motion.span
+          <m.span
             key="idle"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
+            transition={quickFade}
           >
             Download customized sequence
-          </motion.span>
+          </m.span>
         )}
       </AnimatePresence>
     </Button>
