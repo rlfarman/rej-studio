@@ -4,6 +4,7 @@ import {
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarMenu,
+  SidebarMenuAction,
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar'
@@ -11,9 +12,10 @@ import { useFavoriteGenes } from '@/context/favorite-genes-context'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip'
+import { X } from 'lucide-react'
 
 export function FavoriteGenes() {
-  const { favoriteGenes } = useFavoriteGenes()
+  const { favoriteGenes, removeFavoriteGene } = useFavoriteGenes()
 
   return (
     <SidebarGroup>
@@ -22,7 +24,7 @@ export function FavoriteGenes() {
         {favoriteGenes.length > 0 ? (
           <SidebarMenu>
             {favoriteGenes.map((gene) => (
-              <SidebarMenuItem key={gene.id}>
+              <SidebarMenuItem key={gene.id} className="group/item">
                 <SidebarMenuButton asChild>
                   <Link href={`/genes/${gene.symbol}`}>
                     <Tooltip>
@@ -39,6 +41,12 @@ export function FavoriteGenes() {
                     <span className="text-xs">{gene.name}</span>
                   </Link>
                 </SidebarMenuButton>
+                <SidebarMenuAction
+                  className="opacity-0 group-hover/item:opacity-100"
+                  onClick={() => removeFavoriteGene(gene.id)}
+                >
+                  <X className="h-3 w-3" />
+                </SidebarMenuAction>
               </SidebarMenuItem>
             ))}
           </SidebarMenu>

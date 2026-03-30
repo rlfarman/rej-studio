@@ -13,6 +13,7 @@ import type { SavedGene } from '@/lib/domain-types'
 interface RecentGenesContextValue {
   recentGenes: SavedGene[]
   addRecentGene: (gene: SavedGene) => void
+  removeRecentGene: (geneId: string) => void
   clearRecentGenes: () => void
 }
 
@@ -37,13 +38,20 @@ export function RecentGenesProvider({ children }: { children: ReactNode }) {
     [setRecentGenes],
   )
 
+  const removeRecentGene = useCallback(
+    (geneId: string) => {
+      setRecentGenes((prev) => prev.filter((gene) => gene.id !== geneId))
+    },
+    [setRecentGenes],
+  )
+
   const clearRecentGenes = useCallback(() => {
     setRecentGenes([])
   }, [setRecentGenes])
 
   const value = useMemo(
-    () => ({ recentGenes, addRecentGene, clearRecentGenes }),
-    [recentGenes, addRecentGene, clearRecentGenes],
+    () => ({ recentGenes, addRecentGene, removeRecentGene, clearRecentGenes }),
+    [recentGenes, addRecentGene, removeRecentGene, clearRecentGenes],
   )
 
   return (

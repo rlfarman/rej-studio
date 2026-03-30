@@ -4,6 +4,7 @@ import {
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarMenu,
+  SidebarMenuAction,
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar'
@@ -12,9 +13,10 @@ import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip'
 import { Button } from '@/components/ui/button'
+import { X } from 'lucide-react'
 
 export function RecentGenes() {
-  const { recentGenes, clearRecentGenes } = useRecentGenes()
+  const { recentGenes, removeRecentGene, clearRecentGenes } = useRecentGenes()
 
   return (
     <SidebarGroup>
@@ -35,7 +37,7 @@ export function RecentGenes() {
         {recentGenes.length > 0 ? (
           <SidebarMenu>
             {recentGenes.map((gene) => (
-              <SidebarMenuItem key={gene.id}>
+              <SidebarMenuItem key={gene.id} className="group/item">
                 <SidebarMenuButton asChild>
                   <Link
                     href={`/genes/${gene.symbol}`}
@@ -55,6 +57,12 @@ export function RecentGenes() {
                     <span className="truncate text-xs">{gene.name}</span>
                   </Link>
                 </SidebarMenuButton>
+                <SidebarMenuAction
+                  className="opacity-0 group-hover/item:opacity-100"
+                  onClick={() => removeRecentGene(gene.id)}
+                >
+                  <X className="h-3 w-3" />
+                </SidebarMenuAction>
               </SidebarMenuItem>
             ))}
           </SidebarMenu>
