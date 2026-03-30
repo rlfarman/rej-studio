@@ -76,12 +76,14 @@ export async function handleSubmitForm({
       { id: toastId },
     )
   } catch (error) {
-    toast.error(
-      error instanceof Error
-        ? error.message
-        : 'An error occurred while processing your request.',
-      { id: toastId },
-    )
+    let message = 'An unexpected error occurred. Please try again.'
+    if (error instanceof TypeError && error.message === 'Failed to fetch') {
+      message =
+        'Unable to reach the server. Please check your connection and try again.'
+    } else if (error instanceof Error) {
+      message = error.message
+    }
+    toast.error(message, { id: toastId })
     console.error('Error creating job:', error)
   }
 }

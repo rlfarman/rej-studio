@@ -24,13 +24,15 @@ export function DNASplicer() {
   )
 
   // When sequence length changes, maintain the relative position (percentage)
-  if (seqLength !== prevSeqLengthRef.current) {
-    const ratio = prevPositionRef.current / (prevSeqLengthRef.current || 1)
-    const newPosition = Math.max(1, Math.min(Math.floor(ratio * seqLength), seqLength - 1))
-    prevSeqLengthRef.current = seqLength
-    prevPositionRef.current = newPosition
-    setValue('spliceJunctionPosition', newPosition)
-  }
+  React.useEffect(() => {
+    if (seqLength !== prevSeqLengthRef.current) {
+      const ratio = prevPositionRef.current / (prevSeqLengthRef.current || 1)
+      const newPosition = Math.max(1, Math.min(Math.round(ratio * seqLength), seqLength - 1))
+      prevSeqLengthRef.current = seqLength
+      prevPositionRef.current = newPosition
+      setValue('spliceJunctionPosition', newPosition)
+    }
+  }, [seqLength, setValue])
 
   const position = watch('spliceJunctionPosition')
   const percentage = seqLength > 1 ? (position / seqLength) * 100 : 0
@@ -53,7 +55,7 @@ export function DNASplicer() {
 
   const handlePercentageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const pct = Math.min(Math.max(Number(event.target.value), 0), 100)
-    setPosition(Math.floor((pct / 100) * seqLength))
+    setPosition(Math.round((pct / 100) * seqLength))
   }
 
   const tickCount = 5
@@ -168,7 +170,7 @@ export function DNASplicer() {
             <div className="relative">
               <Input
                 type="number"
-                value={parseFloat(percentage.toFixed(1))}
+                value={Math.round(percentage * 10) / 10}
                 onChange={handlePercentageChange}
                 min={0}
                 max={100}
