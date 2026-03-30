@@ -2,7 +2,6 @@
 import { Button } from '@/components/ui/button'
 import { Heart } from 'lucide-react'
 import { useFavoriteGenes } from '@/context/favorite-genes-context'
-import { useEffect, useState } from 'react'
 
 interface FavoriteButtonProps {
   gene: {
@@ -15,7 +14,7 @@ interface FavoriteButtonProps {
 export function FavoriteGeneButton({ gene }: FavoriteButtonProps) {
   const { addFavoriteGene, removeFavoriteGene, isFavoriteGene } =
     useFavoriteGenes()
-  const [isFavorite, setIsFavorite] = useState(isFavoriteGene(gene.id))
+  const isFavorite = isFavoriteGene(gene.id)
 
   const handleFavoriteClick = () => {
     if (isFavorite) {
@@ -23,15 +22,15 @@ export function FavoriteGeneButton({ gene }: FavoriteButtonProps) {
     } else {
       addFavoriteGene(gene)
     }
-    setIsFavorite(!isFavorite)
   }
 
-  useEffect(() => {
-    setIsFavorite(isFavoriteGene(gene.id))
-  }, [gene.id, isFavoriteGene])
-
   return (
-    <Button onClick={handleFavoriteClick} variant="ghost" size="icon">
+    <Button
+      onClick={handleFavoriteClick}
+      variant="ghost"
+      size="icon"
+      aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+    >
       <Heart
         className={`size-5 ${
           isFavorite ? 'text-destructive' : 'text-muted-foreground'

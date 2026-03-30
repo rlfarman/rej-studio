@@ -1,38 +1,33 @@
 import { notFound } from 'next/navigation'
 import { Separator } from '@/components/ui/separator'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { getGeneBySymbol, getIsoformsByGene, isFavoriteGene } from '@/actions'
+import { getGeneBySymbol } from '@/actions/genes'
+import { getIsoformsByGene } from '@/actions/isoforms'
 import IsoformTable, { IsoformTableLoading } from './_components/isoform-table'
-import { getAllGeneSymbols } from './_actions'
 import { Suspense } from 'react'
 import { FavoriteGeneButton } from './_components/favorite-gene-button'
 import { Metadata } from 'next'
+import { cache } from 'react'
 
 type Props = {
   params: Promise<{ symbol: string }>
 }
 
-// Todo: cache metadata
+const getCachedGeneBySymbol = cache(getGeneBySymbol)
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const symbol = (await params).symbol
+  const gene = await getCachedGeneBySymbol(symbol)
 
   return {
-    title: `${symbol} | REJ Studio`,
-    description: `View all isoforms for ${symbol} and download pre-optimized sequences or customize your own.`,
+    title: `${gene?.symbol ?? symbol} | REJ Studio`,
+    description: `View all isoforms for ${gene?.name ?? symbol} and download pre-optimized sequences or customize your own.`,
   }
 }
 
-// export async function generateStaticParams() {
-//   const genes = await getAllGeneSymbols()
-//   return genes.map((gene) => ({
-//     symbol: gene.symbol,
-//   }))
-// }
-
 export default async function GeneSymbolPage({ params }: Props) {
   const { symbol } = await params
-  const gene = await getGeneBySymbol(symbol)
+  const gene = await getCachedGeneBySymbol(symbol)
 
   if (!gene) {
     notFound()

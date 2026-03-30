@@ -9,7 +9,7 @@ import { AppSidebar } from '@/components/sidebar/app-sidebar'
 import { Toaster } from '@/components/ui/sonner'
 import { FavoriteGenesProvider } from '@/context/favorite-genes-context'
 import { RecentGenesProvider } from '@/context/recent-genes-context'
-import { SpeciesProvider } from './_context/species-context'
+import { SpeciesProvider } from '@/context/species-context'
 import { cookies } from 'next/headers'
 import { Analytics } from '@vercel/analytics/next'
 
