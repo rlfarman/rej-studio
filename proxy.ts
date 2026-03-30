@@ -25,7 +25,7 @@ async function timingSafeEqual(a: string, b: string): Promise<boolean> {
   return result === 1
 }
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const basicAuth = req.headers.get('authorization')
   const url = req.nextUrl
 
