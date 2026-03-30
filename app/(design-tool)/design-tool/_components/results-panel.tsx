@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 import { m } from 'motion/react'
 import { Download, Copy, Check, Clock, Scissors, Info } from 'lucide-react'
 import {
@@ -25,16 +24,15 @@ import { cn } from '@/lib/utils'
 import { fadeUp } from '@/lib/motion'
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
 import type { ProcessResult } from '@/design-tool/types/process-result'
-import type { FormValues } from './form-schema'
 import { toast } from 'sonner'
-import { downloadZip } from './form-handler'
+import { downloadResultsZip } from '@/design-tool/lib/build-zip'
 import { ComparisonPanel } from './comparison-panel'
 import { AavResults } from './aav-size-estimator'
 import { formatFasta } from '@/design-tool/lib/fasta'
 
 interface ResultsPanelProps {
   result: ProcessResult
-  formValues: FormValues
+  optionsUsed: string
 }
 
 function SequenceBlock({
@@ -322,20 +320,14 @@ function WggwDetails({
   )
 }
 
-export function ResultsPanel({ result, formValues }: ResultsPanelProps) {
-  const [downloading, setDownloading] = useState(false)
-
-  const handleDownloadZip = async () => {
-    setDownloading(true)
+export function ResultsPanel({ result, optionsUsed }: ResultsPanelProps) {
+  const handleDownloadZip = () => {
     try {
-      await downloadZip(formValues)
-      toast.success('Download started.')
+      downloadResultsZip(result, optionsUsed)
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : 'Download failed.',
       )
-    } finally {
-      setDownloading(false)
     }
   }
 
@@ -365,10 +357,9 @@ export function ResultsPanel({ result, formValues }: ResultsPanelProps) {
               size="sm"
               className="gap-1.5"
               onClick={handleDownloadZip}
-              disabled={downloading}
             >
               <Download className="size-4" />
-              {downloading ? 'Downloading...' : 'Download ZIP'}
+              Download ZIP
             </Button>
           </div>
         </CardHeader>

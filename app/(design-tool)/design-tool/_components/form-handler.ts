@@ -1,5 +1,4 @@
-import { toast } from 'sonner'
-import { FormValues } from './form-schema'
+import type { FormValues } from './form-schema'
 import type { ProcessResult } from '@/design-tool/types/process-result'
 
 function buildOptions(values: FormValues) {
@@ -21,12 +20,9 @@ function buildOptions(values: FormValues) {
   }
 }
 
-function buildBody(values: FormValues) {
-  return JSON.stringify({
-    CDS: values.codingSequence,
-    name: values.name,
-    options: buildOptions(values),
-  })
+/** Serialize the options dict as a human-readable string for the report. */
+export function formatOptionsForReport(values: FormValues): string {
+  return JSON.stringify(buildOptions(values), null, 2)
 }
 
 export async function submitFormJson(
@@ -35,7 +31,11 @@ export async function submitFormJson(
   const response = await fetch('/api/py/process-json', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: buildBody(values),
+    body: JSON.stringify({
+      CDS: values.codingSequence,
+      name: values.name,
+      options: buildOptions(values),
+    }),
   })
 
   if (!response.ok) {
@@ -48,57 +48,4 @@ export async function submitFormJson(
   }
 
   return response.json()
-}
-
-export async function downloadZip(values: FormValues) {
-  const response = await fetch('/api/py/process', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: buildBody(values),
-  })
-
-  if (!response.ok) {
-    let detail = 'Something went wrong while downloading your sequence.'
-    try {
-      const body = await response.json()
-      if (body.detail) detail = body.detail
-    } catch {}
-    throw new Error(detail)
-  }
-
-  const blob = await response.blob()
-  const url = window.URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  try {
-    a.style.display = 'none'
-    a.href = url
-    const safeName = values.name.replace(/[^a-zA-Z0-9_\-. ]/g, '_')
-    a.download = `${safeName}.zip`
-    document.body.appendChild(a)
-    a.click()
-  } finally {
-    a.remove()
-    window.URL.revokeObjectURL(url)
-  }
-}
-
-/** Legacy handler kept for backward compatibility */
-export async function handleSubmitForm(values: FormValues) {
-  const toastId = toast.loading('Processing your sequence...')
-  try {
-    await downloadZip(values)
-    toast.success('Sequence ready — your download has started.', {
-      id: toastId,
-    })
-  } catch (error) {
-    let message = 'Something went wrong. Please try again.'
-    if (error instanceof TypeError && error.message === 'Failed to fetch') {
-      message =
-        'Unable to reach the server. Please check your connection and try again.'
-    } else if (error instanceof Error) {
-      message = error.message
-    }
-    toast.error(message, { id: toastId })
-    console.error('Error creating job:', error)
-  }
 }

@@ -20,7 +20,7 @@ import {
 import type { DesignToolSpecies } from '@/design-tool/types/species-options'
 import type { ProcessResult } from '@/design-tool/types/process-result'
 import { validationSchema, FormValues } from './form-schema'
-import { submitFormJson } from './form-handler'
+import { submitFormJson, formatOptionsForReport } from './form-handler'
 import { CustomizationOptions } from './customization-options'
 import { SpeciesOptions } from './species-options'
 import { CodonOptimizationOptions } from './optimization-options'
@@ -209,7 +209,7 @@ export function GeneSplitterForm({
 
         {result && (
           <div ref={resultsRef}>
-            <ResultsPanel result={result} formValues={methods.getValues()} />
+            <ResultsPanel result={result} optionsUsed={formatOptionsForReport(methods.getValues())} />
           </div>
         )}
       </form>
