@@ -1,4 +1,5 @@
 'use client'
+import { useState } from 'react'
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
 
@@ -8,13 +9,16 @@ A combinatorial system for gene expression using RNA-fragment end joining (REJ).
 export function Footer() {
   const { copy, isCopied } = useCopyToClipboard({ showToast: false })
   const copied = isCopied()
+  const [hovered, setHovered] = useState(false)
 
   return (
     <footer className="mx-auto mt-auto max-w-4xl px-4 pt-4 pb-6 text-center sm:px-6 lg:px-4">
-      <Tooltip>
+      <Tooltip open={copied || hovered}>
         <TooltipTrigger asChild>
           <button
             onClick={() => copy(CITATION)}
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
             aria-label="Copy citation to clipboard"
             className="text-muted-foreground text-sm hover:underline"
           >

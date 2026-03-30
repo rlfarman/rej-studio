@@ -1,4 +1,5 @@
 'use client'
+import { useState } from 'react'
 import {
   Tooltip,
   TooltipContent,
@@ -21,12 +22,16 @@ export function CopyableText({
   onCopy,
   children,
 }: CopyableTextProps) {
+  const [hovered, setHovered] = useState(false)
+
   return (
-    <Tooltip>
+    <Tooltip open={copied || hovered}>
       <TooltipTrigger asChild>
         <button
           className="hover:text-muted-foreground inline-flex items-center hover:underline"
           onClick={onCopy}
+          onMouseEnter={() => setHovered(true)}
+          onMouseLeave={() => setHovered(false)}
           aria-label={label}
         >
           {children}
