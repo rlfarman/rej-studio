@@ -110,20 +110,20 @@ export function SequenceDiagnostics() {
         label={`GC ${stats.gcPercent.toFixed(1)}%`}
         tooltip={
           gcStatus === 'good'
-            ? 'GC content is in the optimal 35\u201360% range'
+            ? 'GC content is in the optimal 35-60% range.'
             : gcStatus === 'warn'
-              ? 'GC content is outside the optimal 35\u201360% range'
-              : 'GC content is far from the optimal 35\u201360% range'
+              ? 'GC content is outside the optimal 35-60% range.'
+              : 'GC content is far from the optimal 35-60% range.'
         }
       />
 
       <DiagBadge
         status={stats.startCodon ? 'good' : 'error'}
-        label={stats.startCodon ? 'ATG start' : 'No ATG'}
+        label={stats.startCodon ? 'Start: ATG' : 'No start codon'}
         tooltip={
           stats.startCodon
             ? 'Sequence begins with ATG start codon'
-            : 'Sequence does not begin with ATG \u2014 this may not be a valid CDS'
+            : 'Sequence does not begin with ATG. This may not be a valid CDS.'
         }
       />
 
@@ -174,10 +174,10 @@ export function SequenceDiagnostics() {
         label={`Split: ${Math.round((spliceJunctionPosition / stats.bpLength) * 100)}% / ${Math.round(100 - (spliceJunctionPosition / stats.bpLength) * 100)}%`}
         tooltip={
           stats.balance === 'balanced'
-            ? 'Fragment sizes are well balanced'
+            ? 'Fragment sizes are well balanced.'
             : stats.balance === 'moderate'
-              ? 'Fragments are moderately imbalanced \u2014 consider centering the split'
-              : 'Fragments are highly imbalanced \u2014 this may cause issues with AAV packaging'
+              ? 'Fragments are moderately imbalanced. Consider centering the split.'
+              : 'Fragments are highly imbalanced. This may cause issues with AAV packaging.'
         }
       />
 

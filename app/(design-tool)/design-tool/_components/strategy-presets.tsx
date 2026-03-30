@@ -52,7 +52,7 @@ export function StrategyPresets() {
               >
                 {preset.label}
               </span>
-              <span className="text-muted-foreground mt-0.5 line-clamp-2 text-[11px] leading-tight">
+              <span className="text-muted-foreground mt-0.5 text-[11px] leading-tight">
                 {preset.description}
               </span>
             </button>

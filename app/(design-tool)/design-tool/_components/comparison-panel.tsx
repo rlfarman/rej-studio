@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react'
 import { ArrowRight } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
+import { cn } from '@/lib/utils'
 import type { ProcessResult } from '@/design-tool/types/process-result'
 import { computeGcPercent, countCpG } from '@/design-tool/lib/sequence-utils'
 
@@ -25,6 +25,7 @@ function StatDelta({
 }) {
   const delta = after - before
   const improved = lowerIsBetter ? delta < 0 : delta > 0
+  const worsened = lowerIsBetter ? delta > 0 : delta < 0
   const unchanged = delta === 0
   const fmt = (n: number) =>
     Number.isInteger(n) ? n.toLocaleString() : n.toFixed(1)
@@ -44,14 +45,18 @@ function StatDelta({
         </span>
       </div>
       {!unchanged && (
-        <Badge
-          variant={improved ? 'secondary' : 'outline'}
-          className="mt-1.5 w-fit text-[10px]"
+        <span
+          className={cn(
+            'mt-1.5 text-[10px] font-medium tabular-nums',
+            improved && 'text-emerald-600 dark:text-emerald-400',
+            worsened && 'text-red-600 dark:text-red-400',
+            !improved && !worsened && 'text-muted-foreground',
+          )}
         >
           {delta > 0 ? '+' : ''}
           {fmt(delta)}
           {unit}
-        </Badge>
+        </span>
       )}
     </div>
   )
@@ -76,7 +81,15 @@ export function ComparisonPanel({ result }: ComparisonPanelProps) {
     }
     const changePercent = len > 0 ? (changedPositions / len) * 100 : 0
 
-    return { gcBefore, gcAfter, cpgBefore, cpgAfter, changedPositions, changePercent, len }
+    return {
+      gcBefore,
+      gcAfter,
+      cpgBefore,
+      cpgAfter,
+      changedPositions,
+      changePercent,
+      len,
+    }
   }, [result.original_sequence, result.optimized_sequence])
 
   if (!stats) return null
@@ -97,11 +110,17 @@ export function ComparisonPanel({ result }: ComparisonPanelProps) {
           after={stats.cpgAfter}
           lowerIsBetter
         />
-        <StatDelta
-          label="Changed Positions"
-          before={0}
-          after={stats.changedPositions}
-        />
+        <div className="bg-muted/50 flex flex-col rounded-lg border p-3">
+          <span className="text-muted-foreground text-xs font-medium">
+            Positions Changed
+          </span>
+          <span className="mt-1 text-sm font-medium tabular-nums">
+            {stats.changedPositions.toLocaleString()}
+          </span>
+          <span className="text-muted-foreground mt-1.5 text-[10px]">
+            {stats.changePercent.toFixed(1)}% of sequence
+          </span>
+        </div>
         <div className="bg-muted/50 flex flex-col rounded-lg border p-3">
           <span className="text-muted-foreground text-xs font-medium">
             Sequence Identity
@@ -110,8 +129,8 @@ export function ComparisonPanel({ result }: ComparisonPanelProps) {
             {(100 - stats.changePercent).toFixed(1)}%
           </span>
           <span className="text-muted-foreground mt-1.5 text-[10px]">
-            {stats.changedPositions.toLocaleString()} of{' '}
-            {stats.len.toLocaleString()} bp changed
+            {(stats.len - stats.changedPositions).toLocaleString()} of{' '}
+            {stats.len.toLocaleString()} bp preserved
           </span>
         </div>
       </div>

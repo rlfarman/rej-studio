@@ -5,7 +5,6 @@ import { useFormContext } from 'react-hook-form'
 import { Slider } from '@/components/ui/slider'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import {
   FormItem,
   FormLabel,
@@ -199,9 +198,9 @@ export function DNASplicer() {
           Bias 3&apos;
         </Button>
         {position !== midpoint && (
-          <Badge variant="outline" className="text-[10px]">
+          <span className="text-muted-foreground text-[10px] tabular-nums">
             {Math.abs(position - midpoint).toLocaleString()} bp from center
-          </Badge>
+          </span>
         )}
       </div>
 
@@ -242,11 +241,12 @@ export function DNASplicer() {
                 step={0.1}
                 className="pr-7"
               />
-              <span className="text-muted-foreground pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-sm">
+              <span className="text-muted-foreground pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm">
                 %
               </span>
             </div>
           </FormControl>
+          <FormAssistiveText reserveSpace />
         </FormItem>
       </div>
     </div>

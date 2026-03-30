@@ -22,6 +22,7 @@ import type { ProcessResult } from '@/design-tool/types/process-result'
 import { validationSchema, FormValues } from './form-schema'
 import { submitFormJson } from './form-handler'
 import { CustomizationOptions } from './customization-options'
+import { SpeciesOptions } from './species-options'
 import { CodonOptimizationOptions } from './optimization-options'
 import {
   FiveFragmentOptions,
@@ -117,6 +118,7 @@ export function GeneSplitterForm({
           <CardContent className="space-y-6">
             <CustomizationOptions />
             <SequenceDiagnostics />
+            <SpeciesOptions />
             <div className="space-y-2">
               <p className="text-sm font-medium">Splice junction</p>
               <p className="text-muted-foreground text-sm">
