@@ -1,5 +1,5 @@
 'use client'
-import { useMemo } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import {
   Table,
   TableBody,
@@ -8,7 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { ExternalLink } from 'lucide-react'
+import { ExternalLink, Check } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -46,14 +46,18 @@ export default function IsoformTable({ isoforms }: IsoformListProps) {
     [species, isoforms],
   )
 
-  const handleCopy = async (text: string) => {
+  const [copiedId, setCopiedId] = useState<string | null>(null)
+
+  const handleCopy = useCallback(async (text: string, id: string) => {
     try {
       await navigator.clipboard.writeText(text)
+      setCopiedId(id)
       toast.success('Sequence copied to clipboard!')
+      setTimeout(() => setCopiedId(null), 1500)
     } catch {
       toast.error('Failed to copy to clipboard.')
     }
-  }
+  }, [])
 
   return (
     <Table>
@@ -85,16 +89,22 @@ export default function IsoformTable({ isoforms }: IsoformListProps) {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <button
-                      className="hover:text-muted-foreground hover:underline"
-                      onClick={() => handleCopy(isoform.codingSequence)}
+                      className="hover:text-muted-foreground inline-flex items-center gap-1.5 hover:underline"
+                      onClick={() => handleCopy(isoform.codingSequence, `cds-${isoform.id}`)}
                       aria-label="Copy coding sequence"
                     >
-                      <span className="hidden sm:inline">
-                        {isoform.codingSequence.slice(0, 20)}...
-                      </span>
-                      <span className="sm:hidden">
-                        {isoform.codingSequence.slice(0, 10)}...
-                      </span>
+                      {copiedId === `cds-${isoform.id}` ? (
+                        <Check className="text-chart-2 size-3.5 animate-check-draw" />
+                      ) : (
+                        <>
+                          <span className="hidden sm:inline">
+                            {isoform.codingSequence.slice(0, 20)}...
+                          </span>
+                          <span className="sm:hidden">
+                            {isoform.codingSequence.slice(0, 10)}...
+                          </span>
+                        </>
+                      )}
                     </button>
                   </TooltipTrigger>
                   <TooltipContent>Click to copy</TooltipContent>
@@ -104,16 +114,22 @@ export default function IsoformTable({ isoforms }: IsoformListProps) {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <button
-                      onClick={() => handleCopy(isoform.proteinSequence)}
-                      className="hover:text-muted-foreground hover:underline"
+                      onClick={() => handleCopy(isoform.proteinSequence, `prot-${isoform.id}`)}
+                      className="hover:text-muted-foreground inline-flex items-center gap-1.5 hover:underline"
                       aria-label="Copy protein sequence"
                     >
-                      <span className="hidden sm:inline">
-                        {isoform.proteinSequence.slice(0, 20)}...
-                      </span>
-                      <span className="sm:hidden">
-                        {isoform.proteinSequence.slice(0, 10)}...
-                      </span>
+                      {copiedId === `prot-${isoform.id}` ? (
+                        <Check className="text-chart-2 size-3.5 animate-check-draw" />
+                      ) : (
+                        <>
+                          <span className="hidden sm:inline">
+                            {isoform.proteinSequence.slice(0, 20)}...
+                          </span>
+                          <span className="sm:hidden">
+                            {isoform.proteinSequence.slice(0, 10)}...
+                          </span>
+                        </>
+                      )}
                     </button>
                   </TooltipTrigger>
                   <TooltipContent>Click to copy</TooltipContent>
