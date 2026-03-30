@@ -10,6 +10,7 @@ import {
 import { FavoriteGenes } from './favorite-genes'
 import { RecentGenes } from './recent-genes'
 import { ThemeToggle } from '@/components/theme-toggle'
+import { SidebarToggle } from '@/components/sidebar-toggle'
 import Link from 'next/link'
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -31,7 +32,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <FavoriteGenes />
       </SidebarContent>
       <SidebarFooter>
-        <ThemeToggle />
+        <div className="flex justify-between items-center gap-2">
+          <ThemeToggle />
+          <SidebarToggle />
+        </div>
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>
