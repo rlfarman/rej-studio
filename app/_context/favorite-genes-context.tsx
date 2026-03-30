@@ -37,7 +37,7 @@ export function FavoriteGenesProvider({ children }: { children: ReactNode }) {
       } catch (error) {
         console.error(
           'Failed to parse favorite genes from localStorage:',
-          error
+          error,
         )
       }
     }
@@ -87,7 +87,7 @@ export function useFavoriteGenes() {
   const context = useContext(FavoriteGenesContext)
   if (!context) {
     throw new Error(
-      'useFavoriteGenes must be used within a FavoriteGenesProvider'
+      'useFavoriteGenes must be used within a FavoriteGenesProvider',
     )
   }
   return context

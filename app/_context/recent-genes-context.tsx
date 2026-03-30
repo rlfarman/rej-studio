@@ -21,7 +21,7 @@ interface RecentGenesContextValue {
 }
 
 const RecentGenesContext = createContext<RecentGenesContextValue | undefined>(
-  undefined
+  undefined,
 )
 
 export function RecentGenesProvider({ children }: { children: ReactNode }) {

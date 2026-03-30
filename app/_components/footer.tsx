@@ -1,7 +1,6 @@
 'use client'
 import { Button } from '@/components/ui/button'
-import { Tooltip } from '@radix-ui/react-tooltip'
-import { TooltipContent, TooltipTrigger } from './ui/tooltip'
+import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
 import { toast } from 'sonner'
 
 export function Footer() {
@@ -13,7 +12,7 @@ A combinatorial system for gene expression using RNA-fragment end joining (REJ).
   }
 
   return (
-    <footer className="mx-auto mt-auto max-w-4xl px-4 pb-6 pt-4 text-center sm:px-6 lg:px-4">
+    <footer className="mx-auto mt-auto max-w-4xl px-4 pt-4 pb-6 text-center sm:px-6 lg:px-4">
       <Tooltip>
         <TooltipTrigger asChild>
           <button

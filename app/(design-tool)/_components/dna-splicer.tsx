@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useFormContext } from 'react-hook-form'
 import { Slider } from '@/components/ui/slider'
-import { Input } from '@/components/ui/input' // Import Input from shadCN
+import { Input } from '@/components/ui/input'
 import {
   FormItem,
   FormLabel,
@@ -19,40 +19,35 @@ export function DNASplicer() {
   const spliceJunctionPosition = watch('spliceJunctionPosition')
   const [percentage, setPercentage] = useState(50)
 
+  const seqLength = codingSequence.length || 1
+
   useEffect(() => {
-    // Set the value of the spliceJunctionPosition equal to the previous percentage with the new coding sequence length
     setValue(
       'spliceJunctionPosition',
-      Math.floor((Number(percentage) / 100) * codingSequence.length)
+      Math.floor((Number(percentage) / 100) * seqLength),
     )
-  }, [codingSequence.length, percentage, setValue])
+  }, [seqLength, percentage, setValue])
 
   const handleSliderChange = (value: number[]) => {
     const newPosition = Math.floor(value[0])
     setValue('spliceJunctionPosition', newPosition)
-    setPercentage(
-      parseFloat(((newPosition / codingSequence.length) * 100).toFixed(1))
-    )
+    setPercentage(parseFloat(((newPosition / seqLength) * 100).toFixed(1)))
   }
 
   const handlePositionChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newPosition = Math.min(
       Math.max(Number(event.target.value), 1),
-      codingSequence.length - 1
+      seqLength - 1,
     )
     setValue('spliceJunctionPosition', newPosition)
-    setPercentage(
-      parseFloat(((newPosition / codingSequence.length) * 100).toFixed(1))
-    )
+    setPercentage(parseFloat(((newPosition / seqLength) * 100).toFixed(1)))
   }
 
   const handlePercentageChange = (
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const newPercentage = Math.min(Math.max(Number(event.target.value), 0), 100)
-    const newPosition = Math.floor(
-      (newPercentage / 100) * codingSequence.length
-    )
+    const newPosition = Math.floor((newPercentage / 100) * seqLength)
     setValue('spliceJunctionPosition', newPosition)
     setPercentage(parseFloat(newPercentage.toFixed(1)))
   }
@@ -65,10 +60,11 @@ export function DNASplicer() {
           control={control}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Position</FormLabel>
+              <FormLabel htmlFor="splice-junction-position">Position</FormLabel>
               <FormControl>
                 <span>
                   <input
+                    id="splice-junction-position"
                     type="number"
                     value={field.value}
                     onChange={(e) => {
@@ -78,7 +74,7 @@ export function DNASplicer() {
                     className="text-2xl font-bold"
                     style={{ width: `${String(field.value).length + 1.5}ch` }}
                     min={1}
-                    max={codingSequence.length - 1}
+                    max={seqLength - 1}
                   />
                   <span className="text-muted-foreground ml-1 text-sm font-normal">
                     base pairs
@@ -118,7 +114,7 @@ export function DNASplicer() {
             render={({ field }) => (
               <Slider
                 value={[field.value]}
-                max={codingSequence.length}
+                max={seqLength}
                 step={1}
                 onValueChange={(value) => {
                   field.onChange(value[0])
@@ -139,7 +135,7 @@ export function DNASplicer() {
               >
                 {i % 10 === 0 && (
                   <span className="text-muted-foreground absolute text-xs">
-                    {Math.floor((i / 50) * codingSequence.length)}
+                    {Math.floor((i / 50) * seqLength)}
                   </span>
                 )}
               </div>

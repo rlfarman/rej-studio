@@ -6,7 +6,7 @@ import { useSpeciesContext } from '@/context/species-context'
 interface UseGeneSearchProps {
   searchGenes: (
     content: string,
-    species?: string // Add species parameter
+    species?: string, // Add species parameter
   ) => Promise<
     Array<Pick<GeneSearchResult, 'symbol' | 'id' | 'name' | 'species'>>
   >
@@ -24,29 +24,39 @@ export function useGeneSearch({
   >([])
   const [debouncedQuery] = useDebounce(query, 250)
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  const { species } = useSpeciesContext() // Use the species hook
+  const { species } = useSpeciesContext()
 
   useEffect(() => {
     let current = true
     if (debouncedQuery.trim().length > 0) {
       setIsLoading(true)
-      searchGenes(debouncedQuery, species).then((results) => {
-        if (current) {
-          setSearchResults(results)
-          setHasSearched(true)
-          setIsLoading(false)
-        }
-      })
+      setError(null)
+      searchGenes(debouncedQuery, species)
+        .then((results) => {
+          if (current) {
+            setSearchResults(results)
+            setHasSearched(true)
+            setIsLoading(false)
+          }
+        })
+        .catch(() => {
+          if (current) {
+            setError('Search failed. Please try again.')
+            setIsLoading(false)
+          }
+        })
     } else {
       setSearchResults([])
       setHasSearched(false)
       setIsLoading(false)
+      setError(null)
     }
     return () => {
       current = false
     }
-  }, [debouncedQuery, searchGenes, species]) // Add species as a dependency
+  }, [debouncedQuery, searchGenes, species])
 
   return {
     query,
@@ -54,5 +64,6 @@ export function useGeneSearch({
     hasSearched,
     searchResults,
     isLoading,
+    error,
   }
 }

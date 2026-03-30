@@ -1,5 +1,4 @@
 import { toast } from 'sonner'
-import { createJob } from '@/actions'
 import { SpeciesValues } from '@/design-tool/types/species-options'
 import { FormValues } from './form-schema'
 
@@ -38,12 +37,7 @@ export async function handleSubmitForm({
     wggw_threshold: 300, // Default threshold for WGGW
   }
   try {
-    await createJob({
-      userId: 'abcd1234',
-      name,
-      sequence: codingSequence,
-      options,
-    })
+    // TODO: Re-enable job logging when user auth is implemented
     const response = await fetch('/api/py/process', {
       method: 'POST',
       headers: {
@@ -66,16 +60,16 @@ export async function handleSubmitForm({
     const a = document.createElement('a')
     a.style.display = 'none'
     a.href = url
-    a.download = `${name}.zip`
+    const safeName = name.replace(/[^a-zA-Z0-9_\-. ]/g, '_')
+    a.download = `${safeName}.zip`
     document.body.appendChild(a)
     a.click()
     window.URL.revokeObjectURL(url)
     a.remove()
     toast.success(
       'Sequence processed successfully! Your download will start shortly.',
-      { id: toastId }
+      { id: toastId },
     )
-    console.log('Job created successfully')
   } catch (error) {
     toast.error('An error occurred while processing your request.', {
       id: toastId,

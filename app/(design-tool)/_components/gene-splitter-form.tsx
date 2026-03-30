@@ -61,7 +61,7 @@ export function GeneSplitterForm({
       name: defaultName ?? '',
       species: defaultSpecies ?? SpeciesValues.None,
       spliceJunctionPosition: defaultCodingSequence
-        ? parseInt((defaultCodingSequence.length / 2).toString())
+        ? Math.floor(defaultCodingSequence.length / 2)
         : 1,
     },
   })
@@ -89,7 +89,7 @@ export function GeneSplitterForm({
                     </p>
                   </div>
                 </AccordionTrigger>
-                <AccordionContent className="pb-8 pt-4">
+                <AccordionContent className="pt-4 pb-8">
                   <CodonOptimizationOptions />
                 </AccordionContent>
               </AccordionItem>
@@ -102,7 +102,7 @@ export function GeneSplitterForm({
                     </p>
                   </div>
                 </AccordionTrigger>
-                <AccordionContent className="pb-8 pt-4">
+                <AccordionContent className="pt-4 pb-8">
                   <div className="flex flex-col space-y-4">
                     <FiveFragmentOptions />
                     <ThreeFragmentOptions />
@@ -118,7 +118,7 @@ export function GeneSplitterForm({
                     </p>
                   </div>
                 </AccordionTrigger>
-                <AccordionContent className="pb-8 pt-4">
+                <AccordionContent className="pt-4 pb-8">
                   <DNASplicer />
                 </AccordionContent>
               </AccordionItem>
@@ -131,7 +131,7 @@ export function GeneSplitterForm({
                     </p>
                   </div>
                 </AccordionTrigger>
-                <AccordionContent className="pb-8 pt-4">
+                <AccordionContent className="pt-4 pb-8">
                   <div className="flex flex-col space-y-4">
                     <CodonOptimizeWeight />
                     <RemoveCrypticSpliceSitesWeight />

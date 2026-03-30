@@ -4,7 +4,7 @@ import React, { useEffect, useState, createContext, useContext } from 'react'
 // Create a context for species
 const SpeciesContext = createContext<
   | {
-      species: string | undefined
+      species: string
       handleSpeciesChange: (value: string) => void
     }
   | undefined
@@ -18,18 +18,22 @@ export function useSpeciesContext() {
   return context
 }
 
+const VALID_SPECIES = ['human', 'mouse', 'both']
+
 export function SpeciesProvider({ children }: { children: React.ReactNode }) {
-  const [species, setSpecies] = useState<string | undefined>(undefined)
+  const [species, setSpecies] = useState<string>('both')
 
   useEffect(() => {
     const storedSpecies = localStorage.getItem('species')
-    if (storedSpecies) {
+    if (storedSpecies && VALID_SPECIES.includes(storedSpecies)) {
       setSpecies(storedSpecies)
     } else {
       const speciesFromQuery = new URLSearchParams(window.location.search).get(
-        'species'
+        'species',
       )
-      setSpecies(speciesFromQuery ?? 'both')
+      if (speciesFromQuery && VALID_SPECIES.includes(speciesFromQuery)) {
+        setSpecies(speciesFromQuery)
+      }
     }
   }, [])
 

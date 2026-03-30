@@ -17,7 +17,7 @@ export function CodonOptimizationOptions() {
         name="removeCrypticSpliceSites"
         control={control}
         render={({ field }) => (
-          <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+          <FormItem className="flex flex-row items-start space-y-0 space-x-3">
             <FormControl>
               <Checkbox
                 id="removeCrypticSpliceSites"
@@ -39,7 +39,7 @@ export function CodonOptimizationOptions() {
         name="minimizeCpgs"
         control={control}
         render={({ field }) => (
-          <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+          <FormItem className="flex flex-row items-start space-y-0 space-x-3">
             <FormControl>
               <Checkbox
                 id="minimizeCpgs"
@@ -60,7 +60,7 @@ export function CodonOptimizationOptions() {
         name="reduceKmerComplexity"
         control={control}
         render={({ field }) => (
-          <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+          <FormItem className="flex flex-row items-start space-y-0 space-x-3">
             <FormControl>
               <Checkbox
                 id="reduceKmerComplexity"
@@ -82,7 +82,7 @@ export function CodonOptimizationOptions() {
         name="enforceGcContent"
         control={control}
         render={({ field }) => (
-          <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+          <FormItem className="flex flex-row items-start space-y-0 space-x-3">
             <FormControl>
               <Checkbox
                 id="enforceGcContent"

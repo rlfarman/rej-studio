@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useMemo } from 'react'
 import {
   Table,
   TableBody,
@@ -12,7 +12,7 @@ import { ExternalLink } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { useSpecies } from '../../../../_hooks/use-species'
+import { useSpeciesContext } from '@/context/species-context'
 import {
   Tooltip,
   TooltipContent,
@@ -39,25 +39,20 @@ interface IsoformListProps {
 }
 
 export default function IsoformTable({ isoforms }: IsoformListProps) {
-  const species = useSpecies()
-  const [filteredIsoforms, setFilteredIsoforms] = useState<Isoform[]>([])
+  const { species } = useSpeciesContext()
 
-  useEffect(() => {
-    // Filter isoforms based on the selected species
-    const filtered = isoforms.filter((isoform) => {
-      if (species === 'both') return true
-      return isoform.species.toLowerCase() === species
-    })
-    setFilteredIsoforms(filtered)
-  }, [species, isoforms])
+  const filteredIsoforms = useMemo(
+    () =>
+      isoforms.filter((isoform) => {
+        if (!species || species === 'both') return true
+        return isoform.species.toLowerCase() === species
+      }),
+    [species, isoforms],
+  )
 
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text)
-    toast.success('Sequence copied to clipboard!') // Show success toast
-  }
-
-  if (!species) {
-    return <IsoformTableLoading />
+    toast.success('Sequence copied to clipboard!')
   }
 
   return (
@@ -72,14 +67,13 @@ export default function IsoformTable({ isoforms }: IsoformListProps) {
           </TableHead>
           <TableHead>Coding Sequence</TableHead>
           <TableHead>Protein Sequence</TableHead>
-          {/* <TableHead className="text-right">Download</TableHead> */}
           <TableHead className="text-right">Customize</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {filteredIsoforms.length > 0 ? (
           filteredIsoforms.map((isoform) => (
-            <TableRow key={isoform.enst}>
+            <TableRow key={isoform.id}>
               <TableCell className="font-mono">
                 {isoform.codingSequenceLength}
               </TableCell>
@@ -93,6 +87,7 @@ export default function IsoformTable({ isoforms }: IsoformListProps) {
                     <button
                       className="hover:text-muted-foreground hover:underline"
                       onClick={() => handleCopy(isoform.codingSequence)}
+                      aria-label="Copy coding sequence"
                     >
                       <span className="hidden sm:inline">
                         {isoform.codingSequence.slice(0, 20)}...
@@ -111,6 +106,7 @@ export default function IsoformTable({ isoforms }: IsoformListProps) {
                     <button
                       onClick={() => handleCopy(isoform.proteinSequence)}
                       className="hover:text-muted-foreground hover:underline"
+                      aria-label="Copy protein sequence"
                     >
                       <span className="hidden sm:inline">
                         {isoform.proteinSequence.slice(0, 20)}...
@@ -123,11 +119,6 @@ export default function IsoformTable({ isoforms }: IsoformListProps) {
                   <TooltipContent>Click to copy</TooltipContent>
                 </Tooltip>
               </TableCell>
-              {/* <TableCell className="text-right">
-                  <Button variant="ghost" size="icon">
-                    <Download />
-                  </Button>
-                </TableCell> */}
               <TableCell className="text-right">
                 <Button variant="ghost" size="icon" asChild>
                   <Link href={`/design-tool?isoform=${isoform.id}`}>
@@ -140,7 +131,7 @@ export default function IsoformTable({ isoforms }: IsoformListProps) {
         ) : (
           <TableRow>
             <TableCell
-              colSpan={7}
+              colSpan={6}
               className="text-muted-foreground text-center"
             >
               No isoforms found for the selected species.
@@ -165,7 +156,6 @@ export function IsoformTableLoading() {
           </TableHead>
           <TableHead>Coding Sequence</TableHead>
           <TableHead>Protein Sequence</TableHead>
-          <TableHead className="text-right">Download</TableHead>
           <TableHead className="text-right">Customize</TableHead>
         </TableRow>
       </TableHeader>
@@ -187,9 +177,6 @@ export function IsoformTableLoading() {
             <TableCell>
               <Skeleton className="h-4 w-24 rounded" />
             </TableCell>
-            {/* <TableCell className="text-right">
-              <Skeleton className="inline-block h-8 w-8 rounded-full" />
-            </TableCell> */}
             <TableCell className="text-right">
               <Skeleton className="inline-block h-8 w-8 rounded-full" />
             </TableCell>

@@ -7,7 +7,7 @@ export const validationSchema = z.object({
     .nonempty('Coding sequence is required.')
     .regex(
       /^[ACGTUacgtu]+$/,
-      'Invalid coding sequence. Must contain only A, C, G, T, or U.'
+      'Invalid coding sequence. Must contain only A, C, G, T, or U.',
     )
     .refine((value) => value.length % 3 === 0, {
       message: 'Invalid coding sequence. Must be a multiple of 3.',
@@ -21,25 +21,13 @@ export const validationSchema = z.object({
     SpeciesValues.Human,
     SpeciesValues.Mouse,
   ]),
-  codonOptimizeWeight: z
-    .number()
-    .min(0)
-    .max(Number.MAX_SAFE_INTEGER)
-    .default(1),
+  codonOptimizeWeight: z.number().min(0).max(100).default(1),
   removeCrypticSpliceSites: z.boolean(),
-  removeCrypticSpliceSitesWeight: z
-    .number()
-    .min(0)
-    .max(Number.MAX_SAFE_INTEGER)
-    .default(1),
+  removeCrypticSpliceSitesWeight: z.number().min(0).max(100).default(1),
   minimizeCpgs: z.boolean().default(true),
-  minimizeCpgsWeight: z.number().min(0).max(Number.MAX_SAFE_INTEGER).default(1),
+  minimizeCpgsWeight: z.number().min(0).max(100).default(1),
   reduceKmerComplexity: z.boolean().default(true),
-  reduceKmerComplexityWeight: z
-    .number()
-    .min(0)
-    .max(Number.MAX_SAFE_INTEGER)
-    .default(1),
+  reduceKmerComplexityWeight: z.number().min(0).max(100).default(1),
   enforceGcContent: z.boolean().default(true),
   '5PrimeStimulatoryIntron': z.boolean().default(true),
   '3PrimeStimulatoryIntron': z.boolean().default(true),

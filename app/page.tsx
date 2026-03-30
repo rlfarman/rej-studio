@@ -13,7 +13,7 @@ export default function HomePage() {
             alt="REJ Studio Logo"
             width={24}
             height={24}
-            className="ml-2 mt-2 invert dark:invert"
+            className="mt-2 ml-2 dark:invert"
           />
         </div>
         <div className="pb-2 font-mono">RNA END-JOINING (REJ) Studio</div>

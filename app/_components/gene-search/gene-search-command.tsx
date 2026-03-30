@@ -42,8 +42,9 @@ interface GeneSearchInputProps {
   isLoading: boolean
   setIsOpen: (isLoading: boolean) => void
   handleSelect: (
-    gene: Pick<GeneSearchResult, 'symbol' | 'id' | 'name' | 'species'>
+    gene: Pick<GeneSearchResult, 'symbol' | 'id' | 'name' | 'species'>,
   ) => void
+  error: string | null
 }
 
 export function GeneSearchCommand({
@@ -54,11 +55,12 @@ export function GeneSearchCommand({
   isLoading,
   setIsOpen,
   handleSelect,
+  error,
 }: GeneSearchInputProps) {
   const [showList, setShowList] = useState(true)
 
   const internalHandleSelect = (
-    gene: Pick<GeneSearchResult, 'symbol' | 'id' | 'name' | 'species'>
+    gene: Pick<GeneSearchResult, 'symbol' | 'id' | 'name' | 'species'>,
   ) => {
     setShowList(false)
     handleSelect(gene)
@@ -72,7 +74,7 @@ export function GeneSearchCommand({
       <CommandInput
         id="search"
         placeholder="Search for Genes"
-        className="border-0 text-base outline-0 ring-0 focus:border-0 focus:ring-0 active:border-0 active:ring-0 sm:text-sm"
+        className="border-0 text-base ring-0 outline-0 focus:border-0 focus:ring-0 active:border-0 active:ring-0 sm:text-sm"
         value={query}
         onValueChange={(q) => {
           setQuery(q)
@@ -86,6 +88,10 @@ export function GeneSearchCommand({
         <CommandList className="max-h-[300px] overflow-y-auto">
           {isLoading ? (
             <GeneResultsSkeleton />
+          ) : error ? (
+            <div className="text-destructive p-4 text-center text-sm">
+              {error}
+            </div>
           ) : (
             <>
               <CommandEmpty>
@@ -120,7 +126,7 @@ export function GeneSearchCommand({
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <Badge
-                          className="grid w-[96px] items-center gap-2 overflow-hidden truncate font-mono"
+                          className="grid w-[96px] items-center gap-2 truncate overflow-hidden font-mono"
                           style={{ gridTemplateColumns: '24px 1fr' }}
                         >
                           <SpeciesIcon

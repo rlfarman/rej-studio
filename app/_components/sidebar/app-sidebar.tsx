@@ -23,9 +23,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             alt="REJ Studio Logo"
             width={24}
             height={24}
-            className="ml-2 mt-2 invert dark:invert"
+            className="mt-2 ml-2 invert dark:invert"
           />
-          <span className="ml-2 mt-2 font-mono text-lg font-semibold">
+          <span className="mt-2 ml-2 font-mono text-lg font-semibold">
             REJ Studio
           </span>
         </Link>

@@ -16,7 +16,7 @@ export function FiveFragmentOptions() {
       name="5PrimeStimulatoryIntron"
       control={control}
       render={({ field }) => (
-        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+        <FormItem className="flex flex-row items-start space-y-0 space-x-3">
           <FormControl>
             <Checkbox
               id="5PrimeStimulatoryIntron"
@@ -43,7 +43,7 @@ export function ThreeFragmentOptions() {
       name="3PrimeStimulatoryIntron"
       control={control}
       render={({ field }) => (
-        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+        <FormItem className="flex flex-row items-start space-y-0 space-x-3">
           <FormControl>
             <Checkbox
               id="3PrimeStimulatoryIntron"

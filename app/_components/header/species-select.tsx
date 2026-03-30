@@ -1,5 +1,4 @@
 'use client'
-import React, { useEffect, useState, createContext, useContext } from 'react'
 import {
   Select,
   SelectTrigger,
@@ -17,7 +16,7 @@ export function SpeciesSelect() {
 
   return (
     <Select onValueChange={handleSpeciesChange} value={species}>
-      <SelectTrigger className="hover:bg-accent lg:w-51 w-22 z-10 cursor-pointer border-none font-semibold shadow-none">
+      <SelectTrigger className="hover:bg-accent z-10 w-22 cursor-pointer border-none font-semibold shadow-none lg:w-51">
         <SelectValue>
           <div className="flex items-center">
             <SpeciesIcon species={species} />
@@ -25,8 +24,8 @@ export function SpeciesSelect() {
               {species === 'mouse'
                 ? 'Mice'
                 : species === 'human'
-                ? 'Humans'
-                : 'Humans & Mice'}
+                  ? 'Humans'
+                  : 'Humans & Mice'}
             </span>
           </div>
         </SelectValue>

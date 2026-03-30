@@ -22,25 +22,32 @@ type SessionPayload = {
   expiresAt: Date
 }
 
-const secretKey = process.env.SESSION_SECRET
-const encodedKey = new TextEncoder().encode(secretKey)
+function getEncodedKey() {
+  const secretKey = process.env.SESSION_SECRET
+  if (!secretKey) {
+    throw new Error(
+      'SESSION_SECRET environment variable is not set. Sessions will not work.',
+    )
+  }
+  return new TextEncoder().encode(secretKey)
+}
 
 export async function encrypt(payload: SessionPayload) {
   return new SignJWT(payload)
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime('7d')
-    .sign(encodedKey)
+    .sign(getEncodedKey())
 }
 
 export async function decrypt(session: string | undefined = '') {
   try {
-    const { payload } = await jwtVerify(session, encodedKey, {
+    const { payload } = await jwtVerify(session, getEncodedKey(), {
       algorithms: ['HS256'],
     })
     return payload
   } catch (error) {
-    console.log('Failed to verify session')
+    console.error('Failed to verify session')
   }
 }
 
@@ -51,9 +58,8 @@ export type GeneSearchResult = Pick<
 
 export async function searchGenes(
   query: string,
-  species: string = 'both' // Default to 'both' if no species is provided
+  species: string = 'both', // Default to 'both' if no species is provided
 ): Promise<Array<GeneSearchResult>> {
-  console.log('Searching for genes with query:', query, species)
   try {
     const trimmedQuery = query.trim()
     if (trimmedQuery.length === 0) return []
@@ -84,10 +90,10 @@ export async function searchGenes(
           or(
             sql`LOWER(${genes.name}) LIKE LOWER(${`%${trimmedQuery}%`})`,
             sql`LOWER(${genes.symbol}) LIKE LOWER(${`%${trimmedQuery}%`})`,
-            sql`${`%${trimmedQuery}%`} = ANY(${genes.alternateSymbols})` // Check alternateSymbols
+            sql`${`%${trimmedQuery}%`} = ANY(${genes.alternateSymbols})`, // Check alternateSymbols
           ),
-          species !== 'both' ? eq(genes.species, species) : sql`TRUE`
-        )
+          species !== 'both' ? eq(genes.species, species) : sql`TRUE`,
+        ),
       )
       .groupBy(genes.id) // Ensure unique genes
       .orderBy(genes.name) // Order by name
@@ -101,9 +107,8 @@ export async function searchGenes(
 }
 
 async function searchGeneByENST(
-  enst: string
+  enst: string,
 ): Promise<GeneSearchResult | undefined> {
-  console.log('Searching for gene by ENST:', enst)
   try {
     const [isoform] = await db
       .select({
@@ -134,9 +139,8 @@ async function searchGeneByENST(
 }
 
 async function searchGeneByENSG(
-  ensg: string
+  ensg: string,
 ): Promise<GeneSearchResult | undefined> {
-  console.log('Searching for gene by ENSG:', ensg)
   try {
     const [gene] = await db
       .select({
@@ -254,13 +258,12 @@ export async function getGeneBySymbol(symbol: string) {
 
 export async function createSession(userId?: string) {
   try {
-    const sessionId = '1234'
-    console.log('Creating session:', sessionId)
+    const sessionId = crypto.randomUUID()
     const expiresAt = new Date()
     expiresAt.setFullYear(expiresAt.getFullYear() + 1)
     await db.insert(sessions).values({
       id: sessionId,
-      // userId: userId || null,
+      userId: userId || null,
       expiresAt,
     })
 
@@ -286,7 +289,7 @@ export async function getSession(sessionId: string) {
     const [session] = await db
       .select({
         id: sessions.id,
-        // userId: sessions.userId,
+        userId: sessions.userId,
         createdAt: sessions.createdAt,
         updatedAt: sessions.updatedAt,
       })
@@ -351,6 +354,23 @@ export async function getRecentSearchedGenes({ userId }: { userId: string }) {
   }
 }
 
+interface JobOptions {
+  codon_optimize: string | null
+  codon_optimize_weight: number
+  remove_cryptic_ss: boolean
+  remove_cryptic_ss_weight: number
+  minimize_CpGs: boolean
+  minimize_CpGs_weight: number
+  reduce_kmer_complexity: boolean
+  reduce_kmer_complexity_weight: number
+  enforce_gc: boolean
+  stim_5: boolean
+  stim_3: boolean
+  split_point: number
+  ensure_wggw: boolean
+  wggw_threshold: number
+}
+
 export const createJob = async ({
   userId,
   name,
@@ -360,9 +380,7 @@ export const createJob = async ({
   userId: string
   name: string
   sequence: string
-  options?: {
-    [key: string]: any
-  }
+  options?: JobOptions
 }) => {
   try {
     await db.insert(jobs).values({
