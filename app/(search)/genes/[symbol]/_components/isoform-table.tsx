@@ -89,12 +89,7 @@ export default function IsoformTable({ isoforms }: IsoformListProps) {
                       onClick={() => handleCopy(isoform.codingSequence)}
                       aria-label="Copy coding sequence"
                     >
-                      <span className="hidden sm:inline">
-                        {isoform.codingSequence.slice(0, 20)}...
-                      </span>
-                      <span className="sm:hidden">
-                        {isoform.codingSequence.slice(0, 10)}...
-                      </span>
+                      {isoform.codingSequence.slice(0, 20)}...
                     </button>
                   </TooltipTrigger>
                   <TooltipContent>Click to copy</TooltipContent>
@@ -108,12 +103,7 @@ export default function IsoformTable({ isoforms }: IsoformListProps) {
                       className="hover:text-muted-foreground hover:underline"
                       aria-label="Copy protein sequence"
                     >
-                      <span className="hidden sm:inline">
-                        {isoform.proteinSequence.slice(0, 20)}...
-                      </span>
-                      <span className="sm:hidden">
-                        {isoform.proteinSequence.slice(0, 10)}...
-                      </span>
+                      {isoform.proteinSequence.slice(0, 20)}...
                     </button>
                   </TooltipTrigger>
                   <TooltipContent>Click to copy</TooltipContent>
@@ -121,7 +111,7 @@ export default function IsoformTable({ isoforms }: IsoformListProps) {
               </TableCell>
               <TableCell className="text-right">
                 <Button variant="ghost" size="icon" asChild>
-                  <Link href={`/design-tool?isoform=${isoform.id}`}>
+                  <Link href={`/design-tool?isoform=${isoform.id}`} aria-label={`Customize ${isoform.enst}`}>
                     <ExternalLink />
                   </Link>
                 </Button>

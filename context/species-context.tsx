@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useState, ReactNode } from 'react'
+import { createContext, useContext, useState, useCallback, useMemo, ReactNode } from 'react'
 import { type SpeciesFilter, isSpeciesFilter } from '@/lib/species'
 
 const SpeciesContext = createContext<
@@ -35,16 +35,21 @@ export function SpeciesProvider({ children }: { children: ReactNode }) {
     return 'both'
   })
 
-  const handleSpeciesChange = (value: SpeciesFilter) => {
+  const handleSpeciesChange = useCallback((value: SpeciesFilter) => {
     setSpecies(value)
     localStorage.setItem('species', value)
     const url = new URL(window.location.href)
     url.searchParams.set('species', value)
     window.history.pushState({}, '', url.toString())
-  }
+  }, [])
+
+  const value = useMemo(
+    () => ({ species, handleSpeciesChange }),
+    [species, handleSpeciesChange],
+  )
 
   return (
-    <SpeciesContext.Provider value={{ species, handleSpeciesChange }}>
+    <SpeciesContext.Provider value={value}>
       {children}
     </SpeciesContext.Provider>
   )
