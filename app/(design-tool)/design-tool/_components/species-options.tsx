@@ -6,9 +6,9 @@ import {
   FormControl,
   FormMessage,
 } from '@/components/ui/form'
-import { DnaIcon } from '@/components/dna-icon'
 import { SpeciesIcon } from '@/components/species-icon'
 import { cn } from '@/lib/utils'
+import { Dna } from 'lucide-react'
 import { useFormContext } from 'react-hook-form'
 import { DESIGN_TOOL_SPECIES_OPTIONS } from '../_types/species-options'
 import { FormValues } from './form-schema'
@@ -46,7 +46,7 @@ export function SpeciesOptions() {
                     )}
                   >
                     {value === 'none' ? (
-                      <DnaIcon className="text-muted-foreground size-4" />
+                      <Dna className="text-muted-foreground size-4" />
                     ) : (
                       <SpeciesIcon species={value} className="text-muted-foreground size-4" />
                     )}
