@@ -84,7 +84,7 @@ export function GeneSplitterForm({
                 <AccordionTrigger>
                   <div>
                     <p>Customize codon optimization</p>
-                    <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                    <p className="text-sm text-muted-foreground">
                       By default, the sequence will be codon optimized for the
                       selected species.
                     </p>
@@ -98,7 +98,7 @@ export function GeneSplitterForm({
                 <AccordionTrigger>
                   <div>
                     <p>Customize stimulatory introns</p>
-                    <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                    <p className="text-sm text-muted-foreground">
                       Adjust settings for 5' and 3' stimulatory introns.
                     </p>
                   </div>
@@ -114,7 +114,7 @@ export function GeneSplitterForm({
                 <AccordionTrigger>
                   <div>
                     <p>Customize splice junction</p>
-                    <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                    <p className="text-sm text-muted-foreground">
                       Adjust the splice junction position.
                     </p>
                   </div>
@@ -127,7 +127,7 @@ export function GeneSplitterForm({
                 <AccordionTrigger>
                   <div>
                     <p>Customize parameter weights</p>
-                    <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                    <p className="text-sm text-muted-foreground">
                       Fine tune the inputs to the algorithm.
                     </p>
                   </div>

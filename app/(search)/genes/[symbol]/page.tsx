@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import { Separator } from '@/components/ui/separator'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { getGeneBySymbol } from '@/actions/genes'
 import { getIsoformsByGene } from '@/actions/isoforms'
 import IsoformTable, { IsoformTableLoading } from './_components/isoform-table'
@@ -38,9 +38,7 @@ export default async function GeneSymbolPage({ params }: Props) {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center gap-4">
-        <CardTitle className="font-mono text-2xl font-bold">
-          {gene.symbol}
-        </CardTitle>
+        <h1 className="font-mono text-2xl font-bold leading-none">{gene.symbol}</h1>
         <FavoriteGeneButton gene={gene} />
       </CardHeader>
       <CardContent>

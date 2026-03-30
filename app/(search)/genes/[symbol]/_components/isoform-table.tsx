@@ -46,9 +46,13 @@ export default function IsoformTable({ isoforms }: IsoformListProps) {
     [species, isoforms],
   )
 
-  const handleCopy = (text: string) => {
-    navigator.clipboard.writeText(text)
-    toast.success('Sequence copied to clipboard!')
+  const handleCopy = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text)
+      toast.success('Sequence copied to clipboard!')
+    } catch {
+      toast.error('Failed to copy to clipboard.')
+    }
   }
 
   return (

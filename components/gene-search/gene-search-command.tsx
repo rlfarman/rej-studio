@@ -113,16 +113,10 @@ export function GeneSearchCommand({
                   value={gene.id}
                   onSelect={() => internalHandleSelect(gene)}
                 >
-                  <div
-                    className="grid items-center"
-                    style={{ gridTemplateColumns: '96px 1fr' }}
-                  >
+                  <div className="grid grid-cols-[96px_1fr] items-center">
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <Badge
-                          className="grid w-[96px] items-center gap-2 truncate overflow-hidden font-mono"
-                          style={{ gridTemplateColumns: '24px 1fr' }}
-                        >
+                        <Badge className="grid w-[96px] grid-cols-[24px_1fr] items-center gap-2 truncate overflow-hidden font-mono">
                           <SpeciesIcon
                             species={gene.species}
                             className="text-secondary h-4 w-4"

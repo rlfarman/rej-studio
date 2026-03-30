@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { CommandDialog } from '@/components/ui/command'
 import { useRouter } from 'next/navigation'
 import { type GeneSearchResult } from '@/actions/genes'
@@ -32,6 +32,10 @@ export function GeneSearch({
     })
   const [isOpen, setIsOpen] = useState(false)
   const { addRecentGene } = useRecentGenes()
+  const isMac = useMemo(
+    () => typeof navigator !== 'undefined' && /Mac|iPod|iPhone|iPad/.test(navigator.userAgent),
+    [],
+  )
 
   const handleSelect = (gene: GeneSearchResult) => {
     setIsOpen(false)
@@ -71,7 +75,7 @@ export function GeneSearch({
           <p className="text-muted-foreground hidden text-sm md:block">
             Press{' '}
             <kbd className="bg-muted text-muted-foreground pointer-events-none inline-flex h-5 items-center gap-1 rounded border px-1.5 font-mono text-[10px] font-medium opacity-100 select-none">
-              <span className="text-xs">⌘</span>J
+              <span className="text-xs">{isMac ? '⌘' : 'Ctrl+'}</span>J
             </kbd>
           </p>
         </Button>

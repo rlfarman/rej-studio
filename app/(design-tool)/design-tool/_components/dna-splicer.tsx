@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import * as React from 'react'
+import { useState } from 'react'
 import { useFormContext } from 'react-hook-form'
 import { Slider } from '@/components/ui/slider'
-import { Input } from '@/components/ui/input'
 import {
   FormItem,
   FormLabel,
@@ -19,14 +19,17 @@ export function DNASplicer() {
   const spliceJunctionPosition = watch('spliceJunctionPosition')
   const [percentage, setPercentage] = useState(50)
 
+  const prevSeqLengthRef = React.useRef(codingSequence.length || 1)
   const seqLength = codingSequence.length || 1
 
-  useEffect(() => {
+  // Only recalculate position when sequence length changes (not on every percentage change)
+  if (seqLength !== prevSeqLengthRef.current) {
+    prevSeqLengthRef.current = seqLength
     setValue(
       'spliceJunctionPosition',
       Math.floor((Number(percentage) / 100) * seqLength),
     )
-  }, [seqLength, percentage, setValue])
+  }
 
   const handleSliderChange = (value: number[]) => {
     const newPosition = Math.floor(value[0])
@@ -71,7 +74,7 @@ export function DNASplicer() {
                       field.onChange(e)
                       handlePositionChange(e)
                     }}
-                    className="text-2xl font-bold"
+                    className="border-input bg-transparent text-2xl font-bold outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] rounded-md border px-2 py-1"
                     style={{ width: `${String(field.value).length + 1.5}ch` }}
                     min={1}
                     max={seqLength - 1}
@@ -89,15 +92,15 @@ export function DNASplicer() {
           <FormLabel>Percentage</FormLabel>
           <FormControl>
             <span>
-              <Input
+              <input
                 type="number"
                 value={percentage}
                 onChange={handlePercentageChange}
-                className="text-2xl font-bold"
+                className="border-input bg-transparent text-2xl font-bold outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] rounded-md border px-2 py-1"
                 style={{ width: `${String(percentage).length + 1.5}ch` }}
                 min={0}
                 max={100}
-                step={0.1} // Allow decimal values
+                step={0.1}
               />
               <span className="text-muted-foreground ml-1 text-sm font-normal">
                 %

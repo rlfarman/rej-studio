@@ -38,6 +38,12 @@ export default async function RootLayout({
           <FavoriteGenesProvider>
             <RecentGenesProvider>
               <SpeciesProvider>
+                <a
+                  href="#main-content"
+                  className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-background focus:px-4 focus:py-2 focus:text-foreground focus:shadow-md focus:ring-2 focus:ring-ring"
+                >
+                  Skip to content
+                </a>
                 <SidebarProvider
                   defaultOpen={defaultOpen}
                   className="relative flex h-full w-full flex-row overflow-hidden"
@@ -45,7 +51,7 @@ export default async function RootLayout({
                   <AppSidebar />
                   <SidebarInset className="relative flex h-full min-h-screen max-w-full flex-1 flex-col overflow-hidden">
                     <Header />
-                    <div className="relative h-full w-full flex-1 overflow-auto">
+                    <div id="main-content" className="relative h-full w-full flex-1 overflow-auto">
                       {children}
                     </div>
                     <Footer />

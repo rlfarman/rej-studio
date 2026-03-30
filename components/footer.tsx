@@ -4,11 +4,15 @@ import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
 import { toast } from 'sonner'
 
 export function Footer() {
-  const handleClick = () => {
+  const handleClick = async () => {
     const text = `Bachmann L, Hsu RH, Hermann K, Williams CE, Farman RL, Criales N, Kramer S, Lettieri K, Pfaff SL
 A combinatorial system for gene expression using RNA-fragment end joining (REJ). In preparation. (2025)`
-    navigator.clipboard.writeText(text)
-    toast.success('Citation copied to clipboard!')
+    try {
+      await navigator.clipboard.writeText(text)
+      toast.success('Citation copied to clipboard!')
+    } catch {
+      toast.error('Failed to copy citation to clipboard.')
+    }
   }
 
   return (
@@ -20,11 +24,11 @@ A combinatorial system for gene expression using RNA-fragment end joining (REJ).
             aria-label="Copy citation to clipboard"
             className="text-muted-foreground flex-col text-sm hover:underline"
           >
-            <span className="block text-[0.5rem] group-hover:underline sm:text-xs">
+            <span className="block text-xs sm:text-sm">
               Bachmann L, Hsu RH, Hermann K, Williams CE, Farman RL, Criales N,
               Kramer S, Lettieri K, Pfaff SL.
             </span>
-            <span className="mt-1 block text-[0.5rem] group-hover:underline sm:text-sm">
+            <span className="mt-1 block text-xs sm:text-sm">
               A combinatorial system for gene expression using RNA-fragment end
               joining (REJ). In preparation. (2025)
             </span>
