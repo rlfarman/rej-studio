@@ -1,9 +1,6 @@
 'use client'
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
-import { Check } from 'lucide-react'
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
-import { AnimatePresence, m } from 'motion/react'
-import { popSpring } from '@/lib/motion'
 
 const CITATION = `Bachmann L, Hsu RH, Hermann K, Williams CE, Farman RL, Criales N, Kramer S, Lettieri K, Pfaff SL
 A combinatorial system for gene expression using RNA-fragment end joining (REJ). In preparation. (2025)`
@@ -19,31 +16,16 @@ export function Footer() {
           <button
             onClick={() => copy(CITATION)}
             aria-label="Copy citation to clipboard"
-            className="text-muted-foreground inline-flex items-center gap-2 text-sm hover:underline"
+            className="text-muted-foreground text-sm hover:underline"
           >
-            <span>
-              <span className="block text-xs sm:text-sm">
-                Bachmann L, Hsu RH, Hermann K, Williams CE, Farman RL, Criales N,
-                Kramer S, Lettieri K, Pfaff SL.
-              </span>
-              <span className="mt-1 block text-xs sm:text-sm">
-                A combinatorial system for gene expression using RNA-fragment end
-                joining (REJ). In preparation. (2025)
-              </span>
+            <span className="block text-xs sm:text-sm">
+              Bachmann L, Hsu RH, Hermann K, Williams CE, Farman RL, Criales N,
+              Kramer S, Lettieri K, Pfaff SL.
             </span>
-            <AnimatePresence>
-              {copied && (
-                <m.span
-                  initial={{ opacity: 0, scale: 0 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0 }}
-                  transition={popSpring}
-                  className="shrink-0"
-                >
-                  <Check className="text-chart-2 size-4" />
-                </m.span>
-              )}
-            </AnimatePresence>
+            <span className="mt-1 block text-xs sm:text-sm">
+              A combinatorial system for gene expression using RNA-fragment end
+              joining (REJ). In preparation. (2025)
+            </span>
           </button>
         </TooltipTrigger>
         <TooltipContent side="top">
