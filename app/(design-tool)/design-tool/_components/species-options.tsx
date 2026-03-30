@@ -6,9 +6,11 @@ import {
   FormControl,
   FormMessage,
 } from '@/components/ui/form'
+import { DnaIcon } from '@/components/dna-icon'
+import { SpeciesIcon } from '@/components/species-icon'
+import { cn } from '@/lib/utils'
 import { useFormContext } from 'react-hook-form'
 import { DESIGN_TOOL_SPECIES_OPTIONS } from '../_types/species-options'
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { FormValues } from './form-schema'
 
 export function SpeciesOptions() {
@@ -21,20 +23,40 @@ export function SpeciesOptions() {
         <FormItem>
           <FormLabel>Harmonize codon usage for species</FormLabel>
           <FormControl>
-            <RadioGroup
-              className="flex gap-6"
-              value={field.value}
-              onValueChange={field.onChange}
+            <div
+              role="radiogroup"
+              aria-label="Harmonize codon usage for species"
+              className="grid grid-cols-1 gap-2 sm:grid-cols-3"
             >
-              {DESIGN_TOOL_SPECIES_OPTIONS.map(({ label, value }) => (
-                <div key={value} className="flex items-center space-x-2">
-                  <RadioGroupItem id={value} value={value} />
-                  <label htmlFor={value} className="text-sm font-medium">
-                    {label}
-                  </label>
-                </div>
-              ))}
-            </RadioGroup>
+              {DESIGN_TOOL_SPECIES_OPTIONS.map(({ label, value }) => {
+                const isActive = field.value === value
+
+                return (
+                  <button
+                    key={value}
+                    type="button"
+                    role="radio"
+                    aria-checked={isActive}
+                    onClick={() => field.onChange(value)}
+                    className={cn(
+                      'flex items-center gap-2 rounded-lg border px-3 py-2 text-left transition-colors',
+                      isActive
+                        ? 'border-primary bg-primary/5 ring-primary/20 ring-1'
+                        : 'hover:bg-muted/50',
+                    )}
+                  >
+                    {value === 'none' ? (
+                      <DnaIcon className="text-muted-foreground size-4" />
+                    ) : (
+                      <SpeciesIcon species={value} className="text-muted-foreground size-4" />
+                    )}
+                    <span className={cn('text-sm font-medium', isActive && 'text-primary')}>
+                      {label}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
           </FormControl>
           <FormMessage />
         </FormItem>
