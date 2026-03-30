@@ -8,7 +8,6 @@ import {
 import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
 import type { GeneSearchResult } from '@/actions/genes'
-import { Skeleton } from '@/components/ui/skeleton'
 import {
   Tooltip,
   TooltipTrigger,
@@ -17,18 +16,10 @@ import {
 import { SpeciesIcon } from '@/components/species-icon'
 import { useState } from 'react'
 
-export function GeneResultsSkeleton() {
+export function GeneResultsLoading() {
   return (
-    <div>
-      {[...Array(5)].map((_, index) => (
-        <div
-          key={index}
-          className="grid grid-cols-[72px_1fr] items-center gap-3 px-2 py-3"
-        >
-          <Skeleton className="h-6 w-[72px]" />
-          <Skeleton className="h-4 w-full" />
-        </div>
-      ))}
+    <div className="text-muted-foreground p-4 text-center text-sm">
+      Searching...
     </div>
   )
 }
@@ -81,7 +72,7 @@ export function GeneSearchCommand({
       {showList && (
         <CommandList className="max-h-[300px] overflow-y-auto">
           {isLoading ? (
-            <GeneResultsSkeleton />
+            <GeneResultsLoading />
           ) : error ? (
             <div className="text-destructive p-4 text-center text-sm">
               {error}

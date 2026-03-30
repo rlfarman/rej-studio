@@ -1,13 +1,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
-import { Skeleton } from '@/components/ui/skeleton'
 
 export default function Loading() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="font-mono text-2xl font-bold">
-          <Skeleton className="h-8 w-24" />
+        <CardTitle className="text-muted-foreground font-mono text-2xl font-bold">
+          Loading...
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -16,30 +15,24 @@ export default function Loading() {
             <div className="text-muted-foreground text-sm font-semibold">
               Gene name
             </div>
-            <div>
-              <Skeleton className="h-4 w-36" />
-            </div>
+            <div className="text-muted-foreground/60 text-sm">&mdash;</div>
           </div>
           <div>
             <div className="text-muted-foreground text-sm font-semibold">
               Ensembl Gene ID
             </div>
-            <div className="font-mono">
-              <Skeleton className="h-4 w-48" />
-            </div>
+            <div className="text-muted-foreground/60 font-mono text-sm">&mdash;</div>
           </div>
           <div>
             <div className="text-muted-foreground text-sm font-semibold">
               Chromosome
             </div>
-            <div className="font-mono">
-              <Skeleton className="h-4 w-8" />
-            </div>
+            <div className="text-muted-foreground/60 font-mono text-sm">&mdash;</div>
           </div>
         </div>
         <Separator className="my-4" />
         <h2 className="font-bold">Isoforms</h2>
-        <Skeleton className="h-8 w-24" />
+        <p className="text-muted-foreground text-sm">Loading...</p>
       </CardContent>
     </Card>
   )
