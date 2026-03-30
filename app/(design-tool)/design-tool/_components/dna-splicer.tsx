@@ -62,6 +62,18 @@ export function DNASplicer() {
     return Math.floor(frac * seqLength)
   })
 
+  const hasSequence = codingSequence.length > 0
+
+  if (!hasSequence) {
+    return (
+      <div className="flex h-24 items-center justify-center rounded-md border border-dashed">
+        <p className="text-muted-foreground text-sm">
+          Enter a coding sequence to configure the splice junction
+        </p>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-5">
       {/* Sequence visualization bar */}
