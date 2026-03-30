@@ -8,16 +8,11 @@ import {
   ReactNode,
 } from 'react'
 import { useLocalStorage } from '@/lib/use-local-storage'
-
-interface FavoriteGene {
-  id: string
-  name: string
-  symbol: string
-}
+import type { SavedGene } from '@/lib/domain-types'
 
 interface FavoriteGenesContextValue {
-  favoriteGenes: FavoriteGene[]
-  addFavoriteGene: (gene: FavoriteGene) => void
+  favoriteGenes: SavedGene[]
+  addFavoriteGene: (gene: SavedGene) => void
   removeFavoriteGene: (geneId: string) => void
   isFavoriteGene: (geneId: string) => boolean
 }
@@ -26,16 +21,16 @@ const FavoriteGenesContext = createContext<
   FavoriteGenesContextValue | undefined
 >(undefined)
 
-const EMPTY: FavoriteGene[] = []
+const EMPTY: SavedGene[] = []
 
 export function FavoriteGenesProvider({ children }: { children: ReactNode }) {
-  const [favoriteGenes, setFavoriteGenes] = useLocalStorage<FavoriteGene[]>(
+  const [favoriteGenes, setFavoriteGenes] = useLocalStorage<SavedGene[]>(
     'favoriteGenes',
     EMPTY,
   )
 
   const addFavoriteGene = useCallback(
-    (gene: FavoriteGene) => {
+    (gene: SavedGene) => {
       setFavoriteGenes((prev) => [
         gene,
         ...prev.filter((fav) => fav.id !== gene.id),

@@ -8,16 +8,11 @@ import {
   ReactNode,
 } from 'react'
 import { useLocalStorage } from '@/lib/use-local-storage'
-
-interface RecentGene {
-  id: string
-  name: string
-  symbol: string
-}
+import type { SavedGene } from '@/lib/domain-types'
 
 interface RecentGenesContextValue {
-  recentGenes: RecentGene[]
-  addRecentGene: (gene: RecentGene) => void
+  recentGenes: SavedGene[]
+  addRecentGene: (gene: SavedGene) => void
   clearRecentGenes: () => void
 }
 
@@ -25,16 +20,16 @@ const RecentGenesContext = createContext<RecentGenesContextValue | undefined>(
   undefined,
 )
 
-const EMPTY: RecentGene[] = []
+const EMPTY: SavedGene[] = []
 
 export function RecentGenesProvider({ children }: { children: ReactNode }) {
-  const [recentGenes, setRecentGenes] = useLocalStorage<RecentGene[]>(
+  const [recentGenes, setRecentGenes] = useLocalStorage<SavedGene[]>(
     'recentGenes',
     EMPTY,
   )
 
   const addRecentGene = useCallback(
-    (gene: RecentGene) => {
+    (gene: SavedGene) => {
       setRecentGenes((prev) =>
         [gene, ...prev.filter((r) => r.id !== gene.id)].slice(0, 10),
       )
