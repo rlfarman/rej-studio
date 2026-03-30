@@ -16,7 +16,7 @@ export function SpeciesSelect() {
 
   return (
     <Select onValueChange={handleSpeciesChange} value={species}>
-      <SelectTrigger className="hover:bg-accent z-10 w-fit cursor-pointer border-none font-semibold shadow-none">
+      <SelectTrigger className="hover:bg-accent z-10 w-fit cursor-pointer gap-2 border-none font-semibold shadow-none">
         <SelectValue>
           <div className="flex items-center">
             <SpeciesIcon species={species} />
