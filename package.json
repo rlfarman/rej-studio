@@ -9,8 +9,8 @@
     "db:seed": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' drizzle/seed.ts",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "lint:fix": "next lint --fix",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "type-check": "tsc --noEmit"
   },
@@ -61,6 +61,7 @@
     "@types/node": "^25.5.0",
     "dotenv": "^17.3.1",
     "drizzle-kit": "^0.31.10",
+    "eslint-plugin-react-hooks": "^7.0.1",
     "prettier": "^3.8.1",
     "prettier-plugin-tailwindcss": "^0.7.2",
     "ts-node": "^10.9.2"
