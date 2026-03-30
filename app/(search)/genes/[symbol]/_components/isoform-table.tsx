@@ -106,7 +106,7 @@ export default function IsoformTable({ isoforms }: IsoformListProps) {
               colSpan={6}
               className="text-muted-foreground text-center"
             >
-              No isoforms found for the selected species.
+              No isoforms available for this species. Try selecting a different species filter.
             </TableCell>
           </TableRow>
         )}

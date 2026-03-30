@@ -68,7 +68,7 @@ export function DNASplicer() {
     return (
       <div className="flex h-24 items-center justify-center rounded-md border border-dashed">
         <p className="text-muted-foreground text-sm">
-          Enter a coding sequence to configure the splice junction
+          Add a coding sequence above to configure the splice junction
         </p>
       </div>
     )

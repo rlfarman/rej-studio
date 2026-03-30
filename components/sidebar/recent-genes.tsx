@@ -60,7 +60,7 @@ export function RecentGenes() {
           </SidebarMenu>
         ) : (
           <div className="text-muted-foreground p-4 text-xs">
-            No recent searches yet. Search for genes to see them here!
+            Your recent gene searches will appear here.
           </div>
         )}
       </SidebarGroupContent>
