@@ -83,12 +83,8 @@
           "name": "favorites_user_id_users_id_fk",
           "tableFrom": "favorites",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -96,12 +92,8 @@
           "name": "favorites_gene_id_genes_id_fk",
           "tableFrom": "favorites",
           "tableTo": "genes",
-          "columnsFrom": [
-            "gene_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["gene_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -109,12 +101,8 @@
           "name": "favorites_isoform_id_isoforms_id_fk",
           "tableFrom": "favorites",
           "tableTo": "isoforms",
-          "columnsFrom": [
-            "isoform_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["isoform_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -340,12 +328,8 @@
           "name": "isoforms_geneId_genes_id_fk",
           "tableFrom": "isoforms",
           "tableTo": "genes",
-          "columnsFrom": [
-            "geneId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["geneId"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -423,12 +407,8 @@
           "name": "jobs_user_id_users_id_fk",
           "tableFrom": "jobs",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -497,12 +477,8 @@
           "name": "searches_user_id_users_id_fk",
           "tableFrom": "searches",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -510,12 +486,8 @@
           "name": "searches_gene_id_genes_id_fk",
           "tableFrom": "searches",
           "tableTo": "genes",
-          "columnsFrom": [
-            "gene_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["gene_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -549,12 +521,8 @@
           "name": "sequences_isoform_id_isoforms_id_fk",
           "tableFrom": "sequences",
           "tableTo": "isoforms",
-          "columnsFrom": [
-            "isoform_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["isoform_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -608,12 +576,8 @@
           "name": "sessions_user_id_users_id_fk",
           "tableFrom": "sessions",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -661,9 +625,7 @@
         "users_email_unique": {
           "name": "users_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         }
       },
       "policies": {},
