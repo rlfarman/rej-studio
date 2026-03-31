@@ -98,12 +98,7 @@ export default async function GeneSymbolPage({ params }: Props) {
           )}
         </div>
         <Separator className="my-4" />
-        <div className="flex items-baseline justify-between mb-2">
-          <h2 className="text-lg font-semibold tracking-tight">Isoforms</h2>
-          <span className="text-muted-foreground text-sm">
-            {isoforms.length} total
-          </span>
-        </div>
+        <h2 className="text-lg font-semibold tracking-tight mb-2">Isoforms</h2>
         <IsoformSummary isoforms={isoforms} />
         <Suspense fallback={<IsoformTableLoading />}>
           <IsoformTable isoforms={isoforms} />
