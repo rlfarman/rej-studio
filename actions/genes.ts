@@ -50,21 +50,36 @@ export async function searchGenes(
     return result ? [result] : []
   }
 
+  const lowerQuery = trimmedQuery.toLowerCase()
+  const prefixPattern = `${lowerQuery}%`
+  const containsPattern = `%${lowerQuery}%`
+
   return db
     .select(geneSearchColumns)
     .from(genes)
     .where(
       and(
         or(
-          sql`LOWER(${genes.name}) LIKE LOWER(${`%${trimmedQuery}%`})`,
-          sql`LOWER(${genes.symbol}) LIKE LOWER(${`%${trimmedQuery}%`})`,
-          sql`${`%${trimmedQuery}%`} = ANY(${genes.alternateSymbols})`,
+          sql`LOWER(${genes.symbol}) LIKE LOWER(${containsPattern})`,
+          sql`LOWER(${genes.name}) LIKE LOWER(${containsPattern})`,
+          sql`LOWER(${`%${trimmedQuery}%`}) = ANY(SELECT LOWER(x) FROM unnest(${genes.alternateSymbols}) AS x)`,
+          sql`EXISTS (SELECT 1 FROM unnest(${genes.diseaseAssociations}) AS da WHERE LOWER(da) LIKE LOWER(${containsPattern}))`,
         ),
         species !== 'both' ? eq(genes.species, species) : sql`TRUE`,
       ),
     )
     .groupBy(genes.id)
-    .orderBy(genes.name)
+    .orderBy(
+      sql`CASE
+        WHEN LOWER(${genes.symbol}) = ${lowerQuery} THEN 0
+        WHEN LOWER(${genes.symbol}) LIKE ${prefixPattern} THEN 1
+        WHEN LOWER(${genes.name}) LIKE ${prefixPattern} THEN 2
+        WHEN LOWER(${genes.symbol}) LIKE ${containsPattern} THEN 3
+        WHEN LOWER(${genes.name}) LIKE ${containsPattern} THEN 4
+        ELSE 5
+      END`,
+      genes.name,
+    )
     .limit(6)
 }
 
