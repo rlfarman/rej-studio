@@ -1,7 +1,6 @@
 'use client'
 import { type ReactNode } from 'react'
 import { m } from 'motion/react'
-import { staggerContainer, fadeUp } from '@/lib/motion'
 
 const dnaFloat = {
   rotate: [0, 8, 0],
@@ -13,24 +12,25 @@ const dnaFloat = {
 }
 
 export function Hero({ children }: { children: ReactNode }) {
-  return (
-    <m.div variants={staggerContainer} initial="hidden" animate="visible">
-      {children}
-    </m.div>
-  )
+  return <div>{children}</div>
 }
 
 export function HeroItem({
   children,
   className,
+  index = 0,
 }: {
   children: ReactNode
   className?: string
+  index?: number
 }) {
   return (
-    <m.div variants={fadeUp} className={className}>
+    <div
+      className={`hero-stagger ${className ?? ''}`}
+      style={{ '--stagger': index } as React.CSSProperties}
+    >
       {children}
-    </m.div>
+    </div>
   )
 }
 
