@@ -6,7 +6,6 @@ import {
   SheetHeader,
   SheetTitle,
   SheetDescription,
-  SheetTrigger,
 } from '@/components/ui/sheet'
 import {
   Table,
@@ -30,7 +29,8 @@ import type { IsoformListItem } from '@/lib/domain-types'
 
 interface IsoformComparisonSheetProps {
   isoforms: IsoformListItem[]
-  children: React.ReactNode
+  open: boolean
+  onOpenChange: (open: boolean) => void
 }
 
 const SUITABILITY_VARIANT_MAP = {
@@ -42,7 +42,8 @@ const SUITABILITY_VARIANT_MAP = {
 
 export function IsoformComparisonSheet({
   isoforms,
-  children,
+  open,
+  onOpenChange,
 }: IsoformComparisonSheetProps) {
   const analyses = isoforms.map((iso) => {
     const suitability = assessDesignSuitability(iso.codingSequence)
@@ -64,8 +65,7 @@ export function IsoformComparisonSheet({
   }
 
   return (
-    <Sheet>
-      <SheetTrigger asChild>{children}</SheetTrigger>
+    <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-lg">
         <SheetHeader>
           <SheetTitle>Compare Isoforms</SheetTitle>

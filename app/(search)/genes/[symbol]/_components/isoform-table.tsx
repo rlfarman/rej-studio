@@ -71,6 +71,7 @@ export default function IsoformTable({ isoforms }: IsoformListProps) {
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [comparisonOpen, setComparisonOpen] = useState(false)
 
   const filteredIsoforms = useMemo(
     () =>
@@ -128,8 +129,13 @@ export default function IsoformTable({ isoforms }: IsoformListProps) {
   const toggleSelected = useCallback((id: string) => {
     setSelectedIds((prev) => {
       const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else if (next.size < 3) next.add(id)
+      if (next.has(id)) {
+        next.delete(id)
+        if (next.size === 0) setComparisonOpen(false)
+      } else if (next.size < 3) {
+        next.add(id)
+        setComparisonOpen(true)
+      }
       return next
     })
   }, [])
@@ -226,13 +232,17 @@ export default function IsoformTable({ isoforms }: IsoformListProps) {
 
       {selectedIds.size > 0 && (
         <div className="sticky bottom-4 z-10 mt-4 flex justify-center">
-          <IsoformComparisonSheet isoforms={selectedIsoforms}>
-            <Button size="sm">
-              Compare {selectedIds.size} isoform{selectedIds.size > 1 ? 's' : ''}
-            </Button>
-          </IsoformComparisonSheet>
+          <Button size="sm" onClick={() => setComparisonOpen(true)}>
+            Compare {selectedIds.size} isoform{selectedIds.size > 1 ? 's' : ''}
+          </Button>
         </div>
       )}
+
+      <IsoformComparisonSheet
+        isoforms={selectedIsoforms}
+        open={comparisonOpen}
+        onOpenChange={setComparisonOpen}
+      />
     </>
   )
 }
