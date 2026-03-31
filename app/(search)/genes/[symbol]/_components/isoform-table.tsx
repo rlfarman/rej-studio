@@ -44,7 +44,7 @@ import {
   getSuitabilityConfig,
 } from '@/lib/design-suitability'
 import { IsoformValidationBadges } from './isoform-validation-badges'
-import { IsoformComparisonSheet } from './isoform-comparison-sheet'
+import { IsoformComparisonPanel } from './isoform-comparison-sheet'
 import type { IsoformListItem } from '@/lib/domain-types'
 
 interface IsoformListProps {
@@ -158,92 +158,95 @@ export default function IsoformTable({ isoforms }: IsoformListProps) {
   }
 
   return (
-    <>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-10">
-              <span className="sr-only">Select</span>
-            </TableHead>
-            <TableHead className="w-8">
-              <span className="sr-only">Expand</span>
-            </TableHead>
-            <SortableHead
-              label="CDS"
-              sortKey="cdsLength"
-              currentKey={sortKey}
-              direction={sortDirection}
-              onSort={toggleSort}
-            />
-            <SortableHead
-              label="Protein"
-              sortKey="proteinLength"
-              currentKey={sortKey}
-              direction={sortDirection}
-              onSort={toggleSort}
-              className="hidden md:table-cell"
-            />
-            <TableHead className="hidden lg:table-cell">Suitability</TableHead>
-            <TableHead className="hidden md:table-cell">Species</TableHead>
-            <SortableHead
-              label={
-                <>
-                  <span className="hidden sm:inline">Ensembl Transcript ID</span>
-                  <span className="sm:hidden">ENST</span>
-                </>
-              }
-              sortKey="enst"
-              currentKey={sortKey}
-              direction={sortDirection}
-              onSort={toggleSort}
-            />
-            <TableHead className="text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {sortedIsoforms.map((isoform) => {
-            const isExpanded = expandedIds.has(isoform.id)
-            const isSelected = selectedIds.has(isoform.id)
-            const suitability = assessDesignSuitability(isoform.codingSequence)
-            const suitConfig = getSuitabilityConfig(suitability)
-            const cdsId = `cds-${isoform.id}`
-            const fastaId = `fasta-${isoform.id}`
-
-            return (
-              <IsoformRow
-                key={isoform.id}
-                isoform={isoform}
-                isExpanded={isExpanded}
-                isSelected={isSelected}
-                canSelect={selectedIds.size < 3 || isSelected}
-                suitability={suitability}
-                suitConfig={suitConfig}
-                cdsId={cdsId}
-                fastaId={fastaId}
-                isCopied={isCopied}
-                copy={copy}
-                onToggleExpanded={toggleExpanded}
-                onToggleSelected={toggleSelected}
+    <div className="flex gap-0">
+      <div className="min-w-0 flex-1">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-10">
+                <span className="sr-only">Select</span>
+              </TableHead>
+              <TableHead className="w-8">
+                <span className="sr-only">Expand</span>
+              </TableHead>
+              <SortableHead
+                label="CDS"
+                sortKey="cdsLength"
+                currentKey={sortKey}
+                direction={sortDirection}
+                onSort={toggleSort}
               />
-            )
-          })}
-        </TableBody>
-      </Table>
+              <SortableHead
+                label="Protein"
+                sortKey="proteinLength"
+                currentKey={sortKey}
+                direction={sortDirection}
+                onSort={toggleSort}
+                className="hidden md:table-cell"
+              />
+              <TableHead className="hidden lg:table-cell">Suitability</TableHead>
+              <TableHead className="hidden md:table-cell">Species</TableHead>
+              <SortableHead
+                label={
+                  <>
+                    <span className="hidden sm:inline">Ensembl Transcript ID</span>
+                    <span className="sm:hidden">ENST</span>
+                  </>
+                }
+                sortKey="enst"
+                currentKey={sortKey}
+                direction={sortDirection}
+                onSort={toggleSort}
+              />
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {sortedIsoforms.map((isoform) => {
+              const isExpanded = expandedIds.has(isoform.id)
+              const isSelected = selectedIds.has(isoform.id)
+              const suitability = assessDesignSuitability(isoform.codingSequence)
+              const suitConfig = getSuitabilityConfig(suitability)
+              const cdsId = `cds-${isoform.id}`
+              const fastaId = `fasta-${isoform.id}`
 
-      {selectedIds.size > 0 && (
-        <div className="sticky bottom-4 z-10 mt-4 flex justify-center">
-          <Button size="sm" onClick={() => setComparisonOpen(true)}>
-            Compare {selectedIds.size} isoform{selectedIds.size > 1 ? 's' : ''}
-          </Button>
-        </div>
+              return (
+                <IsoformRow
+                  key={isoform.id}
+                  isoform={isoform}
+                  isExpanded={isExpanded}
+                  isSelected={isSelected}
+                  canSelect={selectedIds.size < 3 || isSelected}
+                  suitability={suitability}
+                  suitConfig={suitConfig}
+                  cdsId={cdsId}
+                  fastaId={fastaId}
+                  isCopied={isCopied}
+                  copy={copy}
+                  onToggleExpanded={toggleExpanded}
+                  onToggleSelected={toggleSelected}
+                />
+              )
+            })}
+          </TableBody>
+        </Table>
+
+        {selectedIds.size > 0 && !comparisonOpen && (
+          <div className="mt-4 flex justify-center">
+            <Button size="sm" onClick={() => setComparisonOpen(true)}>
+              Compare {selectedIds.size} isoform{selectedIds.size > 1 ? 's' : ''}
+            </Button>
+          </div>
+        )}
+      </div>
+
+      {comparisonOpen && selectedIsoforms.length > 0 && (
+        <IsoformComparisonPanel
+          isoforms={selectedIsoforms}
+          onClose={() => setComparisonOpen(false)}
+        />
       )}
-
-      <IsoformComparisonSheet
-        isoforms={selectedIsoforms}
-        open={comparisonOpen}
-        onOpenChange={setComparisonOpen}
-      />
-    </>
+    </div>
   )
 }
 
