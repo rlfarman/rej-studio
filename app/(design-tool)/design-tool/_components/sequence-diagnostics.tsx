@@ -16,7 +16,7 @@ import {
   getStopCodonStatus,
   findInvalidChars,
   assessFragmentBalance,
-} from '@/design-tool/lib/sequence-utils'
+} from '@/lib/sequence-utils'
 import { AavPreflight } from './aav-size-estimator'
 
 function DiagBadge({

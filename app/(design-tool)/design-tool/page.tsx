@@ -2,6 +2,7 @@ import { getIsoformAndGeneByIsoformId } from '@/actions/isoforms'
 import { GeneSplitterForm } from '@/design-tool/components/gene-splitter-form'
 import type { DesignToolSpecies } from './_types/species-options'
 import { isSpecies } from '@/lib/species'
+import { PRESETS } from './_lib/presets'
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -19,8 +20,15 @@ async function DesignToolPage({
     ? params.isoform[0]
     : params.isoform
 
+  const presetKey = Array.isArray(params.preset)
+    ? params.preset[0]
+    : params.preset
+
+  const presetValues =
+    presetKey && presetKey in PRESETS ? PRESETS[presetKey].values : undefined
+
   if (!isoformId) {
-    return <GeneSplitterForm />
+    return <GeneSplitterForm defaultPreset={presetValues} />
   }
 
   const result = isoformId
@@ -28,7 +36,7 @@ async function DesignToolPage({
     : undefined
 
   if (!result) {
-    return <GeneSplitterForm />
+    return <GeneSplitterForm defaultPreset={presetValues} />
   }
 
   const { isoform, gene } = result
@@ -41,6 +49,7 @@ async function DesignToolPage({
       defaultName={`Custom ${gene.symbol}`}
       defaultSpecies={validSpecies}
       defaultCodingSequence={isoform.codingSequence}
+      defaultPreset={presetValues}
     />
   )
 }

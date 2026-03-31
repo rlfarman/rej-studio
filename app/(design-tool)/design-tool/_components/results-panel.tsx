@@ -28,7 +28,7 @@ import { toast } from 'sonner'
 import { downloadResultsZip } from '@/design-tool/lib/build-zip'
 import { ComparisonPanel } from './comparison-panel'
 import { AavResults } from './aav-size-estimator'
-import { formatFasta } from '@/design-tool/lib/fasta'
+import { formatFasta } from '@/lib/fasta'
 
 interface ResultsPanelProps {
   result: ProcessResult

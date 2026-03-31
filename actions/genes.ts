@@ -22,6 +22,7 @@ const geneDetailColumns = {
   ...geneSearchColumns,
   ENSG: genes.ENSG,
   chromosome: genes.chromosome,
+  diseaseAssociations: genes.diseaseAssociations,
 } as const
 
 export async function searchGenes(
