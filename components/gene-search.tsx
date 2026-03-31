@@ -8,6 +8,7 @@ import { SearchIcon } from 'lucide-react'
 import { useGeneSearch } from '@/hooks/use-gene-search'
 import { GeneSearchCommand } from './gene-search/gene-search-command'
 import { useRecentGenes } from '@/context/recent-genes-context'
+import { useFavoriteGenes } from '@/context/favorite-genes-context'
 import type { SpeciesFilter } from '@/lib/species'
 
 interface GeneSearchProperties {
@@ -43,7 +44,8 @@ export function GeneSearch({
       defaultQuery,
     })
   const [isOpen, setIsOpen] = useState(false)
-  const { addRecentGene } = useRecentGenes()
+  const { recentGenes, addRecentGene } = useRecentGenes()
+  const { favoriteGenes } = useFavoriteGenes()
   const isMac = useSyncExternalStore(
     subscribeToPlatformStore,
     getPlatformSnapshot,
@@ -102,6 +104,9 @@ export function GeneSearch({
             setIsOpen={setIsOpen}
             handleSelect={handleSelect}
             error={error}
+            recentGenes={recentGenes}
+            favoriteGenes={favoriteGenes}
+
           />
         </CommandDialog>
       </div>
@@ -118,6 +123,8 @@ export function GeneSearch({
       setIsOpen={setIsOpen}
       handleSelect={handleSelect}
       error={error}
+      recentGenes={recentGenes}
+      favoriteGenes={favoriteGenes}
     />
   )
 }

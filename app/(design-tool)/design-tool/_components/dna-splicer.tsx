@@ -109,7 +109,7 @@ export function DNASplicer() {
           </div>
         </div>
         {balance === 'imbalanced' && (
-          <p className="text-destructive text-xs">
+          <p className="text-destructive-foreground text-xs">
             Fragments are highly imbalanced. This may cause issues with AAV
             packaging or expression.
           </p>
