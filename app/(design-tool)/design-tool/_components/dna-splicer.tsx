@@ -15,6 +15,12 @@ import {
 import { FormValues } from './form-schema'
 import { assessFragmentBalance } from '@/design-tool/lib/sequence-utils'
 
+/** AAV packaging constants (keep in sync with aav-size-estimator) */
+const AAV_OVERHEAD_BP = 1540
+const AAV_PACKAGING_LIMIT = 4700
+const AAV_MAX_PAYLOAD = AAV_PACKAGING_LIMIT - AAV_OVERHEAD_BP // 3160 bp
+const AAV_TIGHT_PAYLOAD = AAV_PACKAGING_LIMIT + 300 - AAV_OVERHEAD_BP // 3460 bp
+
 export function DNASplicer() {
   const { control, setValue, watch } = useFormContext<FormValues>()
   const codingSequence = watch('codingSequence')
@@ -79,6 +85,16 @@ export function DNASplicer() {
   const balance = assessFragmentBalance(position, seqLength)
   const midpoint = Math.floor(seqLength / 2)
 
+  // AAV capacity zone boundaries (slider position values)
+  // 5' fits when: position <= AAV_MAX_PAYLOAD
+  // 3' fits when: seqLength - position <= AAV_MAX_PAYLOAD => position >= seqLength - AAV_MAX_PAYLOAD
+  const safeLeft = Math.max(1, seqLength - AAV_MAX_PAYLOAD) // min position for 3' to fit
+  const safeRight = Math.min(seqLength - 1, AAV_MAX_PAYLOAD) // max position for 5' to fit
+  const tightLeft = Math.max(1, seqLength - AAV_TIGHT_PAYLOAD)
+  const tightRight = Math.min(seqLength - 1, AAV_TIGHT_PAYLOAD)
+  const hasSafeZone = safeLeft <= safeRight
+  const needsIndicator = seqLength > AAV_MAX_PAYLOAD // only show when sequence is large enough to matter
+
   if (!hasSequence) {
     return (
       <div className="flex h-24 items-center justify-center rounded-md border border-dashed">
@@ -124,22 +140,52 @@ export function DNASplicer() {
 
       {/* Slider with tick marks */}
       <div className="space-y-1">
-        <FormField
-          name="spliceJunctionPosition"
-          control={control}
-          render={({ field }) => (
-            <Slider
-              value={[field.value]}
-              max={seqLength - 1}
-              min={1}
-              step={1}
-              onValueChange={(value) => {
-                field.onChange(value[0])
-                handleSliderChange(value)
+        {/* AAV capacity zone indicator bar */}
+        {needsIndicator && (
+          <div
+            className="relative mb-1.5 h-1.5 w-full overflow-hidden rounded-full"
+            aria-hidden="true"
+          >
+            {/* Base: over-limit background */}
+            <div className="bg-destructive/20 absolute inset-0" />
+            {/* Tight zone */}
+            <div
+              className="absolute inset-y-0 bg-yellow-400/30"
+              style={{
+                left: `${(tightLeft / seqLength) * 100}%`,
+                right: `${((seqLength - tightRight) / seqLength) * 100}%`,
               }}
             />
-          )}
-        />
+            {/* Safe zone */}
+            {hasSafeZone && (
+              <div
+                className="absolute inset-y-0 bg-emerald-500/30"
+                style={{
+                  left: `${(safeLeft / seqLength) * 100}%`,
+                  right: `${((seqLength - safeRight) / seqLength) * 100}%`,
+                }}
+              />
+            )}
+          </div>
+        )}
+        <div>
+          <FormField
+            name="spliceJunctionPosition"
+            control={control}
+            render={({ field }) => (
+              <Slider
+                value={[field.value]}
+                max={seqLength - 1}
+                min={1}
+                step={1}
+                onValueChange={(value) => {
+                  field.onChange(value[0])
+                  handleSliderChange(value)
+                }}
+              />
+            )}
+          />
+        </div>
         <div className="relative h-4 w-full">
           {/* Midpoint marker */}
           <span
@@ -166,6 +212,25 @@ export function DNASplicer() {
           ))}
         </div>
       </div>
+
+      {/* AAV zone legend */}
+      {needsIndicator && (
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          <span className="text-muted-foreground text-[10px]">AAV capacity:</span>
+          <span className="flex items-center gap-1 text-[10px]">
+            <span className="inline-block size-2 rounded-sm bg-emerald-500/40" />
+            <span className="text-muted-foreground">Both fit</span>
+          </span>
+          <span className="flex items-center gap-1 text-[10px]">
+            <span className="inline-block size-2 rounded-sm bg-yellow-400/40" />
+            <span className="text-muted-foreground">Tight</span>
+          </span>
+          <span className="flex items-center gap-1 text-[10px]">
+            <span className="bg-destructive/30 inline-block size-2 rounded-sm" />
+            <span className="text-muted-foreground">Over limit</span>
+          </span>
+        </div>
+      )}
 
       {/* Quick actions */}
       <div className="flex flex-wrap items-center gap-2">
