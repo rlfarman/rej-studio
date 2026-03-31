@@ -1,13 +1,16 @@
 import { notFound } from 'next/navigation'
 import { Separator } from '@/components/ui/separator'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 import { getGeneBySymbol } from '@/actions/genes'
 import { getIsoformsByGene } from '@/actions/isoforms'
 import IsoformTable, { IsoformTableLoading } from './_components/isoform-table'
+import { IsoformSummary } from './_components/isoform-summary'
 import { Suspense } from 'react'
 import { FavoriteGeneButton } from './_components/favorite-gene-button'
 import { Metadata } from 'next'
 import { cache } from 'react'
+import { SPECIES_DISPLAY_NAME, type Species } from '@/lib/species'
 
 type Props = {
   params: Promise<{ symbol: string }>
@@ -34,6 +37,10 @@ export default async function GeneSymbolPage({ params }: Props) {
   }
 
   const isoforms = await getIsoformsByGene(gene.id)
+
+  const speciesAvailable = [
+    ...new Set(isoforms.map((i) => i.species)),
+  ] as Species[]
 
   return (
     <Card>
@@ -65,9 +72,34 @@ export default async function GeneSymbolPage({ params }: Props) {
               <div className="font-mono">{gene.chromosome}</div>
             </div>
           )}
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-muted-foreground text-sm font-semibold">
+              Species
+            </span>
+            {speciesAvailable.map((s) => (
+              <Badge key={s} variant="secondary">
+                {SPECIES_DISPLAY_NAME[s]}
+              </Badge>
+            ))}
+          </div>
+          {gene.diseaseAssociations && gene.diseaseAssociations.length > 0 && (
+            <div>
+              <div className="text-muted-foreground text-sm font-semibold mb-1">
+                Disease associations
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {gene.diseaseAssociations.map((disease) => (
+                  <Badge key={disease} variant="outline">
+                    {disease}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
         <Separator className="my-4" />
-        <h2 className="text-lg font-semibold tracking-tight">Isoforms</h2>
+        <h2 className="text-lg font-semibold tracking-tight mb-2">Isoforms</h2>
+        <IsoformSummary isoforms={isoforms} />
         <Suspense fallback={<IsoformTableLoading />}>
           <IsoformTable isoforms={isoforms} />
         </Suspense>

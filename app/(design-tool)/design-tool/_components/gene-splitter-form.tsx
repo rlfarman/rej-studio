@@ -44,12 +44,14 @@ interface GeneSplitterFormProperties {
   defaultCodingSequence?: string
   defaultName?: string
   defaultSpecies?: DesignToolSpecies
+  defaultPreset?: Partial<FormValues>
 }
 
 export function GeneSplitterForm({
   defaultCodingSequence,
   defaultName,
   defaultSpecies,
+  defaultPreset,
 }: GeneSplitterFormProperties) {
   const [result, setResult] = useState<ProcessResult | null>(null)
   const resultsRef = useRef<HTMLDivElement>(null)
@@ -74,6 +76,7 @@ export function GeneSplitterForm({
       spliceJunctionPosition: defaultCodingSequence
         ? Math.floor(defaultCodingSequence.length / 2)
         : 1,
+      ...defaultPreset,
     },
   })
 

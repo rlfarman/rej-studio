@@ -11,9 +11,12 @@ export async function getIsoformsByGene(geneId: string) {
         id: isoforms.id,
         enst: isoforms.ENST,
         codingSequenceLength: isoforms.codingSequenceLength,
+        proteinSequenceLength: isoforms.proteinSequenceLength,
         codingSequence: isoforms.codingSequence,
         proteinSequence: isoforms.proteinSequence,
         species: isoforms.species,
+        defaultFivePrimeSequence: isoforms.defaultFivePrimeSequence,
+        defaultThreePrimeSequence: isoforms.defaultThreePrimeSequence,
       })
       .from(isoforms)
       .where(eq(isoforms.geneId, geneId))

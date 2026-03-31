@@ -14,7 +14,7 @@ import { FormValues } from './form-schema'
 import { SequenceWarnings } from './sequence-warnings'
 import { SequenceHighlight } from './sequence-highlight'
 import { cn } from '@/lib/utils'
-import { cleanSequence, parseFasta } from '@/design-tool/lib/fasta'
+import { cleanSequence, parseFasta } from '@/lib/fasta'
 import { toast } from 'sonner'
 
 const MAX_LENGTH = 50_000
