@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button'
 import { Upload } from 'lucide-react'
 import { FormValues } from './form-schema'
 import { SequenceWarnings } from './sequence-warnings'
+import { SequenceHighlight } from './sequence-highlight'
 import { cn } from '@/lib/utils'
 import { cleanSequence, parseFasta } from '@/design-tool/lib/fasta'
 import { toast } from 'sonner'
@@ -23,6 +24,15 @@ export function CodingSequenceInput() {
   const value = watch('codingSequence')
   const length = value?.length ?? 0
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const backdropRef = useRef<HTMLDivElement>(null)
+
+  const syncScroll = useCallback(() => {
+    if (textareaRef.current && backdropRef.current) {
+      backdropRef.current.scrollTop = textareaRef.current.scrollTop
+      backdropRef.current.scrollLeft = textareaRef.current.scrollLeft
+    }
+  }, [])
 
   const applyCleanedSequence = useCallback(
     (text: string, source: string) => {
@@ -93,6 +103,9 @@ export function CodingSequenceInput() {
     [applyCleanedSequence, setValue, watch],
   )
 
+  const sharedTextStyles =
+    'px-3 py-2 font-mono text-sm leading-normal break-all whitespace-pre-wrap'
+
   return (
     <FormField
       name="codingSequence"
@@ -122,19 +135,45 @@ export function CodingSequenceInput() {
             />
           </div>
           <FormControl>
-            <textarea
-              placeholder="ATGATTACA... (paste sequence or upload FASTA)"
-              rows={4}
-              aria-required="true"
-              {...field}
-              onPaste={handlePaste}
-              className={cn(
-                'border-input file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground flex w-full min-w-0 rounded-md border bg-transparent px-3 py-2 font-mono text-sm shadow-xs transition-[color,box-shadow] outline-none disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
-                'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
-                'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
-                'resize-y',
-              )}
-            />
+            <div className="relative min-h-[6.5rem]">
+              {/* Highlight backdrop */}
+              <div
+                ref={backdropRef}
+                aria-hidden="true"
+                className={cn(
+                  sharedTextStyles,
+                  'pointer-events-none absolute inset-0 overflow-hidden rounded-md border border-transparent',
+                  'text-foreground',
+                )}
+              >
+                {value ? (
+                  <SequenceHighlight sequence={value} />
+                ) : (
+                  <span className="text-transparent">placeholder</span>
+                )}
+              </div>
+              {/* Transparent textarea on top */}
+              <textarea
+                placeholder="ATGATTACA... (paste sequence or upload FASTA)"
+                rows={4}
+                aria-required="true"
+                {...field}
+                ref={(el) => {
+                  // Merge refs: react-hook-form's ref + our local ref
+                  field.ref(el)
+                  ;(textareaRef as React.MutableRefObject<HTMLTextAreaElement | null>).current = el
+                }}
+                onPaste={handlePaste}
+                onScroll={syncScroll}
+                className={cn(
+                  sharedTextStyles,
+                  'border-input placeholder:text-muted-foreground selection:bg-primary/30 relative flex w-full min-w-0 rounded-md border bg-transparent shadow-xs transition-[color,box-shadow] outline-none disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
+                  'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
+                  'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
+                  'resize-y text-transparent caret-foreground',
+                )}
+              />
+            </div>
           </FormControl>
           <FormAssistiveText className="min-w-0">
             <span className="flex min-h-5 items-start justify-between gap-4">
