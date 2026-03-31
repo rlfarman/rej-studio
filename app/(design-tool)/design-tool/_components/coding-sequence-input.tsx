@@ -177,11 +177,6 @@ export function CodingSequenceInput() {
           </FormControl>
           <FormAssistiveText className="min-w-0">
             <span className="flex min-h-5 items-start justify-between gap-4">
-              <span>
-                Valid characters: A, C, G, T, U. Length must be a multiple of 3.
-                Paste or upload FASTA — headers and whitespace are stripped
-                automatically.
-              </span>
               <span
                 className={cn(
                   'shrink-0 tabular-nums',
