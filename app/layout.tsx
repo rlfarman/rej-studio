@@ -10,7 +10,6 @@ import { Toaster } from '@/components/ui/sonner'
 import { FavoriteGenesProvider } from '@/context/favorite-genes-context'
 import { RecentGenesProvider } from '@/context/recent-genes-context'
 import { SpeciesProvider } from '@/context/species-context'
-import { SearchHistoryProvider } from '@/context/search-history-context'
 import { cookies } from 'next/headers'
 import { Analytics } from '@vercel/analytics/next'
 
@@ -38,7 +37,6 @@ export default async function RootLayout({
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <FavoriteGenesProvider>
             <RecentGenesProvider>
-              <SearchHistoryProvider>
               <SpeciesProvider>
                 <a
                   href="#main-content"
@@ -64,7 +62,6 @@ export default async function RootLayout({
                 </SidebarProvider>
                 <Toaster />
               </SpeciesProvider>
-              </SearchHistoryProvider>
             </RecentGenesProvider>
           </FavoriteGenesProvider>
         </ThemeProvider>

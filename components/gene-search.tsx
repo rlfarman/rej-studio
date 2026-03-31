@@ -9,7 +9,6 @@ import { useGeneSearch } from '@/hooks/use-gene-search'
 import { GeneSearchCommand } from './gene-search/gene-search-command'
 import { useRecentGenes } from '@/context/recent-genes-context'
 import { useFavoriteGenes } from '@/context/favorite-genes-context'
-import { useSearchHistory } from '@/context/search-history-context'
 import type { SpeciesFilter } from '@/lib/species'
 
 interface GeneSearchProperties {
@@ -47,7 +46,6 @@ export function GeneSearch({
   const [isOpen, setIsOpen] = useState(false)
   const { recentGenes, addRecentGene } = useRecentGenes()
   const { favoriteGenes } = useFavoriteGenes()
-  const { searchHistory, addSearchQuery } = useSearchHistory()
   const isMac = useSyncExternalStore(
     subscribeToPlatformStore,
     getPlatformSnapshot,
@@ -56,9 +54,6 @@ export function GeneSearch({
 
   const handleSelect = (gene: GeneSearchResult) => {
     setIsOpen(false)
-    if (query.trim()) {
-      addSearchQuery(query.trim())
-    }
     addRecentGene({
       id: gene.id,
       name: gene.name,
@@ -111,7 +106,7 @@ export function GeneSearch({
             error={error}
             recentGenes={recentGenes}
             favoriteGenes={favoriteGenes}
-            searchHistory={searchHistory}
+
           />
         </CommandDialog>
       </div>
@@ -130,7 +125,6 @@ export function GeneSearch({
       error={error}
       recentGenes={recentGenes}
       favoriteGenes={favoriteGenes}
-      searchHistory={searchHistory}
     />
   )
 }

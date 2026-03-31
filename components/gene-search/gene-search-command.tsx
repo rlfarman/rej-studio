@@ -18,7 +18,7 @@ import {
 import { SpeciesIcon } from '@/components/species-icon'
 import { HighlightMatch } from '@/lib/highlight-match'
 import { useState } from 'react'
-import { ClockIcon, HeartIcon, SearchIcon } from 'lucide-react'
+import { ClockIcon, HeartIcon } from 'lucide-react'
 import type { SavedGene } from '@/lib/domain-types'
 
 export function GeneResultsLoading() {
@@ -40,7 +40,6 @@ interface GeneSearchInputProps {
   error: string | null
   recentGenes: SavedGene[]
   favoriteGenes: SavedGene[]
-  searchHistory: string[]
 }
 
 export function GeneSearchCommand({
@@ -54,7 +53,6 @@ export function GeneSearchCommand({
   error,
   recentGenes,
   favoriteGenes,
-  searchHistory,
 }: GeneSearchInputProps) {
   const [showList, setShowList] = useState(true)
 
@@ -66,8 +64,7 @@ export function GeneSearchCommand({
   const showEmptyState = query.trim() === '' && !hasSearched
   const hasRecentGenes = recentGenes.length > 0
   const hasFavoriteGenes = favoriteGenes.length > 0
-  const hasSearchHistory = searchHistory.length > 0
-  const hasAnySuggestions = hasRecentGenes || hasFavoriteGenes || hasSearchHistory
+  const hasAnySuggestions = hasRecentGenes || hasFavoriteGenes
 
   return (
     <Command
@@ -144,25 +141,6 @@ export function GeneSearchCommand({
                           <span className="text-muted-foreground truncate">
                             {gene.name}
                           </span>
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </>
-                )}
-                {hasSearchHistory && (
-                  <>
-                    {(hasFavoriteGenes || hasRecentGenes) && (
-                      <CommandSeparator />
-                    )}
-                    <CommandGroup heading="Recent Searches">
-                      {searchHistory.slice(0, 5).map((q) => (
-                        <CommandItem
-                          key={`history-${q}`}
-                          value={`history-${q}`}
-                          onSelect={() => setQuery(q)}
-                        >
-                          <SearchIcon className="text-muted-foreground h-4 w-4" />
-                          <span>{q}</span>
                         </CommandItem>
                       ))}
                     </CommandGroup>
