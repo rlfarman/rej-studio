@@ -33,12 +33,7 @@ interface DiagBadgeProps {
 }
 
 export function DiagBadge({ status, label, tooltip }: DiagBadgeProps) {
-  const variant =
-    status === 'good'
-      ? 'secondary'
-      : status === 'error'
-        ? 'destructive'
-        : 'outline'
+  const variant = status === 'error' ? 'destructive' : 'secondary'
 
   const Icon =
     status === 'good'
@@ -49,15 +44,22 @@ export function DiagBadge({ status, label, tooltip }: DiagBadgeProps) {
           ? CircleAlert
           : CircleMinus
 
+  const iconColor =
+    status === 'good'
+      ? 'text-green-500'
+      : status === 'warn'
+        ? 'text-yellow-500'
+        : ''
+
   return (
     <Tooltip>
       <TooltipTrigger asChild>
         <Badge variant={variant} className="gap-1 select-none">
-          <Icon className="size-3" />
+          <Icon className={`size-3 ${iconColor}`} />
           {label}
         </Badge>
       </TooltipTrigger>
-      <TooltipContent className="max-w-56">{tooltip}</TooltipContent>
+      <TooltipContent>{tooltip}</TooltipContent>
     </Tooltip>
   )
 }
