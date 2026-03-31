@@ -1,16 +1,12 @@
 'use client'
 
 import { useMemo } from 'react'
-import { Badge } from '@/components/ui/badge'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
+import { DiagBadge, type DiagStatus } from '@/components/diag-badge'
 import {
   computeGcPercent,
   hasStartCodon,
   getStopCodonStatus,
+  findInvalidChars,
 } from '@/lib/sequence-utils'
 
 interface IsoformValidationBadgesProps {
@@ -22,82 +18,112 @@ export function IsoformValidationBadges({
   codingSequence,
   codingSequenceLength,
 }: IsoformValidationBadgesProps) {
-  const checks = useMemo(() => {
-    const multipleOf3 = codingSequence.length % 3 === 0
-    const startCodon = hasStartCodon(codingSequence)
-    const stopCodon = getStopCodonStatus(codingSequence)
-    const gc = computeGcPercent(codingSequence)
+  const seq = codingSequence.toUpperCase()
+
+  const stats = useMemo(() => {
+    const bpLength = seq.length
+    const aaLength = Math.floor(bpLength / 3)
+    const gcPercent = computeGcPercent(seq)
+    const startCodon = hasStartCodon(seq)
+    const stopCodon = getStopCodonStatus(seq)
+    const invalidChars = findInvalidChars(seq)
+    const multipleOf3 = bpLength % 3 === 0
     const fitsAav = codingSequenceLength <= 4700
 
-    return { multipleOf3, startCodon, stopCodon, gc, fitsAav }
-  }, [codingSequence, codingSequenceLength])
+    return {
+      bpLength,
+      aaLength,
+      gcPercent,
+      startCodon,
+      stopCodon,
+      invalidChars,
+      multipleOf3,
+      fitsAav,
+    }
+  }, [seq, codingSequenceLength])
 
-  function gcVariant(): 'default' | 'secondary' | 'destructive' {
-    if (checks.gc >= 40 && checks.gc <= 60) return 'default'
-    if (checks.gc >= 30 && checks.gc <= 70) return 'secondary'
-    return 'destructive'
-  }
+  const gcStatus: DiagStatus =
+    stats.gcPercent >= 35 && stats.gcPercent <= 60
+      ? 'good'
+      : stats.gcPercent >= 25 && stats.gcPercent <= 70
+        ? 'warn'
+        : 'error'
 
   return (
-    <div className="flex flex-wrap gap-1.5">
-      <ValidationBadge
-        pass={checks.multipleOf3}
-        label={checks.multipleOf3 ? 'Codon-complete' : 'Not multiple of 3'}
-        tooltip="CDS length should be a multiple of 3"
+    <div className="flex flex-wrap gap-2">
+      <DiagBadge
+        status="neutral"
+        label={`${stats.bpLength.toLocaleString()} bp / ${stats.aaLength.toLocaleString()} aa`}
+        tooltip="Sequence length in base pairs and amino acids"
       />
-      <ValidationBadge
-        pass={checks.startCodon}
-        label={checks.startCodon ? 'ATG start' : 'No ATG'}
-        tooltip="Valid start codon (ATG)"
-      />
-      <ValidationBadge
-        pass={checks.stopCodon === 'present'}
-        label={checks.stopCodon === 'present' ? 'Stop codon' : 'No stop'}
-        tooltip="Valid stop codon (TAA, TAG, or TGA)"
-      />
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Badge variant={gcVariant()} className="text-xs">
-            GC {checks.gc.toFixed(1)}%
-          </Badge>
-        </TooltipTrigger>
-        <TooltipContent>
-          GC content: {checks.gc.toFixed(1)}% (ideal: 40–60%)
-        </TooltipContent>
-      </Tooltip>
-      <ValidationBadge
-        pass={checks.fitsAav}
-        label={checks.fitsAav ? 'Fits AAV' : 'Oversized'}
+
+      <DiagBadge
+        status={gcStatus}
+        label={`GC ${stats.gcPercent.toFixed(1)}%`}
         tooltip={
-          checks.fitsAav
-            ? 'CDS fits within single AAV packaging limit (~4700 bp)'
-            : 'CDS exceeds AAV packaging limit (~4700 bp)'
+          gcStatus === 'good'
+            ? 'GC content is in the optimal 35–60% range.'
+            : gcStatus === 'warn'
+              ? 'GC content is outside the optimal 35–60% range.'
+              : 'GC content is far from the optimal 35–60% range.'
+        }
+      />
+
+      <DiagBadge
+        status={stats.startCodon ? 'good' : 'error'}
+        label={stats.startCodon ? 'Start: ATG' : 'No start codon'}
+        tooltip={
+          stats.startCodon
+            ? 'Sequence begins with ATG start codon'
+            : 'Sequence does not begin with ATG. This may not be a valid CDS.'
+        }
+      />
+
+      <DiagBadge
+        status={
+          stats.stopCodon === 'present'
+            ? 'good'
+            : stats.stopCodon === 'absent'
+              ? 'warn'
+              : 'neutral'
+        }
+        label={
+          stats.stopCodon === 'present'
+            ? `Stop: ${seq.slice(-3)}`
+            : 'No stop codon'
+        }
+        tooltip={
+          stats.stopCodon === 'present'
+            ? `Sequence ends with ${seq.slice(-3)} stop codon`
+            : 'No stop codon detected at the end of the sequence'
+        }
+      />
+
+      {!stats.multipleOf3 && (
+        <DiagBadge
+          status="error"
+          label="Not multiple of 3"
+          tooltip="Sequence length must be a multiple of 3 for valid codon reading frame"
+        />
+      )}
+
+      {stats.invalidChars.length > 0 && (
+        <DiagBadge
+          status="error"
+          label={`${stats.invalidChars.length} invalid char${stats.invalidChars.length > 1 ? 's' : ''}`}
+          tooltip={`Found invalid characters: ${stats.invalidChars.join(', ')}`}
+        />
+      )}
+
+      <DiagBadge
+        status={stats.fitsAav ? 'good' : 'warn'}
+        label={stats.fitsAav ? 'Fits AAV' : 'Exceeds AAV'}
+        tooltip={
+          stats.fitsAav
+            ? 'CDS fits within single AAV packaging limit (~4,700 bp)'
+            : 'CDS exceeds single AAV packaging limit (~4,700 bp) — will require dual-AAV splitting'
         }
       />
     </div>
-  )
-}
-
-function ValidationBadge({
-  pass,
-  label,
-  tooltip,
-}: {
-  pass: boolean
-  label: string
-  tooltip: string
-}) {
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <Badge
-          variant={pass ? 'default' : 'destructive'}
-          className="text-xs"
-        >
-          {label}
-        </Badge>
-      </TooltipTrigger>
-      <TooltipContent>{tooltip}</TooltipContent>
-    </Tooltip>
   )
 }

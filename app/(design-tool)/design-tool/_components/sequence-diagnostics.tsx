@@ -2,14 +2,8 @@
 
 import { useMemo } from 'react'
 import { useFormContext } from 'react-hook-form'
-import { Badge } from '@/components/ui/badge'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
-import { CircleCheck, CircleAlert, CircleMinus } from 'lucide-react'
 import { FormValues } from './form-schema'
+import { DiagBadge } from '@/components/diag-badge'
 import {
   computeGcPercent,
   hasStartCodon,
@@ -18,44 +12,6 @@ import {
   assessFragmentBalance,
 } from '@/lib/sequence-utils'
 import { AavPreflight } from './aav-size-estimator'
-
-function DiagBadge({
-  status,
-  label,
-  tooltip,
-}: {
-  status: 'good' | 'warn' | 'error' | 'neutral'
-  label: string
-  tooltip: string
-}) {
-  const variant =
-    status === 'good'
-      ? 'secondary'
-      : status === 'error'
-        ? 'destructive'
-        : 'outline'
-
-  const Icon =
-    status === 'good'
-      ? CircleCheck
-      : status === 'error'
-        ? CircleAlert
-        : status === 'warn'
-          ? CircleAlert
-          : CircleMinus
-
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <Badge variant={variant} className="gap-1 select-none">
-          <Icon className="size-3" />
-          {label}
-        </Badge>
-      </TooltipTrigger>
-      <TooltipContent className="max-w-56">{tooltip}</TooltipContent>
-    </Tooltip>
-  )
-}
 
 export function SequenceDiagnostics() {
   const { watch } = useFormContext<FormValues>()
