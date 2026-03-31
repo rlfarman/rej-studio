@@ -132,7 +132,7 @@ export default function IsoformTable({ isoforms }: IsoformListProps) {
       if (next.has(id)) {
         next.delete(id)
         if (next.size === 0) setComparisonOpen(false)
-      } else if (next.size < 3) {
+      } else {
         next.add(id)
         setComparisonOpen(true)
       }
@@ -216,8 +216,7 @@ export default function IsoformTable({ isoforms }: IsoformListProps) {
                   isoform={isoform}
                   isExpanded={isExpanded}
                   isSelected={isSelected}
-                  canSelect={selectedIds.size < 3 || isSelected}
-                  suitability={suitability}
+                    suitability={suitability}
                   suitConfig={suitConfig}
                   cdsId={cdsId}
                   fastaId={fastaId}
@@ -254,7 +253,6 @@ function IsoformRow({
   isoform,
   isExpanded,
   isSelected,
-  canSelect,
   suitability,
   suitConfig,
   cdsId,
@@ -267,7 +265,6 @@ function IsoformRow({
   isoform: IsoformListItem
   isExpanded: boolean
   isSelected: boolean
-  canSelect: boolean
   suitability: ReturnType<typeof assessDesignSuitability>
   suitConfig: ReturnType<typeof getSuitabilityConfig>
   cdsId: string
@@ -283,7 +280,6 @@ function IsoformRow({
         <TableCell onClick={(e) => e.stopPropagation()}>
           <Checkbox
             checked={isSelected}
-            disabled={!canSelect}
             onCheckedChange={() => onToggleSelected(isoform.id)}
             aria-label={`Select ${isoform.enst}`}
           />
