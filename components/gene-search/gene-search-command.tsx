@@ -1,9 +1,11 @@
 import {
   Command,
   CommandEmpty,
+  CommandGroup,
   CommandInput,
   CommandItem,
   CommandList,
+  CommandSeparator,
 } from '@/components/ui/command'
 import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
@@ -14,7 +16,10 @@ import {
   TooltipContent,
 } from '@/components/ui/tooltip'
 import { SpeciesIcon } from '@/components/species-icon'
+import { HighlightMatch } from '@/lib/highlight-match'
 import { useState } from 'react'
+import { ClockIcon, HeartIcon } from 'lucide-react'
+import type { SavedGene } from '@/lib/domain-types'
 
 export function GeneResultsLoading() {
   return (
@@ -23,6 +28,7 @@ export function GeneResultsLoading() {
     </div>
   )
 }
+
 interface GeneSearchInputProps {
   query: string
   setQuery: (query: string) => void
@@ -32,6 +38,8 @@ interface GeneSearchInputProps {
   setIsOpen: (isLoading: boolean) => void
   handleSelect: (gene: GeneSearchResult) => void
   error: string | null
+  recentGenes: SavedGene[]
+  favoriteGenes: SavedGene[]
 }
 
 export function GeneSearchCommand({
@@ -43,6 +51,8 @@ export function GeneSearchCommand({
   setIsOpen,
   handleSelect,
   error,
+  recentGenes,
+  favoriteGenes,
 }: GeneSearchInputProps) {
   const [showList, setShowList] = useState(true)
 
@@ -51,6 +61,11 @@ export function GeneSearchCommand({
     handleSelect(gene)
   }
 
+  const showEmptyState = query.trim() === '' && !hasSearched
+  const hasRecentGenes = recentGenes.length > 0
+  const hasFavoriteGenes = favoriteGenes.length > 0
+  const hasAnySuggestions = hasRecentGenes || hasFavoriteGenes
+
   return (
     <Command
       className="rounded-lg border md:min-w-[450px]"
@@ -58,7 +73,7 @@ export function GeneSearchCommand({
     >
       <CommandInput
         id="search"
-        placeholder="Search for Genes"
+        placeholder="Search by gene symbol, name, or disease..."
         className="border-0 text-base ring-0 outline-0 focus:border-0 focus:ring-0 active:border-0 active:ring-0 sm:text-sm"
         value={query}
         onValueChange={(q) => {
@@ -77,11 +92,71 @@ export function GeneSearchCommand({
             <div className="text-destructive-foreground p-4 text-center text-sm">
               {error}
             </div>
+          ) : showEmptyState ? (
+            hasAnySuggestions ? (
+              <>
+                {hasFavoriteGenes && (
+                  <CommandGroup heading="Favorites">
+                    {favoriteGenes.slice(0, 5).map((gene) => (
+                      <CommandItem
+                        key={`fav-${gene.id}`}
+                        value={`fav-${gene.id}`}
+                        onSelect={() =>
+                          internalHandleSelect({
+                            ...gene,
+                            species: '',
+                          })
+                        }
+                      >
+                        <HeartIcon className="text-muted-foreground h-4 w-4" />
+                        <span className="font-mono font-medium">
+                          {gene.symbol}
+                        </span>
+                        <span className="text-muted-foreground truncate">
+                          {gene.name}
+                        </span>
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                )}
+                {hasRecentGenes && (
+                  <>
+                    {hasFavoriteGenes && <CommandSeparator />}
+                    <CommandGroup heading="Recent Genes">
+                      {recentGenes.slice(0, 5).map((gene) => (
+                        <CommandItem
+                          key={`recent-${gene.id}`}
+                          value={`recent-${gene.id}`}
+                          onSelect={() =>
+                            internalHandleSelect({
+                              ...gene,
+                              species: '',
+                            })
+                          }
+                        >
+                          <ClockIcon className="text-muted-foreground h-4 w-4" />
+                          <span className="font-mono font-medium">
+                            {gene.symbol}
+                          </span>
+                          <span className="text-muted-foreground truncate">
+                            {gene.name}
+                          </span>
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </>
+                )}
+              </>
+            ) : (
+              <CommandEmpty>
+                Search by gene symbol, name, or disease.
+              </CommandEmpty>
+            )
           ) : (
             <>
               <CommandEmpty>
-                {query.trim() === '' || !hasSearched ? (
-                  'Search by gene symbol or name.'
+                {!hasSearched ? (
+                  'Search by gene symbol, name, or disease.'
                 ) : (
                   <div>
                     No genes match &ldquo;{query}&rdquo;.{' '}
@@ -112,13 +187,20 @@ export function GeneSearchCommand({
                             species={gene.species}
                             className="text-secondary h-4 w-4"
                           />
-                          <span className="truncate">{gene.symbol}</span>
+                          <span className="truncate">
+                            <HighlightMatch
+                              text={gene.symbol}
+                              query={query}
+                            />
+                          </span>
                         </Badge>
                       </TooltipTrigger>
                       <TooltipContent>{gene.symbol}</TooltipContent>
                     </Tooltip>
                     <div className="ml-4 space-y-1">
-                      <p className="text-sm">{gene.name}</p>
+                      <p className="text-sm">
+                        <HighlightMatch text={gene.name} query={query} />
+                      </p>
                     </div>
                   </div>
                 </CommandItem>
