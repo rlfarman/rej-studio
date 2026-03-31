@@ -51,7 +51,7 @@ interface IsoformListProps {
   isoforms: IsoformListItem[]
 }
 
-type SortKey = 'enst' | 'cdsLength' | 'proteinLength' | 'species'
+type SortKey = 'enst' | 'cdsLength' | 'proteinLength' | 'species' | 'suitability'
 type SortDirection = 'asc' | 'desc'
 
 const SUITABILITY_VARIANT_MAP = {
@@ -62,6 +62,13 @@ const SUITABILITY_VARIANT_MAP = {
 } as const
 
 const COLUMN_COUNT = 8
+
+const SUITABILITY_RANK = {
+  easy: 0,
+  moderate: 1,
+  complex: 2,
+  oversized: 3,
+} as const
 
 export default function IsoformTable({ isoforms }: IsoformListProps) {
   const { species } = useSpeciesContext()
@@ -97,6 +104,11 @@ export default function IsoformTable({ isoforms }: IsoformListProps) {
           break
         case 'species':
           cmp = a.species.localeCompare(b.species)
+          break
+        case 'suitability':
+          cmp =
+            SUITABILITY_RANK[assessDesignSuitability(a.codingSequence)] -
+            SUITABILITY_RANK[assessDesignSuitability(b.codingSequence)]
           break
       }
       return sortDirection === 'asc' ? cmp : -cmp
@@ -177,7 +189,14 @@ export default function IsoformTable({ isoforms }: IsoformListProps) {
               onSort={toggleSort}
               className="hidden md:table-cell"
             />
-            <TableHead className="hidden lg:table-cell">Suitability</TableHead>
+            <SortableHead
+              label="Suitability"
+              sortKey="suitability"
+              currentKey={sortKey}
+              direction={sortDirection}
+              onSort={toggleSort}
+              className="hidden lg:table-cell"
+            />
             <TableHead className="hidden md:table-cell">Species</TableHead>
             <SortableHead
               label={
