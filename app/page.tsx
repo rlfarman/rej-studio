@@ -9,20 +9,20 @@ export default function HomePage() {
     <div className="flex flex-col lg:pt-36">
       <Hero>
         <div className="mx-auto mt-0 w-full max-w-4xl px-4 text-center sm:px-6 lg:px-8">
-          <HeroItem className="mb-4 flex items-center justify-center">
+          <HeroItem index={0} className="mb-4 flex items-center justify-center">
             <DnaFloat>
               <DnaIcon className="mt-2 ml-2 size-6" />
             </DnaFloat>
           </HeroItem>
-          <HeroItem className="pb-2 font-mono">
+          <HeroItem index={1} className="pb-2 font-mono">
             RNA END-JOINING (REJ) Studio
           </HeroItem>
-          <HeroItem>
+          <HeroItem index={2}>
             <h1 className="text-primary pb-2 text-3xl font-bold tracking-tight sm:text-4xl">
               What gene are you optimizing?
             </h1>
           </HeroItem>
-          <HeroItem>
+          <HeroItem index={3}>
             <p className="text-muted-foreground">
               Try searching for a gene, or{' '}
               <Link
@@ -38,7 +38,7 @@ export default function HomePage() {
             </p>
           </HeroItem>
         </div>
-        <HeroItem className="mx-auto mt-8 w-full max-w-2xl px-4 sm:px-6 lg:px-8">
+        <HeroItem index={4} className="mx-auto mt-8 w-full max-w-2xl px-4 sm:px-6 lg:px-8">
           <GeneSearch searchGenes={searchGenes} />
         </HeroItem>
       </Hero>
