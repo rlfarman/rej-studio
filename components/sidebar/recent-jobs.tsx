@@ -77,7 +77,7 @@ export function RecentJobs({ onSelectJob }: RecentJobsProps) {
                       <TooltipTrigger asChild>
                         <Badge
                           variant="outline"
-                          className="inline-block w-16 flex-shrink-0 truncate text-center font-mono"
+                          className="inline-block w-16 flex-shrink-0 truncate text-center font-mono uppercase"
                         >
                           {entry.id}
                         </Badge>
