@@ -10,7 +10,7 @@ import {
   segmentSequence,
   type HighlightType,
   type SequenceSegment,
-} from '@/design-tool/lib/sequence-utils'
+} from '@/lib/sequence-utils'
 
 const highlightStyles: Record<HighlightType, string> = {
   'start-codon': 'bg-emerald-400/30 dark:bg-emerald-500/30',
