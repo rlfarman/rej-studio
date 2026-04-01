@@ -11,6 +11,7 @@ import {
 import { useFavoriteGenes } from '@/context/favorite-genes-context'
 import Link from 'next/link'
 import { geneHref } from '@/lib/species'
+import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip'
 import { Button } from '@/components/ui/button'
 import { SpeciesIcon } from '@/components/species-icon'
 
@@ -48,7 +49,12 @@ export function FavoriteGenes() {
                         />
                       )}
                       <span className="font-mono font-medium">{gene.symbol}</span>
-                      <span className="text-muted-foreground truncate text-xs">{gene.name}</span>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span className="text-muted-foreground truncate text-xs">{gene.name}</span>
+                        </TooltipTrigger>
+                        <TooltipContent>{gene.name}</TooltipContent>
+                      </Tooltip>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
