@@ -38,23 +38,32 @@ function useProcessingStage(isSubmitting: boolean) {
   return PROCESSING_STAGES[stage]
 }
 
-export function SubmitButton() {
+interface SubmitButtonProps {
+  isJobRunning?: boolean
+  isJobComplete?: boolean
+}
+
+export function SubmitButton({
+  isJobRunning = false,
+  isJobComplete = false,
+}: SubmitButtonProps) {
   const { formState } = useFormContext<FormValues>()
   const [showSuccess, setShowSuccess] = useState(false)
-  const stageText = useProcessingStage(formState.isSubmitting)
+  const isProcessing = formState.isSubmitting || isJobRunning
+  const stageText = useProcessingStage(isProcessing)
 
   useEffect(() => {
-    if (formState.isSubmitSuccessful && !formState.isSubmitting) {
+    if (isJobComplete) {
       setShowSuccess(true) // eslint-disable-line react-hooks/set-state-in-effect
       const timer = setTimeout(() => setShowSuccess(false), 2000)
       return () => clearTimeout(timer)
     }
-  }, [formState.isSubmitSuccessful, formState.isSubmitting])
+  }, [isJobComplete])
 
   return (
-    <Button type="submit" className="inline" disabled={formState.isSubmitting}>
+    <Button type="submit" className="inline" disabled={isProcessing}>
       <AnimatePresence mode="wait" initial={false}>
-        {formState.isSubmitting ? (
+        {isProcessing ? (
           <m.span
             key="loading"
             initial={{ opacity: 0 }}

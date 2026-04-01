@@ -1,6 +1,14 @@
 import type { FormValues } from './form-schema'
 import type { ProcessResult } from '@/design-tool/types/process-result'
 
+export function buildJobParams(values: FormValues) {
+  return {
+    CDS: values.codingSequence,
+    name: values.name,
+    options: buildOptions(values),
+  }
+}
+
 function buildOptions(values: FormValues) {
   return {
     codon_optimize: values.species !== 'none' ? values.species : null,
