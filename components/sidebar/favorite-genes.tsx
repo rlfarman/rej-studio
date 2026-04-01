@@ -11,6 +11,7 @@ import {
 import { useFavoriteGenes } from '@/context/favorite-genes-context'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
+import { geneHref } from '@/lib/species'
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip'
 import { Button } from '@/components/ui/button'
 
@@ -40,7 +41,7 @@ export function FavoriteGenes() {
               {visibleItems.map((gene) => (
                 <SidebarMenuItem key={gene.id}>
                   <SidebarMenuButton asChild>
-                    <Link href={`/genes/${gene.symbol}`}>
+                    <Link href={geneHref(gene.symbol, gene.species)}>
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Badge

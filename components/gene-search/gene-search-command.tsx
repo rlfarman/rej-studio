@@ -36,7 +36,7 @@ interface GeneSearchInputProps {
   searchResults: GeneSearchResult[]
   isLoading: boolean
   setIsOpen: (isLoading: boolean) => void
-  handleSelect: (gene: GeneSearchResult) => void
+  handleSelect: (gene: SavedGene) => void
   error: string | null
   recentGenes: SavedGene[]
   favoriteGenes: SavedGene[]
@@ -56,7 +56,7 @@ export function GeneSearchCommand({
 }: GeneSearchInputProps) {
   const [showList, setShowList] = useState(true)
 
-  const internalHandleSelect = (gene: GeneSearchResult) => {
+  const internalHandleSelect = (gene: SavedGene) => {
     setShowList(false)
     handleSelect(gene)
   }
@@ -102,10 +102,7 @@ export function GeneSearchCommand({
                         key={`fav-${gene.id}`}
                         value={`fav-${gene.id}`}
                         onSelect={() =>
-                          internalHandleSelect({
-                            ...gene,
-                            species: '',
-                          })
+                          internalHandleSelect(gene)
                         }
                       >
                         <HeartIcon className="text-muted-foreground h-4 w-4" />
@@ -128,10 +125,7 @@ export function GeneSearchCommand({
                           key={`recent-${gene.id}`}
                           value={`recent-${gene.id}`}
                           onSelect={() =>
-                            internalHandleSelect({
-                              ...gene,
-                              species: '',
-                            })
+                            internalHandleSelect(gene)
                           }
                         >
                           <ClockIcon className="text-muted-foreground h-4 w-4" />

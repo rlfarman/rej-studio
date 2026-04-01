@@ -10,17 +10,28 @@ import { Suspense } from 'react'
 import { FavoriteGeneButton } from './_components/favorite-gene-button'
 import { Metadata } from 'next'
 import { cache } from 'react'
-import { SPECIES_DISPLAY_NAME, type Species } from '@/lib/species'
+import {
+  SPECIES_DISPLAY_NAME,
+  parseSpeciesParam,
+  type Species,
+} from '@/lib/species'
 
 type Props = {
   params: Promise<{ symbol: string }>
+  searchParams: Promise<{ species?: string }>
 }
 
 const getCachedGeneBySymbol = cache(getGeneBySymbol)
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const symbol = (await params).symbol
-  const gene = await getCachedGeneBySymbol(symbol)
+async function resolveGene({ params, searchParams }: Props) {
+  const { symbol } = await params
+  const { species } = await searchParams
+  return getCachedGeneBySymbol(symbol, parseSpeciesParam(species))
+}
+
+export async function generateMetadata(props: Props): Promise<Metadata> {
+  const { symbol } = await props.params
+  const gene = await resolveGene(props)
 
   return {
     title: `${gene?.symbol ?? symbol} | REJ Studio`,
@@ -28,9 +39,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-export default async function GeneSymbolPage({ params }: Props) {
-  const { symbol } = await params
-  const gene = await getCachedGeneBySymbol(symbol)
+export default async function GeneSymbolPage(props: Props) {
+  const gene = await resolveGene(props)
 
   if (!gene) {
     notFound()

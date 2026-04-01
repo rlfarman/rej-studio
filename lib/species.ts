@@ -26,3 +26,13 @@ export function isSpecies(value: string): value is Species {
 export function isSpeciesFilter(value: string): value is SpeciesFilter {
   return value === 'human' || value === 'mouse' || value === 'both'
 }
+
+export function geneHref(symbol: string, species?: string) {
+  return species ? `/genes/${symbol}?species=${species}` : `/genes/${symbol}`
+}
+
+export function parseSpeciesParam(
+  value: string | undefined,
+): SpeciesFilter | undefined {
+  return value && isSpeciesFilter(value) ? value : undefined
+}
