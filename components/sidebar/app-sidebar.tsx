@@ -12,6 +12,7 @@ import { RecentGenes } from './recent-genes'
 import { RecentJobs } from './recent-jobs'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { SidebarToggle } from '@/components/sidebar-toggle'
+import { DataTransfer } from './data-transfer'
 import { useJobHistoryContext } from '@/context/job-history-context'
 import Link from 'next/link'
 
@@ -37,8 +38,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <RecentJobs onSelectJob={selectEntry} />
       </SidebarContent>
       <SidebarFooter>
-        <div className="flex justify-between items-center gap-2">
+        <div className="flex items-center gap-2">
           <ThemeToggle />
+          <DataTransfer />
+          <div className="flex-1" />
           <SidebarToggle />
         </div>
       </SidebarFooter>
