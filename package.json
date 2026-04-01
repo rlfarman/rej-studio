@@ -7,7 +7,7 @@
     "next-dev": "next dev",
     "dev": "concurrently \"npm run next-dev\" \"npm run fastapi-dev\"",
     "db:build": "python3 scripts/build-db.py",
-    "build": "ls -la data/ && next build",
+    "build": "next build",
     "start": "next start",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
