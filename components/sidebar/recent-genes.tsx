@@ -9,10 +9,11 @@ import {
   SidebarMenuItem,
 } from '@/components/ui/sidebar'
 import { useRecentGenes } from '@/context/recent-genes-context'
-import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
-import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip'
+import { geneHref } from '@/lib/species'
 import { Button } from '@/components/ui/button'
+import { TruncatedText } from '@/components/truncated-text'
+import { SpeciesIcon } from '@/components/species-icon'
 
 const COLLAPSED_COUNT = 5
 const EXPANDED_MAX = 15
@@ -53,21 +54,17 @@ export function RecentGenes() {
                 <SidebarMenuItem key={gene.id}>
                   <SidebarMenuButton asChild>
                     <Link
-                      href={`/genes/${gene.symbol}`}
+                      href={geneHref(gene.symbol, gene.species)}
                       className="flex items-center gap-2"
                     >
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Badge
-                            variant="outline"
-                            className="inline-block w-16 flex-shrink-0 truncate text-center font-mono"
-                          >
-                            {gene.symbol}
-                          </Badge>
-                        </TooltipTrigger>
-                        <TooltipContent>{gene.symbol}</TooltipContent>
-                      </Tooltip>
-                      <span className="truncate text-xs">{gene.name}</span>
+                      {gene.species && (
+                        <SpeciesIcon
+                          species={gene.species}
+                          className="text-muted-foreground h-3.5 w-3.5 flex-shrink-0"
+                        />
+                      )}
+                      <span className="font-mono font-medium">{gene.symbol}</span>
+                      <TruncatedText tooltip={gene.name} className="text-muted-foreground truncate text-xs">{gene.name}</TruncatedText>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

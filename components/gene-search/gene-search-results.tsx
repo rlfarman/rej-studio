@@ -1,5 +1,5 @@
 import { searchGenes } from '@/actions/genes'
-import type { SpeciesFilter } from '@/lib/species'
+import { geneHref, type SpeciesFilter } from '@/lib/species'
 import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
 import { SpeciesIcon } from '@/components/species-icon'
@@ -34,7 +34,7 @@ export async function GeneSearchResults({
       {results.map((gene) => (
         <Link
           key={gene.id}
-          href={`/genes/${gene.symbol}`}
+          href={geneHref(gene.symbol, gene.species)}
           className="hover:bg-accent flex items-center gap-4 px-4 py-3 transition-colors"
         >
           <Badge className="grid w-24 shrink-0 grid-cols-[24px_1fr] items-center gap-2 font-mono">

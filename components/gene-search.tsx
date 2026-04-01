@@ -9,7 +9,8 @@ import { useGeneSearch } from '@/hooks/use-gene-search'
 import { GeneSearchCommand } from './gene-search/gene-search-command'
 import { useRecentGenes } from '@/context/recent-genes-context'
 import { useFavoriteGenes } from '@/context/favorite-genes-context'
-import type { SpeciesFilter } from '@/lib/species'
+import { geneHref, type SpeciesFilter } from '@/lib/species'
+import type { SavedGene } from '@/lib/domain-types'
 
 interface GeneSearchProperties {
   searchGenes: (
@@ -52,14 +53,10 @@ export function GeneSearch({
     getPlatformServerSnapshot,
   )
 
-  const handleSelect = (gene: GeneSearchResult) => {
+  const handleSelect = (gene: SavedGene) => {
     setIsOpen(false)
-    addRecentGene({
-      id: gene.id,
-      name: gene.name,
-      symbol: gene.symbol,
-    })
-    router.push(`/genes/${gene.symbol}`)
+    addRecentGene(gene)
+    router.push(geneHref(gene.symbol, gene.species))
     setQuery(gene.symbol)
   }
 

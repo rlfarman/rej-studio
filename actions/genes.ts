@@ -83,12 +83,22 @@ export async function searchGenes(
   return results
 }
 
-export async function getGeneBySymbol(symbol: string) {
-  const [gene] = await db
-    .select(geneDetailColumns)
-    .from(genes)
-    .where(eq(genes.symbol, symbol))
-    .limit(1)
+export async function getGeneBySymbol(
+  symbol: string,
+  species?: SpeciesFilter,
+) {
+  const speciesCondition =
+    species && species !== 'both'
+      ? sql`AND ${genes.species} = ${species}`
+      : sql``
+
+  const [gene] = await db.all<GeneSearchResult>(sql`
+    SELECT ${genes.id} AS id, ${genes.name} AS name, ${genes.symbol} AS symbol, ${genes.species} AS species
+    FROM ${genes}
+    WHERE ${genes.symbol} = ${symbol}
+    ${speciesCondition}
+    LIMIT 1
+  `)
 
   return gene
 }
