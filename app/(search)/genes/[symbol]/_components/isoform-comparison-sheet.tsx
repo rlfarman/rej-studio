@@ -81,7 +81,7 @@ export function IsoformComparisonSheet({
                 <TableHead className="min-w-24">Property</TableHead>
                 {analyses.map((iso) => (
                   <TableHead key={iso.id} className="min-w-28 font-mono text-xs">
-                    {iso.enst}
+                    {iso.id}
                   </TableHead>
                 ))}
               </TableRow>

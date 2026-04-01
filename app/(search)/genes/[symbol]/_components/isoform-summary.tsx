@@ -51,7 +51,7 @@ export function IsoformSummary({ isoforms }: IsoformSummaryProps) {
       {stats.recommended && (
         <div className="flex items-center gap-1.5">
           <span className="text-muted-foreground">Recommended</span>
-          <span className="font-mono text-xs">{stats.recommended.enst}</span>
+          <span className="font-mono text-xs">{stats.recommended.id}</span>
         </div>
       )}
     </div>

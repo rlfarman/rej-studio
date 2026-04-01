@@ -10,8 +10,4 @@ export type IsoformListItem = Pick<
   | 'codingSequenceLength'
   | 'proteinSequenceLength'
   | 'species'
-  | 'defaultFivePrimeSequence'
-  | 'defaultThreePrimeSequence'
-> & {
-  enst: SelectIsoform['ENST']
-}
+>

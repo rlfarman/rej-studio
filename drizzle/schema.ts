@@ -1,70 +1,37 @@
-import { index, integer, pgTable, text, timestamp } from 'drizzle-orm/pg-core'
-import { randomUUID } from 'crypto'
+import { sqliteTable, text, integer, index } from 'drizzle-orm/sqlite-core'
 
-export const genes = pgTable(
+export const genes = sqliteTable(
   'genes',
   {
-    id: text('id')
-      .primaryKey()
-      .notNull()
-      .$defaultFn(() => randomUUID()),
+    id: text('id').primaryKey().notNull(),
     symbol: text('symbol').notNull(),
-    alternateSymbols: text('alternate_symbols').array(),
     name: text('name').notNull(),
-    ENSG: text('ENSG').notNull(),
-    species: text('species').notNull().default(''),
-    chromosome: text('chromosome'),
-    diseaseAssociations: text('disease_associations').array(),
+    species: text('species').notNull(),
+    alternateSymbols: text('alternate_symbols'),
   },
   (table) => [
-    index('genes_symbol_idx').on(table.symbol),
-    index('genes_name_idx').on(table.name),
-    index('genes_ensg_idx').on(table.ENSG),
+    index('idx_genes_symbol').on(table.symbol),
+    index('idx_genes_name').on(table.name),
+    index('idx_genes_species').on(table.species),
   ],
 )
 
 export type SelectGene = typeof genes.$inferSelect
 
-export const isoforms = pgTable(
+export const isoforms = sqliteTable(
   'isoforms',
   {
-    id: text('id')
-      .primaryKey()
-      .notNull()
-      .$defaultFn(() => randomUUID()),
-    geneId: text('geneId')
+    id: text('id').primaryKey().notNull(),
+    geneId: text('gene_id')
       .notNull()
       .references(() => genes.id),
-    ENST: text('ENST').notNull(),
     codingSequenceLength: integer('coding_sequence_length').notNull(),
-    proteinSequenceLength: integer('protein_sequence_length')
-      .notNull()
-      .default(0),
-    species: text('species').notNull(),
+    proteinSequenceLength: integer('protein_length').notNull(),
     codingSequence: text('coding_sequence').notNull().default(''),
     proteinSequence: text('protein_sequence').notNull().default(''),
-    defaultThreePrimeSequence: text('default_three_prime_sequence')
-      .notNull()
-      .default(''),
-    defaultFivePrimeSequence: text('default_five_prime_sequence')
-      .notNull()
-      .default(''),
+    species: text('species').notNull(),
   },
-  (table) => [
-    index('isoforms_gene_id_idx').on(table.geneId),
-    index('isoforms_enst_idx').on(table.ENST),
-  ],
+  (table) => [index('idx_isoforms_gene_id').on(table.geneId)],
 )
 
 export type SelectIsoform = typeof isoforms.$inferSelect
-
-export const sequences = pgTable('sequences', {
-  isoformId: text('isoform_id')
-    .notNull()
-    .references(() => isoforms.id)
-    .primaryKey(),
-  sequence: text('sequence').notNull(),
-})
-
-export type SelectSequence = typeof sequences.$inferSelect
-

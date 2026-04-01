@@ -49,3 +49,6 @@ notes.md
 .claude/
 
 drizzle/transcript_metadata.csv
+
+# sqlite database
+/data/
