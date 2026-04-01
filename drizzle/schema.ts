@@ -80,26 +80,6 @@ export const users = pgTable('users', {
 
 export type SelectUser = typeof users.$inferSelect
 
-export const jobs = pgTable('jobs', {
-  id: text('id')
-    .primaryKey()
-    .notNull()
-    .$defaultFn(() => randomUUID()),
-  userId: text('user_id')
-    .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
-  name: text('name').notNull(),
-  sequence: text('sequence').notNull(),
-  options: text('options').notNull(), // JSON string
-  status: text('status')
-    .notNull()
-    .$default(() => 'pending'), // 'pending', 'processing', 'completed', 'failed'
-  errorMessage: text('errorMessage'), // If the job fails, store the error message
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at').notNull().defaultNow(),
-})
-
-export type SelectJob = typeof jobs.$inferSelect
 
 export const sessions = pgTable('sessions', {
   id: text('id')
