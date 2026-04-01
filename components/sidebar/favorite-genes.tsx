@@ -9,10 +9,8 @@ import {
   SidebarMenuItem,
 } from '@/components/ui/sidebar'
 import { useFavoriteGenes } from '@/context/favorite-genes-context'
-import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import { geneHref } from '@/lib/species'
-import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip'
 import { Button } from '@/components/ui/button'
 import { SpeciesIcon } from '@/components/species-icon'
 
@@ -49,18 +47,8 @@ export function FavoriteGenes() {
                           className="text-muted-foreground h-3.5 w-3.5 flex-shrink-0"
                         />
                       )}
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Badge
-                            variant="outline"
-                            className="inline-block w-16 truncate text-center font-mono"
-                          >
-                            {gene.symbol}
-                          </Badge>
-                        </TooltipTrigger>
-                        <TooltipContent>{gene.symbol}</TooltipContent>
-                      </Tooltip>
-                      <span className="text-xs">{gene.name}</span>
+                      <span className="font-mono font-medium">{gene.symbol}</span>
+                      <span className="text-muted-foreground truncate text-xs">{gene.name}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
