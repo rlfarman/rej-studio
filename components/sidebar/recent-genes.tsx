@@ -11,8 +11,8 @@ import {
 import { useRecentGenes } from '@/context/recent-genes-context'
 import Link from 'next/link'
 import { geneHref } from '@/lib/species'
-import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip'
 import { Button } from '@/components/ui/button'
+import { TruncatedText } from '@/components/truncated-text'
 import { SpeciesIcon } from '@/components/species-icon'
 
 const COLLAPSED_COUNT = 5
@@ -64,12 +64,7 @@ export function RecentGenes() {
                         />
                       )}
                       <span className="font-mono font-medium">{gene.symbol}</span>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <span className="text-muted-foreground truncate text-xs">{gene.name}</span>
-                        </TooltipTrigger>
-                        <TooltipContent>{gene.name}</TooltipContent>
-                      </Tooltip>
+                      <TruncatedText tooltip={gene.name} className="text-muted-foreground truncate text-xs">{gene.name}</TruncatedText>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

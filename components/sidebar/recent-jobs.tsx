@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/sidebar'
 import { useJobHistory, type JobHistoryEntry } from '@/hooks/use-job-history'
 import { Button } from '@/components/ui/button'
-import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip'
+import { TruncatedText } from '@/components/truncated-text'
 
 const COLLAPSED_COUNT = 5
 const EXPANDED_MAX = 15
@@ -67,12 +67,7 @@ export function RecentJobs({ onSelectJob }: RecentJobsProps) {
               {visibleItems.map((entry) => (
                 <SidebarMenuItem key={entry.id}>
                   <SidebarMenuButton onClick={() => onSelectJob?.(entry)}>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <span className="truncate text-xs">{entry.name}</span>
-                      </TooltipTrigger>
-                      <TooltipContent>{entry.name}</TooltipContent>
-                    </Tooltip>
+                    <TruncatedText tooltip={entry.name} className="truncate text-xs">{entry.name}</TruncatedText>
                     <span className="text-muted-foreground ml-auto flex-shrink-0 text-[10px]">
                       {formatTimeAgo(entry.createdAt)}
                     </span>

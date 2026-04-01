@@ -9,12 +9,8 @@ import {
 } from '@/components/ui/command'
 import Link from 'next/link'
 import type { GeneSearchResult } from '@/actions/genes'
-import {
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent,
-} from '@/components/ui/tooltip'
 import { SpeciesIcon } from '@/components/species-icon'
+import { TruncatedText } from '@/components/truncated-text'
 import { HighlightMatch } from '@/lib/highlight-match'
 import { useState } from 'react'
 import { ClockIcon, HeartIcon } from 'lucide-react'
@@ -114,14 +110,9 @@ export function GeneSearchCommand({
                         <span className="font-mono font-medium">
                           {gene.symbol}
                         </span>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <span className="text-muted-foreground truncate">
-                              {gene.name}
-                            </span>
-                          </TooltipTrigger>
-                          <TooltipContent>{gene.name}</TooltipContent>
-                        </Tooltip>
+                        <TruncatedText tooltip={gene.name} className="text-muted-foreground truncate">
+                          {gene.name}
+                        </TruncatedText>
                       </CommandItem>
                     ))}
                   </CommandGroup>
@@ -148,14 +139,9 @@ export function GeneSearchCommand({
                           <span className="font-mono font-medium">
                             {gene.symbol}
                           </span>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <span className="text-muted-foreground truncate">
-                                {gene.name}
-                              </span>
-                            </TooltipTrigger>
-                            <TooltipContent>{gene.name}</TooltipContent>
-                          </Tooltip>
+                          <TruncatedText tooltip={gene.name} className="text-muted-foreground truncate">
+                            {gene.name}
+                          </TruncatedText>
                         </CommandItem>
                       ))}
                     </CommandGroup>
@@ -201,14 +187,9 @@ export function GeneSearchCommand({
                   <span className="font-mono font-medium">
                     <HighlightMatch text={gene.symbol} query={query} />
                   </span>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <span className="text-muted-foreground truncate">
-                        <HighlightMatch text={gene.name} query={query} />
-                      </span>
-                    </TooltipTrigger>
-                    <TooltipContent>{gene.name}</TooltipContent>
-                  </Tooltip>
+                  <TruncatedText tooltip={gene.name} className="text-muted-foreground truncate">
+                    <HighlightMatch text={gene.name} query={query} />
+                  </TruncatedText>
                 </CommandItem>
               ))}
             </>
