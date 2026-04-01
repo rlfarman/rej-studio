@@ -10,7 +10,7 @@ project_root = Path(__file__).parent.parent
 
 image = (
     modal.Image.debian_slim(python_version="3.11")
-    .pip_install("dnachisel", "tqdm")
+    .pip_install("dnachisel", "tqdm", "fastapi[standard]")
     .add_local_file(project_root / "api" / "algorithm.py", remote_path="/root/algorithm.py")
 )
 
