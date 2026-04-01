@@ -8,13 +8,7 @@ import {
   CommandSeparator,
 } from '@/components/ui/command'
 import Link from 'next/link'
-import { Badge } from '@/components/ui/badge'
 import type { GeneSearchResult } from '@/actions/genes'
-import {
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent,
-} from '@/components/ui/tooltip'
 import { SpeciesIcon } from '@/components/species-icon'
 import { HighlightMatch } from '@/lib/highlight-match'
 import { useState } from 'react'
@@ -185,30 +179,16 @@ export function GeneSearchCommand({
                   value={gene.id}
                   onSelect={() => internalHandleSelect(gene)}
                 >
-                  <div className="grid grid-cols-[96px_1fr] items-center">
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Badge className="grid w-[96px] grid-cols-[24px_1fr] items-center gap-2 truncate overflow-hidden font-mono">
-                          <SpeciesIcon
-                            species={gene.species}
-                            className="text-secondary h-4 w-4"
-                          />
-                          <span className="truncate">
-                            <HighlightMatch
-                              text={gene.symbol}
-                              query={query}
-                            />
-                          </span>
-                        </Badge>
-                      </TooltipTrigger>
-                      <TooltipContent>{gene.symbol}</TooltipContent>
-                    </Tooltip>
-                    <div className="ml-4 space-y-1">
-                      <p className="text-sm">
-                        <HighlightMatch text={gene.name} query={query} />
-                      </p>
-                    </div>
-                  </div>
+                  <SpeciesIcon
+                    species={gene.species}
+                    className="text-muted-foreground h-3.5 w-3.5"
+                  />
+                  <span className="font-mono font-medium">
+                    <HighlightMatch text={gene.symbol} query={query} />
+                  </span>
+                  <span className="text-muted-foreground truncate">
+                    <HighlightMatch text={gene.name} query={query} />
+                  </span>
                 </CommandItem>
               ))}
             </>
