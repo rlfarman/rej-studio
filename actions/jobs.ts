@@ -21,6 +21,55 @@ interface JobOptions {
   wggw_threshold: number
 }
 
+// --- Modal async job actions ---
+
+interface ModalJobParams {
+  CDS: string
+  name: string
+  options: Record<string, unknown>
+}
+
+export async function submitModalJob(params: ModalJobParams) {
+  const modalUrl = process.env.MODAL_API_URL
+  if (!modalUrl) {
+    throw new Error('MODAL_API_URL is not configured')
+  }
+
+  const response = await fetch(`${modalUrl}/jobs`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(params),
+  })
+
+  if (!response.ok) {
+    const text = await response.text()
+    throw new Error(`Modal API error: ${text}`)
+  }
+
+  const data = await response.json()
+  return data as { call_id: string }
+}
+
+export async function getModalJobStatus(callId: string) {
+  const modalUrl = process.env.MODAL_API_URL
+  if (!modalUrl) {
+    throw new Error('MODAL_API_URL is not configured')
+  }
+
+  const response = await fetch(`${modalUrl}/jobs/${callId}`)
+
+  if (!response.ok) {
+    const text = await response.text()
+    throw new Error(`Modal API error: ${text}`)
+  }
+
+  const data = await response.json()
+  return data as {
+    status: 'running' | 'completed' | 'failed' | 'not_found'
+    result?: Record<string, unknown>
+  }
+}
+
 export const createJob = async ({
   userId,
   name,

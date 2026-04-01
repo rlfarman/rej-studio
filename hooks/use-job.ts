@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { submitModalJob, getModalJobStatus } from '@/actions/jobs'
 import type { ProcessResult } from '@/design-tool/types/process-result'
 
 type JobStatus = 'idle' | 'submitting' | 'running' | 'completed' | 'failed'
@@ -36,20 +37,17 @@ export function useJob(): UseJobReturn {
     (callId: string) => {
       intervalRef.current = setInterval(async () => {
         try {
-          const res = await fetch(`/api/jobs/${callId}`)
-          if (!res.ok) {
-            throw new Error(`Failed to check job status: ${res.statusText}`)
-          }
-
-          const data = await res.json()
+          const data = await getModalJobStatus(callId)
 
           if (data.status === 'completed') {
             clearPolling()
-            setResult(data.result as ProcessResult)
+            setResult(data.result as unknown as ProcessResult)
             setStatus('completed')
           } else if (data.status === 'failed') {
             clearPolling()
-            setError(data.result?.error ?? 'Job failed')
+            setError(
+              (data.result?.error as string) ?? 'Job failed',
+            )
             setStatus('failed')
           } else if (data.status === 'not_found') {
             clearPolling()
@@ -81,18 +79,7 @@ export function useJob(): UseJobReturn {
       setError(null)
 
       try {
-        const res = await fetch('/api/jobs', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(params),
-        })
-
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}))
-          throw new Error(data.error ?? `Failed to submit job: ${res.statusText}`)
-        }
-
-        const { call_id } = await res.json()
+        const { call_id } = await submitModalJob(params)
         setStatus('running')
         pollJob(call_id)
       } catch (err) {
