@@ -1,0 +1,4 @@
+modal
+dnachisel
+tqdm
+fastapi[standard]

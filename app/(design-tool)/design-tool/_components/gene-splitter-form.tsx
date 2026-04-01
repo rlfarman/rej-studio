@@ -1,4 +1,5 @@
 'use client'
+import * as React from 'react'
 import { useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -20,7 +21,10 @@ import {
 import type { DesignToolSpecies } from '@/design-tool/types/species-options'
 import type { ProcessResult } from '@/design-tool/types/process-result'
 import { validationSchema, FormValues } from './form-schema'
-import { submitFormJson, formatOptionsForReport } from './form-handler'
+import { formatOptionsForReport, buildJobParams } from './form-handler'
+import { useJob } from '@/hooks/use-job'
+import { useJobHistory } from '@/hooks/use-job-history'
+import { useJobHistoryContext } from '@/context/job-history-context'
 import { CustomizationOptions } from './customization-options'
 import { SpeciesOptions } from './species-options'
 import { CodonOptimizationOptions } from './optimization-options'
@@ -55,6 +59,9 @@ export function GeneSplitterForm({
 }: GeneSplitterFormProperties) {
   const [result, setResult] = useState<ProcessResult | null>(null)
   const resultsRef = useRef<HTMLDivElement>(null)
+  const job = useJob()
+  const jobHistory = useJobHistory()
+  const { selectedEntry, clearSelection } = useJobHistoryContext()
 
   const methods = useForm<FormValues>({
     resolver: zodResolver(validationSchema),
@@ -80,28 +87,39 @@ export function GeneSplitterForm({
     },
   })
 
-  const onSubmit = async (values: FormValues) => {
-    setResult(null)
-    try {
-      const res = await submitFormJson(values)
-      setResult(res)
+  // When a job history entry is selected from the sidebar, load it
+  React.useEffect(() => {
+    if (selectedEntry) {
+      setResult(selectedEntry.result)
+      clearSelection()
       setTimeout(() => {
         resultsRef.current?.scrollIntoView({
           behavior: 'smooth',
           block: 'start',
         })
       }, 100)
-    } catch (error) {
-      let message = 'Something went wrong. Please try again.'
-      if (error instanceof TypeError && error.message === 'Failed to fetch') {
-        message =
-          'Unable to reach the server. Please check your connection and try again.'
-      } else if (error instanceof Error) {
-        message = error.message
-      }
-      toast.error(message)
-      console.error('Error processing sequence:', error)
     }
+  }, [selectedEntry, clearSelection])
+
+  // When the async job completes, update the result and save to history
+  React.useEffect(() => {
+    if (job.status === 'completed' && job.result) {
+      setResult(job.result)
+      jobHistory.addEntry(job.result)
+      setTimeout(() => {
+        resultsRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+        })
+      }, 100)
+    } else if (job.status === 'failed' && job.error) {
+      toast.error(job.error)
+    }
+  }, [job.status, job.result, job.error]) // eslint-disable-line react-hooks/exhaustive-deps -- jobHistory.addEntry is stable
+
+  const onSubmit = async (values: FormValues) => {
+    setResult(null)
+    await job.submitJob(buildJobParams(values))
   }
 
   return (
@@ -205,7 +223,10 @@ export function GeneSplitterForm({
           </CardHeader>
           <CardContent>
             <div className="flex justify-end">
-              <SubmitButton />
+              <SubmitButton
+                isJobRunning={job.isLoading}
+                isJobComplete={job.status === 'completed'}
+              />
             </div>
           </CardContent>
         </Card>

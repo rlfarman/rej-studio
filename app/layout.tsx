@@ -9,6 +9,7 @@ import { AppSidebar } from '@/components/sidebar/app-sidebar'
 import { Toaster } from '@/components/ui/sonner'
 import { FavoriteGenesProvider } from '@/context/favorite-genes-context'
 import { RecentGenesProvider } from '@/context/recent-genes-context'
+import { JobHistoryProvider } from '@/context/job-history-context'
 import { SpeciesProvider } from '@/context/species-context'
 import { cookies } from 'next/headers'
 import { Analytics } from '@vercel/analytics/next'
@@ -37,6 +38,7 @@ export default async function RootLayout({
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <FavoriteGenesProvider>
             <RecentGenesProvider>
+              <JobHistoryProvider>
               <SpeciesProvider>
                 <a
                   href="#main-content"
@@ -62,6 +64,7 @@ export default async function RootLayout({
                 </SidebarProvider>
                 <Toaster />
               </SpeciesProvider>
+              </JobHistoryProvider>
             </RecentGenesProvider>
           </FavoriteGenesProvider>
         </ThemeProvider>
