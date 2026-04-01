@@ -1,4 +1,5 @@
 'use client'
+import { useState } from 'react'
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -11,6 +12,9 @@ import { useJobHistory, type JobHistoryEntry } from '@/hooks/use-job-history'
 import { Badge } from '@/components/ui/badge'
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip'
 import { Button } from '@/components/ui/button'
+
+const COLLAPSED_COUNT = 5
+const EXPANDED_MAX = 15
 
 function formatTimeAgo(dateString: string): string {
   const seconds = Math.floor(
@@ -36,6 +40,12 @@ interface RecentJobsProps {
 
 export function RecentJobs({ onSelectJob }: RecentJobsProps) {
   const { entries, clearHistory } = useJobHistory()
+  const [expanded, setExpanded] = useState(false)
+
+  const hiddenCount = entries.length - COLLAPSED_COUNT
+  const visibleItems = expanded
+    ? entries.slice(0, EXPANDED_MAX)
+    : entries.slice(0, COLLAPSED_COUNT)
 
   return (
     <SidebarGroup>
@@ -54,31 +64,49 @@ export function RecentJobs({ onSelectJob }: RecentJobsProps) {
       </div>
       <SidebarGroupContent>
         {entries.length > 0 ? (
-          <SidebarMenu>
-            {entries.map((entry) => (
-              <SidebarMenuItem key={entry.id}>
-                <SidebarMenuButton onClick={() => onSelectJob?.(entry)}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Badge
-                        variant="outline"
-                        className="inline-block w-16 flex-shrink-0 truncate text-center font-mono"
-                      >
-                        {formatBp(entry.sequenceLength)}
-                      </Badge>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      {entry.sequenceLength.toLocaleString()} bp
-                    </TooltipContent>
-                  </Tooltip>
-                  <span className="truncate text-xs">{entry.name}</span>
-                  <span className="text-muted-foreground ml-auto flex-shrink-0 text-[10px]">
-                    {formatTimeAgo(entry.createdAt)}
-                  </span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))}
-          </SidebarMenu>
+          <>
+            <SidebarMenu
+              className={
+                expanded ? 'max-h-80 overflow-y-auto' : undefined
+              }
+            >
+              {visibleItems.map((entry) => (
+                <SidebarMenuItem key={entry.id}>
+                  <SidebarMenuButton onClick={() => onSelectJob?.(entry)}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Badge
+                          variant="outline"
+                          className="inline-block w-16 flex-shrink-0 truncate text-center font-mono"
+                        >
+                          {formatBp(entry.sequenceLength)}
+                        </Badge>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        {entry.sequenceLength.toLocaleString()} bp
+                      </TooltipContent>
+                    </Tooltip>
+                    <span className="truncate text-xs">{entry.name}</span>
+                    <span className="text-muted-foreground ml-auto flex-shrink-0 text-[10px]">
+                      {formatTimeAgo(entry.createdAt)}
+                    </span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+            {hiddenCount > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setExpanded(!expanded)}
+                className="text-muted-foreground w-full text-xs"
+              >
+                {expanded
+                  ? 'Show less'
+                  : `+ Show ${hiddenCount} more`}
+              </Button>
+            )}
+          </>
         ) : (
           <div className="text-muted-foreground p-4 text-xs">
             Your completed optimization jobs will appear here.
