@@ -62,16 +62,8 @@ export default async function GeneSymbolPage({ params }: Props) {
             <div className="text-muted-foreground text-sm font-semibold">
               Ensembl Gene ID
             </div>
-            <div className="font-mono">{gene.ENSG}</div>
+            <div className="font-mono">{gene.id}</div>
           </div>
-          {gene.chromosome && (
-            <div>
-              <div className="text-muted-foreground text-sm font-semibold">
-                Chromosome
-              </div>
-              <div className="font-mono">{gene.chromosome}</div>
-            </div>
-          )}
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-muted-foreground text-sm font-semibold">
               Species
@@ -82,20 +74,6 @@ export default async function GeneSymbolPage({ params }: Props) {
               </Badge>
             ))}
           </div>
-          {gene.diseaseAssociations && gene.diseaseAssociations.length > 0 && (
-            <div>
-              <div className="text-muted-foreground text-sm font-semibold mb-1">
-                Disease associations
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {gene.diseaseAssociations.map((disease) => (
-                  <Badge key={disease} variant="outline">
-                    {disease}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
         <Separator className="my-4" />
         <h2 className="text-lg font-semibold tracking-tight mb-2">Isoforms</h2>

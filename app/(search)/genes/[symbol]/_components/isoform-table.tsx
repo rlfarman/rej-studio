@@ -94,7 +94,7 @@ export default function IsoformTable({ isoforms }: IsoformListProps) {
       let cmp = 0
       switch (sortKey) {
         case 'enst':
-          cmp = a.enst.localeCompare(b.enst)
+          cmp = a.id.localeCompare(b.id)
           break
         case 'cdsLength':
           cmp = a.codingSequenceLength - b.codingSequenceLength
@@ -287,7 +287,7 @@ function IsoformRow({
           <Checkbox
             checked={isSelected}
             onCheckedChange={() => onToggleSelected(isoform.id)}
-            aria-label={`Select ${isoform.enst}`}
+            aria-label={`Select ${isoform.id}`}
           />
         </TableCell>
         <TableCell>
@@ -318,7 +318,7 @@ function IsoformRow({
             isoform.species as keyof typeof SPECIES_DISPLAY_NAME
           ] ?? 'Unknown'}
         </TableCell>
-        <TableCell className="font-mono">{isoform.enst}</TableCell>
+        <TableCell className="font-mono">{isoform.id}</TableCell>
         <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
           <div className="flex items-center justify-end gap-1">
             <Tooltip>
@@ -347,7 +347,7 @@ function IsoformRow({
                   className="size-8"
                   onClick={() =>
                     copy(
-                      formatFasta(isoform.enst, isoform.codingSequence),
+                      formatFasta(isoform.id, isoform.codingSequence),
                       fastaId,
                     )
                   }
@@ -370,8 +370,8 @@ function IsoformRow({
                   className="size-8"
                   onClick={() =>
                     downloadTextFile(
-                      `${isoform.enst}.fasta`,
-                      formatFasta(isoform.enst, isoform.codingSequence),
+                      `${isoform.id}.fasta`,
+                      formatFasta(isoform.id, isoform.codingSequence),
                     )
                   }
                   aria-label="Download FASTA"
@@ -386,7 +386,7 @@ function IsoformRow({
                 <Button variant="ghost" size="icon" className="size-8" asChild>
                   <Link
                     href={`/design-tool?isoform=${isoform.id}`}
-                    aria-label={`Customize ${isoform.enst}`}
+                    aria-label={`Customize ${isoform.id}`}
                   >
                     <ExternalLink className="size-3.5" />
                   </Link>
@@ -450,30 +450,6 @@ function ExpandedDetails({ isoform }: { isoform: IsoformListItem }) {
         </div>
       </div>
 
-      {(isoform.defaultFivePrimeSequence || isoform.defaultThreePrimeSequence) && (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          {isoform.defaultFivePrimeSequence && (
-            <div>
-              <div className="text-muted-foreground mb-1 text-xs font-semibold">
-                Default 5&apos; Fragment
-              </div>
-              <code className="text-xs break-all">
-                {isoform.defaultFivePrimeSequence.slice(0, 40)}...
-              </code>
-            </div>
-          )}
-          {isoform.defaultThreePrimeSequence && (
-            <div>
-              <div className="text-muted-foreground mb-1 text-xs font-semibold">
-                Default 3&apos; Fragment
-              </div>
-              <code className="text-xs break-all">
-                {isoform.defaultThreePrimeSequence.slice(0, 40)}...
-              </code>
-            </div>
-          )}
-        </div>
-      )}
 
       <Separator />
 
