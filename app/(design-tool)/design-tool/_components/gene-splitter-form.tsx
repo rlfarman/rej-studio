@@ -23,6 +23,7 @@ import type { ProcessResult } from '@/design-tool/types/process-result'
 import { validationSchema, FormValues } from './form-schema'
 import { formatOptionsForReport, buildJobParams } from './form-handler'
 import { useJob } from '@/hooks/use-job'
+import { useJobHistory } from '@/hooks/use-job-history'
 import { CustomizationOptions } from './customization-options'
 import { SpeciesOptions } from './species-options'
 import { CodonOptimizationOptions } from './optimization-options'
@@ -58,6 +59,7 @@ export function GeneSplitterForm({
   const [result, setResult] = useState<ProcessResult | null>(null)
   const resultsRef = useRef<HTMLDivElement>(null)
   const job = useJob()
+  const jobHistory = useJobHistory()
 
   const methods = useForm<FormValues>({
     resolver: zodResolver(validationSchema),
@@ -83,10 +85,11 @@ export function GeneSplitterForm({
     },
   })
 
-  // When the async job completes, update the result
+  // When the async job completes, update the result and save to history
   React.useEffect(() => {
     if (job.status === 'completed' && job.result) {
       setResult(job.result)
+      jobHistory.addEntry(job.result)
       setTimeout(() => {
         resultsRef.current?.scrollIntoView({
           behavior: 'smooth',
@@ -96,7 +99,7 @@ export function GeneSplitterForm({
     } else if (job.status === 'failed' && job.error) {
       toast.error(job.error)
     }
-  }, [job.status, job.result, job.error])
+  }, [job.status, job.result, job.error]) // eslint-disable-line react-hooks/exhaustive-deps -- jobHistory.addEntry is stable
 
   const onSubmit = async (values: FormValues) => {
     setResult(null)
