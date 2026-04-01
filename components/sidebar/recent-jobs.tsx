@@ -79,11 +79,11 @@ export function RecentJobs({ onSelectJob }: RecentJobsProps) {
                           variant="outline"
                           className="inline-block w-16 flex-shrink-0 truncate text-center font-mono"
                         >
-                          {formatBp(entry.sequenceLength)}
+                          {entry.id}
                         </Badge>
                       </TooltipTrigger>
                       <TooltipContent>
-                        {entry.sequenceLength.toLocaleString()} bp
+                        {formatBp(entry.sequenceLength)}
                       </TooltipContent>
                     </Tooltip>
                     <span className="truncate text-xs">{entry.name}</span>

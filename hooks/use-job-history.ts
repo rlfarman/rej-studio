@@ -16,6 +16,12 @@ export interface JobHistoryEntry {
 }
 
 const EMPTY: JobHistoryEntry[] = []
+const ID_CHARS = 'abcdefghijklmnopqrstuvwxyz0123456789'
+
+function randomId(length = 5): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(length))
+  return Array.from(bytes, (b) => ID_CHARS[b % ID_CHARS.length]).join('')
+}
 
 export function useJobHistory() {
   const [entries, setEntries] = useLocalStorage<JobHistoryEntry[]>(
@@ -26,7 +32,7 @@ export function useJobHistory() {
   const addEntry = useCallback(
     (result: ProcessResult) => {
       const entry: JobHistoryEntry = {
-        id: crypto.randomUUID(),
+        id: randomId(),
         name: result.name,
         sequenceLength: result.original_sequence.length,
         createdAt: new Date().toISOString(),
