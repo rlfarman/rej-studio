@@ -1,1 +1,1 @@
-data/rej-studio.db filter=lfs diff=lfs merge=lfs -text
+data/rej-studio.db.gz filter=lfs diff=lfs merge=lfs -text

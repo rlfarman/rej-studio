@@ -50,3 +50,8 @@ notes.md
 
 drizzle/transcript_metadata.csv
 
+# sqlite database (raw, uncompressed — only .gz is committed)
+data/rej-studio.db
+data/rej-studio.db-shm
+data/rej-studio.db-wal
+
