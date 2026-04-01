@@ -106,6 +106,12 @@ export function GeneSearchCommand({
                         }
                       >
                         <HeartIcon className="text-muted-foreground h-4 w-4" />
+                        {gene.species && (
+                          <SpeciesIcon
+                            species={gene.species}
+                            className="text-muted-foreground h-3.5 w-3.5"
+                          />
+                        )}
                         <span className="font-mono font-medium">
                           {gene.symbol}
                         </span>
@@ -129,6 +135,12 @@ export function GeneSearchCommand({
                           }
                         >
                           <ClockIcon className="text-muted-foreground h-4 w-4" />
+                          {gene.species && (
+                            <SpeciesIcon
+                              species={gene.species}
+                              className="text-muted-foreground h-3.5 w-3.5"
+                            />
+                          )}
                           <span className="font-mono font-medium">
                             {gene.symbol}
                           </span>

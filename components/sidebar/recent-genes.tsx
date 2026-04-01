@@ -14,6 +14,7 @@ import Link from 'next/link'
 import { geneHref } from '@/lib/species'
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip'
 import { Button } from '@/components/ui/button'
+import { SpeciesIcon } from '@/components/species-icon'
 
 const COLLAPSED_COUNT = 5
 const EXPANDED_MAX = 15
@@ -57,6 +58,12 @@ export function RecentGenes() {
                       href={geneHref(gene.symbol, gene.species)}
                       className="flex items-center gap-2"
                     >
+                      {gene.species && (
+                        <SpeciesIcon
+                          species={gene.species}
+                          className="text-muted-foreground h-3.5 w-3.5 flex-shrink-0"
+                        />
+                      )}
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Badge
