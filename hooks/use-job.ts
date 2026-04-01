@@ -17,18 +17,42 @@ interface UseJobReturn {
 }
 
 const POLL_INTERVAL = 2000
+const MAX_RETRIES = 3
+const ACTIVE_JOB_KEY = 'rej-studio:active-job'
+
+function saveActiveJob(jobId: string) {
+  try {
+    localStorage.setItem(ACTIVE_JOB_KEY, jobId)
+  } catch {}
+}
+
+function clearActiveJob() {
+  try {
+    localStorage.removeItem(ACTIVE_JOB_KEY)
+  } catch {}
+}
+
+function loadActiveJob(): string | null {
+  try {
+    return localStorage.getItem(ACTIVE_JOB_KEY)
+  } catch {
+    return null
+  }
+}
 
 export function useJob(): UseJobReturn {
   const [status, setStatus] = useState<JobStatus>('idle')
   const [result, setResult] = useState<ProcessResult | null>(null)
   const [error, setError] = useState<string | null>(null)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const retriesRef = useRef(0)
 
   const clearPolling = useCallback(() => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current)
       intervalRef.current = null
     }
+    retriesRef.current = 0
   }, [])
 
   useEffect(() => clearPolling, [clearPolling])
@@ -39,33 +63,55 @@ export function useJob(): UseJobReturn {
         try {
           const data = await getJobStatus(callId)
 
+          // Reset retry counter on success
+          retriesRef.current = 0
+
           if (data.status === 'completed') {
             clearPolling()
+            clearActiveJob()
             setResult(data.result as unknown as ProcessResult)
             setStatus('completed')
           } else if (data.status === 'failed') {
             clearPolling()
+            clearActiveJob()
             setError(
               (data.result?.error as string) ?? 'Job failed',
             )
             setStatus('failed')
           } else if (data.status === 'not_found') {
             clearPolling()
+            clearActiveJob()
             setError('Job not found')
             setStatus('failed')
           }
           // status === 'running' -> keep polling
         } catch (err) {
-          clearPolling()
-          setError(
-            err instanceof Error ? err.message : 'Failed to check job status',
-          )
-          setStatus('failed')
+          retriesRef.current += 1
+          if (retriesRef.current >= MAX_RETRIES) {
+            clearPolling()
+            clearActiveJob()
+            setError(
+              err instanceof Error
+                ? err.message
+                : 'Failed to check job status',
+            )
+            setStatus('failed')
+          }
+          // Otherwise silently retry on next interval
         }
       }, POLL_INTERVAL)
     },
     [clearPolling],
   )
+
+  // Resume polling for an active job on mount
+  useEffect(() => {
+    const activeJobId = loadActiveJob()
+    if (activeJobId) {
+      setStatus('running')
+      pollJob(activeJobId)
+    }
+  }, [pollJob])
 
   const submitJob = useCallback(
     async (params: {
@@ -88,6 +134,7 @@ export function useJob(): UseJobReturn {
           return
         }
 
+        saveActiveJob(jobId)
         setStatus('running')
         pollJob(jobId)
       } catch (err) {
