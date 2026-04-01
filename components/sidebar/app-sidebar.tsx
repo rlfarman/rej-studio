@@ -6,7 +6,6 @@ import {
   SidebarHeader,
   SidebarRail,
   SidebarFooter,
-  SidebarSeparator,
 } from '@/components/ui/sidebar'
 import { FavoriteGenes } from './favorite-genes'
 import { RecentGenes } from './recent-genes'
@@ -33,10 +32,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </Link>
       </SidebarHeader>
       <SidebarContent>
-        <RecentJobs onSelectJob={selectEntry} />
-        <SidebarSeparator />
-        <RecentGenes />
         <FavoriteGenes />
+        <RecentGenes />
+        <RecentJobs onSelectJob={selectEntry} />
       </SidebarContent>
       <SidebarFooter>
         <div className="flex justify-between items-center gap-2">
