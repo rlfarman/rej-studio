@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { submitModalJob, getModalJobStatus } from '@/actions/jobs'
+import { submitJob as submitJobAction, getJobStatus } from '@/actions/jobs'
 import type { ProcessResult } from '@/design-tool/types/process-result'
 
 type JobStatus = 'idle' | 'submitting' | 'running' | 'completed' | 'failed'
@@ -37,7 +37,7 @@ export function useJob(): UseJobReturn {
     (callId: string) => {
       intervalRef.current = setInterval(async () => {
         try {
-          const data = await getModalJobStatus(callId)
+          const data = await getJobStatus(callId)
 
           if (data.status === 'completed') {
             clearPolling()
@@ -79,9 +79,9 @@ export function useJob(): UseJobReturn {
       setError(null)
 
       try {
-        const { call_id } = await submitModalJob(params)
+        const { jobId } = await submitJobAction(params)
         setStatus('running')
-        pollJob(call_id)
+        pollJob(jobId)
       } catch (err) {
         setError(
           err instanceof Error ? err.message : 'Failed to submit job',

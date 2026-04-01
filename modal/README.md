@@ -11,13 +11,7 @@ pip install modal
 modal setup
 ```
 
-2. Copy the algorithm into this directory (it needs to be bundled with the Modal image):
-
-```bash
-cp api/algorithm.py modal/algorithm.py
-```
-
-3. Deploy:
+2. Deploy (the algorithm is sourced from `api/algorithm.py` automatically):
 
 ```bash
 modal deploy modal/app.py
@@ -26,8 +20,11 @@ modal deploy modal/app.py
 After deploying, Modal will print the web endpoint URL. Set this as `MODAL_API_URL` in your `.env.local`:
 
 ```
+COMPUTE_BACKEND=modal
 MODAL_API_URL=https://your-username--rej-studio-web.modal.run
 ```
+
+To switch back to local FastAPI, remove `COMPUTE_BACKEND` (or set it to anything other than `modal`).
 
 ## Local development
 

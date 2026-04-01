@@ -21,53 +21,88 @@ interface JobOptions {
   wggw_threshold: number
 }
 
-// --- Modal async job actions ---
+// --- Compute backend actions ---
+// Set COMPUTE_BACKEND=modal to use Modal, otherwise falls back to local FastAPI.
 
-interface ModalJobParams {
+export interface JobParams {
   CDS: string
   name: string
   options: Record<string, unknown>
 }
 
-export async function submitModalJob(params: ModalJobParams) {
-  const modalUrl = process.env.MODAL_API_URL
-  if (!modalUrl) {
-    throw new Error('MODAL_API_URL is not configured')
+export interface JobStatusResult {
+  status: 'running' | 'completed' | 'failed' | 'not_found'
+  result?: Record<string, unknown>
+}
+
+function useModal() {
+  return process.env.COMPUTE_BACKEND === 'modal'
+}
+
+function getModalUrl() {
+  const url = process.env.MODAL_API_URL
+  if (!url) throw new Error('MODAL_API_URL is not configured')
+  return url
+}
+
+function getLocalUrl() {
+  return process.env.LOCAL_API_URL ?? 'http://127.0.0.1:8000'
+}
+
+export async function submitJob(
+  params: JobParams,
+): Promise<{ jobId: string }> {
+  if (useModal()) {
+    const response = await fetch(`${getModalUrl()}/jobs`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(params),
+    })
+    if (!response.ok) {
+      const text = await response.text()
+      throw new Error(`Modal API error: ${text}`)
+    }
+    const data = await response.json()
+    return { jobId: data.call_id }
   }
 
-  const response = await fetch(`${modalUrl}/jobs`, {
+  // Local backend: call FastAPI synchronously, return result immediately
+  const response = await fetch(`${getLocalUrl()}/api/py/process-json`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(params),
   })
-
   if (!response.ok) {
-    const text = await response.text()
-    throw new Error(`Modal API error: ${text}`)
+    const detail = await response.json().catch(() => ({}))
+    throw new Error(detail.detail ?? `Local API error: ${response.statusText}`)
   }
-
-  const data = await response.json()
-  return data as { call_id: string }
+  const result = await response.json()
+  // Store result in a synthetic ID so getJobStatus can return it
+  localResults.set(crypto.randomUUID(), result)
+  const jobId = [...localResults.keys()].pop()!
+  return { jobId }
 }
 
-export async function getModalJobStatus(callId: string) {
-  const modalUrl = process.env.MODAL_API_URL
-  if (!modalUrl) {
-    throw new Error('MODAL_API_URL is not configured')
+// In-memory cache for local (synchronous) results
+const localResults = new Map<string, Record<string, unknown>>()
+
+export async function getJobStatus(
+  jobId: string,
+): Promise<JobStatusResult> {
+  if (useModal()) {
+    const response = await fetch(`${getModalUrl()}/jobs/${jobId}`)
+    if (!response.ok) {
+      const text = await response.text()
+      throw new Error(`Modal API error: ${text}`)
+    }
+    return response.json()
   }
 
-  const response = await fetch(`${modalUrl}/jobs/${callId}`)
-
-  if (!response.ok) {
-    const text = await response.text()
-    throw new Error(`Modal API error: ${text}`)
-  }
-
-  const data = await response.json()
-  return data as {
-    status: 'running' | 'completed' | 'failed' | 'not_found'
-    result?: Record<string, unknown>
-  }
+  // Local backend: result was already computed synchronously
+  const result = localResults.get(jobId)
+  if (!result) return { status: 'not_found' }
+  localResults.delete(jobId)
+  return { status: 'completed', result }
 }
 
 export const createJob = async ({

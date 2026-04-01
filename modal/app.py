@@ -6,12 +6,12 @@ from typing import Any
 
 app = modal.App("rej-studio")
 
-local_dir = Path(__file__).parent
+project_root = Path(__file__).parent.parent
 
 image = (
     modal.Image.debian_slim(python_version="3.11")
     .pip_install("dnachisel", "tqdm")
-    .add_local_file(local_dir / "algorithm.py", remote_path="/root/algorithm.py")
+    .add_local_file(project_root / "api" / "algorithm.py", remote_path="/root/algorithm.py")
 )
 
 
