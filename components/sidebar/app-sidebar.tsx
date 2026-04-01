@@ -6,14 +6,19 @@ import {
   SidebarHeader,
   SidebarRail,
   SidebarFooter,
+  SidebarSeparator,
 } from '@/components/ui/sidebar'
 import { FavoriteGenes } from './favorite-genes'
 import { RecentGenes } from './recent-genes'
+import { RecentJobs } from './recent-jobs'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { SidebarToggle } from '@/components/sidebar-toggle'
+import { useJobHistoryContext } from '@/context/job-history-context'
 import Link from 'next/link'
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { selectEntry } = useJobHistoryContext()
+
   return (
     <Sidebar {...props}>
       <SidebarHeader>
@@ -28,6 +33,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </Link>
       </SidebarHeader>
       <SidebarContent>
+        <RecentJobs onSelectJob={selectEntry} />
+        <SidebarSeparator />
         <RecentGenes />
         <FavoriteGenes />
       </SidebarContent>
