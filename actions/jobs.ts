@@ -45,13 +45,19 @@ function getModalUrl() {
   return url
 }
 
-function getLocalUrl() {
-  return process.env.LOCAL_API_URL ?? 'http://127.0.0.1:8000'
+function getLocalApiUrl() {
+  // In dev, hit uvicorn directly. On Vercel, use the app's own URL (rewrites handle routing).
+  if (process.env.NODE_ENV === 'development') {
+    return process.env.LOCAL_API_URL ?? 'http://127.0.0.1:8000'
+  }
+  const vercelUrl = process.env.VERCEL_URL
+  if (vercelUrl) return `https://${vercelUrl}`
+  return 'http://127.0.0.1:3000'
 }
 
 export async function submitJob(
   params: JobParams,
-): Promise<{ jobId: string }> {
+): Promise<{ jobId: string; result?: Record<string, unknown> }> {
   if (useModal()) {
     const response = await fetch(`${getModalUrl()}/jobs`, {
       method: 'POST',
@@ -66,8 +72,9 @@ export async function submitJob(
     return { jobId: data.call_id }
   }
 
-  // Local backend: call FastAPI synchronously, return result immediately
-  const response = await fetch(`${getLocalUrl()}/api/py/process-json`, {
+  // Local backend: call FastAPI synchronously and return the result inline.
+  // No polling needed — the result is available immediately.
+  const response = await fetch(`${getLocalApiUrl()}/api/py/process-json`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(params),
@@ -77,14 +84,8 @@ export async function submitJob(
     throw new Error(detail.detail ?? `Local API error: ${response.statusText}`)
   }
   const result = await response.json()
-  // Store result in a synthetic ID so getJobStatus can return it
-  localResults.set(crypto.randomUUID(), result)
-  const jobId = [...localResults.keys()].pop()!
-  return { jobId }
+  return { jobId: 'local', result }
 }
-
-// In-memory cache for local (synchronous) results
-const localResults = new Map<string, Record<string, unknown>>()
 
 export async function getJobStatus(
   jobId: string,
@@ -98,11 +99,9 @@ export async function getJobStatus(
     return response.json()
   }
 
-  // Local backend: result was already computed synchronously
-  const result = localResults.get(jobId)
-  if (!result) return { status: 'not_found' }
-  localResults.delete(jobId)
-  return { status: 'completed', result }
+  // Local backend: result was returned inline from submitJob, so this
+  // should not be called. Return not_found as a safeguard.
+  return { status: 'not_found' }
 }
 
 export const createJob = async ({

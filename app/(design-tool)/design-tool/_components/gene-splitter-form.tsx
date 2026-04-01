@@ -21,11 +21,7 @@ import {
 import type { DesignToolSpecies } from '@/design-tool/types/species-options'
 import type { ProcessResult } from '@/design-tool/types/process-result'
 import { validationSchema, FormValues } from './form-schema'
-import {
-  submitFormJson,
-  formatOptionsForReport,
-  buildJobParams,
-} from './form-handler'
+import { formatOptionsForReport, buildJobParams } from './form-handler'
 import { useJob } from '@/hooks/use-job'
 import { CustomizationOptions } from './customization-options'
 import { SpeciesOptions } from './species-options'

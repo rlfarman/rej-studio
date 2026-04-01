@@ -79,7 +79,15 @@ export function useJob(): UseJobReturn {
       setError(null)
 
       try {
-        const { jobId } = await submitJobAction(params)
+        const { jobId, result: inlineResult } = await submitJobAction(params)
+
+        // Local backend returns the result inline — no polling needed
+        if (inlineResult) {
+          setResult(inlineResult as unknown as ProcessResult)
+          setStatus('completed')
+          return
+        }
+
         setStatus('running')
         pollJob(jobId)
       } catch (err) {
