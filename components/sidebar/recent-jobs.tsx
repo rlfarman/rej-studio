@@ -9,8 +9,6 @@ import {
   SidebarMenuItem,
 } from '@/components/ui/sidebar'
 import { useJobHistory, type JobHistoryEntry } from '@/hooks/use-job-history'
-import { Badge } from '@/components/ui/badge'
-import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip'
 import { Button } from '@/components/ui/button'
 
 const COLLAPSED_COUNT = 5
@@ -27,11 +25,6 @@ function formatTimeAgo(dateString: string): string {
   if (hours < 24) return `${hours}h ago`
   const days = Math.floor(hours / 24)
   return `${days}d ago`
-}
-
-function formatBp(length: number): string {
-  if (length >= 1000) return `${(length / 1000).toFixed(1)}kb`
-  return `${length}bp`
 }
 
 interface RecentJobsProps {
@@ -73,19 +66,6 @@ export function RecentJobs({ onSelectJob }: RecentJobsProps) {
               {visibleItems.map((entry) => (
                 <SidebarMenuItem key={entry.id}>
                   <SidebarMenuButton onClick={() => onSelectJob?.(entry)}>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Badge
-                          variant="outline"
-                          className="inline-block w-16 flex-shrink-0 truncate text-center font-mono uppercase"
-                        >
-                          {entry.id}
-                        </Badge>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        {formatBp(entry.sequenceLength)}
-                      </TooltipContent>
-                    </Tooltip>
                     <span className="truncate text-xs">{entry.name}</span>
                     <span className="text-muted-foreground ml-auto flex-shrink-0 text-[10px]">
                       {formatTimeAgo(entry.createdAt)}
