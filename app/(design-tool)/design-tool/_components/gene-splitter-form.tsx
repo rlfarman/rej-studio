@@ -24,7 +24,6 @@ import { validationSchema, FormValues } from './form-schema'
 import { formatOptionsForReport, buildJobParams } from './form-handler'
 import { useJob } from '@/hooks/use-job'
 import { useJobHistory } from '@/hooks/use-job-history'
-import { useJobHistoryContext } from '@/context/job-history-context'
 import { CustomizationOptions } from './customization-options'
 import { SpeciesOptions } from './species-options'
 import { CodonOptimizationOptions } from './optimization-options'
@@ -49,6 +48,7 @@ interface GeneSplitterFormProperties {
   defaultName?: string
   defaultSpecies?: DesignToolSpecies
   defaultPreset?: Partial<FormValues>
+  defaultJobId?: string
 }
 
 export function GeneSplitterForm({
@@ -56,12 +56,12 @@ export function GeneSplitterForm({
   defaultName,
   defaultSpecies,
   defaultPreset,
+  defaultJobId,
 }: GeneSplitterFormProperties) {
   const [result, setResult] = useState<ProcessResult | null>(null)
   const resultsRef = useRef<HTMLDivElement>(null)
   const job = useJob()
   const jobHistory = useJobHistory()
-  const { selectedEntry, clearSelection } = useJobHistoryContext()
 
   const methods = useForm<FormValues>({
     resolver: zodResolver(validationSchema),
@@ -87,25 +87,30 @@ export function GeneSplitterForm({
     },
   })
 
-  // When a job history entry is selected from the sidebar, load it
+  // When a job ID is provided via URL, load it from history
   React.useEffect(() => {
-    if (selectedEntry) {
-      setResult(selectedEntry.result)
-      clearSelection()
-      setTimeout(() => {
-        resultsRef.current?.scrollIntoView({
-          behavior: 'smooth',
-          block: 'start',
-        })
-      }, 100)
+    if (defaultJobId) {
+      const entry = jobHistory.getEntry(defaultJobId)
+      if (entry) {
+        setResult(entry.result)
+        setTimeout(() => {
+          resultsRef.current?.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start',
+          })
+        }, 100)
+      }
     }
-  }, [selectedEntry, clearSelection])
+  }, [defaultJobId]) // eslint-disable-line react-hooks/exhaustive-deps -- jobHistory.getEntry is stable
 
   // When the async job completes, update the result and save to history
   React.useEffect(() => {
     if (job.status === 'completed' && job.result) {
       setResult(job.result)
-      jobHistory.addEntry(job.result)
+      const id = jobHistory.addEntry(job.result)
+      const url = new URL(window.location.href)
+      url.searchParams.set('job', id)
+      window.history.replaceState(null, '', url.toString())
       setTimeout(() => {
         resultsRef.current?.scrollIntoView({
           behavior: 'smooth',
