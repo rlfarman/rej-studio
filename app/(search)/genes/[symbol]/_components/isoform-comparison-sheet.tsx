@@ -34,10 +34,9 @@ interface IsoformComparisonSheetProps {
 }
 
 const SUITABILITY_VARIANT_MAP = {
-  easy: 'default',
-  moderate: 'secondary',
-  complex: 'outline',
-  oversized: 'destructive',
+  'single-aav': 'default',
+  'dual-aav': 'secondary',
+  'triple-aav': 'destructive',
 } as const
 
 export function IsoformComparisonSheet({
