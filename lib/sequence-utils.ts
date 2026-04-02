@@ -27,32 +27,68 @@ export function countCpG(seq: string): number {
   return count
 }
 
-/** Count potential splice donor sites (GT followed by A or G: GT[AG]). */
-export function countSpliceDonors(seq: string): number {
-  const upper = seq.toUpperCase()
-  let count = 0
-  for (let i = 0; i < upper.length - 2; i++) {
-    if (upper[i] === 'G' && upper[i + 1] === 'T' && (upper[i + 2] === 'A' || upper[i + 2] === 'G')) {
-      count++
+/**
+ * Count regex pattern matches in a sequence.
+ * Uses the same patterns as the Python algorithm (algorithm.py).
+ */
+function countPatternMatches(seq: string, patterns: RegExp[]): number {
+  let total = 0
+  for (const pattern of patterns) {
+    let m: RegExpExecArray | null
+    while ((m = pattern.exec(seq)) !== null) {
+      total++
+      // Advance by 1 to find overlapping matches
+      pattern.lastIndex = m.index + 1
     }
   }
-  return count
+  return total
 }
 
-/** Count potential splice acceptor sites (pyrimidine + AG pattern). */
+// Splice donor patterns from algorithm.py:215
+const SPLICE_DONOR_PATTERNS = [
+  /GT[AG]A/g,
+  /AAGTA/g,
+  /[CTA]AG[GA]/g,
+  /CAG[GC]/g,
+]
+
+// Splice acceptor patterns from algorithm.py:216-242
+const SPLICE_ACCEPTOR_PATTERNS = [
+  /[CT]{2}[ACGT][CT]AG[GA]T/g,
+  /[AG][CT][ACGT][CT]AG[GA]T/g,
+  /[CT][AG][ACGT][CT]AG[GA]T/g,
+  /[CT]{3}[ACGT][CT]AG[GA]T/g,
+  /[AG][CT]{2}[ACGT][CT]AG[GA]T/g,
+  /[CT][AG][CT][ACGT][CT]AG[GA]T/g,
+  /[CT]{2}[AG][ACGT][CT]AG[GA]T/g,
+  /[CT]{4}[ACGT][CT]AG[GA]T/g,
+  /[AG][CT]{3}[ACGT][CT]AG[GA]T/g,
+  /[CT][AG][CT]{2}[ACGT][CT]AG[GA]T/g,
+  /[CT]{2}[AG][CT][ACGT][CT]AG[GA]T/g,
+  /[CT]{3}[AG][ACGT][CT]AG[GA]T/g,
+  /[CT]{5}[ACGT][CT]AG[GA]T/g,
+  /[AG][CT]{4}[ACGT][CT]AG[GA]T/g,
+  /[CT][AG][CT]{3}[ACGT][CT]AG[GA]T/g,
+  /[CT]{2}[AG][CT]{2}[ACGT][CT]AG[GA]T/g,
+  /[CT]{3}[AG][CT][ACGT][CT]AG[GA]T/g,
+  /[CT]{4}[AG][ACGT][CT]AG[GA]T/g,
+  /[CT]{6}[ACGT][CT]AG[GA]T/g,
+  /[AG][CT]{5}[ACGT][CT]AG[GA]T/g,
+  /[CT][AG][CT]{4}[ACGT][CT]AG[GA]T/g,
+  /[CT]{2}[AG][CT]{3}[ACGT][CT]AG[GA]T/g,
+  /[CT]{3}[AG][CT]{2}[ACGT][CT]AG[GA]T/g,
+  /[CT]{4}[AG][CT][ACGT][CT]AG[GA]T/g,
+  /[CT]{5}[AG][ACGT][CT]AG[GA]T/g,
+]
+
+/** Count cryptic splice donor site matches using algorithm patterns. */
+export function countSpliceDonors(seq: string): number {
+  return countPatternMatches(seq.toUpperCase(), SPLICE_DONOR_PATTERNS)
+}
+
+/** Count cryptic splice acceptor site matches using algorithm patterns. */
 export function countSpliceAcceptors(seq: string): number {
-  const upper = seq.toUpperCase()
-  let count = 0
-  for (let i = 1; i < upper.length - 2; i++) {
-    if (
-      (upper[i] === 'C' || upper[i] === 'T') &&
-      upper[i + 1] === 'A' &&
-      upper[i + 2] === 'G'
-    ) {
-      count++
-    }
-  }
-  return count
+  return countPatternMatches(seq.toUpperCase(), SPLICE_ACCEPTOR_PATTERNS)
 }
 
 /** Compute k-mer complexity score (fraction of unique k-mers out of total k-mers). */
