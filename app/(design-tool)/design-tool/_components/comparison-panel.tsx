@@ -5,6 +5,12 @@ import { ArrowRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { ProcessResult } from '@/design-tool/types/process-result'
 import { computeGcPercent, countCpG } from '@/lib/sequence-utils'
+import {
+  countSpliceDonors,
+  countSpliceAcceptors,
+  parseCAI,
+  parseKmerScore,
+} from '@/lib/objectives-utils'
 
 interface ComparisonPanelProps {
   result: ProcessResult
@@ -81,6 +87,15 @@ export function ComparisonPanel({ result }: ComparisonPanelProps) {
     }
     const changePercent = len > 0 ? (changedPositions / len) * 100 : 0
 
+    const donorsBefore = countSpliceDonors(result.objectives_before)
+    const donorsAfter = countSpliceDonors(result.objectives_after)
+    const acceptorsBefore = countSpliceAcceptors(result.objectives_before)
+    const acceptorsAfter = countSpliceAcceptors(result.objectives_after)
+    const caiBefore = parseCAI(result.objectives_before)
+    const caiAfter = parseCAI(result.objectives_after)
+    const kmerBefore = parseKmerScore(result.objectives_before)
+    const kmerAfter = parseKmerScore(result.objectives_after)
+
     return {
       gcBefore,
       gcAfter,
@@ -89,8 +104,16 @@ export function ComparisonPanel({ result }: ComparisonPanelProps) {
       changedPositions,
       changePercent,
       len,
+      donorsBefore,
+      donorsAfter,
+      acceptorsBefore,
+      acceptorsAfter,
+      caiBefore,
+      caiAfter,
+      kmerBefore,
+      kmerAfter,
     }
-  }, [result.original_sequence, result.optimized_sequence])
+  }, [result.original_sequence, result.optimized_sequence, result.objectives_before, result.objectives_after])
 
   if (!stats) return null
 
@@ -110,6 +133,32 @@ export function ComparisonPanel({ result }: ComparisonPanelProps) {
           after={stats.cpgAfter}
           lowerIsBetter
         />
+        <StatDelta
+          label="Splice Donor Sites"
+          before={stats.donorsBefore}
+          after={stats.donorsAfter}
+          lowerIsBetter
+        />
+        <StatDelta
+          label="Splice Acceptor Sites"
+          before={stats.acceptorsBefore}
+          after={stats.acceptorsAfter}
+          lowerIsBetter
+        />
+        {stats.caiBefore !== null && stats.caiAfter !== null && (
+          <StatDelta
+            label="CAI"
+            before={stats.caiBefore}
+            after={stats.caiAfter}
+          />
+        )}
+        {stats.kmerBefore !== null && stats.kmerAfter !== null && (
+          <StatDelta
+            label="Kmer Complexity"
+            before={stats.kmerBefore}
+            after={stats.kmerAfter}
+          />
+        )}
         <div className="bg-muted/50 flex flex-col rounded-lg border p-3">
           <span className="text-muted-foreground text-xs font-medium">
             Positions Changed

@@ -27,6 +27,12 @@ import type { ProcessResult } from '@/design-tool/types/process-result'
 import { toast } from 'sonner'
 import { downloadResultsZip } from '@/design-tool/lib/build-zip'
 import { ComparisonPanel } from './comparison-panel'
+import {
+  countSpliceDonors,
+  countSpliceAcceptors,
+  parseCAI,
+  parseKmerScore,
+} from '@/lib/objectives-utils'
 import { AavResults } from './aav-size-estimator'
 import { formatFasta } from '@/lib/fasta'
 
@@ -147,28 +153,13 @@ function SplitVisualization({
 
 /** Parse the DNAChisel objectives text into a digestible summary. */
 function parseObjectives(text: string) {
-  const totalMatch = text.match(/TOTAL OBJECTIVES SCORE:\s*([-\d.]+)/)
-  const totalScore = totalMatch ? parseFloat(totalMatch[1]) : null
-
-  // Count passed vs failed objectives
-  const passedCount = (text.match(/✔/g) || []).length
-  const failedLines = text.match(/Failed\./g) || []
-  const failedCount = failedLines.length
-
-  // Extract key metrics
-  const caiMatch = text.match(/MaximizeCAI.*scored\s*([-\d.E+]+)/)
-  const caiScore = caiMatch ? parseFloat(caiMatch[1]) : null
-
-  const cpgMatch = text.match(
-    /AvoidPattern.*pattern:CG\).*?positions \[([^\]]*)\]/,
-  )
-  const cpgCount = cpgMatch
-    ? cpgMatch[1].split(',').filter((s) => s.trim()).length
-    : 0
-
+  const caiScore = parseCAI(text)
   const kmerPassed = /UniquifyAllKmers.*Passed/.test(text)
+  const kmerScore = parseKmerScore(text)
+  const donorCount = countSpliceDonors(text)
+  const acceptorCount = countSpliceAcceptors(text)
 
-  return { totalScore, passedCount, failedCount, caiScore, cpgCount, kmerPassed }
+  return { caiScore, kmerPassed, kmerScore, donorCount, acceptorCount }
 }
 
 function ObjectivesSummary({
@@ -181,40 +172,53 @@ function ObjectivesSummary({
   const beforeStats = parseObjectives(before)
   const afterStats = parseObjectives(after)
 
-  const items: { label: string; status: 'good' | 'improved' | 'neutral' }[] = []
+  const items: { label: string; status: 'good' | 'improved' | 'neutral'; hint?: string }[] = []
 
-  if (beforeStats.totalScore !== null && afterStats.totalScore !== null) {
-    const improved = afterStats.totalScore > beforeStats.totalScore
+  // Splice donor sites
+  if (beforeStats.donorCount > 0 || afterStats.donorCount > 0) {
     items.push({
-      label: `Objective score: ${beforeStats.totalScore.toFixed(1)} \u2192 ${afterStats.totalScore.toFixed(1)}`,
+      label: `Potential splice donor sites: ${beforeStats.donorCount} \u2192 ${afterStats.donorCount}`,
+      status: afterStats.donorCount < beforeStats.donorCount
+        ? afterStats.donorCount === 0 ? 'good' : 'improved'
+        : 'neutral',
+    })
+  }
+
+  // Splice acceptor sites
+  if (beforeStats.acceptorCount > 0 || afterStats.acceptorCount > 0) {
+    items.push({
+      label: `Potential splice acceptor sites: ${beforeStats.acceptorCount} \u2192 ${afterStats.acceptorCount}`,
+      status: afterStats.acceptorCount < beforeStats.acceptorCount
+        ? afterStats.acceptorCount === 0 ? 'good' : 'improved'
+        : 'neutral',
+    })
+  }
+
+  // CAI score
+  if (afterStats.caiScore !== null) {
+    const improved =
+      beforeStats.caiScore !== null && afterStats.caiScore > beforeStats.caiScore
+    items.push({
+      label: beforeStats.caiScore !== null
+        ? `CAI: ${beforeStats.caiScore.toFixed(3)} \u2192 ${afterStats.caiScore.toFixed(3)}`
+        : `CAI: ${afterStats.caiScore.toFixed(3)}`,
       status: improved ? 'improved' : 'neutral',
     })
   }
 
-  if (afterStats.passedCount > 0 || afterStats.failedCount > 0) {
-    const total = afterStats.passedCount + afterStats.failedCount
-    items.push({
-      label: `${afterStats.passedCount} of ${total} objectives passed`,
-      status:
-        afterStats.passedCount > beforeStats.passedCount
-          ? 'improved'
-          : afterStats.failedCount === 0
-            ? 'good'
-            : 'neutral',
-    })
-  }
-
-  if (beforeStats.cpgCount > 0 || afterStats.cpgCount > 0) {
-    items.push({
-      label: `CpG sites: ${beforeStats.cpgCount} \u2192 ${afterStats.cpgCount}`,
-      status: afterStats.cpgCount < beforeStats.cpgCount ? 'improved' : 'neutral',
-    })
-  }
-
+  // Kmer complexity
   if (afterStats.kmerPassed) {
     items.push({
       label: 'No repetitive 10-mers remaining',
       status: 'good',
+    })
+  } else if (afterStats.kmerScore !== null) {
+    const improved =
+      beforeStats.kmerScore !== null && afterStats.kmerScore > beforeStats.kmerScore
+    items.push({
+      label: `Kmer complexity: ${afterStats.kmerScore.toFixed(1)}`,
+      status: improved ? 'improved' : 'neutral',
+      hint: 'If the current sequence is too difficult to synthesize, rerun the optimization with higher weight on reducing kmer complexity.',
     })
   }
 
@@ -227,16 +231,23 @@ function ObjectivesSummary({
       {items.length > 0 && (
         <ul className="space-y-1">
           {items.map((item) => (
-            <li key={item.label} className="flex items-center gap-2 text-sm">
-              <span
-                className={cn(
-                  'size-1.5 shrink-0 rounded-full',
-                  item.status === 'good' && 'bg-emerald-500',
-                  item.status === 'improved' && 'bg-emerald-500',
-                  item.status === 'neutral' && 'bg-muted-foreground',
-                )}
-              />
-              {item.label}
+            <li key={item.label} className="space-y-0.5">
+              <div className="flex items-center gap-2 text-sm">
+                <span
+                  className={cn(
+                    'size-1.5 shrink-0 rounded-full',
+                    item.status === 'good' && 'bg-emerald-500',
+                    item.status === 'improved' && 'bg-emerald-500',
+                    item.status === 'neutral' && 'bg-muted-foreground',
+                  )}
+                />
+                {item.label}
+              </div>
+              {item.hint && (
+                <p className="text-muted-foreground ml-3.5 text-xs italic">
+                  {item.hint}
+                </p>
+              )}
             </li>
           ))}
         </ul>
