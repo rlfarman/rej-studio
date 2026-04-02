@@ -1,7 +1,6 @@
 'use client'
 
 import { useMemo } from 'react'
-import { hasStartCodon, getStopCodonStatus } from '@/lib/sequence-utils'
 import { useSpeciesContext } from '@/context/species-context'
 import type { IsoformListItem } from '@/lib/domain-types'
 
@@ -28,15 +27,7 @@ export function IsoformSummary({ isoforms }: IsoformSummaryProps) {
     const shortest = Math.min(...lengths)
     const longest = Math.max(...lengths)
 
-    const recommended = filtered.find(
-      (i) =>
-        hasStartCodon(i.codingSequence) &&
-        getStopCodonStatus(i.codingSequence) === 'present' &&
-        i.codingSequence.length % 3 === 0 &&
-        i.codingSequenceLength <= 4700,
-    )
-
-    return { shortest, longest, recommended }
+    return { shortest, longest }
   }, [filtered])
 
   if (!stats) return null
@@ -48,12 +39,6 @@ export function IsoformSummary({ isoforms }: IsoformSummaryProps) {
         label="CDS range"
         value={`${stats.shortest.toLocaleString()} – ${stats.longest.toLocaleString()} bp`}
       />
-      {stats.recommended && (
-        <div className="flex items-center gap-1.5">
-          <span className="text-muted-foreground">Recommended</span>
-          <span className="font-mono text-xs">{stats.recommended.id}</span>
-        </div>
-      )}
     </div>
   )
 }
