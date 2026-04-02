@@ -21,6 +21,7 @@ function GeneSearchTooltip() {
         <Button variant="ghost" asChild>
           <Link href="/design-tool" aria-label="Go to Design Tool">
             <WandSparkles className="size-5" />
+            <span>Design Tool</span>
           </Link>
         </Button>
       </TooltipTrigger>

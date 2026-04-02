@@ -43,10 +43,13 @@ export function FavoriteGenes() {
                   <SidebarMenuButton asChild>
                     <Link href={geneHref(gene.symbol, gene.species)}>
                       {gene.species && (
-                        <SpeciesIcon
-                          species={gene.species}
-                          className="text-muted-foreground h-3.5 w-3.5 flex-shrink-0"
-                        />
+                        <span className="flex flex-shrink-0 items-center gap-1">
+                          <SpeciesIcon
+                            species={gene.species}
+                            className="text-muted-foreground h-3.5 w-3.5 flex-shrink-0"
+                          />
+                          <span className="text-muted-foreground text-xs capitalize">{gene.species}</span>
+                        </span>
                       )}
                       <span className="font-mono font-medium">{gene.symbol}</span>
                       <TruncatedText tooltip={gene.name} className="text-muted-foreground truncate text-xs">{gene.name}</TruncatedText>

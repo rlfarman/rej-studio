@@ -10,9 +10,9 @@ export function SpeciesIcon({
 }) {
   switch (species) {
     case 'human':
-      return <User className={`size-5 ${className}`} />
+      return <User className={`size-5 ${className}`} aria-hidden="true" />
     case 'mouse':
-      return <RatIcon className={`size-5 ${className}`} />
+      return <RatIcon className={`size-5 ${className}`} aria-hidden="true" />
     default:
       return <Dna className={`size-5 ${className}`} />
   }
