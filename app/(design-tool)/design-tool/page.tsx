@@ -27,8 +27,10 @@ async function DesignToolPage({
   const presetValues =
     presetKey && presetKey in PRESETS ? PRESETS[presetKey].values : undefined
 
+  const jobId = Array.isArray(params.job) ? params.job[0] : params.job
+
   if (!isoformId) {
-    return <GeneSplitterForm defaultPreset={presetValues} />
+    return <GeneSplitterForm defaultPreset={presetValues} defaultJobId={jobId} />
   }
 
   const result = isoformId
@@ -36,7 +38,7 @@ async function DesignToolPage({
     : undefined
 
   if (!result) {
-    return <GeneSplitterForm defaultPreset={presetValues} />
+    return <GeneSplitterForm defaultPreset={presetValues} defaultJobId={jobId} />
   }
 
   const { isoform, gene } = result
@@ -50,6 +52,7 @@ async function DesignToolPage({
       defaultSpecies={validSpecies}
       defaultCodingSequence={isoform.codingSequence}
       defaultPreset={presetValues}
+      defaultJobId={jobId}
     />
   )
 }

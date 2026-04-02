@@ -13,11 +13,16 @@ import { RecentJobs } from './recent-jobs'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { SidebarToggle } from '@/components/sidebar-toggle'
 import { DataTransfer } from './data-transfer'
-import { useJobHistoryContext } from '@/context/job-history-context'
+import type { JobHistoryEntry } from '@/hooks/use-job-history'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { selectEntry } = useJobHistoryContext()
+  const router = useRouter()
+
+  function handleSelectJob(entry: JobHistoryEntry) {
+    router.push(`/design-tool?job=${entry.id}`)
+  }
 
   return (
     <Sidebar {...props}>
@@ -35,7 +40,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarContent>
         <FavoriteGenes />
         <RecentGenes />
-        <RecentJobs onSelectJob={selectEntry} />
+        <RecentJobs onSelectJob={handleSelectJob} />
       </SidebarContent>
       <SidebarFooter>
         <div className="flex items-center gap-2">
