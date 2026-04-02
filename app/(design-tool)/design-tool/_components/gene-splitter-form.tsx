@@ -78,6 +78,7 @@ export function GeneSplitterForm({
       reduceKmerComplexityWeight: 1,
       enforceGcContent: true,
       codingSequence: defaultCodingSequence ?? '',
+      inputType: 'nucleotide' as const,
       name: defaultName ?? '',
       species: defaultSpecies ?? 'none',
       spliceJunctionPosition: defaultCodingSequence

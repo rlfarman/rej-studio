@@ -1,5 +1,5 @@
 'use client'
-import { useCallback, useRef } from 'react'
+import { useCallback, useRef, useEffect } from 'react'
 import { useFormContext } from 'react-hook-form'
 import {
   FormField,
@@ -9,12 +9,14 @@ import {
   FormAssistiveText,
 } from '@/components/ui/form'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { Upload } from 'lucide-react'
 import { FormValues } from './form-schema'
 import { SequenceWarnings } from './sequence-warnings'
 import { SequenceHighlight } from './sequence-highlight'
 import { cn } from '@/lib/utils'
 import { cleanSequence, parseFasta } from '@/lib/fasta'
+import { detectSequenceType } from '@/lib/sequence-utils'
 import { toast } from 'sonner'
 
 const MAX_LENGTH = 50_000
@@ -22,10 +24,21 @@ const MAX_LENGTH = 50_000
 export function CodingSequenceInput() {
   const { control, watch, setValue } = useFormContext<FormValues>()
   const value = watch('codingSequence')
+  const inputType = watch('inputType')
   const length = value?.length ?? 0
   const fileInputRef = useRef<HTMLInputElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const backdropRef = useRef<HTMLDivElement>(null)
+
+  // Auto-detect sequence type when value changes
+  useEffect(() => {
+    if (value) {
+      const detected = detectSequenceType(value)
+      if (detected !== inputType) {
+        setValue('inputType', detected)
+      }
+    }
+  }, [value, inputType, setValue])
 
   const syncScroll = useCallback(() => {
     if (textareaRef.current && backdropRef.current) {
@@ -36,6 +49,41 @@ export function CodingSequenceInput() {
 
   const applyCleanedSequence = useCallback(
     (text: string, source: string) => {
+      const detected = detectSequenceType(text)
+
+      if (detected === 'amino_acid') {
+        // For amino acid input, just strip whitespace and headers
+        const lines = text.split(/\r?\n/)
+        let removedHeaders = 0
+        const seqLines: string[] = []
+        for (const line of lines) {
+          const trimmed = line.trim()
+          if (trimmed.startsWith('>')) {
+            removedHeaders++
+            continue
+          }
+          seqLines.push(trimmed)
+        }
+        const cleaned = seqLines.join('').replace(/\s/g, '').toUpperCase()
+
+        if (cleaned.length === 0) {
+          toast.error('No valid amino acid characters found.')
+          return
+        }
+
+        setValue('codingSequence', cleaned, { shouldValidate: true })
+        setValue('inputType', 'amino_acid')
+
+        const parts: string[] = ['detected as amino acid sequence']
+        if (removedHeaders > 0)
+          parts.push(
+            `${removedHeaders} header${removedHeaders > 1 ? 's' : ''} stripped`,
+          )
+
+        toast.info(`${source}: ${parts.join(', ')}.`)
+        return
+      }
+
       const { cleaned, removedChars, removedHeaders } = cleanSequence(text)
 
       if (cleaned.length === 0) {
@@ -44,6 +92,7 @@ export function CodingSequenceInput() {
       }
 
       setValue('codingSequence', cleaned, { shouldValidate: true })
+      setValue('inputType', 'nucleotide')
 
       const parts: string[] = []
       if (removedHeaders > 0)
@@ -63,8 +112,6 @@ export function CodingSequenceInput() {
   const handlePaste = useCallback(
     (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
       const text = e.clipboardData.getData('text')
-      // Only intercept if the pasted text looks like it needs cleaning
-      // (has FASTA headers, line numbers, or significant non-nucleotide chars)
       const hasHeaders = text.includes('>')
       const nonNuc = text.replace(/[ACGTUacgtu\s\r\n]/g, '')
       if (hasHeaders || nonNuc.length > 3) {
@@ -86,7 +133,6 @@ export function CodingSequenceInput() {
         const entries = parseFasta(text)
 
         if (entries.length > 0 && entries[0].header) {
-          // Use FASTA header as name if name field is empty
           const currentName = watch('name')
           if (!currentName) {
             setValue('name', entries[0].header.slice(0, 250))
@@ -97,7 +143,6 @@ export function CodingSequenceInput() {
       }
       reader.readAsText(file)
 
-      // Reset file input so re-selecting the same file triggers onChange
       e.target.value = ''
     },
     [applyCleanedSequence, setValue, watch],
@@ -113,9 +158,16 @@ export function CodingSequenceInput() {
       render={({ field }) => (
         <FormItem>
           <div className="flex items-center justify-between">
-            <FormLabel>
-              Enter your coding sequence <span aria-hidden="true">*</span>
-            </FormLabel>
+            <div className="flex items-center gap-2">
+              <FormLabel>
+                Enter your sequence <span aria-hidden="true">*</span>
+              </FormLabel>
+              {value && (
+                <Badge variant={inputType === 'amino_acid' ? 'secondary' : 'outline'} className="text-[10px]">
+                  {inputType === 'amino_acid' ? 'Amino Acid' : 'Nucleotide'}
+                </Badge>
+              )}
+            </div>
             <Button
               type="button"
               variant="ghost"
@@ -136,7 +188,6 @@ export function CodingSequenceInput() {
           </div>
           <FormControl>
             <div className="relative min-h-[6.5rem]">
-              {/* Highlight backdrop */}
               <div
                 ref={backdropRef}
                 aria-hidden="true"
@@ -147,19 +198,21 @@ export function CodingSequenceInput() {
                 )}
               >
                 {value ? (
-                  <SequenceHighlight sequence={value} />
+                  inputType === 'amino_acid' ? (
+                    <span>{value}</span>
+                  ) : (
+                    <SequenceHighlight sequence={value} />
+                  )
                 ) : (
                   <span className="text-transparent">placeholder</span>
                 )}
               </div>
-              {/* Transparent textarea on top */}
               <textarea
-                placeholder="ATGATTACA... (paste sequence or upload FASTA)"
+                placeholder="ATGATTACA... or MIVT... (paste nucleotide or amino acid sequence)"
                 rows={4}
                 aria-required="true"
                 {...field}
                 ref={(el) => {
-                  // Merge refs: react-hook-form's ref + our local ref
                   field.ref(el)
                   ;(textareaRef as React.MutableRefObject<HTMLTextAreaElement | null>).current = el
                 }}
@@ -186,10 +239,18 @@ export function CodingSequenceInput() {
                 )}
               >
                 {length.toLocaleString()} / {MAX_LENGTH.toLocaleString()}
+                {inputType === 'amino_acid' ? ' aa' : ' bp'}
               </span>
             </span>
           </FormAssistiveText>
-          <SequenceWarnings />
+          {inputType === 'amino_acid' && (
+            <p className="text-muted-foreground text-xs">
+              Amino acid sequence detected. It will be converted to a coding
+              sequence using codon optimization for the selected species before
+              processing.
+            </p>
+          )}
+          {inputType === 'nucleotide' && <SequenceWarnings />}
         </FormItem>
       )}
     />

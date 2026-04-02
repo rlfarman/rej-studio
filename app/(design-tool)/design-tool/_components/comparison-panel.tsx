@@ -4,7 +4,13 @@ import { useMemo } from 'react'
 import { ArrowRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { ProcessResult } from '@/design-tool/types/process-result'
-import { computeGcPercent, countCpG } from '@/lib/sequence-utils'
+import {
+  computeGcPercent,
+  countCpG,
+  countSpliceDonors,
+  countSpliceAcceptors,
+  computeKmerComplexity,
+} from '@/lib/sequence-utils'
 
 interface ComparisonPanelProps {
   result: ProcessResult
@@ -74,6 +80,14 @@ export function ComparisonPanel({ result }: ComparisonPanelProps) {
     const cpgBefore = countCpG(orig)
     const cpgAfter = countCpG(opt)
 
+    const spliceDonorsBefore = countSpliceDonors(orig)
+    const spliceDonorsAfter = countSpliceDonors(opt)
+    const spliceAcceptorsBefore = countSpliceAcceptors(orig)
+    const spliceAcceptorsAfter = countSpliceAcceptors(opt)
+
+    const kmerBefore = computeKmerComplexity(orig)
+    const kmerAfter = computeKmerComplexity(opt)
+
     let changedPositions = 0
     const len = Math.min(orig.length, opt.length)
     for (let i = 0; i < len; i++) {
@@ -86,6 +100,12 @@ export function ComparisonPanel({ result }: ComparisonPanelProps) {
       gcAfter,
       cpgBefore,
       cpgAfter,
+      spliceDonorsBefore,
+      spliceDonorsAfter,
+      spliceAcceptorsBefore,
+      spliceAcceptorsAfter,
+      kmerBefore,
+      kmerAfter,
       changedPositions,
       changePercent,
       len,
@@ -109,6 +129,24 @@ export function ComparisonPanel({ result }: ComparisonPanelProps) {
           before={stats.cpgBefore}
           after={stats.cpgAfter}
           lowerIsBetter
+        />
+        <StatDelta
+          label="Splice Donors"
+          before={stats.spliceDonorsBefore}
+          after={stats.spliceDonorsAfter}
+          lowerIsBetter
+        />
+        <StatDelta
+          label="Splice Acceptors"
+          before={stats.spliceAcceptorsBefore}
+          after={stats.spliceAcceptorsAfter}
+          lowerIsBetter
+        />
+        <StatDelta
+          label="K-mer Complexity"
+          before={Math.round(stats.kmerBefore * 100)}
+          after={Math.round(stats.kmerAfter * 100)}
+          unit="%"
         />
         <div className="bg-muted/50 flex flex-col rounded-lg border p-3">
           <span className="text-muted-foreground text-xs font-medium">
@@ -134,6 +172,13 @@ export function ComparisonPanel({ result }: ComparisonPanelProps) {
           </span>
         </div>
       </div>
+      {stats.kmerAfter < 0.9 && (
+        <p className="text-muted-foreground text-xs">
+          K-mer complexity is below 90%. If the sequence is too difficult to
+          synthesize, rerun the optimization with higher weight on reducing
+          k-mer complexity.
+        </p>
+      )}
     </div>
   )
 }

@@ -147,28 +147,12 @@ function SplitVisualization({
 
 /** Parse the DNAChisel objectives text into a digestible summary. */
 function parseObjectives(text: string) {
-  const totalMatch = text.match(/TOTAL OBJECTIVES SCORE:\s*([-\d.]+)/)
-  const totalScore = totalMatch ? parseFloat(totalMatch[1]) : null
-
-  // Count passed vs failed objectives
-  const passedCount = (text.match(/✔/g) || []).length
-  const failedLines = text.match(/Failed\./g) || []
-  const failedCount = failedLines.length
-
-  // Extract key metrics
   const caiMatch = text.match(/MaximizeCAI.*scored\s*([-\d.E+]+)/)
   const caiScore = caiMatch ? parseFloat(caiMatch[1]) : null
 
-  const cpgMatch = text.match(
-    /AvoidPattern.*pattern:CG\).*?positions \[([^\]]*)\]/,
-  )
-  const cpgCount = cpgMatch
-    ? cpgMatch[1].split(',').filter((s) => s.trim()).length
-    : 0
-
   const kmerPassed = /UniquifyAllKmers.*Passed/.test(text)
 
-  return { totalScore, passedCount, failedCount, caiScore, cpgCount, kmerPassed }
+  return { caiScore, kmerPassed }
 }
 
 function ObjectivesSummary({
@@ -183,31 +167,16 @@ function ObjectivesSummary({
 
   const items: { label: string; status: 'good' | 'improved' | 'neutral' }[] = []
 
-  if (beforeStats.totalScore !== null && afterStats.totalScore !== null) {
-    const improved = afterStats.totalScore > beforeStats.totalScore
+  if (beforeStats.caiScore !== null && afterStats.caiScore !== null) {
+    const improved = afterStats.caiScore > beforeStats.caiScore
     items.push({
-      label: `Objective score: ${beforeStats.totalScore.toFixed(1)} \u2192 ${afterStats.totalScore.toFixed(1)}`,
+      label: `CAI: ${beforeStats.caiScore.toFixed(3)} \u2192 ${afterStats.caiScore.toFixed(3)}`,
       status: improved ? 'improved' : 'neutral',
     })
-  }
-
-  if (afterStats.passedCount > 0 || afterStats.failedCount > 0) {
-    const total = afterStats.passedCount + afterStats.failedCount
+  } else if (afterStats.caiScore !== null) {
     items.push({
-      label: `${afterStats.passedCount} of ${total} objectives passed`,
-      status:
-        afterStats.passedCount > beforeStats.passedCount
-          ? 'improved'
-          : afterStats.failedCount === 0
-            ? 'good'
-            : 'neutral',
-    })
-  }
-
-  if (beforeStats.cpgCount > 0 || afterStats.cpgCount > 0) {
-    items.push({
-      label: `CpG sites: ${beforeStats.cpgCount} \u2192 ${afterStats.cpgCount}`,
-      status: afterStats.cpgCount < beforeStats.cpgCount ? 'improved' : 'neutral',
+      label: `CAI: ${afterStats.caiScore.toFixed(3)}`,
+      status: 'good',
     })
   }
 

@@ -30,8 +30,7 @@ export function CodonOptimizationOptions() {
               <FormDescription>
                 Prevents unintended mRNA splicing in mammalian cells by
                 eliminating sequences resembling splice donor and acceptor
-                motifs. Trade-off: constrains codon choices, which may slightly
-                reduce codon optimization.
+                motifs.
               </FormDescription>
             </div>
           </FormItem>
@@ -53,8 +52,7 @@ export function CodonOptimizationOptions() {
               <FormLabel>Minimize CpG sites</FormLabel>
               <FormDescription>
                 Reduces silencing risk from DNA methylation by minimizing CpG
-                dinucleotides. Trade-off: may push GC content below the optimal
-                range.
+                dinucleotides.
               </FormDescription>
             </div>
           </FormItem>
@@ -76,8 +74,7 @@ export function CodonOptimizationOptions() {
               <FormLabel>Reduce k-mer complexity</FormLabel>
               <FormDescription>
                 Reduces synthesis complexity and repetitive regions by
-                diversifying 10-mer sequences. Trade-off: limits codon
-                flexibility, which may compete with other objectives.
+                diversifying 10-mer sequences.
               </FormDescription>
             </div>
           </FormItem>

@@ -9,6 +9,7 @@ interface UseJobReturn {
     CDS: string
     name: string
     options: Record<string, unknown>
+    input_type?: string
   }) => Promise<void>
   status: JobStatus
   result: ProcessResult | null
@@ -118,6 +119,7 @@ export function useJob(): UseJobReturn {
       CDS: string
       name: string
       options: Record<string, unknown>
+      input_type?: string
     }) => {
       clearPolling()
       setStatus('submitting')

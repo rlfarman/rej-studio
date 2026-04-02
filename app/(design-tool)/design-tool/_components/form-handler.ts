@@ -5,6 +5,7 @@ export function buildJobParams(values: FormValues) {
     CDS: values.codingSequence,
     name: values.name,
     options: buildOptions(values),
+    input_type: values.inputType,
   }
 }
 

@@ -7,7 +7,7 @@ import io
 import re
 from typing import Any
 
-from .algorithm import process_single_request, process_single_request_json
+from .algorithm import process_single_request, process_single_request_json, aa_to_cds
 
 # Create FastAPI instance with custom docs and openapi URL
 app = FastAPI(docs_url="/api/py/docs", openapi_url="/api/py/openapi.json")
@@ -32,20 +32,17 @@ class ProcessOptions(BaseModel):
 
 
 class ProcessRequest(BaseModel):
-    CDS: str  # Coding sequence
+    CDS: str  # Coding sequence or amino acid sequence
     name: str  # Name identifier for the output files
     options: ProcessOptions
+    input_type: str = "nucleotide"  # "nucleotide" or "amino_acid"
 
     @field_validator("CDS")
     @classmethod
     def validate_cds(cls, v: str) -> str:
         v = v.strip().upper()
         if not v:
-            raise ValueError("Coding sequence must not be empty")
-        if not re.match(r"^[ACGTU]+$", v):
-            raise ValueError("Coding sequence must contain only A, C, G, T, or U")
-        if len(v) % 3 != 0:
-            raise ValueError("Coding sequence length must be a multiple of 3")
+            raise ValueError("Sequence must not be empty")
         return v
 
     @field_validator("name")
@@ -64,10 +61,16 @@ def process_gene(request: ProcessRequest):
     # Define results folder
     results_folder = "/tmp/results"
 
+    # Convert amino acid sequence to CDS if needed
+    cds = request.CDS
+    if request.input_type == "amino_acid":
+        species = request.options.codon_optimize
+        cds = aa_to_cds(request.CDS, species)
+
     # Call the process_single_request function
     try:
         report_filename, sequences_filename = process_single_request(
-            CDS=request.CDS,
+            CDS=cds,
             name=request.name,
             OPTIONS=request.options.model_dump(),
             results_folder=results_folder,
@@ -128,9 +131,15 @@ class ProcessResult(BaseModel):
 
 @app.post("/api/py/process-json", response_model=ProcessResult)
 def process_gene_json(request: ProcessRequest):
+    # Convert amino acid sequence to CDS if needed
+    cds = request.CDS
+    if request.input_type == "amino_acid":
+        species = request.options.codon_optimize
+        cds = aa_to_cds(request.CDS, species)
+
     try:
         result = process_single_request_json(
-            CDS=request.CDS,
+            CDS=cds,
             name=request.name,
             OPTIONS=request.options.model_dump(),
         )

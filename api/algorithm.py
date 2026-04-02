@@ -167,6 +167,32 @@ def insert_wggw_motif(sequence, split_point, min_distance=0, direction=0):
     
     return sequence, None
 
+def aa_to_cds(aa_sequence, species=None):
+    """
+    Convert an amino acid sequence to a coding DNA sequence.
+
+    If a species is specified ('human' or 'mouse'), uses DNAChisel's
+    reverse_translate with codon optimization for that species.
+    Otherwise, uses random codon selection.
+    """
+    aa_sequence = aa_sequence.upper().replace('*', '')  # Remove stop codons if present
+
+    speciesmap = {'human': 'h_sapiens', 'mouse': 'm_musculus'}
+
+    if species and species in speciesmap:
+        cds = biotools.reverse_translate(aa_sequence, table='Standard',
+                                          randomize_codons=False,
+                                          favor_species=speciesmap[species])
+    else:
+        cds = biotools.reverse_translate(aa_sequence, table='Standard',
+                                          randomize_codons=True)
+
+    # Add stop codon
+    cds += 'TAA'
+
+    return cds
+
+
 def runOptimization(CDS, OPTIONS):
     """
     Optimize a coding sequence (CDS) based on provided options.

@@ -27,6 +27,67 @@ export function countCpG(seq: string): number {
   return count
 }
 
+/** Count potential splice donor sites (GT followed by A or G: GT[AG]). */
+export function countSpliceDonors(seq: string): number {
+  const upper = seq.toUpperCase()
+  let count = 0
+  for (let i = 0; i < upper.length - 2; i++) {
+    if (upper[i] === 'G' && upper[i + 1] === 'T' && (upper[i + 2] === 'A' || upper[i + 2] === 'G')) {
+      count++
+    }
+  }
+  return count
+}
+
+/** Count potential splice acceptor sites (pyrimidine + AG pattern). */
+export function countSpliceAcceptors(seq: string): number {
+  const upper = seq.toUpperCase()
+  let count = 0
+  for (let i = 1; i < upper.length - 2; i++) {
+    if (
+      (upper[i] === 'C' || upper[i] === 'T') &&
+      upper[i + 1] === 'A' &&
+      upper[i + 2] === 'G'
+    ) {
+      count++
+    }
+  }
+  return count
+}
+
+/** Compute k-mer complexity score (fraction of unique k-mers out of total k-mers). */
+export function computeKmerComplexity(seq: string, k = 10): number {
+  const upper = seq.toUpperCase()
+  if (upper.length < k) return 1
+  const kmers = new Set<string>()
+  const total = upper.length - k + 1
+  for (let i = 0; i <= upper.length - k; i++) {
+    kmers.add(upper.slice(i, i + k))
+  }
+  return kmers.size / total
+}
+
+/**
+ * Detect whether a sequence is amino acid or nucleotide.
+ * Amino acid sequences contain characters outside of ACGTU.
+ */
+export type SequenceType = 'nucleotide' | 'amino_acid'
+
+const NUCLEOTIDE_CHARS = new Set('ACGTUacgtu'.split(''))
+const AMINO_ACID_CHARS = new Set(
+  'ACDEFGHIKLMNPQRSTVWYacdefghiklmnpqrstvwy*'.split(''),
+)
+
+export function detectSequenceType(seq: string): SequenceType {
+  if (seq.length === 0) return 'nucleotide'
+  for (const c of seq) {
+    if (AMINO_ACID_CHARS.has(c) && !NUCLEOTIDE_CHARS.has(c)) {
+      return 'amino_acid'
+    }
+  }
+  return 'nucleotide'
+}
+
 export function findInvalidChars(seq: string): string[] {
   const invalid = new Set<string>()
   for (const c of seq) {

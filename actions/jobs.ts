@@ -7,6 +7,7 @@ export interface JobParams {
   CDS: string
   name: string
   options: Record<string, unknown>
+  input_type?: string
 }
 
 export interface JobStatusResult {

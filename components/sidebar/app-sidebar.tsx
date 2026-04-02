@@ -1,4 +1,6 @@
 'use client'
+import { useCallback } from 'react'
+import { usePathname, useRouter } from 'next/navigation'
 import { DnaIcon } from '@/components/dna-icon'
 import {
   Sidebar,
@@ -14,10 +16,23 @@ import { ThemeToggle } from '@/components/theme-toggle'
 import { SidebarToggle } from '@/components/sidebar-toggle'
 import { DataTransfer } from './data-transfer'
 import { useJobHistoryContext } from '@/context/job-history-context'
+import type { JobHistoryEntry } from '@/hooks/use-job-history'
 import Link from 'next/link'
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { selectEntry } = useJobHistoryContext()
+  const pathname = usePathname()
+  const router = useRouter()
+
+  const handleSelectJob = useCallback(
+    (entry: JobHistoryEntry) => {
+      selectEntry(entry)
+      if (pathname !== '/design-tool') {
+        router.push('/design-tool')
+      }
+    },
+    [selectEntry, pathname, router],
+  )
 
   return (
     <Sidebar {...props}>
@@ -35,7 +50,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarContent>
         <FavoriteGenes />
         <RecentGenes />
-        <RecentJobs onSelectJob={selectEntry} />
+        <RecentJobs onSelectJob={handleSelectJob} />
       </SidebarContent>
       <SidebarFooter>
         <div className="flex items-center gap-2">

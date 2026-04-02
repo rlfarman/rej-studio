@@ -55,19 +55,17 @@ type SortKey = 'enst' | 'cdsLength' | 'proteinLength' | 'species' | 'suitability
 type SortDirection = 'asc' | 'desc'
 
 const SUITABILITY_VARIANT_MAP = {
-  easy: 'default',
-  moderate: 'secondary',
-  complex: 'outline',
-  oversized: 'destructive',
+  single: 'default',
+  dual: 'secondary',
+  triple: 'destructive',
 } as const
 
 const COLUMN_COUNT = 8
 
 const SUITABILITY_RANK = {
-  easy: 0,
-  moderate: 1,
-  complex: 2,
-  oversized: 3,
+  single: 0,
+  dual: 1,
+  triple: 2,
 } as const
 
 export default function IsoformTable({ isoforms }: IsoformListProps) {

@@ -30,7 +30,7 @@ export function SpeciesSelect({ alwaysShowLabel = false }: SpeciesSelectProps) {
         <SelectValue>
           <div className="flex items-center">
             <SpeciesIcon species={species} />
-            <span className={alwaysShowLabel ? 'ml-3' : 'ml-3 hidden lg:block'}>
+            <span className="ml-3">
               {speciesLabel}
             </span>
           </div>
