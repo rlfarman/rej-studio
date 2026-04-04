@@ -87,30 +87,31 @@ export function GeneSplitterForm({
     },
   })
 
-  // When a job ID is provided via URL, load it from history
+  // On mount, if a job id is in the URL: either show its cached result from
+  // history, or (if not cached) resume polling for it. Runs once — history
+  // isn't populated on first render since it comes from localStorage.
   React.useEffect(() => {
-    if (defaultJobId) {
-      const entry = jobHistory.getEntry(defaultJobId)
-      if (entry) {
-        setResult(entry.result)
-        setTimeout(() => {
-          resultsRef.current?.scrollIntoView({
-            behavior: 'smooth',
-            block: 'start',
-          })
-        }, 100)
-      }
+    if (!defaultJobId) return
+    const entry = jobHistory.getEntry(defaultJobId)
+    if (entry) {
+      setResult(entry.result)
+      setTimeout(() => {
+        resultsRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+        })
+      }, 100)
+    } else {
+      job.resume(defaultJobId)
     }
-  }, [defaultJobId]) // eslint-disable-line react-hooks/exhaustive-deps -- jobHistory.getEntry is stable
+  }, [defaultJobId]) // eslint-disable-line react-hooks/exhaustive-deps -- jobHistory.getEntry and job.resume are stable
 
-  // When the async job completes, update the result and save to history
+  // When the async job completes, display the result and save to history.
+  // useJob owns the URL — we just persist under its assigned jobId.
   React.useEffect(() => {
-    if (job.status === 'completed' && job.result) {
+    if (job.status === 'completed' && job.result && job.jobId) {
       setResult(job.result)
-      const id = jobHistory.addEntry(job.result)
-      const url = new URL(window.location.href)
-      url.searchParams.set('job', id)
-      window.history.replaceState(null, '', url.toString())
+      jobHistory.addEntry(job.result, job.jobId)
       setTimeout(() => {
         resultsRef.current?.scrollIntoView({
           behavior: 'smooth',
@@ -120,7 +121,7 @@ export function GeneSplitterForm({
     } else if (job.status === 'failed' && job.error) {
       toast.error(job.error)
     }
-  }, [job.status, job.result, job.error]) // eslint-disable-line react-hooks/exhaustive-deps -- jobHistory.addEntry is stable
+  }, [job.status, job.result, job.jobId, job.error]) // eslint-disable-line react-hooks/exhaustive-deps -- jobHistory.addEntry is stable
 
   const onSubmit = async (values: FormValues) => {
     setResult(null)

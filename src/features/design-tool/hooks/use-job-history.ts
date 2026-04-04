@@ -24,16 +24,18 @@ export function useJobHistory() {
   )
 
   const addEntry = useCallback(
-    (result: ProcessResult) => {
+    (result: ProcessResult, id: string) => {
       const entry: JobHistoryEntry = {
-        id: crypto.randomUUID(),
+        id,
         name: result.name,
         sequenceLength: result.original_sequence.length,
         createdAt: new Date().toISOString(),
         result,
       }
-      setEntries((prev) => [entry, ...prev].slice(0, MAX_ENTRIES))
-      return entry.id
+      setEntries((prev) =>
+        [entry, ...prev.filter((e) => e.id !== id)].slice(0, MAX_ENTRIES),
+      )
+      return id
     },
     [setEntries],
   )

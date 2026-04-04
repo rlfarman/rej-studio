@@ -1,10 +1,9 @@
-import { useState, useCallback } from 'react'
+import { useCallback, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   submitJob as submitJobAction,
   getJobStatus,
 } from '@/features/design-tool/api/jobs'
-import { useLocalStorage } from '@/hooks/use-local-storage'
 import type { ProcessResult } from '@/features/design-tool/types/process-result'
 
 type JobStatus = 'idle' | 'submitting' | 'running' | 'completed' | 'failed'
@@ -15,6 +14,11 @@ interface UseJobReturn {
     name: string
     options: Record<string, unknown>
   }) => Promise<void>
+  // Resume polling for an existing (modal-backend) job by id. Use this when a
+  // job id is present in the URL on mount and the caller has determined that
+  // the result is NOT already cached in local history.
+  resume: (jobId: string) => void
+  jobId: string | null
   status: JobStatus
   result: ProcessResult | null
   error: string | null
@@ -22,37 +26,67 @@ interface UseJobReturn {
 }
 
 const POLL_INTERVAL = 2000
-const ACTIVE_JOB_KEY = 'rej-studio:active-job'
+const JOB_PARAM = 'job'
+
+// Shallow URL update — avoids re-running the server component (unlike
+// router.replace), so form state is preserved during submission.
+function writeJobToUrl(jobId: string | null) {
+  if (typeof window === 'undefined') return
+  const url = new URL(window.location.href)
+  if (jobId) {
+    url.searchParams.set(JOB_PARAM, jobId)
+  } else {
+    url.searchParams.delete(JOB_PARAM)
+  }
+  window.history.replaceState(null, '', url.toString())
+}
 
 export function useJob(): UseJobReturn {
-  // jobId drives the polling query. Persisted to survive tab reloads
-  // while a modal backend job is in flight.
-  const [jobId, setJobId] = useLocalStorage<string | null>(ACTIVE_JOB_KEY, null)
-  // Inline result from local backend (not persisted — session-scoped).
+  const [jobId, setJobIdState] = useState<string | null>(null)
+  // Inline result from local backend (completed synchronously at submit time).
   const [inlineResult, setInlineResult] = useState<ProcessResult | null>(null)
+  // Polling is on when we have a modal jobId whose result we don't yet know.
+  const [isPolling, setIsPolling] = useState<boolean>(false)
   const queryClient = useQueryClient()
+
+  const setJobId = useCallback((next: string | null) => {
+    setJobIdState(next)
+    writeJobToUrl(next)
+  }, [])
 
   const submitMutation = useMutation({
     mutationFn: submitJobAction,
     onMutate: () => {
       setInlineResult(null)
+      setIsPolling(false)
       setJobId(null)
     },
     onSuccess: ({ jobId: newJobId, result }) => {
       if (result) {
-        // Local backend: synchronous result, no polling.
+        // Local backend: result is already here. Server-assigned jobId.
         setInlineResult(result as unknown as ProcessResult)
+        setJobId(newJobId)
         return
       }
-      // Modal backend: kick off polling.
+      // Modal backend: jobId is the Modal call_id, start polling.
+      setIsPolling(true)
       setJobId(newJobId)
     },
   })
 
+  const resume = useCallback(
+    (id: string) => {
+      setInlineResult(null)
+      setJobId(id)
+      setIsPolling(true)
+    },
+    [setJobId],
+  )
+
   const statusQuery = useQuery({
     queryKey: ['job-status', jobId],
     queryFn: () => getJobStatus(jobId as string),
-    enabled: jobId !== null,
+    enabled: isPolling && jobId !== null,
     refetchInterval: (query) => {
       const data = query.state.data
       if (!data) return POLL_INTERVAL
@@ -78,7 +112,7 @@ export function useJob(): UseJobReturn {
   } else if (inlineResult) {
     status = 'completed'
     result = inlineResult
-  } else if (jobId && statusQuery.data) {
+  } else if (isPolling && statusQuery.data) {
     const data = statusQuery.data
     if (data.status === 'completed') {
       status = 'completed'
@@ -92,13 +126,13 @@ export function useJob(): UseJobReturn {
     } else {
       status = 'running'
     }
-  } else if (jobId && statusQuery.isError) {
+  } else if (isPolling && statusQuery.isError) {
     status = 'failed'
     error =
       statusQuery.error instanceof Error
         ? statusQuery.error.message
         : 'Failed to check job status'
-  } else if (jobId) {
+  } else if (isPolling) {
     status = 'running'
   }
 
@@ -108,7 +142,6 @@ export function useJob(): UseJobReturn {
       name: string
       options: Record<string, unknown>
     }) => {
-      // Drop any cached status for previous job IDs.
       queryClient.removeQueries({ queryKey: ['job-status'] })
       await submitMutation.mutateAsync(params)
     },
@@ -117,6 +150,8 @@ export function useJob(): UseJobReturn {
 
   return {
     submitJob,
+    resume,
+    jobId,
     status,
     result,
     error,

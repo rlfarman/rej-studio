@@ -52,7 +52,9 @@ export async function submitJob(
   }
 
   // Local backend: call FastAPI synchronously and return the result inline.
-  // No polling needed — the result is available immediately.
+  // No polling needed — the result is available immediately. The jobId is
+  // server-minted here so the client has a single, stable identity (used for
+  // URL state + history) regardless of which backend ran the job.
   const response = await fetch(`${getLocalApiUrl()}/api/py/process-json`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -63,12 +65,10 @@ export async function submitJob(
     throw new Error(detail.detail ?? `Local API error: ${response.statusText}`)
   }
   const result = await response.json()
-  return { jobId: 'local', result }
+  return { jobId: crypto.randomUUID(), result }
 }
 
-export async function getJobStatus(
-  jobId: string,
-): Promise<JobStatusResult> {
+export async function getJobStatus(jobId: string): Promise<JobStatusResult> {
   if (isModalBackend()) {
     const response = await fetch(`${getModalUrl()}/jobs/${jobId}`)
     if (!response.ok) {
