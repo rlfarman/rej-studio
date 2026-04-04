@@ -1,0 +1,22 @@
+#!/usr/bin/env sh
+# Enforce conventional branch names on push.
+# See: https://conventional-branch.github.io/
+
+branch="$(git rev-parse --abbrev-ref HEAD)"
+
+# Allowed: main, master, develop, staging, or <type>/<description>
+# where type is one of: feature, bugfix, hotfix, release, chore, claude
+pattern='^(main|master|develop|staging|(feature|bugfix|hotfix|release|chore|claude)/[a-z0-9._/-]+)$'
+
+if ! echo "$branch" | grep -Eq "$pattern"; then
+  echo "✗ Branch name '$branch' does not follow Conventional Branch naming."
+  echo ""
+  echo "  Expected: main | master | develop | staging"
+  echo "         or <type>/<description>"
+  echo "  Types:    feature, bugfix, hotfix, release, chore, claude"
+  echo "  Example:  feature/add-login-page"
+  echo ""
+  echo "  Rename with:  git branch -m <new-name>"
+  echo "  See:          https://conventional-branch.github.io/"
+  exit 1
+fi
