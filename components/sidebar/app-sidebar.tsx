@@ -43,9 +43,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <RecentJobs onSelectJob={handleSelectJob} />
       </SidebarContent>
       <SidebarFooter>
+        <div className="flex flex-col gap-1">
+          <ThemeToggle />
+        </div>
         <DataTransfer />
         <div className="flex items-center gap-2">
-          <ThemeToggle />
           <div className="flex-1" />
           <SidebarToggle />
         </div>
