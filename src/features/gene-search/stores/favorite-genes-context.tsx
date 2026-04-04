@@ -7,7 +7,7 @@ import {
   useMemo,
   ReactNode,
 } from 'react'
-import { useLocalStorage } from '@/lib/use-local-storage'
+import { useLocalStorage } from '@/hooks/use-local-storage'
 import type { SavedGene } from '@/features/gene-search/types/domain-types'
 
 interface FavoriteGenesContextValue {

@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback } from 'react'
-import { useLocalStorage } from '@/lib/use-local-storage'
+import { useLocalStorage } from '@/hooks/use-local-storage'
 import type { ProcessResult } from '@/features/design-tool/types/process-result'
 
 const STORAGE_KEY = 'rej-studio:job-history'

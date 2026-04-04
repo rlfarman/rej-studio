@@ -19,8 +19,7 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"],
-      "@/design-tool/*": ["./src/app/(design-tool)/design-tool/_*"]
+      "@/*": ["./src/*"]
     },
     "target": "ES2017"
   },
