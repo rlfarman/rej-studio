@@ -73,7 +73,7 @@ A web application for RNA End-Joining sequence design and optimization. Scientis
 npm run dev
 ```
 
-This starts both the Next.js dev server (port 3000) and the FastAPI server (port 8000) concurrently. API requests to `/api/py/*` are proxied to FastAPI in development.
+This starts both the Next.js dev server (port 3000) and the local FastAPI compute backend (port 8000) concurrently. Next.js server actions call the FastAPI backend directly over HTTP. In production, set `COMPUTE_BACKEND=modal` and `MODAL_API_URL` to use the Modal-hosted backend instead.
 
 To run them individually:
 
@@ -103,11 +103,14 @@ app/
 │   ├── genes/             # Search results
 │   └── genes/[symbol]/    # Gene detail with isoforms
 ├── (design-tool)/         # Sequence design tool
-└── api/                   # Next.js API routes (auth)
+└── api/                   # Next.js API routes
 
-api/                       # FastAPI backend
-├── index.py               # Endpoints (POST /api/py/process)
+algorithm/                 # Local FastAPI compute backend (dev only)
+├── index.py               # Job endpoints (POST /jobs, GET /jobs/{id})
 └── algorithm.py           # DNA optimization algorithms
+
+modal/                     # Modal-hosted compute backend (production)
+└── app.py                 # Same /jobs contract as the local server
 
 actions/                   # Next.js server actions
 components/                # React components (+ shadcn/ui)
@@ -117,13 +120,14 @@ hooks/                     # Custom React hooks
 lib/                       # Shared utilities
 ```
 
-## API
+## Compute Backend
 
-The FastAPI backend exposes a single optimization endpoint:
+The optimization algorithm runs as an async job API. Both the local FastAPI server and the Modal deployment expose the same contract:
 
-- **`POST /api/py/process`** — Accepts a coding sequence and optimization options, returns a ZIP file containing a report and optimized sequences.
+- **`POST /jobs`** — Accepts `{ CDS, name, options }` and returns `{ call_id }`.
+- **`GET /jobs/{call_id}`** — Returns `{ status, result? }` where status is `running`, `completed`, `failed`, or `not_found`.
 
-Swagger docs are available at `/docs` in development.
+The Next.js server action (`actions/jobs.ts`) talks to whichever backend is selected by the `COMPUTE_BACKEND` env var (`modal` or unset for local).
 
 ## License
 

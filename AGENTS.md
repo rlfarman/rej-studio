@@ -7,7 +7,7 @@ REJ Studio is a bioinformatics web app for RNA End-Joining sequence design. User
 ## Architecture
 
 - **Next.js 16 (App Router)** — Frontend and server actions. Route groups: `(search)` for gene browsing, `(design-tool)` for the optimization form.
-- **FastAPI (Python)** — Runs the DNA optimization algorithm. Single endpoint: `POST /api/py/process`. In development, Next.js proxies `/api/py/*` to `localhost:8000`.
+- **Python compute backend** — Runs the DNA optimization algorithm. In production, Modal hosts it (`modal/app.py`); in development, a local FastAPI server at `localhost:8000` (`algorithm/index.py`) provides the same contract. Both expose `POST /jobs` + `GET /jobs/{call_id}`. The backend is selected by `COMPUTE_BACKEND` env var.
 - **PostgreSQL + Drizzle ORM** — Stores genes, isoforms, sequences, users, jobs, sessions, searches, and favorites. Schema in `drizzle/schema.ts`.
 - **shadcn/ui + Radix UI** — Component library. UI components live in `components/ui/`. Config in `components.json`.
 

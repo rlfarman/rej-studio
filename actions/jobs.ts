@@ -1,7 +1,8 @@
 'use server'
 
 // --- Compute backend actions ---
-// Set COMPUTE_BACKEND=modal to use Modal, otherwise falls back to local FastAPI.
+// Set COMPUTE_BACKEND=modal to use Modal, otherwise talks to local FastAPI.
+// Both backends expose the same `/jobs` + `/jobs/{call_id}` contract.
 
 export interface JobParams {
   CDS: string
@@ -14,71 +15,38 @@ export interface JobStatusResult {
   result?: Record<string, unknown>
 }
 
-function useModal() {
-  return process.env.COMPUTE_BACKEND === 'modal'
-}
-
-function getModalUrl() {
-  const url = process.env.MODAL_API_URL
-  if (!url) throw new Error('MODAL_API_URL is not configured')
-  return url
-}
-
-function getLocalApiUrl() {
-  // In dev, hit uvicorn directly. On Vercel, use the app's own URL (rewrites handle routing).
-  if (process.env.NODE_ENV === 'development') {
-    return process.env.LOCAL_API_URL ?? 'http://127.0.0.1:8000'
+function getBackendUrl() {
+  if (process.env.COMPUTE_BACKEND === 'modal') {
+    const url = process.env.MODAL_API_URL
+    if (!url) throw new Error('MODAL_API_URL is not configured')
+    return url
   }
-  const vercelUrl = process.env.VERCEL_URL
-  if (vercelUrl) return `https://${vercelUrl}`
-  return 'http://127.0.0.1:3000'
+  return process.env.LOCAL_API_URL ?? 'http://127.0.0.1:8000'
 }
 
 export async function submitJob(
   params: JobParams,
-): Promise<{ jobId: string; result?: Record<string, unknown> }> {
-  if (useModal()) {
-    const response = await fetch(`${getModalUrl()}/jobs`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(params),
-    })
-    if (!response.ok) {
-      const text = await response.text()
-      throw new Error(`Modal API error: ${text}`)
-    }
-    const data = await response.json()
-    return { jobId: data.call_id }
-  }
-
-  // Local backend: call FastAPI synchronously and return the result inline.
-  // No polling needed — the result is available immediately.
-  const response = await fetch(`${getLocalApiUrl()}/api/py/process-json`, {
+): Promise<{ jobId: string }> {
+  const response = await fetch(`${getBackendUrl()}/jobs`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(params),
   })
   if (!response.ok) {
-    const detail = await response.json().catch(() => ({}))
-    throw new Error(detail.detail ?? `Local API error: ${response.statusText}`)
+    const text = await response.text()
+    throw new Error(`Compute backend error: ${text}`)
   }
-  const result = await response.json()
-  return { jobId: 'local', result }
+  const data = await response.json()
+  return { jobId: data.call_id }
 }
 
 export async function getJobStatus(
   jobId: string,
 ): Promise<JobStatusResult> {
-  if (useModal()) {
-    const response = await fetch(`${getModalUrl()}/jobs/${jobId}`)
-    if (!response.ok) {
-      const text = await response.text()
-      throw new Error(`Modal API error: ${text}`)
-    }
-    return response.json()
+  const response = await fetch(`${getBackendUrl()}/jobs/${jobId}`)
+  if (!response.ok) {
+    const text = await response.text()
+    throw new Error(`Compute backend error: ${text}`)
   }
-
-  // Local backend: result was returned inline from submitJob, so this
-  // should not be called. Return not_found as a safeguard.
-  return { status: 'not_found' }
+  return response.json()
 }
