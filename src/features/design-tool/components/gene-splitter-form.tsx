@@ -91,17 +91,18 @@ export function GeneSplitterForm({
     },
   })
 
-  // On mount, if a job id is in the URL: either show its cached result from
-  // history, or (if not cached) resume polling for it. Runs once — history
+  // On mount, if a job id is in the URL: restore form values from history,
+  // then either show the cached result (if completed) or resume polling
+  // (if still running or the entry isn't known to us). Runs once — history
   // isn't populated on first render since it comes from localStorage.
   React.useEffect(() => {
     if (!defaultJobId) return
     const entry = jobHistory.getEntry(defaultJobId)
-    if (entry) {
+    if (entry?.formValues) {
+      methods.reset(entry.formValues)
+    }
+    if (entry?.result) {
       setResult(entry.result)
-      if (entry.formValues) {
-        methods.reset(entry.formValues)
-      }
       setTimeout(() => {
         resultsRef.current?.scrollIntoView({
           behavior: 'smooth',
@@ -109,12 +110,24 @@ export function GeneSplitterForm({
         })
       }, 100)
     } else {
+      // Either no entry, or a running-but-incomplete one — resume polling.
       job.resume(defaultJobId)
     }
-  }, [defaultJobId]) // eslint-disable-line react-hooks/exhaustive-deps -- jobHistory.getEntry and job.resume are stable
+  }, [defaultJobId]) // eslint-disable-line react-hooks/exhaustive-deps -- methods.reset, jobHistory.getEntry, job.resume are stable
 
-  // When the async job completes, display the result and save to history.
-  // useJob owns the URL — we just persist under its assigned jobId.
+  // When the modal backend assigns a jobId, persist a pending history entry
+  // so the job survives a page reload (URL has ?job=, history holds the
+  // formValues, completion effect later upgrades it with the result).
+  // Skipped when submittedValuesRef is null — that means we're resuming an
+  // existing entry, not starting a new one.
+  React.useEffect(() => {
+    if (job.status === 'running' && job.jobId && submittedValuesRef.current) {
+      jobHistory.addEntry(null, job.jobId, submittedValuesRef.current)
+    }
+  }, [job.status, job.jobId]) // eslint-disable-line react-hooks/exhaustive-deps -- jobHistory.addEntry is stable; submittedValuesRef is written in submit handler
+
+  // When the async job completes, display the result and upgrade the history
+  // entry (addEntry preserves createdAt for the existing pending entry).
   React.useEffect(() => {
     if (job.status === 'completed' && job.result && job.jobId) {
       setResult(job.result)

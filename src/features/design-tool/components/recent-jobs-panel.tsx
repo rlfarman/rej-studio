@@ -8,9 +8,13 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar'
-import { useJobHistory, type JobHistoryEntry } from '@/features/design-tool/hooks/use-job-history'
+import {
+  useJobHistory,
+  type JobHistoryEntry,
+} from '@/features/design-tool/hooks/use-job-history'
 import { Button } from '@/components/ui/button'
 import { TruncatedText } from '@/components/truncated-text'
+import { Loader2 } from 'lucide-react'
 
 const COLLAPSED_COUNT = 5
 const EXPANDED_MAX = 15
@@ -60,20 +64,29 @@ export function RecentJobs({ onSelectJob }: RecentJobsProps) {
         {entries.length > 0 ? (
           <>
             <SidebarMenu
-              className={
-                expanded ? 'max-h-80 overflow-y-auto' : undefined
-              }
+              className={expanded ? 'max-h-80 overflow-y-auto' : undefined}
             >
-              {visibleItems.map((entry) => (
-                <SidebarMenuItem key={entry.id}>
-                  <SidebarMenuButton onClick={() => onSelectJob?.(entry)}>
-                    <TruncatedText tooltip={entry.name} className="truncate text-xs">{entry.name}</TruncatedText>
-                    <span className="text-muted-foreground ml-auto flex-shrink-0 text-[10px]">
-                      {formatTimeAgo(entry.createdAt)}
-                    </span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {visibleItems.map((entry) => {
+                const isRunning = entry.result === null
+                return (
+                  <SidebarMenuItem key={entry.id}>
+                    <SidebarMenuButton onClick={() => onSelectJob?.(entry)}>
+                      {isRunning && (
+                        <Loader2 className="size-3 flex-shrink-0 animate-spin" />
+                      )}
+                      <TruncatedText
+                        tooltip={entry.name}
+                        className="truncate text-xs"
+                      >
+                        {entry.name}
+                      </TruncatedText>
+                      <span className="text-muted-foreground ml-auto flex-shrink-0 text-[10px]">
+                        {isRunning ? 'running' : formatTimeAgo(entry.createdAt)}
+                      </span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                )
+              })}
             </SidebarMenu>
             {hiddenCount > 0 && (
               <Button
@@ -82,9 +95,7 @@ export function RecentJobs({ onSelectJob }: RecentJobsProps) {
                 onClick={() => setExpanded(!expanded)}
                 className="text-muted-foreground w-full text-xs"
               >
-                {expanded
-                  ? 'Show less'
-                  : `+ Show ${hiddenCount} more`}
+                {expanded ? 'Show less' : `+ Show ${hiddenCount} more`}
               </Button>
             )}
           </>
