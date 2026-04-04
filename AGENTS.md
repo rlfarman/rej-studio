@@ -35,6 +35,7 @@ pnpm lint:fix     # Auto-fix lint
 pnpm format       # Prettier
 pnpm type-check   # TypeScript check
 pnpm db:build     # Rebuild SQLite database from source data
+pnpm db:studio    # Browse the DB in Drizzle Studio (local.drizzle.studio)
 ```
 
 ## Code Conventions
