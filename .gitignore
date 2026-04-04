@@ -51,7 +51,7 @@ notes.md
 # claude
 .claude/
 
-drizzle/transcript_metadata.csv
+src/drizzle/transcript_metadata.csv
 
 # sqlite database (raw, uncompressed — only .gz is committed)
 data/rej-studio.db
