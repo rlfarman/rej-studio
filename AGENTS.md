@@ -57,6 +57,10 @@ Rebuild from source data with `pnpm db:build` (runs `scripts/build-db.py`).
 
 Defined in `.env.example`. Required: `SESSION_SECRET`.
 
+## Commits & Branches
+
+This repo enforces [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) and [Conventional Branch](https://conventional-branch.github.io/) naming via husky hooks and CI. See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for the allowed types, examples, and bypass instructions.
+
 ## Testing
 
 No test suite is currently configured.
