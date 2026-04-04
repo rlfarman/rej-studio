@@ -66,4 +66,4 @@ Use sparingly — CI will still enforce the rules on the PR.
 
 ## Setup
 
-Hooks install automatically when you run `npm install` (via husky's `prepare` script). No extra steps required.
+Hooks install automatically when you run `pnpm install` (via husky's `prepare` script). No extra steps required.

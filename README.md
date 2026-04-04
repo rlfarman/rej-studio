@@ -38,7 +38,7 @@ A web application for RNA End-Joining sequence design and optimization. Scientis
 1. **Install dependencies**
 
    ```bash
-   npm install
+   pnpm install
    python3 -m venv venv
    source venv/bin/activate
    pip install -r requirements.txt
@@ -61,12 +61,12 @@ A web application for RNA End-Joining sequence design and optimization. Scientis
 
 3. **Unpack the database** (if not already present)
 
-   The SQLite database is committed as `data/rej-studio.db.gz`. Decompress it to `data/rej-studio.db` before running the app, or rebuild from source data with `npm run db:build`.
+   The SQLite database is committed as `data/rej-studio.db.gz`. Decompress it to `data/rej-studio.db` before running the app, or rebuild from source data with `pnpm db:build`.
 
 ### Development
 
 ```bash
-npm run dev
+pnpm dev
 ```
 
 This starts both the Next.js dev server (port 3000) and the FastAPI server (port 8000) concurrently. API requests to `/api/py/*` are proxied to FastAPI in development.
@@ -74,22 +74,22 @@ This starts both the Next.js dev server (port 3000) and the FastAPI server (port
 To run them individually:
 
 ```bash
-npm run next-dev      # Next.js only
-npm run fastapi-dev   # FastAPI only
+pnpm next-dev      # Next.js only
+pnpm fastapi-dev   # FastAPI only
 ```
 
 ### Scripts
 
 | Command              | Description                      |
 | -------------------- | -------------------------------- |
-| `npm run dev`        | Start both servers concurrently  |
-| `npm run build`      | Production build (Next.js)       |
-| `npm run start`      | Start production server          |
-| `npm run lint`       | Run ESLint                       |
-| `npm run lint:fix`   | Auto-fix lint issues             |
-| `npm run format`     | Format with Prettier             |
-| `npm run type-check` | TypeScript type checking         |
-| `npm run db:build`   | Rebuild SQLite database from source data |
+| `pnpm dev`        | Start both servers concurrently  |
+| `pnpm build`      | Production build (Next.js)       |
+| `pnpm start`      | Start production server          |
+| `pnpm lint`       | Run ESLint                       |
+| `pnpm lint:fix`   | Auto-fix lint issues             |
+| `pnpm format`     | Format with Prettier             |
+| `pnpm type-check` | TypeScript type checking         |
+| `pnpm db:build`   | Rebuild SQLite database from source data |
 
 ## Project Structure
 

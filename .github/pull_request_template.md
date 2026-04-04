@@ -11,10 +11,10 @@
 ## Testing
 
 <!-- How did you test these changes? -->
-- [ ] Ran locally (`npm run dev`)
-- [ ] Lint passes (`npm run lint`)
-- [ ] Type-check passes (`npm run type-check`)
-- [ ] Build passes (`npm run build`)
+- [ ] Ran locally (`pnpm dev`)
+- [ ] Lint passes (`pnpm lint`)
+- [ ] Type-check passes (`pnpm type-check`)
+- [ ] Build passes (`pnpm build`)
 
 ## Screenshots / Recordings
 

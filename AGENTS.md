@@ -8,7 +8,7 @@ REJ Studio is a bioinformatics web app for RNA End-Joining sequence design. User
 
 - **Next.js 16 (App Router)** — Frontend and server actions. Route groups: `(search)` for gene browsing, `(design-tool)` for the optimization form.
 - **FastAPI (Python)** — Runs the DNA optimization algorithm. Single endpoint: `POST /api/py/process`. In development, Next.js proxies `/api/py/*` to `localhost:8000`.
-- **SQLite (better-sqlite3) + Drizzle ORM** — Read-only gene/isoform/sequence data. Database file is built from source data via `npm run db:build` and checked in as `data/rej-studio.db.gz`. Schema in `drizzle/schema.ts`.
+- **SQLite (better-sqlite3) + Drizzle ORM** — Read-only gene/isoform/sequence data. Database file is built from source data via `pnpm db:build` and checked in as `data/rej-studio.db.gz`. Schema in `drizzle/schema.ts`.
 - **shadcn/ui + Radix UI** — Component library. UI components live in `components/ui/`. Config in `components.json`.
 
 ## Key Directories
@@ -28,13 +28,14 @@ REJ Studio is a bioinformatics web app for RNA End-Joining sequence design. User
 ## Development Commands
 
 ```bash
-npm run dev          # Start Next.js + FastAPI concurrently
-npm run build        # Production build
-npm run lint         # ESLint
-npm run lint:fix     # Auto-fix lint
-npm run format       # Prettier
-npm run type-check   # TypeScript check
-npm run db:build     # Rebuild SQLite database from source data
+pnpm dev          # Start Next.js + FastAPI concurrently
+pnpm build        # Production build
+pnpm lint         # ESLint
+pnpm lint:fix     # Auto-fix lint
+pnpm format       # Prettier
+pnpm type-check   # TypeScript check
+pnpm db:build     # Rebuild SQLite database from source data
+pnpm db:studio    # Browse the DB in Drizzle Studio (local.drizzle.studio)
 ```
 
 ## Code Conventions
@@ -50,7 +51,7 @@ npm run db:build     # Rebuild SQLite database from source data
 
 Read-only SQLite database (`data/rej-studio.db`, decompressed from `data/rej-studio.db.gz` at build time). Schema is in `drizzle/schema.ts`; tables: `genes`, `isoforms`.
 
-Rebuild from source data with `npm run db:build` (runs `scripts/build-db.py`).
+Rebuild from source data with `pnpm db:build` (runs `scripts/build-db.py`).
 
 ## Environment Variables
 
@@ -74,7 +75,7 @@ Claude agents often run in git worktrees at `.claude/worktrees/<name>/`. A fresh
 ./scripts/bootstrap-worktree.sh
 ```
 
-This symlinks `.env` and `venv/` from the main repo and runs `npm install` in the worktree.
+This symlinks `.env` and `venv/` from the main repo and runs `pnpm install` in the worktree.
 
 **Always use absolute paths or paths relative to the worktree root** — do not assume the working directory is the main repo. When in doubt, `pwd` first. Edits, commits, and commands must happen inside the worktree (`.claude/worktrees/<name>/`), not the main repo at the project root.
 
@@ -83,4 +84,4 @@ This symlinks `.env` and `venv/` from the main repo and runs `npm install` in th
 - **Adding a new UI component**: Use `npx shadcn@latest add <component>`. Components go in `components/ui/`.
 - **Adding a server action**: Create or update a file in `actions/`. Import `db` from `drizzle/db.ts`.
 - **Modifying the optimization algorithm**: Edit `api/algorithm.py`. The FastAPI endpoint is in `api/index.py`.
-- **Database schema changes**: Edit `drizzle/schema.ts` and update `scripts/build-db.py` so the generated SQLite file matches. Then run `npm run db:build` and commit the updated `data/rej-studio.db.gz`.
+- **Database schema changes**: Edit `drizzle/schema.ts` and update `scripts/build-db.py` so the generated SQLite file matches. Then run `pnpm db:build` and commit the updated `data/rej-studio.db.gz`.
