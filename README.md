@@ -23,7 +23,7 @@ A web application for RNA End-Joining sequence design and optimization. Scientis
 | Frontend | Next.js 16, React 19, TypeScript, Tailwind CSS   |
 | UI       | shadcn/ui, Radix UI primitives                   |
 | Backend  | FastAPI (Python) with dnachisel                  |
-| Database | PostgreSQL (Vercel Postgres / Neon), Drizzle ORM |
+| Database | SQLite (better-sqlite3), Drizzle ORM             |
 | Hosting  | Vercel                                           |
 
 ## Getting Started
@@ -32,7 +32,6 @@ A web application for RNA End-Joining sequence design and optimization. Scientis
 
 - Node.js 20+
 - Python 3.11+
-- PostgreSQL database (or a Vercel Postgres / Neon instance)
 
 ### Setup
 
@@ -55,17 +54,14 @@ A web application for RNA End-Joining sequence design and optimization. Scientis
 
    | Variable                | Description                          |
    | ----------------------- | ------------------------------------ |
-   | `POSTGRES_URL`          | PostgreSQL connection string         |
    | `SESSION_SECRET`        | Random hex string for JWT signing    |
    | `BASIC_AUTH_USER`       | Basic auth username for landing page |
    | `BASIC_AUTH_PASSWORD`   | Basic auth password                  |
    | `BLOB_READ_WRITE_TOKEN` | Vercel Blob token (optional)         |
 
-3. **Seed the database**
+3. **Unpack the database** (if not already present)
 
-   ```bash
-   npm run db:seed
-   ```
+   The SQLite database is committed as `data/rej-studio.db.gz`. Decompress it to `data/rej-studio.db` before running the app, or rebuild from source data with `npm run db:build`.
 
 ### Development
 
@@ -93,7 +89,7 @@ npm run fastapi-dev   # FastAPI only
 | `npm run lint:fix`   | Auto-fix lint issues             |
 | `npm run format`     | Format with Prettier             |
 | `npm run type-check` | TypeScript type checking         |
-| `npm run db:seed`    | Seed gene data into the database |
+| `npm run db:build`   | Rebuild SQLite database from source data |
 
 ## Project Structure
 
