@@ -38,11 +38,7 @@ import { preload, preinit } from 'react-dom'
 
 export default function RootLayout({ children }) {
   // Preload font file
-  preload('/fonts/inter.woff2', {
-    as: 'font',
-    type: 'font/woff2',
-    crossOrigin: 'anonymous',
-  })
+  preload('/fonts/inter.woff2', { as: 'font', type: 'font/woff2', crossOrigin: 'anonymous' })
 
   // Fetch and apply critical stylesheet immediately
   preinit('/styles/critical.css', { as: 'style' })
@@ -77,13 +73,13 @@ function Navigation() {
 
 **When to use each:**
 
-| API             | Use case                                    |
-| --------------- | ------------------------------------------- |
-| `prefetchDNS`   | Third-party domains you'll connect to later |
-| `preconnect`    | APIs or CDNs you'll fetch from immediately  |
-| `preload`       | Critical resources needed for current page  |
-| `preloadModule` | JS modules for likely next navigation       |
-| `preinit`       | Stylesheets/scripts that must execute early |
-| `preinitModule` | ES modules that must execute early          |
+| API | Use case |
+|-----|----------|
+| `prefetchDNS` | Third-party domains you'll connect to later |
+| `preconnect` | APIs or CDNs you'll fetch from immediately |
+| `preload` | Critical resources needed for current page |
+| `preloadModule` | JS modules for likely next navigation |
+| `preinit` | Stylesheets/scripts that must execute early |
+| `preinitModule` | ES modules that must execute early |
 
 Reference: [React DOM Resource Preloading APIs](https://react.dev/reference/react-dom#resource-preloading-apis)
