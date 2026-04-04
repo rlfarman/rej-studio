@@ -21,9 +21,8 @@ import {
 import type { DesignToolSpecies } from '@/features/design-tool/types/species-options'
 import type { ProcessResult } from '@/features/design-tool/types/process-result'
 import { validationSchema, FormValues } from '../types/form-schema'
-import { formatOptionsForReport, buildJobParams } from '../utils/form-handler'
+import { formatOptionsForReport } from '../utils/form-handler'
 import { useJob } from '@/features/design-tool/hooks/use-job'
-import { useJobHistory } from '@/features/design-tool/hooks/use-job-history'
 import { CustomizationOptions } from './customization-options'
 import { SpeciesOptions } from './species-options'
 import { CodonOptimizationOptions } from './optimization-options'
@@ -60,12 +59,11 @@ export function GeneSplitterForm({
 }: GeneSplitterFormProperties) {
   const [result, setResult] = useState<ProcessResult | null>(null)
   const resultsRef = useRef<HTMLDivElement>(null)
-  // Snapshot of the values submitted for the in-flight job, captured at submit
-  // time so we persist them to history exactly as they were when the job ran
-  // (the user may edit the form while a modal job is polling).
-  const submittedValuesRef = useRef<FormValues | null>(null)
-  const job = useJob()
-  const jobHistory = useJobHistory()
+  // Guards the one-shot form restore. Set true after we hydrate from a
+  // resumed URL job, or eagerly on submit so the new job's own persisted
+  // formValues don't ricochet back and overwrite the live form.
+  const didResetRef = useRef(false)
+  const job = useJob({ initialJobId: defaultJobId ?? null })
 
   const methods = useForm<FormValues>({
     resolver: zodResolver(validationSchema),
@@ -91,51 +89,22 @@ export function GeneSplitterForm({
     },
   })
 
-  // On mount, if a job id is in the URL: restore form values from history,
-  // then either show the cached result (if completed) or resume polling
-  // (if still running or the entry isn't known to us). Runs once — history
-  // isn't populated on first render since it comes from localStorage.
+  // Hydrate the form from a resumed URL job's stored formValues — once they
+  // appear in history (localStorage isn't populated on first render).
   React.useEffect(() => {
-    if (!defaultJobId) return
-    const entry = jobHistory.getEntry(defaultJobId)
-    if (entry?.formValues) {
-      methods.reset(entry.formValues)
+    if (didResetRef.current) return
+    if (job.formValues) {
+      methods.reset(job.formValues)
+      didResetRef.current = true
     }
-    if (entry?.result) {
-      setResult(entry.result)
-      setTimeout(() => {
-        resultsRef.current?.scrollIntoView({
-          behavior: 'smooth',
-          block: 'start',
-        })
-      }, 100)
-    } else {
-      // Either no entry, or a running-but-incomplete one — resume polling.
-      job.resume(defaultJobId)
-    }
-  }, [defaultJobId]) // eslint-disable-line react-hooks/exhaustive-deps -- methods.reset, jobHistory.getEntry, job.resume are stable
+  }, [job.formValues, methods])
 
-  // When the modal backend assigns a jobId, persist a pending history entry
-  // so the job survives a page reload (URL has ?job=, history holds the
-  // formValues, completion effect later upgrades it with the result).
-  // Skipped when submittedValuesRef is null — that means we're resuming an
-  // existing entry, not starting a new one.
+  // React to status changes: display result and scroll on completion, toast
+  // on failure. Storage is handled centrally (useJob on submit, JobWatcher
+  // on poll settle), so the form just presents.
   React.useEffect(() => {
-    if (job.status === 'running' && job.jobId && submittedValuesRef.current) {
-      jobHistory.addEntry(null, job.jobId, submittedValuesRef.current)
-    }
-  }, [job.status, job.jobId]) // eslint-disable-line react-hooks/exhaustive-deps -- jobHistory.addEntry is stable; submittedValuesRef is written in submit handler
-
-  // When the async job completes, display the result and upgrade the history
-  // entry (addEntry preserves createdAt for the existing pending entry).
-  React.useEffect(() => {
-    if (job.status === 'completed' && job.result && job.jobId) {
+    if (job.status === 'completed' && job.result) {
       setResult(job.result)
-      jobHistory.addEntry(
-        job.result,
-        job.jobId,
-        submittedValuesRef.current ?? undefined,
-      )
       setTimeout(() => {
         resultsRef.current?.scrollIntoView({
           behavior: 'smooth',
@@ -145,18 +114,20 @@ export function GeneSplitterForm({
     } else if (job.status === 'failed' && job.error) {
       toast.error(job.error)
     }
-  }, [job.status, job.result, job.jobId, job.error]) // eslint-disable-line react-hooks/exhaustive-deps -- jobHistory.addEntry is stable
+  }, [job.status, job.result, job.error])
 
   const onSubmit = async (values: FormValues) => {
     setResult(null)
-    submittedValuesRef.current = values
-    await job.submitJob(buildJobParams(values))
+    // Mark as reset so the about-to-be-persisted formValues don't trigger
+    // the hydration effect above and overwrite the live form.
+    didResetRef.current = true
+    await job.submitJob(values)
   }
 
   return (
     <Form {...methods}>
       {}
-      {/* eslint-disable-next-line react-hooks/refs -- onSubmit only touches submittedValuesRef in the submit event handler, never during render */}
+      {/* eslint-disable-next-line react-hooks/refs -- onSubmit only writes didResetRef in the submit event handler, never during render */}
       <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-6">
         {/* ── Card 1: Input ── */}
         <Card>

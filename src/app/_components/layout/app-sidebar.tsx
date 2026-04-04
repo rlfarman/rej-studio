@@ -10,6 +10,7 @@ import {
 import { FavoriteGenes } from '@/features/gene-search/components/favorites-panel'
 import { RecentGenes } from '@/features/gene-search/components/recent-genes-panel'
 import { RecentJobs } from '@/features/design-tool/components/recent-jobs-panel'
+import { JobWatcher } from '@/features/design-tool/components/job-watcher'
 import { ThemeToggle } from '@/app/_components/layout/theme-toggle'
 import { SidebarToggle } from '@/app/_components/layout/sidebar-toggle'
 import { DataTransfer } from '@/app/_components/data-transfer'
@@ -42,6 +43,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <RecentGenes />
         <RecentJobs onSelectJob={handleSelectJob} />
       </SidebarContent>
+      <JobWatcher />
       <SidebarFooter>
         <div className="flex flex-col gap-1">
           <ThemeToggle />

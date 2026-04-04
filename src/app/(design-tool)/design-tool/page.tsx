@@ -31,7 +31,11 @@ async function DesignToolPage({
 
   if (!isoformId) {
     return (
-      <GeneSplitterForm defaultPreset={presetValues} defaultJobId={jobId} />
+      <GeneSplitterForm
+        key={jobId ?? 'new'}
+        defaultPreset={presetValues}
+        defaultJobId={jobId}
+      />
     )
   }
 
@@ -41,7 +45,11 @@ async function DesignToolPage({
 
   if (!result) {
     return (
-      <GeneSplitterForm defaultPreset={presetValues} defaultJobId={jobId} />
+      <GeneSplitterForm
+        key={jobId ?? 'new'}
+        defaultPreset={presetValues}
+        defaultJobId={jobId}
+      />
     )
   }
 
@@ -52,6 +60,7 @@ async function DesignToolPage({
 
   return (
     <GeneSplitterForm
+      key={jobId ?? `iso-${isoformId}`}
       defaultName={`Custom ${gene.symbol}`}
       defaultSpecies={validSpecies}
       defaultCodingSequence={isoform.codingSequence}

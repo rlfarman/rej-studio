@@ -11,18 +11,34 @@ const MAX_ENTRIES = 50
 // poll was abandoned (tab closed, Modal call_id expired) and drop it.
 const STALE_RUNNING_TTL_MS = 24 * 60 * 60 * 1000
 
+export type JobStatus = 'running' | 'completed' | 'failed'
+
 export interface JobHistoryEntry {
   id: string
   name: string
   sequenceLength: number
   createdAt: string
-  // Null while the job is still running. Populated on completion.
+  status: JobStatus
+  // Populated when status === 'completed'.
   result: ProcessResult | null
+  // Populated when status === 'failed'.
+  error: string | null
   // Form values that produced this job. Optional for backwards-compat.
   formValues?: FormValues
 }
 
 const EMPTY: JobHistoryEntry[] = []
+
+// Partial input for upserting an entry — status is required, everything else
+// is optional (and either derived from `result`/`formValues` or preserved
+// from an existing entry with the same id).
+interface UpsertInput {
+  id: string
+  status: JobStatus
+  result?: ProcessResult | null
+  error?: string | null
+  formValues?: FormValues
+}
 
 export function useJobHistory() {
   const [entries, setEntries] = useLocalStorage<JobHistoryEntry[]>(
@@ -36,7 +52,7 @@ export function useJobHistory() {
     const cutoff = Date.now() - STALE_RUNNING_TTL_MS
     setEntries((prev) => {
       const fresh = prev.filter((e) => {
-        if (e.result !== null) return true
+        if (e.status !== 'running') return true
         return new Date(e.createdAt).getTime() >= cutoff
       })
       return fresh.length === prev.length ? prev : fresh
@@ -45,23 +61,32 @@ export function useJobHistory() {
 
   // Upsert: if an entry with this id already exists, preserve its createdAt
   // (so a running entry doesn't jump in the list when it completes) and
-  // overlay the new fields. Otherwise insert at the top.
-  const addEntry = useCallback(
-    (result: ProcessResult | null, id: string, formValues?: FormValues) => {
-      const name = result?.name ?? formValues?.name ?? 'Untitled'
-      const sequenceLength =
-        result?.original_sequence.length ??
-        formValues?.codingSequence.length ??
-        0
+  // overlay any fields we've learned. Otherwise insert at the top.
+  const upsertEntry = useCallback(
+    ({ id, status, result, error, formValues }: UpsertInput) => {
       setEntries((prev) => {
         const existing = prev.find((e) => e.id === id)
+        const nextResult = result ?? existing?.result ?? null
+        const nextFormValues = formValues ?? existing?.formValues
+        const name =
+          nextResult?.name ??
+          nextFormValues?.name ??
+          existing?.name ??
+          'Untitled'
+        const sequenceLength =
+          nextResult?.original_sequence.length ??
+          nextFormValues?.codingSequence.length ??
+          existing?.sequenceLength ??
+          0
         const entry: JobHistoryEntry = {
           id,
           name,
           sequenceLength,
           createdAt: existing?.createdAt ?? new Date().toISOString(),
-          result,
-          formValues: formValues ?? existing?.formValues,
+          status,
+          result: nextResult,
+          error: error ?? existing?.error ?? null,
+          formValues: nextFormValues,
         }
         return [entry, ...prev.filter((e) => e.id !== id)].slice(0, MAX_ENTRIES)
       })
@@ -86,5 +111,5 @@ export function useJobHistory() {
     [entries],
   )
 
-  return { entries, addEntry, removeEntry, clearHistory, getEntry }
+  return { entries, upsertEntry, removeEntry, clearHistory, getEntry }
 }

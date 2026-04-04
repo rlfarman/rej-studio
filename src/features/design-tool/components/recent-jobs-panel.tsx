@@ -14,7 +14,7 @@ import {
 } from '@/features/design-tool/hooks/use-job-history'
 import { Button } from '@/components/ui/button'
 import { TruncatedText } from '@/components/truncated-text'
-import { Loader2 } from 'lucide-react'
+import { Loader2, CircleAlert } from 'lucide-react'
 
 const COLLAPSED_COUNT = 5
 const EXPANDED_MAX = 15
@@ -66,27 +66,33 @@ export function RecentJobs({ onSelectJob }: RecentJobsProps) {
             <SidebarMenu
               className={expanded ? 'max-h-80 overflow-y-auto' : undefined}
             >
-              {visibleItems.map((entry) => {
-                const isRunning = entry.result === null
-                return (
-                  <SidebarMenuItem key={entry.id}>
-                    <SidebarMenuButton onClick={() => onSelectJob?.(entry)}>
-                      {isRunning && (
-                        <Loader2 className="size-3 flex-shrink-0 animate-spin" />
-                      )}
-                      <TruncatedText
-                        tooltip={entry.name}
-                        className="truncate text-xs"
-                      >
-                        {entry.name}
-                      </TruncatedText>
-                      <span className="text-muted-foreground ml-auto flex-shrink-0 text-[10px]">
-                        {isRunning ? 'running' : formatTimeAgo(entry.createdAt)}
-                      </span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                )
-              })}
+              {visibleItems.map((entry) => (
+                <SidebarMenuItem key={entry.id}>
+                  <SidebarMenuButton onClick={() => onSelectJob?.(entry)}>
+                    {entry.status === 'running' && (
+                      <Loader2 className="size-3 flex-shrink-0 animate-spin" />
+                    )}
+                    {entry.status === 'failed' && (
+                      <CircleAlert className="text-destructive size-3 flex-shrink-0" />
+                    )}
+                    <TruncatedText
+                      tooltip={
+                        entry.status === 'failed' && entry.error
+                          ? entry.error
+                          : entry.name
+                      }
+                      className="truncate text-xs"
+                    >
+                      {entry.name}
+                    </TruncatedText>
+                    <span className="text-muted-foreground ml-auto flex-shrink-0 text-[10px]">
+                      {entry.status === 'running'
+                        ? 'running'
+                        : formatTimeAgo(entry.createdAt)}
+                    </span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
             </SidebarMenu>
             {hiddenCount > 0 && (
               <Button
