@@ -60,6 +60,10 @@ export function GeneSplitterForm({
 }: GeneSplitterFormProperties) {
   const [result, setResult] = useState<ProcessResult | null>(null)
   const resultsRef = useRef<HTMLDivElement>(null)
+  // Snapshot of the values submitted for the in-flight job, captured at submit
+  // time so we persist them to history exactly as they were when the job ran
+  // (the user may edit the form while a modal job is polling).
+  const submittedValuesRef = useRef<FormValues | null>(null)
   const job = useJob()
   const jobHistory = useJobHistory()
 
@@ -95,6 +99,9 @@ export function GeneSplitterForm({
     const entry = jobHistory.getEntry(defaultJobId)
     if (entry) {
       setResult(entry.result)
+      if (entry.formValues) {
+        methods.reset(entry.formValues)
+      }
       setTimeout(() => {
         resultsRef.current?.scrollIntoView({
           behavior: 'smooth',
@@ -111,7 +118,11 @@ export function GeneSplitterForm({
   React.useEffect(() => {
     if (job.status === 'completed' && job.result && job.jobId) {
       setResult(job.result)
-      jobHistory.addEntry(job.result, job.jobId)
+      jobHistory.addEntry(
+        job.result,
+        job.jobId,
+        submittedValuesRef.current ?? undefined,
+      )
       setTimeout(() => {
         resultsRef.current?.scrollIntoView({
           behavior: 'smooth',
@@ -125,12 +136,14 @@ export function GeneSplitterForm({
 
   const onSubmit = async (values: FormValues) => {
     setResult(null)
+    submittedValuesRef.current = values
     await job.submitJob(buildJobParams(values))
   }
 
   return (
     <Form {...methods}>
       {}
+      {/* eslint-disable-next-line react-hooks/refs -- onSubmit only touches submittedValuesRef in the submit event handler, never during render */}
       <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-6">
         {/* ── Card 1: Input ── */}
         <Card>
