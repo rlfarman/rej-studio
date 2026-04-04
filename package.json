@@ -2,13 +2,14 @@
   "name": "rej-studio",
   "version": "0.2.0",
   "private": true,
+  "packageManager": "pnpm@9.12.3",
   "scripts": {
     "fastapi-dev": "source venv/bin/activate && pip install -r requirements.txt && python3 -m uvicorn api.index:app --reload",
     "next-dev": "next dev",
-    "dev": "concurrently \"npm run next-dev\" \"npm run fastapi-dev\"",
+    "dev": "concurrently \"pnpm next-dev\" \"pnpm fastapi-dev\"",
     "db:build": "python3 scripts/build-db.py",
     "db:ensure": "test -f data/rej-studio.db || gunzip -kc data/rej-studio.db.gz > data/rej-studio.db",
-    "db:studio": "npm run db:ensure && drizzle-kit studio",
+    "db:studio": "pnpm db:ensure && drizzle-kit studio",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
@@ -69,11 +70,11 @@
     "prettier-plugin-tailwindcss": "^0.7.2",
     "ts-node": "^10.9.2"
   },
-  "overrides": {
-    "@types/react": "$@types/react",
-    "@types/react-dom": "$@types/react-dom",
-    "typescript-eslint": {
-      "typescript": "$typescript"
+  "pnpm": {
+    "overrides": {
+      "@types/react": "$@types/react",
+      "@types/react-dom": "$@types/react-dom",
+      "typescript-eslint>typescript": "$typescript"
     }
   }
 }
