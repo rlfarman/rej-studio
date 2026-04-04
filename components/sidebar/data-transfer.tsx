@@ -3,7 +3,6 @@
 import { useRef } from 'react'
 import { Download, Upload } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { exportUserData, importUserData } from '@/lib/data-transfer'
 import { toast } from 'sonner'
 
@@ -26,7 +25,7 @@ export function DataTransfer() {
   }
 
   return (
-    <>
+    <div className="flex flex-col gap-1">
       <input
         ref={fileInputRef}
         type="file"
@@ -34,32 +33,24 @@ export function DataTransfer() {
         className="hidden"
         onChange={handleImport}
       />
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={exportUserData}
-            title="Export data"
-          >
-            <Download className="h-4 w-4" />
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>Export data</TooltipContent>
-      </Tooltip>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => fileInputRef.current?.click()}
-            title="Import data"
-          >
-            <Upload className="h-4 w-4" />
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>Import data</TooltipContent>
-      </Tooltip>
-    </>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="justify-start"
+        onClick={exportUserData}
+      >
+        <Download className="h-4 w-4" />
+        Export data
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="justify-start"
+        onClick={() => fileInputRef.current?.click()}
+      >
+        <Upload className="h-4 w-4" />
+        Import data
+      </Button>
+    </div>
   )
 }
