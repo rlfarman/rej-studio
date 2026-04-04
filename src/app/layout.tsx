@@ -7,6 +7,7 @@ import { ThemeProvider } from '@/app/_components/layout/theme-provider'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { AppSidebar } from '@/app/_components/layout/app-sidebar'
 import { Toaster } from '@/components/ui/sonner'
+import { QueryProvider } from '@/app/_components/providers/query-provider'
 import { cookies } from 'next/headers'
 import { Analytics } from '@vercel/analytics/next'
 
@@ -37,29 +38,31 @@ export default async function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <a
-            href="#main-content"
-            className="focus:bg-background focus:text-foreground focus:ring-ring sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:rounded-md focus:px-4 focus:py-2 focus:shadow-md focus:ring-2"
-          >
-            Skip to content
-          </a>
-          <SidebarProvider
-            defaultOpen={defaultOpen}
-            className="relative flex h-full w-full flex-row overflow-hidden"
-          >
-            <AppSidebar />
-            <SidebarInset className="relative flex h-full min-h-screen max-w-full flex-1 flex-col overflow-hidden">
-              <Header />
-              <main
-                id="main-content"
-                className="relative h-full w-full flex-1 overflow-auto"
-              >
-                {children}
-              </main>
-              <Footer />
-            </SidebarInset>
-          </SidebarProvider>
-          <Toaster />
+          <QueryProvider>
+            <a
+              href="#main-content"
+              className="focus:bg-background focus:text-foreground focus:ring-ring sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:rounded-md focus:px-4 focus:py-2 focus:shadow-md focus:ring-2"
+            >
+              Skip to content
+            </a>
+            <SidebarProvider
+              defaultOpen={defaultOpen}
+              className="relative flex h-full w-full flex-row overflow-hidden"
+            >
+              <AppSidebar />
+              <SidebarInset className="relative flex h-full min-h-screen max-w-full flex-1 flex-col overflow-hidden">
+                <Header />
+                <main
+                  id="main-content"
+                  className="relative h-full w-full flex-1 overflow-auto"
+                >
+                  {children}
+                </main>
+                <Footer />
+              </SidebarInset>
+            </SidebarProvider>
+            <Toaster />
+          </QueryProvider>
         </ThemeProvider>
         <Analytics />
       </body>
