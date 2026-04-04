@@ -35,6 +35,7 @@ npm run lint:fix     # Auto-fix lint
 npm run format       # Prettier
 npm run type-check   # TypeScript check
 npm run db:build     # Rebuild SQLite database from source data
+npm run db:studio    # Browse the DB in Drizzle Studio (local.drizzle.studio)
 ```
 
 ## Code Conventions
