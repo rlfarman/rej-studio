@@ -35,3 +35,24 @@ export const isoforms = sqliteTable(
 )
 
 export type SelectIsoform = typeof isoforms.$inferSelect
+
+export const transcriptResults = sqliteTable(
+  'transcript_results',
+  {
+    transcriptId: text('transcript_id').primaryKey().notNull(),
+    optimizationReportFilename: text('optimization_report_filename').notNull(),
+    optimizationReportText: text('optimization_report_text').notNull(),
+    rejFilename: text('rej_filename').notNull(),
+    rejText: text('rej_text').notNull(),
+    seq5: text('seq5').notNull(),
+    seq3: text('seq3').notNull(),
+    hasStimintron: integer('has_stimintron').notNull().default(0),
+    ingestedAt: text('ingested_at').notNull(),
+    contentSha256: text('content_sha256'),
+  },
+  (table) => [
+    index('idx_transcript_results_ingested_at').on(table.ingestedAt),
+  ],
+)
+
+export type SelectTranscriptResult = typeof transcriptResults.$inferSelect

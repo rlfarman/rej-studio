@@ -22,6 +22,7 @@ import {
   ChevronRight,
   Copy,
   Download,
+  FileArchive,
   FileText,
   FlaskConical,
   Beaker,
@@ -49,6 +50,7 @@ import type { IsoformListItem } from '@/lib/domain-types'
 
 interface IsoformListProps {
   isoforms: IsoformListItem[]
+  availableResultIds?: string[]
 }
 
 type SortKey = 'enst' | 'cdsLength' | 'proteinLength' | 'species' | 'suitability'
@@ -68,7 +70,8 @@ const SUITABILITY_RANK = {
   'triple-aav': 2,
 } as const
 
-export default function IsoformTable({ isoforms }: IsoformListProps) {
+export default function IsoformTable({ isoforms, availableResultIds = [] }: IsoformListProps) {
+  const resultIdSet = useMemo(() => new Set(availableResultIds), [availableResultIds])
   const { species } = useSpeciesContext()
   const { copy, isCopied } = useCopyToClipboard({ showToast: false })
 
@@ -234,6 +237,7 @@ export default function IsoformTable({ isoforms }: IsoformListProps) {
                 copy={copy}
                 onToggleExpanded={toggleExpanded}
                 onToggleSelected={toggleSelected}
+                hasResult={resultIdSet.has(isoform.id)}
               />
             )
           })}
@@ -265,6 +269,7 @@ function IsoformRow({
   copy,
   onToggleExpanded,
   onToggleSelected,
+  hasResult,
 }: {
   isoform: IsoformListItem
   isExpanded: boolean
@@ -277,6 +282,7 @@ function IsoformRow({
   copy: (text: string, id: string) => void
   onToggleExpanded: (id: string) => void
   onToggleSelected: (id: string) => void
+  hasResult: boolean
 }) {
   return (
     <>
@@ -379,6 +385,27 @@ function IsoformRow({
               </TooltipTrigger>
               <TooltipContent>Download FASTA</TooltipContent>
             </Tooltip>
+            {hasResult && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="size-8"
+                    asChild
+                  >
+                    <a
+                      href={`/api/results/${isoform.id}`}
+                      download
+                      aria-label={`Download precomputed results for ${isoform.id}`}
+                    >
+                      <FileArchive className="size-3.5" />
+                    </a>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Download REJ results</TooltipContent>
+              </Tooltip>
+            )}
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="ghost" size="icon" className="size-8" asChild>

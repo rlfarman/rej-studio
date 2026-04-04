@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { getGeneBySymbol } from '@/actions/genes'
 import { getIsoformsByGene } from '@/actions/isoforms'
+import { getAvailableTranscriptResultIds } from '@/actions/transcript-results'
 import IsoformTable, { IsoformTableLoading } from './_components/isoform-table'
 import { IsoformSummary } from './_components/isoform-summary'
 import { Suspense } from 'react'
@@ -47,6 +48,9 @@ export default async function GeneSymbolPage(props: Props) {
   }
 
   const isoforms = await getIsoformsByGene(gene.id)
+  const availableResultIds = await getAvailableTranscriptResultIds(
+    isoforms.map((i) => i.id),
+  )
 
   const speciesAvailable = [
     ...new Set(isoforms.map((i) => i.species)),
@@ -89,7 +93,10 @@ export default async function GeneSymbolPage(props: Props) {
         <h2 className="text-lg font-semibold tracking-tight mb-2">Isoforms</h2>
         <IsoformSummary isoforms={isoforms} />
         <Suspense fallback={<IsoformTableLoading />}>
-          <IsoformTable isoforms={isoforms} />
+          <IsoformTable
+            isoforms={isoforms}
+            availableResultIds={[...availableResultIds]}
+          />
         </Suspense>
       </CardContent>
     </Card>
