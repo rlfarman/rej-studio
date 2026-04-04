@@ -14,7 +14,7 @@ export interface JobStatusResult {
   result?: Record<string, unknown>
 }
 
-function useModal() {
+function isModalBackend() {
   return process.env.COMPUTE_BACKEND === 'modal'
 }
 
@@ -37,7 +37,7 @@ function getLocalApiUrl() {
 export async function submitJob(
   params: JobParams,
 ): Promise<{ jobId: string; result?: Record<string, unknown> }> {
-  if (useModal()) {
+  if (isModalBackend()) {
     const response = await fetch(`${getModalUrl()}/jobs`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -69,7 +69,7 @@ export async function submitJob(
 export async function getJobStatus(
   jobId: string,
 ): Promise<JobStatusResult> {
-  if (useModal()) {
+  if (isModalBackend()) {
     const response = await fetch(`${getModalUrl()}/jobs/${jobId}`)
     if (!response.ok) {
       const text = await response.text()
