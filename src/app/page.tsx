@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { GeneSearch } from '@/features/gene-search/components/gene-search'
 import { searchGenes } from '@/features/gene-search/api/genes'
-import { DnaIcon } from '@/components/dna-icon'
+import { DnaIcon } from '@/components/bio/dna-icon'
 import { Hero, HeroItem, DnaFloat } from './_components/hero'
 
 export default function HomePage() {
@@ -38,7 +38,10 @@ export default function HomePage() {
             </p>
           </HeroItem>
         </div>
-        <HeroItem index={4} className="mx-auto mt-8 w-full max-w-2xl px-4 sm:px-6 lg:px-8">
+        <HeroItem
+          index={4}
+          className="mx-auto mt-8 w-full max-w-2xl px-4 sm:px-6 lg:px-8"
+        >
           <GeneSearch searchGenes={searchGenes} />
         </HeroItem>
       </Hero>

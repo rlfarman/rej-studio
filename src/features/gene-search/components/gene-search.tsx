@@ -9,7 +9,7 @@ import { useGeneSearch } from '@/features/gene-search/hooks/use-gene-search'
 import { GeneSearchCommand } from './gene-search-command'
 import { useRecentGenes } from '@/features/gene-search/stores/recent-genes-context'
 import { useFavoriteGenes } from '@/features/gene-search/stores/favorite-genes-context'
-import { geneHref, type SpeciesFilter } from '@/lib/species'
+import { geneHref, type SpeciesFilter } from '@/lib/bio/species'
 import type { SavedGene } from '@/features/gene-search/types/domain-types'
 
 interface GeneSearchProperties {

@@ -1,4 +1,4 @@
-import type { Species } from '@/lib/species'
+import type { Species } from '@/lib/bio/species'
 
 export type DesignToolSpecies = Species | 'none'
 

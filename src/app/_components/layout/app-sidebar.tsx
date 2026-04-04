@@ -1,5 +1,5 @@
 'use client'
-import { DnaIcon } from '@/components/dna-icon'
+import { DnaIcon } from '@/components/bio/dna-icon'
 import {
   Sidebar,
   SidebarContent,

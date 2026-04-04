@@ -10,7 +10,7 @@ import {
   multipleOf3Check,
   invalidCharsCheck,
   aavFitCheck,
-} from '@/components/diag-badge'
+} from '@/components/bio/diag-badge'
 
 interface IsoformValidationBadgesProps {
   codingSequence: string

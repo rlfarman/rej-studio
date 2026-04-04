@@ -4,7 +4,9 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { getGeneBySymbol } from '@/features/gene-search/api/genes'
 import { getIsoformsByGene } from '@/features/gene-search/api/isoforms'
-import IsoformTable, { IsoformTableLoading } from '@/features/gene-search/components/isoform-table'
+import IsoformTable, {
+  IsoformTableLoading,
+} from '@/features/gene-search/components/isoform-table'
 import { IsoformSummary } from '@/features/gene-search/components/isoform-summary'
 import { Suspense } from 'react'
 import { FavoriteGeneButton } from '@/features/gene-search/components/favorite-gene-button'
@@ -14,7 +16,7 @@ import {
   SPECIES_DISPLAY_NAME,
   parseSpeciesParam,
   type Species,
-} from '@/lib/species'
+} from '@/lib/bio/species'
 
 type Props = {
   params: Promise<{ symbol: string }>
@@ -86,7 +88,7 @@ export default async function GeneSymbolPage(props: Props) {
           </div>
         </div>
         <Separator className="my-4" />
-        <h2 className="text-lg font-semibold tracking-tight mb-2">Isoforms</h2>
+        <h2 className="mb-2 text-lg font-semibold tracking-tight">Isoforms</h2>
         <IsoformSummary isoforms={isoforms} />
         <Suspense fallback={<IsoformTableLoading />}>
           <IsoformTable isoforms={isoforms} />

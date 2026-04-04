@@ -1,7 +1,7 @@
 import { getIsoformAndGeneByIsoformId } from '@/features/gene-search/api/isoforms'
 import { GeneSplitterForm } from '@/features/design-tool/components/gene-splitter-form'
 import type { DesignToolSpecies } from '@/features/design-tool/types/species-options'
-import { isSpecies } from '@/lib/species'
+import { isSpecies } from '@/lib/bio/species'
 import { PRESETS } from '@/features/design-tool/utils/presets'
 import { Metadata } from 'next'
 
@@ -30,7 +30,9 @@ async function DesignToolPage({
   const jobId = Array.isArray(params.job) ? params.job[0] : params.job
 
   if (!isoformId) {
-    return <GeneSplitterForm defaultPreset={presetValues} defaultJobId={jobId} />
+    return (
+      <GeneSplitterForm defaultPreset={presetValues} defaultJobId={jobId} />
+    )
   }
 
   const result = isoformId
@@ -38,7 +40,9 @@ async function DesignToolPage({
     : undefined
 
   if (!result) {
-    return <GeneSplitterForm defaultPreset={presetValues} defaultJobId={jobId} />
+    return (
+      <GeneSplitterForm defaultPreset={presetValues} defaultJobId={jobId} />
+    )
   }
 
   const { isoform, gene } = result

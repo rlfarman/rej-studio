@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/command'
 import Link from 'next/link'
 import type { GeneSearchResult } from '@/features/gene-search/api/genes'
-import { SpeciesIcon } from '@/components/species-icon'
+import { SpeciesIcon } from '@/components/bio/species-icon'
 import { TruncatedText } from '@/components/truncated-text'
 import { HighlightMatch } from '@/features/gene-search/utils/highlight-match'
 import { useState } from 'react'
@@ -96,9 +96,7 @@ export function GeneSearchCommand({
                       <CommandItem
                         key={`fav-${gene.id}`}
                         value={`fav-${gene.id}`}
-                        onSelect={() =>
-                          internalHandleSelect(gene)
-                        }
+                        onSelect={() => internalHandleSelect(gene)}
                       >
                         <HeartIcon className="text-muted-foreground h-4 w-4" />
                         {gene.species && (
@@ -110,7 +108,10 @@ export function GeneSearchCommand({
                         <span className="font-mono font-medium">
                           {gene.symbol}
                         </span>
-                        <TruncatedText tooltip={gene.name} className="text-muted-foreground truncate">
+                        <TruncatedText
+                          tooltip={gene.name}
+                          className="text-muted-foreground truncate"
+                        >
                           {gene.name}
                         </TruncatedText>
                       </CommandItem>
@@ -125,9 +126,7 @@ export function GeneSearchCommand({
                         <CommandItem
                           key={`recent-${gene.id}`}
                           value={`recent-${gene.id}`}
-                          onSelect={() =>
-                            internalHandleSelect(gene)
-                          }
+                          onSelect={() => internalHandleSelect(gene)}
                         >
                           <ClockIcon className="text-muted-foreground h-4 w-4" />
                           {gene.species && (
@@ -139,7 +138,10 @@ export function GeneSearchCommand({
                           <span className="font-mono font-medium">
                             {gene.symbol}
                           </span>
-                          <TruncatedText tooltip={gene.name} className="text-muted-foreground truncate">
+                          <TruncatedText
+                            tooltip={gene.name}
+                            className="text-muted-foreground truncate"
+                          >
                             {gene.name}
                           </TruncatedText>
                         </CommandItem>
@@ -187,7 +189,10 @@ export function GeneSearchCommand({
                   <span className="font-mono font-medium">
                     <HighlightMatch text={gene.symbol} query={query} />
                   </span>
-                  <TruncatedText tooltip={gene.name} className="text-muted-foreground truncate">
+                  <TruncatedText
+                    tooltip={gene.name}
+                    className="text-muted-foreground truncate"
+                  >
                     <HighlightMatch text={gene.name} query={query} />
                   </TruncatedText>
                 </CommandItem>

@@ -4,7 +4,7 @@ import { useMemo } from 'react'
 import { ArrowRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { ProcessResult } from '@/features/design-tool/types/process-result'
-import { computeGcPercent, countCpG } from '@/lib/sequence-utils'
+import { computeGcPercent, countCpG } from '@/lib/bio/sequence-utils'
 
 interface ComparisonPanelProps {
   result: ProcessResult

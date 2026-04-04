@@ -8,7 +8,7 @@ import {
   useSyncExternalStore,
   ReactNode,
 } from 'react'
-import { type SpeciesFilter, isSpeciesFilter } from '@/lib/species'
+import { type SpeciesFilter, isSpeciesFilter } from '@/lib/bio/species'
 
 const SPECIES_STORAGE_KEY = 'species'
 const SPECIES_CHANGE_EVENT = 'specieschange'

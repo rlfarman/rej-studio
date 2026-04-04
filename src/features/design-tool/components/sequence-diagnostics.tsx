@@ -11,8 +11,8 @@ import {
   stopCodonCheck,
   multipleOf3Check,
   invalidCharsCheck,
-} from '@/components/diag-badge'
-import { assessFragmentBalance } from '@/lib/sequence-utils'
+} from '@/components/bio/diag-badge'
+import { assessFragmentBalance } from '@/lib/bio/sequence-utils'
 import { AavPreflight } from './aav-size-estimator'
 
 export function SequenceDiagnostics() {

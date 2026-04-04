@@ -13,7 +13,7 @@ import {
   FormField,
 } from '@/components/ui/form'
 import { FormValues } from '../types/form-schema'
-import { assessFragmentBalance } from '@/lib/sequence-utils'
+import { assessFragmentBalance } from '@/lib/bio/sequence-utils'
 
 export function DNASplicer() {
   const { control, setValue, watch } = useFormContext<FormValues>()

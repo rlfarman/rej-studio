@@ -10,10 +10,10 @@ import {
 } from '@/components/ui/sidebar'
 import { useFavoriteGenes } from '@/features/gene-search/stores/favorite-genes-context'
 import Link from 'next/link'
-import { geneHref } from '@/lib/species'
+import { geneHref } from '@/lib/bio/species'
 import { Button } from '@/components/ui/button'
 import { TruncatedText } from '@/components/truncated-text'
-import { SpeciesIcon } from '@/components/species-icon'
+import { SpeciesIcon } from '@/components/bio/species-icon'
 
 const COLLAPSED_COUNT = 5
 const EXPANDED_MAX = 15
@@ -34,9 +34,7 @@ export function FavoriteGenes() {
         {favoriteGenes.length > 0 ? (
           <>
             <SidebarMenu
-              className={
-                expanded ? 'max-h-80 overflow-y-auto' : undefined
-              }
+              className={expanded ? 'max-h-80 overflow-y-auto' : undefined}
             >
               {visibleItems.map((gene) => (
                 <SidebarMenuItem key={gene.id}>
@@ -48,8 +46,15 @@ export function FavoriteGenes() {
                           className="text-muted-foreground h-3.5 w-3.5 flex-shrink-0"
                         />
                       )}
-                      <span className="font-mono font-medium">{gene.symbol}</span>
-                      <TruncatedText tooltip={gene.name} className="text-muted-foreground truncate text-xs">{gene.name}</TruncatedText>
+                      <span className="font-mono font-medium">
+                        {gene.symbol}
+                      </span>
+                      <TruncatedText
+                        tooltip={gene.name}
+                        className="text-muted-foreground truncate text-xs"
+                      >
+                        {gene.name}
+                      </TruncatedText>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -62,9 +67,7 @@ export function FavoriteGenes() {
                 onClick={() => setExpanded(!expanded)}
                 className="text-muted-foreground w-full text-xs"
               >
-                {expanded
-                  ? 'Show less'
-                  : `+ Show ${hiddenCount} more`}
+                {expanded ? 'Show less' : `+ Show ${hiddenCount} more`}
               </Button>
             )}
           </>

@@ -12,7 +12,7 @@ import {
   hasStartCodon,
   getStopCodonStatus,
   findInvalidChars,
-} from '@/lib/sequence-utils'
+} from '@/lib/bio/sequence-utils'
 
 // ── Types ──
 

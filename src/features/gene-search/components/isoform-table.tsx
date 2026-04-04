@@ -32,17 +32,17 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Separator } from '@/components/ui/separator'
-import { SpeciesSelect } from '@/components/species-select'
+import { SpeciesSelect } from '@/components/bio/species-select'
 import { useSpeciesContext } from '@/context/species-context'
-import { SPECIES_DISPLAY_NAME } from '@/lib/species'
+import { SPECIES_DISPLAY_NAME } from '@/lib/bio/species'
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
 import { CopyableText } from '@/components/copyable-text'
-import { formatFasta } from '@/lib/fasta'
+import { formatFasta } from '@/lib/bio/fasta'
 import { downloadTextFile } from '@/lib/download-file'
 import {
   assessDesignSuitability,
   getSuitabilityConfig,
-} from '@/lib/design-suitability'
+} from '@/lib/bio/design-suitability'
 import { IsoformValidationBadges } from './isoform-validation-badges'
 import { IsoformComparisonSheet } from './isoform-comparison-sheet'
 import type { IsoformListItem } from '@/features/gene-search/types/domain-types'
@@ -51,7 +51,12 @@ interface IsoformListProps {
   isoforms: IsoformListItem[]
 }
 
-type SortKey = 'enst' | 'cdsLength' | 'proteinLength' | 'species' | 'suitability'
+type SortKey =
+  | 'enst'
+  | 'cdsLength'
+  | 'proteinLength'
+  | 'species'
+  | 'suitability'
 type SortDirection = 'asc' | 'desc'
 
 const SUITABILITY_VARIANT_MAP = {
@@ -199,7 +204,9 @@ export default function IsoformTable({ isoforms }: IsoformListProps) {
             <SortableHead
               label={
                 <>
-                  <span className="hidden sm:inline">Ensembl Transcript ID</span>
+                  <span className="hidden sm:inline">
+                    Ensembl Transcript ID
+                  </span>
                   <span className="sm:hidden">ENST</span>
                 </>
               }
@@ -244,7 +251,8 @@ export default function IsoformTable({ isoforms }: IsoformListProps) {
         <div className="sticky bottom-4 z-10 mt-4 flex justify-center">
           <IsoformComparisonSheet isoforms={selectedIsoforms}>
             <Button size="sm">
-              Compare {selectedIds.size} isoform{selectedIds.size > 1 ? 's' : ''}
+              Compare {selectedIds.size} isoform
+              {selectedIds.size > 1 ? 's' : ''}
             </Button>
           </IsoformComparisonSheet>
         </div>
@@ -280,7 +288,10 @@ function IsoformRow({
 }) {
   return (
     <>
-      <TableRow className="cursor-pointer" onClick={() => onToggleExpanded(isoform.id)}>
+      <TableRow
+        className="cursor-pointer"
+        onClick={() => onToggleExpanded(isoform.id)}
+      >
         <TableCell onClick={(e) => e.stopPropagation()}>
           <Checkbox
             checked={isSelected}
@@ -448,11 +459,10 @@ function ExpandedDetails({ isoform }: { isoform: IsoformListItem }) {
         </div>
       </div>
 
-
       <Separator />
 
       <div className="flex flex-wrap gap-2">
-        <span className="text-muted-foreground text-xs font-semibold self-center mr-1">
+        <span className="text-muted-foreground mr-1 self-center text-xs font-semibold">
           Design with preset
         </span>
         <Button variant="outline" size="sm" asChild>
@@ -462,7 +472,9 @@ function ExpandedDetails({ isoform }: { isoform: IsoformListItem }) {
           </Link>
         </Button>
         <Button variant="outline" size="sm" asChild>
-          <Link href={`/design-tool?isoform=${isoform.id}&preset=aavConstrained`}>
+          <Link
+            href={`/design-tool?isoform=${isoform.id}&preset=aavConstrained`}
+          >
             <FlaskConical className="size-3.5" />
             AAV-Constrained
           </Link>
@@ -498,7 +510,7 @@ function SortableHead({
   return (
     <TableHead className={className}>
       <button
-        className="inline-flex items-center gap-1 hover:text-foreground"
+        className="hover:text-foreground inline-flex items-center gap-1"
         onClick={() => onSort(sortKey)}
       >
         {label}
@@ -536,7 +548,10 @@ export function IsoformTableLoading() {
       </TableHeader>
       <TableBody>
         <TableRow>
-          <TableCell colSpan={COLUMN_COUNT} className="text-muted-foreground text-center">
+          <TableCell
+            colSpan={COLUMN_COUNT}
+            className="text-muted-foreground text-center"
+          >
             Loading isoforms...
           </TableCell>
         </TableRow>

@@ -28,7 +28,7 @@ import { toast } from 'sonner'
 import { downloadResultsZip } from '@/features/design-tool/utils/build-zip'
 import { ComparisonPanel } from './comparison-panel'
 import { AavResults } from './aav-size-estimator'
-import { formatFasta } from '@/lib/fasta'
+import { formatFasta } from '@/lib/bio/fasta'
 
 interface ResultsPanelProps {
   result: ProcessResult
@@ -65,10 +65,7 @@ function SequenceBlock({
               size="sm"
               className="h-7 gap-1.5 px-2 text-xs"
               onClick={() =>
-                copy(
-                  formatFasta(fastaName, sequence),
-                  `${copyId}-fasta`,
-                )
+                copy(formatFasta(fastaName, sequence), `${copyId}-fasta`)
               }
             >
               {isCopied(`${copyId}-fasta`) ? (
@@ -168,7 +165,14 @@ function parseObjectives(text: string) {
 
   const kmerPassed = /UniquifyAllKmers.*Passed/.test(text)
 
-  return { totalScore, passedCount, failedCount, caiScore, cpgCount, kmerPassed }
+  return {
+    totalScore,
+    passedCount,
+    failedCount,
+    caiScore,
+    cpgCount,
+    kmerPassed,
+  }
 }
 
 function ObjectivesSummary({
@@ -207,7 +211,8 @@ function ObjectivesSummary({
   if (beforeStats.cpgCount > 0 || afterStats.cpgCount > 0) {
     items.push({
       label: `CpG sites: ${beforeStats.cpgCount} \u2192 ${afterStats.cpgCount}`,
-      status: afterStats.cpgCount < beforeStats.cpgCount ? 'improved' : 'neutral',
+      status:
+        afterStats.cpgCount < beforeStats.cpgCount ? 'improved' : 'neutral',
     })
   }
 
@@ -247,7 +252,7 @@ function ObjectivesSummary({
         </summary>
         <div className="mt-2 grid gap-3 sm:grid-cols-2">
           <div className="space-y-1">
-            <span className="text-muted-foreground text-xs font-medium uppercase tracking-wider">
+            <span className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
               Before
             </span>
             <pre className="bg-muted max-h-48 overflow-auto rounded-md p-2.5 font-mono text-[11px] whitespace-pre-wrap">
@@ -255,7 +260,7 @@ function ObjectivesSummary({
             </pre>
           </div>
           <div className="space-y-1">
-            <span className="text-muted-foreground text-xs font-medium uppercase tracking-wider">
+            <span className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
               After
             </span>
             <pre className="bg-muted max-h-48 overflow-auto rounded-md p-2.5 font-mono text-[11px] whitespace-pre-wrap">
@@ -327,9 +332,7 @@ export function ResultsPanel({ result, optionsUsed }: ResultsPanelProps) {
     try {
       downloadResultsZip(result, optionsUsed)
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : 'Download failed.',
-      )
+      toast.error(error instanceof Error ? error.message : 'Download failed.')
     }
   }
 
@@ -416,13 +419,12 @@ export function ResultsPanel({ result, optionsUsed }: ResultsPanelProps) {
             seq3Length={seq3Clean.length}
           />
 
-          {result.wggw_info &&
-            Object.keys(result.wggw_info).length > 0 && (
-              <>
-                <Separator />
-                <WggwDetails wggwInfo={result.wggw_info} />
-              </>
-            )}
+          {result.wggw_info && Object.keys(result.wggw_info).length > 0 && (
+            <>
+              <Separator />
+              <WggwDetails wggwInfo={result.wggw_info} />
+            </>
+          )}
         </CardContent>
       </Card>
     </m.div>

@@ -6,7 +6,7 @@ import {
   FormControl,
   FormMessage,
 } from '@/components/ui/form'
-import { SpeciesIcon } from '@/components/species-icon'
+import { SpeciesIcon } from '@/components/bio/species-icon'
 import { cn } from '@/lib/utils'
 import { Dna } from 'lucide-react'
 import { useFormContext } from 'react-hook-form'

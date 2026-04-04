@@ -20,12 +20,16 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ExternalLink } from 'lucide-react'
 import Link from 'next/link'
-import { SPECIES_DISPLAY_NAME } from '@/lib/species'
-import { computeGcPercent, hasStartCodon, getStopCodonStatus } from '@/lib/sequence-utils'
+import { SPECIES_DISPLAY_NAME } from '@/lib/bio/species'
+import {
+  computeGcPercent,
+  hasStartCodon,
+  getStopCodonStatus,
+} from '@/lib/bio/sequence-utils'
 import {
   assessDesignSuitability,
   getSuitabilityConfig,
-} from '@/lib/design-suitability'
+} from '@/lib/bio/design-suitability'
 import type { IsoformListItem } from '@/features/gene-search/types/domain-types'
 
 interface IsoformComparisonSheetProps {
@@ -79,7 +83,10 @@ export function IsoformComparisonSheet({
               <TableRow>
                 <TableHead className="min-w-24">Property</TableHead>
                 {analyses.map((iso) => (
-                  <TableHead key={iso.id} className="min-w-28 font-mono text-xs">
+                  <TableHead
+                    key={iso.id}
+                    className="min-w-28 font-mono text-xs"
+                  >
                     {iso.id}
                   </TableHead>
                 ))}
@@ -117,9 +124,7 @@ export function IsoformComparisonSheet({
               <CompRow
                 label="GC Content"
                 values={analyses.map((a) => `${a.gc.toFixed(1)}%`)}
-                diffClass={diffClass(
-                  analyses.map((a) => Math.round(a.gc)),
-                )}
+                diffClass={diffClass(analyses.map((a) => Math.round(a.gc)))}
               />
               <CompRow
                 label="Start Codon"
@@ -189,7 +194,10 @@ function CompRow({
         {label}
       </TableCell>
       {values.map((v, i) => (
-        <TableCell key={i} className={`font-mono text-xs tabular-nums ${diffClass}`}>
+        <TableCell
+          key={i}
+          className={`font-mono text-xs tabular-nums ${diffClass}`}
+        >
           {v}
         </TableCell>
       ))}

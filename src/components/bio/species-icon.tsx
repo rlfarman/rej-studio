@@ -1,5 +1,5 @@
 import { User, RatIcon, Dna } from 'lucide-react'
-import type { SpeciesFilter } from '@/lib/species'
+import type { SpeciesFilter } from '@/lib/bio/species'
 
 export function SpeciesIcon({
   species,

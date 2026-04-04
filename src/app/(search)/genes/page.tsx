@@ -4,8 +4,8 @@ import {
   GeneSearchResults,
   GeneSearchResultsLoading,
 } from '@/features/gene-search/components/gene-search-results'
-import { isSpeciesFilter } from '@/lib/species'
-import type { SpeciesFilter } from '@/lib/species'
+import { isSpeciesFilter } from '@/lib/bio/species'
+import type { SpeciesFilter } from '@/lib/bio/species'
 import { Metadata } from 'next'
 import { Suspense } from 'react'
 

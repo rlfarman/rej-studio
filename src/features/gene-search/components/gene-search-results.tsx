@@ -1,8 +1,8 @@
 import { searchGenes } from '@/features/gene-search/api/genes'
-import { geneHref, type SpeciesFilter } from '@/lib/species'
+import { geneHref, type SpeciesFilter } from '@/lib/bio/species'
 import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
-import { SpeciesIcon } from '@/components/species-icon'
+import { SpeciesIcon } from '@/components/bio/species-icon'
 
 interface GeneSearchResultsProps {
   query: string
