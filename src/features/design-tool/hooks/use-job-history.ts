@@ -2,7 +2,7 @@
 
 import { useCallback } from 'react'
 import { useLocalStorage } from '@/lib/use-local-storage'
-import type { ProcessResult } from '@/design-tool/types/process-result'
+import type { ProcessResult } from '@/features/design-tool/types/process-result'
 
 const STORAGE_KEY = 'rej-studio:job-history'
 const MAX_ENTRIES = 50

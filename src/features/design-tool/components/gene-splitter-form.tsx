@@ -18,12 +18,12 @@ import {
   AccordionTrigger,
   AccordionContent,
 } from '@/components/ui/accordion'
-import type { DesignToolSpecies } from '@/design-tool/types/species-options'
-import type { ProcessResult } from '@/design-tool/types/process-result'
+import type { DesignToolSpecies } from '@/features/design-tool/types/species-options'
+import type { ProcessResult } from '@/features/design-tool/types/process-result'
 import { validationSchema, FormValues } from './form-schema'
 import { formatOptionsForReport, buildJobParams } from './form-handler'
-import { useJob } from '@/hooks/use-job'
-import { useJobHistory } from '@/hooks/use-job-history'
+import { useJob } from '@/features/design-tool/hooks/use-job'
+import { useJobHistory } from '@/features/design-tool/hooks/use-job-history'
 import { CustomizationOptions } from './customization-options'
 import { SpeciesOptions } from './species-options'
 import { CodonOptimizationOptions } from './optimization-options'

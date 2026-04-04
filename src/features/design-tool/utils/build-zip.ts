@@ -1,5 +1,5 @@
 import { zipSync, strToU8 } from 'fflate'
-import type { ProcessResult } from '@/design-tool/types/process-result'
+import type { ProcessResult } from '@/features/design-tool/types/process-result'
 
 /** Build the report text from a ProcessResult. */
 function buildReportText(result: ProcessResult, optionsUsed: string): string {

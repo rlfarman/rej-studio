@@ -8,7 +8,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar'
-import { useJobHistory, type JobHistoryEntry } from '@/hooks/use-job-history'
+import { useJobHistory, type JobHistoryEntry } from '@/features/design-tool/hooks/use-job-history'
 import { Button } from '@/components/ui/button'
 import { TruncatedText } from '@/components/truncated-text'
 

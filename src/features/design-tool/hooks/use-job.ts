@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { submitJob as submitJobAction, getJobStatus } from '@/actions/jobs'
-import type { ProcessResult } from '@/design-tool/types/process-result'
+import { submitJob as submitJobAction, getJobStatus } from '@/features/design-tool/api/jobs'
+import type { ProcessResult } from '@/features/design-tool/types/process-result'
 
 type JobStatus = 'idle' | 'submitting' | 'running' | 'completed' | 'failed'
 

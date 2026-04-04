@@ -10,7 +10,7 @@ import { SpeciesIcon } from '@/components/species-icon'
 import { cn } from '@/lib/utils'
 import { Dna } from 'lucide-react'
 import { useFormContext } from 'react-hook-form'
-import { DESIGN_TOOL_SPECIES_OPTIONS } from '../_types/species-options'
+import { DESIGN_TOOL_SPECIES_OPTIONS } from '../types/species-options'
 import { FormValues } from './form-schema'
 
 export function SpeciesOptions() {

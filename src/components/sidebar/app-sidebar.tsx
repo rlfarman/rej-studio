@@ -7,13 +7,13 @@ import {
   SidebarRail,
   SidebarFooter,
 } from '@/components/ui/sidebar'
-import { FavoriteGenes } from './favorite-genes'
-import { RecentGenes } from './recent-genes'
-import { RecentJobs } from './recent-jobs'
+import { FavoriteGenes } from '@/features/gene-search/components/favorites-panel'
+import { RecentGenes } from '@/features/gene-search/components/recent-genes-panel'
+import { RecentJobs } from '@/features/design-tool/components/recent-jobs-panel'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { SidebarToggle } from '@/components/sidebar-toggle'
 import { DataTransfer } from './data-transfer'
-import type { JobHistoryEntry } from '@/hooks/use-job-history'
+import type { JobHistoryEntry } from '@/features/design-tool/hooks/use-job-history'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 

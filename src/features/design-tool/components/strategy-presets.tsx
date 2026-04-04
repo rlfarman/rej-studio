@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useFormContext } from 'react-hook-form'
 import { cn } from '@/lib/utils'
-import { PRESETS, PRESET_KEYS } from '@/design-tool/lib/presets'
+import { PRESETS, PRESET_KEYS } from '@/features/design-tool/utils/presets'
 import type { FormValues } from './form-schema'
 
 export function StrategyPresets() {

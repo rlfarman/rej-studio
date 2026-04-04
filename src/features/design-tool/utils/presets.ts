@@ -1,4 +1,4 @@
-import type { FormValues } from '../_components/form-schema'
+import type { FormValues } from '../types/form-schema'
 
 export interface PresetConfig {
   label: string

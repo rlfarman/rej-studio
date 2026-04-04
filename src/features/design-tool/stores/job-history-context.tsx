@@ -8,7 +8,7 @@ import {
   useMemo,
   type ReactNode,
 } from 'react'
-import type { JobHistoryEntry } from '@/hooks/use-job-history'
+import type { JobHistoryEntry } from '@/features/design-tool/hooks/use-job-history'
 
 interface JobHistoryContextValue {
   selectedEntry: JobHistoryEntry | null
