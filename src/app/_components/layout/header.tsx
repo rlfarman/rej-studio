@@ -1,7 +1,7 @@
 'use client'
 import Link from 'next/link'
 import { WandSparkles } from 'lucide-react'
-import { SpeciesSelect } from '@/components/header/species-select'
+import { SpeciesSelect } from '@/components/species-select'
 import { GeneSearch } from '@/features/gene-search/components/gene-search'
 import { searchGenes } from '@/features/gene-search/api/genes'
 import { usePathname } from 'next/navigation'
