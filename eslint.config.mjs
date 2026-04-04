@@ -1,5 +1,37 @@
+import { readdirSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
+import { dirname, join } from 'node:path'
 import nextConfig from 'eslint-config-next'
 import reactHooks from 'eslint-plugin-react-hooks'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
+
+// Discover feature names from src/features/ at config load.
+// Adding or removing a feature requires no eslint changes.
+const FEATURES = readdirSync(join(__dirname, 'src/features'), {
+  withFileTypes: true,
+})
+  .filter((entry) => entry.isDirectory())
+  .map((entry) => entry.name)
+
+// Cross-feature imports are forbidden: for every (a, b) where a !== b,
+// a feature cannot import from another feature.
+const crossFeatureZones = FEATURES.flatMap((target) =>
+  FEATURES.filter((from) => from !== target).map((from) => ({
+    target: `./src/features/${target}`,
+    from: `./src/features/${from}`,
+    message:
+      'Cross-feature imports are forbidden. Move shared code to src/lib, src/components, or src/hooks.',
+  })),
+)
+
+// Shared layers cannot depend on features or app. Direction: shared -> features -> app.
+const SHARED_LAYERS = ['components', 'hooks', 'lib', 'context']
+const sharedLayerZones = SHARED_LAYERS.map((layer) => ({
+  target: `./src/${layer}`,
+  from: ['./src/features', './src/app'],
+  message: `Shared ${layer} cannot depend on features or app. The dependency direction is shared -> features -> app.`,
+}))
 
 const config = [
   ...nextConfig,
@@ -15,50 +47,12 @@ const config = [
   {
     files: ['src/**/*.{ts,tsx}'],
     rules: {
-      // Enforce bulletproof-react dependency direction: shared -> features -> app
       'import/no-restricted-paths': [
         'error',
         {
           zones: [
-            // Features cannot import from each other
-            {
-              target: './src/features/gene-search',
-              from: './src/features/design-tool',
-              message:
-                'Cross-feature imports are forbidden. Move shared code to src/lib, src/components, or src/hooks.',
-            },
-            {
-              target: './src/features/design-tool',
-              from: './src/features/gene-search',
-              message:
-                'Cross-feature imports are forbidden. Move shared code to src/lib, src/components, or src/hooks.',
-            },
-            // Shared code cannot import from features or app
-            {
-              target: './src/components',
-              from: ['./src/features', './src/app'],
-              message:
-                'Shared components cannot depend on features or app. The dependency direction is shared -> features -> app.',
-            },
-            {
-              target: './src/hooks',
-              from: ['./src/features', './src/app'],
-              message:
-                'Shared hooks cannot depend on features or app. The dependency direction is shared -> features -> app.',
-            },
-            {
-              target: './src/lib',
-              from: ['./src/features', './src/app'],
-              message:
-                'Shared lib cannot depend on features or app. The dependency direction is shared -> features -> app.',
-            },
-            {
-              target: './src/context',
-              from: ['./src/features', './src/app'],
-              message:
-                'Shared context cannot depend on features or app. The dependency direction is shared -> features -> app.',
-            },
-            // Features cannot import from app
+            ...crossFeatureZones,
+            ...sharedLayerZones,
             {
               target: './src/features',
               from: './src/app',
