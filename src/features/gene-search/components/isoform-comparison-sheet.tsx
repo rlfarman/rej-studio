@@ -26,7 +26,7 @@ import {
   assessDesignSuitability,
   getSuitabilityConfig,
 } from '@/lib/design-suitability'
-import type { IsoformListItem } from '@/lib/domain-types'
+import type { IsoformListItem } from '@/features/gene-search/types/domain-types'
 
 interface IsoformComparisonSheetProps {
   isoforms: IsoformListItem[]

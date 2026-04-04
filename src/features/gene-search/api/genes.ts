@@ -3,7 +3,7 @@
 import { db } from '@/drizzle/db'
 import { SelectGene, genes, isoforms } from '@/drizzle/schema'
 import { sql, eq } from 'drizzle-orm'
-import { ENST_REGEX, ENSG_REGEX } from '@/lib/regex'
+import { ENST_REGEX, ENSG_REGEX } from '@/features/gene-search/utils/ensembl-regex'
 import type { SpeciesFilter } from '@/lib/species'
 
 export type GeneSearchResult = Pick<

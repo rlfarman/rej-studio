@@ -8,7 +8,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar'
-import { useRecentGenes } from '@/context/recent-genes-context'
+import { useRecentGenes } from '@/features/gene-search/stores/recent-genes-context'
 import Link from 'next/link'
 import { geneHref } from '@/lib/species'
 import { Button } from '@/components/ui/button'

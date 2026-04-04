@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react'
 import { useSpeciesContext } from '@/context/species-context'
-import type { IsoformListItem } from '@/lib/domain-types'
+import type { IsoformListItem } from '@/features/gene-search/types/domain-types'
 
 interface IsoformSummaryProps {
   isoforms: IsoformListItem[]

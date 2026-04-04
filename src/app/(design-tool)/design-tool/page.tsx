@@ -1,4 +1,4 @@
-import { getIsoformAndGeneByIsoformId } from '@/actions/isoforms'
+import { getIsoformAndGeneByIsoformId } from '@/features/gene-search/api/isoforms'
 import { GeneSplitterForm } from '@/design-tool/components/gene-splitter-form'
 import type { DesignToolSpecies } from './_types/species-options'
 import { isSpecies } from '@/lib/species'

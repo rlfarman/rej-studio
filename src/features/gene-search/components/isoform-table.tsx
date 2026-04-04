@@ -45,7 +45,7 @@ import {
 } from '@/lib/design-suitability'
 import { IsoformValidationBadges } from './isoform-validation-badges'
 import { IsoformComparisonSheet } from './isoform-comparison-sheet'
-import type { IsoformListItem } from '@/lib/domain-types'
+import type { IsoformListItem } from '@/features/gene-search/types/domain-types'
 
 interface IsoformListProps {
   isoforms: IsoformListItem[]

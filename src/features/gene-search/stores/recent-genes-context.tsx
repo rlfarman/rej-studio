@@ -8,7 +8,7 @@ import {
   ReactNode,
 } from 'react'
 import { useLocalStorage } from '@/lib/use-local-storage'
-import type { SavedGene } from '@/lib/domain-types'
+import type { SavedGene } from '@/features/gene-search/types/domain-types'
 
 interface RecentGenesContextValue {
   recentGenes: SavedGene[]

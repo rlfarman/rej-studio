@@ -8,13 +8,13 @@ import {
   CommandSeparator,
 } from '@/components/ui/command'
 import Link from 'next/link'
-import type { GeneSearchResult } from '@/actions/genes'
+import type { GeneSearchResult } from '@/features/gene-search/api/genes'
 import { SpeciesIcon } from '@/components/species-icon'
 import { TruncatedText } from '@/components/truncated-text'
-import { HighlightMatch } from '@/lib/highlight-match'
+import { HighlightMatch } from '@/features/gene-search/utils/highlight-match'
 import { useState } from 'react'
 import { ClockIcon, HeartIcon } from 'lucide-react'
-import type { SavedGene } from '@/lib/domain-types'
+import type { SavedGene } from '@/features/gene-search/types/domain-types'
 
 export function GeneResultsLoading() {
   return (

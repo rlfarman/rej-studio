@@ -1,6 +1,6 @@
 import Link from 'next/link'
-import { GeneSearch } from '@/components/gene-search'
-import { searchGenes } from '@/actions/genes'
+import { GeneSearch } from '@/features/gene-search/components/gene-search'
+import { searchGenes } from '@/features/gene-search/api/genes'
 import { DnaIcon } from '@/components/dna-icon'
 import { Hero, HeroItem, DnaFloat } from './_components/hero'
 

@@ -1,4 +1,4 @@
-import { searchGenes } from '@/actions/genes'
+import { searchGenes } from '@/features/gene-search/api/genes'
 import { geneHref, type SpeciesFilter } from '@/lib/species'
 import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'

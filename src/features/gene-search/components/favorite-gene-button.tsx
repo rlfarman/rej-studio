@@ -1,10 +1,10 @@
 'use client'
 import { Button } from '@/components/ui/button'
 import { Star } from 'lucide-react'
-import { useFavoriteGenes } from '@/context/favorite-genes-context'
+import { useFavoriteGenes } from '@/features/gene-search/stores/favorite-genes-context'
 import { AnimatePresence, m } from 'motion/react'
 import { popSpring } from '@/lib/motion'
-import type { SavedGene } from '@/lib/domain-types'
+import type { SavedGene } from '@/features/gene-search/types/domain-types'
 
 interface FavoriteButtonProps {
   gene: SavedGene

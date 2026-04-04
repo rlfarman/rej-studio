@@ -2,15 +2,15 @@
 import { useEffect, useState, useSyncExternalStore } from 'react'
 import { CommandDialog } from '@/components/ui/command'
 import { useRouter } from 'next/navigation'
-import { type GeneSearchResult } from '@/actions/genes'
+import { type GeneSearchResult } from '@/features/gene-search/api/genes'
 import { Button } from './ui/button'
 import { SearchIcon } from 'lucide-react'
-import { useGeneSearch } from '@/hooks/use-gene-search'
+import { useGeneSearch } from '@/features/gene-search/hooks/use-gene-search'
 import { GeneSearchCommand } from './gene-search/gene-search-command'
-import { useRecentGenes } from '@/context/recent-genes-context'
-import { useFavoriteGenes } from '@/context/favorite-genes-context'
+import { useRecentGenes } from '@/features/gene-search/stores/recent-genes-context'
+import { useFavoriteGenes } from '@/features/gene-search/stores/favorite-genes-context'
 import { geneHref, type SpeciesFilter } from '@/lib/species'
-import type { SavedGene } from '@/lib/domain-types'
+import type { SavedGene } from '@/features/gene-search/types/domain-types'
 
 interface GeneSearchProperties {
   searchGenes: (

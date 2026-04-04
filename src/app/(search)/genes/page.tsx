@@ -1,9 +1,9 @@
-import { searchGenes } from '@/actions/genes'
-import { GeneSearch } from '@/components/gene-search'
+import { searchGenes } from '@/features/gene-search/api/genes'
+import { GeneSearch } from '@/features/gene-search/components/gene-search'
 import {
   GeneSearchResults,
   GeneSearchResultsLoading,
-} from '@/components/gene-search/gene-search-results'
+} from '@/features/gene-search/components/gene-search-results'
 import { isSpeciesFilter } from '@/lib/species'
 import type { SpeciesFilter } from '@/lib/species'
 import { Metadata } from 'next'
