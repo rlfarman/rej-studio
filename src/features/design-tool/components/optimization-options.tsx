@@ -7,7 +7,7 @@ import {
   FormDescription,
 } from '@/components/ui/form'
 import { Checkbox } from '@/components/ui/checkbox'
-import { FormValues } from './form-schema'
+import { FormValues } from '../types/form-schema'
 
 export function CodonOptimizationOptions() {
   const { control } = useFormContext<FormValues>()

@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/form'
 import { Button } from '@/components/ui/button'
 import { Upload } from 'lucide-react'
-import { FormValues } from './form-schema'
+import { FormValues } from '../types/form-schema'
 import { SequenceWarnings } from './sequence-warnings'
 import { SequenceHighlight } from './sequence-highlight'
 import { cn } from '@/lib/utils'
@@ -51,7 +51,9 @@ export function CodingSequenceInput() {
           `${removedHeaders} header${removedHeaders > 1 ? 's' : ''} stripped`,
         )
       if (removedChars > 0)
-        parts.push(`${removedChars} non-nucleotide character${removedChars > 1 ? 's' : ''} removed`)
+        parts.push(
+          `${removedChars} non-nucleotide character${removedChars > 1 ? 's' : ''} removed`,
+        )
 
       if (parts.length > 0) {
         toast.info(`${source}: ${parts.join(', ')}.`)
@@ -161,7 +163,9 @@ export function CodingSequenceInput() {
                 ref={(el) => {
                   // Merge refs: react-hook-form's ref + our local ref
                   field.ref(el)
-                  ;(textareaRef as React.MutableRefObject<HTMLTextAreaElement | null>).current = el
+                  ;(
+                    textareaRef as React.MutableRefObject<HTMLTextAreaElement | null>
+                  ).current = el
                 }}
                 onPaste={handlePaste}
                 onScroll={syncScroll}
@@ -170,7 +174,7 @@ export function CodingSequenceInput() {
                   'border-input placeholder:text-muted-foreground selection:bg-primary/30 relative flex w-full min-w-0 rounded-md border bg-transparent shadow-xs transition-[color,box-shadow] outline-none disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
                   'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
                   'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
-                  'resize-y text-transparent caret-foreground',
+                  'caret-foreground resize-y text-transparent',
                 )}
               />
             </div>

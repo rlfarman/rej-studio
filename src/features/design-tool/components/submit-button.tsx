@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useFormContext } from 'react-hook-form'
 import { Button } from '@/components/ui/button'
 import { Loader2, Check, Play } from 'lucide-react'
-import { FormValues } from './form-schema'
+import { FormValues } from '../types/form-schema'
 import { AnimatePresence, m } from 'motion/react'
 import { quickFade, softSpring } from '@/lib/motion'
 

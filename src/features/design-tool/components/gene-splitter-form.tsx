@@ -20,8 +20,8 @@ import {
 } from '@/components/ui/accordion'
 import type { DesignToolSpecies } from '@/features/design-tool/types/species-options'
 import type { ProcessResult } from '@/features/design-tool/types/process-result'
-import { validationSchema, FormValues } from './form-schema'
-import { formatOptionsForReport, buildJobParams } from './form-handler'
+import { validationSchema, FormValues } from '../types/form-schema'
+import { formatOptionsForReport, buildJobParams } from '../utils/form-handler'
 import { useJob } from '@/features/design-tool/hooks/use-job'
 import { useJobHistory } from '@/features/design-tool/hooks/use-job-history'
 import { CustomizationOptions } from './customization-options'
@@ -129,7 +129,7 @@ export function GeneSplitterForm({
 
   return (
     <Form {...methods}>
-      {/* eslint-disable-next-line react-hooks/refs -- onSubmit is an event handler, ref is only accessed after async await */}
+      {}
       <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-6">
         {/* ── Card 1: Input ── */}
         <Card>
@@ -238,7 +238,10 @@ export function GeneSplitterForm({
 
         {result && (
           <div ref={resultsRef}>
-            <ResultsPanel result={result} optionsUsed={formatOptionsForReport(methods.getValues())} />
+            <ResultsPanel
+              result={result}
+              optionsUsed={formatOptionsForReport(methods.getValues())}
+            />
           </div>
         )}
       </form>

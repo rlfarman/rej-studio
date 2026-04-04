@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils'
 import { Dna } from 'lucide-react'
 import { useFormContext } from 'react-hook-form'
 import { DESIGN_TOOL_SPECIES_OPTIONS } from '../types/species-options'
-import { FormValues } from './form-schema'
+import { FormValues } from '../types/form-schema'
 
 export function SpeciesOptions() {
   const { control } = useFormContext<FormValues>()
@@ -48,9 +48,17 @@ export function SpeciesOptions() {
                     {value === 'none' ? (
                       <Dna className="text-muted-foreground size-4" />
                     ) : (
-                      <SpeciesIcon species={value} className="text-muted-foreground size-4" />
+                      <SpeciesIcon
+                        species={value}
+                        className="text-muted-foreground size-4"
+                      />
                     )}
-                    <span className={cn('text-sm font-medium', isActive && 'text-primary')}>
+                    <span
+                      className={cn(
+                        'text-sm font-medium',
+                        isActive && 'text-primary',
+                      )}
+                    >
                       {label}
                     </span>
                   </button>

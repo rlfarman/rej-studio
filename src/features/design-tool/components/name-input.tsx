@@ -8,7 +8,7 @@ import {
   FormAssistiveText,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import { FormValues } from './form-schema'
+import { FormValues } from '../types/form-schema'
 import { cn } from '@/lib/utils'
 
 const MAX_NAME_LENGTH = 250

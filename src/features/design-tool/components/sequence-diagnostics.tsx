@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react'
 import { useFormContext } from 'react-hook-form'
-import { FormValues } from './form-schema'
+import { FormValues } from '../types/form-schema'
 import {
   DiagBadge,
   lengthCheck,

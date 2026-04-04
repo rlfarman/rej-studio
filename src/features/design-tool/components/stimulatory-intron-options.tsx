@@ -7,7 +7,7 @@ import {
   FormDescription,
 } from '@/components/ui/form'
 import { Checkbox } from '@/components/ui/checkbox'
-import { FormValues } from './form-schema'
+import { FormValues } from '../types/form-schema'
 
 export function FiveFragmentOptions() {
   const { control } = useFormContext<FormValues>()
@@ -57,8 +57,8 @@ export function ThreeFragmentOptions() {
             <FormLabel>3' Stimulatory Intron</FormLabel>
             <FormDescription>
               Inserts a stimulatory intron downstream of the main split point to
-              boost expression of the 3&apos; fragment. Placed ~150 bp after
-              the junction at the nearest compatible splice site.
+              boost expression of the 3&apos; fragment. Placed ~150 bp after the
+              junction at the nearest compatible splice site.
             </FormDescription>
           </div>
         </FormItem>

@@ -12,7 +12,7 @@ import {
   FormAssistiveText,
   FormField,
 } from '@/components/ui/form'
-import { FormValues } from './form-schema'
+import { FormValues } from '../types/form-schema'
 import { assessFragmentBalance } from '@/lib/sequence-utils'
 
 export function DNASplicer() {

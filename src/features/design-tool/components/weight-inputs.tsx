@@ -9,7 +9,7 @@ import {
   FormDescription,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import { FormValues } from './form-schema'
+import { FormValues } from '../types/form-schema'
 
 const WEIGHT_HELP =
   '1 = gentle nudge, 10 = strong preference, 50+ = aggressively prioritize over other objectives.'

@@ -3,10 +3,10 @@ import { useEffect, useState, useSyncExternalStore } from 'react'
 import { CommandDialog } from '@/components/ui/command'
 import { useRouter } from 'next/navigation'
 import { type GeneSearchResult } from '@/features/gene-search/api/genes'
-import { Button } from './ui/button'
+import { Button } from '@/components/ui/button'
 import { SearchIcon } from 'lucide-react'
 import { useGeneSearch } from '@/features/gene-search/hooks/use-gene-search'
-import { GeneSearchCommand } from './gene-search/gene-search-command'
+import { GeneSearchCommand } from './gene-search-command'
 import { useRecentGenes } from '@/features/gene-search/stores/recent-genes-context'
 import { useFavoriteGenes } from '@/features/gene-search/stores/favorite-genes-context'
 import { geneHref, type SpeciesFilter } from '@/lib/species'
@@ -103,7 +103,6 @@ export function GeneSearch({
             error={error}
             recentGenes={recentGenes}
             favoriteGenes={favoriteGenes}
-
           />
         </CommandDialog>
       </div>

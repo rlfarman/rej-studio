@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/tooltip'
 import { Suspense } from 'react'
 import { Button } from '@/components/ui/button'
-import { SidebarTrigger } from './ui/sidebar'
+import { SidebarTrigger } from '@/components/ui/sidebar'
 
 function GeneSearchTooltip() {
   return (
@@ -21,7 +21,7 @@ function GeneSearchTooltip() {
         <Button variant="ghost" asChild>
           <Link href="/design-tool" aria-label="Go to Design Tool">
             <WandSparkles className="size-5" />
-              Design Tool
+            Design Tool
           </Link>
         </Button>
       </TooltipTrigger>

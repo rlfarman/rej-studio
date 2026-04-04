@@ -3,7 +3,7 @@ import { useMemo } from 'react'
 import { useFormContext } from 'react-hook-form'
 import { TriangleAlert, Info } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { FormValues } from './form-schema'
+import { FormValues } from '../types/form-schema'
 
 /** Typical AAV packaging capacity in bases (excluding ITRs, promoter, polyA). */
 const AAV_PRACTICAL_LIMIT_BP = 4700
@@ -115,7 +115,11 @@ export function SequenceWarnings() {
   if (warnings.length === 0) return null
 
   return (
-    <ul className="mt-2 space-y-1.5" role="status" aria-label="Sequence warnings">
+    <ul
+      className="mt-2 space-y-1.5"
+      role="status"
+      aria-label="Sequence warnings"
+    >
       {warnings.map((w) => (
         <li
           key={w.key}

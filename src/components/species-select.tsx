@@ -8,7 +8,7 @@ import {
   SelectLabel,
   SelectItem,
 } from '@/components/ui/select'
-import { SpeciesIcon } from '../species-icon'
+import { SpeciesIcon } from './species-icon'
 import { useSpeciesContext } from '@/context/species-context'
 
 interface SpeciesSelectProps {

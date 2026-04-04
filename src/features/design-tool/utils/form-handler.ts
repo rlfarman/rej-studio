@@ -1,4 +1,4 @@
-import type { FormValues } from './form-schema'
+import type { FormValues } from '../types/form-schema'
 
 export function buildJobParams(values: FormValues) {
   return {
