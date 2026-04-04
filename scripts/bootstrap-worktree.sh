@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Bootstrap a git worktree so the app can run from it.
 #
-# Symlinks venv/ and .env from the main repo, then runs npm install.
+# Symlinks venv/ and .env from the main repo, then runs pnpm install.
 # Safe to re-run: skips steps that are already done.
 set -euo pipefail
 
@@ -43,10 +43,10 @@ fi
 # Install Node deps in the worktree. Can't share node_modules across worktrees
 # safely (Next.js build state leaks) — each worktree needs its own.
 if [ ! -d "$WORKTREE_ROOT/node_modules" ]; then
-  echo "Running npm install..."
-  (cd "$WORKTREE_ROOT" && npm install)
+  echo "Running pnpm install..."
+  (cd "$WORKTREE_ROOT" && pnpm install)
 else
-  echo "node_modules present — skipping npm install (run manually if package.json changed)."
+  echo "node_modules present — skipping pnpm install (run manually if package.json changed)."
 fi
 
-echo "Bootstrap complete. You can now run: npm run dev"
+echo "Bootstrap complete. You can now run: pnpm dev"
