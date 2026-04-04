@@ -16,7 +16,7 @@ REJ Studio is a bioinformatics web app for RNA End-Joining sequence design. User
 | Path           | Purpose                                                                      |
 | -------------- | ---------------------------------------------------------------------------- |
 | `app/`         | Next.js pages and layouts (App Router)                                       |
-| `api/`         | FastAPI Python backend (`index.py`, `algorithm.py`)                          |
+| `algorithm/`   | FastAPI Python backend (`index.py`, `algorithm.py`)                          |
 | `actions/`     | Next.js server actions (genes, isoforms, jobs, favorites, searches, session) |
 | `components/`  | React components; `components/ui/` is shadcn/ui                              |
 | `context/`     | React context providers (favorites, recent genes, species)                   |
@@ -64,5 +64,5 @@ No test suite is currently configured.
 
 - **Adding a new UI component**: Use `npx shadcn@latest add <component>`. Components go in `components/ui/`.
 - **Adding a server action**: Create or update a file in `actions/`. Import `db` from `drizzle/db.ts`.
-- **Modifying the optimization algorithm**: Edit `api/algorithm.py`. The FastAPI endpoint is in `api/index.py`.
+- **Modifying the optimization algorithm**: Edit `algorithm/algorithm.py`. The FastAPI endpoint is in `algorithm/index.py`.
 - **Database schema changes**: Edit `drizzle/schema.ts`, then generate and run migrations with Drizzle Kit.

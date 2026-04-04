@@ -11,7 +11,7 @@ pip install modal
 modal setup
 ```
 
-2. Deploy (the algorithm is sourced from `api/algorithm.py` automatically):
+2. Deploy (the algorithm is sourced from `algorithm/algorithm.py` automatically):
 
 ```bash
 modal deploy modal/app.py
