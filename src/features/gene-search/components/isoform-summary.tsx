@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
-import { useSpeciesContext } from '@/context/species-context'
+import { useSpeciesContext } from '@/stores/species-store'
 import type { IsoformListItem } from '@/features/gene-search/types/domain-types'
 
 interface IsoformSummaryProps {

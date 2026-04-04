@@ -1,5 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { submitJob as submitJobAction, getJobStatus } from '@/features/design-tool/api/jobs'
+import {
+  submitJob as submitJobAction,
+  getJobStatus,
+} from '@/features/design-tool/api/jobs'
 import type { ProcessResult } from '@/features/design-tool/types/process-result'
 
 type JobStatus = 'idle' | 'submitting' | 'running' | 'completed' | 'failed'
@@ -74,9 +77,7 @@ export function useJob(): UseJobReturn {
           } else if (data.status === 'failed') {
             clearPolling()
             clearActiveJob()
-            setError(
-              (data.result?.error as string) ?? 'Job failed',
-            )
+            setError((data.result?.error as string) ?? 'Job failed')
             setStatus('failed')
           } else if (data.status === 'not_found') {
             clearPolling()
@@ -91,9 +92,7 @@ export function useJob(): UseJobReturn {
             clearPolling()
             clearActiveJob()
             setError(
-              err instanceof Error
-                ? err.message
-                : 'Failed to check job status',
+              err instanceof Error ? err.message : 'Failed to check job status',
             )
             setStatus('failed')
           }
@@ -108,6 +107,7 @@ export function useJob(): UseJobReturn {
   useEffect(() => {
     const activeJobId = loadActiveJob()
     if (activeJobId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- resuming async polling from persisted state
       setStatus('running')
       pollJob(activeJobId)
     }
@@ -138,9 +138,7 @@ export function useJob(): UseJobReturn {
         setStatus('running')
         pollJob(jobId)
       } catch (err) {
-        setError(
-          err instanceof Error ? err.message : 'Failed to submit job',
-        )
+        setError(err instanceof Error ? err.message : 'Failed to submit job')
         setStatus('failed')
       }
     },

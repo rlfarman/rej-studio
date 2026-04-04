@@ -9,7 +9,7 @@ import {
   SelectItem,
 } from '@/components/ui/select'
 import { SpeciesIcon } from './species-icon'
-import { useSpeciesContext } from '@/context/species-context'
+import { useSpeciesContext } from '@/stores/species-store'
 
 interface SpeciesSelectProps {
   alwaysShowLabel?: boolean

@@ -9,8 +9,10 @@ export function ThemeToggle() {
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
 
-  // Avoid hydration mismatch
+  // Standard next-themes pattern: defer rendering until client mount to avoid
+  // hydration mismatch between server (no theme known) and client.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- detecting client-side mount
     setMounted(true)
   }, [])
 

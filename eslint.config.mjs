@@ -26,7 +26,7 @@ const crossFeatureZones = FEATURES.flatMap((target) =>
 )
 
 // Shared layers cannot depend on features or app. Direction: shared -> features -> app.
-const SHARED_LAYERS = ['components', 'hooks', 'lib', 'context']
+const SHARED_LAYERS = ['components', 'hooks', 'lib', 'stores']
 const sharedLayerZones = SHARED_LAYERS.map((layer) => ({
   target: `./src/${layer}`,
   from: ['./src/features', './src/app'],
