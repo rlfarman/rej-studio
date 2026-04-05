@@ -370,7 +370,7 @@ function ExpandableRow({
   title,
   summary,
   children,
-  defaultOpen = false,
+  defaultOpen = true,
 }: {
   title: string
   summary?: string
