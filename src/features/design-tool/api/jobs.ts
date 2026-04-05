@@ -9,9 +9,18 @@ export interface JobParams {
   options: Record<string, unknown>
 }
 
+export interface JobErrorPayload {
+  code: string
+  message: string
+  retriable: boolean
+}
+
 export interface JobStatusResult {
-  status: 'running' | 'completed' | 'failed' | 'not_found'
+  status: 'running' | 'completed' | 'failed' | 'cancelled' | 'not_found'
   result?: Record<string, unknown>
+  error?: JobErrorPayload
+  progress?: number
+  stage?: string
 }
 
 function isModalBackend() {
@@ -81,4 +90,27 @@ export async function getJobStatus(jobId: string): Promise<JobStatusResult> {
   // Local backend: result was returned inline from submitJob, so this
   // should not be called. Return not_found as a safeguard.
   return { status: 'not_found' }
+}
+
+export async function cancelJob(jobId: string): Promise<JobStatusResult> {
+  if (isModalBackend()) {
+    const response = await fetch(`${getModalUrl()}/jobs/${jobId}`, {
+      method: 'DELETE',
+    })
+    if (!response.ok) {
+      const text = await response.text()
+      throw new Error(`Modal API error: ${text}`)
+    }
+    return response.json()
+  }
+
+  // Local backend runs synchronously, so there's nothing to cancel.
+  return {
+    status: 'cancelled',
+    error: {
+      code: 'cancelled',
+      message: 'Job cancelled',
+      retriable: true,
+    },
+  }
 }

@@ -41,7 +41,8 @@ import { ResultsPanel } from './results-panel'
 import { SequenceDiagnostics } from './sequence-diagnostics'
 import { StrategyPresets } from './strategy-presets'
 import { toast } from 'sonner'
-import { CircleAlert } from 'lucide-react'
+import { CircleAlert, RotateCw } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 interface GeneSplitterFormProperties {
   defaultCodingSequence?: string
@@ -95,12 +96,21 @@ export function GeneSplitterForm({
 
   // Hydrate the form from a resumed URL job's stored formValues — once they
   // appear in history (localStorage isn't populated on first render).
+  // Guards against validation drift: if the schema has changed since this
+  // job was saved, `safeParse` will reject, and we drop back to defaults
+  // rather than silently loading an invalid form.
   React.useEffect(() => {
     if (didResetRef.current) return
-    if (job.formValues) {
-      methods.reset(job.formValues)
-      didResetRef.current = true
+    if (!job.formValues) return
+    const parsed = validationSchema.safeParse(job.formValues)
+    if (parsed.success) {
+      methods.reset(parsed.data)
+    } else {
+      toast.warning(
+        'Saved inputs from this job were incompatible with the current form — defaults were used instead.',
+      )
     }
+    didResetRef.current = true
   }, [job.formValues, methods])
 
   // React to status changes: display result and scroll on completion, toast
@@ -118,7 +128,7 @@ export function GeneSplitterForm({
     } else if (job.status === 'failed' && job.error && job.jobId) {
       if (!toastedJobsRef.current.has(job.jobId)) {
         toastedJobsRef.current.add(job.jobId)
-        toast.error(job.error)
+        toast.error(job.error.message)
       }
     }
   }, [job.status, job.result, job.error, job.jobId])
@@ -243,12 +253,40 @@ export function GeneSplitterForm({
 
         {job.status === 'failed' && job.error && (
           <Card className="border-destructive/50">
-            <CardContent className="flex items-start gap-3 pt-6">
-              <CircleAlert className="text-destructive mt-0.5 size-5 flex-shrink-0" />
-              <div className="space-y-1">
-                <p className="text-sm font-medium">Job failed</p>
-                <p className="text-muted-foreground text-sm">{job.error}</p>
+            <CardContent className="flex items-start justify-between gap-3 pt-6">
+              <div className="flex items-start gap-3">
+                <CircleAlert className="text-destructive mt-0.5 size-5 flex-shrink-0" />
+                <div className="space-y-1">
+                  <p className="text-sm font-medium">
+                    {job.error.code === 'timeout'
+                      ? 'Timed out'
+                      : job.error.code === 'not_found'
+                        ? 'Job unavailable'
+                        : job.error.code === 'network'
+                          ? 'Connection failed'
+                          : 'Job failed'}
+                  </p>
+                  <p className="text-muted-foreground text-sm">
+                    {job.error.message}
+                  </p>
+                </div>
               </div>
+              {job.error.retriable && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    methods
+                      .handleSubmit(onSubmit)()
+                      .catch(() => {})
+                  }
+                  className="flex-shrink-0"
+                >
+                  <RotateCw className="size-4" />
+                  Run again
+                </Button>
+              )}
             </CardContent>
           </Card>
         )}

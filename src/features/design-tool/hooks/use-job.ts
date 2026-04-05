@@ -1,10 +1,14 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
-import { submitJob as submitJobAction } from '@/features/design-tool/api/jobs'
+import {
+  submitJob as submitJobAction,
+  cancelJob as cancelJobAction,
+} from '@/features/design-tool/api/jobs'
 import { buildJobParams } from '@/features/design-tool/utils/form-handler'
 import {
   useJobHistory,
   type JobStatus as EntryStatus,
+  type JobError,
 } from '@/features/design-tool/hooks/use-job-history'
 import type { ProcessResult } from '@/features/design-tool/types/process-result'
 import type { FormValues } from '@/features/design-tool/types/form-schema'
@@ -19,11 +23,14 @@ interface UseJobOptions {
 
 interface UseJobReturn {
   submitJob: (values: FormValues) => Promise<void>
+  cancelJob: () => Promise<void>
   jobId: string | null
   status: JobStatus
   result: ProcessResult | null
-  error: string | null
+  error: JobError | null
   formValues: FormValues | null
+  progress: number | undefined
+  stage: string | undefined
   isLoading: boolean
 }
 
@@ -46,8 +53,12 @@ export function useJob({
   initialJobId = null,
 }: UseJobOptions = {}): UseJobReturn {
   const [jobId, setJobIdState] = useState<string | null>(initialJobId)
-  const { upsertEntry, getEntry } = useJobHistory()
-  const entry = jobId ? getEntry(jobId) : null
+  // Selector-scoped reads so this hook only re-renders when the specific
+  // entry it cares about changes.
+  const upsertEntry = useJobHistory((s) => s.upsertEntry)
+  const entry = useJobHistory(
+    (s) => s.entries.find((e) => e.id === jobId) ?? null,
+  )
 
   const setJobId = useCallback((next: string | null) => {
     setJobIdState(next)
@@ -59,10 +70,11 @@ export function useJob({
   // a running stub so the global watcher picks it up and polls.
   useEffect(() => {
     if (!initialJobId) return
-    if (!getEntry(initialJobId)) {
+    const existing = useJobHistory.getState().getEntry(initialJobId)
+    if (!existing) {
       upsertEntry({ id: initialJobId, status: 'running' })
     }
-    // upsertEntry and getEntry are stable; only the id matters here.
+    // upsertEntry is stable; only the id matters here.
   }, [initialJobId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const submitMutation = useMutation({
@@ -94,20 +106,44 @@ export function useJob({
     },
   })
 
+  const cancelMutation = useMutation({
+    mutationFn: async (id: string) => cancelJobAction(id),
+    onSuccess: (data, id) => {
+      // The watcher will also observe this on its next poll, but updating
+      // eagerly gives an instant UI response.
+      upsertEntry({
+        id,
+        status: 'cancelled',
+        error: data.error
+          ? { ...data.error, code: data.error.code as JobError['code'] }
+          : { code: 'cancelled', message: 'Cancelled', retriable: true },
+      })
+    },
+  })
+
+  const cancelJob = useCallback(async () => {
+    if (!jobId) return
+    await cancelMutation.mutateAsync(jobId)
+  }, [jobId, cancelMutation])
+
   // Derive unified status/result/error. Submit-in-flight and submit-errored
   // states come from the mutation; everything after that reads the entry.
   let status: JobStatus = 'idle'
   let result: ProcessResult | null = null
-  let error: string | null = null
+  let error: JobError | null = null
 
   if (submitMutation.isPending) {
     status = 'submitting'
   } else if (submitMutation.isError) {
     status = 'failed'
-    error =
-      submitMutation.error instanceof Error
-        ? submitMutation.error.message
-        : 'Failed to submit job'
+    error = {
+      code: 'network',
+      message:
+        submitMutation.error instanceof Error
+          ? submitMutation.error.message
+          : 'Failed to submit job',
+      retriable: true,
+    }
   } else if (entry) {
     status = entry.status
     result = entry.result
@@ -123,11 +159,14 @@ export function useJob({
 
   return {
     submitJob,
+    cancelJob,
     jobId,
     status,
     result,
     error,
     formValues: entry?.formValues ?? null,
+    progress: entry?.progress,
+    stage: entry?.stage,
     isLoading: status === 'submitting' || status === 'running',
   }
 }

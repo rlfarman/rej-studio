@@ -11,7 +11,24 @@ const MAX_ENTRIES = 50
 // poll was abandoned (tab closed, Modal call_id expired) and drop it.
 const STALE_RUNNING_TTL_MS = 24 * 60 * 60 * 1000
 
-export type JobStatus = 'running' | 'completed' | 'failed'
+export type JobStatus = 'running' | 'completed' | 'failed' | 'cancelled'
+
+// Structured failure shape. `code` lets the UI branch (retry vs user-action)
+// without string sniffing; `retriable` is the backend's hint about whether
+// the same inputs would likely succeed on another attempt.
+export type JobErrorCode =
+  | 'timeout'
+  | 'not_found'
+  | 'cancelled'
+  | 'backend'
+  | 'network'
+  | 'unknown'
+
+export interface JobError {
+  code: JobErrorCode
+  message: string
+  retriable: boolean
+}
 
 export interface JobHistoryEntry {
   id: string
@@ -21,10 +38,14 @@ export interface JobHistoryEntry {
   status: JobStatus
   // Populated when status === 'completed'.
   result: ProcessResult | null
-  // Populated when status === 'failed'.
-  error: string | null
+  // Populated when status === 'failed' or 'cancelled'.
+  error: JobError | null
   // Form values that produced this job. Optional for backwards-compat.
   formValues?: FormValues
+  // Backend progress signal, 0..1. Optional — backends may not emit it.
+  progress?: number
+  // Human-readable stage label (e.g. "optimizing", "packaging").
+  stage?: string
 }
 
 // Partial input for upserting an entry — status is required, everything else
@@ -34,8 +55,10 @@ interface UpsertInput {
   id: string
   status: JobStatus
   result?: ProcessResult | null
-  error?: string | null
+  error?: JobError | null
   formValues?: FormValues
+  progress?: number
+  stage?: string
 }
 
 interface JobHistoryState {
@@ -55,7 +78,15 @@ export const useJobHistory = create<JobHistoryState>()(
       // createdAt (so a running entry doesn't jump in the list when it
       // completes) and overlay any fields we've learned. Otherwise insert
       // at the top.
-      upsertEntry: ({ id, status, result, error, formValues }) => {
+      upsertEntry: ({
+        id,
+        status,
+        result,
+        error,
+        formValues,
+        progress,
+        stage,
+      }) => {
         set((state) => {
           const existing = state.entries.find((e) => e.id === id)
           const nextResult = result ?? existing?.result ?? null
@@ -70,6 +101,8 @@ export const useJobHistory = create<JobHistoryState>()(
             nextFormValues?.codingSequence.length ??
             existing?.sequenceLength ??
             0
+          // Terminal states clear progress; running states preserve it.
+          const isTerminal = status !== 'running'
           const entry: JobHistoryEntry = {
             id,
             name,
@@ -79,6 +112,8 @@ export const useJobHistory = create<JobHistoryState>()(
             result: nextResult,
             error: error ?? existing?.error ?? null,
             formValues: nextFormValues,
+            progress: isTerminal ? undefined : (progress ?? existing?.progress),
+            stage: isTerminal ? undefined : (stage ?? existing?.stage),
           }
           return {
             entries: [entry, ...state.entries.filter((e) => e.id !== id)].slice(
@@ -119,3 +154,14 @@ export const useJobHistory = create<JobHistoryState>()(
     },
   ),
 )
+
+// Cross-tab sync: when another tab writes to our localStorage key, rehydrate
+// so every open tab converges on the same history. Without this, a job
+// submitted in Tab A is invisible to Tab B, and two tabs can race to poll
+// and clobber each other's writes.
+if (typeof window !== 'undefined') {
+  window.addEventListener('storage', (event) => {
+    if (event.key !== STORAGE_KEY || event.newValue === null) return
+    void useJobHistory.persist.rehydrate()
+  })
+}

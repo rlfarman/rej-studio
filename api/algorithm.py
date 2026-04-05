@@ -167,13 +167,21 @@ def insert_wggw_motif(sequence, split_point, min_distance=0, direction=0):
     
     return sequence, None
 
-def runOptimization(CDS, OPTIONS):
+def runOptimization(CDS, OPTIONS, on_progress=None):
     """
     Optimize a coding sequence (CDS) based on provided options.
-    
+
     Returns a tuple:
         (optimized_sequence, objectives_before, objectives_after)
+
+    on_progress is an optional callable (fraction: float, stage: str) used
+    to surface progress to callers that want to report it (e.g. Modal web
+    endpoint polling a shared Dict). None by default so the synchronous
+    local FastAPI path stays callback-free.
     """
+    def _emit(frac, stage):
+        if on_progress is not None:
+            on_progress(frac, stage)
     CDS = CDS.upper()
     AAseq = biotools.translate(CDS)
     constraints = []
@@ -254,16 +262,20 @@ def runOptimization(CDS, OPTIONS):
         constraints.append(EnforceGCContent(location=(0, CDSlen, 1), mini=0.35, maxi=0.60))
     
     # Create and solve the optimization problem
+    _emit(0.10, 'Preparing constraints')
     problem = DnaOptimizationProblem(
         sequence=CDS,
         constraints=constraints,
         objectives=objectives,
     )
+    _emit(0.15, 'Resolving constraints')
     problem.resolve_constraints()
-    
+
     objectives_before = problem.objectives_text_summary()
+    _emit(0.45, 'Optimizing sequence')
     problem.optimize()
     objectives_after = problem.objectives_text_summary()
+    _emit(0.90, 'Finalizing')
     
     return problem.sequence, objectives_before, objectives_after
 
@@ -468,15 +480,15 @@ def replaceMarkersWithPlaceholders(seq_with_markers):
         print("Warning: No split separator found in processed sequence. Returning complete sequence as seq5.")
         return finalseq, ""
 
-def optimize_and_split(CDS, OPTIONS):
+def optimize_and_split(CDS, OPTIONS, on_progress=None):
     """
     Optimize a CDS and split it into final sequences.
-    
+
     Returns:
         tuple: (seq5, seq3, objectives_before, objectives_after, optimized_seq)
     """
     try:
-        optimized_seq, objectives_before, objectives_after = runOptimization(CDS, OPTIONS)
+        optimized_seq, objectives_before, objectives_after = runOptimization(CDS, OPTIONS, on_progress=on_progress)
         seq_with_markers = insertSplitMarkers(optimized_seq, OPTIONS)
         
         # Check for numeric markers in sequence which could cause translation errors
@@ -950,7 +962,7 @@ def process_single_request(CDS, name, OPTIONS, results_folder="/tmp/results"):
             f.write(f"CDS: {CDS[:100]}... (truncated if longer than 100 characters)\n")
         return error_report, None    
 
-def process_single_request_json(CDS, name, OPTIONS):
+def process_single_request_json(CDS, name, OPTIONS, on_progress=None):
     """
     Process a single coding sequence and return structured results as a dict.
     Created for the web application JSON API.
@@ -978,8 +990,13 @@ def process_single_request_json(CDS, name, OPTIONS):
     # Create a copy of OPTIONS without modifying the original
     options_copy = OPTIONS.copy()
 
+    if on_progress is not None:
+        on_progress(0.05, 'Validating sequence')
+
     # Run the optimization and splitting
-    seq5, seq3, obj_before, obj_after, optimized_seq = optimize_and_split(CDS, options_copy)
+    seq5, seq3, obj_before, obj_after, optimized_seq = optimize_and_split(
+        CDS, options_copy, on_progress=on_progress
+    )
 
     elapsed = _time.monotonic() - start
 
