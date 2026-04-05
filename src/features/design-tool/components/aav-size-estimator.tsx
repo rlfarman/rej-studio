@@ -12,8 +12,8 @@ import { PackageCheck, PackageX, Package } from 'lucide-react'
  * Typical AAV construct overhead:
  * ITRs ~290 bp + Promoter ~800 bp + polyA ~250 bp + regulatory ~200 bp = ~1540 bp
  */
-const AAV_OVERHEAD_BP = 1540
-const AAV_PACKAGING_LIMIT = 4700
+export const AAV_OVERHEAD_BP = 1540
+export const AAV_PACKAGING_LIMIT = 4700
 
 interface AavPreflightProps {
   sequenceLength: number
@@ -61,9 +61,7 @@ export function AavPreflight({ sequenceLength }: AavPreflightProps) {
           }
           className="gap-1 select-none"
         >
-          <StatusIcon
-            status={singleStatus === 'fits' ? 'fits' : dualStatus}
-          />
+          <StatusIcon status={singleStatus === 'fits' ? 'fits' : dualStatus} />
           {singleStatus === 'fits'
             ? 'Single AAV'
             : dualStatus === 'fits'
@@ -75,14 +73,12 @@ export function AavPreflight({ sequenceLength }: AavPreflightProps) {
       </TooltipTrigger>
       <TooltipContent className="max-w-64 text-xs">
         <p>
-          Estimated total: ~{singleTotal.toLocaleString()} bp (sequence +
-          ~{AAV_OVERHEAD_BP.toLocaleString()} bp overhead).
+          Estimated total: ~{singleTotal.toLocaleString()} bp (sequence + ~
+          {AAV_OVERHEAD_BP.toLocaleString()} bp overhead).
         </p>
         <p>AAV limit: ~{AAV_PACKAGING_LIMIT.toLocaleString()} bp.</p>
         {singleStatus !== 'fits' && (
-          <p>
-            Dual vector: ~{dualPerVector.toLocaleString()} bp per half.
-          </p>
+          <p>Dual vector: ~{dualPerVector.toLocaleString()} bp per half.</p>
         )}
       </TooltipContent>
     </Tooltip>
@@ -129,8 +125,8 @@ export function AavResults({ seq5Length, seq3Length }: AavResultsProps) {
             </Badge>
           </div>
           <span className="text-muted-foreground mt-1 text-[10px]">
-            {seq5Length.toLocaleString()} bp + ~{AAV_OVERHEAD_BP.toLocaleString()}{' '}
-            overhead
+            {seq5Length.toLocaleString()} bp + ~
+            {AAV_OVERHEAD_BP.toLocaleString()} overhead
           </span>
         </div>
         <div className="bg-muted/50 flex flex-col rounded-lg border p-3">
@@ -160,15 +156,15 @@ export function AavResults({ seq5Length, seq3Length }: AavResultsProps) {
             </Badge>
           </div>
           <span className="text-muted-foreground mt-1 text-[10px]">
-            {seq3Length.toLocaleString()} bp + ~{AAV_OVERHEAD_BP.toLocaleString()}{' '}
-            overhead
+            {seq3Length.toLocaleString()} bp + ~
+            {AAV_OVERHEAD_BP.toLocaleString()} overhead
           </span>
         </div>
       </div>
       <p className="text-muted-foreground text-[11px]">
         Estimates assume ~{AAV_OVERHEAD_BP.toLocaleString()} bp overhead (ITRs +
-        promoter + polyA + regulatory elements). AAV packaging limit is
-        ~{AAV_PACKAGING_LIMIT.toLocaleString()} bp.
+        promoter + polyA + regulatory elements). AAV packaging limit is ~
+        {AAV_PACKAGING_LIMIT.toLocaleString()} bp.
       </p>
     </div>
   )

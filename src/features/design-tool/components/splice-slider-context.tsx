@@ -1,9 +1,16 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useRef } from 'react'
 import { cn } from '@/lib/utils'
-import { findWggwMotifs, slidingGcContent } from '@/lib/bio/sequence-utils'
+import {
+  findWggwMotifs,
+  slidingGcContent,
+  localGcAt,
+  rankWggwByBalance,
+  computeGcPercent,
+} from '@/lib/bio/sequence-utils'
 import { translateCodon, AMINO_ACID_NAMES } from '@/lib/bio/genetic-code'
+import { AAV_OVERHEAD_BP, AAV_PACKAGING_LIMIT } from './aav-size-estimator'
 
 interface Props {
   sequence: string
@@ -13,22 +20,32 @@ interface Props {
 
 const MAX_WGGW_MARKERS = 200
 const CONTEXT_WINDOW = 6 // codons of context on each side of the split
+const LOCAL_GC_WINDOW = 40 // bp window for "local GC at cut"
 
 /**
- * Context strip that sits directly under the splice-junction slider:
- * - A GC micro-profile (40–60% target band) so users avoid splitting through
- *   high-GC / potentially structured regions
- * - WGGW candidate ticks aligned to the slider axis — clicking snaps the
- *   position to the nearest WGGW boundary
- * - Live frame-at-split readout showing the codon and amino acid being
- *   bisected, with ±2 codons of context
+ * Context strip that sits directly under the splice-junction slider. It
+ * surfaces raw, defensible measurements for the current cut rather than
+ * combining them into an arbitrary composite score:
+ *
+ * - Drag-to-set GC micro-profile with the 40–60% reference band
+ * - WGGW ticks aligned to the slider, snappable on click
+ * - Balanced WGGW candidates — every motif in the sequence ranked by
+ *   distance from a 50/50 split (single criterion: fragment balance)
+ * - Per-fragment length, GC%, and AAV fit (hard ~4.7kb packaging limit)
+ * - Codon-level frame-at-split readout with ±6 codons of context
  */
 export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
   const seqLen = sequence.length
+  const svgRef = useRef<SVGSVGElement>(null)
 
-  const { gcPoints, wggwMotifs, nearestWggw } = useMemo(() => {
+  const { gcPoints, wggwMotifs, nearestWggw, balancedWggw } = useMemo(() => {
     if (seqLen < 12) {
-      return { gcPoints: [], wggwMotifs: [], nearestWggw: null }
+      return {
+        gcPoints: [],
+        wggwMotifs: [],
+        nearestWggw: null,
+        balancedWggw: [],
+      }
     }
     // Window scales with sequence length: bigger windows for long CDSs,
     // tighter windows for short ones. 30–120bp range feels sensible.
@@ -38,24 +55,51 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
 
     const motifs = findWggwMotifs(sequence).slice(0, MAX_WGGW_MARKERS)
 
-    // Find the closest WGGW motif to the current position, for the "snap to
-    // nearest" button. Use the motif's midpoint as the snap target.
-    let nearest: { position: number; motif: string; distance: number } | null =
-      null
+    // Nearest WGGW to the current cut, for the "snap to nearest" button.
+    let nearest: {
+      position: number
+      motif: string
+      distance: number
+    } | null = null
     for (const m of motifs) {
-      const mid = m.position + 1 // WGGW is 4bp, split between bases 2 and 3
+      const mid = m.position + 1
       const d = Math.abs(mid - position)
       if (!nearest || d < nearest.distance) {
         nearest = { position: mid, motif: m.motif, distance: d }
       }
     }
 
-    return { gcPoints, wggwMotifs: motifs, nearestWggw: nearest }
+    const balancedWggw = rankWggwByBalance(sequence).slice(0, 3)
+
+    return { gcPoints, wggwMotifs: motifs, nearestWggw: nearest, balancedWggw }
   }, [sequence, seqLen, position])
+
+  const fragmentStats = useMemo(() => {
+    if (seqLen < 2) return null
+    const fiveSeq = sequence.slice(0, position)
+    const threeSeq = sequence.slice(position)
+    return {
+      five: {
+        length: fiveSeq.length,
+        gc: computeGcPercent(fiveSeq.toUpperCase()),
+        aavTotal: fiveSeq.length + AAV_OVERHEAD_BP,
+      },
+      three: {
+        length: threeSeq.length,
+        gc: computeGcPercent(threeSeq.toUpperCase()),
+        aavTotal: threeSeq.length + AAV_OVERHEAD_BP,
+      },
+    }
+  }, [sequence, position, seqLen])
 
   const frameContext = useMemo(() => {
     return buildFrameContext(sequence, position)
   }, [sequence, position])
+
+  const localGc = useMemo(
+    () => localGcAt(sequence, position, LOCAL_GC_WINDOW),
+    [sequence, position],
+  )
 
   if (seqLen < 12) return null
 
@@ -70,14 +114,152 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
     .join(' ')
 
   const positionPct = (position / seqLen) * 100
-  const nearestPct = nearestWggw ? (nearestWggw.position / seqLen) * 100 : null
+  const candidateSet = new Set(balancedWggw.map((c) => c.position))
+
+  // Drag-to-set: convert pointer X to a 1..seqLen-1 position.
+  const positionFromPointer = (clientX: number): number => {
+    const svg = svgRef.current
+    if (!svg) return position
+    const rect = svg.getBoundingClientRect()
+    const x = Math.max(0, Math.min(clientX - rect.left, rect.width))
+    const frac = rect.width > 0 ? x / rect.width : 0
+    return Math.max(1, Math.min(seqLen - 1, Math.round(frac * seqLen)))
+  }
+
+  const handleProfilePointerDown = (e: React.PointerEvent<SVGSVGElement>) => {
+    e.preventDefault()
+    const target = e.currentTarget
+    target.setPointerCapture(e.pointerId)
+    onSnap(positionFromPointer(e.clientX))
+    const handleMove = (ev: PointerEvent) => {
+      onSnap(positionFromPointer(ev.clientX))
+    }
+    const handleUp = () => {
+      if (target.hasPointerCapture(e.pointerId)) {
+        target.releasePointerCapture(e.pointerId)
+      }
+      target.removeEventListener('pointermove', handleMove)
+      target.removeEventListener('pointerup', handleUp)
+      target.removeEventListener('pointercancel', handleUp)
+    }
+    target.addEventListener('pointermove', handleMove)
+    target.addEventListener('pointerup', handleUp)
+    target.addEventListener('pointercancel', handleUp)
+  }
+
+  const balanceRatio =
+    fragmentStats &&
+    `${Math.round((fragmentStats.five.length / seqLen) * 100)} / ${Math.round(
+      (fragmentStats.three.length / seqLen) * 100,
+    )}`
 
   return (
     <div className="space-y-2">
+      {/* Raw-measurement strip — facts, no composite score */}
+      <div className="bg-muted/30 grid grid-cols-2 gap-x-3 gap-y-1 rounded-sm border px-2 py-1.5 text-[10px] md:grid-cols-4">
+        <Measurement
+          label="Balance"
+          value={balanceRatio ?? '—'}
+          unit="% 5′/3′"
+        />
+        <Measurement
+          label="Nearest WGGW"
+          value={
+            nearestWggw
+              ? nearestWggw.distance === 0
+                ? 'on motif'
+                : `${nearestWggw.distance.toLocaleString()} bp`
+              : 'none'
+          }
+          unit={nearestWggw ? nearestWggw.motif : undefined}
+          onClick={
+            nearestWggw && nearestWggw.distance > 0
+              ? () => onSnap(nearestWggw.position)
+              : undefined
+          }
+        />
+        <Measurement
+          label={`Local GC (±${LOCAL_GC_WINDOW / 2}bp)`}
+          value={`${localGc.toFixed(0)}`}
+          unit="%"
+        />
+        <Measurement
+          label="Frame"
+          value={
+            frameContext.frameOffset === 0
+              ? 'codon boundary'
+              : `+${frameContext.frameOffset} into codon`
+          }
+        />
+      </div>
+
+      {/* Balanced WGGW candidates — ranked by one criterion: |pos − len/2| */}
+      {balancedWggw.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2 text-[10px]">
+          <span
+            className="text-muted-foreground"
+            title="WGGW motifs ranked by distance from a 50/50 split"
+          >
+            Balanced WGGW motifs:
+          </span>
+          {balancedWggw.map((c, i) => {
+            const isCurrent = Math.abs(c.position - position) <= 1
+            const fiveAav = c.fivePrimeLength + AAV_OVERHEAD_BP
+            const threeAav = c.threePrimeLength + AAV_OVERHEAD_BP
+            const bothFit =
+              fiveAav <= AAV_PACKAGING_LIMIT && threeAav <= AAV_PACKAGING_LIMIT
+            return (
+              <button
+                type="button"
+                key={c.position}
+                onClick={() => onSnap(c.position)}
+                title={`${c.motif} at bp ${c.position.toLocaleString()} · 5′ ${c.fivePrimeLength.toLocaleString()} bp · 3′ ${c.threePrimeLength.toLocaleString()} bp · ${c.distanceFromCenter.toLocaleString()} bp from center`}
+                className={cn(
+                  'rounded-sm border px-1.5 py-0.5 font-mono tabular-nums transition-colors',
+                  isCurrent
+                    ? 'border-primary bg-primary/10 text-primary'
+                    : 'hover:border-primary/60 hover:text-foreground text-muted-foreground',
+                )}
+              >
+                #{i + 1} {c.motif}@{c.position.toLocaleString()}
+                {!bothFit && (
+                  <span
+                    className="ml-1 text-red-600 dark:text-red-400"
+                    title="One fragment + AAV overhead exceeds ~4,700 bp"
+                  >
+                    ⚠
+                  </span>
+                )}
+              </button>
+            )
+          })}
+        </div>
+      )}
+
+      {/* Per-fragment readout — length, GC%, AAV fit */}
+      {fragmentStats && (
+        <div className="grid grid-cols-2 gap-2 text-[10px]">
+          <FragmentPill
+            label="5′"
+            length={fragmentStats.five.length}
+            gc={fragmentStats.five.gc}
+            aavTotal={fragmentStats.five.aavTotal}
+          />
+          <FragmentPill
+            label="3′"
+            length={fragmentStats.three.length}
+            gc={fragmentStats.three.gc}
+            aavTotal={fragmentStats.three.aavTotal}
+          />
+        </div>
+      )}
+
       {/* GC profile + WGGW ticks, aligned to the slider axis above */}
       <div className="space-y-1">
         <div className="flex items-center justify-between text-[10px]">
-          <span className="text-muted-foreground">Split context</span>
+          <span className="text-muted-foreground">
+            Split context · <span className="italic">drag profile to set</span>
+          </span>
           <div className="text-muted-foreground flex items-center gap-3">
             <span className="flex items-center gap-1">
               <span className="bg-primary inline-block h-[2px] w-3" />
@@ -90,14 +272,15 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
           </div>
         </div>
         <div className="relative">
-          {/* SVG profile: target band (40-60%) shaded, GC polyline drawn on top */}
           <svg
+            ref={svgRef}
             viewBox="0 0 100 20"
             preserveAspectRatio="none"
-            className="bg-muted/30 h-8 w-full rounded-sm"
-            aria-label="GC content profile across sequence"
+            onPointerDown={handleProfilePointerDown}
+            className="bg-muted/30 h-8 w-full cursor-ew-resize touch-none rounded-sm select-none"
+            aria-label="GC content profile across sequence (drag to set split position)"
           >
-            {/* 40-60% target band */}
+            {/* 40-60% reference band */}
             <rect
               x={0}
               y={20 - (60 / 100) * 20}
@@ -132,7 +315,7 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
               y1={0}
               y2={20}
               className="stroke-foreground"
-              strokeWidth={1}
+              strokeWidth={1.5}
               vectorEffect="non-scaling-stroke"
             />
           </svg>
@@ -144,6 +327,7 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
               const x = (mid / seqLen) * 100
               const isNearest =
                 nearestWggw !== null && nearestWggw.position === mid
+              const isCandidate = candidateSet.has(mid)
               return (
                 <button
                   type="button"
@@ -153,9 +337,11 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
                   className={cn(
                     'absolute top-0 h-full -translate-x-1/2 cursor-pointer rounded-sm transition-all',
                     'hover:h-[140%] hover:bg-emerald-400',
-                    isNearest
-                      ? 'w-[2px] bg-emerald-500'
-                      : 'w-[1px] bg-emerald-500/60',
+                    isCandidate
+                      ? 'w-[2px] bg-amber-500'
+                      : isNearest
+                        ? 'w-[2px] bg-emerald-500'
+                        : 'w-[1px] bg-emerald-500/60',
                   )}
                   style={{ left: `${x}%` }}
                 />
@@ -163,36 +349,81 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
             })}
           </div>
         </div>
-        {nearestWggw && (
-          <div className="flex items-center justify-between text-[10px]">
-            <span className="text-muted-foreground">
-              Nearest WGGW:{' '}
-              <span className="text-foreground font-mono">
-                {nearestWggw.motif}
-              </span>{' '}
-              at bp {nearestWggw.position.toLocaleString()}
-              {nearestWggw.distance > 0 && (
-                <span className="text-muted-foreground">
-                  {' '}
-                  ({nearestWggw.distance.toLocaleString()} bp away)
-                </span>
-              )}
-            </span>
-            {nearestWggw.distance > 0 && (
-              <button
-                type="button"
-                onClick={() => onSnap(nearestWggw.position)}
-                className="text-primary hover:underline"
-              >
-                Snap here
-              </button>
-            )}
-          </div>
-        )}
       </div>
 
       {/* Frame-at-split readout */}
       <FrameAtSplit ctx={frameContext} position={position} />
+    </div>
+  )
+}
+
+function Measurement({
+  label,
+  value,
+  unit,
+  onClick,
+}: {
+  label: string
+  value: string
+  unit?: string
+  onClick?: () => void
+}) {
+  const content = (
+    <>
+      <div className="text-muted-foreground leading-tight">{label}</div>
+      <div className="font-mono tabular-nums">
+        <span className="text-foreground">{value}</span>
+        {unit && <span className="text-muted-foreground ml-1">{unit}</span>}
+      </div>
+    </>
+  )
+  if (onClick) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        className="hover:bg-muted/50 -m-1 rounded-sm p-1 text-left transition-colors"
+        title="Snap to nearest"
+      >
+        {content}
+      </button>
+    )
+  }
+  return <div>{content}</div>
+}
+
+function FragmentPill({
+  label,
+  length,
+  gc,
+  aavTotal,
+}: {
+  label: string
+  length: number
+  gc: number
+  aavTotal: number
+}) {
+  const fits = aavTotal <= AAV_PACKAGING_LIMIT
+  const tight = !fits && aavTotal <= AAV_PACKAGING_LIMIT + 300
+  const fitLabel = fits ? 'fits' : tight ? 'tight' : 'exceeds'
+  const fitColor = fits
+    ? 'text-emerald-600 dark:text-emerald-400'
+    : tight
+      ? 'text-amber-600 dark:text-amber-400'
+      : 'text-red-600 dark:text-red-400'
+  return (
+    <div
+      className="bg-muted/30 flex items-center justify-between gap-2 rounded-sm border px-2 py-1"
+      title={`${label} fragment: ${length.toLocaleString()} bp + ${AAV_OVERHEAD_BP.toLocaleString()} bp overhead = ${aavTotal.toLocaleString()} bp (AAV limit ${AAV_PACKAGING_LIMIT.toLocaleString()} bp)`}
+    >
+      <span className="text-muted-foreground font-medium">{label}</span>
+      <div className="flex items-center gap-2 font-mono tabular-nums">
+        <span className="text-foreground">{length.toLocaleString()} bp</span>
+        <span className="text-muted-foreground">{gc.toFixed(0)}% GC</span>
+        <span className={cn('font-medium', fitColor)} title="AAV packaging">
+          {fitLabel}
+        </span>
+      </div>
     </div>
   )
 }

@@ -121,6 +121,65 @@ export function findInvalidChars(seq: string): string[] {
   return [...invalid]
 }
 
+// ---------------------------------------------------------------------------
+// Splice-junction helpers
+// ---------------------------------------------------------------------------
+
+/** Local GC % in a window centered on `position` (1-based cut). */
+export function localGcAt(seq: string, position: number, window = 40): number {
+  const len = seq.length
+  if (len === 0) return 0
+  const half = Math.floor(window / 2)
+  const start = Math.max(0, position - half)
+  const end = Math.min(len, position + half)
+  let gc = 0
+  const upper = seq.toUpperCase()
+  for (let i = start; i < end; i++) {
+    const c = upper[i]
+    if (c === 'G' || c === 'C') gc++
+  }
+  const w = end - start
+  return w > 0 ? (gc / w) * 100 : 0
+}
+
+export interface WggwCandidate {
+  /** 1-based cut position at the motif midpoint (between bases 2 and 3). */
+  position: number
+  /** The matched WGGW tetramer (e.g. "TGGA"). */
+  motif: string
+  /** |position − seqLength/2|: distance from a 50/50 split, in bp. */
+  distanceFromCenter: number
+  /** 5' fragment length if the split is applied here. */
+  fivePrimeLength: number
+  /** 3' fragment length if the split is applied here. */
+  threePrimeLength: number
+}
+
+/**
+ * Return every WGGW motif in the sequence, ranked by proximity to a 50/50
+ * fragment split. This is an explicit, single-criterion ranking — "of the
+ * motifs that are actual REJ recognition substrates, which would produce
+ * the most balanced halves?" — not a composite score.
+ */
+export function rankWggwByBalance(sequence: string): WggwCandidate[] {
+  const len = sequence.length
+  if (len < 4) return []
+  const center = len / 2
+  const motifs = findWggwMotifs(sequence)
+  return motifs
+    .map((m): WggwCandidate => {
+      const cut = m.position + 1 // midpoint of the 4bp motif (1-based cut index)
+      return {
+        position: cut,
+        motif: m.motif,
+        distanceFromCenter: Math.abs(cut - center),
+        fivePrimeLength: cut,
+        threePrimeLength: len - cut,
+      }
+    })
+    .sort((a, b) => a.distanceFromCenter - b.distanceFromCenter)
+}
+
 export function assessFragmentBalance(
   splitPosition: number,
   seqLength: number,
