@@ -6,12 +6,11 @@ import {
   FormItem,
   FormLabel,
   FormControl,
-  FormAssistiveText,
 } from '@/components/ui/form'
 import { Button } from '@/components/ui/button'
 import { Upload } from 'lucide-react'
 import { FormValues } from '../types/form-schema'
-import { SequenceWarnings } from './sequence-warnings'
+import { SequenceDiagnostics } from './sequence-diagnostics'
 import { SequenceHighlight } from './sequence-highlight'
 import { GcSparkline } from '@/components/bio/gc-sparkline'
 import { CodonUsageStrip } from './codon-usage-strip'
@@ -183,20 +182,17 @@ export function CodingSequenceInput() {
               />
             </div>
           </FormControl>
-          <FormAssistiveText className="min-w-0">
-            <span className="flex min-h-5 items-start justify-between gap-4">
-              <span
-                className={cn(
-                  'shrink-0 tabular-nums',
-                  length > MAX_LENGTH
-                    ? 'text-destructive-foreground'
-                    : 'text-muted-foreground',
-                )}
-              >
-                {length.toLocaleString()} / {MAX_LENGTH.toLocaleString()}
-              </span>
-            </span>
-          </FormAssistiveText>
+          <p
+            className={cn(
+              'text-sm leading-5 tabular-nums',
+              length > MAX_LENGTH
+                ? 'text-destructive-foreground'
+                : 'text-muted-foreground',
+            )}
+          >
+            {length.toLocaleString()} / {MAX_LENGTH.toLocaleString()}
+          </p>
+          <SequenceDiagnostics />
           {value && value.length >= 60 && (
             <div className="space-y-2 pt-1">
               <GcSparkline sequence={value} />
@@ -205,7 +201,6 @@ export function CodingSequenceInput() {
               )}
             </div>
           )}
-          <SequenceWarnings />
         </FormItem>
       )}
     />

@@ -14,6 +14,7 @@ import {
   prematureStopCheck,
   homopolymerCheck,
   tandemRepeatCheck,
+  shortCdsCheck,
 } from '@/components/bio/diag-badge'
 import { AavPreflight } from './aav-size-estimator'
 
@@ -45,6 +46,8 @@ export function SequenceDiagnostics() {
     if (hp) checks.push(hp)
     const tr = tandemRepeatCheck(seq)
     if (tr) checks.push(tr)
+    const sc = shortCdsCheck(seq)
+    if (sc) checks.push(sc)
 
     return { checks, bpLength }
   }, [seq])
