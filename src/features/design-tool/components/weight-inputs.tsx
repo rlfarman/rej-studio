@@ -9,202 +9,248 @@ import {
   FormDescription,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import { cn } from '@/lib/utils'
 import { FormValues } from '../types/form-schema'
 
-const WEIGHT_HELP =
-  '1 = gentle nudge, 10 = strong preference, 50+ = aggressively prioritize over other objectives.'
+// Semantic tiers mapped to numeric weights. The algorithm takes a 0-100
+// weight, but in practice presets use 1-10 and useful range tops out ~50.
+// Surfacing these as named tiers matches the language in the help text
+// ("1 = gentle, 10 = strong, 50+ = aggressive") and removes the guesswork
+// of picking an arbitrary number.
+const TIERS = [
+  { label: 'Gentle', value: 1 },
+  { label: 'Moderate', value: 3 },
+  { label: 'Strong', value: 10 },
+  { label: 'Aggressive', value: 50 },
+] as const
 
-function WeightDescription({ text }: { text: string }) {
+function nearestTierIndex(value: number): number {
+  let bestIndex = 0
+  let bestDelta = Math.abs(value - TIERS[0].value)
+  for (let i = 1; i < TIERS.length; i++) {
+    const delta = Math.abs(value - TIERS[i].value)
+    if (delta < bestDelta) {
+      bestDelta = delta
+      bestIndex = i
+    }
+  }
+  return bestIndex
+}
+
+interface WeightFieldProperties {
+  name: keyof FormValues
+  label: string
+  description: string
+  disabled: boolean
+  disabledHint?: React.ReactNode
+}
+
+function WeightField({
+  name,
+  label,
+  description,
+  disabled,
+  disabledHint,
+}: WeightFieldProperties) {
+  const { control } = useFormContext<FormValues>()
+
   return (
-    <FormDescription>
-      <span className="text-muted-foreground block">{text}</span>
-      <span className="text-muted-foreground/70 block text-[11px]">
-        {WEIGHT_HELP}
-      </span>
-    </FormDescription>
+    <FormField
+      name={name}
+      control={control}
+      render={({ field }) => {
+        const numericValue =
+          typeof field.value === 'number' ? field.value : TIERS[0].value
+        const activeIndex = nearestTierIndex(numericValue)
+        const isCustom = TIERS[activeIndex].value !== numericValue
+
+        return (
+          <FormItem>
+            <div className="flex items-baseline justify-between gap-2">
+              <FormLabel
+                className={disabled ? 'text-muted-foreground' : undefined}
+              >
+                {label}
+              </FormLabel>
+              {!disabled && (
+                <span
+                  className={cn(
+                    'text-xs',
+                    isCustom ? 'text-muted-foreground' : 'text-primary',
+                  )}
+                >
+                  {isCustom
+                    ? `~ ${TIERS[activeIndex].label}`
+                    : TIERS[activeIndex].label}
+                </span>
+              )}
+            </div>
+            <FormControl>
+              <div className="flex items-stretch gap-2">
+                <div
+                  role="radiogroup"
+                  aria-label={`${label} tier`}
+                  className={cn(
+                    'bg-muted/40 grid flex-1 grid-cols-4 gap-1 rounded-md p-1',
+                    disabled && 'pointer-events-none opacity-50',
+                  )}
+                >
+                  {TIERS.map((tier, index) => {
+                    const isActive = !disabled && index === activeIndex
+                    return (
+                      <button
+                        key={tier.label}
+                        type="button"
+                        role="radio"
+                        aria-checked={isActive}
+                        disabled={disabled}
+                        onClick={() => field.onChange(tier.value)}
+                        className={cn(
+                          'focus-visible:ring-ring rounded px-2 py-1.5 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:outline-hidden',
+                          isActive
+                            ? 'bg-background text-foreground shadow-sm'
+                            : 'text-muted-foreground hover:text-foreground',
+                        )}
+                      >
+                        {tier.label}
+                      </button>
+                    )
+                  })}
+                </div>
+                <Input
+                  type="number"
+                  aria-label={`${label} exact weight`}
+                  value={numericValue}
+                  onChange={(e) => {
+                    const next = e.target.value
+                    field.onChange(next === '' ? 0 : Number(next))
+                  }}
+                  min={0}
+                  max={100}
+                  step={0.1}
+                  disabled={disabled}
+                  className="h-auto w-20 text-center tabular-nums"
+                />
+              </div>
+            </FormControl>
+            <FormDescription>
+              {disabled ? disabledHint : description}
+            </FormDescription>
+            <FormMessage />
+          </FormItem>
+        )
+      }}
+    />
+  )
+}
+
+function EnableLink({
+  onClick,
+  children,
+  suffix,
+}: {
+  onClick: () => void
+  children: React.ReactNode
+  suffix: string
+}) {
+  return (
+    <>
+      <button
+        type="button"
+        className="text-primary underline-offset-2 hover:underline"
+        onClick={onClick}
+      >
+        {children}
+      </button>{' '}
+      {suffix}
+    </>
   )
 }
 
 export function CodonOptimizeWeight() {
-  const { control, watch, setValue } = useFormContext<FormValues>()
-  const species = watch('species')
-  const disabled = species === 'none'
+  const { watch, setValue } = useFormContext<FormValues>()
+  const disabled = watch('species') === 'none'
 
   return (
-    <FormField
+    <WeightField
       name="codonOptimizeWeight"
-      control={control}
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel className={disabled ? 'text-muted-foreground' : undefined}>
-            Codon optimization weight
-          </FormLabel>
-          <FormControl>
-            <Input
-              type="number"
-              value={field.value}
-              onChange={(e) => field.onChange(Number(e.target.value))}
-              min={0}
-              max={100}
-              step={1}
-              disabled={disabled}
-            />
-          </FormControl>
-          {disabled ? (
-            <FormDescription>
-              <button
-                type="button"
-                className="text-primary underline-offset-2 hover:underline"
-                onClick={() => setValue('species', 'human')}
-              >
-                Select a species
-              </button>{' '}
-              above to enable codon optimization.
-            </FormDescription>
-          ) : (
-            <WeightDescription text="How strongly to prefer codons favored by the target species." />
-          )}
-          <FormMessage />
-        </FormItem>
-      )}
+      label="Codon optimization"
+      description="How strongly to prefer codons favored by the target species."
+      disabled={disabled}
+      disabledHint={
+        <EnableLink
+          onClick={() => setValue('species', 'human')}
+          suffix="above to enable codon optimization."
+        >
+          Select a species
+        </EnableLink>
+      }
     />
   )
 }
 
 export function RemoveCrypticSpliceSitesWeight() {
-  const { control, watch, setValue } = useFormContext<FormValues>()
-  const removeCrypticSpliceSites = watch('removeCrypticSpliceSites')
-  const disabled = !removeCrypticSpliceSites
+  const { watch, setValue } = useFormContext<FormValues>()
+  const disabled = !watch('removeCrypticSpliceSites')
 
   return (
-    <FormField
+    <WeightField
       name="removeCrypticSpliceSitesWeight"
-      control={control}
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel className={disabled ? 'text-muted-foreground' : undefined}>
-            Cryptic splice site removal weight
-          </FormLabel>
-          <FormControl>
-            <Input
-              type="number"
-              value={field.value}
-              onChange={(e) => field.onChange(Number(e.target.value))}
-              min={0}
-              max={100}
-              step={1}
-              disabled={disabled}
-            />
-          </FormControl>
-          {disabled ? (
-            <FormDescription>
-              <button
-                type="button"
-                className="text-primary underline-offset-2 hover:underline"
-                onClick={() => setValue('removeCrypticSpliceSites', true)}
-              >
-                Enable cryptic splice site removal
-              </button>{' '}
-              above to set this weight.
-            </FormDescription>
-          ) : (
-            <WeightDescription text="How aggressively to eliminate splice-like motifs. Higher values remove more sites but constrain codon choice." />
-          )}
-          <FormMessage />
-        </FormItem>
-      )}
+      label="Cryptic splice site removal"
+      description="How aggressively to eliminate splice-like motifs. Higher values remove more sites but constrain codon choice."
+      disabled={disabled}
+      disabledHint={
+        <EnableLink
+          onClick={() => setValue('removeCrypticSpliceSites', true)}
+          suffix="above to set this weight."
+        >
+          Enable cryptic splice site removal
+        </EnableLink>
+      }
     />
   )
 }
 
 export function MinimizeCpGsWeight() {
-  const { control, watch, setValue } = useFormContext<FormValues>()
-  const minimizeCpgs = watch('minimizeCpgs')
-  const disabled = !minimizeCpgs
+  const { watch, setValue } = useFormContext<FormValues>()
+  const disabled = !watch('minimizeCpgs')
 
   return (
-    <FormField
+    <WeightField
       name="minimizeCpgsWeight"
-      control={control}
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel className={disabled ? 'text-muted-foreground' : undefined}>
-            CpG minimization weight
-          </FormLabel>
-          <FormControl>
-            <Input
-              type="number"
-              value={field.value}
-              onChange={(e) => field.onChange(Number(e.target.value))}
-              min={0}
-              max={100}
-              step={1}
-              disabled={disabled}
-            />
-          </FormControl>
-          {disabled ? (
-            <FormDescription>
-              <button
-                type="button"
-                className="text-primary underline-offset-2 hover:underline"
-                onClick={() => setValue('minimizeCpgs', true)}
-              >
-                Enable CpG minimization
-              </button>{' '}
-              above to set this weight.
-            </FormDescription>
-          ) : (
-            <WeightDescription text="How strongly to avoid CpG dinucleotides. High values greatly reduce CpGs but may lower GC content." />
-          )}
-          <FormMessage />
-        </FormItem>
-      )}
+      label="CpG minimization"
+      description="How strongly to avoid CpG dinucleotides. High values greatly reduce CpGs but may lower GC content."
+      disabled={disabled}
+      disabledHint={
+        <EnableLink
+          onClick={() => setValue('minimizeCpgs', true)}
+          suffix="above to set this weight."
+        >
+          Enable CpG minimization
+        </EnableLink>
+      }
     />
   )
 }
 
 export function ReduceKmerComplexityWeight() {
-  const { control, watch, setValue } = useFormContext<FormValues>()
-  const reduceKmerComplexity = watch('reduceKmerComplexity')
-  const disabled = !reduceKmerComplexity
+  const { watch, setValue } = useFormContext<FormValues>()
+  const disabled = !watch('reduceKmerComplexity')
 
   return (
-    <FormField
+    <WeightField
       name="reduceKmerComplexityWeight"
-      control={control}
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel className={disabled ? 'text-muted-foreground' : undefined}>
-            k-mer complexity reduction weight
-          </FormLabel>
-          <FormControl>
-            <Input
-              type="number"
-              value={field.value}
-              onChange={(e) => field.onChange(Number(e.target.value))}
-              min={0}
-              max={100}
-              step={1}
-              disabled={disabled}
-            />
-          </FormControl>
-          {disabled ? (
-            <FormDescription>
-              <button
-                type="button"
-                className="text-primary underline-offset-2 hover:underline"
-                onClick={() => setValue('reduceKmerComplexity', true)}
-              >
-                Enable k-mer complexity reduction
-              </button>{' '}
-              above to set this weight.
-            </FormDescription>
-          ) : (
-            <WeightDescription text="How strongly to diversify 10-mer repeats. Helps synthesis and reduces recombination risk." />
-          )}
-          <FormMessage />
-        </FormItem>
-      )}
+      label="k-mer complexity reduction"
+      description="How strongly to diversify 10-mer repeats. Helps synthesis and reduces recombination risk."
+      disabled={disabled}
+      disabledHint={
+        <EnableLink
+          onClick={() => setValue('reduceKmerComplexity', true)}
+          suffix="above to set this weight."
+        >
+          Enable k-mer complexity reduction
+        </EnableLink>
+      }
     />
   )
 }
