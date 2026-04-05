@@ -8,7 +8,7 @@ REJ Studio is a bioinformatics web app for RNA End-Joining sequence design. User
 
 - **Next.js 16 (App Router)** — Frontend and server actions. Route groups: `(search)` for gene browsing, `(design-tool)` for the optimization form. Frontend source lives under `src/`.
 - **Bulletproof-react structure** — Code is organized into `src/features/<feature>/` (self-contained: `api/`, `components/`, `hooks/`, `stores/`, `types/`, `utils/`) plus shared layers (`src/components/`, `src/lib/`, `src/hooks/`, `src/stores/`). Cross-feature imports and shared→feature imports are forbidden by ESLint (`import/no-restricted-paths`).
-- **FastAPI (Python)** — Runs the DNA optimization algorithm. Canonical code lives in `python/`. Single endpoint: `POST /api/py/process`. In development, Next.js proxies `/api/py/*` to `localhost:8000`. `api/index.py` is a thin wrapper that re-exports `python.index:app` for Vercel's Python runtime discovery — on Cloudflare (no Python runtime), compute runs on Modal instead.
+- **FastAPI (Python)** — Runs the DNA optimization algorithm. Canonical code lives in `python/`. Single endpoint: `POST /api/py/process`. In development, Next.js proxies `/api/py/*` to a local uvicorn at `localhost:8000`. In production Python does NOT run on Vercel or Cloudflare — it's deployed to Modal and called directly from server actions. `COMPUTE_BACKEND=modal` is required in prod on every host; the local backend is dev-only.
 - **Neon (Postgres) + Drizzle ORM** — Read-only gene/isoform/sequence data. The app connects to Neon over HTTP via `@neondatabase/serverless`. Seed Neon with `pnpm db:build` + `pnpm db:upload`. Schema in `src/drizzle/schema.ts`.
 - **shadcn/ui + Radix UI** — Component library. UI primitives live in `src/components/ui/`. Config in `components.json`.
 - **Zustand** — Global client state (favorites, recent genes, species filter) lives in `src/stores/` (shared) or `src/features/<feature>/stores/` (feature-owned).
@@ -27,9 +27,8 @@ REJ Studio is a bioinformatics web app for RNA End-Joining sequence design. User
 | `src/hooks/`          | Generic shared React hooks                                                         |
 | `src/stores/`         | Shared Zustand stores (e.g. species filter)                                        |
 | `src/drizzle/`        | DB schema and client (`schema.ts`, `db.ts`)                                        |
-| `python/`             | FastAPI Python backend (`index.py`, `algorithm.py`) — canonical location           |
-| `api/`                | Vercel Python entrypoint wrapper (`index.py` re-exports `python.index:app`)        |
-| `public/data/`        | Static gene data and coding sequence files                                         |
+| `python/`             | FastAPI Python backend (`index.py`, `algorithm.py`, `requirements.txt`)            |
+| `modal/`              | Modal deployment for the Python backend (production compute)                       |
 
 ## Development Commands
 
@@ -121,7 +120,7 @@ Shared Claude Code permissions, deny rules, and sandbox config live in `.agents/
 - **Adding a server action**: Place it in the owning feature's `api/` folder (e.g. `src/features/gene-search/api/`). Import `db` from `@/drizzle/db`.
 - **Adding a new feature**: Create `src/features/<name>/` with the standard subfolders. ESLint boundary rules apply automatically (no config changes needed).
 - **Adding shared code**: If used by ≥2 features, decide by domain: bio-specific → `src/lib/bio/` or `src/components/bio/`; generic → `src/lib/` or `src/components/`.
-- **Modifying the optimization algorithm**: Edit `python/algorithm.py`. The FastAPI endpoint is in `python/index.py`. (`api/index.py` is a 2-line Vercel wrapper — don't touch it.)
+- **Modifying the optimization algorithm**: Edit `python/algorithm.py`. The FastAPI endpoint is in `python/index.py`. In production this runs on Modal (see `modal/app.py`), so redeploy Modal after changes.
 - **Database schema changes**: Edit `src/drizzle/schema.ts`, update `scripts/build-db.py` if the JSONL shape needs to change, then `pnpm db:build && pnpm db:push && pnpm db:upload`.
 - **Switching DB backend**: See [docs/db-migration.md](./docs/db-migration.md) — it's a 5-file change.
 - **Switching deploy target (Vercel ↔ Cloudflare)**: See [docs/deployment.md](./docs/deployment.md).

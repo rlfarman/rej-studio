@@ -18,13 +18,13 @@ A web application for RNA End-Joining sequence design and optimization. Scientis
 
 ## Tech Stack
 
-| Layer    | Technology                                     |
-| -------- | ---------------------------------------------- |
-| Frontend | Next.js 16, React 19, TypeScript, Tailwind CSS |
-| UI       | shadcn/ui, Radix UI primitives                 |
-| Backend  | FastAPI (Python) with dnachisel                |
-| Database | Neon (Postgres) via HTTP driver, Drizzle ORM   |
-| Hosting  | Vercel                                         |
+| Layer    | Technology                                              |
+| -------- | ------------------------------------------------------- |
+| Frontend | Next.js 16, React 19, TypeScript, Tailwind CSS          |
+| UI       | shadcn/ui, Radix UI primitives                          |
+| Backend  | FastAPI (Python) with dnachisel, deployed on Modal      |
+| Database | Neon (Postgres) via HTTP driver, Drizzle ORM            |
+| Hosting  | Vercel or Cloudflare Workers (Next.js) + Modal (Python) |
 
 ## Getting Started
 
@@ -41,7 +41,7 @@ A web application for RNA End-Joining sequence design and optimization. Scientis
    pnpm install
    python3 -m venv venv
    source venv/bin/activate
-   pip install -r requirements.txt
+   pip install -r python/requirements.txt
    ```
 
 2. **Configure environment**
@@ -112,9 +112,11 @@ app/
 ├── (design-tool)/         # Sequence design tool
 └── api/                   # Next.js API routes (auth)
 
-api/                       # FastAPI backend
+python/                    # FastAPI backend (dev + deployed to Modal)
 ├── index.py               # Endpoints (POST /api/py/process)
 └── algorithm.py           # DNA optimization algorithms
+
+modal/                     # Modal deployment for the Python backend
 
 actions/                   # Next.js server actions
 components/                # React components (+ shadcn/ui)
