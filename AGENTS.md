@@ -69,7 +69,7 @@ To seed / refresh:
 
 ## Environment Variables
 
-Defined in `.env.example`. Required: `DATABASE_URL`, `SESSION_SECRET`.
+Defined in `.env.example`. Required: `DATABASE_URL`.
 
 ## Commits & Branches
 

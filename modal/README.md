@@ -24,7 +24,7 @@ COMPUTE_BACKEND=modal
 MODAL_API_URL=https://your-username--rej-studio-web.modal.run
 ```
 
-To switch back to local FastAPI, remove `COMPUTE_BACKEND` (or set it to anything other than `modal`).
+To switch back to local FastAPI, set `COMPUTE_BACKEND=local` or remove the variable.
 
 ## Local development
 
