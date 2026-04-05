@@ -20,6 +20,7 @@ import type {
   ObjectiveEvaluationEntry,
   ObjectivesReport,
 } from '@/features/design-tool/types/process-result'
+import { deriveKeyMetrics } from '@/features/design-tool/utils/objective-metrics'
 
 // ---------- parsing the "objective" string into a nicer display ----------
 
@@ -405,6 +406,7 @@ function ComparisonPanel({
 interface SummaryItem {
   label: string
   status: 'good' | 'improved' | 'worsened' | 'neutral'
+  hint?: string
 }
 
 function buildSummaryItems(
@@ -437,6 +439,69 @@ function buildSummaryItems(
             : afterPass < beforePass
               ? 'worsened'
               : 'neutral',
+    })
+  }
+
+  const beforeMetrics = deriveKeyMetrics(before)
+  const afterMetrics = deriveKeyMetrics(after)
+
+  const deltaStatus = (
+    b: number,
+    a: number,
+    lowerIsBetter: boolean,
+  ): SummaryItem['status'] => {
+    if (a === b) return 'neutral'
+    const improved = lowerIsBetter ? a < b : a > b
+    if (lowerIsBetter && a === 0 && b > 0) return 'good'
+    return improved ? 'improved' : 'worsened'
+  }
+
+  if (beforeMetrics.spliceDonors > 0 || afterMetrics.spliceDonors > 0) {
+    items.push({
+      label: `Potential splice donor sites: ${beforeMetrics.spliceDonors} → ${afterMetrics.spliceDonors}`,
+      status: deltaStatus(
+        beforeMetrics.spliceDonors,
+        afterMetrics.spliceDonors,
+        true,
+      ),
+    })
+  }
+
+  if (beforeMetrics.spliceAcceptors > 0 || afterMetrics.spliceAcceptors > 0) {
+    items.push({
+      label: `Potential splice acceptor sites: ${beforeMetrics.spliceAcceptors} → ${afterMetrics.spliceAcceptors}`,
+      status: deltaStatus(
+        beforeMetrics.spliceAcceptors,
+        afterMetrics.spliceAcceptors,
+        true,
+      ),
+    })
+  }
+
+  if (afterMetrics.caiScore !== null) {
+    const b = beforeMetrics.caiScore
+    const a = afterMetrics.caiScore
+    items.push({
+      label:
+        b !== null
+          ? `CAI: ${b.toFixed(3)} → ${a.toFixed(3)}`
+          : `CAI: ${a.toFixed(3)}`,
+      status: b !== null ? deltaStatus(b, a, false) : 'neutral',
+    })
+  }
+
+  if (afterMetrics.kmerPassed) {
+    items.push({
+      label: 'No repetitive 10-mers remaining',
+      status: 'good',
+    })
+  } else if (afterMetrics.kmerScore !== null) {
+    const b = beforeMetrics.kmerScore
+    const a = afterMetrics.kmerScore
+    items.push({
+      label: `Kmer complexity: ${a.toFixed(1)}`,
+      status: b !== null ? deltaStatus(b, a, false) : 'neutral',
+      hint: 'If the current sequence is too difficult to synthesize, rerun the optimization with higher weight on reducing kmer complexity.',
     })
   }
 
@@ -722,17 +787,24 @@ export function ObjectivesSummary({
       {summaryItems.length > 0 && (
         <ul className="space-y-1">
           {summaryItems.map((item) => (
-            <li key={item.label} className="flex items-center gap-2 text-sm">
-              <span
-                className={cn(
-                  'size-1.5 shrink-0 rounded-full',
-                  item.status === 'good' && 'bg-emerald-500',
-                  item.status === 'improved' && 'bg-emerald-500',
-                  item.status === 'worsened' && 'bg-red-500',
-                  item.status === 'neutral' && 'bg-muted-foreground',
-                )}
-              />
-              {item.label}
+            <li key={item.label} className="space-y-0.5">
+              <div className="flex items-center gap-2 text-sm">
+                <span
+                  className={cn(
+                    'size-1.5 shrink-0 rounded-full',
+                    item.status === 'good' && 'bg-emerald-500',
+                    item.status === 'improved' && 'bg-emerald-500',
+                    item.status === 'worsened' && 'bg-red-500',
+                    item.status === 'neutral' && 'bg-muted-foreground',
+                  )}
+                />
+                {item.label}
+              </div>
+              {item.hint && (
+                <p className="text-muted-foreground ml-3.5 text-xs italic">
+                  {item.hint}
+                </p>
+              )}
             </li>
           ))}
         </ul>
