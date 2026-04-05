@@ -1,13 +1,18 @@
-import { sqliteTable, text, integer, index } from 'drizzle-orm/sqlite-core'
+import { pgTable, text, integer, index } from 'drizzle-orm/pg-core'
 
-export const genes = sqliteTable(
+// alternateSymbols is pipe-delimited (e.g. "|Abca1|Cerp|Tgd|") so search queries
+// can use a plain LOWER(col) LIKE '%query%' pattern that works in any SQL dialect.
+// Parse with parseAlternateSymbols() from @/lib/bio/gene-symbols for display.
+// Original casing is preserved.
+
+export const genes = pgTable(
   'genes',
   {
     id: text('id').primaryKey().notNull(),
     symbol: text('symbol').notNull(),
     name: text('name').notNull(),
     species: text('species').notNull(),
-    alternateSymbols: text('alternate_symbols'),
+    alternateSymbols: text('alternate_symbols').notNull().default(''),
   },
   (table) => [
     index('idx_genes_symbol').on(table.symbol),
@@ -18,7 +23,7 @@ export const genes = sqliteTable(
 
 export type SelectGene = typeof genes.$inferSelect
 
-export const isoforms = sqliteTable(
+export const isoforms = pgTable(
   'isoforms',
   {
     id: text('id').primaryKey().notNull(),

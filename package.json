@@ -8,7 +8,8 @@
     "next-dev": "next dev",
     "dev": "concurrently \"pnpm next-dev\" \"pnpm fastapi-dev\"",
     "db:build": "python3 scripts/build-db.py",
-    "db:upload": "./scripts/upload-to-turso.sh",
+    "db:push": "drizzle-kit push",
+    "db:upload": "tsx scripts/load-db.ts",
     "db:studio": "drizzle-kit studio",
     "build": "next build",
     "start": "next start",
@@ -20,7 +21,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
-    "@libsql/client": "^0.17.2",
+    "@neondatabase/serverless": "^0.10.4",
     "@radix-ui/react-accordion": "^1.2.3",
     "@radix-ui/react-checkbox": "^1.1.4",
     "@radix-ui/react-dialog": "^1.1.6",
@@ -76,7 +77,8 @@
     "lint-staged": "^15.2.10",
     "prettier": "^3.8.1",
     "prettier-plugin-tailwindcss": "^0.7.2",
-    "ts-node": "^10.9.2"
+    "ts-node": "^10.9.2",
+    "tsx": "^4.19.2"
   },
   "pnpm": {
     "overrides": {
