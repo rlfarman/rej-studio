@@ -43,6 +43,7 @@ interface GeneSplitterFormProperties {
   defaultName?: string
   defaultSpecies?: DesignToolSpecies
   defaultJobId?: string
+  defaultSpliceJunctionPosition?: number
 }
 
 export function GeneSplitterForm({
@@ -50,6 +51,7 @@ export function GeneSplitterForm({
   defaultName,
   defaultSpecies,
   defaultJobId,
+  defaultSpliceJunctionPosition,
 }: GeneSplitterFormProperties) {
   const [result, setResult] = useState<ProcessResult | null>(null)
   const [isEditing, setIsEditing] = useState(false)
@@ -80,9 +82,11 @@ export function GeneSplitterForm({
       codingSequence: defaultCodingSequence ?? '',
       name: defaultName ?? '',
       species: defaultSpecies ?? 'none',
-      spliceJunctionPosition: defaultCodingSequence
-        ? Math.floor(defaultCodingSequence.length / 2)
-        : 1,
+      spliceJunctionPosition:
+        defaultSpliceJunctionPosition ??
+        (defaultCodingSequence
+          ? Math.floor(defaultCodingSequence.length / 2)
+          : 1),
     },
   })
 
