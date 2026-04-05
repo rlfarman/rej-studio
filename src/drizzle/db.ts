@@ -1,27 +1,53 @@
-import Database from 'better-sqlite3'
-import { drizzle, BetterSQLite3Database } from 'drizzle-orm/better-sqlite3'
-import * as schema from './schema'
+import { createClient, type Client } from '@libsql/client'
+import { drizzle, type LibSQLDatabase } from 'drizzle-orm/libsql'
 import path from 'path'
+import * as schema from './schema'
 
-const dbPath =
+// Embedded replica: a local SQLite file that syncs from a remote Turso database.
+// Reads hit the local file (fast), writes go to the remote (we only read here).
+// In Vercel's serverless runtime the filesystem is read-only outside /tmp, so the
+// replica lives there; locally we keep it alongside the source data.
+const replicaPath =
   process.env.NODE_ENV === 'production'
-    ? '/tmp/rej-studio.db'
-    : path.join(process.cwd(), 'data', 'rej-studio.db')
+    ? '/tmp/rej-studio.replica.db'
+    : path.join(process.cwd(), 'data', 'rej-studio.replica.db')
 
-let _db: BetterSQLite3Database<typeof schema> | null = null
+const syncUrl = process.env.TURSO_DATABASE_URL
+const authToken = process.env.TURSO_AUTH_TOKEN
+
+if (!syncUrl) {
+  throw new Error('TURSO_DATABASE_URL is not set')
+}
+
+let _client: Client | null = null
+let _db: LibSQLDatabase<typeof schema> | null = null
+
+function getClient() {
+  if (!_client) {
+    _client = createClient({
+      url: `file:${replicaPath}`,
+      syncUrl,
+      authToken,
+      // Periodically refresh from the remote while the process is alive.
+      syncInterval: 300,
+    })
+  }
+  return _client
+}
 
 function getDb() {
   if (!_db) {
-    const sqlite = new Database(dbPath, { readonly: true })
-    sqlite.pragma('journal_mode = WAL')
-    sqlite.pragma('cache_size = -64000')
-    _db = drizzle(sqlite, { schema })
+    _db = drizzle(getClient(), { schema })
   }
   return _db
 }
 
-export const db = new Proxy({} as BetterSQLite3Database<typeof schema>, {
+export async function syncReplica() {
+  await getClient().sync()
+}
+
+export const db = new Proxy({} as LibSQLDatabase<typeof schema>, {
   get(_, prop) {
-    return (getDb() as any)[prop]
+    return (getDb() as unknown as Record<string, unknown>)[prop as string]
   },
 })
