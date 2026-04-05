@@ -2,7 +2,7 @@
 
 import { memo } from 'react'
 import { m } from 'motion/react'
-import { Download, Copy, Check, Clock, Scissors, Info } from 'lucide-react'
+import { Download, Copy, Check, Clock, Scissors } from 'lucide-react'
 import {
   Card,
   CardContent,
@@ -29,6 +29,7 @@ import { toast } from 'sonner'
 import { downloadResultsZip } from '@/features/design-tool/utils/build-zip'
 import { ComparisonPanel } from './comparison-panel'
 import { AavResults } from './aav-size-estimator'
+import { ObjectivesSummary } from './objectives-output'
 import { formatFasta } from '@/lib/bio/fasta'
 
 interface ResultsPanelProps {
@@ -139,137 +140,6 @@ function SplitVisualization({
           </span>
         </div>
       </div>
-    </div>
-  )
-}
-
-/** Parse the DNAChisel objectives text into a digestible summary. */
-function parseObjectives(text: string) {
-  const totalMatch = text.match(/TOTAL OBJECTIVES SCORE:\s*([-\d.]+)/)
-  const totalScore = totalMatch ? parseFloat(totalMatch[1]) : null
-
-  // Count passed vs failed objectives
-  const passedCount = (text.match(/✔/g) || []).length
-  const failedLines = text.match(/Failed\./g) || []
-  const failedCount = failedLines.length
-
-  // Extract key metrics
-  const caiMatch = text.match(/MaximizeCAI.*scored\s*([-\d.E+]+)/)
-  const caiScore = caiMatch ? parseFloat(caiMatch[1]) : null
-
-  const cpgMatch = text.match(
-    /AvoidPattern.*pattern:CG\).*?positions \[([^\]]*)\]/,
-  )
-  const cpgCount = cpgMatch
-    ? cpgMatch[1].split(',').filter((s) => s.trim()).length
-    : 0
-
-  const kmerPassed = /UniquifyAllKmers.*Passed/.test(text)
-
-  return {
-    totalScore,
-    passedCount,
-    failedCount,
-    caiScore,
-    cpgCount,
-    kmerPassed,
-  }
-}
-
-function ObjectivesSummary({
-  before,
-  after,
-}: {
-  before: string
-  after: string
-}) {
-  const beforeStats = parseObjectives(before)
-  const afterStats = parseObjectives(after)
-
-  const items: { label: string; status: 'good' | 'improved' | 'neutral' }[] = []
-
-  if (beforeStats.totalScore !== null && afterStats.totalScore !== null) {
-    const improved = afterStats.totalScore > beforeStats.totalScore
-    items.push({
-      label: `Objective score: ${beforeStats.totalScore.toFixed(1)} \u2192 ${afterStats.totalScore.toFixed(1)}`,
-      status: improved ? 'improved' : 'neutral',
-    })
-  }
-
-  if (afterStats.passedCount > 0 || afterStats.failedCount > 0) {
-    const total = afterStats.passedCount + afterStats.failedCount
-    items.push({
-      label: `${afterStats.passedCount} of ${total} objectives passed`,
-      status:
-        afterStats.passedCount > beforeStats.passedCount
-          ? 'improved'
-          : afterStats.failedCount === 0
-            ? 'good'
-            : 'neutral',
-    })
-  }
-
-  if (beforeStats.cpgCount > 0 || afterStats.cpgCount > 0) {
-    items.push({
-      label: `CpG sites: ${beforeStats.cpgCount} \u2192 ${afterStats.cpgCount}`,
-      status:
-        afterStats.cpgCount < beforeStats.cpgCount ? 'improved' : 'neutral',
-    })
-  }
-
-  if (afterStats.kmerPassed) {
-    items.push({
-      label: 'No repetitive 10-mers remaining',
-      status: 'good',
-    })
-  }
-
-  return (
-    <div className="space-y-3">
-      <div className="flex items-center gap-2 text-sm font-medium">
-        <Info className="text-muted-foreground size-4" />
-        Optimization Summary
-      </div>
-      {items.length > 0 && (
-        <ul className="space-y-1">
-          {items.map((item) => (
-            <li key={item.label} className="flex items-center gap-2 text-sm">
-              <span
-                className={cn(
-                  'size-1.5 shrink-0 rounded-full',
-                  item.status === 'good' && 'bg-emerald-500',
-                  item.status === 'improved' && 'bg-emerald-500',
-                  item.status === 'neutral' && 'bg-muted-foreground',
-                )}
-              />
-              {item.label}
-            </li>
-          ))}
-        </ul>
-      )}
-      <details className="group">
-        <summary className="text-muted-foreground cursor-pointer text-xs hover:underline">
-          Show full optimizer output
-        </summary>
-        <div className="mt-2 grid gap-3 sm:grid-cols-2">
-          <div className="space-y-1">
-            <span className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
-              Before
-            </span>
-            <pre className="bg-muted max-h-48 overflow-auto rounded-md p-2.5 font-mono text-[11px] whitespace-pre-wrap">
-              {before || 'No objectives measured'}
-            </pre>
-          </div>
-          <div className="space-y-1">
-            <span className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
-              After
-            </span>
-            <pre className="bg-muted max-h-48 overflow-auto rounded-md p-2.5 font-mono text-[11px] whitespace-pre-wrap">
-              {after || 'No objectives measured'}
-            </pre>
-          </div>
-        </div>
-      </details>
     </div>
   )
 }
@@ -405,8 +275,10 @@ function ResultsPanelImpl({ result, optionsUsed }: ResultsPanelProps) {
           <Separator />
 
           <ObjectivesSummary
-            before={result.objectives_before}
-            after={result.objectives_after}
+            reportBefore={result.objectives_report_before}
+            reportAfter={result.objectives_report_after}
+            textBefore={result.objectives_before}
+            textAfter={result.objectives_after}
           />
 
           <Separator />
