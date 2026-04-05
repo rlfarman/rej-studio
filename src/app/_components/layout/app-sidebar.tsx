@@ -11,10 +11,8 @@ import { FavoriteGenes } from '@/features/gene-search/components/favorites-panel
 import { RecentGenes } from '@/features/gene-search/components/recent-genes-panel'
 import { RecentJobs } from '@/features/design-tool/components/recent-jobs-panel'
 import { JobWatcher } from '@/features/design-tool/components/job-watcher'
-import { ThemeToggle } from '@/app/_components/layout/theme-toggle'
+import { SidebarMenu } from '@/app/_components/layout/sidebar-menu'
 import { SidebarToggle } from '@/app/_components/layout/sidebar-toggle'
-import { DataTransfer } from '@/app/_components/data-transfer'
-import { SeedDataButton } from '@/app/_components/seed-data-button'
 import type { JobHistoryEntry } from '@/features/design-tool/hooks/use-job-history'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -46,12 +44,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarContent>
       <JobWatcher />
       <SidebarFooter>
-        <div className="flex flex-col gap-1">
-          <ThemeToggle />
-        </div>
-        <DataTransfer />
-        <SeedDataButton />
         <div className="flex items-center gap-2">
+          <SidebarMenu />
           <div className="flex-1" />
           <SidebarToggle />
         </div>

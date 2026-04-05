@@ -1,8 +1,3 @@
-'use client'
-
-import { Sprout } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { toast } from 'sonner'
 import { useFavoriteGenes } from '@/features/gene-search/stores/favorite-genes-store'
 import { useRecentGenes } from '@/features/gene-search/stores/recent-genes-store'
 import {
@@ -76,6 +71,10 @@ function minutesAgo(n: number): string {
   return new Date(Date.now() - n * 60_000).toISOString()
 }
 
+// No 'running' seed: JobWatcher would immediately poll the backend,
+// not find the job, and flip it to failed(not_found). Seeding running
+// state honestly would require either a reserved id prefix the watcher
+// skips, or a fake backend entry — neither worth the complexity.
 const JOB_SEED: JobHistoryEntry[] = [
   {
     id: 'seed-job-completed-1',
@@ -119,10 +118,6 @@ const JOB_SEED: JobHistoryEntry[] = [
     },
     error: null,
   },
-  // No 'running' seed: JobWatcher would immediately poll the backend,
-  // not find the job, and flip it to failed(not_found). Seeding running
-  // state honestly would require either a reserved id prefix the watcher
-  // skips, or a fake backend entry — neither worth the complexity.
   {
     id: 'seed-job-failed-1',
     name: 'MYC transactivation',
@@ -181,25 +176,4 @@ export function seedUserData() {
     recents: RECENT_SEED.length,
     jobs: JOB_SEED.length,
   }
-}
-
-export function SeedDataButton() {
-  if (process.env.NODE_ENV !== 'development') return null
-
-  return (
-    <Button
-      variant="ghost"
-      size="sm"
-      className="justify-start"
-      onClick={() => {
-        const { favorites, recents, jobs } = seedUserData()
-        toast.success(
-          `Seeded ${favorites} favorites, ${recents} recents, ${jobs} jobs`,
-        )
-      }}
-    >
-      <Sprout className="h-4 w-4" />
-      Seed data (dev)
-    </Button>
-  )
 }
