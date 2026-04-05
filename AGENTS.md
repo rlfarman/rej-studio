@@ -9,7 +9,7 @@ REJ Studio is a bioinformatics web app for RNA End-Joining sequence design. User
 - **Next.js 16 (App Router)** — Frontend and server actions. Route groups: `(search)` for gene browsing, `(design-tool)` for the optimization form. Frontend source lives under `src/`.
 - **Bulletproof-react structure** — Code is organized into `src/features/<feature>/` (self-contained: `api/`, `components/`, `hooks/`, `stores/`, `types/`, `utils/`) plus shared layers (`src/components/`, `src/lib/`, `src/hooks/`, `src/stores/`). Cross-feature imports and shared→feature imports are forbidden by ESLint (`import/no-restricted-paths`).
 - **FastAPI (Python)** — Runs the DNA optimization algorithm. Single endpoint: `POST /api/py/process`. In development, Next.js proxies `/api/py/*` to `localhost:8000`.
-- **Turso (libSQL) + Drizzle ORM** — Read-only gene/isoform/sequence data. The source of truth is a remote Turso database; the app uses an embedded local replica (`data/rej-studio.replica.db` in dev, `/tmp/rej-studio.replica.db` in prod) that is synced from Turso on startup (`src/instrumentation.node.ts`). Seed the Turso DB with `pnpm db:build` + `pnpm db:upload`. Schema in `src/drizzle/schema.ts`.
+- **Neon (Postgres) + Drizzle ORM** — Read-only gene/isoform/sequence data. The app connects to Neon over HTTP via `@neondatabase/serverless`. Seed Neon with `pnpm db:build` + `pnpm db:upload`. Schema in `src/drizzle/schema.ts`.
 - **shadcn/ui + Radix UI** — Component library. UI primitives live in `src/components/ui/`. Config in `components.json`.
 - **Zustand** — Global client state (favorites, recent genes, species filter) lives in `src/stores/` (shared) or `src/features/<feature>/stores/` (feature-owned).
 
@@ -39,9 +39,10 @@ pnpm lint         # ESLint
 pnpm lint:fix     # Auto-fix lint
 pnpm format       # Prettier
 pnpm type-check   # TypeScript check
-pnpm db:build     # Rebuild the local SQLite seed from source CSV (data/rej-studio.db)
-pnpm db:upload    # Dump local seed and load it into Turso (requires turso CLI)
-pnpm db:studio    # Browse Turso in Drizzle Studio (local.drizzle.studio)
+pnpm db:build     # Emit neutral JSONL seed from source CSV (data/*.jsonl)
+pnpm db:push      # Create/update tables in $DATABASE_URL from schema.ts
+pnpm db:upload    # Load JSONL into $DATABASE_URL via Drizzle (dialect-neutral)
+pnpm db:studio    # Browse DB in Drizzle Studio (local.drizzle.studio)
 ```
 
 ## Code Conventions
@@ -56,16 +57,19 @@ pnpm db:studio    # Browse Turso in Drizzle Studio (local.drizzle.studio)
 
 ## Database
 
-Primary store is a Turso (libSQL) database. The Next.js server opens an **embedded replica** (`src/drizzle/db.ts`) — a local libSQL file that syncs from the Turso remote. Reads hit the local file; the replica refreshes on boot (`src/instrumentation.node.ts`) and on a background interval. Schema is in `src/drizzle/schema.ts`; tables: `genes`, `isoforms`, plus `genes_fts` (FTS5).
+Primary store is a Neon (Postgres) database. The Next.js server connects via the Neon HTTP driver (`src/drizzle/db.ts`); every query is a serverless HTTP round-trip. Schema is in `src/drizzle/schema.ts`; tables: `genes`, `isoforms`.
 
-To seed / refresh Turso:
+App code uses dialect-neutral SQL (Drizzle query builder + `LOWER(col) LIKE '%x%'`) so the DB backend can be swapped without touching queries. See [docs/db-migration.md](./docs/db-migration.md) for the switching checklist.
 
-1. `pnpm db:build` — regenerate `data/rej-studio.db` from `drizzle/transcript_metadata.csv`.
-2. `TURSO_DB_NAME=<name> pnpm db:upload` — dump + pipe into Turso (requires `turso` CLI).
+To seed / refresh:
+
+1. `pnpm db:build` — emit `data/genes.jsonl` + `data/isoforms.jsonl` from `drizzle/transcript_metadata.csv`.
+2. `pnpm db:push` — create tables in `$DATABASE_URL` from `schema.ts`.
+3. `pnpm db:upload` — load JSONL via Drizzle INSERTs.
 
 ## Environment Variables
 
-Defined in `.env.example`. Required: `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`, `SESSION_SECRET`.
+Defined in `.env.example`. Required: `DATABASE_URL`, `SESSION_SECRET`.
 
 ## Commits & Branches
 
@@ -114,4 +118,5 @@ Shared Claude Code permissions, deny rules, and sandbox config live in `.agents/
 - **Adding a new feature**: Create `src/features/<name>/` with the standard subfolders. ESLint boundary rules apply automatically (no config changes needed).
 - **Adding shared code**: If used by ≥2 features, decide by domain: bio-specific → `src/lib/bio/` or `src/components/bio/`; generic → `src/lib/` or `src/components/`.
 - **Modifying the optimization algorithm**: Edit `api/algorithm.py`. The FastAPI endpoint is in `api/index.py`.
-- **Database schema changes**: Edit `src/drizzle/schema.ts` and update `scripts/build-db.py` so the generated SQLite file matches. Then run `pnpm db:build` and `pnpm db:upload` to push the new data to Turso.
+- **Database schema changes**: Edit `src/drizzle/schema.ts`, update `scripts/build-db.py` if the JSONL shape needs to change, then `pnpm db:build && pnpm db:push && pnpm db:upload`.
+- **Switching DB backend**: See [docs/db-migration.md](./docs/db-migration.md) — it's a 5-file change.

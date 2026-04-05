@@ -18,13 +18,13 @@ A web application for RNA End-Joining sequence design and optimization. Scientis
 
 ## Tech Stack
 
-| Layer    | Technology                                        |
-| -------- | ------------------------------------------------- |
-| Frontend | Next.js 16, React 19, TypeScript, Tailwind CSS    |
-| UI       | shadcn/ui, Radix UI primitives                    |
-| Backend  | FastAPI (Python) with dnachisel                   |
-| Database | Turso (libSQL) with embedded replica, Drizzle ORM |
-| Hosting  | Vercel                                            |
+| Layer    | Technology                                     |
+| -------- | ---------------------------------------------- |
+| Frontend | Next.js 16, React 19, TypeScript, Tailwind CSS |
+| UI       | shadcn/ui, Radix UI primitives                 |
+| Backend  | FastAPI (Python) with dnachisel                |
+| Database | Neon (Postgres) via HTTP driver, Drizzle ORM   |
+| Hosting  | Vercel                                         |
 
 ## Getting Started
 
@@ -54,24 +54,23 @@ A web application for RNA End-Joining sequence design and optimization. Scientis
 
    | Variable                | Description                          |
    | ----------------------- | ------------------------------------ |
-   | `TURSO_DATABASE_URL`    | libSQL URL of your Turso database    |
-   | `TURSO_AUTH_TOKEN`      | Auth token for the Turso database    |
+   | `DATABASE_URL`          | Postgres connection string (Neon)    |
    | `SESSION_SECRET`        | Random hex string for JWT signing    |
    | `BASIC_AUTH_USER`       | Basic auth username for landing page |
    | `BASIC_AUTH_PASSWORD`   | Basic auth password                  |
    | `BLOB_READ_WRITE_TOKEN` | Vercel Blob token (optional)         |
 
-3. **Populate the Turso database** (first time only)
+3. **Populate the Neon database** (first time only)
 
-   The app reads from a Turso (libSQL) database via an embedded local replica. To seed Turso from the source CSV:
+   The app reads from a Neon Postgres database over HTTP. To seed Neon from the source CSV:
 
    ```bash
-   pnpm db:build                              # build data/rej-studio.db from CSV
-   turso db create rej-studio                 # if it doesn't exist yet
-   TURSO_DB_NAME=rej-studio pnpm db:upload    # dump + pipe into Turso
+   pnpm db:build                  # emit data/genes.jsonl + data/isoforms.jsonl
+   pnpm db:push                   # create tables from schema.ts
+   pnpm db:upload                 # load JSONL into $DATABASE_URL via Drizzle
    ```
 
-   On app startup (dev and prod), an embedded replica is created at `data/rej-studio.replica.db` (or `/tmp/` in production) and synced from Turso.
+   `DATABASE_URL` must point to your Neon database. See [docs/db-migration.md](./docs/db-migration.md) for switching to a different DB backend.
 
 ### Development
 
@@ -90,18 +89,19 @@ pnpm fastapi-dev   # FastAPI only
 
 ### Scripts
 
-| Command           | Description                                    |
-| ----------------- | ---------------------------------------------- |
-| `pnpm dev`        | Start both servers concurrently                |
-| `pnpm build`      | Production build (Next.js)                     |
-| `pnpm start`      | Start production server                        |
-| `pnpm lint`       | Run ESLint                                     |
-| `pnpm lint:fix`   | Auto-fix lint issues                           |
-| `pnpm format`     | Format with Prettier                           |
-| `pnpm type-check` | TypeScript type checking                       |
-| `pnpm db:build`   | Rebuild the local SQLite seed from source data |
-| `pnpm db:upload`  | Dump the local seed and pipe it into Turso     |
-| `pnpm db:studio`  | Browse Turso with Drizzle Studio               |
+| Command           | Description                             |
+| ----------------- | --------------------------------------- |
+| `pnpm dev`        | Start both servers concurrently         |
+| `pnpm build`      | Production build (Next.js)              |
+| `pnpm start`      | Start production server                 |
+| `pnpm lint`       | Run ESLint                              |
+| `pnpm lint:fix`   | Auto-fix lint issues                    |
+| `pnpm format`     | Format with Prettier                    |
+| `pnpm type-check` | TypeScript type checking                |
+| `pnpm db:build`   | Emit neutral JSONL seed from source CSV |
+| `pnpm db:push`    | Create/update tables from schema.ts     |
+| `pnpm db:upload`  | Load JSONL into the DB via Drizzle      |
+| `pnpm db:studio`  | Browse DB with Drizzle Studio           |
 
 ## Project Structure
 
