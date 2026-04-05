@@ -14,6 +14,7 @@ import { JobWatcher } from '@/features/design-tool/components/job-watcher'
 import { ThemeToggle } from '@/app/_components/layout/theme-toggle'
 import { SidebarToggle } from '@/app/_components/layout/sidebar-toggle'
 import { DataTransfer } from '@/app/_components/data-transfer'
+import { SeedDataButton } from '@/app/_components/seed-data-button'
 import type { JobHistoryEntry } from '@/features/design-tool/hooks/use-job-history'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -49,6 +50,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <ThemeToggle />
         </div>
         <DataTransfer />
+        <SeedDataButton />
         <div className="flex items-center gap-2">
           <div className="flex-1" />
           <SidebarToggle />
