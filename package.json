@@ -90,7 +90,8 @@
     "overrides": {
       "@types/react": "$@types/react",
       "@types/react-dom": "$@types/react-dom",
-      "typescript-eslint>typescript": "$typescript"
+      "typescript-eslint>typescript": "$typescript",
+      "esbuild@<0.25.0": ">=0.25.0"
     }
   }
 }
