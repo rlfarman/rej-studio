@@ -1,5 +1,10 @@
-export type Species = 'human' | 'mouse'
-export type SpeciesFilter = Species | 'both'
+import { z } from 'zod'
+
+export const speciesSchema = z.enum(['human', 'mouse'])
+export const speciesFilterSchema = z.enum(['human', 'mouse', 'both'])
+
+export type Species = z.infer<typeof speciesSchema>
+export type SpeciesFilter = z.infer<typeof speciesFilterSchema>
 
 export const SPECIES_OPTIONS: Species[] = ['human', 'mouse']
 export const SPECIES_FILTER_OPTIONS: SpeciesFilter[] = [

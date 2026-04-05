@@ -7,7 +7,8 @@ import {
   ENST_REGEX,
   ENSG_REGEX,
 } from '@/features/gene-search/utils/ensembl-regex'
-import type { SpeciesFilter } from '@/lib/bio/species'
+import { speciesFilterSchema, type SpeciesFilter } from '@/lib/bio/species'
+import { z } from 'zod'
 
 export type GeneSearchResult = Pick<
   SelectGene,
@@ -23,11 +24,25 @@ const geneSearchColumns = {
   species: genes.species,
 } as const
 
+// Defense-in-depth: server actions are reachable from any caller (client, other
+// server code), so re-validate inputs at the boundary even though call-sites
+// pass typed values. A hostile client can construct arbitrary payloads.
+const searchGenesInput = z.object({
+  query: z.string().max(200),
+  species: speciesFilterSchema.default('both'),
+})
+
+const geneSymbolInput = z.object({
+  symbol: z.string().min(1).max(100),
+  species: speciesFilterSchema.optional(),
+})
+
 export async function searchGenes(
   query: string,
   species: SpeciesFilter = 'both',
 ): Promise<GeneSearchResult[]> {
-  const trimmedQuery = query.trim()
+  const parsed = searchGenesInput.parse({ query, species })
+  const trimmedQuery = parsed.query.trim()
   if (trimmedQuery.length === 0) return []
 
   if (ENST_REGEX.test(trimmedQuery)) {
@@ -61,7 +76,7 @@ export async function searchGenes(
   const nameMatch = sql`LOWER(${genes.name}) LIKE ${containsPattern}`
   const altMatch = sql`LOWER(${genes.alternateSymbols}) LIKE ${containsPattern}`
   const speciesMatch =
-    species !== 'both' ? eq(genes.species, species) : undefined
+    parsed.species !== 'both' ? eq(genes.species, parsed.species) : undefined
 
   const rankExpression = sql<number>`
     CASE
@@ -87,10 +102,11 @@ export async function searchGenes(
 }
 
 export async function getGeneBySymbol(symbol: string, species?: SpeciesFilter) {
+  const parsed = geneSymbolInput.parse({ symbol, species })
   const conditions =
-    species && species !== 'both'
-      ? sql`${eq(genes.symbol, symbol)} AND ${eq(genes.species, species)}`
-      : eq(genes.symbol, symbol)
+    parsed.species && parsed.species !== 'both'
+      ? sql`${eq(genes.symbol, parsed.symbol)} AND ${eq(genes.species, parsed.species)}`
+      : eq(genes.symbol, parsed.symbol)
 
   const [gene] = await db
     .select(geneSearchColumns)

@@ -6,6 +6,27 @@
 // you can set COMPUTE_BACKEND=local (or leave it unset) to hit uvicorn at
 // http://127.0.0.1:8000, and COMPUTE_BACKEND=modal still works too.
 
+import { z } from 'zod'
+
+// Server-action input validation. Hostile clients can craft any payload;
+// validate at the trust boundary even though in-app call-sites are typed.
+const jobParamsSchema = z.object({
+  CDS: z
+    .string()
+    .min(1)
+    .max(50000)
+    .regex(/^[ACGTUacgtu]+$/, 'Invalid characters in coding sequence.'),
+  name: z.string().min(1).max(250),
+  options: z.record(z.string(), z.unknown()),
+})
+
+const jobIdSchema = z
+  .string()
+  .min(1)
+  .max(200)
+  // Modal FunctionCall IDs are opaque tokens; keep the character class tight.
+  .regex(/^[A-Za-z0-9_-]+$/, 'Invalid job id.')
+
 export interface JobParams {
   CDS: string
   name: string
@@ -65,11 +86,13 @@ function getLocalApiUrl() {
 export async function submitJob(
   params: JobParams,
 ): Promise<{ jobId: string; result?: Record<string, unknown> }> {
+  const validated = jobParamsSchema.parse(params)
+
   if (isModalBackend()) {
     const response = await fetch(`${getModalUrl()}/jobs`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(params),
+      body: JSON.stringify(validated),
     })
     if (!response.ok) {
       const text = await response.text()
@@ -86,7 +109,7 @@ export async function submitJob(
   const response = await fetch(`${getLocalApiUrl()}/api/py/process-json`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(params),
+    body: JSON.stringify(validated),
   })
   if (!response.ok) {
     const detail = await response.json().catch(() => ({}))
@@ -97,8 +120,10 @@ export async function submitJob(
 }
 
 export async function getJobStatus(jobId: string): Promise<JobStatusResult> {
+  const validatedId = jobIdSchema.parse(jobId)
+
   if (isModalBackend()) {
-    const response = await fetch(`${getModalUrl()}/jobs/${jobId}`)
+    const response = await fetch(`${getModalUrl()}/jobs/${validatedId}`)
     if (!response.ok) {
       const text = await response.text()
       throw new Error(`Modal API error: ${text}`)
@@ -112,8 +137,10 @@ export async function getJobStatus(jobId: string): Promise<JobStatusResult> {
 }
 
 export async function cancelJob(jobId: string): Promise<JobStatusResult> {
+  const validatedId = jobIdSchema.parse(jobId)
+
   if (isModalBackend()) {
-    const response = await fetch(`${getModalUrl()}/jobs/${jobId}`, {
+    const response = await fetch(`${getModalUrl()}/jobs/${validatedId}`, {
       method: 'DELETE',
     })
     if (!response.ok) {
