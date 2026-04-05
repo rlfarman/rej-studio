@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query'
 import { getJobStatus } from '@/features/design-tool/api/jobs'
 import { useJobHistory } from '@/features/design-tool/hooks/use-job-history'
 import type { ProcessResult } from '@/features/design-tool/types/process-result'
+import type { JobError } from '@/features/design-tool/hooks/use-job-history'
 import { createLogger } from '@/lib/logger'
 
 const POLL_INTERVAL = 2000
@@ -12,6 +13,9 @@ const POLL_INTERVAL = 2000
 // resolves (stuck worker, lost call_id). The stale-running TTL in the
 // history store (24h) is a safety net on top of this.
 const POLL_DEADLINE_MS = 10 * 60 * 1000
+
+// Exponential backoff for poll retries: 1s, 2s, 4s, 8s, then cap at 15s.
+const MAX_POLL_RETRIES = 4
 
 const log = createLogger('job-watcher')
 
@@ -27,14 +31,19 @@ const log = createLogger('job-watcher')
  * request per poll interval.
  */
 export function JobWatcher() {
-  const { entries } = useJobHistory()
-  const runningIds = entries
-    .filter((e) => e.status === 'running')
-    .map((e) => e.id)
+  // Selector subscription: only re-render when the set of running IDs
+  // actually changes, not on every history mutation (e.g. progress ticks).
+  const runningIds = useJobHistory((s) =>
+    s.entries
+      .filter((e) => e.status === 'running')
+      .map((e) => e.id)
+      .join(','),
+  )
+  const ids = runningIds ? runningIds.split(',') : []
 
   return (
     <>
-      {runningIds.map((id) => (
+      {ids.map((id) => (
         <JobPoller key={id} jobId={id} />
       ))}
     </>
@@ -46,20 +55,22 @@ interface JobPollerProps {
 }
 
 function JobPoller({ jobId }: JobPollerProps) {
-  const { upsertEntry, getEntry } = useJobHistory()
-  const entry = getEntry(jobId)
+  const upsertEntry = useJobHistory((s) => s.upsertEntry)
+  const createdAt = useJobHistory(
+    (s) => s.entries.find((e) => e.id === jobId)?.createdAt,
+  )
   const [isPastDeadline, setIsPastDeadline] = useState(false)
 
   // Schedule a timer off the entry's createdAt. When the deadline hits,
   // flip local state — that disables the query and fires the failure
   // effect below. Reading Date.now() here (in an effect) is safe.
   useEffect(() => {
-    if (!entry) return
-    const createdAtMs = new Date(entry.createdAt).getTime()
+    if (!createdAt) return
+    const createdAtMs = new Date(createdAt).getTime()
     const remaining = Math.max(0, createdAtMs + POLL_DEADLINE_MS - Date.now())
     const timer = setTimeout(() => setIsPastDeadline(true), remaining)
     return () => clearTimeout(timer)
-  }, [entry])
+  }, [createdAt])
 
   const { data, error, isError } = useQuery({
     queryKey: ['job-status', jobId],
@@ -70,6 +81,15 @@ function JobPoller({ jobId }: JobPollerProps) {
       if (!d) return POLL_INTERVAL
       return d.status === 'running' ? POLL_INTERVAL : false
     },
+    // Pause polling when the tab is backgrounded — TanStack Query's focus
+    // manager already does this, but being explicit makes the intent clear
+    // and guards against a future default change.
+    refetchIntervalInBackground: false,
+    // Exponential backoff on transient errors. Most poll failures are
+    // network blips; retrying a few times before surfacing 'failed' cuts
+    // down on false positives.
+    retry: MAX_POLL_RETRIES,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 15000),
     staleTime: 0,
     gcTime: 0,
   })
@@ -81,7 +101,11 @@ function JobPoller({ jobId }: JobPollerProps) {
     upsertEntry({
       id: jobId,
       status: 'failed',
-      error: 'Timed out waiting for result',
+      error: {
+        code: 'timeout',
+        message: 'Timed out waiting for result',
+        retriable: true,
+      },
     })
     // upsertEntry is stable
   }, [jobId, isPastDeadline]) // eslint-disable-line react-hooks/exhaustive-deps -- upsertEntry is stable
@@ -91,12 +115,13 @@ function JobPoller({ jobId }: JobPollerProps) {
   useEffect(() => {
     if (isError) {
       log.error('poll failed', error, { jobId })
-      upsertEntry({
-        id: jobId,
-        status: 'failed',
-        error:
+      const jobError: JobError = {
+        code: 'network',
+        message:
           error instanceof Error ? error.message : 'Failed to check job status',
-      })
+        retriable: true,
+      }
+      upsertEntry({ id: jobId, status: 'failed', error: jobError })
       return
     }
     if (!data) return
@@ -107,19 +132,49 @@ function JobPoller({ jobId }: JobPollerProps) {
         status: 'completed',
         result: data.result as unknown as ProcessResult,
       })
+    } else if (data.status === 'running') {
+      // Surface progress/stage as they arrive, so the sidebar and inline
+      // spinner can show something better than a blank indefinite loader.
+      if (data.progress !== undefined || data.stage !== undefined) {
+        upsertEntry({
+          id: jobId,
+          status: 'running',
+          progress: data.progress,
+          stage: data.stage,
+        })
+      }
     } else if (data.status === 'failed') {
-      log.warn('job failed', { jobId, error: data.result?.error })
+      log.warn('job failed', { jobId, error: data.error })
       upsertEntry({
         id: jobId,
         status: 'failed',
-        error: (data.result?.error as string) ?? 'Job failed',
+        error: data.error
+          ? { ...data.error, code: data.error.code as JobError['code'] }
+          : {
+              code: 'backend',
+              message: 'Job failed',
+              retriable: false,
+            },
+      })
+    } else if (data.status === 'cancelled') {
+      log.info('job cancelled', { jobId })
+      upsertEntry({
+        id: jobId,
+        status: 'cancelled',
+        error: data.error
+          ? { ...data.error, code: data.error.code as JobError['code'] }
+          : { code: 'cancelled', message: 'Cancelled', retriable: true },
       })
     } else if (data.status === 'not_found') {
       log.warn('job not found', { jobId })
       upsertEntry({
         id: jobId,
         status: 'failed',
-        error: 'No longer available',
+        error: {
+          code: 'not_found',
+          message: 'No longer available',
+          retriable: false,
+        },
       })
     }
     // upsertEntry is stable
