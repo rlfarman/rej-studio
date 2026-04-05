@@ -72,23 +72,31 @@ Hooks install automatically when you run `pnpm install` (via husky's `prepare` s
 
 The following jobs should be configured as **required status checks** on `main` in GitHub repo settings (Settings → Branches → Branch protection rules → `main`):
 
-| Check           | Workflow          | Blocks merge? |
-| --------------- | ----------------- | ------------- |
-| `Lint`          | `ci.yml`          | ✅ required   |
-| `Format`        | `ci.yml`          | ✅ required   |
-| `Type Check`    | `ci.yml`          | ✅ required   |
-| `Knip`          | `ci.yml`          | ✅ required   |
-| `Build`         | `ci.yml`          | ✅ required   |
-| `OSV Scanner`   | `security.yml`    | ✅ required   |
-| `Commitlint`    | `conventions.yml` | ⚠️ advisory   |
-| `PR Title`      | `conventions.yml` | ⚠️ advisory   |
-| `Branch Name`   | `conventions.yml` | ⚠️ advisory   |
-| `Lighthouse CI` | `lighthouse.yml`  | ⚠️ advisory   |
+| Check                       | Workflow               | Blocks merge? |
+| --------------------------- | ---------------------- | ------------- |
+| `Lint`                      | `ci.yml`               | ✅ required   |
+| `Format`                    | `ci.yml`               | ✅ required   |
+| `Type Check`                | `ci.yml`               | ✅ required   |
+| `Knip`                      | `ci.yml`               | ✅ required   |
+| `Build`                     | `ci.yml`               | ✅ required   |
+| `pnpm audit`                | `security.yml`         | ✅ required   |
+| `pip-audit`                 | `security.yml`         | ✅ required   |
+| `Gitleaks`                  | `secret-scanning.yml`  | ✅ required   |
+| `Lockfile drift`            | `lock-file-policy.yml` | ⚠️ advisory   |
+| `Ruff (lint + format)`      | `python-ci.yml`        | ✅ required   |
+| `Pyright`                   | `python-ci.yml`        | ⚠️ advisory   |
+| `Schema drift + migrations` | `db-ci.yml`            | ✅ required   |
+| `Commitlint`                | `conventions.yml`      | ⚠️ advisory   |
+| `PR Title`                  | `conventions.yml`      | ⚠️ advisory   |
+| `Branch Name`               | `conventions.yml`      | ⚠️ advisory   |
+| `Lighthouse CI`             | `lighthouse.yml`       | ⚠️ advisory   |
 
-The five `ci.yml` jobs use `dorny/paths-filter` and are skipped for docs-only PRs; GitHub treats skipped required checks as passing.
+The `ci.yml` jobs use `dorny/paths-filter` and are skipped for docs-only PRs; GitHub treats skipped required checks as passing. `python-ci.yml` and `db-ci.yml` are path-filtered too.
+
+All GitHub Action uses are pinned to commit SHAs (not tags) to prevent tag-reassignment attacks. When updating actions via Dependabot, the pinned SHA will be bumped automatically.
 
 To enable: repo Settings → Branches → Add branch protection rule → pattern `main` → "Require status checks to pass before merging" → search for and add each required check.
 
 ## Locally reproducing CI
 
-Run `pnpm verify` to reproduce the CI gates (lint, format check, type check, knip, build) in one command before pushing.
+Run `pnpm verify` to reproduce the CI gates (lint, format check, type check, knip, build) in one command before pushing. The `pre-push` hook also runs `pnpm verify` automatically.

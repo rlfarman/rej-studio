@@ -1,0 +1,75 @@
+name: Neon Preview
+
+# Creates an ephemeral Neon branch per PR so migrations and seed experiments
+# run against a throwaway DB. Deletes the branch on PR close/merge so we
+# don't burn through the 10-branch limit on the free plan.
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, closed]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.number }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  create:
+    name: Create preview branch
+    runs-on: ubuntu-latest
+    if: github.event.action != 'closed'
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Create or reset Neon branch
+        id: create_branch
+        uses: neondatabase/create-branch-action@34f619c41c6e67b4f2f13f1c6eae90827a5f2cf4 # v5
+        with:
+          project_id: ${{ secrets.NEON_PROJECT_ID }}
+          branch_name: preview/pr-${{ github.event.number }}
+          api_key: ${{ secrets.NEON_API_KEY }}
+
+      - name: Comment on PR with connection info
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.0.1
+        with:
+          script: |
+            const marker = '<!-- neon-preview -->'
+            const body = `${marker}
+            **Neon preview branch:** \`preview/pr-${{ github.event.number }}\`
+
+            Connection info available in Actions secrets as \`NEON_PREVIEW_URL\`.
+            This branch is deleted automatically when the PR is closed.`
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            })
+            const existing = comments.find(c => c.body?.includes(marker))
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                comment_id: existing.id, body,
+              })
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: context.issue.number, body,
+              })
+            }
+
+  delete:
+    name: Delete preview branch
+    runs-on: ubuntu-latest
+    # Runs on both merge and plain close — either way we want the branch gone
+    # so the 10-branch cap on Neon's free plan doesn't pile up stale previews.
+    if: github.event.action == 'closed'
+    steps:
+      - name: Delete Neon branch
+        uses: neondatabase/delete-branch-action@4468d825d5a88ef4012f1705a82f02ec3072f776 # v3
+        with:
+          project_id: ${{ secrets.NEON_PROJECT_ID }}
+          branch: preview/pr-${{ github.event.number }}
+          api_key: ${{ secrets.NEON_API_KEY }}

@@ -1,4 +1,5 @@
 -r requirements.txt
 
-# Dev tooling — used by lint-staged pre-commit hook and local scripts.
+# Dev tooling — used by lint-staged pre-commit hook, CI, and local scripts.
 ruff>=0.6.0
+pyright>=1.1.370

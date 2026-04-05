@@ -5,22 +5,77 @@ on:
   push:
     branches: [main]
   schedule:
-    # Weekly scan (Monday 08:00 UTC) catches newly-disclosed CVEs in pinned deps
+    # Weekly scan (Monday 08:00 UTC) catches newly-disclosed CVEs in pinned deps.
     - cron: '0 8 * * 1'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
-  security-events: write
 
 jobs:
-  osv-scanner:
-    name: OSV Scanner
-    uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@v2.0.0
-    with:
-      scan-args: |-
-        --lockfile=pnpm-lock.yaml
-        --lockfile=requirements.txt:python/requirements.txt
-    permissions:
-      contents: read
-      security-events: write
-      actions: read
+  # `pnpm audit` hits the npm registry's advisory DB directly — no GitHub code
+  # scanning required, which matters while the repo is private (code scanning
+  # is paid on private repos). Fails on moderate+ so CVEs block merges.
+  npm-audit:
+    name: pnpm audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.1.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+      - name: Audit production dependencies
+        # Only fail on advisories affecting prod deps; dev-dep CVEs are noisy
+        # and rarely ship to users. `--audit-level moderate` blocks on
+        # moderate+ severity; swap to `high` if the signal gets too noisy.
+        run: pnpm audit --prod --audit-level moderate
+
+  # pip-audit uses PyPI's advisory DB (PYSEC + OSV feed) — no GitHub code
+  # scanning. Runs against runtime + Modal requirements.
+  pip-audit:
+    name: pip-audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: '3.11'
+      - name: Install pip-audit
+        run: pip install pip-audit
+      - name: Audit python/requirements.txt
+        run: pip-audit -r python/requirements.txt --strict
+
+  # SBOM generation — attached as a workflow artifact on every main push.
+  # Gives us a reproducible snapshot of what was shipped, usable for
+  # compliance audits or CVE triage after the fact.
+  sbom:
+    name: SBOM
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.1.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: '3.11'
+      - run: pnpm install --frozen-lockfile
+      - name: Generate npm SBOM (CycloneDX)
+        run: npx --yes @cyclonedx/cyclonedx-npm --output-file sbom-npm.cdx.json
+      - name: Generate Python SBOM (CycloneDX)
+        run: |
+          pip install cyclonedx-bom
+          cyclonedx-py requirements python/requirements.txt -o sbom-python.cdx.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: sbom
+          path: sbom-*.cdx.json
+          retention-days: 90
