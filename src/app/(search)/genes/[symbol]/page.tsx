@@ -20,7 +20,7 @@ import {
 
 type Props = {
   params: Promise<{ symbol: string }>
-  searchParams: Promise<{ species?: string }>
+  searchParams: Promise<{ species?: string; isoform?: string }>
 }
 
 const getCachedGeneBySymbol = cache(getGeneBySymbol)
@@ -48,6 +48,7 @@ export default async function GeneSymbolPage(props: Props) {
     notFound()
   }
 
+  const { isoform: highlightedIsoformId } = await props.searchParams
   const isoforms = await getIsoformsByGene(gene.id)
 
   const speciesAvailable = [
@@ -91,7 +92,10 @@ export default async function GeneSymbolPage(props: Props) {
         <h2 className="mb-2 text-lg font-semibold tracking-tight">Isoforms</h2>
         <IsoformSummary isoforms={isoforms} />
         <Suspense fallback={<IsoformTableLoading />}>
-          <IsoformTable isoforms={isoforms} />
+          <IsoformTable
+            isoforms={isoforms}
+            highlightedIsoformId={highlightedIsoformId}
+          />
         </Suspense>
       </CardContent>
     </Card>
