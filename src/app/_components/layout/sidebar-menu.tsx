@@ -7,6 +7,7 @@ import {
   Monitor,
   Moon,
   MoreHorizontal,
+  Sprout,
   Sun,
   Upload,
 } from 'lucide-react'
@@ -22,7 +23,10 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Button } from '@/components/ui/button'
 import { exportUserData, importUserData } from '@/lib/data-transfer'
+import { seedUserData } from '@/app/_components/seed-data'
 import { toast } from 'sonner'
+
+const IS_DEV = process.env.NODE_ENV === 'development'
 
 const THEMES = [
   { value: 'light', label: 'Light', icon: Sun },
@@ -92,6 +96,22 @@ export function SidebarMenu() {
             <Upload className="h-4 w-4" />
             Import data
           </DropdownMenuItem>
+          {IS_DEV && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => {
+                  const { favorites, recents, jobs } = seedUserData()
+                  toast.success(
+                    `Seeded ${favorites} favorites, ${recents} recents, ${jobs} jobs`,
+                  )
+                }}
+              >
+                <Sprout className="h-4 w-4" />
+                Seed data (dev)
+              </DropdownMenuItem>
+            </>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
     </>

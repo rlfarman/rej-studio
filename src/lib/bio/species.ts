@@ -27,8 +27,12 @@ export function isSpeciesFilter(value: string): value is SpeciesFilter {
   return value === 'human' || value === 'mouse' || value === 'both'
 }
 
-export function geneHref(symbol: string, species?: string) {
-  return species ? `/genes/${symbol}?species=${species}` : `/genes/${symbol}`
+export function geneHref(symbol: string, species?: string, isoformId?: string) {
+  const params = new URLSearchParams()
+  if (species) params.set('species', species)
+  if (isoformId) params.set('isoform', isoformId)
+  const qs = params.toString()
+  return qs ? `/genes/${symbol}?${qs}` : `/genes/${symbol}`
 }
 
 export function parseSpeciesParam(

@@ -12,7 +12,9 @@ import type { SpeciesFilter } from '@/lib/bio/species'
 export type GeneSearchResult = Pick<
   SelectGene,
   'id' | 'name' | 'symbol' | 'species'
->
+> & {
+  matchedIsoformId?: string
+}
 
 const geneSearchColumns = {
   id: genes.id,
@@ -34,7 +36,7 @@ export async function searchGenes(
 
   if (ENST_REGEX.test(trimmedQuery)) {
     const [result] = await db
-      .select(geneSearchColumns)
+      .select({ ...geneSearchColumns, matchedIsoformId: isoforms.id })
       .from(isoforms)
       .innerJoin(genes, eq(isoforms.geneId, genes.id))
       .where(eq(isoforms.id, trimmedQuery))

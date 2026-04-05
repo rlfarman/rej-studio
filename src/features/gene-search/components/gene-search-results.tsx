@@ -34,14 +34,21 @@ export async function GeneSearchResults({
       {results.map((gene) => (
         <Link
           key={gene.id}
-          href={geneHref(gene.symbol, gene.species)}
+          href={geneHref(gene.symbol, gene.species, gene.matchedIsoformId)}
           className="hover:bg-accent flex items-center gap-4 px-4 py-3 transition-colors"
         >
           <Badge className="grid w-24 shrink-0 grid-cols-[24px_1fr] items-center gap-2 font-mono">
             <SpeciesIcon species={gene.species} className="h-4 w-4" />
             <span className="truncate">{gene.symbol}</span>
           </Badge>
-          <span className="text-sm">{gene.name}</span>
+          <div className="flex flex-col gap-0.5">
+            <span className="text-sm">{gene.name}</span>
+            {gene.matchedIsoformId && (
+              <span className="text-muted-foreground font-mono text-xs">
+                {gene.matchedIsoformId}
+              </span>
+            )}
+          </div>
         </Link>
       ))}
     </div>
