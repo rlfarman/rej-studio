@@ -17,7 +17,7 @@ export function HighlightMatch({
     <>
       {parts.map((part, i) =>
         regex.test(part) ? (
-          <mark key={i} className="bg-primary/20 text-inherit rounded-sm">
+          <mark key={i} className="bg-primary/20 rounded-sm text-inherit">
             {part}
           </mark>
         ) : (

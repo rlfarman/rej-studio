@@ -15,7 +15,9 @@ export function DataTransfer() {
 
     try {
       const { imported } = await importUserData(file)
-      toast.success(`Imported ${imported} data ${imported === 1 ? 'category' : 'categories'}`)
+      toast.success(
+        `Imported ${imported} data ${imported === 1 ? 'category' : 'categories'}`,
+      )
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Import failed')
     }

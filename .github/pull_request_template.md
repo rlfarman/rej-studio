@@ -4,13 +4,14 @@
 
 ## Changes
 
-<!-- Bullet list of key changes -->
--
+## <!-- Bullet list of key changes -->
+
 -
 
 ## Testing
 
 <!-- How did you test these changes? -->
+
 - [ ] Ran locally (`pnpm dev`)
 - [ ] Lint passes (`pnpm lint`)
 - [ ] Type-check passes (`pnpm type-check`)
