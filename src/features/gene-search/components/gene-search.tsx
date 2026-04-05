@@ -78,7 +78,7 @@ export function GeneSearch({
         <Button
           variant="outline"
           onClick={() => setIsOpen(true)}
-          className="text-muted-foreground hover:text-muted-foreground w-full min-w-42 cursor-pointer justify-between sm:min-w-96 md:min-w-72 xl:min-w-108"
+          className="text-muted-foreground hover:text-muted-foreground w-full min-w-42 cursor-pointer justify-between md:min-w-72 xl:min-w-108"
         >
           <div className="flex items-center gap-2">
             <SearchIcon className="h-5 w-5" />
