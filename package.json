@@ -9,7 +9,7 @@
     "dev": "concurrently \"pnpm next-dev\" \"pnpm fastapi-dev\"",
     "db:build": "python3 scripts/build-db.py",
     "db:push": "drizzle-kit push",
-    "db:upload": "tsx scripts/load-db.ts",
+    "db:upload": "tsx --env-file=.env scripts/load-db.ts",
     "db:studio": "drizzle-kit studio",
     "build": "next build",
     "start": "next start",
