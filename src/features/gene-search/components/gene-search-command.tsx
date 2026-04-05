@@ -108,12 +108,19 @@ export function GeneSearchCommand({
                         <span className="font-mono font-medium">
                           {gene.symbol}
                         </span>
-                        <TruncatedText
-                          tooltip={gene.name}
-                          className="text-muted-foreground truncate"
-                        >
-                          {gene.name}
-                        </TruncatedText>
+                        <div className="flex min-w-0 flex-col">
+                          <TruncatedText
+                            tooltip={gene.name}
+                            className="text-muted-foreground truncate"
+                          >
+                            {gene.name}
+                          </TruncatedText>
+                          {gene.matchedIsoformId && (
+                            <span className="text-muted-foreground font-mono text-xs">
+                              {gene.matchedIsoformId}
+                            </span>
+                          )}
+                        </div>
                       </CommandItem>
                     ))}
                   </CommandGroup>
@@ -138,12 +145,19 @@ export function GeneSearchCommand({
                           <span className="font-mono font-medium">
                             {gene.symbol}
                           </span>
-                          <TruncatedText
-                            tooltip={gene.name}
-                            className="text-muted-foreground truncate"
-                          >
-                            {gene.name}
-                          </TruncatedText>
+                          <div className="flex min-w-0 flex-col">
+                            <TruncatedText
+                              tooltip={gene.name}
+                              className="text-muted-foreground truncate"
+                            >
+                              {gene.name}
+                            </TruncatedText>
+                            {gene.matchedIsoformId && (
+                              <span className="text-muted-foreground font-mono text-xs">
+                                {gene.matchedIsoformId}
+                              </span>
+                            )}
+                          </div>
                         </CommandItem>
                       ))}
                     </CommandGroup>

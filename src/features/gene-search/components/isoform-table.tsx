@@ -82,6 +82,16 @@ export default function IsoformTable({
   const { species } = useSpeciesContext()
   const { copy, isCopied } = useCopyToClipboard({ showToast: false })
 
+  useEffect(() => {
+    if (!highlightedIsoformId) return
+    const timer = setTimeout(() => {
+      const url = new URL(window.location.href)
+      url.searchParams.delete('isoform')
+      window.history.replaceState(null, '', url.toString())
+    }, 200)
+    return () => clearTimeout(timer)
+  }, [highlightedIsoformId])
+
   const [sortKey, setSortKey] = useState<SortKey>('cdsLength')
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
   const [expandedIds, setExpandedIds] = useState<Set<string>>(() =>
@@ -296,12 +306,15 @@ function IsoformRow({
   onToggleExpanded: (id: string) => void
   onToggleSelected: (id: string) => void
 }) {
+  const [ringVisible, setRingVisible] = useState(!!isHighlighted)
+
   useEffect(() => {
-    if (isHighlighted) {
-      document
-        .getElementById(`isoform-row-${isoform.id}`)
-        ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-    }
+    if (!isHighlighted) return
+    document
+      .getElementById(`isoform-row-${isoform.id}`)
+      ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    const timer = setTimeout(() => setRingVisible(false), 2000)
+    return () => clearTimeout(timer)
   }, [isHighlighted, isoform.id])
 
   return (
@@ -309,8 +322,8 @@ function IsoformRow({
       <TableRow
         id={`isoform-row-${isoform.id}`}
         className={cn(
-          'cursor-pointer',
-          isHighlighted && 'ring-primary ring-2 ring-inset',
+          'cursor-pointer transition-shadow duration-1000',
+          ringVisible && 'ring-primary ring-2 ring-inset',
         )}
         onClick={() => onToggleExpanded(isoform.id)}
       >
