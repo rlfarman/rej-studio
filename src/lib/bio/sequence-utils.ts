@@ -7,6 +7,26 @@ export function computeGcPercent(seq: string): number {
 }
 
 /**
+ * Find all WGGW motif occurrences in a sequence. WGGW = [AT]GG[AT].
+ * Returns 1-based positions of the first base of each motif.
+ */
+export function findWggwMotifs(
+  seq: string,
+): { position: number; motif: string }[] {
+  if (seq.length < 4) return []
+  const upper = seq.toUpperCase().replace(/U/g, 'T')
+  const matches: { position: number; motif: string }[] = []
+  const re = /[AT]GG[AT]/g
+  let m: RegExpExecArray | null
+  while ((m = re.exec(upper)) !== null) {
+    matches.push({ position: m.index + 1, motif: m[0] })
+    // Advance by 1 to catch overlapping motifs (e.g. TGGT inside ATGGTA).
+    re.lastIndex = m.index + 1
+  }
+  return matches
+}
+
+/**
  * Sliding-window GC content. Returns one point per `step` bases, centered on
  * the window. Windows at the edges are shortened to fit within the sequence.
  */

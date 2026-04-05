@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/form'
 import { FormValues } from '../types/form-schema'
 import { assessFragmentBalance } from '@/lib/bio/sequence-utils'
+import { SpliceSliderContext } from './splice-slider-context'
 
 export function DNASplicer() {
   const { control, setValue, watch } = useFormContext<FormValues>()
@@ -166,6 +167,13 @@ export function DNASplicer() {
           ))}
         </div>
       </div>
+
+      {/* Split context: GC profile, WGGW candidates, frame-at-split */}
+      <SpliceSliderContext
+        sequence={codingSequence}
+        position={position}
+        onSnap={setPosition}
+      />
 
       {/* Quick actions */}
       <div className="flex flex-wrap items-center gap-2">
