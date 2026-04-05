@@ -45,11 +45,11 @@ export function GcSparkline({ sequence }: Props) {
   const bandBottom = PAD_Y + (1 - 0.4) * (H - PAD_Y * 2)
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex min-w-0 items-center gap-2">
       <svg
         viewBox={`0 0 1000 ${H}`}
         preserveAspectRatio="none"
-        className="block h-5 w-full flex-1 overflow-visible"
+        className="block h-5 w-full min-w-0 flex-1 overflow-visible"
         role="img"
         aria-label={`GC content sparkline, overall ${overallGc.toFixed(1)} percent`}
       >
