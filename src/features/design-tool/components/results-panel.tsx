@@ -29,6 +29,8 @@ import { toast } from 'sonner'
 import { downloadResultsZip } from '@/features/design-tool/utils/build-zip'
 import { ComparisonPanel } from './comparison-panel'
 import { SequenceVisualizations } from './sequence-visualizations'
+import { CodonChanges } from './codon-changes'
+import { JunctionContext } from './junction-context'
 import { AavResults } from './aav-size-estimator'
 import { formatFasta } from '@/lib/bio/fasta'
 
@@ -420,6 +422,22 @@ function ResultsPanelImpl({ result, optionsUsed }: ResultsPanelProps) {
             original={result.original_sequence}
             optimized={result.optimized_sequence}
             splitPoint={result.split_point}
+          />
+
+          <Separator />
+
+          <CodonChanges
+            original={result.original_sequence}
+            optimized={result.optimized_sequence}
+            splitPoint={result.split_point}
+          />
+
+          <Separator />
+
+          <JunctionContext
+            sequence={result.optimized_sequence}
+            splitPoint={result.split_point}
+            wggwMotif={result.wggw_info?.main?.motif}
           />
 
           <Separator />

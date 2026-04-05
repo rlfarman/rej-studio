@@ -13,15 +13,19 @@ import { Upload } from 'lucide-react'
 import { FormValues } from '../types/form-schema'
 import { SequenceWarnings } from './sequence-warnings'
 import { SequenceHighlight } from './sequence-highlight'
+import { SequenceGcSparkline } from './sequence-gc-sparkline'
+import { CodonUsageStrip } from './codon-usage-strip'
 import { cn } from '@/lib/utils'
 import { cleanSequence, parseFasta } from '@/lib/bio/fasta'
 import { toast } from 'sonner'
+import { isSpecies } from '@/lib/bio/species'
 
 const MAX_LENGTH = 50_000
 
 export function CodingSequenceInput() {
   const { control, watch, setValue } = useFormContext<FormValues>()
   const value = watch('codingSequence')
+  const species = watch('species')
   const length = value?.length ?? 0
   const fileInputRef = useRef<HTMLInputElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -193,6 +197,14 @@ export function CodingSequenceInput() {
               </span>
             </span>
           </FormAssistiveText>
+          {value && value.length >= 60 && (
+            <div className="space-y-2 pt-1">
+              <SequenceGcSparkline sequence={value} />
+              {isSpecies(species) && value.length % 3 === 0 && (
+                <CodonUsageStrip sequence={value} species={species} />
+              )}
+            </div>
+          )}
           <SequenceWarnings />
         </FormItem>
       )}
