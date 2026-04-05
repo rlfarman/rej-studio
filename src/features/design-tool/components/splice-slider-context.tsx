@@ -353,7 +353,7 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
       )}
 
       {/* Frame-at-split readout */}
-      <FrameAtSplit ctx={frameContext} position={position} />
+      <FrameAtSplit ctx={frameContext} position={position} onSnap={onSnap} />
     </div>
   )
 }
@@ -433,9 +433,11 @@ function buildFrameContext(sequence: string, position: number): FrameContext {
 function FrameAtSplit({
   ctx,
   position,
+  onSnap,
 }: {
   ctx: FrameContext
   position: number
+  onSnap: (position: number) => void
 }) {
   const splitCodon = ctx.codons.find((c) => c.isSplit)
   const aaName =
@@ -484,10 +486,13 @@ function FrameAtSplit({
       >
         <div className="flex items-center gap-[1px]">
           {ctx.codons.map((c) => (
-            <div
+            <button
+              type="button"
               key={c.idx}
+              onClick={() => onSnap(c.idx * 3 + 1)}
+              title={`Snap cut to start of codon ${c.idx + 1} (bp ${(c.idx * 3 + 1).toLocaleString()})`}
               className={cn(
-                'flex flex-col items-center gap-0.5 rounded-sm px-[3px] py-1',
+                'hover:bg-primary/10 hover:ring-primary/30 flex flex-col items-center gap-0.5 rounded-sm px-[3px] py-1 transition-colors hover:ring-1',
                 c.isSplit && 'bg-primary/15 ring-primary/40 ring-1',
               )}
             >
@@ -521,7 +526,7 @@ function FrameAtSplit({
                   )
                 })}
               </span>
-            </div>
+            </button>
           ))}
         </div>
       </div>
