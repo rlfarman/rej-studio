@@ -24,10 +24,14 @@ export function RunningPlaceholder({
   stage,
   progress,
 }: RunningPlaceholderProps) {
+  // Backend emits progress as a 0-1 fraction.
   const pct =
-    typeof progress === 'number' && progress >= 0 && progress <= 100
-      ? Math.round(progress)
+    typeof progress === 'number' && progress >= 0 && progress <= 1
+      ? Math.round(progress * 100)
       : null
+  // Ease toward the target so the bar never feels frozen between polls, and
+  // always advances visibly when a new checkpoint lands.
+  const displayedPct = useSmoothedProgress(pct)
   return (
     <Card>
       <CardContent className="flex flex-col items-center justify-center gap-4 py-12">
@@ -42,22 +46,72 @@ export function RunningPlaceholder({
               'Running DNAChisel on the server. This usually takes a few seconds.'}
           </p>
         </div>
-        {pct !== null && (
+        {displayedPct !== null && (
           <div className="w-full max-w-xs">
-            <div className="bg-muted h-1.5 w-full overflow-hidden rounded-full">
+            <div className="bg-muted relative h-1.5 w-full overflow-hidden rounded-full">
               <div
-                className="bg-primary h-full transition-all"
-                style={{ width: `${pct}%` }}
+                className="bg-primary h-full transition-[width] duration-700 ease-out"
+                style={{ width: `${displayedPct}%` }}
+              />
+              {/* Shimmer overlay signals continued activity even when the
+                  filled width sits on the same checkpoint for a while. */}
+              <span
+                aria-hidden
+                className="pointer-events-none absolute inset-0 -translate-x-full animate-[shimmer_1.6s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-white/25 to-transparent"
               />
             </div>
             <p className="text-muted-foreground mt-1.5 text-center text-[10px] tabular-nums">
-              {pct}%
+              {displayedPct}%
             </p>
           </div>
         )}
       </CardContent>
     </Card>
   )
+}
+
+/**
+ * Eases displayed percentage toward the target. Between polls (every ~2s) the
+ * real progress value doesn't move, so we creep forward on an asymptotic curve
+ * that caps a few points below the target. When a new poll lands, the
+ * displayed value snaps to the new floor and resumes creeping.
+ */
+function useSmoothedProgress(target: number | null): number | null {
+  const [displayed, setDisplayed] = React.useState<number | null>(target)
+  const targetRef = React.useRef(target)
+
+  React.useEffect(() => {
+    targetRef.current = target
+    if (target === null) {
+      setDisplayed(null)
+      return
+    }
+    // Snap up to the real target when it jumps forward.
+    setDisplayed((prev) => (prev === null || target > prev ? target : prev))
+
+    let raf = 0
+    let lastTick = performance.now()
+    const tick = (now: number) => {
+      const dt = (now - lastTick) / 1000
+      lastTick = now
+      setDisplayed((prev) => {
+        const t = targetRef.current
+        if (t === null || prev === null) return prev
+        // Creep up to +6 points above the last real checkpoint, but never
+        // reach 100 via creep — real completion is signalled elsewhere.
+        const ceiling = Math.min(99, t + 6)
+        if (prev >= ceiling) return prev
+        // ~1.5 points/second, tapered.
+        const delta = dt * 1.5 * (1 - (prev - t) / 6)
+        return Math.min(ceiling, prev + delta)
+      })
+      raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [target])
+
+  return displayed === null ? null : Math.round(displayed)
 }
 
 type JobHeaderStatus = 'running' | 'completed' | 'failed' | 'cancelled'

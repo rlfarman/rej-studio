@@ -3,6 +3,7 @@ import glob
 import re
 import contextlib
 import random
+import threading
 import time
 import sys
 import shutil
@@ -13,6 +14,172 @@ from tqdm import tqdm
 from dnachisel import *
 from dnachisel import biotools
 from collections import defaultdict
+
+# proglog ships with dnachisel; if import shape shifts we fall back to a
+# stub base that does nothing so the algorithm still runs.
+try:
+    from proglog import ProgressBarLogger as _ProgressBarLoggerBase
+except Exception:  # pragma: no cover - defensive
+    class _ProgressBarLoggerBase:  # type: ignore[no-redef]
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def __call__(self, *args, **kwargs):
+            pass
+
+
+class _MonotonicProgress:
+    """Shared gate that both the proglog bridge and the heartbeat thread
+    write through, so the UI never sees progress regress. Also exposes
+    last-emit time so the heartbeat can act as a watchdog (only tick when
+    the real logger has gone quiet).
+    """
+
+    def __init__(self, on_progress):
+        self._on_progress = on_progress
+        self._lock = threading.Lock()
+        self._last_frac = 0.0
+        self._last_emit_at = 0.0
+
+    def emit(self, frac, stage):
+        if self._on_progress is None:
+            return
+        with self._lock:
+            if frac <= self._last_frac:
+                return
+            self._last_frac = frac
+            self._last_emit_at = time.monotonic()
+        try:
+            self._on_progress(frac, stage)
+        except Exception:
+            pass
+
+    @property
+    def last_frac(self):
+        with self._lock:
+            return self._last_frac
+
+    @property
+    def seconds_since_emit(self):
+        with self._lock:
+            if self._last_emit_at == 0.0:
+                return float('inf')
+            return time.monotonic() - self._last_emit_at
+
+
+class _ProgressBridgeLogger(_ProgressBarLoggerBase):
+    """Translate dnachisel's proglog bar updates into on_progress() calls.
+
+    DNAChisel drives bars named 'mutation', 'objective', and 'constraint'
+    via `self.logger(bar__total=N)` and `self.logger(bar__index=i)`. The
+    long-running work during `problem.optimize()` advances the 'mutation'
+    bar (iteration count / total mutation space) along with 'objective'
+    (which objective is currently being worked on). We map those into a
+    monotonically-increasing fraction in frac_range and emit a stage label
+    like 'Optimizing sequence (obj 2/5)'.
+    """
+
+    def __init__(self, gate, frac_range, stage):
+        super().__init__()
+        self._gate = gate
+        self._frac_lo, self._frac_hi = frac_range
+        self._base_stage = stage
+        # Per-bar (index, total) so we can compute combined progress.
+        self._obj_index = 0
+        self._obj_total = 0
+        self._mut_index = 0
+        self._mut_total = 0
+
+    def bars_callback(self, bar, attr, value, old_value=None):
+        if attr not in ('index', 'total'):
+            return
+        try:
+            v = int(value)
+        except (TypeError, ValueError):
+            return
+        if bar == 'objective':
+            if attr == 'total':
+                self._obj_total = max(0, v)
+            elif attr == 'index':
+                self._obj_index = max(0, v)
+        elif bar == 'mutation':
+            if attr == 'total':
+                self._mut_total = max(0, v)
+            elif attr == 'index':
+                self._mut_index = max(0, v)
+        else:
+            return  # ignore 'constraint' etc. during optimize phase
+        self._emit()
+
+    def _emit(self):
+        if self._gate is None:
+            return
+        if self._obj_total > 0:
+            obj_portion = min(self._obj_index, self._obj_total) / self._obj_total
+        else:
+            obj_portion = 0.0
+        mut_portion = 0.0
+        if self._obj_total > 0 and self._mut_total > 0:
+            mut_fraction = min(self._mut_index, self._mut_total) / self._mut_total
+            mut_portion = mut_fraction / self._obj_total
+        raw = obj_portion + mut_portion
+        frac = self._frac_lo + (self._frac_hi - self._frac_lo) * min(raw, 0.999)
+        stage = self._base_stage
+        if self._obj_total > 0:
+            stage = f"{self._base_stage} ({min(self._obj_index + 1, self._obj_total)}/{self._obj_total})"
+        self._gate.emit(frac, stage)
+
+
+@contextlib.contextmanager
+def _progress_heartbeat(gate, frac_range, stage, expected_seconds, idle_after=2.0):
+    """Watchdog thread that creeps progress forward on wall-clock, but only
+    when the real proglog bridge has gone quiet for `idle_after` seconds.
+
+    Shares a monotonic gate with the bridge so the bridge's real updates
+    always win, and the heartbeat only fills silence. Uses an asymptotic
+    curve so it approaches but never reaches frac_hi, leaving headroom for
+    the next real checkpoint to overtake it.
+    """
+    if gate is None or gate._on_progress is None:
+        yield
+        return
+
+    stop_event = threading.Event()
+    frac_lo, frac_hi = frac_range
+    span = max(1e-6, frac_hi - frac_lo)
+    started = time.monotonic()
+
+    def run():
+        import math
+        # Heartbeat never reaches frac_hi — bridge events own the last few
+        # percent of the range.
+        cap = frac_hi
+        while not stop_event.is_set():
+            if gate.seconds_since_emit >= idle_after:
+                elapsed = time.monotonic() - started
+                # Primary asymptotic approach based on expected_seconds.
+                # Saturates at ~80% of span over ~3τ.
+                ratio = 1.0 - math.exp(-elapsed / max(1.0, expected_seconds))
+                frac_primary = frac_lo + span * ratio * 0.80
+                # Secondary creep: close 1.5% of the remaining gap-to-cap
+                # per tick so the bar keeps moving on long runs after the
+                # primary curve saturates, and continues creeping from
+                # wherever the bridge last left it.
+                last = max(gate.last_frac, frac_lo)
+                frac_secondary = last + max(0.0, cap - last) * 0.015
+                frac = max(frac_primary, frac_secondary)
+                if frac > cap:
+                    frac = cap
+                gate.emit(frac, stage)
+            stop_event.wait(1.5)
+
+    t = threading.Thread(target=run, name='progress-heartbeat', daemon=True)
+    t.start()
+    try:
+        yield
+    finally:
+        stop_event.set()
+        t.join(timeout=0.5)
 
 # A simple "tee" object for duplicating writes
 class Tee:
@@ -248,9 +415,11 @@ def runOptimization(CDS, OPTIONS, on_progress=None):
     endpoint polling a shared Dict). None by default so the synchronous
     local FastAPI path stays callback-free.
     """
+    # Shared monotonic gate: every progress write goes through here, so
+    # the UI only ever sees frac advance, never regress.
+    progress_gate = _MonotonicProgress(on_progress)
     def _emit(frac, stage):
-        if on_progress is not None:
-            on_progress(frac, stage)
+        progress_gate.emit(frac, stage)
     CDS = CDS.upper()
     AAseq = biotools.translate(CDS)
     constraints = []
@@ -330,12 +499,28 @@ def runOptimization(CDS, OPTIONS, on_progress=None):
     if OPTIONS.get('enforce_gc', True):
         constraints.append(EnforceGCContent(location=(0, CDSlen, 1), mini=0.35, maxi=0.60))
     
-    # Create and solve the optimization problem
+    # Create and solve the optimization problem. We hand DNAChisel a custom
+    # proglog logger that forwards its internal bar updates ('mutation',
+    # 'objective', 'constraint') to our on_progress callback, so the frontend
+    # can show real sub-progress during the long `problem.optimize()` call
+    # instead of sitting frozen at 45% for most of the run.
+    optimize_logger = _ProgressBridgeLogger(
+        gate=progress_gate,
+        frac_range=(0.45, 0.88),
+        stage='Optimizing sequence',
+    ) if on_progress is not None else 'bar'
+    resolve_logger = _ProgressBridgeLogger(
+        gate=progress_gate,
+        frac_range=(0.15, 0.40),
+        stage='Resolving constraints',
+    ) if on_progress is not None else 'bar'
+
     _emit(0.10, 'Preparing constraints')
     problem = DnaOptimizationProblem(
         sequence=CDS,
         constraints=constraints,
         objectives=objectives,
+        logger=resolve_logger,
     )
     _emit(0.15, 'Resolving constraints')
     problem.resolve_constraints()
@@ -343,10 +528,23 @@ def runOptimization(CDS, OPTIONS, on_progress=None):
     objectives_before = problem.objectives_text_summary()
     OPTIONS['objectives_report_before'] = build_objectives_report(problem)
     _emit(0.45, 'Optimizing sequence')
-    problem.optimize()
+    # Swap in the optimize-phase logger. Some dnachisel versions look it up
+    # as problem.logger; this reassignment is safe either way.
+    problem.logger = optimize_logger
+    # Also run a heartbeat thread as a safety net: if dnachisel doesn't emit
+    # bar events frequently enough (short objective lists, tight loops,
+    # different version internals), we still creep forward on wall-clock so
+    # the UI never looks frozen.
+    with _progress_heartbeat(
+        gate=progress_gate,
+        frac_range=(0.45, 0.87),
+        stage='Optimizing sequence',
+        expected_seconds=10.0,
+    ):
+        problem.optimize()
     objectives_after = problem.objectives_text_summary()
     OPTIONS['objectives_report_after'] = build_objectives_report(problem)
-    _emit(0.90, 'Finalizing')
+    _emit(0.92, 'Finalizing')
 
     return problem.sequence, objectives_before, objectives_after
 

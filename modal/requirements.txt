@@ -1,4 +1,5 @@
 modal
 dnachisel
+proglog
 tqdm
 fastapi[standard]
