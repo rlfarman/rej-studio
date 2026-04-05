@@ -33,7 +33,6 @@ import { SpeciesSelect } from '@/components/bio/species-select'
 import { useSpeciesContext } from '@/stores/species-store'
 import { SPECIES_DISPLAY_NAME } from '@/lib/bio/species'
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
-import { CopyableText } from '@/components/copyable-text'
 import { formatFasta } from '@/lib/bio/fasta'
 import { downloadTextFile } from '@/lib/download-file'
 import {
@@ -444,15 +443,11 @@ function IsoformRow({
 }
 
 function ExpandedDetails({ isoform }: { isoform: IsoformListItem }) {
-  const { copy, isCopied } = useCopyToClipboard({ showToast: false })
   const needsSplit = isoform.codingSequenceLength > 4700
 
   return (
     <div className="space-y-4">
-      <IsoformValidationBadges
-        codingSequence={isoform.codingSequence}
-        codingSequenceLength={isoform.codingSequenceLength}
-      />
+      <IsoformValidationBadges codingSequence={isoform.codingSequence} />
 
       <IsoformMetricsStrip codingSequence={isoform.codingSequence} />
 
@@ -464,37 +459,6 @@ function ExpandedDetails({ isoform }: { isoform: IsoformListItem }) {
       )}
 
       <GcSparkline sequence={isoform.codingSequence} />
-
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div>
-          <div className="text-muted-foreground mb-1 text-xs font-semibold">
-            Coding Sequence
-          </div>
-          <CopyableText
-            label="Copy coding sequence"
-            copied={isCopied('exp-cds')}
-            onCopy={() => copy(isoform.codingSequence, 'exp-cds')}
-          >
-            <code className="text-xs break-all">
-              {isoform.codingSequence.slice(0, 60)}...
-            </code>
-          </CopyableText>
-        </div>
-        <div>
-          <div className="text-muted-foreground mb-1 text-xs font-semibold">
-            Protein Sequence
-          </div>
-          <CopyableText
-            label="Copy protein sequence"
-            copied={isCopied('exp-prot')}
-            onCopy={() => copy(isoform.proteinSequence, 'exp-prot')}
-          >
-            <code className="text-xs break-all">
-              {isoform.proteinSequence.slice(0, 60)}...
-            </code>
-          </CopyableText>
-        </div>
-      </div>
     </div>
   )
 }
