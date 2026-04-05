@@ -13,6 +13,7 @@ import {
   useJobHistory,
   type JobHistoryEntry,
 } from '@/features/design-tool/hooks/use-job-history'
+import { cancelJob as cancelJobAction } from '@/features/design-tool/api/jobs'
 import { Button } from '@/components/ui/button'
 import { TruncatedText } from '@/components/truncated-text'
 import { Loader2, CircleAlert, X } from 'lucide-react'
@@ -38,8 +39,33 @@ interface RecentJobsProps {
 }
 
 export function RecentJobs({ onSelectJob }: RecentJobsProps) {
-  const { entries, clearHistory, removeEntry } = useJobHistory()
+  // Selector-scoped reads so this component only re-renders when the
+  // relevant slice changes, not on every unrelated store mutation.
+  const entries = useJobHistory((s) => s.entries)
+  const clearHistory = useJobHistory((s) => s.clearHistory)
+  const removeEntry = useJobHistory((s) => s.removeEntry)
+  const upsertEntry = useJobHistory((s) => s.upsertEntry)
   const [expanded, setExpanded] = useState(false)
+
+  // X on a running entry cancels the backend job (eagerly marking it
+  // cancelled in the store) rather than silently dismissing while the
+  // job keeps running. Terminal entries are just removed locally.
+  const handleRemove = (entry: JobHistoryEntry) => {
+    if (entry.status === 'running') {
+      upsertEntry({
+        id: entry.id,
+        status: 'cancelled',
+        error: {
+          code: 'cancelled',
+          message: 'Cancelled',
+          retriable: true,
+        },
+      })
+      void cancelJobAction(entry.id).catch(() => {})
+    } else {
+      removeEntry(entry.id)
+    }
+  }
 
   const hiddenCount = entries.length - COLLAPSED_COUNT
   const visibleItems = expanded
@@ -73,13 +99,16 @@ export function RecentJobs({ onSelectJob }: RecentJobsProps) {
                     {entry.status === 'running' && (
                       <Loader2 className="size-3 flex-shrink-0 animate-spin" />
                     )}
-                    {entry.status === 'failed' && (
+                    {(entry.status === 'failed' ||
+                      entry.status === 'cancelled') && (
                       <CircleAlert className="text-destructive size-3 flex-shrink-0" />
                     )}
                     <TruncatedText
                       tooltip={
-                        entry.status === 'failed' && entry.error
-                          ? entry.error
+                        (entry.status === 'failed' ||
+                          entry.status === 'cancelled') &&
+                        entry.error
+                          ? entry.error.message
                           : entry.name
                       }
                       className="truncate text-xs"
@@ -88,14 +117,21 @@ export function RecentJobs({ onSelectJob }: RecentJobsProps) {
                     </TruncatedText>
                     <span className="text-muted-foreground ml-auto flex-shrink-0 text-[10px]">
                       {entry.status === 'running'
-                        ? 'running'
+                        ? (entry.stage ??
+                          (entry.progress !== undefined
+                            ? `${Math.round(entry.progress * 100)}%`
+                            : 'running'))
                         : formatTimeAgo(entry.createdAt)}
                     </span>
                   </SidebarMenuButton>
                   <SidebarMenuAction
                     showOnHover
-                    onClick={() => removeEntry(entry.id)}
-                    aria-label={`Remove ${entry.name} from recent jobs`}
+                    onClick={() => handleRemove(entry)}
+                    aria-label={
+                      entry.status === 'running'
+                        ? `Cancel ${entry.name}`
+                        : `Remove ${entry.name} from recent jobs`
+                    }
                     className="bg-sidebar hover:bg-sidebar-accent"
                   >
                     <X />
