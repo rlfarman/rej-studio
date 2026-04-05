@@ -1,7 +1,8 @@
 'use server'
 
 // --- Compute backend actions ---
-// Set COMPUTE_BACKEND=modal to use Modal, otherwise falls back to local FastAPI.
+// Set COMPUTE_BACKEND=modal to use Modal, or COMPUTE_BACKEND=local (or leave
+// unset) to use the local FastAPI backend.
 
 export interface JobParams {
   CDS: string
@@ -23,8 +24,19 @@ export interface JobStatusResult {
   stage?: string
 }
 
+type ComputeBackend = 'modal' | 'local'
+
+function getComputeBackend(): ComputeBackend {
+  const value = process.env.COMPUTE_BACKEND
+  if (!value || value === 'local') return 'local'
+  if (value === 'modal') return 'modal'
+  throw new Error(
+    `Invalid COMPUTE_BACKEND: "${value}". Expected "modal", "local", or unset.`,
+  )
+}
+
 function isModalBackend() {
-  return process.env.COMPUTE_BACKEND === 'modal'
+  return getComputeBackend() === 'modal'
 }
 
 function getModalUrl() {
