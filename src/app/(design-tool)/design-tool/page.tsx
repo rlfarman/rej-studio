@@ -2,21 +2,8 @@ import { getIsoformAndGeneByIsoformId } from '@/features/gene-search/api/isoform
 import { GeneSplitterForm } from '@/features/design-tool/components/gene-splitter-form'
 import type { DesignToolSpecies } from '@/features/design-tool/types/species-options'
 import { isSpecies } from '@/lib/bio/species'
-import { rankWggwByBalance } from '@/lib/bio/sequence-utils'
-import { AAV_PACKAGING_LIMIT } from '@/lib/bio/aav'
+import { pickDefaultSplitPoint } from '@/features/design-tool/utils/default-split-point'
 import { Metadata } from 'next'
-
-/**
- * Choose an initial splice-junction position for the form. Returns the
- * balance-ranked best WGGW cut when the sequence is long enough to require
- * splitting; otherwise returns undefined and the form falls back to its
- * usual length/2 default.
- */
-function pickDefaultSplitPoint(sequence: string): number | undefined {
-  if (sequence.length <= AAV_PACKAGING_LIMIT) return undefined
-  const ranked = rankWggwByBalance(sequence)
-  return ranked[0]?.position
-}
 
 export const metadata: Metadata = {
   title: 'Design Tool | REJ Studio',
