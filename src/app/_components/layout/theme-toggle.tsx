@@ -37,7 +37,7 @@ export function ThemeToggle() {
 
   return (
     <Select value={theme} onValueChange={setTheme}>
-      <SelectTrigger className="h-8 w-full text-sm">
+      <SelectTrigger className="hover:bg-accent w-fit cursor-pointer gap-2 border-none font-semibold shadow-none">
         <SelectValue>
           <span className="flex items-center gap-2">
             <Icon className="h-4 w-4" />
