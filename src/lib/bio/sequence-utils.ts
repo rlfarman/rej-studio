@@ -6,6 +6,72 @@ export function computeGcPercent(seq: string): number {
   return (gc / seq.length) * 100
 }
 
+/**
+ * Sliding-window GC content. Returns one point per `step` bases, centered on
+ * the window. Windows at the edges are shortened to fit within the sequence.
+ */
+export function slidingGcContent(
+  seq: string,
+  windowSize = 60,
+  step = 10,
+): { position: number; gc: number }[] {
+  if (seq.length === 0) return []
+  const upper = seq.toUpperCase()
+  const len = upper.length
+  const half = Math.floor(windowSize / 2)
+  const points: { position: number; gc: number }[] = []
+
+  for (let center = 0; center < len; center += step) {
+    const start = Math.max(0, center - half)
+    const end = Math.min(len, center + half)
+    let gc = 0
+    for (let i = start; i < end; i++) {
+      const c = upper[i]
+      if (c === 'G' || c === 'C') gc++
+    }
+    const width = end - start
+    points.push({ position: center, gc: width > 0 ? (gc / width) * 100 : 0 })
+  }
+  // Always include a final point at the exact sequence end
+  if (points[points.length - 1]?.position !== len - 1) {
+    const start = Math.max(0, len - 1 - half)
+    let gc = 0
+    for (let i = start; i < len; i++) {
+      const c = upper[i]
+      if (c === 'G' || c === 'C') gc++
+    }
+    points.push({
+      position: len - 1,
+      gc: len - start > 0 ? (gc / (len - start)) * 100 : 0,
+    })
+  }
+  return points
+}
+
+/**
+ * Density of per-position mismatches between two aligned sequences, bucketed
+ * into `binCount` bins. Assumes equal-length sequences (synonymous rewrite).
+ */
+export function changeDensity(
+  a: string,
+  b: string,
+  binCount = 40,
+): { start: number; end: number; changes: number; binSize: number }[] {
+  const len = Math.min(a.length, b.length)
+  if (len === 0 || binCount <= 0) return []
+  const binSize = Math.max(1, Math.ceil(len / binCount))
+  const bins = Array.from({ length: Math.ceil(len / binSize) }, (_, i) => ({
+    start: i * binSize,
+    end: Math.min(len, (i + 1) * binSize),
+    changes: 0,
+    binSize,
+  }))
+  for (let i = 0; i < len; i++) {
+    if (a[i] !== b[i]) bins[Math.floor(i / binSize)].changes++
+  }
+  return bins
+}
+
 export function hasStartCodon(seq: string): boolean {
   return seq.length >= 3 && seq.slice(0, 3).toUpperCase() === 'ATG'
 }

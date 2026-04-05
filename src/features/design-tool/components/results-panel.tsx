@@ -28,6 +28,7 @@ import type { ProcessResult } from '@/features/design-tool/types/process-result'
 import { toast } from 'sonner'
 import { downloadResultsZip } from '@/features/design-tool/utils/build-zip'
 import { ComparisonPanel } from './comparison-panel'
+import { SequenceVisualizations } from './sequence-visualizations'
 import { AavResults } from './aav-size-estimator'
 import { formatFasta } from '@/lib/bio/fasta'
 
@@ -412,6 +413,14 @@ function ResultsPanelImpl({ result, optionsUsed }: ResultsPanelProps) {
           <Separator />
 
           <ComparisonPanel result={result} />
+
+          <Separator />
+
+          <SequenceVisualizations
+            original={result.original_sequence}
+            optimized={result.optimized_sequence}
+            splitPoint={result.split_point}
+          />
 
           <Separator />
 
