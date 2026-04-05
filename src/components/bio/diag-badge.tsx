@@ -138,6 +138,36 @@ export function invalidCharsCheck(seq: string): DiagCheck | null {
   }
 }
 
+export function homopolymerCheck(seq: string): DiagCheck | null {
+  // Flag runs of ≥8 identical bases — synthesis vendors often reject these
+  // and they create ambiguous regions for repeat-based optimizers.
+  const match = seq.toUpperCase().match(/([ACGT])\1{7,}/)
+  if (!match) return null
+  const base = match[1]
+  const runLength = match[0].length
+  const position = (match.index ?? 0) + 1
+  return {
+    status: 'warn',
+    label: `${base}×${runLength} run at bp ${position}`,
+    tooltip: `Found a run of ${runLength} ${base}'s starting at bp ${position}. Homopolymer runs ≥8 bp are hard to synthesize and may be rejected by synthesis vendors.`,
+  }
+}
+
+export function tandemRepeatCheck(seq: string): DiagCheck | null {
+  // Flag direct tandem repeats ≥12 bp (a 6+ bp unit repeated 2+ times).
+  // Keeps the regex bounded to avoid O(n²) blowup on long sequences.
+  const upper = seq.toUpperCase()
+  const match = upper.match(/([ACGT]{6,12})\1/)
+  if (!match) return null
+  const unit = match[1]
+  const position = (match.index ?? 0) + 1
+  return {
+    status: 'warn',
+    label: `Tandem repeat at bp ${position}`,
+    tooltip: `Direct repeat of "${unit}" (${match[0].length} bp) starting at bp ${position}. Tandem repeats complicate synthesis and can trigger recombination.`,
+  }
+}
+
 export function prematureStopCheck(seq: string): DiagCheck | null {
   // Only meaningful for in-frame sequences with at least 2 codons.
   if (seq.length < 6 || seq.length % 3 !== 0) return null

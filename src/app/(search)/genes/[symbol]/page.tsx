@@ -9,6 +9,7 @@ import IsoformTable, {
 } from '@/features/gene-search/components/isoform-table'
 import { IsoformSummary } from '@/features/gene-search/components/isoform-summary'
 import { IsoformLengthChart } from '@/features/gene-search/components/isoform-length-chart'
+import { IsoformIdentityMatrix } from '@/features/gene-search/components/isoform-identity-matrix'
 import { Suspense } from 'react'
 import { FavoriteGeneButton } from '@/features/gene-search/components/favorite-gene-button'
 import { Metadata } from 'next'
@@ -92,6 +93,7 @@ export default async function GeneSymbolPage(props: Props) {
         <h2 className="mb-2 text-lg font-semibold tracking-tight">Isoforms</h2>
         <IsoformSummary isoforms={isoforms} />
         <IsoformLengthChart isoforms={isoforms} />
+        <IsoformIdentityMatrix isoforms={isoforms} />
         <Suspense fallback={<IsoformTableLoading />}>
           <IsoformTable isoforms={isoforms} />
         </Suspense>

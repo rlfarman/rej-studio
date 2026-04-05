@@ -31,12 +31,17 @@ import { ComparisonPanel } from './comparison-panel'
 import { SequenceVisualizations } from './sequence-visualizations'
 import { CodonChanges } from './codon-changes'
 import { JunctionContext } from './junction-context'
+import { RestrictionSiteMap } from './restriction-site-map'
+import { CodonDeltaStrip } from './codon-delta-strip'
 import { AavResults } from './aav-size-estimator'
 import { formatFasta } from '@/lib/bio/fasta'
+import { isSpecies } from '@/lib/bio/species'
+import type { DesignToolSpecies } from '@/features/design-tool/types/species-options'
 
 interface ResultsPanelProps {
   result: ProcessResult
   optionsUsed: string
+  species: DesignToolSpecies
 }
 
 function SequenceBlock({
@@ -331,7 +336,7 @@ function WggwDetails({
   )
 }
 
-function ResultsPanelImpl({ result, optionsUsed }: ResultsPanelProps) {
+function ResultsPanelImpl({ result, optionsUsed, species }: ResultsPanelProps) {
   const handleDownloadZip = () => {
     try {
       downloadResultsZip(result, optionsUsed)
@@ -439,6 +444,24 @@ function ResultsPanelImpl({ result, optionsUsed }: ResultsPanelProps) {
             splitPoint={result.split_point}
             wggwMotif={result.wggw_info?.main?.motif}
           />
+
+          <Separator />
+
+          <RestrictionSiteMap
+            original={result.original_sequence}
+            optimized={result.optimized_sequence}
+          />
+
+          {isSpecies(species) && (
+            <>
+              <Separator />
+              <CodonDeltaStrip
+                original={result.original_sequence}
+                optimized={result.optimized_sequence}
+                species={species}
+              />
+            </>
+          )}
 
           <Separator />
 

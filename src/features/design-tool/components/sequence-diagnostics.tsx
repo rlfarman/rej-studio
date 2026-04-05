@@ -12,6 +12,8 @@ import {
   multipleOf3Check,
   invalidCharsCheck,
   prematureStopCheck,
+  homopolymerCheck,
+  tandemRepeatCheck,
 } from '@/components/bio/diag-badge'
 import { assessFragmentBalance } from '@/lib/bio/sequence-utils'
 import { AavPreflight } from './aav-size-estimator'
@@ -42,6 +44,10 @@ export function SequenceDiagnostics() {
     if (inv) checks.push(inv)
     const ps = prematureStopCheck(seq)
     if (ps) checks.push(ps)
+    const hp = homopolymerCheck(seq)
+    if (hp) checks.push(hp)
+    const tr = tandemRepeatCheck(seq)
+    if (tr) checks.push(tr)
 
     return { checks, balance, bpLength }
   }, [seq, spliceJunctionPosition])
