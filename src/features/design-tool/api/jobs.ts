@@ -1,8 +1,10 @@
 'use server'
 
 // --- Compute backend actions ---
-// Set COMPUTE_BACKEND=modal to use Modal, or COMPUTE_BACKEND=local (or leave
-// unset) to use the local FastAPI backend.
+// In production, COMPUTE_BACKEND=modal is required on every host (Vercel and
+// Cloudflare). The local FastAPI backend is a dev-only convenience: in dev
+// you can set COMPUTE_BACKEND=local (or leave it unset) to hit uvicorn at
+// http://127.0.0.1:8000, and COMPUTE_BACKEND=modal still works too.
 
 export interface JobParams {
   CDS: string
@@ -28,11 +30,20 @@ type ComputeBackend = 'modal' | 'local'
 
 function getComputeBackend(): ComputeBackend {
   const value = process.env.COMPUTE_BACKEND
-  if (!value || value === 'local') return 'local'
   if (value === 'modal') return 'modal'
-  throw new Error(
-    `Invalid COMPUTE_BACKEND: "${value}". Expected "modal", "local", or unset.`,
-  )
+  if (value && value !== 'local') {
+    throw new Error(
+      `Invalid COMPUTE_BACKEND: "${value}". Expected "modal", "local", or unset.`,
+    )
+  }
+  // "local" (or unset) is only valid in dev — there is no Python runtime in
+  // production on either Vercel or Cloudflare.
+  if (process.env.NODE_ENV !== 'development') {
+    throw new Error(
+      'COMPUTE_BACKEND=modal is required in production. The local FastAPI backend is dev-only.',
+    )
+  }
+  return 'local'
 }
 
 function isModalBackend() {
@@ -46,19 +57,9 @@ function getModalUrl() {
 }
 
 function getLocalApiUrl() {
-  // In dev, hit uvicorn directly. In prod, hit the app's own URL (rewrites
-  // handle routing to /api/ on Vercel). On Cloudflare this path is unused
-  // because COMPUTE_BACKEND=modal is required (no Python runtime).
-  if (process.env.NODE_ENV === 'development') {
-    return process.env.LOCAL_API_URL ?? 'http://127.0.0.1:8000'
-  }
-  // APP_URL is the generic, host-agnostic setting. Fall back to VERCEL_URL
-  // so existing Vercel deploys keep working without extra env config.
-  const appUrl = process.env.APP_URL
-  if (appUrl) return appUrl.startsWith('http') ? appUrl : `https://${appUrl}`
-  const vercelUrl = process.env.VERCEL_URL
-  if (vercelUrl) return `https://${vercelUrl}`
-  return 'http://127.0.0.1:3000'
+  // Dev-only: hit uvicorn directly. getComputeBackend() guarantees we only
+  // reach this in dev (NODE_ENV === 'development').
+  return process.env.LOCAL_API_URL ?? 'http://127.0.0.1:8000'
 }
 
 export async function submitJob(
