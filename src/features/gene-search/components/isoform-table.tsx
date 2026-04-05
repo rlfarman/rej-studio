@@ -35,6 +35,7 @@ import { SPECIES_DISPLAY_NAME } from '@/lib/bio/species'
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
 import { formatFasta } from '@/lib/bio/fasta'
 import { downloadTextFile } from '@/lib/download-file'
+import { trackEvent } from '@/lib/analytics'
 import {
   assessDesignSuitability,
   getSuitabilityConfig,
@@ -434,12 +435,16 @@ function IsoformRow({
                   variant="ghost"
                   size="icon"
                   className="size-8"
-                  onClick={() =>
+                  onClick={() => {
                     downloadTextFile(
                       `${isoform.id}.fasta`,
                       formatFasta(isoform.id, isoform.codingSequence),
                     )
-                  }
+                    trackEvent({
+                      event: 'sequence_download',
+                      isoform_id: isoform.id,
+                    })
+                  }}
                   aria-label="Download FASTA"
                 >
                   <Download className="size-3.5" />

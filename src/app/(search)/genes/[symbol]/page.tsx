@@ -12,6 +12,7 @@ import { IsoformLengthChart } from '@/features/gene-search/components/isoform-le
 import { IsoformIdentityMatrix } from '@/features/gene-search/components/isoform-identity-matrix'
 import { Suspense } from 'react'
 import { FavoriteGeneButton } from '@/features/gene-search/components/favorite-gene-button'
+import { TrackOnMount } from '@/components/track-on-mount'
 import { Metadata } from 'next'
 import { cache } from 'react'
 import {
@@ -65,6 +66,14 @@ export default async function GeneSymbolPage(props: Props) {
         </h1>
         <FavoriteGeneButton gene={gene} />
       </CardHeader>
+      <TrackOnMount
+        event={{
+          event: 'isoform_view',
+          gene_symbol: gene.symbol,
+          gene_id: gene.id,
+          isoform_count: isoforms.length,
+        }}
+      />
       <CardContent>
         <div className="grid grid-cols-1 gap-4">
           <div>

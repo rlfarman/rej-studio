@@ -12,6 +12,7 @@ import {
 } from '@/features/design-tool/hooks/use-job-history'
 import type { ProcessResult } from '@/features/design-tool/types/process-result'
 import type { FormValues } from '@/features/design-tool/types/form-schema'
+import { trackEvent } from '@/lib/analytics'
 
 type JobStatus = 'idle' | 'submitting' | EntryStatus
 
@@ -103,6 +104,7 @@ export function useJob({
         })
       }
       setJobId(newJobId)
+      trackEvent({ event: 'job_submit', job_id: newJobId })
     },
   })
 

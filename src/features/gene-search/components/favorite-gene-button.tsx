@@ -5,6 +5,7 @@ import { useFavoriteGenes } from '@/features/gene-search/stores/favorite-genes-s
 import { AnimatePresence, m } from 'motion/react'
 import { popSpring } from '@/lib/motion'
 import type { SavedGene } from '@/features/gene-search/types/domain-types'
+import { trackEvent } from '@/lib/analytics'
 
 interface FavoriteButtonProps {
   gene: SavedGene
@@ -21,6 +22,12 @@ export function FavoriteGeneButton({ gene }: FavoriteButtonProps) {
     } else {
       addFavoriteGene(gene)
     }
+    trackEvent({
+      event: 'favorite_gene_toggle',
+      gene_id: gene.id,
+      symbol: gene.symbol,
+      action: isFavorite ? 'remove' : 'add',
+    })
   }
 
   return (

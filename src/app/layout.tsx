@@ -11,6 +11,9 @@ import { QueryProvider } from '@/app/_components/providers/query-provider'
 import { MaintenanceBanner } from '@/components/maintenance-banner'
 import { cookies } from 'next/headers'
 import { GoogleTagManager } from '@/components/google-tag-manager'
+import { AnalyticsPageview } from '@/components/analytics-pageview'
+import { AnalyticsProperties } from '@/components/analytics-properties'
+import { Suspense } from 'react'
 
 export const metadata = {
   title: 'REJ Studio',
@@ -70,6 +73,10 @@ export default async function RootLayout({
               </SidebarInset>
             </SidebarProvider>
             <Toaster />
+            <Suspense fallback={null}>
+              <AnalyticsPageview />
+            </Suspense>
+            <AnalyticsProperties />
           </QueryProvider>
         </ThemeProvider>
         <GoogleTagManager />
