@@ -35,6 +35,7 @@ import type { ProcessResult } from '@/features/design-tool/types/process-result'
 import { toast } from 'sonner'
 import { downloadResultsZip } from '@/features/design-tool/utils/build-zip'
 import { AavResults } from './aav-size-estimator'
+import { ObjectivesSummary } from './objectives-output'
 import { formatFasta } from '@/lib/bio/fasta'
 import { computeGcPercent, countCpG } from '@/lib/bio/sequence-utils'
 
@@ -478,25 +479,13 @@ function ResultsPanelImpl({ result, optionsUsed }: ResultsPanelProps) {
                 <WggwTable wggwInfo={result.wggw_info} />
               </ExpandableRow>
             )}
-            <ExpandableRow title="Full optimizer output">
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="space-y-1">
-                  <span className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
-                    Before
-                  </span>
-                  <pre className="bg-muted max-h-48 overflow-auto rounded-md p-2.5 font-mono text-[11px] whitespace-pre-wrap">
-                    {result.objectives_before || 'No objectives measured'}
-                  </pre>
-                </div>
-                <div className="space-y-1">
-                  <span className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
-                    After
-                  </span>
-                  <pre className="bg-muted max-h-48 overflow-auto rounded-md p-2.5 font-mono text-[11px] whitespace-pre-wrap">
-                    {result.objectives_after || 'No objectives measured'}
-                  </pre>
-                </div>
-              </div>
+            <ExpandableRow title="Objectives report">
+              <ObjectivesSummary
+                reportBefore={result.objectives_report_before}
+                reportAfter={result.objectives_report_after}
+                textBefore={result.objectives_before}
+                textAfter={result.objectives_after}
+              />
             </ExpandableRow>
           </div>
         </CardContent>

@@ -112,6 +112,25 @@ class WggwSiteInfo(BaseModel):
     new_codons: list[str]
 
 
+class ObjectiveLocation(BaseModel):
+    start: int
+    end: int
+    strand: int | None = None
+
+
+class ObjectiveEvaluationEntry(BaseModel):
+    objective: str
+    passes: bool
+    score: float
+    message: str
+    locations: list[ObjectiveLocation] = []
+
+
+class ObjectivesReport(BaseModel):
+    entries: list[ObjectiveEvaluationEntry] = []
+    total_score: float | None = None
+
+
 class ProcessResult(BaseModel):
     name: str
     original_sequence: str
@@ -122,6 +141,8 @@ class ProcessResult(BaseModel):
     used_wggw_as_split: bool
     objectives_before: str
     objectives_after: str
+    objectives_report_before: ObjectivesReport = ObjectivesReport()
+    objectives_report_after: ObjectivesReport = ObjectivesReport()
     wggw_info: dict[str, WggwSiteInfo] | None = None
     processing_time_seconds: float
 
