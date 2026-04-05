@@ -2,7 +2,6 @@ import { getIsoformAndGeneByIsoformId } from '@/features/gene-search/api/isoform
 import { GeneSplitterForm } from '@/features/design-tool/components/gene-splitter-form'
 import type { DesignToolSpecies } from '@/features/design-tool/types/species-options'
 import { isSpecies } from '@/lib/bio/species'
-import { PRESETS } from '@/features/design-tool/utils/presets'
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -20,23 +19,10 @@ async function DesignToolPage({
     ? params.isoform[0]
     : params.isoform
 
-  const presetKey = Array.isArray(params.preset)
-    ? params.preset[0]
-    : params.preset
-
-  const presetValues =
-    presetKey && presetKey in PRESETS ? PRESETS[presetKey].values : undefined
-
   const jobId = Array.isArray(params.job) ? params.job[0] : params.job
 
   if (!isoformId) {
-    return (
-      <GeneSplitterForm
-        key={jobId ?? 'new'}
-        defaultPreset={presetValues}
-        defaultJobId={jobId}
-      />
-    )
+    return <GeneSplitterForm key={jobId ?? 'new'} defaultJobId={jobId} />
   }
 
   const result = isoformId
@@ -44,13 +30,7 @@ async function DesignToolPage({
     : undefined
 
   if (!result) {
-    return (
-      <GeneSplitterForm
-        key={jobId ?? 'new'}
-        defaultPreset={presetValues}
-        defaultJobId={jobId}
-      />
-    )
+    return <GeneSplitterForm key={jobId ?? 'new'} defaultJobId={jobId} />
   }
 
   const { isoform, gene } = result
@@ -64,7 +44,6 @@ async function DesignToolPage({
       defaultName={`Custom ${gene.symbol}`}
       defaultSpecies={validSpecies}
       defaultCodingSequence={isoform.codingSequence}
-      defaultPreset={presetValues}
       defaultJobId={jobId}
     />
   )

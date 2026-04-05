@@ -23,16 +23,12 @@ import {
   Copy,
   Download,
   FileText,
-  FlaskConical,
-  Beaker,
-  Zap,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Separator } from '@/components/ui/separator'
 import { SpeciesSelect } from '@/components/bio/species-select'
 import { useSpeciesContext } from '@/stores/species-store'
 import { SPECIES_DISPLAY_NAME } from '@/lib/bio/species'
@@ -485,34 +481,6 @@ function ExpandedDetails({ isoform }: { isoform: IsoformListItem }) {
             </code>
           </CopyableText>
         </div>
-      </div>
-
-      <Separator />
-
-      <div className="flex flex-wrap gap-2">
-        <span className="text-muted-foreground mr-1 self-center text-xs font-semibold">
-          Design with preset
-        </span>
-        <Button variant="outline" size="sm" asChild>
-          <Link href={`/design-tool?isoform=${isoform.id}&preset=balanced`}>
-            <Beaker className="size-3.5" />
-            Balanced
-          </Link>
-        </Button>
-        <Button variant="outline" size="sm" asChild>
-          <Link
-            href={`/design-tool?isoform=${isoform.id}&preset=aavConstrained`}
-          >
-            <FlaskConical className="size-3.5" />
-            AAV-Constrained
-          </Link>
-        </Button>
-        <Button variant="outline" size="sm" asChild>
-          <Link href={`/design-tool?isoform=${isoform.id}&preset=lowCpg`}>
-            <Zap className="size-3.5" />
-            Low CpG
-          </Link>
-        </Button>
       </div>
     </div>
   )
