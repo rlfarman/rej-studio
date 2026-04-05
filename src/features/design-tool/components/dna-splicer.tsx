@@ -4,7 +4,6 @@ import * as React from 'react'
 import { useFormContext } from 'react-hook-form'
 import { Slider } from '@/components/ui/slider'
 import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
 import {
   FormItem,
   FormLabel,
@@ -13,7 +12,6 @@ import {
   FormField,
 } from '@/components/ui/form'
 import { FormValues } from '../types/form-schema'
-import { assessFragmentBalance } from '@/lib/bio/sequence-utils'
 import { SpliceSliderContext } from './splice-slider-context'
 
 export function DNASplicer() {
@@ -77,8 +75,6 @@ export function DNASplicer() {
   )
 
   const hasSequence = codingSequence.length > 0
-  const balance = assessFragmentBalance(position, seqLength)
-  const midpoint = Math.floor(seqLength / 2)
 
   if (!hasSequence) {
     return (
@@ -93,34 +89,20 @@ export function DNASplicer() {
   return (
     <div className="space-y-5">
       {/* Sequence visualization bar */}
-      <div className="space-y-1.5">
-        <div className="flex h-8 w-full overflow-hidden rounded-md border">
-          <div
-            className="bg-primary/15 border-primary flex min-w-0 items-center justify-center border-r-2 transition-all duration-150"
-            style={{ width: `${percentage}%` }}
-          >
-            <span className="text-primary truncate px-1.5 text-xs font-medium">
-              5&apos; &middot; {fivePrimeLength.toLocaleString()} bp
-            </span>
-          </div>
-          <div className="bg-muted/50 flex min-w-0 flex-1 items-center justify-center transition-all duration-150">
-            <span className="text-muted-foreground truncate px-1.5 text-xs font-medium">
-              3&apos; &middot; {threePrimeLength.toLocaleString()} bp
-            </span>
-          </div>
+      <div className="flex h-8 w-full overflow-hidden rounded-md border">
+        <div
+          className="bg-primary/15 border-primary flex min-w-0 items-center justify-center border-r-2 transition-all duration-150"
+          style={{ width: `${percentage}%` }}
+        >
+          <span className="text-primary truncate px-1.5 text-xs font-medium">
+            5&apos; &middot; {fivePrimeLength.toLocaleString()} bp
+          </span>
         </div>
-        {balance === 'imbalanced' && (
-          <p className="text-destructive-foreground text-xs">
-            Fragments are highly imbalanced. This may cause issues with AAV
-            packaging or expression.
-          </p>
-        )}
-        {balance === 'moderate' && (
-          <p className="text-muted-foreground text-xs">
-            Fragments are moderately imbalanced. Consider centering the split
-            for more even packaging.
-          </p>
-        )}
+        <div className="bg-muted/50 flex min-w-0 flex-1 items-center justify-center transition-all duration-150">
+          <span className="text-muted-foreground truncate px-1.5 text-xs font-medium">
+            3&apos; &middot; {threePrimeLength.toLocaleString()} bp
+          </span>
+        </div>
       </div>
 
       {/* Slider with tick marks */}
@@ -142,12 +124,6 @@ export function DNASplicer() {
           )}
         />
         <div className="relative h-4 w-full">
-          {/* Midpoint marker */}
-          <span
-            className="border-muted-foreground/30 absolute top-0 h-2 border-l border-dashed"
-            style={{ left: '50%' }}
-            title={`Midpoint: ${midpoint.toLocaleString()} bp`}
-          />
           {ticks.map((tick, i) => (
             <span
               key={tick.value}
@@ -174,43 +150,6 @@ export function DNASplicer() {
         position={position}
         onSnap={setPosition}
       />
-
-      {/* Quick actions */}
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="text-muted-foreground text-xs">Quick:</span>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="h-6 px-2 text-xs"
-          onClick={() => setPosition(midpoint)}
-        >
-          Center
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="h-6 px-2 text-xs"
-          onClick={() => setPosition(Math.round(seqLength * 0.6))}
-        >
-          Bias 5&apos;
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="h-6 px-2 text-xs"
-          onClick={() => setPosition(Math.round(seqLength * 0.4))}
-        >
-          Bias 3&apos;
-        </Button>
-        {position !== midpoint && (
-          <span className="text-muted-foreground text-[10px] tabular-nums">
-            {Math.abs(position - midpoint).toLocaleString()} bp from center
-          </span>
-        )}
-      </div>
 
       {/* Inputs row */}
       <div className="flex gap-4">

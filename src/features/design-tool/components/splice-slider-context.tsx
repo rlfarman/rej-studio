@@ -5,7 +5,6 @@ import { cn } from '@/lib/utils'
 import {
   findWggwMotifs,
   slidingGcContent,
-  localGcAt,
   rankWggwByBalance,
   computeGcPercent,
 } from '@/lib/bio/sequence-utils'
@@ -20,7 +19,6 @@ interface Props {
 
 const MAX_WGGW_MARKERS = 200
 const CONTEXT_WINDOW = 6 // codons of context on each side of the split
-const LOCAL_GC_WINDOW = 40 // bp window for "local GC at cut"
 
 /**
  * Context strip that sits directly under the splice-junction slider. It
@@ -96,11 +94,6 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
     return buildFrameContext(sequence, position)
   }, [sequence, position])
 
-  const localGc = useMemo(
-    () => localGcAt(sequence, position, LOCAL_GC_WINDOW),
-    [sequence, position],
-  )
-
   if (seqLen < 12) return null
 
   // Build the GC polyline path within a fixed-height SVG (viewBox 100x20).
@@ -147,52 +140,8 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
     target.addEventListener('pointercancel', handleUp)
   }
 
-  const balanceRatio =
-    fragmentStats &&
-    `${Math.round((fragmentStats.five.length / seqLen) * 100)} / ${Math.round(
-      (fragmentStats.three.length / seqLen) * 100,
-    )}`
-
   return (
     <div className="space-y-2">
-      {/* Raw-measurement strip — facts, no composite score */}
-      <div className="bg-muted/30 grid grid-cols-2 gap-x-3 gap-y-1 rounded-sm border px-2 py-1.5 text-[10px] md:grid-cols-4">
-        <Measurement
-          label="Balance"
-          value={balanceRatio ?? '—'}
-          unit="% 5′/3′"
-        />
-        <Measurement
-          label="Nearest WGGW"
-          value={
-            nearestWggw
-              ? nearestWggw.distance === 0
-                ? 'on motif'
-                : `${nearestWggw.distance.toLocaleString()} bp`
-              : 'none'
-          }
-          unit={nearestWggw ? nearestWggw.motif : undefined}
-          onClick={
-            nearestWggw && nearestWggw.distance > 0
-              ? () => onSnap(nearestWggw.position)
-              : undefined
-          }
-        />
-        <Measurement
-          label={`Local GC (±${LOCAL_GC_WINDOW / 2}bp)`}
-          value={`${localGc.toFixed(0)}`}
-          unit="%"
-        />
-        <Measurement
-          label="Frame"
-          value={
-            frameContext.frameOffset === 0
-              ? 'codon boundary'
-              : `+${frameContext.frameOffset} into codon`
-          }
-        />
-      </div>
-
       {/* Balanced WGGW candidates — ranked by one criterion: |pos − len/2| */}
       {balancedWggw.length > 0 && (
         <div className="flex flex-wrap items-center gap-2 text-[10px]">
@@ -355,41 +304,6 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
       <FrameAtSplit ctx={frameContext} position={position} />
     </div>
   )
-}
-
-function Measurement({
-  label,
-  value,
-  unit,
-  onClick,
-}: {
-  label: string
-  value: string
-  unit?: string
-  onClick?: () => void
-}) {
-  const content = (
-    <>
-      <div className="text-muted-foreground leading-tight">{label}</div>
-      <div className="font-mono tabular-nums">
-        <span className="text-foreground">{value}</span>
-        {unit && <span className="text-muted-foreground ml-1">{unit}</span>}
-      </div>
-    </>
-  )
-  if (onClick) {
-    return (
-      <button
-        type="button"
-        onClick={onClick}
-        className="hover:bg-muted/50 -m-1 rounded-sm p-1 text-left transition-colors"
-        title="Snap to nearest"
-      >
-        {content}
-      </button>
-    )
-  }
-  return <div>{content}</div>
 }
 
 function FragmentPill({
