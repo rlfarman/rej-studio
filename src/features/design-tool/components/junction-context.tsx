@@ -1,6 +1,5 @@
 'use client'
 
-import { Scissors } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface Props {
@@ -55,15 +54,6 @@ export function JunctionContext({
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-sm font-medium">
-          <Scissors className="text-muted-foreground size-4" />
-          Junction Context
-        </div>
-        <span className="text-muted-foreground text-[10px] tabular-nums">
-          ±{flank} bp around position {splitPoint.toLocaleString()}
-        </span>
-      </div>
       <div className="bg-muted/30 overflow-x-auto rounded-md border p-3">
         <div className="flex items-center justify-center gap-0 font-mono text-sm">
           <span className="text-muted-foreground mr-2 text-[10px] tabular-nums">

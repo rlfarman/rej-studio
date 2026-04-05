@@ -1,7 +1,6 @@
 'use client'
 
 import { useMemo } from 'react'
-import { Scissors } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
   findRestrictionSites,
@@ -80,15 +79,9 @@ export function RestrictionSiteMap({ original, optimized }: Props) {
 
   if (rows.length === 0) {
     return (
-      <div className="space-y-2">
-        <div className="flex items-center gap-2 text-sm font-medium">
-          <Scissors className="text-muted-foreground size-4" />
-          Restriction sites
-        </div>
-        <p className="text-muted-foreground text-xs">
-          No common Type II enzyme sites found in either sequence.
-        </p>
-      </div>
+      <p className="text-muted-foreground text-xs">
+        No common Type II enzyme sites found in either sequence.
+      </p>
     )
   }
 
@@ -96,11 +89,7 @@ export function RestrictionSiteMap({ original, optimized }: Props) {
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-sm font-medium">
-          <Scissors className="text-muted-foreground size-4" />
-          Restriction sites
-        </div>
+      <div className="flex items-center justify-end">
         <div className="text-muted-foreground flex items-center gap-3 text-[10px] tabular-nums">
           <span>
             {totalBefore} → {totalAfter} total

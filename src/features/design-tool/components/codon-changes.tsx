@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
-import { ArrowRight, Shield, ShieldAlert } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
   toCodons,
@@ -69,15 +69,7 @@ export function CodonChanges({ original, optimized, splitPoint }: Props) {
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2 text-sm font-medium">
-          {allSynonymous ? (
-            <Shield className="size-4 text-emerald-600 dark:text-emerald-400" />
-          ) : (
-            <ShieldAlert className="size-4 text-red-600 dark:text-red-400" />
-          )}
-          Codon Changes
-        </div>
+      <div className="flex items-center justify-end gap-2">
         <div className="flex items-center gap-2 text-[10px]">
           <span
             className={cn(
