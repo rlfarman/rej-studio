@@ -1,4 +1,7 @@
 {
+  "env": {
+    "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:node_modules/.bin"
+  },
   "permissions": {
     "allow": [
       "Bash(./scripts/bootstrap-worktree.sh)",
