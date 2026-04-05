@@ -220,14 +220,14 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
           {/* Top lane: 5′/3′ fragment bar */}
           <div className="flex h-7 w-full overflow-hidden rounded-t-[5px]">
             <div
-              className="bg-primary/15 border-primary flex min-w-0 items-center justify-center border-r-2 transition-[width] duration-75"
+              className="bg-primary/15 border-primary flex min-w-0 items-center justify-center border-r-2"
               style={{ width: `${fivePct}%` }}
             >
               <span className="text-primary pointer-events-none truncate px-1.5 text-xs font-medium">
                 5′ · {fivePrimeLength.toLocaleString()} bp
               </span>
             </div>
-            <div className="bg-muted/50 flex min-w-0 flex-1 items-center justify-center transition-[width] duration-75">
+            <div className="bg-muted/50 flex min-w-0 flex-1 items-center justify-center">
               <span className="text-muted-foreground pointer-events-none truncate px-1.5 text-xs font-medium">
                 3′ · {threePrimeLength.toLocaleString()} bp
               </span>
