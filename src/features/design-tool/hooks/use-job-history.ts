@@ -7,6 +7,16 @@ import type { FormValues } from '@/features/design-tool/types/form-schema'
 
 const STORAGE_KEY = 'rej-studio:job-history'
 const MAX_ENTRIES = 50
+
+// Prefix for all seed-demo entries. Used by JobWatcher to skip polling the
+// backend for seeded running jobs (they have no backend counterpart), by
+// data-transfer to exclude seeded rows from user exports, and by the
+// "Clear seed data" action to identify which entries to drop.
+export const SEED_ID_PREFIX = 'seed-'
+
+export function isSeedId(id: string): boolean {
+  return id.startsWith(SEED_ID_PREFIX)
+}
 // How long to keep an entry stuck in the running state before we assume the
 // poll was abandoned (tab closed, Modal call_id expired) and drop it.
 const STALE_RUNNING_TTL_MS = 24 * 60 * 60 * 1000
@@ -46,6 +56,10 @@ export interface JobHistoryEntry {
   progress?: number
   // Human-readable stage label (e.g. "optimizing", "packaging").
   stage?: string
+  // True when this entry was added by the seed-data demo action. Scopes the
+  // "Clear seed data" action and excludes the entry from exports. Not set
+  // on real jobs.
+  isSeed?: boolean
 }
 
 // Partial input for upserting an entry — status is required, everything else
