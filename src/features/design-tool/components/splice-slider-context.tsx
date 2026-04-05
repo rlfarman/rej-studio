@@ -205,11 +205,30 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
   const threePrimeLength = fragmentStats?.three.length ?? 0
   const fivePct = (fivePrimeLength / seqLen) * 100
 
-  // Split-level warnings surfaced inside the slider itself.
+  // AAV capacity zones: which slider positions yield fragments that fit the
+  // ~4.7 kb packaging limit once ITR/promoter overhead is added. Surfaced
+  // proactively as a thin stripe above the fragment bar so users can see
+  // safe regions at a glance before committing to a cut.
+  const maxPayload = AAV_PACKAGING_LIMIT - AAV_OVERHEAD_BP
+  const tightPayload = AAV_PACKAGING_LIMIT + 300 - AAV_OVERHEAD_BP
+  const safeLeft = Math.max(1, seqLen - maxPayload)
+  const safeRight = Math.min(seqLen - 1, maxPayload)
+  const tightLeft = Math.max(1, seqLen - tightPayload)
+  const tightRight = Math.min(seqLen - 1, tightPayload)
+  const hasSafeZone = safeLeft <= safeRight
+  const showAavZones = seqLen > maxPayload
+
+  // Split-level warnings surfaced inside the slider itself. Thresholds mirror
+  // the AAV zone stripe above the fragment bar and FragmentPill's tight/exceeds
+  // labels: ≤limit = fits (green), ≤limit+300 = tight (yellow, warn), over = red (error).
   const balance = assessFragmentBalance(position, seqLen)
-  const fiveExceeds = (fragmentStats?.five.aavTotal ?? 0) > AAV_PACKAGING_LIMIT
-  const threeExceeds =
-    (fragmentStats?.three.aavTotal ?? 0) > AAV_PACKAGING_LIMIT
+  const TIGHT_LIMIT = AAV_PACKAGING_LIMIT + 300
+  const fiveTotal = fragmentStats?.five.aavTotal ?? 0
+  const threeTotal = fragmentStats?.three.aavTotal ?? 0
+  const fiveExceeds = fiveTotal > TIGHT_LIMIT
+  const threeExceeds = threeTotal > TIGHT_LIMIT
+  const fiveTight = !fiveExceeds && fiveTotal > AAV_PACKAGING_LIMIT
+  const threeTight = !threeExceeds && threeTotal > AAV_PACKAGING_LIMIT
   const warnings: { level: 'warn' | 'error'; message: string }[] = []
   if (fiveExceeds || threeExceeds) {
     const which = [fiveExceeds && '5′', threeExceeds && '3′']
@@ -218,6 +237,14 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
     warnings.push({
       level: 'error',
       message: `${which} fragment + AAV overhead exceeds ~${AAV_PACKAGING_LIMIT.toLocaleString()} bp packaging limit.`,
+    })
+  } else if (fiveTight || threeTight) {
+    const which = [fiveTight && '5′', threeTight && '3′']
+      .filter(Boolean)
+      .join(' & ')
+    warnings.push({
+      level: 'warn',
+      message: `${which} fragment + AAV overhead is tight (within 300 bp of the ~${AAV_PACKAGING_LIMIT.toLocaleString()} bp packaging limit).`,
     })
   }
   if (balance === 'imbalanced') {
@@ -267,10 +294,43 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
           onKeyDown={handleTrackKeyDown}
           className="focus-visible:ring-ring relative cursor-ew-resize touch-none rounded-md border select-none focus:outline-none focus-visible:ring-2"
         >
-          {/* Top lane: 5′/3′ fragment bar */}
-          <div className="relative flex h-7 w-full overflow-hidden rounded-t-[5px]">
+          {/* AAV capacity zones: green = both fragments fit, yellow = tight,
+              red = over ~4.7 kb packaging limit. Hidden for sequences that
+              already fit as a monomer. */}
+          {showAavZones && (
             <div
-              className="bg-primary/15 border-primary flex min-w-0 items-center justify-center border-r-2"
+              className="relative h-1.5 w-full overflow-hidden rounded-t-[5px]"
+              aria-hidden="true"
+              title="AAV packaging zones: green fits, yellow tight, red over limit"
+            >
+              <div className="bg-destructive/25 absolute inset-0" />
+              <div
+                className="absolute inset-y-0 bg-yellow-400/40"
+                style={{
+                  left: `${(tightLeft / seqLen) * 100}%`,
+                  right: `${((seqLen - tightRight) / seqLen) * 100}%`,
+                }}
+              />
+              {hasSafeZone && (
+                <div
+                  className="absolute inset-y-0 bg-emerald-500/40"
+                  style={{
+                    left: `${(safeLeft / seqLen) * 100}%`,
+                    right: `${((seqLen - safeRight) / seqLen) * 100}%`,
+                  }}
+                />
+              )}
+            </div>
+          )}
+          {/* Top lane: 5′/3′ fragment bar */}
+          <div
+            className={cn(
+              'relative flex h-7 w-full overflow-hidden',
+              !showAavZones && 'rounded-t-[5px]',
+            )}
+          >
+            <div
+              className="bg-primary/15 flex min-w-0 items-center justify-center"
               style={{ width: `${fivePct}%` }}
             >
               <span className="text-primary pointer-events-none truncate px-1.5 text-xs font-medium">
