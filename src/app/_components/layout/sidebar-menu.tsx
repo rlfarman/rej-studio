@@ -26,8 +26,6 @@ import { exportUserData, importUserData } from '@/lib/data-transfer'
 import { seedUserData } from '@/app/_components/seed-data'
 import { toast } from 'sonner'
 
-const IS_DEV = process.env.NODE_ENV === 'development'
-
 const THEMES = [
   { value: 'light', label: 'Light', icon: Sun },
   { value: 'dark', label: 'Dark', icon: Moon },
@@ -96,22 +94,18 @@ export function SidebarMenu() {
             <Upload className="h-4 w-4" />
             Import data
           </DropdownMenuItem>
-          {IS_DEV && (
-            <>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => {
-                  const { favorites, recents, jobs } = seedUserData()
-                  toast.success(
-                    `Seeded ${favorites} favorites, ${recents} recents, ${jobs} jobs`,
-                  )
-                }}
-              >
-                <Sprout className="h-4 w-4" />
-                Seed data (dev)
-              </DropdownMenuItem>
-            </>
-          )}
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            onClick={() => {
+              const { favorites, recents, jobs } = seedUserData()
+              toast.success(
+                `Seeded ${favorites} favorites, ${recents} recents, ${jobs} jobs`,
+              )
+            }}
+          >
+            <Sprout className="h-4 w-4" />
+            Seed data
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     </>

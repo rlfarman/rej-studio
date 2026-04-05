@@ -8,6 +8,7 @@ import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { AppSidebar } from '@/app/_components/layout/app-sidebar'
 import { Toaster } from '@/components/ui/sonner'
 import { QueryProvider } from '@/app/_components/providers/query-provider'
+import { MaintenanceBanner } from '@/components/maintenance-banner'
 import { cookies } from 'next/headers'
 import { Analytics } from '@vercel/analytics/next'
 
@@ -23,6 +24,7 @@ export default async function RootLayout({
 }) {
   const cookieStore = await cookies()
   const defaultOpen = cookieStore.get('sidebar_state')?.value === 'true'
+  const maintenanceMessage = process.env.MAINTENANCE_MESSAGE?.trim()
 
   return (
     <html
@@ -51,6 +53,12 @@ export default async function RootLayout({
             >
               <AppSidebar />
               <SidebarInset className="relative flex h-full min-h-screen max-w-full flex-1 flex-col overflow-hidden">
+                {maintenanceMessage && (
+                  <MaintenanceBanner
+                    message={maintenanceMessage}
+                    signature={maintenanceMessage}
+                  />
+                )}
                 <Header />
                 <main
                   id="main-content"

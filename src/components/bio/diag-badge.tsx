@@ -193,6 +193,16 @@ export function prematureStopCheck(seq: string): DiagCheck | null {
   }
 }
 
+export function shortCdsCheck(seq: string): DiagCheck | null {
+  const len = seq.length
+  if (len < 6 || len >= 300) return null
+  return {
+    status: 'warn',
+    label: `Short CDS (${len} bp)`,
+    tooltip: `CDS is only ${len} bp. Sequences under 300 bp may not benefit from dual-AAV REJ splitting.`,
+  }
+}
+
 export function aavFitCheck(bpLength: number): DiagCheck {
   const fits = bpLength <= 4700
   return {

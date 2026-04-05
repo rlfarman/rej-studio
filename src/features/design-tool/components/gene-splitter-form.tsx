@@ -26,10 +26,7 @@ import { useJob } from '@/features/design-tool/hooks/use-job'
 import { CustomizationOptions } from './customization-options'
 import { SpeciesOptions } from './species-options'
 import { CodonOptimizationOptions } from './optimization-options'
-import {
-  FiveFragmentOptions,
-  ThreeFragmentOptions,
-} from './stimulatory-intron-options'
+import { StimulatoryIntronOptions } from './stimulatory-intron-options'
 import {
   CodonOptimizeWeight,
   RemoveCrypticSpliceSitesWeight,
@@ -38,7 +35,6 @@ import {
 } from './weight-inputs'
 import { SubmitButton } from './submit-button'
 import { ResultsPanel } from './results-panel'
-import { SequenceDiagnostics } from './sequence-diagnostics'
 import { JobHeader, RunningPlaceholder } from './job-header'
 import { toast } from 'sonner'
 
@@ -201,7 +197,6 @@ export function GeneSplitterForm({
               </CardHeader>
               <CardContent className="space-y-6">
                 <CustomizationOptions />
-                <SequenceDiagnostics />
                 <SpeciesOptions />
                 <div className="space-y-2">
                   <p className="text-sm font-medium">Splice junction</p>
@@ -247,10 +242,7 @@ export function GeneSplitterForm({
                       </div>
                     </AccordionTrigger>
                     <AccordionContent className="pt-4 pb-8">
-                      <div className="flex flex-col space-y-4">
-                        <FiveFragmentOptions />
-                        <ThreeFragmentOptions />
-                      </div>
+                      <StimulatoryIntronOptions />
                     </AccordionContent>
                   </AccordionItem>
                   <AccordionItem value="weights">

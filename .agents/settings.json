@@ -1,0 +1,66 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./scripts/bootstrap-worktree.sh)",
+      "Bash(pnpm install)",
+      "Bash(pnpm run *)",
+      "Bash(pnpm dev)",
+      "Bash(pnpm lint*)",
+      "Bash(pnpm format)",
+      "Bash(pnpm type-check)",
+      "Bash(pnpm db:*)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git add*)",
+      "Bash(git commit*)",
+      "Bash(git push)",
+      "Bash(git fetch*)",
+      "Bash(git pull*)",
+      "Bash(git checkout*)",
+      "Bash(git branch*)",
+      "Bash(git restore*)",
+      "Bash(git stash*)",
+      "Bash(git worktree*)",
+      "Bash(gh pr *)",
+      "Bash(gh run *)",
+      "Bash(gh issue *)"
+    ],
+    "deny": [
+      "Bash(git push --force*)",
+      "Bash(git push -f *)",
+      "Bash(git push --no-verify*)",
+      "Bash(git commit --no-verify*)",
+      "Bash(git reset --hard*)",
+      "Bash(git clean -f*)",
+      "Bash(rm -rf /*)",
+      "Bash(rm -rf ~/*)",
+      "Read(./.env)",
+      "Read(./venv/**)",
+      "Edit(./.env)",
+      "Edit(./venv/**)"
+    ]
+  },
+  "sandbox": {
+    "enabled": true,
+    "failIfUnavailable": false,
+    "network": {
+      "allowedDomains": [
+        "github.com",
+        "api.github.com",
+        "codeload.github.com",
+        "objects.githubusercontent.com",
+        "raw.githubusercontent.com",
+        "registry.npmjs.org",
+        "*.npmjs.org",
+        "*.turso.io",
+        "*.sentry.io",
+        "vercel.com",
+        "*.vercel.app",
+        "pypi.org",
+        "*.pypi.org",
+        "files.pythonhosted.org"
+      ]
+    }
+  }
+}

@@ -93,6 +93,24 @@ This symlinks `.env` and `venv/` from the main repo and runs `pnpm install` in t
 
 **Always use absolute paths or paths relative to the worktree root** — do not assume the working directory is the main repo. When in doubt, `pwd` first. Edits, commits, and commands must happen inside the worktree (`.claude/worktrees/<name>/`), not the main repo at the project root.
 
+## Claude Code Settings
+
+Shared Claude Code permissions, deny rules, and sandbox config live in `.agents/settings.json` (symlinked as `.claude/settings.json`). These apply to every worktree and are checked into git.
+
+`autoMode.environment` cannot live in shared project settings (Claude Code ignores it there for safety). To enable [auto permission mode](https://code.claude.com/docs/en/permission-modes), add this to `~/.claude/settings.json` or `.claude/settings.local.json`:
+
+```json
+{
+  "autoMode": {
+    "environment": [
+      "Organization: REJ Studio. Primary use: bioinformatics web app (Next.js + FastAPI)",
+      "Source control: github.com/rlfarman/rej-studio",
+      "Trusted internal services: Turso database at *.turso.io, Vercel deployments at *.vercel.app"
+    ]
+  }
+}
+```
+
 ## Common Tasks
 
 - **Adding a new UI primitive**: Use `npx shadcn@latest add <component>`. Components go in `src/components/ui/`.

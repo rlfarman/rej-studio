@@ -1,6 +1,8 @@
 'use client'
 
 import { useMemo } from 'react'
+import Link from 'next/link'
+import { usePathname, useSearchParams } from 'next/navigation'
 import { BarChart3 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
@@ -37,6 +39,14 @@ const DUAL_AAV_MAX = 8000
  */
 export function IsoformLengthChart({ isoforms }: Props) {
   const { species } = useSpeciesContext()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+
+  const buildHref = (id: string) => {
+    const params = new URLSearchParams(searchParams?.toString() ?? '')
+    params.set('isoform', id)
+    return `${pathname}?${params.toString()}#isoform-row-${id}`
+  }
 
   const { rows, scaleMax } = useMemo(() => {
     const filtered = isoforms.filter((i) => {
@@ -89,12 +99,14 @@ export function IsoformLengthChart({ isoforms }: Props) {
         {rows.map((row) => {
           const pct = (row.length / scaleMax) * 100
           return (
-            <div
+            <Link
               key={row.id}
-              className="group flex items-center gap-2 text-[10px]"
+              href={buildHref(row.id)}
+              scroll={false}
+              className="group hover:bg-muted/40 focus-visible:ring-ring -mx-1 flex items-center gap-2 rounded-sm px-1 py-0.5 text-[10px] transition-colors focus-visible:ring-2 focus-visible:outline-none"
               title={`${row.id} · ${row.length.toLocaleString()} bp · ${SUITABILITY_LABEL[row.suitability]}`}
             >
-              <span className="text-muted-foreground w-28 shrink-0 truncate font-mono">
+              <span className="text-muted-foreground group-hover:text-foreground w-28 shrink-0 truncate font-mono">
                 {row.id}
               </span>
               <div className="bg-muted/30 relative h-3 flex-1 overflow-hidden rounded-sm">
@@ -119,7 +131,7 @@ export function IsoformLengthChart({ isoforms }: Props) {
               <span className="text-muted-foreground w-16 shrink-0 text-right font-mono tabular-nums">
                 {row.length.toLocaleString()}
               </span>
-            </div>
+            </Link>
           )
         })}
       </div>
