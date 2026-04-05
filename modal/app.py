@@ -1,8 +1,32 @@
-import modal
+import json
+import logging
+import sys
+import time
 from pathlib import Path
+from typing import Any
+
+import modal
 from fastapi import FastAPI
 from pydantic import BaseModel
-from typing import Any
+
+
+# --- Structured logging ---
+# Emit one JSON object per line to stdout. Modal captures stdout into its log
+# viewer; shipping structured payloads means we can grep/jq for specific jobs,
+# stages, and failure modes without regexing free-form strings.
+def _log(event: str, **fields: Any) -> None:
+    """Emit a single structured log line."""
+    payload = {"ts": time.time(), "event": event, **fields}
+    try:
+        sys.stdout.write(json.dumps(payload, default=str) + "\n")
+        sys.stdout.flush()
+    except Exception:
+        # Never let logging take down a worker.
+        pass
+
+
+# Silence FastAPI/Uvicorn's default access logs since we emit our own.
+logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
 
 app = modal.App("rej-studio")
 
@@ -28,9 +52,6 @@ PROGRESS_TTL_SECONDS = 30 * 60
 @app.function(image=image, timeout=600)
 def run_job(params: dict) -> dict:
     """Long-running gene optimization job."""
-    import sys
-    import time
-
     sys.path.insert(0, "/root")
     from algorithm import process_single_request_json
 
@@ -43,18 +64,53 @@ def run_job(params: dict) -> dict:
     except Exception:
         call_id = ""
 
+    # Per-stage timing: track when each stage started so we can log cumulative
+    # wall-clock per stage at completion. Helps identify which constraint is
+    # dominating runtime when dnachisel is slow.
+    stage_timings: dict[str, float] = {}
+    current_stage = {"name": "", "started_at": 0.0}
+
+    def _close_stage(now: float) -> None:
+        if current_stage["name"]:
+            elapsed = now - current_stage["started_at"]
+            stage_timings[current_stage["name"]] = (
+                stage_timings.get(current_stage["name"], 0.0) + elapsed
+            )
+
+    cds_len = len(params.get("CDS", ""))
+    job_started = time.monotonic()
+    _log(
+        "job.start",
+        call_id=call_id,
+        name=params.get("name"),
+        cds_length=cds_len,
+        options=params.get("options"),
+    )
+
     # Throttled progress writer. dnachisel's inner loops would hammer this
     # Dict unthrottled; we only push on a meaningful delta or once every
     # couple of seconds. Keep the payload to JSON primitives.
-    last_written = {"at": 0.0, "frac": -1.0}
-
-    last_written["stage"] = ""
+    last_written = {"at": 0.0, "frac": -1.0, "stage": ""}
 
     def on_progress(frac: float, stage: str):
+        now = time.monotonic()
+
+        # Log every stage transition (unthrottled — stages are coarse-grained).
+        if stage != current_stage["name"]:
+            _close_stage(now)
+            _log(
+                "job.stage",
+                call_id=call_id,
+                stage=stage,
+                elapsed_s=round(now - job_started, 3),
+            )
+            current_stage["name"] = stage
+            current_stage["started_at"] = now
+
         if not call_id:
             return
-        now = time.monotonic()
-        stage_changed = stage != last_written.get("stage", "")
+
+        stage_changed = stage != last_written["stage"]
         # Write on: stage change, OR >=2% frac delta, OR >=1s since last write.
         # This keeps dnachisel's hot inner loop from hammering the Dict while
         # still feeding the 2s-poll frontend fresh numbers between checkpoints.
@@ -80,7 +136,27 @@ def run_job(params: dict) -> dict:
             OPTIONS=params["options"],
             on_progress=on_progress,
         )
+        _close_stage(time.monotonic())
+        _log(
+            "job.complete",
+            call_id=call_id,
+            name=params.get("name"),
+            total_s=round(time.monotonic() - job_started, 3),
+            stage_timings_s={k: round(v, 3) for k, v in stage_timings.items()},
+        )
         return result
+    except Exception as e:
+        _close_stage(time.monotonic())
+        _log(
+            "job.error",
+            call_id=call_id,
+            name=params.get("name"),
+            total_s=round(time.monotonic() - job_started, 3),
+            stage_timings_s={k: round(v, 3) for k, v in stage_timings.items()},
+            error_type=type(e).__name__,
+            error_message=str(e),
+        )
+        raise
     finally:
         # Clear progress on exit (success, error, or cancellation) so
         # get_job doesn't ever read stale "90%" after the call settled.
@@ -130,8 +206,6 @@ async def create_job(request: JobRequest):
 
 @web_app.get("/jobs/{call_id}", response_model=JobStatus)
 async def get_job(call_id: str):
-    import time
-
     from modal.functions import FunctionCall
 
     try:
