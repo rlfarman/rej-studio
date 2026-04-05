@@ -1,14 +1,7 @@
-import { syncReplica, isReplica } from '@/drizzle/db'
+import { isReplica } from '@/drizzle/db'
 
 if (isReplica) {
-  const start = Date.now()
-  try {
-    await syncReplica()
-    const elapsed = ((Date.now() - start) / 1000).toFixed(1)
-    console.log(`[instrumentation] Turso replica synced (${elapsed}s)`)
-  } catch (err) {
-    console.error('[instrumentation] Turso replica sync failed:', err)
-  }
+  console.log('[instrumentation] Using Turso embedded replica')
 } else {
-  console.log('[instrumentation] Using local SQLite database (offline mode)')
+  console.log('[instrumentation] Using direct Turso HTTP (or local SQLite)')
 }

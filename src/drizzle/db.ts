@@ -10,33 +10,22 @@ import * as schema from './schema'
 //   Build the file first with `pnpm db:build`.
 //
 // Online (TURSO_DATABASE_URL set):
-//   Opens an embedded replica — a local SQLite file that syncs from Turso.
-//   Reads hit the local file (fast); sync happens on boot and every 5 minutes.
-//   The replica lives at data/rej-studio.replica.db in dev, /tmp/ in prod.
+//   Talks to Turso directly over HTTP. Every query is a round-trip.
+//   Uses row-read quota (generous) instead of sync quota (tiny on free tier).
 
-const syncUrl = process.env.TURSO_DATABASE_URL
+const remoteUrl = process.env.TURSO_DATABASE_URL
 const authToken = process.env.TURSO_AUTH_TOKEN
-
-function getUrl(): string {
-  if (syncUrl) {
-    const replicaPath =
-      process.env.NODE_ENV === 'production'
-        ? '/tmp/rej-studio.replica.db'
-        : path.join(process.cwd(), 'data', 'rej-studio.replica.db')
-    return `file:${replicaPath}`
-  }
-  return `file:${path.join(process.cwd(), 'data', 'rej-studio.db')}`
-}
 
 let _client: Client | null = null
 let _db: LibSQLDatabase<typeof schema> | null = null
 
 function getClient() {
   if (!_client) {
-    const url = getUrl()
-    _client = createClient(
-      syncUrl ? { url, syncUrl, authToken, syncInterval: 300 } : { url },
-    )
+    _client = remoteUrl
+      ? createClient({ url: remoteUrl, authToken })
+      : createClient({
+          url: `file:${path.join(process.cwd(), 'data', 'rej-studio.db')}`,
+        })
   }
   return _client
 }
@@ -48,11 +37,10 @@ function getDb() {
   return _db
 }
 
-export const isReplica = !!syncUrl
+export const isReplica = false
 
 export async function syncReplica() {
-  if (!isReplica) return
-  await getClient().sync()
+  // No-op: we talk to Turso directly, no embedded replica to sync.
 }
 
 export const db = new Proxy({} as LibSQLDatabase<typeof schema>, {
