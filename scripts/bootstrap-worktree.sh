@@ -42,9 +42,12 @@ fi
 
 # Install Node deps in the worktree. Can't share node_modules across worktrees
 # safely (Next.js build state leaks) — each worktree needs its own.
+# Use a login shell so pnpm is found regardless of whether nvm/Homebrew/etc. are
+# already on PATH — lets this script run from minimal-env contexts (e.g. Claude
+# Code's Bash tool) as well as interactive shells.
 if [ ! -d "$WORKTREE_ROOT/node_modules" ]; then
   echo "Running pnpm install..."
-  (cd "$WORKTREE_ROOT" && pnpm install)
+  (cd "$WORKTREE_ROOT" && /bin/zsh -l -c "pnpm install")
 else
   echo "node_modules present — skipping pnpm install (run manually if package.json changed)."
 fi
