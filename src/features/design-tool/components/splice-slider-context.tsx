@@ -34,7 +34,7 @@ const CONTEXT_WINDOW = 6 // codons of context on each side of the split
  */
 export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
   const seqLen = sequence.length
-  const svgRef = useRef<SVGSVGElement>(null)
+  const trackRef = useRef<HTMLDivElement>(null)
 
   const { gcPoints, wggwMotifs, nearestWggw, balancedWggw } = useMemo(() => {
     if (seqLen < 12) {
@@ -111,18 +111,21 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
 
   // Drag-to-set: convert pointer X to a 1..seqLen-1 position.
   const positionFromPointer = (clientX: number): number => {
-    const svg = svgRef.current
-    if (!svg) return position
-    const rect = svg.getBoundingClientRect()
+    const track = trackRef.current
+    if (!track) return position
+    const rect = track.getBoundingClientRect()
     const x = Math.max(0, Math.min(clientX - rect.left, rect.width))
     const frac = rect.width > 0 ? x / rect.width : 0
     return Math.max(1, Math.min(seqLen - 1, Math.round(frac * seqLen)))
   }
 
-  const handleProfilePointerDown = (e: React.PointerEvent<SVGSVGElement>) => {
+  const handleTrackPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    // Let WGGW tick buttons handle their own clicks.
+    if ((e.target as HTMLElement).closest('button')) return
     e.preventDefault()
     const target = e.currentTarget
     target.setPointerCapture(e.pointerId)
+    target.focus()
     onSnap(positionFromPointer(e.clientX))
     const handleMove = (ev: PointerEvent) => {
       onSnap(positionFromPointer(ev.clientX))
@@ -140,8 +143,154 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
     target.addEventListener('pointercancel', handleUp)
   }
 
+  const handleTrackKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    const big = e.shiftKey ? 10 : 1
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
+      e.preventDefault()
+      onSnap(position - big)
+    } else if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
+      e.preventDefault()
+      onSnap(position + big)
+    } else if (e.key === 'Home') {
+      e.preventDefault()
+      onSnap(1)
+    } else if (e.key === 'End') {
+      e.preventDefault()
+      onSnap(seqLen - 1)
+    } else if (e.key === 'PageDown') {
+      e.preventDefault()
+      onSnap(position - Math.max(1, Math.round(seqLen / 20)))
+    } else if (e.key === 'PageUp') {
+      e.preventDefault()
+      onSnap(position + Math.max(1, Math.round(seqLen / 20)))
+    }
+  }
+
+  const fivePrimeLength = fragmentStats?.five.length ?? 0
+  const threePrimeLength = fragmentStats?.three.length ?? 0
+  const fivePct = (fivePrimeLength / seqLen) * 100
+
   return (
     <div className="space-y-2">
+      {/* Unified composite slider: viz bar + GC profile + WGGW ticks.
+          Drag anywhere, arrow keys to nudge, Home/End to jump to ends. */}
+      <div className="space-y-1">
+        <div
+          ref={trackRef}
+          role="slider"
+          tabIndex={0}
+          aria-label="Splice junction position"
+          aria-valuemin={1}
+          aria-valuemax={seqLen - 1}
+          aria-valuenow={position}
+          aria-valuetext={`bp ${position.toLocaleString()} of ${seqLen.toLocaleString()}`}
+          onPointerDown={handleTrackPointerDown}
+          onKeyDown={handleTrackKeyDown}
+          className="focus-visible:ring-ring relative cursor-ew-resize touch-none rounded-md border select-none focus:outline-none focus-visible:ring-2"
+        >
+          {/* Top lane: 5′/3′ fragment bar */}
+          <div className="flex h-7 w-full overflow-hidden rounded-t-[5px]">
+            <div
+              className="bg-primary/15 border-primary flex min-w-0 items-center justify-center border-r-2 transition-[width] duration-75"
+              style={{ width: `${fivePct}%` }}
+            >
+              <span className="text-primary pointer-events-none truncate px-1.5 text-xs font-medium">
+                5′ · {fivePrimeLength.toLocaleString()} bp
+              </span>
+            </div>
+            <div className="bg-muted/50 flex min-w-0 flex-1 items-center justify-center transition-[width] duration-75">
+              <span className="text-muted-foreground pointer-events-none truncate px-1.5 text-xs font-medium">
+                3′ · {threePrimeLength.toLocaleString()} bp
+              </span>
+            </div>
+          </div>
+          {/* Middle lane: GC profile */}
+          <svg
+            viewBox="0 0 100 20"
+            preserveAspectRatio="none"
+            className="bg-muted/20 block h-8 w-full"
+            aria-hidden="true"
+          >
+            {/* 40-60% reference band */}
+            <rect
+              x={0}
+              y={20 - (60 / 100) * 20}
+              width={100}
+              height={((60 - 40) / 100) * 20}
+              className="fill-emerald-500/10"
+            />
+            {/* 50% reference line */}
+            <line
+              x1={0}
+              x2={100}
+              y1={10}
+              y2={10}
+              className="stroke-muted-foreground/30"
+              strokeWidth={0.3}
+              vectorEffect="non-scaling-stroke"
+              strokeDasharray="2 2"
+            />
+            {/* GC polyline */}
+            {pathData && (
+              <path
+                d={pathData}
+                className="stroke-primary fill-none"
+                strokeWidth={1.5}
+                vectorEffect="non-scaling-stroke"
+              />
+            )}
+          </svg>
+          {/* Bottom lane: WGGW ticks */}
+          <div className="bg-muted/30 relative h-3 w-full rounded-b-[5px]">
+            {wggwMotifs.map((m, i) => {
+              const mid = m.position + 1
+              const x = (mid / seqLen) * 100
+              const isNearest =
+                nearestWggw !== null && nearestWggw.position === mid
+              const isCandidate = candidateSet.has(mid)
+              return (
+                <button
+                  type="button"
+                  key={`${mid}-${i}`}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onSnap(mid)
+                  }}
+                  title={`WGGW ${m.motif} at bp ${m.position}–${m.position + 3} · snap`}
+                  className={cn(
+                    'absolute top-0 h-full -translate-x-1/2 cursor-pointer rounded-sm transition-all',
+                    'hover:h-[140%] hover:bg-emerald-400',
+                    isCandidate
+                      ? 'w-[2px] bg-amber-500'
+                      : isNearest
+                        ? 'w-[2px] bg-emerald-500'
+                        : 'w-[1px] bg-emerald-500/60',
+                  )}
+                  style={{ left: `${x}%` }}
+                />
+              )
+            })}
+          </div>
+          {/* Current position indicator spanning all three lanes */}
+          <div
+            className="border-foreground pointer-events-none absolute inset-y-0 w-0 border-l-2"
+            style={{ left: `${positionPct}%` }}
+            aria-hidden="true"
+          />
+        </div>
+        {/* Single readout */}
+        <div className="text-muted-foreground flex items-center justify-between text-[10px]">
+          <span className="font-mono tabular-nums">
+            bp {position.toLocaleString()} ·{' '}
+            {Math.round((fivePrimeLength / seqLen) * 100)}/
+            {Math.round((threePrimeLength / seqLen) * 100)} 5′/3′
+          </span>
+          <span>
+            WGGW: {wggwMotifs.length} · drag or ←→ (shift ×10, home/end to ends)
+          </span>
+        </div>
+      </div>
+
       {/* Balanced WGGW candidates — ranked by one criterion: |pos − len/2| */}
       {balancedWggw.length > 0 && (
         <div className="flex flex-wrap items-center gap-2 text-[10px]">
@@ -202,103 +351,6 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
           />
         </div>
       )}
-
-      {/* GC profile + WGGW ticks, aligned to the slider axis above */}
-      <div className="space-y-1">
-        <div className="flex items-center justify-between text-[10px]">
-          <span className="text-muted-foreground">
-            Split context · <span className="italic">drag profile to set</span>
-          </span>
-          <div className="text-muted-foreground flex items-center gap-3">
-            <span className="flex items-center gap-1">
-              <span className="bg-primary inline-block h-[2px] w-3" />
-              GC %
-            </span>
-            <span className="flex items-center gap-1">
-              <span className="inline-block h-2 w-[2px] bg-emerald-500" />
-              WGGW ({wggwMotifs.length})
-            </span>
-          </div>
-        </div>
-        <div className="relative">
-          <svg
-            ref={svgRef}
-            viewBox="0 0 100 20"
-            preserveAspectRatio="none"
-            onPointerDown={handleProfilePointerDown}
-            className="bg-muted/30 h-8 w-full cursor-ew-resize touch-none rounded-sm select-none"
-            aria-label="GC content profile across sequence (drag to set split position)"
-          >
-            {/* 40-60% reference band */}
-            <rect
-              x={0}
-              y={20 - (60 / 100) * 20}
-              width={100}
-              height={((60 - 40) / 100) * 20}
-              className="fill-emerald-500/10"
-            />
-            {/* 50% reference line */}
-            <line
-              x1={0}
-              x2={100}
-              y1={10}
-              y2={10}
-              className="stroke-muted-foreground/30"
-              strokeWidth={0.3}
-              vectorEffect="non-scaling-stroke"
-              strokeDasharray="2 2"
-            />
-            {/* GC polyline */}
-            {pathData && (
-              <path
-                d={pathData}
-                className="stroke-primary fill-none"
-                strokeWidth={1.5}
-                vectorEffect="non-scaling-stroke"
-              />
-            )}
-            {/* Current split position marker */}
-            <line
-              x1={positionPct}
-              x2={positionPct}
-              y1={0}
-              y2={20}
-              className="stroke-foreground"
-              strokeWidth={1.5}
-              vectorEffect="non-scaling-stroke"
-            />
-          </svg>
-
-          {/* WGGW candidate ticks overlaid beneath */}
-          <div className="relative mt-0.5 h-3 w-full">
-            {wggwMotifs.map((m, i) => {
-              const mid = m.position + 1
-              const x = (mid / seqLen) * 100
-              const isNearest =
-                nearestWggw !== null && nearestWggw.position === mid
-              const isCandidate = candidateSet.has(mid)
-              return (
-                <button
-                  type="button"
-                  key={`${mid}-${i}`}
-                  onClick={() => onSnap(mid)}
-                  title={`WGGW ${m.motif} at bp ${m.position}–${m.position + 3} · snap`}
-                  className={cn(
-                    'absolute top-0 h-full -translate-x-1/2 cursor-pointer rounded-sm transition-all',
-                    'hover:h-[140%] hover:bg-emerald-400',
-                    isCandidate
-                      ? 'w-[2px] bg-amber-500'
-                      : isNearest
-                        ? 'w-[2px] bg-emerald-500'
-                        : 'w-[1px] bg-emerald-500/60',
-                  )}
-                  style={{ left: `${x}%` }}
-                />
-              )
-            })}
-          </div>
-        </div>
-      </div>
 
       {/* Frame-at-split readout */}
       <FrameAtSplit ctx={frameContext} position={position} />
