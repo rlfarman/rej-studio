@@ -10,7 +10,7 @@ import { Toaster } from '@/components/ui/sonner'
 import { QueryProvider } from '@/app/_components/providers/query-provider'
 import { MaintenanceBanner } from '@/components/maintenance-banner'
 import { cookies } from 'next/headers'
-import { GoogleAnalytics } from '@/components/google-analytics'
+import { GoogleTagManager } from '@/components/google-tag-manager'
 
 export const metadata = {
   title: 'REJ Studio',
@@ -72,7 +72,7 @@ export default async function RootLayout({
             <Toaster />
           </QueryProvider>
         </ThemeProvider>
-        <GoogleAnalytics />
+        <GoogleTagManager />
       </body>
     </html>
   )
