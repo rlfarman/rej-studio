@@ -3,7 +3,10 @@
 import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { getJobStatus } from '@/features/design-tool/api/jobs'
-import { useJobHistory } from '@/features/design-tool/hooks/use-job-history'
+import {
+  useJobHistory,
+  isSeedId,
+} from '@/features/design-tool/hooks/use-job-history'
 import type { ProcessResult } from '@/features/design-tool/types/process-result'
 import type { JobError } from '@/features/design-tool/hooks/use-job-history'
 import { createLogger } from '@/lib/logger'
@@ -33,9 +36,12 @@ const log = createLogger('job-watcher')
 export function JobWatcher() {
   // Selector subscription: only re-render when the set of running IDs
   // actually changes, not on every history mutation (e.g. progress ticks).
+  // Skip seed-demo entries: they have no backend counterpart, so polling
+  // would immediately flip them to failed(not_found) and defeat the point
+  // of the demo.
   const runningIds = useJobHistory((s) =>
     s.entries
-      .filter((e) => e.status === 'running')
+      .filter((e) => e.status === 'running' && !isSeedId(e.id))
       .map((e) => e.id)
       .join(','),
   )

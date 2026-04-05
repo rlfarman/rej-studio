@@ -4,6 +4,7 @@ import { useRef, useEffect, useState } from 'react'
 import { useTheme } from 'next-themes'
 import {
   Download,
+  Eraser,
   Monitor,
   Moon,
   MoreHorizontal,
@@ -23,7 +24,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Button } from '@/components/ui/button'
 import { exportUserData, importUserData } from '@/lib/data-transfer'
-import { seedUserData } from '@/app/_components/seed-data'
+import { seedUserData, clearSeedUserData } from '@/app/_components/seed-data'
 import { toast } from 'sonner'
 
 const THEMES = [
@@ -105,6 +106,22 @@ export function SidebarMenu() {
           >
             <Sprout className="h-4 w-4" />
             Seed data
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => {
+              const { favorites, recents, jobs } = clearSeedUserData()
+              const total = favorites + recents + jobs
+              if (total === 0) {
+                toast.info('No seed data to clear')
+              } else {
+                toast.success(
+                  `Cleared ${favorites} favorites, ${recents} recents, ${jobs} jobs`,
+                )
+              }
+            }}
+          >
+            <Eraser className="h-4 w-4" />
+            Clear seed data
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
