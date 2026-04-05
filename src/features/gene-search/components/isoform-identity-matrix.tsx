@@ -1,6 +1,8 @@
 'use client'
 
 import { useMemo } from 'react'
+import Link from 'next/link'
+import { usePathname, useSearchParams } from 'next/navigation'
 import { Grid3x3 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useSpeciesContext } from '@/stores/species-store'
@@ -53,6 +55,14 @@ function proteinIdentity(a: string, b: string): number {
  */
 export function IsoformIdentityMatrix({ isoforms }: Props) {
   const { species } = useSpeciesContext()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+
+  const buildHref = (id: string) => {
+    const params = new URLSearchParams(searchParams?.toString() ?? '')
+    params.set('isoform', id)
+    return `${pathname}?${params.toString()}#isoform-row-${id}`
+  }
 
   const { rows, ids } = useMemo(() => {
     const filtered = isoforms.filter((i) => {
@@ -110,7 +120,13 @@ export function IsoformIdentityMatrix({ isoforms }: Props) {
           ))}
 
           {rows.map((row, i) => (
-            <Row key={ids[i]} id={ids[i]} values={row} i={i} />
+            <Row
+              key={ids[i]}
+              id={ids[i]}
+              values={row}
+              i={i}
+              href={buildHref(ids[i])}
+            />
           ))}
         </div>
       </div>
@@ -124,15 +140,27 @@ export function IsoformIdentityMatrix({ isoforms }: Props) {
   )
 }
 
-function Row({ id, values, i }: { id: string; values: number[]; i: number }) {
+function Row({
+  id,
+  values,
+  i,
+  href,
+}: {
+  id: string
+  values: number[]
+  i: number
+  href: string
+}) {
   return (
     <>
-      <div
-        className="text-muted-foreground pr-2 text-right font-mono whitespace-nowrap"
-        title={id}
+      <Link
+        href={href}
+        scroll={false}
+        className="text-muted-foreground hover:text-foreground focus-visible:text-foreground pr-2 text-right font-mono whitespace-nowrap hover:underline focus-visible:outline-none"
+        title={`Jump to ${id}`}
       >
         {id}
-      </div>
+      </Link>
       {values.map((v, j) => {
         // Upper triangle only — mirror suppressed to reduce visual noise.
         const hidden = j > i
