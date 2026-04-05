@@ -1,13 +1,16 @@
 import json
 import logging
+import os
 import sys
 import time
 from pathlib import Path
 from typing import Any
 
 import modal
-from fastapi import FastAPI
-from pydantic import BaseModel
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel, field_validator
 
 
 # --- Structured logging ---
@@ -48,6 +51,10 @@ progress_dict = modal.Dict.from_name("rej-studio-progress", create_if_missing=Tr
 # progress entries can linger in the Dict if a worker dies without cleanup.
 PROGRESS_TTL_SECONDS = 30 * 60
 
+# Cold-start tracking: record module-level import time so the worker can
+# detect a cold start vs. a warm invocation.
+_MODULE_IMPORT_TIME = time.monotonic()
+
 
 @app.function(image=image, timeout=600)
 def run_job(params: dict) -> dict:
@@ -63,6 +70,12 @@ def run_job(params: dict) -> dict:
         call_id = modal.current_function_call_id() or ""
     except Exception:
         call_id = ""
+
+    # Cold-start detection. If the worker spins up and immediately runs
+    # this function within a short window of module import, it's a cold
+    # start. Log it so we can quantify cold-start prevalence.
+    now = time.monotonic()
+    is_cold_start = (now - _MODULE_IMPORT_TIME) < 5.0
 
     # Per-stage timing: track when each stage started so we can log cumulative
     # wall-clock per stage at completion. Helps identify which constraint is
@@ -85,6 +98,8 @@ def run_job(params: dict) -> dict:
         name=params.get("name"),
         cds_length=cds_len,
         options=params.get("options"),
+        cold_start=is_cold_start,
+        git_sha=os.environ.get("GIT_SHA", "unknown"),
     )
 
     # Throttled progress writer. dnachisel's inner loops would hammer this
@@ -143,6 +158,7 @@ def run_job(params: dict) -> dict:
             name=params.get("name"),
             total_s=round(time.monotonic() - job_started, 3),
             stage_timings_s={k: round(v, 3) for k, v in stage_timings.items()},
+            cold_start=is_cold_start,
         )
         return result
     except Exception as e:
@@ -155,6 +171,7 @@ def run_job(params: dict) -> dict:
             stage_timings_s={k: round(v, 3) for k, v in stage_timings.items()},
             error_type=type(e).__name__,
             error_message=str(e),
+            cold_start=is_cold_start,
         )
         raise
     finally:
@@ -166,13 +183,69 @@ def run_job(params: dict) -> dict:
 
 # --- FastAPI web endpoint served on Modal ---
 
+# CORS: restrict to production + preview origins only. "*" is the default
+# for FastAPI, which would let any site submit jobs via the browser.
+ALLOWED_ORIGINS = [
+    o
+    for o in [
+        os.environ.get("CORS_ORIGIN"),  # explicit override
+        "https://rej-studio.vercel.app",
+        "https://rejstudio.com",
+    ]
+    if o
+]
+# In development, allow localhost. Keep this behind an env guard so prod
+# never accidentally opens the door.
+if os.environ.get("MODAL_ENVIRONMENT") == "dev":
+    ALLOWED_ORIGINS.extend(
+        ["http://localhost:3000", "http://127.0.0.1:3000"]
+    )
+
+# Request-size cap (bytes). CDS max is 50k chars ≈ 50 KB; add generous
+# headroom for JSON overhead + options but reject truly absurd payloads
+# (e.g. someone POSTing a 10 MB body to tie up the worker).
+MAX_REQUEST_BYTES = 256 * 1024  # 256 KB
+
 web_app = FastAPI()
+
+web_app.add_middleware(
+    CORSMiddleware,
+    allow_origins=ALLOWED_ORIGINS,
+    allow_methods=["GET", "POST", "DELETE"],
+    allow_headers=["Content-Type"],
+)
+
+
+@web_app.middleware("http")
+async def enforce_request_size(request: Request, call_next):
+    """Reject payloads exceeding MAX_REQUEST_BYTES before parsing."""
+    content_length = request.headers.get("content-length")
+    if content_length and int(content_length) > MAX_REQUEST_BYTES:
+        return JSONResponse(
+            {"detail": f"Request body too large (max {MAX_REQUEST_BYTES} bytes)."},
+            status_code=413,
+        )
+    return await call_next(request)
 
 
 class JobRequest(BaseModel):
     CDS: str
     name: str
     options: dict[str, Any]
+
+    @field_validator("CDS")
+    @classmethod
+    def validate_cds(cls, v: str) -> str:
+        if len(v) > 50_000:
+            raise ValueError("CDS too long (max 50,000 characters)")
+        return v
+
+    @field_validator("name")
+    @classmethod
+    def validate_name(cls, v: str) -> str:
+        if len(v) > 250:
+            raise ValueError("Name too long (max 250 characters)")
+        return v
 
 
 class JobResponse(BaseModel):

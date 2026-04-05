@@ -7,14 +7,17 @@
 // http://127.0.0.1:8000, and COMPUTE_BACKEND=modal still works too.
 
 import { z } from 'zod'
+import { headers } from 'next/headers'
+import { createRateLimiter } from '@/lib/rate-limit'
+import { env } from '@/lib/env'
 
-// Server-action input validation. Hostile clients can craft any payload;
-// validate at the trust boundary even though in-app call-sites are typed.
+// --- Input validation ---
+
 const jobParamsSchema = z.object({
   CDS: z
     .string()
     .min(1)
-    .max(50000)
+    .max(50_000)
     .regex(/^[ACGTUacgtu]+$/, 'Invalid characters in coding sequence.'),
   name: z.string().min(1).max(250),
   options: z.record(z.string(), z.unknown()),
@@ -24,7 +27,6 @@ const jobIdSchema = z
   .string()
   .min(1)
   .max(200)
-  // Modal FunctionCall IDs are opaque tokens; keep the character class tight.
   .regex(/^[A-Za-z0-9_-]+$/, 'Invalid job id.')
 
 export interface JobParams {
@@ -47,18 +49,93 @@ export interface JobStatusResult {
   stage?: string
 }
 
+// --- Rate limiter ---
+// 10 job submissions per minute per IP. Prevents a single caller from burning
+// through Modal compute budget.
+const submitLimiter = createRateLimiter({ windowMs: 60_000, max: 10 })
+
+// --- Idempotency ---
+// Hash (CDS, options) to a stable key. If the same job is submitted twice
+// before the first resolves, return the existing call_id instead of spawning
+// a second worker.
+const inflightJobs = new Map<string, { jobId: string; expiresAt: number }>()
+const INFLIGHT_TTL = 10 * 60_000 // 10 minutes
+
+async function idempotencyKey(params: {
+  CDS: string
+  options: Record<string, unknown>
+}): Promise<string> {
+  const payload = JSON.stringify({ CDS: params.CDS, options: params.options })
+  const hash = await crypto.subtle.digest(
+    'SHA-256',
+    new TextEncoder().encode(payload),
+  )
+  return Array.from(new Uint8Array(hash))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('')
+}
+
+function getInflight(key: string): string | null {
+  const entry = inflightJobs.get(key)
+  if (!entry) return null
+  if (Date.now() > entry.expiresAt) {
+    inflightJobs.delete(key)
+    return null
+  }
+  return entry.jobId
+}
+
+function setInflight(key: string, jobId: string) {
+  inflightJobs.set(key, { jobId, expiresAt: Date.now() + INFLIGHT_TTL })
+}
+
+// --- Circuit breaker ---
+// Trips after THRESHOLD consecutive failures to Modal. When open, fail fast
+// with a clear message instead of hanging 30s. Resets after RESET_MS.
+const circuit = {
+  failures: 0,
+  open: false,
+  openedAt: 0,
+  THRESHOLD: 5,
+  RESET_MS: 30_000,
+}
+
+function circuitCheck(): { tripped: boolean } {
+  if (!circuit.open) return { tripped: false }
+  if (Date.now() - circuit.openedAt > circuit.RESET_MS) {
+    // Half-open: allow one request through to test recovery.
+    circuit.open = false
+    circuit.failures = 0
+    return { tripped: false }
+  }
+  return { tripped: true }
+}
+
+function circuitRecordSuccess() {
+  circuit.failures = 0
+  circuit.open = false
+}
+
+function circuitRecordFailure() {
+  circuit.failures++
+  if (circuit.failures >= circuit.THRESHOLD) {
+    circuit.open = true
+    circuit.openedAt = Date.now()
+  }
+}
+
+// --- Backend routing ---
+
 type ComputeBackend = 'modal' | 'local'
 
 function getComputeBackend(): ComputeBackend {
-  const value = process.env.COMPUTE_BACKEND
+  const value = env.COMPUTE_BACKEND
   if (value === 'modal') return 'modal'
   if (value && value !== 'local') {
     throw new Error(
       `Invalid COMPUTE_BACKEND: "${value}". Expected "modal", "local", or unset.`,
     )
   }
-  // "local" (or unset) is only valid in dev — there is no Python runtime in
-  // production on either Vercel or Cloudflare.
   if (process.env.NODE_ENV !== 'development') {
     throw new Error(
       'COMPUTE_BACKEND=modal is required in production. The local FastAPI backend is dev-only.',
@@ -72,40 +149,73 @@ function isModalBackend() {
 }
 
 function getModalUrl() {
-  const url = process.env.MODAL_API_URL
+  const url = env.MODAL_API_URL
   if (!url) throw new Error('MODAL_API_URL is not configured')
   return url
 }
 
 function getLocalApiUrl() {
-  // Dev-only: hit uvicorn directly. getComputeBackend() guarantees we only
-  // reach this in dev (NODE_ENV === 'development').
-  return process.env.LOCAL_API_URL ?? 'http://127.0.0.1:8000'
+  return env.LOCAL_API_URL ?? 'http://127.0.0.1:8000'
 }
+
+// --- Actions ---
 
 export async function submitJob(
   params: JobParams,
 ): Promise<{ jobId: string; result?: Record<string, unknown> }> {
   const validated = jobParamsSchema.parse(params)
 
+  // Rate limit
+  const hdrs = await headers()
+  const ip = hdrs.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
+  const { ok: allowed } = submitLimiter.check(ip)
+  if (!allowed) {
+    throw new Error(
+      'Too many job submissions. Please wait a moment and try again.',
+    )
+  }
+
   if (isModalBackend()) {
-    const response = await fetch(`${getModalUrl()}/jobs`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(validated),
-    })
-    if (!response.ok) {
-      const text = await response.text()
-      throw new Error(`Modal API error: ${text}`)
+    // Circuit breaker
+    if (circuitCheck().tripped) {
+      throw new Error(
+        'The compute backend is temporarily unavailable. Please try again in a few seconds.',
+      )
     }
-    const data = await response.json()
-    return { jobId: data.call_id }
+
+    // Idempotency: dedupe concurrent identical submissions
+    const iKey = await idempotencyKey(validated)
+    const existing = getInflight(iKey)
+    if (existing) {
+      return { jobId: existing }
+    }
+
+    try {
+      const response = await fetch(`${getModalUrl()}/jobs`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(validated),
+        signal: AbortSignal.timeout(30_000),
+      })
+      if (!response.ok) {
+        const text = await response.text()
+        circuitRecordFailure()
+        throw new Error(`Modal API error: ${text}`)
+      }
+      const data = await response.json()
+      circuitRecordSuccess()
+      setInflight(iKey, data.call_id)
+      return { jobId: data.call_id }
+    } catch (err) {
+      if (err instanceof Error && err.message.startsWith('Modal API error')) {
+        throw err
+      }
+      circuitRecordFailure()
+      throw err
+    }
   }
 
   // Local backend: call FastAPI synchronously and return the result inline.
-  // No polling needed — the result is available immediately. The jobId is
-  // server-minted here so the client has a single, stable identity (used for
-  // URL state + history) regardless of which backend ran the job.
   const response = await fetch(`${getLocalApiUrl()}/api/py/process-json`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -123,7 +233,9 @@ export async function getJobStatus(jobId: string): Promise<JobStatusResult> {
   const validatedId = jobIdSchema.parse(jobId)
 
   if (isModalBackend()) {
-    const response = await fetch(`${getModalUrl()}/jobs/${validatedId}`)
+    const response = await fetch(`${getModalUrl()}/jobs/${validatedId}`, {
+      signal: AbortSignal.timeout(10_000),
+    })
     if (!response.ok) {
       const text = await response.text()
       throw new Error(`Modal API error: ${text}`)
@@ -131,8 +243,6 @@ export async function getJobStatus(jobId: string): Promise<JobStatusResult> {
     return response.json()
   }
 
-  // Local backend: result was returned inline from submitJob, so this
-  // should not be called. Return not_found as a safeguard.
   return { status: 'not_found' }
 }
 
@@ -142,6 +252,7 @@ export async function cancelJob(jobId: string): Promise<JobStatusResult> {
   if (isModalBackend()) {
     const response = await fetch(`${getModalUrl()}/jobs/${validatedId}`, {
       method: 'DELETE',
+      signal: AbortSignal.timeout(10_000),
     })
     if (!response.ok) {
       const text = await response.text()
@@ -150,7 +261,6 @@ export async function cancelJob(jobId: string): Promise<JobStatusResult> {
     return response.json()
   }
 
-  // Local backend runs synchronously, so there's nothing to cancel.
   return {
     status: 'cancelled',
     error: {

@@ -1,10 +1,16 @@
 import { NextResponse } from 'next/server'
+import { headers } from 'next/headers'
 import { sql } from 'drizzle-orm'
 import { db } from '@/drizzle/db'
 import { env } from '@/lib/env'
+import { createRateLimiter } from '@/lib/rate-limit'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
+
+// Rate limit: 20 requests per minute per IP. /api/health probes the DB, so
+// an unauthenticated caller could use it as a cheap amplification vector.
+const limiter = createRateLimiter({ windowMs: 60_000, max: 20 })
 
 type CheckStatus = 'ok' | 'fail' | 'skipped'
 
@@ -70,6 +76,23 @@ async function checkModal(): Promise<Check> {
 }
 
 export async function GET() {
+  const hdrs = await headers()
+  const ip = hdrs.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
+  const { ok: allowed, remaining, resetMs } = limiter.check(ip)
+
+  if (!allowed) {
+    return NextResponse.json(
+      { error: 'Rate limit exceeded. Try again later.' },
+      {
+        status: 429,
+        headers: {
+          'Retry-After': String(Math.ceil(resetMs / 1000)),
+          'X-RateLimit-Remaining': '0',
+        },
+      },
+    )
+  }
+
   const [database, modal] = await Promise.all([checkDatabase(), checkModal()])
 
   const degraded = database.status === 'fail' || modal.status === 'fail'
@@ -83,6 +106,9 @@ export async function GET() {
 
   return NextResponse.json(body, {
     status: degraded ? 503 : 200,
-    headers: { 'Cache-Control': 'no-store, max-age=0' },
+    headers: {
+      'Cache-Control': 'no-store, max-age=0',
+      'X-RateLimit-Remaining': String(remaining),
+    },
   })
 }

@@ -13,6 +13,16 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: path.resolve(__dirname),
   },
+  env: {
+    // Baked at build-time so /api/version can report exactly which deploy is
+    // running. Vercel sets VERCEL_GIT_COMMIT_SHA automatically; for CF/self-
+    // host, pass GIT_COMMIT_SHA in the build command.
+    GIT_COMMIT_SHA:
+      process.env.GIT_COMMIT_SHA ??
+      process.env.VERCEL_GIT_COMMIT_SHA ??
+      'unknown',
+    BUILD_TIMESTAMP: new Date().toISOString(),
+  },
   rewrites: async () => {
     if (process.env.NODE_ENV === 'development') {
       return [
