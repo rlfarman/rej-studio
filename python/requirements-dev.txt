@@ -1,0 +1,4 @@
+-r requirements.txt
+
+# Dev tooling — used by lint-staged pre-commit hook and local scripts.
+ruff>=0.6.0

@@ -67,3 +67,28 @@ Use sparingly — CI will still enforce the rules on the PR.
 ## Setup
 
 Hooks install automatically when you run `pnpm install` (via husky's `prepare` script). No extra steps required.
+
+## Required status checks
+
+The following jobs should be configured as **required status checks** on `main` in GitHub repo settings (Settings → Branches → Branch protection rules → `main`):
+
+| Check           | Workflow          | Blocks merge? |
+| --------------- | ----------------- | ------------- |
+| `Lint`          | `ci.yml`          | ✅ required   |
+| `Format`        | `ci.yml`          | ✅ required   |
+| `Type Check`    | `ci.yml`          | ✅ required   |
+| `Knip`          | `ci.yml`          | ✅ required   |
+| `Build`         | `ci.yml`          | ✅ required   |
+| `OSV Scanner`   | `security.yml`    | ✅ required   |
+| `Commitlint`    | `conventions.yml` | ⚠️ advisory   |
+| `PR Title`      | `conventions.yml` | ⚠️ advisory   |
+| `Branch Name`   | `conventions.yml` | ⚠️ advisory   |
+| `Lighthouse CI` | `lighthouse.yml`  | ⚠️ advisory   |
+
+The five `ci.yml` jobs use `dorny/paths-filter` and are skipped for docs-only PRs; GitHub treats skipped required checks as passing.
+
+To enable: repo Settings → Branches → Add branch protection rule → pattern `main` → "Require status checks to pass before merging" → search for and add each required check.
+
+## Locally reproducing CI
+
+Run `pnpm verify` to reproduce the CI gates (lint, format check, type check, knip, build) in one command before pushing.

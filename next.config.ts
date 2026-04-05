@@ -1,5 +1,10 @@
 import type { NextConfig } from 'next'
 import path from 'path'
+import withBundleAnalyzer from '@next/bundle-analyzer'
+
+const bundleAnalyzer = withBundleAnalyzer({
+  enabled: process.env.ANALYZE === 'true',
+})
 
 // In development, proxy /api/py/* to the local uvicorn dev server.
 // In production, the Python backend runs on Modal and is called directly from
@@ -30,4 +35,4 @@ const nextConfig: NextConfig = {
   },
 }
 
-export default nextConfig
+export default bundleAnalyzer(nextConfig)
