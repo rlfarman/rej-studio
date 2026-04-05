@@ -34,10 +34,16 @@ function getModalUrl() {
 }
 
 function getLocalApiUrl() {
-  // In dev, hit uvicorn directly. On Vercel, use the app's own URL (rewrites handle routing).
+  // In dev, hit uvicorn directly. In prod, hit the app's own URL (rewrites
+  // handle routing to /api/ on Vercel). On Cloudflare this path is unused
+  // because COMPUTE_BACKEND=modal is required (no Python runtime).
   if (process.env.NODE_ENV === 'development') {
     return process.env.LOCAL_API_URL ?? 'http://127.0.0.1:8000'
   }
+  // APP_URL is the generic, host-agnostic setting. Fall back to VERCEL_URL
+  // so existing Vercel deploys keep working without extra env config.
+  const appUrl = process.env.APP_URL
+  if (appUrl) return appUrl.startsWith('http') ? appUrl : `https://${appUrl}`
   const vercelUrl = process.env.VERCEL_URL
   if (vercelUrl) return `https://${vercelUrl}`
   return 'http://127.0.0.1:3000'
