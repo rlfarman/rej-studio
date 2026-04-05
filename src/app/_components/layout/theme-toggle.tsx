@@ -1,9 +1,21 @@
 'use client'
 
 import { useTheme } from 'next-themes'
-import { Moon, Sun } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { Monitor, Moon, Sun } from 'lucide-react'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { useEffect, useState } from 'react'
+
+const THEMES = [
+  { value: 'light', label: 'Light', icon: Sun },
+  { value: 'dark', label: 'Dark', icon: Moon },
+  { value: 'system', label: 'System', icon: Monitor },
+] as const
 
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme()
@@ -20,26 +32,29 @@ export function ThemeToggle() {
     return null
   }
 
-  const isDark = theme === 'dark'
+  const current = THEMES.find((t) => t.value === theme) ?? THEMES[2]
+  const Icon = current.icon
 
   return (
-    <Button
-      variant="ghost"
-      size="sm"
-      className="justify-start"
-      onClick={() => setTheme(isDark ? 'light' : 'dark')}
-    >
-      {isDark ? (
-        <>
-          <Sun className="h-4 w-4" />
-          Light mode
-        </>
-      ) : (
-        <>
-          <Moon className="h-4 w-4" />
-          Dark mode
-        </>
-      )}
-    </Button>
+    <Select value={theme} onValueChange={setTheme}>
+      <SelectTrigger className="h-8 w-full text-sm">
+        <SelectValue>
+          <span className="flex items-center gap-2">
+            <Icon className="h-4 w-4" />
+            {current.label}
+          </span>
+        </SelectValue>
+      </SelectTrigger>
+      <SelectContent>
+        {THEMES.map(({ value, label, icon: ItemIcon }) => (
+          <SelectItem key={value} value={value}>
+            <span className="flex items-center gap-2">
+              <ItemIcon className="h-4 w-4" />
+              {label}
+            </span>
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   )
 }
