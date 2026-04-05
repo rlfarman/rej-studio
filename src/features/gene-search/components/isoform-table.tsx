@@ -45,6 +45,7 @@ import {
 } from '@/lib/bio/design-suitability'
 import { IsoformValidationBadges } from './isoform-validation-badges'
 import { IsoformComparisonSheet } from './isoform-comparison-sheet'
+import { GcSparkline } from '@/components/bio/gc-sparkline'
 import type { IsoformListItem } from '@/features/gene-search/types/domain-types'
 
 interface IsoformListProps {
@@ -427,6 +428,8 @@ function ExpandedDetails({ isoform }: { isoform: IsoformListItem }) {
         codingSequence={isoform.codingSequence}
         codingSequenceLength={isoform.codingSequenceLength}
       />
+
+      <GcSparkline sequence={isoform.codingSequence} />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>

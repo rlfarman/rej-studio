@@ -11,11 +11,11 @@ const H = 24
 const PAD_Y = 2
 
 /**
- * Tiny inline GC sparkline for the form. Shows a sliding-window GC trace
- * with a 40–60% target band, plus the overall GC% numerically. Designed to
- * sit flush under the sequence input textarea.
+ * Tiny inline GC sparkline. Shows a sliding-window GC trace with a 40–60%
+ * target band, plus the overall GC% numerically. Hidden for sequences
+ * shorter than 60 bp (not enough data to be informative).
  */
-export function SequenceGcSparkline({ sequence }: Props) {
+export function GcSparkline({ sequence }: Props) {
   const { path, overallGc, len } = useMemo(() => {
     if (sequence.length < 60) {
       return { path: '', overallGc: 0, len: sequence.length }

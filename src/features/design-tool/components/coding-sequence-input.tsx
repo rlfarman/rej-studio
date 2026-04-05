@@ -13,7 +13,7 @@ import { Upload } from 'lucide-react'
 import { FormValues } from '../types/form-schema'
 import { SequenceWarnings } from './sequence-warnings'
 import { SequenceHighlight } from './sequence-highlight'
-import { SequenceGcSparkline } from './sequence-gc-sparkline'
+import { GcSparkline } from '@/components/bio/gc-sparkline'
 import { CodonUsageStrip } from './codon-usage-strip'
 import { cn } from '@/lib/utils'
 import { cleanSequence, parseFasta } from '@/lib/bio/fasta'
@@ -199,7 +199,7 @@ export function CodingSequenceInput() {
           </FormAssistiveText>
           {value && value.length >= 60 && (
             <div className="space-y-2 pt-1">
-              <SequenceGcSparkline sequence={value} />
+              <GcSparkline sequence={value} />
               {isSpecies(species) && value.length % 3 === 0 && (
                 <CodonUsageStrip sequence={value} species={species} />
               )}
