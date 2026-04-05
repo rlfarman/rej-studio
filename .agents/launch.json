@@ -3,21 +3,15 @@
   "configurations": [
     {
       "name": "next-dev",
-      "runtimeExecutable": "/bin/sh",
-      "runtimeArgs": [
-        "-c",
-        "PATH=/usr/local/bin:/opt/homebrew/bin:$PATH exec pnpm run next-dev"
-      ],
+      "runtimeExecutable": "/bin/zsh",
+      "runtimeArgs": ["-l", "-c", "exec pnpm run next-dev"],
       "port": 3000,
       "autoPort": true
     },
     {
       "name": "fastapi-dev",
-      "runtimeExecutable": "/bin/sh",
-      "runtimeArgs": [
-        "-c",
-        "PATH=/usr/local/bin:/opt/homebrew/bin:$PATH exec pnpm run fastapi-dev"
-      ],
+      "runtimeExecutable": "/bin/zsh",
+      "runtimeArgs": ["-l", "-c", "exec pnpm run fastapi-dev"],
       "port": 8000,
       "autoPort": true
     }
