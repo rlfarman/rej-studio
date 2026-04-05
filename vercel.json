@@ -1,0 +1,13 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "build": {
+    "env": {
+      "DEPLOY_TARGET": "vercel"
+    }
+  },
+  "functions": {
+    "api/index.py": {
+      "runtime": "@vercel/python@4.5.0"
+    }
+  }
+}

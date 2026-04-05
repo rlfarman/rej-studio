@@ -4,7 +4,7 @@
   "private": true,
   "packageManager": "pnpm@9.12.3",
   "scripts": {
-    "fastapi-dev": "source venv/bin/activate && pip install -r requirements.txt && python3 -m uvicorn api.index:app --reload",
+    "fastapi-dev": "source venv/bin/activate && pip install -r requirements.txt && python3 -m uvicorn python.index:app --reload",
     "next-dev": "next dev",
     "dev": "concurrently \"pnpm next-dev\" \"pnpm fastapi-dev\"",
     "db:build": "python3 scripts/build-db.py",
@@ -12,6 +12,9 @@
     "db:upload": "tsx --env-file=.env scripts/load-db.ts",
     "db:studio": "drizzle-kit studio",
     "build": "next build",
+    "build:cf": "DEPLOY_TARGET=cloudflare opennextjs-cloudflare build",
+    "preview:cf": "DEPLOY_TARGET=cloudflare opennextjs-cloudflare preview",
+    "deploy:cf": "DEPLOY_TARGET=cloudflare opennextjs-cloudflare deploy",
     "start": "next start",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
@@ -38,7 +41,6 @@
     "@tanstack/react-query": "^5.96.2",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
-    "@vercel/analytics": "^2.0.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.4",
@@ -48,7 +50,6 @@
     "eslint-config-next": "^16.2.1",
     "fflate": "^0.8.2",
     "geist": "^1.3.1",
-    "jose": "^6.0.8",
     "lucide-react": "^1.7.0",
     "motion": "^12.38.0",
     "next": "^16.2.1",
@@ -70,6 +71,7 @@
   "devDependencies": {
     "@commitlint/cli": "^19.6.1",
     "@commitlint/config-conventional": "^19.6.0",
+    "@opennextjs/cloudflare": "^1.18.0",
     "@types/node": "^25.5.0",
     "drizzle-kit": "^0.31.10",
     "eslint-plugin-react-hooks": "^7.0.1",
@@ -78,7 +80,8 @@
     "prettier": "^3.8.1",
     "prettier-plugin-tailwindcss": "^0.7.2",
     "ts-node": "^10.9.2",
-    "tsx": "^4.19.2"
+    "tsx": "^4.19.2",
+    "wrangler": "^4.0.0"
   },
   "pnpm": {
     "overrides": {
