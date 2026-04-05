@@ -48,17 +48,25 @@ def run_job(params: dict) -> dict:
     # couple of seconds. Keep the payload to JSON primitives.
     last_written = {"at": 0.0, "frac": -1.0}
 
+    last_written["stage"] = ""
+
     def on_progress(frac: float, stage: str):
         if not call_id:
             return
         now = time.monotonic()
+        stage_changed = stage != last_written.get("stage", "")
+        # Write on: stage change, OR >=2% frac delta, OR >=1s since last write.
+        # This keeps dnachisel's hot inner loop from hammering the Dict while
+        # still feeding the 2s-poll frontend fresh numbers between checkpoints.
         if (
-            frac - last_written["frac"] < 0.05
-            and now - last_written["at"] < 2.0
+            not stage_changed
+            and frac - last_written["frac"] < 0.02
+            and now - last_written["at"] < 1.0
         ):
             return
         last_written["at"] = now
         last_written["frac"] = frac
+        last_written["stage"] = stage
         progress_dict[call_id] = {
             "progress": float(frac),
             "stage": str(stage),
