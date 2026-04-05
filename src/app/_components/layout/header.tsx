@@ -20,8 +20,8 @@ function GeneSearchTooltip() {
   // search bar and the "Design Tool" label can collide — push the label
   // one breakpoint higher while the sidebar is expanded.
   const labelClass =
-    state === 'expanded' ? 'hidden md:inline' : 'hidden sm:inline'
-  const tooltipHiddenClass = state === 'expanded' ? 'md:hidden' : 'sm:hidden'
+    state === 'expanded' ? 'hidden lg:inline' : 'hidden sm:inline'
+  const tooltipHiddenClass = state === 'expanded' ? 'lg:hidden' : 'sm:hidden'
 
   return (
     <Tooltip>
@@ -49,7 +49,7 @@ export function Header() {
   // Keep the species label in sync with the Design Tool label breakpoint —
   // they share the same row so they should appear/disappear together.
   const headerLabelClass =
-    state === 'expanded' ? 'hidden md:block' : 'hidden sm:block'
+    state === 'expanded' ? 'hidden lg:block' : 'hidden sm:block'
 
   // Extract the gene symbol from the path
   const geneSymbolMatch = pathname.match(/\/genes\/([^/]+)/)
