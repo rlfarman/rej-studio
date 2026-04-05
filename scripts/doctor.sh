@@ -94,6 +94,24 @@ else
   bad ".env missing — copy .env.example to .env and fill in values"
 fi
 
+# --- Modal CLI -------------------------------------------------------------
+section "Modal CLI"
+
+if command -v modal >/dev/null 2>&1; then
+  modal_version="$(modal --version 2>&1 | head -1)"
+  ok "modal CLI installed ($modal_version)"
+
+  # Check authentication by hitting `modal profile current`.
+  # On an unauthed machine this exits non-zero or prints nothing.
+  if modal_profile="$(modal profile current 2>/dev/null)" && [ -n "$modal_profile" ]; then
+    ok "modal authenticated (profile: $modal_profile)"
+  else
+    warn "modal CLI installed but not authenticated — run: modal token set"
+  fi
+else
+  warn "modal CLI not found — install with: pip install modal"
+fi
+
 # --- Environment variables -------------------------------------------------
 section "Environment variables"
 

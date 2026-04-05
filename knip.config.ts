@@ -21,6 +21,8 @@ const config: KnipConfig = {
     'prettier-plugin-tailwindcss',
     // shadcn/ui expects these as peer-ish runtime deps even if not imported directly
     'class-variance-authority',
+    // Used by scripts/generate-api-types.sh via npx
+    'openapi-typescript',
   ],
   ignoreBinaries: ['modal'],
 }

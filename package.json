@@ -29,6 +29,8 @@
     "analyze": "ANALYZE=true next build",
     "type-check": "tsc --noEmit",
     "verify": "pnpm lint && pnpm format:check && pnpm type-check && pnpm knip && pnpm build",
+    "api:types": "bash scripts/generate-api-types.sh",
+    "db:verify-schema": "tsx --env-file=.env scripts/verify-schema.ts",
     "doctor": "bash scripts/doctor.sh",
     "prepare": "husky"
   },
@@ -88,6 +90,7 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "husky": "^9.1.7",
     "knip": "^5.39.0",
+    "openapi-typescript": "^7.0.0",
     "lint-staged": "^15.2.10",
     "prettier": "^3.8.1",
     "prettier-plugin-tailwindcss": "^0.7.2",
