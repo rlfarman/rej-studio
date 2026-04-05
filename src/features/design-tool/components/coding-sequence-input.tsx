@@ -40,7 +40,26 @@ export function CodingSequenceInput() {
 
   const applyCleanedSequence = useCallback(
     (text: string, source: string) => {
-      const { cleaned, removedChars, removedHeaders } = cleanSequence(text)
+      // If the input contains multiple FASTA entries, use only the first
+      // sequence (concatenating them would produce an invalid composite
+      // coding sequence).
+      let textToClean = text
+      let ignoredSequences = 0
+      if (text.includes('>')) {
+        const fastaEntries = parseFasta(text).filter(
+          (e) => e.sequence.length > 0,
+        )
+        if (fastaEntries.length > 1) {
+          ignoredSequences = fastaEntries.length - 1
+          const first = fastaEntries[0]
+          textToClean = first.header
+            ? `>${first.header}\n${first.sequence}`
+            : first.sequence
+        }
+      }
+
+      const { cleaned, removedChars, removedHeaders } =
+        cleanSequence(textToClean)
 
       if (cleaned.length === 0) {
         toast.error('No valid nucleotide characters found.')
@@ -57,6 +76,10 @@ export function CodingSequenceInput() {
       })
 
       const parts: string[] = []
+      if (ignoredSequences > 0)
+        parts.push(
+          `used first sequence (${ignoredSequences} additional sequence${ignoredSequences > 1 ? 's' : ''} ignored)`,
+        )
       if (removedHeaders > 0)
         parts.push(
           `${removedHeaders} header${removedHeaders > 1 ? 's' : ''} stripped`,
