@@ -7,7 +7,7 @@ import {
   type RankedInducibleWggwCandidate,
   type WggwRecodingOption,
 } from '@/lib/bio/sequence-utils'
-import { translateCodon, AMINO_ACID_NAMES } from '@/lib/bio/genetic-code'
+import { translateCodon } from '@/lib/bio/genetic-code'
 import {
   Popover,
   PopoverContent,
@@ -39,27 +39,15 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
   const seqLen = sequence.length
   const trackRef = useRef<HTMLDivElement>(null)
 
-  const { wggwSites, nearestWggw } = useMemo(() => {
+  const { wggwSites } = useMemo(() => {
     if (seqLen < 12) {
       return {
         wggwSites: [],
-        nearestWggw: null,
       }
     }
     const sites = groupWggwSites(rankInducibleWggwByBalance(sequence))
-
-    // Nearest WGGW to the current cut, for the "snap to nearest" button.
-    let nearest: (WggwSiteCandidate & { distance: number }) | null =
-      null
-    for (const site of sites) {
-      const d = Math.abs(site.position - position)
-      if (!nearest || d < nearest.distance) {
-        nearest = { ...site, distance: d }
-      }
-    }
-
-    return { wggwSites: sites, nearestWggw: nearest }
-  }, [sequence, seqLen, position])
+    return { wggwSites: sites }
+  }, [sequence, seqLen])
 
   const selectedSite = useMemo(
     () => wggwSites.find((site) => site.position === position) ?? null,
@@ -202,8 +190,6 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
             {wggwSites.map((site, i) => {
               const mid = site.position
               const x = (mid / seqLen) * 100
-              const isNearest =
-                nearestWggw !== null && nearestWggw.position === mid
               const isSelected = selectedSite?.position === mid
               const sourceLabel = site.alreadyPresent
                 ? 'present in sequence'
@@ -228,9 +214,7 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
                       isSelected
                         ? 'w-[3px] bg-primary'
                         : site.alreadyPresent
-                          ? isNearest
-                            ? 'w-[2px] bg-emerald-500'
-                            : 'w-[1px] bg-emerald-500/60'
+                          ? 'w-[1px] bg-emerald-500/60'
                           : 'w-[1px] bg-amber-500/80',
                     )}
                   />
@@ -252,18 +236,7 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
         </div>
         {/* Single readout */}
         <div className="text-muted-foreground flex items-center justify-between gap-2 text-[10px]">
-          <span className="font-mono tabular-nums">
-            bp {position.toLocaleString()}
-            {nearestWggw && (
-              <>
-                {' · nearest WGGW '}
-                {nearestWggw.alreadyPresent ? '' : 'candidate '}
-                {nearestWggw.distance === 0
-                  ? 'on cut'
-                  : `${nearestWggw.position > position ? '+' : '−'}${nearestWggw.distance} bp`}
-              </>
-            )}
-          </span>
+          <span className="font-mono tabular-nums">bp {position.toLocaleString()}</span>
           <span className="flex items-center gap-1.5">
             <span>WGGW-capable: {wggwSites.length}</span>
             <KeyboardHelp />
@@ -483,46 +456,17 @@ function FrameAtSplit({
     return s
   }, [currentRewrite, selectedSite])
 
-  const splitCodon = ctx.codons.find((c) => c.isSplit)
-  const aaName =
-    splitCodon?.aa && AMINO_ACID_NAMES[splitCodon.aa]
-      ? AMINO_ACID_NAMES[splitCodon.aa]
-      : null
-
-  const frameLabel =
-    ctx.frameOffset === 0
-      ? 'between codons'
-      : ctx.frameOffset === 1
-        ? 'after base 1'
-        : 'after base 2'
+  const selectedCodonIndices = useMemo(() => {
+    const s = new Set<number>()
+    if (!selectedSite) return s
+    const firstCodonIdx = Math.floor((selectedSite.hexamerStart - 1) / 3)
+    s.add(firstCodonIdx)
+    s.add(firstCodonIdx + 1)
+    return s
+  }, [selectedSite])
 
   return (
     <div className="space-y-1">
-      <div className="flex items-center justify-between text-[10px]">
-        <span className="text-muted-foreground">
-          Frame at split · codon {ctx.splitCodon + 1}
-          {splitCodon?.aa && (
-            <>
-              {' '}
-              <span className="text-foreground font-mono">
-                {splitCodon.codon}
-              </span>
-              {aaName && splitCodon.aa !== '*' && (
-                <span className="text-muted-foreground">
-                  {' '}
-                  = {aaName} ({splitCodon.aa})
-                </span>
-              )}
-              {splitCodon.aa === '*' && (
-                <span className="text-red-600 dark:text-red-400"> = stop</span>
-              )}
-            </>
-          )}
-        </span>
-        <span className="text-muted-foreground font-mono">
-          cut {frameLabel} · bp {position.toLocaleString()}
-        </span>
-      </div>
       <div
         ref={stripRef}
         className="bg-muted/40 rounded-sm border p-1.5 font-mono text-[10px] leading-none"
@@ -537,7 +481,11 @@ function FrameAtSplit({
                 key={c.idx}
                 className={cn(
                   'flex flex-1 flex-col items-center gap-0.5 rounded-sm px-[3px] py-1',
-                  roleStyles.container,
+                  c.role === 'split' ? '' : roleStyles.container,
+                  selectedCodonIndices.has(c.idx) &&
+                    (selectedSite?.alreadyPresent
+                      ? 'bg-emerald-500/10 ring-emerald-500/30 ring-1'
+                      : 'bg-amber-500/10 ring-amber-500/30 ring-1'),
                 )}
               >
                 <span className={cn('tabular-nums', roleStyles.aa)}>
@@ -654,26 +602,17 @@ function FrameAtSplit({
               </div>
             )}
           </div>
-          <div className="grid gap-2 sm:grid-cols-2">
-            <PreviewPanel
-              label="Before"
-              peptide={translatePair(selectedSite.originalCodons)}
-              codons={selectedSite.originalCodons}
-              hexamer={selectedSite.originalHexamer}
-              motifStart={selectedSite.motifStart - selectedSite.hexamerStart}
-              cutOffset={selectedSite.position - selectedSite.hexamerStart}
-            />
-            <PreviewPanel
-              label="After"
-              peptide={translatePair(currentRewrite.newCodons)}
-              codons={currentRewrite.newCodons}
-              hexamer={currentRewrite.newHexamer}
-              motifStart={currentRewrite.motifOffset}
-              cutOffset={selectedSite.position - selectedSite.hexamerStart}
-              changedFrom={selectedSite.originalHexamer}
-              highlightPresent={selectedSite.alreadyPresent}
-            />
-          </div>
+          <RewritePreview
+            peptide={translatePair(selectedSite.originalCodons)}
+            beforeCodons={selectedSite.originalCodons}
+            afterCodons={currentRewrite.newCodons}
+            beforeHexamer={selectedSite.originalHexamer}
+            afterHexamer={currentRewrite.newHexamer}
+            changedFrom={selectedSite.originalHexamer}
+            motifStart={currentRewrite.motifOffset}
+            cutOffset={selectedSite.position - selectedSite.hexamerStart}
+            alreadyPresent={selectedSite.alreadyPresent}
+          />
         </div>
       )}
     </div>
@@ -686,67 +625,62 @@ function translatePair(codons: [string, string]) {
     .join('')
 }
 
-function PreviewPanel({
-  label,
+function RewritePreview({
   peptide,
-  codons,
-  hexamer,
+  beforeCodons,
+  afterCodons,
+  beforeHexamer,
+  afterHexamer,
   motifStart,
   cutOffset,
   changedFrom,
-  highlightPresent = false,
+  alreadyPresent,
 }: {
-  label: string
   peptide: string
-  codons: [string, string]
-  hexamer: string
+  beforeCodons: [string, string]
+  afterCodons: [string, string]
+  beforeHexamer: string
+  afterHexamer: string
   motifStart: number
   cutOffset: number
-  changedFrom?: string
-  highlightPresent?: boolean
+  changedFrom: string
+  alreadyPresent: boolean
 }) {
   return (
-    <div className="space-y-1 rounded-sm border bg-background/70 p-2">
-      <div className="text-muted-foreground flex items-center justify-between">
-        <span>{label}</span>
-        <span className="font-mono">cut bp +{cutOffset + 1}</span>
+    <div className="space-y-1.5 rounded-sm border bg-background/70 p-2 font-mono">
+      <div className="flex items-center justify-between">
+        <span className="text-muted-foreground">Peptide</span>
+        <span>{peptide[0] ?? '·'} {peptide[1] ?? '·'}</span>
       </div>
-      <div className="space-y-0.5 font-mono">
-        <div className="flex gap-2">
-          <span className="text-muted-foreground w-10">AA</span>
-          <span>{peptide[0] ?? '·'}</span>
-          <span>{peptide[1] ?? '·'}</span>
-        </div>
-        <div className="flex gap-2">
-          <span className="text-muted-foreground w-10">DNA</span>
-          <div className="flex">
-            {[...hexamer].map((base, index) => {
-              const inMotif = index >= motifStart && index < motifStart + 4
-              const isChanged = changedFrom ? changedFrom[index] !== base : false
-              const isCut = index === cutOffset
-              return (
-                <span
-                  key={index}
-                  className={cn(
-                    'px-[1px]',
-                    inMotif &&
-                      (highlightPresent
-                        ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
-                        : 'bg-amber-500/15 text-amber-700 dark:text-amber-300'),
-                    isChanged && 'underline decoration-2 underline-offset-2',
-                    isCut && 'border-primary border-r-2',
-                  )}
-                >
-                  {base}
-                </span>
-              )
-            })}
-          </div>
-        </div>
-        <div className="flex gap-2">
-          <span className="text-muted-foreground w-10">Codons</span>
-          <span>{codons[0]}</span>
-          <span>{codons[1]}</span>
+      <div className="flex items-center justify-between">
+        <span className="text-muted-foreground">Before</span>
+        <span>{beforeCodons[0]} {beforeCodons[1]}</span>
+      </div>
+      <div className="flex items-center justify-between">
+        <span className="text-muted-foreground">After</span>
+        <div className="flex">
+          {[...afterHexamer].map((base, index) => {
+            const inMotif = index >= motifStart && index < motifStart + 4
+            const isChanged = changedFrom[index] !== base
+            const isCut = index === cutOffset
+            return (
+              <span
+                key={index}
+                className={cn(
+                  'px-[1px]',
+                  index === 3 && 'ml-1',
+                  inMotif &&
+                    (alreadyPresent
+                      ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
+                      : 'bg-amber-500/15 text-amber-700 dark:text-amber-300'),
+                  isChanged && 'underline decoration-2 underline-offset-2',
+                  isCut && 'border-primary border-r-2',
+                )}
+              >
+                {base}
+              </span>
+            )
+          })}
         </div>
       </div>
     </div>

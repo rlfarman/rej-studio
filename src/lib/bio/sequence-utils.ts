@@ -85,7 +85,8 @@ function findWggwWindows(seq: string): {
     matches.push({
       motif: m[0],
       motifOffset: m.index,
-      splitOffset: m.index + 1,
+      // 1-based cut position relative to the 6mer: WG|GW
+      splitOffset: m.index + 2,
     })
     WGGW_REGEX.lastIndex = m.index + 1
   }
@@ -327,7 +328,7 @@ export function rankWggwByBalance(sequence: string): WggwCandidate[] {
   const motifs = findWggwMotifs(sequence)
   return motifs
     .map((m): WggwCandidate => {
-      const cut = m.position + 1 // midpoint of the 4bp motif (1-based cut index)
+      const cut = m.position + 2 // midpoint of the 4bp motif: WG|GW
       return {
         position: cut,
         motif: m.motif,
