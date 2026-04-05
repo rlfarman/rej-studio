@@ -41,6 +41,8 @@ import {
   getSuitabilityConfig,
 } from '@/lib/bio/design-suitability'
 import { IsoformValidationBadges } from './isoform-validation-badges'
+import { IsoformMetricsStrip } from './isoform-metrics-strip'
+import { IsoformSplitPreview } from './isoform-split-preview'
 import { IsoformComparisonSheet } from './isoform-comparison-sheet'
 import { GcSparkline } from '@/components/bio/gc-sparkline'
 import type { IsoformListItem } from '@/features/gene-search/types/domain-types'
@@ -443,6 +445,7 @@ function IsoformRow({
 
 function ExpandedDetails({ isoform }: { isoform: IsoformListItem }) {
   const { copy, isCopied } = useCopyToClipboard({ showToast: false })
+  const needsSplit = isoform.codingSequenceLength > 4700
 
   return (
     <div className="space-y-4">
@@ -450,6 +453,15 @@ function ExpandedDetails({ isoform }: { isoform: IsoformListItem }) {
         codingSequence={isoform.codingSequence}
         codingSequenceLength={isoform.codingSequenceLength}
       />
+
+      <IsoformMetricsStrip codingSequence={isoform.codingSequence} />
+
+      {needsSplit && (
+        <IsoformSplitPreview
+          codingSequence={isoform.codingSequence}
+          codingSequenceLength={isoform.codingSequenceLength}
+        />
+      )}
 
       <GcSparkline sequence={isoform.codingSequence} />
 

@@ -10,6 +10,9 @@ import {
   multipleOf3Check,
   invalidCharsCheck,
   aavFitCheck,
+  homopolymerCheck,
+  tandemRepeatCheck,
+  prematureStopCheck,
 } from '@/components/bio/diag-badge'
 
 interface IsoformValidationBadgesProps {
@@ -35,6 +38,13 @@ export function IsoformValidationBadges({
     if (m3) required.push(m3)
     const inv = invalidCharsCheck(seq)
     if (inv) required.push(inv)
+
+    const premature = prematureStopCheck(seq)
+    if (premature) required.push(premature)
+    const homopolymer = homopolymerCheck(seq)
+    if (homopolymer) required.push(homopolymer)
+    const tandem = tandemRepeatCheck(seq)
+    if (tandem) required.push(tandem)
 
     required.push(aavFitCheck(codingSequenceLength))
     return required
