@@ -86,9 +86,7 @@ export function RecentJobs({ onSelectJob }: RecentJobsProps) {
                     >
                       {entry.name}
                     </TruncatedText>
-                    {/* Fade timestamp on hover so the X button can take its
-                        place without overlapping. */}
-                    <span className="text-muted-foreground ml-auto flex-shrink-0 text-[10px] transition-opacity group-focus-within/menu-item:opacity-0 group-hover/menu-item:opacity-0">
+                    <span className="text-muted-foreground ml-auto flex-shrink-0 text-[10px]">
                       {entry.status === 'running'
                         ? 'running'
                         : formatTimeAgo(entry.createdAt)}

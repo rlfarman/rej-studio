@@ -12,20 +12,31 @@ import {
 } from '@/components/ui/tooltip'
 import { Suspense } from 'react'
 import { Button } from '@/components/ui/button'
-import { SidebarTrigger } from '@/components/ui/sidebar'
+import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar'
 
 function GeneSearchTooltip() {
+  const { state } = useSidebar()
+  // When the sidebar is open it eats enough width that the centered
+  // search bar and the "Design Tool" label collide between sm and lg.
+  // Push the label to lg+ while the sidebar is open; otherwise sm+ is fine.
+  const labelClass =
+    state === 'expanded' ? 'hidden lg:inline' : 'hidden sm:inline'
+  const tooltipHiddenClass = state === 'expanded' ? 'lg:hidden' : 'sm:hidden'
+
   return (
     <Tooltip>
       <TooltipTrigger asChild>
         <Button variant="ghost" asChild>
           <Link href="/design-tool" aria-label="Go to Design Tool">
             <WandSparkles className="size-5" />
-            Design Tool
+            <span className={labelClass}>Design Tool</span>
           </Link>
         </Button>
       </TooltipTrigger>
-      <TooltipContent>Go to Design Tool</TooltipContent>
+      {/* Redundant once the label is visible; only show when label is hidden */}
+      <TooltipContent className={tooltipHiddenClass}>
+        Go to Design Tool
+      </TooltipContent>
     </Tooltip>
   )
 }
@@ -33,7 +44,6 @@ function GeneSearchTooltip() {
 export function Header() {
   const pathname = usePathname()
   const isHomePage = pathname === '/'
-  const isDesignToolPage = pathname === '/design-tool'
 
   // Extract the gene symbol from the path
   const geneSymbolMatch = pathname.match(/\/genes\/([^/]+)/)
@@ -43,14 +53,17 @@ export function Header() {
     <header className="bg-background sticky top-0 z-10 mb-1.5 flex items-center justify-between p-3 md:px-6">
       <div className="flex w-full items-center justify-between xl:justify-normal">
         <div className="z-10 flex items-center">
-          <SidebarTrigger size="lg" />
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <SidebarTrigger size="lg" />
+            </TooltipTrigger>
+            <TooltipContent>Toggle sidebar</TooltipContent>
+          </Tooltip>
           <GeneSearchTooltip />
         </div>
-        {!isDesignToolPage && (
-          <Suspense fallback={<div className="h-9 w-32" />}>
-            <SpeciesSelect />
-          </Suspense>
-        )}
+        <Suspense fallback={<div className="h-9 w-32" />}>
+          <SpeciesSelect />
+        </Suspense>
       </div>
       <div className="absolute left-1/2 flex w-full max-w-[calc(100vw-2rem)] -translate-x-1/2 transform justify-center">
         {!isHomePage && (
