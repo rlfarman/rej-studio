@@ -3,11 +3,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { cn } from '@/lib/utils'
 import {
-  findWggwMotifs,
   slidingGcContent,
-  rankWggwByBalance,
+  rankInducibleWggwByBalance,
   computeGcPercent,
   assessFragmentBalance,
+  type RankedInducibleWggwCandidate,
 } from '@/lib/bio/sequence-utils'
 import { translateCodon, AMINO_ACID_NAMES } from '@/lib/bio/genetic-code'
 import {
@@ -60,23 +60,19 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
     const step = Math.max(1, Math.round(window / 6))
     const gcPoints = slidingGcContent(sequence, window, step)
 
-    const motifs = findWggwMotifs(sequence).slice(0, MAX_WGGW_MARKERS)
+    const motifs = rankInducibleWggwByBalance(sequence).slice(0, MAX_WGGW_MARKERS)
 
     // Nearest WGGW to the current cut, for the "snap to nearest" button.
-    let nearest: {
-      position: number
-      motif: string
-      distance: number
-    } | null = null
+    let nearest: (RankedInducibleWggwCandidate & { distance: number }) | null =
+      null
     for (const m of motifs) {
-      const mid = m.position + 1
-      const d = Math.abs(mid - position)
+      const d = Math.abs(m.position - position)
       if (!nearest || d < nearest.distance) {
-        nearest = { position: mid, motif: m.motif, distance: d }
+        nearest = { ...m, distance: d }
       }
     }
 
-    const balancedWggw = rankWggwByBalance(sequence).slice(0, 3)
+    const balancedWggw = motifs.slice(0, 3)
 
     return { gcPoints, wggwMotifs: motifs, nearestWggw: nearest, balancedWggw }
   }, [sequence, seqLen, position])
@@ -140,7 +136,9 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
     .join(' ')
 
   const positionPct = (position / seqLen) * 100
-  const candidateSet = new Set(balancedWggw.map((c) => c.position))
+  const candidateSet = new Set(
+    balancedWggw.map((c) => `${c.position}:${c.motifStart}`),
+  )
 
   // Drag-to-set: convert pointer X to a 1..seqLen-1 position.
   const positionFromPointer = (clientX: number): number => {
@@ -389,11 +387,14 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
           {/* Bottom lane: WGGW ticks */}
           <div className="bg-muted/30 relative h-3 w-full rounded-b-[5px]">
             {wggwMotifs.map((m, i) => {
-              const mid = m.position + 1
+              const mid = m.position
               const x = (mid / seqLen) * 100
               const isNearest =
                 nearestWggw !== null && nearestWggw.position === mid
-              const isCandidate = candidateSet.has(mid)
+              const isCandidate = candidateSet.has(`${mid}:${m.motifStart}`)
+              const sourceLabel = m.alreadyPresent
+                ? 'present in sequence'
+                : `inducible via synonymous recoding (${m.baseChanges} base${m.baseChanges === 1 ? '' : 's'} changed)`
               return (
                 <button
                   type="button"
@@ -403,7 +404,7 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
                     onSnap(mid)
                   }}
                   onPointerDown={(e) => e.stopPropagation()}
-                  title={`WGGW ${m.motif} at bp ${m.position}–${m.position + 3} · snap`}
+                  title={`WGGW-capable ${m.motif} at bp ${m.motifStart}–${m.motifStart + 3} · ${sourceLabel} · rewritten 6mer ${m.newHexamer} · snap`}
                   className="group absolute top-0 flex h-full w-3 -translate-x-1/2 cursor-pointer items-stretch justify-center"
                   style={{ left: `${x}%` }}
                 >
@@ -438,6 +439,7 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
             {nearestWggw && (
               <>
                 {' · nearest WGGW '}
+                {nearestWggw.alreadyPresent ? '' : 'candidate '}
                 {nearestWggw.distance === 0
                   ? 'on cut'
                   : `${nearestWggw.position > position ? '+' : '−'}${nearestWggw.distance} bp`}
@@ -445,7 +447,7 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
             )}
           </span>
           <span className="flex items-center gap-1.5">
-            <span>WGGW: {wggwMotifs.length}</span>
+            <span>WGGW-capable: {wggwMotifs.length}</span>
             <KeyboardHelp />
           </span>
         </div>
@@ -477,9 +479,9 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
         <div className="flex flex-wrap items-center gap-2 text-[10px]">
           <span
             className="text-muted-foreground"
-            title="WGGW motifs ranked by distance from a 50/50 split"
+            title="WGGW-capable junctions ranked by distance from a 50/50 split"
           >
-            Balanced WGGW motifs:
+            Balanced WGGW candidates:
           </span>
           {balancedWggw.map((c, i) => {
             const isCurrent = Math.abs(c.position - position) <= 1
@@ -492,7 +494,7 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
                 type="button"
                 key={c.position}
                 onClick={() => onSnap(c.position)}
-                title={`${c.motif} at bp ${c.position.toLocaleString()} · 5′ ${c.fivePrimeLength.toLocaleString()} bp · 3′ ${c.threePrimeLength.toLocaleString()} bp · ${c.distanceFromCenter.toLocaleString()} bp from center`}
+                title={`${c.motif} at bp ${c.position.toLocaleString()} · ${c.alreadyPresent ? 'present' : `inducible with ${c.baseChanges} base change${c.baseChanges === 1 ? '' : 's'}`} · 5′ ${c.fivePrimeLength.toLocaleString()} bp · 3′ ${c.threePrimeLength.toLocaleString()} bp · ${c.distanceFromCenter.toLocaleString()} bp from center`}
                 className={cn(
                   'rounded-sm border px-1.5 py-0.5 font-mono tabular-nums transition-colors',
                   isCurrent
@@ -501,6 +503,7 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
                 )}
               >
                 #{i + 1} {c.motif}@{c.position.toLocaleString()}
+                {!c.alreadyPresent && '*'}
                 {!bothFit && (
                   <span
                     className="ml-1 text-red-600 dark:text-red-400"
@@ -700,13 +703,14 @@ function FrameAtSplit({
   position: number
   onSnap: (position: number) => void
   stripRef: React.RefObject<HTMLDivElement | null>
-  wggwMotifs: { position: number; motif: string }[]
+  wggwMotifs: RankedInducibleWggwCandidate[]
 }) {
   // 1-based base positions belonging to any WGGW motif (each motif spans 4 bp).
   const wggwBases = useMemo(() => {
     const s = new Set<number>()
     for (const m of wggwMotifs) {
-      for (let k = 0; k < 4; k++) s.add(m.position + k)
+      if (!m.alreadyPresent) continue
+      for (let k = 0; k < 4; k++) s.add(m.motifStart + k)
     }
     return s
   }, [wggwMotifs])
@@ -719,10 +723,10 @@ function FrameAtSplit({
     const codonEnd = codonStart + 2
     let best: { cut: number; dist: number } | null = null
     for (const m of wggwMotifs) {
-      const motifStart = m.position
-      const motifEnd = m.position + 3
+      const motifStart = m.motifStart
+      const motifEnd = m.motifStart + 3
       if (motifEnd < codonStart || motifStart > codonEnd) continue
-      const cut = m.position + 1 // midpoint cut (same as the tick)
+      const cut = m.position // midpoint cut (same as the tick)
       const center = codonStart + 1
       const d = Math.abs(cut - center)
       if (!best || d < best.dist) best = { cut, dist: d }

@@ -4,7 +4,7 @@ import { useMemo } from 'react'
 import { Scissors } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
-  rankWggwByBalance,
+  rankInducibleWggwByBalance,
   assessFragmentBalance,
 } from '@/lib/bio/sequence-utils'
 import { AAV_OVERHEAD_BP, AAV_PACKAGING_LIMIT } from '@/lib/bio/aav'
@@ -32,7 +32,7 @@ export function IsoformSplitPreview({
   codingSequenceLength,
 }: IsoformSplitPreviewProps) {
   const preview = useMemo(() => {
-    const ranked = rankWggwByBalance(codingSequence)
+    const ranked = rankInducibleWggwByBalance(codingSequence)
     if (ranked.length === 0) return null
     const best = ranked[0]
     const balance = assessFragmentBalance(best.position, codingSequenceLength)
@@ -67,7 +67,7 @@ export function IsoformSplitPreview({
     return (
       <div className="text-muted-foreground flex items-center gap-2 text-xs">
         <Scissors className="size-3.5" />
-        No WGGW motifs found — this sequence cannot be split by REJ.
+        No WGGW-capable junctions found — this sequence cannot be split by REJ.
       </div>
     )
   }
@@ -90,6 +90,12 @@ export function IsoformSplitPreview({
         <span className="font-mono tabular-nums">{best.motif}</span>
         <span className="text-muted-foreground">at bp</span>
         <span className="tabular-nums">{best.position.toLocaleString()}</span>
+        {!best.alreadyPresent && (
+          <span className="text-muted-foreground">
+            (inducible; {best.baseChanges} bp change
+            {best.baseChanges === 1 ? '' : 's'})
+          </span>
+        )}
         <span className={cn('font-medium', BALANCE_CLASS[balance])}>
           ({BALANCE_LABEL[balance]})
         </span>
@@ -134,7 +140,7 @@ export function IsoformSplitPreview({
       {alternatives.length > 0 && (
         <div
           className="text-muted-foreground flex flex-wrap items-center gap-1.5 text-[10px]"
-          title="Next balanced WGGW candidates — adjust to these in the design tool if the best one doesn't fit AAV."
+          title="Next balanced WGGW-capable candidates — adjust to these in the design tool if the best one doesn't fit AAV."
         >
           <span>Alternatives:</span>
           {alternatives.map((c, i) => (

@@ -1,5 +1,7 @@
 /** Pure functions for client-side sequence analysis. */
 
+import { GENETIC_CODE, toCodons } from '@/lib/bio/genetic-code'
+
 export function computeGcPercent(seq: string): number {
   if (seq.length === 0) return 0
   const gc = [...seq].filter((c) => c === 'G' || c === 'C').length
@@ -24,6 +26,163 @@ export function findWggwMotifs(
     re.lastIndex = m.index + 1
   }
   return matches
+}
+
+const WGGW_REGEX = /[AT]GG[AT]/g
+
+export interface WggwRecodingOption {
+  motif: string
+  motifOffset: number
+  splitOffset: number
+  newHexamer: string
+  newCodons: [string, string]
+  baseChanges: number
+}
+
+export interface InducibleWggwCandidate {
+  /** 1-based cut position at the motif midpoint (between bases 2 and 3). */
+  position: number
+  /** 1-based position of the first motif base in the CDS. */
+  motifStart: number
+  /** The WGGW tetramer produced at this junction. */
+  motif: string
+  /** 1-based position of the first base in the owning 6 nt codon-pair window. */
+  hexamerStart: number
+  /** 6 nt codon-pair window before recoding. */
+  originalHexamer: string
+  /** 6 nt codon-pair window after synonymous recoding. */
+  newHexamer: string
+  /** Current codons in the sequence. */
+  originalCodons: [string, string]
+  /** One synonymous codon pair that yields this candidate. */
+  newCodons: [string, string]
+  /** Whether the current sequence already contains this exact WGGW motif. */
+  alreadyPresent: boolean
+  /** Number of nucleotide substitutions needed for the primary rewrite. */
+  baseChanges: number
+  /** Alternative synonymous rewrites that yield the same candidate split. */
+  rewriteOptions: WggwRecodingOption[]
+}
+
+function countBaseChanges(a: string, b: string): number {
+  let changes = 0
+  for (let i = 0; i < Math.min(a.length, b.length); i++) {
+    if (a[i] !== b[i]) changes++
+  }
+  return changes
+}
+
+function findWggwWindows(seq: string): {
+  motif: string
+  motifOffset: number
+  splitOffset: number
+}[] {
+  const matches: { motif: string; motifOffset: number; splitOffset: number }[] =
+    []
+  WGGW_REGEX.lastIndex = 0
+  let m: RegExpExecArray | null
+  while ((m = WGGW_REGEX.exec(seq)) !== null) {
+    matches.push({
+      motif: m[0],
+      motifOffset: m.index,
+      splitOffset: m.index + 1,
+    })
+    WGGW_REGEX.lastIndex = m.index + 1
+  }
+  return matches
+}
+
+const SYNONYMOUS_CODONS = Object.entries(GENETIC_CODE).reduce<
+  Record<string, string[]>
+>((acc, [codon, aa]) => {
+  if (!acc[aa]) acc[aa] = []
+  acc[aa].push(codon)
+  return acc
+}, {})
+
+export const WGGW_RECODING_LOOKUP = Object.entries(GENETIC_CODE).reduce<
+  Record<string, WggwRecodingOption[]>
+>((lookup, [codon1, aa1]) => {
+  for (const [codon2, aa2] of Object.entries(GENETIC_CODE)) {
+    const originalHexamer = `${codon1}${codon2}`
+    const options: WggwRecodingOption[] = []
+
+    for (const newCodon1 of SYNONYMOUS_CODONS[aa1] ?? []) {
+      for (const newCodon2 of SYNONYMOUS_CODONS[aa2] ?? []) {
+        const newHexamer = `${newCodon1}${newCodon2}`
+        for (const match of findWggwWindows(newHexamer)) {
+          options.push({
+            ...match,
+            newHexamer,
+            newCodons: [newCodon1, newCodon2],
+            baseChanges: countBaseChanges(originalHexamer, newHexamer),
+          })
+        }
+      }
+    }
+
+    options.sort((a, b) => {
+      if (a.baseChanges !== b.baseChanges) return a.baseChanges - b.baseChanges
+      if (a.motifOffset !== b.motifOffset) return a.motifOffset - b.motifOffset
+      return a.newHexamer.localeCompare(b.newHexamer)
+    })
+
+    lookup[originalHexamer] = options
+  }
+  return lookup
+}, {})
+
+export function enumerateInducibleWggwCandidates(
+  sequence: string,
+): InducibleWggwCandidate[] {
+  const upper = sequence.toUpperCase().replace(/U/g, 'T')
+  const codons = toCodons(upper)
+  if (codons.length < 2) return []
+
+  const candidates: InducibleWggwCandidate[] = []
+
+  for (let codonIndex = 0; codonIndex < codons.length - 1; codonIndex++) {
+    const codon1 = codons[codonIndex]
+    const codon2 = codons[codonIndex + 1]
+    const originalHexamer = `${codon1}${codon2}`
+    const options = WGGW_RECODING_LOOKUP[originalHexamer]
+    if (!options || options.length === 0) continue
+
+    const grouped = new Map<string, WggwRecodingOption[]>()
+    for (const option of options) {
+      const key = `${option.motifOffset}:${option.motif}`
+      const existing = grouped.get(key)
+      if (existing) existing.push(option)
+      else grouped.set(key, [option])
+    }
+
+    for (const [key, rewriteOptions] of grouped) {
+      const [motifOffsetString] = key.split(':')
+      const motifOffset = Number(motifOffsetString)
+      const primary = rewriteOptions[0]
+      const hexamerStart = codonIndex * 3 + 1
+      const motifStart = hexamerStart + motifOffset
+      candidates.push({
+        position: hexamerStart + primary.splitOffset,
+        motifStart,
+        motif: primary.motif,
+        hexamerStart,
+        originalHexamer,
+        newHexamer: primary.newHexamer,
+        originalCodons: [codon1, codon2],
+        newCodons: primary.newCodons,
+        alreadyPresent: primary.baseChanges === 0,
+        baseChanges: primary.baseChanges,
+        rewriteOptions,
+      })
+    }
+  }
+
+  return candidates.sort((a, b) => {
+    if (a.position !== b.position) return a.position - b.position
+    if (a.baseChanges !== b.baseChanges) return a.baseChanges - b.baseChanges
+    return a.newHexamer.localeCompare(b.newHexamer)
+  })
 }
 
 /**
@@ -178,6 +337,37 @@ export function rankWggwByBalance(sequence: string): WggwCandidate[] {
       }
     })
     .sort((a, b) => a.distanceFromCenter - b.distanceFromCenter)
+}
+
+export interface RankedInducibleWggwCandidate extends InducibleWggwCandidate {
+  /** |position − seqLength/2|: distance from a 50/50 split, in bp. */
+  distanceFromCenter: number
+  /** 5' fragment length if the split is applied here. */
+  fivePrimeLength: number
+  /** 3' fragment length if the split is applied here. */
+  threePrimeLength: number
+}
+
+export function rankInducibleWggwByBalance(
+  sequence: string,
+): RankedInducibleWggwCandidate[] {
+  const len = sequence.length
+  if (len < 4) return []
+  const center = len / 2
+  return enumerateInducibleWggwCandidates(sequence)
+    .map((candidate): RankedInducibleWggwCandidate => ({
+      ...candidate,
+      distanceFromCenter: Math.abs(candidate.position - center),
+      fivePrimeLength: candidate.position,
+      threePrimeLength: len - candidate.position,
+    }))
+    .sort((a, b) => {
+      if (a.distanceFromCenter !== b.distanceFromCenter) {
+        return a.distanceFromCenter - b.distanceFromCenter
+      }
+      if (a.baseChanges !== b.baseChanges) return a.baseChanges - b.baseChanges
+      return a.position - b.position
+    })
 }
 
 export function assessFragmentBalance(
