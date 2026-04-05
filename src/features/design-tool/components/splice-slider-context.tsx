@@ -218,11 +218,17 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
   const hasSafeZone = safeLeft <= safeRight
   const showAavZones = seqLen > maxPayload
 
-  // Split-level warnings surfaced inside the slider itself.
+  // Split-level warnings surfaced inside the slider itself. Thresholds mirror
+  // the AAV zone stripe above the fragment bar and FragmentPill's tight/exceeds
+  // labels: ≤limit = fits (green), ≤limit+300 = tight (yellow, warn), over = red (error).
   const balance = assessFragmentBalance(position, seqLen)
-  const fiveExceeds = (fragmentStats?.five.aavTotal ?? 0) > AAV_PACKAGING_LIMIT
-  const threeExceeds =
-    (fragmentStats?.three.aavTotal ?? 0) > AAV_PACKAGING_LIMIT
+  const TIGHT_LIMIT = AAV_PACKAGING_LIMIT + 300
+  const fiveTotal = fragmentStats?.five.aavTotal ?? 0
+  const threeTotal = fragmentStats?.three.aavTotal ?? 0
+  const fiveExceeds = fiveTotal > TIGHT_LIMIT
+  const threeExceeds = threeTotal > TIGHT_LIMIT
+  const fiveTight = !fiveExceeds && fiveTotal > AAV_PACKAGING_LIMIT
+  const threeTight = !threeExceeds && threeTotal > AAV_PACKAGING_LIMIT
   const warnings: { level: 'warn' | 'error'; message: string }[] = []
   if (fiveExceeds || threeExceeds) {
     const which = [fiveExceeds && '5′', threeExceeds && '3′']
@@ -231,6 +237,14 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
     warnings.push({
       level: 'error',
       message: `${which} fragment + AAV overhead exceeds ~${AAV_PACKAGING_LIMIT.toLocaleString()} bp packaging limit.`,
+    })
+  } else if (fiveTight || threeTight) {
+    const which = [fiveTight && '5′', threeTight && '3′']
+      .filter(Boolean)
+      .join(' & ')
+    warnings.push({
+      level: 'warn',
+      message: `${which} fragment + AAV overhead is tight (within 300 bp of the ~${AAV_PACKAGING_LIMIT.toLocaleString()} bp packaging limit).`,
     })
   }
   if (balance === 'imbalanced') {
@@ -316,7 +330,7 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
             )}
           >
             <div
-              className="bg-primary/15 border-primary flex min-w-0 items-center justify-center border-r-2"
+              className="bg-primary/15 flex min-w-0 items-center justify-center"
               style={{ width: `${fivePct}%` }}
             >
               <span className="text-primary pointer-events-none truncate px-1.5 text-xs font-medium">
