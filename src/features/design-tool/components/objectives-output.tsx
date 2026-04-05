@@ -3,13 +3,11 @@
 import { useCallback, useDeferredValue, useMemo, useRef, useState } from 'react'
 import {
   Check,
-  ChevronDown,
   ChevronRight,
   Copy,
   FileText,
   Info,
   Search,
-  SkipForward,
   X,
   ArrowUp,
   ArrowDown,
@@ -106,7 +104,6 @@ function EntryRow({
   return (
     <div
       data-objective={entry.objective}
-      data-passes={entry.passes ? 'true' : 'false'}
       className={cn(
         'flex items-start gap-2 px-2.5 py-1.5 transition-opacity',
         !entry.passes && 'bg-red-500/[0.04] dark:bg-red-500/[0.06]',
@@ -229,7 +226,6 @@ interface ComparisonPanelProps {
   rawText: string
   query: string
   visibleKeys: Set<string> | null
-  hideSteadyPass: boolean
   scrollRef: React.RefObject<HTMLDivElement | null>
   onScroll: React.UIEventHandler<HTMLDivElement>
 }
@@ -243,7 +239,6 @@ function ComparisonPanel({
   rawText,
   query,
   visibleKeys,
-  hideSteadyPass,
   scrollRef,
   onScroll,
 }: ComparisonPanelProps) {
@@ -287,7 +282,7 @@ function ComparisonPanel({
               isSteadyPass: boolean
               isDimmed: boolean
             }
-            const rawRows: Row[] = entries.map((entry) => {
+            const rows: Row[] = entries.map((entry) => {
               const match = otherEntries.get(entry.objective) ?? null
               let flip: DiffAnnotation['flip'] = null
               let delta: number | null = null
@@ -302,11 +297,6 @@ function ComparisonPanel({
                 visibleKeys !== null && !visibleKeys.has(entry.objective)
               return { entry, flip, delta, isSteadyPass, isDimmed }
             })
-            // "Show only changed" filter: hide rows that were already passing
-            // before and are still passing — these haven't changed.
-            const rows = hideSteadyPass
-              ? rawRows.filter((r) => !r.isSteadyPass)
-              : rawRows
 
             // Only collapse in After panel, and only when no search filter is
             // active (so matches never hide inside a collapsed group).
@@ -378,18 +368,6 @@ function ComparisonPanel({
             <div className="text-muted-foreground px-3 py-4 text-center text-xs italic">
               No objectives measured
             </div>
-          )}
-          {entries.length > 0 && hideSteadyPass && (
-            <>
-              {/* Empty state when every row was filtered out */}
-              {entries.every(
-                (e) => otherEntries.get(e.objective)?.passes && e.passes,
-              ) && (
-                <div className="text-muted-foreground px-3 py-4 text-center text-xs italic">
-                  No changed objectives
-                </div>
-              )}
-            </>
           )}
         </div>
         <div className="bg-background/95 sticky bottom-0 border-t backdrop-blur-sm">
@@ -705,36 +683,9 @@ export function ObjectivesSummary({
     return keys
   }, [deferredSearch, reportBefore.entries, reportAfter.entries])
 
-  const [showOnlyChanged, setShowOnlyChanged] = useState(false)
-
   const beforeRef = useRef<HTMLDivElement | null>(null)
   const afterRef = useRef<HTMLDivElement | null>(null)
   const syncingRef = useRef(false)
-  const nextFailIndexRef = useRef(0)
-
-  const jumpToNextFailure = useCallback(() => {
-    const container = beforeRef.current
-    if (!container) return
-    const failing = Array.from(
-      container.querySelectorAll<HTMLElement>('[data-passes="false"]'),
-    )
-    if (failing.length === 0) return
-    const idx = nextFailIndexRef.current % failing.length
-    nextFailIndexRef.current = idx + 1
-    const target = failing[idx]
-    const offsetTop = target.offsetTop - container.offsetTop
-    container.scrollTo({ top: offsetTop - 8, behavior: 'smooth' })
-    // brief highlight flash
-    target.animate(
-      [
-        { backgroundColor: 'rgba(239, 68, 68, 0.25)' },
-        { backgroundColor: 'transparent' },
-      ],
-      { duration: 800, easing: 'ease-out' },
-    )
-  }, [])
-
-  const failingCount = reportBefore.entries.filter((e) => !e.passes).length
 
   const { copy: copyMarkdown, isCopied: isMdCopied } = useCopyToClipboard({
     showToast: false,
@@ -821,43 +772,6 @@ export function ObjectivesSummary({
                   variant="outline"
                   size="sm"
                   className="h-7 shrink-0 gap-1 px-2 text-[11px]"
-                  onClick={jumpToNextFailure}
-                  disabled={failingCount === 0}
-                  title={
-                    failingCount === 0
-                      ? 'No failing objectives in Before'
-                      : `Cycle through ${failingCount} failing objective${failingCount === 1 ? '' : 's'} in Before`
-                  }
-                >
-                  <SkipForward className="size-3" />
-                  Next failure
-                  {failingCount > 0 && (
-                    <span className="text-muted-foreground tabular-nums">
-                      ({failingCount})
-                    </span>
-                  )}
-                </Button>
-                <Button
-                  type="button"
-                  variant={showOnlyChanged ? 'default' : 'outline'}
-                  size="sm"
-                  className="h-7 shrink-0 gap-1 px-2 text-[11px]"
-                  onClick={() => setShowOnlyChanged((v) => !v)}
-                  aria-pressed={showOnlyChanged}
-                  title="Hide objectives that were already passing before and are still passing"
-                >
-                  {showOnlyChanged ? (
-                    <ChevronDown className="size-3" />
-                  ) : (
-                    <ChevronRight className="size-3" />
-                  )}
-                  Changed only
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="h-7 shrink-0 gap-1 px-2 text-[11px]"
                   onClick={() => copyMarkdown(markdownReport, 'md-report')}
                 >
                   {isMdCopied('md-report') ? (
@@ -878,7 +792,6 @@ export function ObjectivesSummary({
                   rawText={textBefore}
                   query={deferredSearch}
                   visibleKeys={visibleKeys}
-                  hideSteadyPass={false}
                   scrollRef={beforeRef}
                   onScroll={syncScroll('before')}
                 />
@@ -891,7 +804,6 @@ export function ObjectivesSummary({
                   rawText={textAfter}
                   query={deferredSearch}
                   visibleKeys={visibleKeys}
-                  hideSteadyPass={showOnlyChanged}
                   scrollRef={afterRef}
                   onScroll={syncScroll('after')}
                 />
