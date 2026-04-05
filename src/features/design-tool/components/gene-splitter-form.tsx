@@ -39,7 +39,6 @@ import {
 import { SubmitButton } from './submit-button'
 import { ResultsPanel } from './results-panel'
 import { SequenceDiagnostics } from './sequence-diagnostics'
-import { StrategyPresets } from './strategy-presets'
 import { JobHeader, RunningPlaceholder } from './job-header'
 import { toast } from 'sonner'
 
@@ -47,7 +46,6 @@ interface GeneSplitterFormProperties {
   defaultCodingSequence?: string
   defaultName?: string
   defaultSpecies?: DesignToolSpecies
-  defaultPreset?: Partial<FormValues>
   defaultJobId?: string
 }
 
@@ -55,7 +53,6 @@ export function GeneSplitterForm({
   defaultCodingSequence,
   defaultName,
   defaultSpecies,
-  defaultPreset,
   defaultJobId,
 }: GeneSplitterFormProperties) {
   const [result, setResult] = useState<ProcessResult | null>(null)
@@ -90,7 +87,6 @@ export function GeneSplitterForm({
       spliceJunctionPosition: defaultCodingSequence
         ? Math.floor(defaultCodingSequence.length / 2)
         : 1,
-      ...defaultPreset,
     },
   })
 
@@ -221,13 +217,12 @@ export function GeneSplitterForm({
             {/* ── Card 2: Strategy ── */}
             <Card>
               <CardHeader>
-                <CardTitle>Optimization Strategy</CardTitle>
+                <CardTitle>Optimization</CardTitle>
                 <CardDescription>
-                  Choose a preset or fine-tune individual parameters.
+                  Fine-tune individual parameters.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <StrategyPresets />
                 <Accordion type="multiple">
                   <AccordionItem value="codon-optimization">
                     <AccordionTrigger>
