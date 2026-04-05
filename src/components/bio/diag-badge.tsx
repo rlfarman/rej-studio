@@ -13,6 +13,7 @@ import {
   getStopCodonStatus,
   findInvalidChars,
 } from '@/lib/bio/sequence-utils'
+import { toCodons, translateCodon } from '@/lib/bio/genetic-code'
 
 // ── Types ──
 
@@ -134,6 +135,31 @@ export function invalidCharsCheck(seq: string): DiagCheck | null {
     status: 'error',
     label: `${chars.length} invalid char${chars.length > 1 ? 's' : ''}`,
     tooltip: `Found invalid characters: ${chars.join(', ')}`,
+  }
+}
+
+export function prematureStopCheck(seq: string): DiagCheck | null {
+  // Only meaningful for in-frame sequences with at least 2 codons.
+  if (seq.length < 6 || seq.length % 3 !== 0) return null
+  const codons = toCodons(seq)
+  const positions: number[] = []
+  for (let i = 0; i < codons.length - 1; i++) {
+    if (translateCodon(codons[i]) === '*') {
+      positions.push(i * 3 + 1)
+    }
+  }
+  if (positions.length === 0) return null
+  const firstLabel = `bp ${positions[0]}`
+  return {
+    status: 'error',
+    label:
+      positions.length === 1
+        ? `Premature stop at ${firstLabel}`
+        : `${positions.length} premature stops`,
+    tooltip:
+      positions.length === 1
+        ? `In-frame stop codon at ${firstLabel} truncates the protein before the end of the sequence.`
+        : `In-frame stop codons at bp ${positions.slice(0, 3).join(', ')}${positions.length > 3 ? '…' : ''}. These truncate the protein before the end of the sequence.`,
   }
 }
 

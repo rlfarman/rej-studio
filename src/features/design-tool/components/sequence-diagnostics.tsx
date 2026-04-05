@@ -11,6 +11,7 @@ import {
   stopCodonCheck,
   multipleOf3Check,
   invalidCharsCheck,
+  prematureStopCheck,
 } from '@/components/bio/diag-badge'
 import { assessFragmentBalance } from '@/lib/bio/sequence-utils'
 import { AavPreflight } from './aav-size-estimator'
@@ -39,6 +40,8 @@ export function SequenceDiagnostics() {
     if (m3) checks.push(m3)
     const inv = invalidCharsCheck(seq)
     if (inv) checks.push(inv)
+    const ps = prematureStopCheck(seq)
+    if (ps) checks.push(ps)
 
     return { checks, balance, bpLength }
   }, [seq, spliceJunctionPosition])
