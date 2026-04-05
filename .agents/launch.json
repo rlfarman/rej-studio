@@ -3,15 +3,17 @@
   "configurations": [
     {
       "name": "next-dev",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "next-dev"],
-      "port": 3000
+      "runtimeExecutable": "/bin/zsh",
+      "runtimeArgs": ["-l", "-c", "exec pnpm run next-dev"],
+      "port": 3000,
+      "autoPort": true
     },
     {
       "name": "fastapi-dev",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "fastapi-dev"],
-      "port": 8000
+      "runtimeExecutable": "/bin/zsh",
+      "runtimeArgs": ["-l", "-c", "exec pnpm run fastapi-dev"],
+      "port": 8000,
+      "autoPort": true
     }
   ]
 }
