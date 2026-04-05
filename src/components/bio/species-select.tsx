@@ -13,9 +13,18 @@ import { useSpeciesContext } from '@/stores/species-store'
 
 interface SpeciesSelectProps {
   alwaysShowLabel?: boolean
+  /**
+   * Responsive visibility classes for the label. Consumers can override
+   * the default (`hidden md:block`) to match surrounding layout —
+   * e.g. `hidden sm:block` when there's more room on the row.
+   */
+  labelVisibilityClass?: string
 }
 
-export function SpeciesSelect({ alwaysShowLabel = false }: SpeciesSelectProps) {
+export function SpeciesSelect({
+  alwaysShowLabel = false,
+  labelVisibilityClass = 'hidden md:block',
+}: SpeciesSelectProps) {
   const { species, handleSpeciesChange } = useSpeciesContext()
   const speciesLabel =
     species === 'mouse'
@@ -30,7 +39,11 @@ export function SpeciesSelect({ alwaysShowLabel = false }: SpeciesSelectProps) {
         <SelectValue>
           <div className="flex items-center">
             <SpeciesIcon species={species} />
-            <span className={alwaysShowLabel ? 'ml-3' : 'ml-3 hidden lg:block'}>
+            <span
+              className={
+                alwaysShowLabel ? 'ml-3' : `ml-3 ${labelVisibilityClass}`
+              }
+            >
               {speciesLabel}
             </span>
           </div>

@@ -17,11 +17,11 @@ import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar'
 function GeneSearchTooltip() {
   const { state } = useSidebar()
   // When the sidebar is open it eats enough width that the centered
-  // search bar and the "Design Tool" label collide between sm and lg.
-  // Push the label to lg+ while the sidebar is open; otherwise sm+ is fine.
+  // search bar and the "Design Tool" label can collide — push the label
+  // one breakpoint higher while the sidebar is expanded.
   const labelClass =
-    state === 'expanded' ? 'hidden lg:inline' : 'hidden sm:inline'
-  const tooltipHiddenClass = state === 'expanded' ? 'lg:hidden' : 'sm:hidden'
+    state === 'expanded' ? 'hidden md:inline' : 'hidden sm:inline'
+  const tooltipHiddenClass = state === 'expanded' ? 'md:hidden' : 'sm:hidden'
 
   return (
     <Tooltip>
@@ -44,6 +44,12 @@ function GeneSearchTooltip() {
 export function Header() {
   const pathname = usePathname()
   const isHomePage = pathname === '/'
+  const { state } = useSidebar()
+  const sidebarLabel = state === 'expanded' ? 'Close sidebar' : 'Open sidebar'
+  // Keep the species label in sync with the Design Tool label breakpoint —
+  // they share the same row so they should appear/disappear together.
+  const headerLabelClass =
+    state === 'expanded' ? 'hidden md:block' : 'hidden sm:block'
 
   // Extract the gene symbol from the path
   const geneSymbolMatch = pathname.match(/\/genes\/([^/]+)/)
@@ -55,14 +61,14 @@ export function Header() {
         <div className="z-10 flex items-center">
           <Tooltip>
             <TooltipTrigger asChild>
-              <SidebarTrigger size="lg" />
+              <SidebarTrigger size="lg" aria-label={sidebarLabel} />
             </TooltipTrigger>
-            <TooltipContent>Toggle sidebar</TooltipContent>
+            <TooltipContent>{sidebarLabel}</TooltipContent>
           </Tooltip>
           <GeneSearchTooltip />
         </div>
         <Suspense fallback={<div className="h-9 w-32" />}>
-          <SpeciesSelect />
+          <SpeciesSelect labelVisibilityClass={headerLabelClass} />
         </Suspense>
       </div>
       <div className="absolute left-1/2 flex w-full max-w-[calc(100vw-2rem)] -translate-x-1/2 transform justify-center">

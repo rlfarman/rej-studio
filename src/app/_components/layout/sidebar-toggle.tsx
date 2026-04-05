@@ -12,7 +12,7 @@ import {
 export function SidebarToggle() {
   const { toggleSidebar, state } = useSidebar()
   const isCollapsed = state === 'collapsed'
-  const label = isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'
+  const label = isCollapsed ? 'Open sidebar' : 'Close sidebar'
 
   return (
     <Tooltip>
