@@ -93,14 +93,14 @@ export default async function GeneSymbolPage(props: Props) {
         <Separator className="my-4" />
         <h2 className="mb-2 text-lg font-semibold tracking-tight">Isoforms</h2>
         <IsoformSummary isoforms={isoforms} />
-        <IsoformLengthChart isoforms={isoforms} />
-        <IsoformIdentityMatrix isoforms={isoforms} />
         <Suspense fallback={<IsoformTableLoading />}>
           <IsoformTable
             isoforms={isoforms}
             highlightedIsoformId={highlightedIsoformId}
           />
         </Suspense>
+        <IsoformLengthChart isoforms={isoforms} />
+        <IsoformIdentityMatrix isoforms={isoforms} />
       </CardContent>
     </Card>
   )
