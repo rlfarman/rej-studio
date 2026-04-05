@@ -26,10 +26,7 @@ import { useJob } from '@/features/design-tool/hooks/use-job'
 import { CustomizationOptions } from './customization-options'
 import { SpeciesOptions } from './species-options'
 import { CodonOptimizationOptions } from './optimization-options'
-import {
-  FiveFragmentOptions,
-  ThreeFragmentOptions,
-} from './stimulatory-intron-options'
+import { StimulatoryIntronOptions } from './stimulatory-intron-options'
 import {
   CodonOptimizeWeight,
   RemoveCrypticSpliceSitesWeight,
@@ -252,10 +249,7 @@ export function GeneSplitterForm({
                       </div>
                     </AccordionTrigger>
                     <AccordionContent className="pt-4 pb-8">
-                      <div className="flex flex-col space-y-4">
-                        <FiveFragmentOptions />
-                        <ThreeFragmentOptions />
-                      </div>
+                      <StimulatoryIntronOptions />
                     </AccordionContent>
                   </AccordionItem>
                   <AccordionItem value="weights">
