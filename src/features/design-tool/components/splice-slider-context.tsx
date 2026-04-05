@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils'
 import {
   rankInducibleWggwByBalance,
   type RankedInducibleWggwCandidate,
+  type WggwRecodingOption,
 } from '@/lib/bio/sequence-utils'
 import { translateCodon, AMINO_ACID_NAMES } from '@/lib/bio/genetic-code'
 import {
@@ -24,6 +25,10 @@ const MIN_CONTEXT_WINDOW = 6 // minimum codons on each side of the split
 const MAX_CONTEXT_WINDOW = 30 // cap to keep text readable
 const PX_PER_CODON = 28 // approximate minimum width for a 3-base codon box
 
+interface WggwSiteCandidate extends RankedInducibleWggwCandidate {
+  rewriteOptions: WggwRecodingOption[]
+}
+
 /**
  * Context strip that sits directly under the splice-junction slider. It
  * focuses on selecting a splice-junction candidate without overloading the
@@ -34,27 +39,37 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
   const seqLen = sequence.length
   const trackRef = useRef<HTMLDivElement>(null)
 
-  const { wggwMotifs, nearestWggw } = useMemo(() => {
+  const { wggwSites, nearestWggw } = useMemo(() => {
     if (seqLen < 12) {
       return {
-        wggwMotifs: [],
+        wggwSites: [],
         nearestWggw: null,
       }
     }
-    const motifs = rankInducibleWggwByBalance(sequence)
+    const sites = groupWggwSites(rankInducibleWggwByBalance(sequence))
 
     // Nearest WGGW to the current cut, for the "snap to nearest" button.
-    let nearest: (RankedInducibleWggwCandidate & { distance: number }) | null =
+    let nearest: (WggwSiteCandidate & { distance: number }) | null =
       null
-    for (const m of motifs) {
-      const d = Math.abs(m.position - position)
+    for (const site of sites) {
+      const d = Math.abs(site.position - position)
       if (!nearest || d < nearest.distance) {
-        nearest = { ...m, distance: d }
+        nearest = { ...site, distance: d }
       }
     }
 
-    return { wggwMotifs: motifs, nearestWggw: nearest }
+    return { wggwSites: sites, nearestWggw: nearest }
   }, [sequence, seqLen, position])
+
+  const selectedSite = useMemo(
+    () => wggwSites.find((site) => site.position === position) ?? null,
+    [position, wggwSites],
+  )
+
+  const [selectedRewriteIndex, setSelectedRewriteIndex] = useState(0)
+  useEffect(() => {
+    setSelectedRewriteIndex(0)
+  }, [selectedSite?.position])
 
   const [contextWindow, setContextWindow] = useState(MIN_CONTEXT_WINDOW)
   const frameStripRef = useRef<HTMLDivElement>(null)
@@ -87,6 +102,9 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
   if (seqLen < 12) return null
 
   const positionPct = (position / seqLen) * 100
+  const fivePrimeLength = position
+  const threePrimeLength = seqLen - position
+  const fivePct = seqLen > 0 ? (fivePrimeLength / seqLen) * 100 : 50
 
   // Drag-to-set: convert pointer X to a 1..seqLen-1 position.
   const positionFromPointer = (clientX: number): number => {
@@ -163,17 +181,33 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
           aria-valuetext={`bp ${position.toLocaleString()} of ${seqLen.toLocaleString()}`}
           onPointerDown={handleTrackPointerDown}
           onKeyDown={handleTrackKeyDown}
-          className="focus-visible:ring-ring bg-muted/20 relative h-8 cursor-ew-resize touch-none rounded-md border select-none focus:outline-none focus-visible:ring-2"
+          className="focus-visible:ring-ring relative cursor-ew-resize touch-none rounded-md border select-none focus:outline-none focus-visible:ring-2"
         >
-          <div className="absolute inset-0 overflow-hidden rounded-md">
-            {wggwMotifs.map((m, i) => {
-              const mid = m.position
+          <div className="relative flex h-8 w-full overflow-hidden rounded-md">
+            <div
+              className="bg-primary/15 flex min-w-0 items-center justify-center"
+              style={{ width: `${fivePct}%` }}
+            >
+              <span className="text-primary pointer-events-none truncate px-2 text-xs font-medium">
+                5′ · {fivePrimeLength.toLocaleString()} bp
+              </span>
+            </div>
+            <div className="bg-muted/50 flex min-w-0 flex-1 items-center justify-center">
+              <span className="text-muted-foreground pointer-events-none truncate px-2 text-xs font-medium">
+                3′ · {threePrimeLength.toLocaleString()} bp
+              </span>
+            </div>
+          </div>
+          <div className="absolute inset-x-0 bottom-0 h-2 overflow-hidden rounded-b-md">
+            {wggwSites.map((site, i) => {
+              const mid = site.position
               const x = (mid / seqLen) * 100
               const isNearest =
                 nearestWggw !== null && nearestWggw.position === mid
-              const sourceLabel = m.alreadyPresent
+              const isSelected = selectedSite?.position === mid
+              const sourceLabel = site.alreadyPresent
                 ? 'present in sequence'
-                : `inducible via synonymous recoding (${m.baseChanges} base${m.baseChanges === 1 ? '' : 's'} changed)`
+                : 'inducible via synonymous recoding'
               return (
                 <button
                   type="button"
@@ -183,17 +217,21 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
                     onSnap(mid)
                   }}
                   onPointerDown={(e) => e.stopPropagation()}
-                  title={`WGGW-capable ${m.motif} at bp ${m.motifStart}–${m.motifStart + 3} · ${sourceLabel} · rewritten 6mer ${m.newHexamer} · snap`}
+                  title={`WGGW-capable ${site.motif} at bp ${site.motifStart}–${site.motifStart + 3} · ${sourceLabel} · rewritten 6mer ${site.newHexamer} · snap`}
                   className="group absolute top-0 flex h-full w-3 -translate-x-1/2 cursor-pointer items-stretch justify-center"
                   style={{ left: `${x}%` }}
                 >
                   <span
                     className={cn(
                       'rounded-sm transition-all',
-                      'group-hover:w-[3px] group-hover:bg-emerald-400',
-                      isNearest
-                        ? 'w-[2px] bg-emerald-500'
-                        : 'w-[1px] bg-emerald-500/60',
+                      'group-hover:w-[3px]',
+                      isSelected
+                        ? 'w-[3px] bg-primary'
+                        : site.alreadyPresent
+                          ? isNearest
+                            ? 'w-[2px] bg-emerald-500'
+                            : 'w-[1px] bg-emerald-500/60'
+                          : 'w-[1px] bg-amber-500/80',
                     )}
                   />
                 </button>
@@ -205,6 +243,12 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
             style={{ left: `${positionPct}%` }}
             aria-hidden="true"
           />
+          <div
+            className="bg-background text-foreground pointer-events-none absolute -top-2 -translate-x-1/2 rounded border px-1.5 py-0.5 font-mono text-[10px] shadow-sm"
+            style={{ left: `${positionPct}%` }}
+          >
+            {position.toLocaleString()} bp
+          </div>
         </div>
         {/* Single readout */}
         <div className="text-muted-foreground flex items-center justify-between gap-2 text-[10px]">
@@ -220,11 +264,11 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
               </>
             )}
           </span>
-            <span className="flex items-center gap-1.5">
-              <span>WGGW-capable: {wggwMotifs.length}</span>
-              <KeyboardHelp />
-            </span>
-          </div>
+          <span className="flex items-center gap-1.5">
+            <span>WGGW-capable: {wggwSites.length}</span>
+            <KeyboardHelp />
+          </span>
+        </div>
       </div>
 
       {/* Frame-at-split readout */}
@@ -233,10 +277,62 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
         position={position}
         onSnap={onSnap}
         stripRef={frameStripRef}
-        wggwMotifs={wggwMotifs}
+        wggwSites={wggwSites}
+        selectedSite={selectedSite}
+        selectedRewriteIndex={selectedRewriteIndex}
+        onSelectRewrite={setSelectedRewriteIndex}
       />
     </div>
   )
+}
+
+function dedupeRewriteOptions(options: WggwRecodingOption[]) {
+  const seen = new Set<string>()
+  return options.filter((option) => {
+    const key = `${option.motif}|${option.newHexamer}|${option.motifOffset}`
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
+}
+
+function groupWggwSites(
+  candidates: RankedInducibleWggwCandidate[],
+): WggwSiteCandidate[] {
+  const byPosition = new Map<number, RankedInducibleWggwCandidate[]>()
+  for (const candidate of candidates) {
+    const group = byPosition.get(candidate.position)
+    if (group) group.push(candidate)
+    else byPosition.set(candidate.position, [candidate])
+  }
+
+  return [...byPosition.values()]
+    .map((group) => {
+      const representative = [...group].sort((a, b) => {
+        if (a.alreadyPresent !== b.alreadyPresent) {
+          return a.alreadyPresent ? -1 : 1
+        }
+        if (a.baseChanges !== b.baseChanges) return a.baseChanges - b.baseChanges
+        return a.newHexamer.localeCompare(b.newHexamer)
+      })[0]
+      const rewriteOptions = dedupeRewriteOptions(
+        group.flatMap((candidate) => candidate.rewriteOptions),
+      ).sort((a, b) => {
+        if (a.baseChanges !== b.baseChanges) return a.baseChanges - b.baseChanges
+        return a.newHexamer.localeCompare(b.newHexamer)
+      })
+      const primary = rewriteOptions[0]
+      return {
+        ...representative,
+        newHexamer: primary?.newHexamer ?? representative.newHexamer,
+        newCodons: primary?.newCodons ?? representative.newCodons,
+        baseChanges: primary?.baseChanges ?? representative.baseChanges,
+        alreadyPresent:
+          (primary?.baseChanges ?? representative.baseChanges) === 0,
+        rewriteOptions,
+      }
+    })
+    .sort((a, b) => a.position - b.position)
 }
 
 function roleStylesFor(role: CodonRole): {
@@ -275,19 +371,6 @@ function roleStylesFor(role: CodonRole): {
         aa: 'text-muted-foreground/70',
         base: 'text-muted-foreground',
       }
-  }
-}
-
-function roleLabelFor(role: CodonRole): string | null {
-  switch (role) {
-    case 'start':
-      return 'start codon'
-    case 'stop':
-      return 'stop codon'
-    case 'internal-stop':
-      return 'premature stop'
-    default:
-      return null
   }
 }
 
@@ -352,42 +435,54 @@ function FrameAtSplit({
   position,
   onSnap,
   stripRef,
-  wggwMotifs,
+  wggwSites,
+  selectedSite,
+  selectedRewriteIndex,
+  onSelectRewrite,
 }: {
   ctx: FrameContext
   position: number
   onSnap: (position: number) => void
   stripRef: React.RefObject<HTMLDivElement | null>
-  wggwMotifs: RankedInducibleWggwCandidate[]
+  wggwSites: WggwSiteCandidate[]
+  selectedSite: WggwSiteCandidate | null
+  selectedRewriteIndex: number
+  onSelectRewrite: (index: number) => void
 }) {
-  // 1-based base positions belonging to any WGGW motif (each motif spans 4 bp).
-  const wggwBases = useMemo(() => {
+  const visibleBaseStart = ctx.codons[0]?.idx * 3 + 1
+  const visibleBaseEnd = (ctx.codons.at(-1)?.idx ?? 0) * 3 + 3
+  const localSites = useMemo(
+    () =>
+      wggwSites.filter(
+        (site) =>
+          site.position >= visibleBaseStart && site.position <= visibleBaseEnd,
+      ),
+    [visibleBaseEnd, visibleBaseStart, wggwSites],
+  )
+
+  const currentRewrite =
+    selectedSite?.rewriteOptions[
+      Math.min(selectedRewriteIndex, selectedSite.rewriteOptions.length - 1)
+    ] ?? null
+
+  const selectedBases = useMemo(() => {
     const s = new Set<number>()
-    for (const m of wggwMotifs) {
-      if (!m.alreadyPresent) continue
-      for (let k = 0; k < 4; k++) s.add(m.motifStart + k)
+    if (!selectedSite) return s
+    for (let k = 0; k < 4; k++) s.add(selectedSite.motifStart + k)
+    return s
+  }, [selectedSite])
+
+  const selectedChangedBases = useMemo(() => {
+    const s = new Set<number>()
+    if (!selectedSite || !currentRewrite) return s
+    for (let i = 0; i < selectedSite.originalHexamer.length; i++) {
+      if (selectedSite.originalHexamer[i] !== currentRewrite.newHexamer[i]) {
+        s.add(selectedSite.hexamerStart + i)
+      }
     }
     return s
-  }, [wggwMotifs])
+  }, [currentRewrite, selectedSite])
 
-  // Pick the WGGW cut nearest a codon's base range, if any overlap. Used so
-  // clicking a WGGW-highlighted codon snaps to the motif's midpoint cut
-  // (consistent with clicking the tick above) rather than the codon start.
-  const wggwCutForCodon = (codonIdx: number): number | null => {
-    const codonStart = codonIdx * 3 + 1 // 1-based
-    const codonEnd = codonStart + 2
-    let best: { cut: number; dist: number } | null = null
-    for (const m of wggwMotifs) {
-      const motifStart = m.motifStart
-      const motifEnd = m.motifStart + 3
-      if (motifEnd < codonStart || motifStart > codonEnd) continue
-      const cut = m.position // midpoint cut (same as the tick)
-      const center = codonStart + 1
-      const d = Math.abs(cut - center)
-      if (!best || d < best.dist) best = { cut, dist: d }
-    }
-    return best ? best.cut : null
-  }
   const splitCodon = ctx.codons.find((c) => c.isSplit)
   const aaName =
     splitCodon?.aa && AMINO_ACID_NAMES[splitCodon.aa]
@@ -434,23 +529,14 @@ function FrameAtSplit({
         role="img"
         aria-label="Codon context around splice junction"
       >
-        <div className="flex w-full items-center gap-[1px]">
+        <div className="mb-1 flex w-full items-center gap-[1px]">
           {ctx.codons.map((c) => {
             const roleStyles = roleStylesFor(c.role)
-            const roleLabel = roleLabelFor(c.role)
-            const wggwCut = wggwCutForCodon(c.idx)
-            const snapTarget = wggwCut ?? c.idx * 3 + 1
-            const snapLabel = wggwCut
-              ? `WGGW midpoint (bp ${wggwCut.toLocaleString()})`
-              : `codon start (bp ${(c.idx * 3 + 1).toLocaleString()})`
             return (
-              <button
-                type="button"
+              <div
                 key={c.idx}
-                onClick={() => onSnap(snapTarget)}
-                title={`${roleLabel ? roleLabel + ' · ' : ''}codon ${c.idx + 1}${c.aa ? ` (${c.codon} = ${c.aa})` : ''} · snap cut to ${snapLabel}`}
                 className={cn(
-                  'hover:bg-primary/10 hover:ring-primary/30 flex flex-1 flex-col items-center gap-0.5 rounded-sm px-[3px] py-1 transition-colors hover:ring-1',
+                  'flex flex-1 flex-col items-center gap-0.5 rounded-sm px-[3px] py-1',
                   roleStyles.container,
                 )}
               >
@@ -465,14 +551,18 @@ function FrameAtSplit({
                       c.isSplit &&
                       ((ctx.frameOffset === 1 && bi === 0) ||
                         (ctx.frameOffset === 2 && bi === 1))
-                    const inWggw = wggwBases.has(basePos)
+                    const inSelected = selectedBases.has(basePos)
+                    const isChanged = selectedChangedBases.has(basePos)
                     return (
                       <span
                         key={bi}
                         className={cn(
                           roleStyles.base,
-                          inWggw &&
-                            'border-b-2 border-emerald-500 text-emerald-700 dark:text-emerald-300',
+                          inSelected &&
+                            (selectedSite?.alreadyPresent
+                              ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
+                              : 'bg-amber-500/15 text-amber-700 dark:text-amber-300'),
+                          isChanged && 'underline decoration-2 underline-offset-2',
                           isCutBase && 'border-primary border-r-2',
                         )}
                       >
@@ -481,9 +571,182 @@ function FrameAtSplit({
                     )
                   })}
                 </span>
+              </div>
+            )
+          })}
+        </div>
+        <div className="relative h-6">
+          {localSites.map((site) => {
+            const left =
+              ((site.position - visibleBaseStart) /
+                Math.max(1, visibleBaseEnd - visibleBaseStart)) *
+              100
+            const isSelected = selectedSite?.position === site.position
+            return (
+              <button
+                type="button"
+                key={site.position}
+                onClick={() => onSnap(site.position)}
+                title={`${site.motif} at bp ${site.position.toLocaleString()} · ${site.alreadyPresent ? 'present' : 'inducible'}${site.rewriteOptions.length > 1 ? ` · ${site.rewriteOptions.length} rewrite options` : ''}`}
+                className="absolute top-0 flex -translate-x-1/2 flex-col items-center gap-1"
+                style={{ left: `${left}%` }}
+              >
+                <span
+                  className={cn(
+                    'block h-3 w-[3px] rounded-full',
+                    isSelected
+                      ? 'bg-primary'
+                      : site.alreadyPresent
+                        ? 'bg-emerald-500'
+                        : 'bg-amber-500',
+                  )}
+                />
+                <span
+                  className={cn(
+                    'rounded border px-1 py-0.5 text-[9px] leading-none',
+                    isSelected
+                      ? 'border-primary bg-primary/10 text-primary'
+                      : 'border-transparent text-muted-foreground',
+                  )}
+                >
+                  {site.position}
+                </span>
               </button>
             )
           })}
+        </div>
+      </div>
+      {selectedSite && currentRewrite && (
+        <div className="bg-muted/30 space-y-2 rounded-sm border p-2 text-[10px]">
+          <div className="flex items-center justify-between gap-2">
+            <div className="text-muted-foreground">
+              Selected WGGW{' '}
+              <span
+                className={cn(
+                  'font-mono',
+                  selectedSite.alreadyPresent
+                    ? 'text-emerald-700 dark:text-emerald-300'
+                    : 'text-amber-700 dark:text-amber-300',
+                )}
+              >
+                {selectedSite.motif}
+              </span>{' '}
+              at bp {selectedSite.position.toLocaleString()}
+            </div>
+            {selectedSite.rewriteOptions.length > 1 && (
+              <div className="flex flex-wrap items-center gap-1">
+                <span className="text-muted-foreground">Synonymous rewrites:</span>
+                {selectedSite.rewriteOptions.map((option, index) => (
+                  <button
+                    type="button"
+                    key={`${option.newHexamer}-${index}`}
+                    onClick={() => onSelectRewrite(index)}
+                    className={cn(
+                      'rounded border px-1.5 py-0.5 font-mono',
+                      index === selectedRewriteIndex
+                        ? 'border-primary bg-primary/10 text-primary'
+                        : 'text-muted-foreground hover:border-primary/40',
+                    )}
+                  >
+                    {option.newHexamer}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          <div className="grid gap-2 sm:grid-cols-2">
+            <PreviewPanel
+              label="Before"
+              peptide={translatePair(selectedSite.originalCodons)}
+              codons={selectedSite.originalCodons}
+              hexamer={selectedSite.originalHexamer}
+              motifStart={selectedSite.motifStart - selectedSite.hexamerStart}
+              cutOffset={selectedSite.position - selectedSite.hexamerStart}
+            />
+            <PreviewPanel
+              label="After"
+              peptide={translatePair(currentRewrite.newCodons)}
+              codons={currentRewrite.newCodons}
+              hexamer={currentRewrite.newHexamer}
+              motifStart={currentRewrite.motifOffset}
+              cutOffset={selectedSite.position - selectedSite.hexamerStart}
+              changedFrom={selectedSite.originalHexamer}
+              highlightPresent={selectedSite.alreadyPresent}
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function translatePair(codons: [string, string]) {
+  return codons
+    .map((codon) => translateCodon(codon) ?? '?')
+    .join('')
+}
+
+function PreviewPanel({
+  label,
+  peptide,
+  codons,
+  hexamer,
+  motifStart,
+  cutOffset,
+  changedFrom,
+  highlightPresent = false,
+}: {
+  label: string
+  peptide: string
+  codons: [string, string]
+  hexamer: string
+  motifStart: number
+  cutOffset: number
+  changedFrom?: string
+  highlightPresent?: boolean
+}) {
+  return (
+    <div className="space-y-1 rounded-sm border bg-background/70 p-2">
+      <div className="text-muted-foreground flex items-center justify-between">
+        <span>{label}</span>
+        <span className="font-mono">cut bp +{cutOffset + 1}</span>
+      </div>
+      <div className="space-y-0.5 font-mono">
+        <div className="flex gap-2">
+          <span className="text-muted-foreground w-10">AA</span>
+          <span>{peptide[0] ?? '·'}</span>
+          <span>{peptide[1] ?? '·'}</span>
+        </div>
+        <div className="flex gap-2">
+          <span className="text-muted-foreground w-10">DNA</span>
+          <div className="flex">
+            {[...hexamer].map((base, index) => {
+              const inMotif = index >= motifStart && index < motifStart + 4
+              const isChanged = changedFrom ? changedFrom[index] !== base : false
+              const isCut = index === cutOffset
+              return (
+                <span
+                  key={index}
+                  className={cn(
+                    'px-[1px]',
+                    inMotif &&
+                      (highlightPresent
+                        ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
+                        : 'bg-amber-500/15 text-amber-700 dark:text-amber-300'),
+                    isChanged && 'underline decoration-2 underline-offset-2',
+                    isCut && 'border-primary border-r-2',
+                  )}
+                >
+                  {base}
+                </span>
+              )
+            })}
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <span className="text-muted-foreground w-10">Codons</span>
+          <span>{codons[0]}</span>
+          <span>{codons[1]}</span>
         </div>
       </div>
     </div>
