@@ -45,6 +45,7 @@ import { formatFasta } from '@/lib/bio/fasta'
 import { isSpecies } from '@/lib/bio/species'
 import type { DesignToolSpecies } from '@/features/design-tool/types/species-options'
 import { computeGcPercent, countCpG } from '@/lib/bio/sequence-utils'
+import { deriveKeyMetrics } from '@/features/design-tool/utils/objective-metrics'
 
 interface ResultsPanelProps {
   result: ProcessResult
@@ -173,11 +174,21 @@ function MetricsStrip({ result }: { result: ProcessResult }) {
   const stats = useMemo(() => {
     const before = parseObjectives(result.objectives_before)
     const after = parseObjectives(result.objectives_after)
+    const keyBefore = deriveKeyMetrics(result.objectives_report_before)
+    const keyAfter = deriveKeyMetrics(result.objectives_report_after)
 
     const orig = result.original_sequence
     const opt = result.optimized_sequence
     if (!orig || !opt) {
-      return { before, after, gc: null, cpg: null, identity: null }
+      return {
+        before,
+        after,
+        keyBefore,
+        keyAfter,
+        gc: null,
+        cpg: null,
+        identity: null,
+      }
     }
 
     const gcBefore = computeGcPercent(orig)
@@ -193,6 +204,8 @@ function MetricsStrip({ result }: { result: ProcessResult }) {
     return {
       before,
       after,
+      keyBefore,
+      keyAfter,
       gc: { before: gcBefore, after: gcAfter },
       cpg: { before: cpgBefore, after: cpgAfter },
       identity,
@@ -200,9 +213,14 @@ function MetricsStrip({ result }: { result: ProcessResult }) {
   }, [result])
 
   const totalObjectives = stats.after.passedCount + stats.after.failedCount
+  const showDonors =
+    stats.keyBefore.spliceDonors > 0 || stats.keyAfter.spliceDonors > 0
+  const showAcceptors =
+    stats.keyBefore.spliceAcceptors > 0 || stats.keyAfter.spliceAcceptors > 0
+  const showCai = stats.keyAfter.caiScore !== null
 
   return (
-    <div className="bg-border grid grid-cols-2 gap-px overflow-hidden rounded-lg border lg:grid-cols-5">
+    <div className="bg-border grid grid-cols-2 gap-px overflow-hidden rounded-lg border sm:grid-cols-3 lg:grid-cols-5">
       <MetricCell
         label="Score"
         before={stats.before.totalScore}
@@ -231,8 +249,31 @@ function MetricsStrip({ result }: { result: ProcessResult }) {
         before={null}
         after={stats.identity}
         unit="%"
-        className="col-span-2 lg:col-span-1"
       />
+      {showDonors && (
+        <MetricCell
+          label="Splice donors"
+          before={stats.keyBefore.spliceDonors}
+          after={stats.keyAfter.spliceDonors}
+          lowerIsBetter
+        />
+      )}
+      {showAcceptors && (
+        <MetricCell
+          label="Splice acceptors"
+          before={stats.keyBefore.spliceAcceptors}
+          after={stats.keyAfter.spliceAcceptors}
+          lowerIsBetter
+        />
+      )}
+      {showCai && (
+        <MetricCell
+          label="CAI"
+          before={stats.keyBefore.caiScore}
+          after={stats.keyAfter.caiScore}
+          formatter={(n) => n.toFixed(3)}
+        />
+      )}
     </div>
   )
 }
