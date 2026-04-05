@@ -18,6 +18,7 @@ import { cn } from '@/lib/utils'
 import { cleanSequence, parseFasta } from '@/lib/bio/fasta'
 import { toast } from 'sonner'
 import { isSpecies } from '@/lib/bio/species'
+import { detectSequenceType } from '@/lib/bio/sequence-type'
 import { pickDefaultSplitPoint } from '../utils/default-split-point'
 
 const MAX_LENGTH = 50_000
@@ -27,6 +28,7 @@ export function CodingSequenceInput() {
   const value = watch('codingSequence')
   const species = watch('species')
   const length = value?.length ?? 0
+  const isProtein = value ? detectSequenceType(value) === 'protein' : false
   const fileInputRef = useRef<HTMLInputElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const backdropRef = useRef<HTMLDivElement>(null)
@@ -62,7 +64,7 @@ export function CodingSequenceInput() {
         cleanSequence(textToClean)
 
       if (cleaned.length === 0) {
-        toast.error('No valid nucleotide characters found.')
+        toast.error('No valid nucleotide or amino-acid characters found.')
         return
       }
 
@@ -86,7 +88,7 @@ export function CodingSequenceInput() {
         )
       if (removedChars > 0)
         parts.push(
-          `${removedChars} non-nucleotide character${removedChars > 1 ? 's' : ''} removed`,
+          `${removedChars} invalid character${removedChars > 1 ? 's' : ''} removed`,
         )
 
       if (parts.length > 0) {
@@ -102,8 +104,11 @@ export function CodingSequenceInput() {
       // Only intercept if the pasted text looks like it needs cleaning
       // (has FASTA headers, line numbers, or significant non-nucleotide chars)
       const hasHeaders = text.includes('>')
-      const nonNuc = text.replace(/[ACGTUacgtu\s\r\n]/g, '')
-      if (hasHeaders || nonNuc.length > 3) {
+      const nonBio = text.replace(
+        /[ACDEFGHIKLMNPQRSTUVWYacdefghiklmnpqrstuvwy*\s\r\n]/g,
+        '',
+      )
+      if (hasHeaders || nonBio.length > 3) {
         e.preventDefault()
         applyCleanedSequence(text, 'Paste cleaned')
       }
@@ -183,14 +188,18 @@ export function CodingSequenceInput() {
                 )}
               >
                 {value ? (
-                  <SequenceHighlight sequence={value} />
+                  isProtein ? (
+                    <span>{value}</span>
+                  ) : (
+                    <SequenceHighlight sequence={value} />
+                  )
                 ) : (
                   <span className="text-transparent">placeholder</span>
                 )}
               </div>
               {/* Transparent textarea on top */}
               <textarea
-                placeholder="ATGATTACA... (paste sequence or upload FASTA)"
+                placeholder="ATGATTACA... or MIT... (paste DNA or amino acids, or upload FASTA)"
                 rows={4}
                 aria-required="true"
                 {...field}
@@ -213,18 +222,28 @@ export function CodingSequenceInput() {
               />
             </div>
           </FormControl>
-          <p
-            className={cn(
-              'text-sm leading-5 tabular-nums',
-              length > MAX_LENGTH
-                ? 'text-destructive-foreground'
-                : 'text-muted-foreground',
+          <div className="flex items-center justify-between gap-2">
+            <p
+              className={cn(
+                'text-sm leading-5 tabular-nums',
+                length > MAX_LENGTH
+                  ? 'text-destructive-foreground'
+                  : 'text-muted-foreground',
+              )}
+            >
+              {length.toLocaleString()} {isProtein ? 'residues' : 'bp'} /{' '}
+              {MAX_LENGTH.toLocaleString()}
+            </p>
+            {value && isProtein && (
+              <p className="text-muted-foreground text-xs">
+                Amino acids detected — will be reverse-translated (
+                {(length * 3).toLocaleString()} bp)
+                {isSpecies(species) ? ` and harmonized to ${species}.` : '.'}
+              </p>
             )}
-          >
-            {length.toLocaleString()} / {MAX_LENGTH.toLocaleString()}
-          </p>
+          </div>
           <SequenceDiagnostics />
-          {value && value.length >= 60 && (
+          {value && value.length >= 60 && !isProtein && (
             <div className="space-y-2 pt-1">
               <GcSparkline sequence={value} />
               {isSpecies(species) && value.length % 3 === 0 && (

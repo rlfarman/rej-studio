@@ -17,15 +17,28 @@ import {
   shortCdsCheck,
 } from '@/components/bio/diag-badge'
 import { AavPreflight } from './aav-size-estimator'
+import { detectSequenceType } from '@/lib/bio/sequence-type'
 
 export function SequenceDiagnostics() {
   const { watch } = useFormContext<FormValues>()
   const codingSequence = watch('codingSequence')
 
   const seq = codingSequence?.toUpperCase() ?? ''
+  const isProtein = seq.length > 0 && detectSequenceType(seq) === 'protein'
 
   const diagnostics = useMemo(() => {
     if (seq.length === 0) return null
+
+    // Protein input: DNA-specific checks (GC content, start/stop codon,
+    // premature stops, homopolymers, invalid chars, etc.) don't apply —
+    // the DNA is generated server-side by reverse-translation. AAV preflight
+    // uses the effective DNA length (residues × 3).
+    if (isProtein) {
+      const bpLength = seq.length * 3
+      const sc = shortCdsCheck('A'.repeat(bpLength))
+      const checks = sc ? [sc] : []
+      return { checks, bpLength }
+    }
 
     const bpLength = seq.length
 
@@ -50,7 +63,7 @@ export function SequenceDiagnostics() {
     if (sc) checks.push(sc)
 
     return { checks, bpLength }
-  }, [seq])
+  }, [seq, isProtein])
 
   if (!diagnostics) return null
 

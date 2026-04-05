@@ -26,8 +26,15 @@ export function parseFasta(
   return results
 }
 
-/** Strip whitespace, line numbers, FASTA headers, and non-nucleotide characters. */
-export function cleanSequence(text: string): {
+/**
+ * Strip whitespace, line numbers, FASTA headers, and characters outside the
+ * given biological alphabet. Defaults to the union of DNA/RNA + standard
+ * amino acids so a single call handles both nucleotide and protein FASTA.
+ */
+export function cleanSequence(
+  text: string,
+  alphabet: 'bio' | 'dna' = 'bio',
+): {
   cleaned: string
   removedChars: number
   removedHeaders: number
@@ -48,8 +55,11 @@ export function cleanSequence(text: string): {
   }
 
   const joined = sequenceLines.join('')
-  // Remove all non-nucleotide characters (keep only ACGTU)
-  const cleaned = joined.replace(/[^ACGTUacgtu]/g, '').toUpperCase()
+  const stripRegex =
+    alphabet === 'dna'
+      ? /[^ACGTUacgtu]/g
+      : /[^ACDEFGHIKLMNPQRSTUVWYacdefghiklmnpqrstuvwy*]/g
+  const cleaned = joined.replace(stripRegex, '').toUpperCase()
   const removedChars = joined.length - cleaned.length
 
   return { cleaned, removedChars, removedHeaders }

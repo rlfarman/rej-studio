@@ -1,4 +1,5 @@
 import type { FormValues } from '../types/form-schema'
+import { detectSequenceType } from '@/lib/bio/sequence-type'
 
 export function buildJobParams(values: FormValues) {
   return {
@@ -10,6 +11,7 @@ export function buildJobParams(values: FormValues) {
 
 function buildOptions(values: FormValues) {
   return {
+    input_type: detectSequenceType(values.codingSequence),
     codon_optimize: values.species !== 'none' ? values.species : null,
     codon_optimize_weight: values.codonOptimizeWeight,
     remove_cryptic_ss: values.removeCrypticSpliceSites,

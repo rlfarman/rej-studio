@@ -39,4 +39,9 @@ export interface ProcessResult {
   objectives_report_after: ObjectivesReport
   wggw_info: Record<string, WggwSiteInfo> | null
   processing_time_seconds: number
+  /** 'dna' if the user supplied a coding sequence; 'protein' if an amino-
+   * acid sequence was reverse-translated before optimization. */
+  input_type?: 'dna' | 'protein'
+  /** The original amino-acid sequence, when `input_type === 'protein'`. */
+  original_protein_sequence?: string | null
 }

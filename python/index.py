@@ -29,10 +29,15 @@ class ProcessOptions(BaseModel):
     split_point: int = 500
     ensure_wggw: bool = True
     wggw_threshold: int = 300
+    # 'dna' (ACGTU), 'protein' (amino acids), or 'auto' to autodetect from
+    # sequence content. Protein input is reverse-translated to DNA before
+    # optimization; species codon harmonization still happens downstream via
+    # the CodonOptimize objective.
+    input_type: str = "auto"
 
 
 class ProcessRequest(BaseModel):
-    CDS: str  # Coding sequence
+    CDS: str  # Coding sequence or amino-acid sequence
     name: str  # Name identifier for the output files
     options: ProcessOptions
 
@@ -41,11 +46,16 @@ class ProcessRequest(BaseModel):
     def validate_cds(cls, v: str) -> str:
         v = v.strip().upper()
         if not v:
-            raise ValueError("Coding sequence must not be empty")
-        if not re.match(r"^[ACGTU]+$", v):
-            raise ValueError("Coding sequence must contain only A, C, G, T, or U")
-        if len(v) % 3 != 0:
-            raise ValueError("Coding sequence length must be a multiple of 3")
+            raise ValueError("Sequence must not be empty")
+        # Accept the union of DNA/RNA nucleotides and the 20 standard amino
+        # acids plus the stop codon. Per-type checks (multiple of 3 for DNA,
+        # protein alphabet for AA) run inside the algorithm once the input
+        # type is resolved.
+        if not re.match(r"^[ACDEFGHIKLMNPQRSTUVWY*]+$", v):
+            raise ValueError(
+                "Sequence must contain only nucleotides (A, C, G, T, U) or "
+                "amino acids (ACDEFGHIKLMNPQRSTVWY*)"
+            )
         return v
 
     @field_validator("name")
@@ -145,6 +155,8 @@ class ProcessResult(BaseModel):
     objectives_report_after: ObjectivesReport = ObjectivesReport()
     wggw_info: dict[str, WggwSiteInfo] | None = None
     processing_time_seconds: float
+    input_type: str = "dna"
+    original_protein_sequence: str | None = None
 
 
 @app.post("/api/py/process-json", response_model=ProcessResult)

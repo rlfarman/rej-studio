@@ -1149,15 +1149,13 @@ def process_single_request(CDS, name, OPTIONS, results_folder="/tmp/results"):
         tuple: (report_filename, sequences_filename)
     """
     try:
-        # Clean up the input sequence
-        CDS = CDS.strip().upper()
-        
-        # Ensure the CDS is valid
-        if "N" in CDS:
-            raise ValueError("Coding sequence contains ambiguous 'N' nucleotides")
-        if len(CDS) % 3 != 0:
-            raise ValueError("Coding sequence length is not a multiple of 3")
-        
+        # Resolve protein vs. DNA input, reverse-translating amino acids if
+        # needed. See _resolve_sequence_input for the detection rules.
+        requested_type = OPTIONS.get("input_type", "auto")
+        CDS, _resolved_type, _original_protein = _resolve_sequence_input(
+            CDS, requested_type
+        )
+
         # Create a copy of OPTIONS without modifying the split point
         options_for_sequence = OPTIONS.copy()
         
@@ -1231,13 +1229,77 @@ def process_single_request(CDS, name, OPTIONS, results_folder="/tmp/results"):
             f.write(f"CDS: {CDS[:100]}... (truncated if longer than 100 characters)\n")
         return error_report, None    
 
+def _resolve_sequence_input(raw, requested_type):
+    """Resolve a user-supplied sequence to a DNA CDS ready for optimization.
+
+    Returns ``(CDS, resolved_type, original_protein)`` where:
+      * ``CDS`` is an uppercase DNA string (length divisible by 3) to feed
+        into dnachisel.
+      * ``resolved_type`` is ``'dna'`` or ``'protein'``.
+      * ``original_protein`` is the original amino-acid sequence when the
+        input was protein, else ``None``.
+
+    Protein input is reverse-translated with random codons; per-species
+    harmonization still happens downstream via the CodonOptimize objective.
+    """
+    DNA_ALPHABET = set("ACGTU")
+    PROTEIN_ALPHABET = set("ACDEFGHIKLMNPQRSTVWY*")
+    # Letters that only appear in the AA alphabet (never in DNA/RNA). Their
+    # presence unambiguously marks a protein sequence.
+    PROTEIN_ONLY = set("DEFHIKLMNPQRSVWY*")
+
+    seq = (raw or "").strip().upper()
+    if not seq:
+        raise ValueError("Sequence must not be empty")
+    chars = set(seq)
+
+    if requested_type not in ("auto", "dna", "protein"):
+        raise ValueError(
+            f"Unknown input_type {requested_type!r}; expected 'auto', 'dna', or 'protein'"
+        )
+
+    if requested_type == "auto":
+        resolved_type = "protein" if chars & PROTEIN_ONLY else "dna"
+    else:
+        resolved_type = requested_type
+
+    if resolved_type == "protein":
+        invalid = chars - PROTEIN_ALPHABET
+        if invalid:
+            raise ValueError(
+                "Protein sequence contains invalid characters: "
+                + "".join(sorted(invalid))
+            )
+        # reverse_translate returns 3 bp per residue, so length is guaranteed
+        # to be a multiple of 3 and contain no 'N'.
+        dna = biotools.reverse_translate(seq, randomize_codons=True)
+        return dna, "protein", seq
+
+    # DNA path — normalize U→T and run the original validity checks.
+    dna = seq.replace("U", "T")
+    invalid = set(dna) - set("ACGT")
+    if invalid:
+        raise ValueError(
+            "Coding sequence contains invalid nucleotides: "
+            + "".join(sorted(invalid))
+        )
+    if "N" in dna:
+        raise ValueError("Coding sequence contains ambiguous 'N' nucleotides")
+    if len(dna) % 3 != 0:
+        raise ValueError("Coding sequence length is not a multiple of 3")
+    return dna, "dna", None
+
+
 def process_single_request_json(CDS, name, OPTIONS, on_progress=None):
     """
     Process a single coding sequence and return structured results as a dict.
     Created for the web application JSON API.
 
     Args:
-        CDS: The coding sequence string to process
+        CDS: The coding sequence (DNA) or amino-acid sequence to process.
+            Protein input is auto-detected (or forced via
+            ``OPTIONS['input_type']``) and reverse-translated to DNA before
+            optimization.
         name: Name identifier for the sequence
         OPTIONS: Optimization options dictionary
 
@@ -1247,14 +1309,10 @@ def process_single_request_json(CDS, name, OPTIONS, on_progress=None):
     import time as _time
     start = _time.monotonic()
 
-    # Clean up the input sequence
-    CDS = CDS.strip().upper()
-
-    # Ensure the CDS is valid
-    if "N" in CDS:
-        raise ValueError("Coding sequence contains ambiguous 'N' nucleotides")
-    if len(CDS) % 3 != 0:
-        raise ValueError("Coding sequence length is not a multiple of 3")
+    requested_type = OPTIONS.get("input_type", "auto")
+    CDS, resolved_type, original_protein = _resolve_sequence_input(
+        CDS, requested_type
+    )
 
     # Create a copy of OPTIONS without modifying the original
     options_copy = OPTIONS.copy()
@@ -1301,6 +1359,8 @@ def process_single_request_json(CDS, name, OPTIONS, on_progress=None):
         ) or {'entries': [], 'total_score': None},
         'wggw_info': wggw_info,
         'processing_time_seconds': round(elapsed, 2),
+        'input_type': resolved_type,
+        'original_protein_sequence': original_protein,
     }
 
 

@@ -1,5 +1,6 @@
 import { rankWggwByBalance } from '@/lib/bio/sequence-utils'
 import { AAV_PACKAGING_LIMIT } from '@/lib/bio/aav'
+import { detectSequenceType } from '@/lib/bio/sequence-type'
 
 /**
  * Pick the initial splice-junction position for a given coding sequence.
@@ -14,6 +15,13 @@ import { AAV_PACKAGING_LIMIT } from '@/lib/bio/aav'
  * the same default.
  */
 export function pickDefaultSplitPoint(sequence: string): number {
+  // Amino-acid input has no DNA yet — WGGW motifs don't exist on proteins —
+  // so fall back to the midpoint of the reverse-translated length (× 3).
+  if (detectSequenceType(sequence) === 'protein') {
+    const dnaLen = sequence.length * 3
+    if (dnaLen < 2) return 1
+    return Math.floor(dnaLen / 2)
+  }
   const length = sequence.length
   if (length < 2) return 1
   const midpoint = Math.floor(length / 2)

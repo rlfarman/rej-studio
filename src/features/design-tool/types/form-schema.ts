@@ -1,4 +1,9 @@
 import { z } from 'zod'
+import {
+  BIO_ALPHABET_REGEX,
+  detectSequenceType,
+  effectiveDnaLength,
+} from '@/lib/bio/sequence-type'
 
 const STOP_CODONS = new Set(['TAA', 'TAG', 'TGA', 'UAA', 'UAG', 'UGA'])
 
@@ -21,15 +26,20 @@ export const validationSchema = z
       .string()
       .nonempty('Coding sequence is required.')
       .regex(
-        /^[ACGTUacgtu]+$/,
-        'Sequence must contain only valid nucleotides (A, C, G, T, or U).',
+        BIO_ALPHABET_REGEX,
+        'Sequence must contain only valid nucleotides (A, C, G, T, U) or amino acids (ACDEFGHIKLMNPQRSTVWY*).',
       )
       .max(50000, 'Sequence must be 50,000 characters or fewer.')
-      .refine((value) => value.length % 3 === 0, {
-        message: 'Sequence length must be a multiple of 3 (complete codons).',
-      })
+      .refine(
+        (value) =>
+          detectSequenceType(value) === 'protein' || value.length % 3 === 0,
+        {
+          message: 'Sequence length must be a multiple of 3 (complete codons).',
+        },
+      )
       .refine(
         (value) => {
+          if (detectSequenceType(value) === 'protein') return true
           const first3 = value.slice(0, 3).toUpperCase()
           return first3 === 'ATG' || first3 === 'AUG'
         },
@@ -40,6 +50,7 @@ export const validationSchema = z
       )
       .refine(
         (value) => {
+          if (detectSequenceType(value) === 'protein') return true
           if (value.length < 3) return true
           const last3 = value.slice(-3).toUpperCase()
           return STOP_CODONS.has(last3)
@@ -51,6 +62,7 @@ export const validationSchema = z
       )
       .refine(
         (value) => {
+          if (detectSequenceType(value) === 'protein') return true
           if (value.length < 6) return true
           return findInternalStopCodons(value).length === 0
         },
@@ -80,8 +92,9 @@ export const validationSchema = z
     // Cross-field: the splice position must lie strictly inside the coding
     // sequence (1 ≤ position ≤ length - 1). The per-field schema only
     // enforces the lower bound because the upper bound depends on
-    // codingSequence.length.
-    const max = data.codingSequence.length - 1
+    // codingSequence.length (× 3 for amino-acid input, which is
+    // reverse-translated to DNA before optimization).
+    const max = effectiveDnaLength(data.codingSequence) - 1
     if (data.spliceJunctionPosition > max) {
       ctx.addIssue({
         path: ['spliceJunctionPosition'],
