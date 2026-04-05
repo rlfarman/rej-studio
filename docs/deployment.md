@@ -22,7 +22,7 @@ Shared across both targets:
 - `BASIC_AUTH_USER`, `BASIC_AUTH_PASSWORD`
 - `COMPUTE_BACKEND` — **required=`modal`** in production on both Vercel and Cloudflare
 - `MODAL_API_URL` — required (since `COMPUTE_BACKEND=modal` is required)
-- `NEXT_PUBLIC_GA_MEASUREMENT_ID` (optional)
+- `NEXT_PUBLIC_GTM_ID` (optional)
 - `MAINTENANCE_MESSAGE` (optional)
 
 `DEPLOY_TARGET` is set at build time:
@@ -61,8 +61,8 @@ npx wrangler secret put SESSION_SECRET
 npx wrangler secret put BASIC_AUTH_USER
 npx wrangler secret put BASIC_AUTH_PASSWORD
 npx wrangler secret put MODAL_API_URL
-# Only if using GA:
-npx wrangler secret put NEXT_PUBLIC_GA_MEASUREMENT_ID
+# Only if using GTM:
+npx wrangler secret put NEXT_PUBLIC_GTM_ID
 ```
 
 Non-secret vars live in `wrangler.toml` `[vars]` — `DEPLOY_TARGET` and `COMPUTE_BACKEND=modal` are already set there.
