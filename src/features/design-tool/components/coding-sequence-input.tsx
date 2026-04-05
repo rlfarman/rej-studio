@@ -18,6 +18,7 @@ import { cn } from '@/lib/utils'
 import { cleanSequence, parseFasta } from '@/lib/bio/fasta'
 import { toast } from 'sonner'
 import { isSpecies } from '@/lib/bio/species'
+import { pickDefaultSplitPoint } from '../utils/default-split-point'
 
 const MAX_LENGTH = 50_000
 
@@ -47,6 +48,13 @@ export function CodingSequenceInput() {
       }
 
       setValue('codingSequence', cleaned, { shouldValidate: true })
+      // Replace the splice position with a sensible default for the new
+      // sequence (WGGW best when splitting, midpoint otherwise). Without
+      // this, the slider's proportional-scaling effect can snap to the
+      // very end when a sequence is pasted into an empty form.
+      setValue('spliceJunctionPosition', pickDefaultSplitPoint(cleaned), {
+        shouldValidate: true,
+      })
 
       const parts: string[] = []
       if (removedHeaders > 0)

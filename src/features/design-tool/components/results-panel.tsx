@@ -40,6 +40,7 @@ import { JunctionContext } from './junction-context'
 import { RestrictionSiteMap } from './restriction-site-map'
 import { CodonDeltaStrip } from './codon-delta-strip'
 import { AavResults } from './aav-size-estimator'
+import { SplitBar } from '@/components/bio/split-bar'
 import { ObjectivesSummary } from './objectives-output'
 import { formatFasta } from '@/lib/bio/fasta'
 import { isSpecies } from '@/lib/bio/species'
@@ -89,21 +90,7 @@ function SplitVisualization({
           ({Math.round(percentage)}% / {Math.round(100 - percentage)}%)
         </span>
       </div>
-      <div className="flex h-6 w-full overflow-hidden rounded-md border">
-        <div
-          className="bg-primary/15 border-primary flex min-w-0 items-center justify-center border-r-2 transition-all"
-          style={{ width: `${percentage}%` }}
-        >
-          <span className="text-primary truncate px-1.5 text-[10px] font-medium">
-            5&apos; &middot; {seq5Length.toLocaleString()} bp
-          </span>
-        </div>
-        <div className="bg-muted/50 flex min-w-0 flex-1 items-center justify-center">
-          <span className="text-muted-foreground truncate px-1.5 text-[10px] font-medium">
-            3&apos; &middot; {seq3Length.toLocaleString()} bp
-          </span>
-        </div>
-      </div>
+      <SplitBar fivePrimeLength={seq5Length} threePrimeLength={seq3Length} />
     </div>
   )
 }

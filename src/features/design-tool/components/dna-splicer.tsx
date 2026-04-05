@@ -15,19 +15,28 @@ export function DNASplicer() {
     watch('spliceJunctionPosition') || Math.floor(seqLength / 2),
   )
 
-  // When sequence length changes, maintain the relative position (percentage)
+  // When sequence length changes, maintain the relative position
+  // (percentage) — but only between two real sequences. Transitions from
+  // the empty/stub state (prevSeqLengthRef === 1 because seqLength fell
+  // back to 1 for an empty textarea) would otherwise scale by a garbage
+  // ratio and snap to the end; in that case just sync refs and let the
+  // paste/upload handler's own default stand.
   React.useEffect(() => {
-    if (seqLength !== prevSeqLengthRef.current) {
-      const ratio = prevPositionRef.current / (prevSeqLengthRef.current || 1)
+    if (seqLength === prevSeqLengthRef.current) return
+    const prevLen = prevSeqLengthRef.current
+    if (prevLen > 1 && seqLength > 1) {
+      const ratio = prevPositionRef.current / prevLen
       const newPosition = Math.max(
         1,
         Math.min(Math.round(ratio * seqLength), seqLength - 1),
       )
-      prevSeqLengthRef.current = seqLength
       prevPositionRef.current = newPosition
       setValue('spliceJunctionPosition', newPosition)
+    } else {
+      prevPositionRef.current = watch('spliceJunctionPosition')
     }
-  }, [seqLength, setValue])
+    prevSeqLengthRef.current = seqLength
+  }, [seqLength, setValue, watch])
 
   const position = watch('spliceJunctionPosition')
 

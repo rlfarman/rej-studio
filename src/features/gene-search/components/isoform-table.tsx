@@ -33,7 +33,6 @@ import { SpeciesSelect } from '@/components/bio/species-select'
 import { useSpeciesContext } from '@/stores/species-store'
 import { SPECIES_DISPLAY_NAME } from '@/lib/bio/species'
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
-import { CopyableText } from '@/components/copyable-text'
 import { formatFasta } from '@/lib/bio/fasta'
 import { downloadTextFile } from '@/lib/download-file'
 import {
@@ -41,6 +40,8 @@ import {
   getSuitabilityConfig,
 } from '@/lib/bio/design-suitability'
 import { IsoformValidationBadges } from './isoform-validation-badges'
+import { IsoformMetricsStrip } from './isoform-metrics-strip'
+import { IsoformSplitPreview } from './isoform-split-preview'
 import { IsoformComparisonSheet } from './isoform-comparison-sheet'
 import { GcSparkline } from '@/components/bio/gc-sparkline'
 import type { IsoformListItem } from '@/features/gene-search/types/domain-types'
@@ -144,6 +145,18 @@ export default function IsoformTable({
     })
   }, [])
 
+  const toggleExpandAll = useCallback(() => {
+    setExpandedIds((prev) => {
+      const allIds = filteredIsoforms.map((i) => i.id)
+      const allExpanded = allIds.every((id) => prev.has(id))
+      return allExpanded ? new Set() : new Set(allIds)
+    })
+  }, [filteredIsoforms])
+
+  const allExpanded =
+    filteredIsoforms.length > 0 &&
+    filteredIsoforms.every((i) => expandedIds.has(i.id))
+
   const toggleSelected = useCallback((id: string) => {
     setSelectedIds((prev) => {
       const next = new Set(prev)
@@ -178,8 +191,30 @@ export default function IsoformTable({
             <TableHead className="w-10">
               <span className="sr-only">Select</span>
             </TableHead>
-            <TableHead className="w-8">
-              <span className="sr-only">Expand</span>
+            <TableHead className="w-8 p-0">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    onClick={toggleExpandAll}
+                    className="hover:text-foreground text-muted-foreground flex h-full w-full items-center justify-center transition-colors"
+                    aria-label={
+                      allExpanded
+                        ? 'Collapse all isoforms'
+                        : 'Expand all isoforms'
+                    }
+                  >
+                    {allExpanded ? (
+                      <ChevronDown className="size-4" />
+                    ) : (
+                      <ChevronRight className="size-4" />
+                    )}
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {allExpanded ? 'Collapse all' : 'Expand all'}
+                </TooltipContent>
+              </Tooltip>
             </TableHead>
             <SortableHead
               label="CDS"
@@ -442,47 +477,22 @@ function IsoformRow({
 }
 
 function ExpandedDetails({ isoform }: { isoform: IsoformListItem }) {
-  const { copy, isCopied } = useCopyToClipboard({ showToast: false })
+  const needsSplit = isoform.codingSequenceLength > 4700
 
   return (
     <div className="space-y-4">
-      <IsoformValidationBadges
-        codingSequence={isoform.codingSequence}
-        codingSequenceLength={isoform.codingSequenceLength}
-      />
+      <IsoformValidationBadges codingSequence={isoform.codingSequence} />
+
+      <IsoformMetricsStrip codingSequence={isoform.codingSequence} />
+
+      {needsSplit && (
+        <IsoformSplitPreview
+          codingSequence={isoform.codingSequence}
+          codingSequenceLength={isoform.codingSequenceLength}
+        />
+      )}
 
       <GcSparkline sequence={isoform.codingSequence} />
-
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div>
-          <div className="text-muted-foreground mb-1 text-xs font-semibold">
-            Coding Sequence
-          </div>
-          <CopyableText
-            label="Copy coding sequence"
-            copied={isCopied('exp-cds')}
-            onCopy={() => copy(isoform.codingSequence, 'exp-cds')}
-          >
-            <code className="text-xs break-all">
-              {isoform.codingSequence.slice(0, 60)}...
-            </code>
-          </CopyableText>
-        </div>
-        <div>
-          <div className="text-muted-foreground mb-1 text-xs font-semibold">
-            Protein Sequence
-          </div>
-          <CopyableText
-            label="Copy protein sequence"
-            copied={isCopied('exp-prot')}
-            onCopy={() => copy(isoform.proteinSequence, 'exp-prot')}
-          >
-            <code className="text-xs break-all">
-              {isoform.proteinSequence.slice(0, 60)}...
-            </code>
-          </CopyableText>
-        </div>
-      </div>
     </div>
   )
 }

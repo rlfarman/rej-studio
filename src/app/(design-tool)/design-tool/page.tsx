@@ -2,6 +2,7 @@ import { getIsoformAndGeneByIsoformId } from '@/features/gene-search/api/isoform
 import { GeneSplitterForm } from '@/features/design-tool/components/gene-splitter-form'
 import type { DesignToolSpecies } from '@/features/design-tool/types/species-options'
 import { isSpecies } from '@/lib/bio/species'
+import { pickDefaultSplitPoint } from '@/features/design-tool/utils/default-split-point'
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -44,6 +45,9 @@ async function DesignToolPage({
       defaultName={`Custom ${gene.symbol}`}
       defaultSpecies={validSpecies}
       defaultCodingSequence={isoform.codingSequence}
+      defaultSpliceJunctionPosition={pickDefaultSplitPoint(
+        isoform.codingSequence,
+      )}
       defaultJobId={jobId}
     />
   )

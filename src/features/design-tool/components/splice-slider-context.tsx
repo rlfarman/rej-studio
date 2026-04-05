@@ -16,7 +16,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { Keyboard } from 'lucide-react'
-import { AAV_OVERHEAD_BP, AAV_PACKAGING_LIMIT } from './aav-size-estimator'
+import { AAV_OVERHEAD_BP, AAV_PACKAGING_LIMIT } from '@/lib/bio/aav'
 
 interface Props {
   sequence: string
