@@ -1,48 +1,60 @@
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 
 export const config = {
-  matcher: [
-    /*
-     * Match all request paths except for:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico, robots.txt, sitemap.xml
-     */
-    '/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml).*)',
-  ],
+  matcher: ['/', '/index'],
 }
 
-export function middleware(request: NextRequest) {
-  const user = process.env.BASIC_AUTH_USER
-  const password = process.env.BASIC_AUTH_PASSWORD
+async function timingSafeEqual(a: string, b: string): Promise<boolean> {
+  const encoder = new TextEncoder()
+  const aBuf = encoder.encode(a)
+  const bBuf = encoder.encode(b)
+  // Use HMAC-based comparison for constant-time equality
+  const key = await crypto.subtle.generateKey(
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  )
+  const aMac = await crypto.subtle.sign('HMAC', key, aBuf)
+  const bMac = await crypto.subtle.sign('HMAC', key, bBuf)
+  const aArr = new Uint8Array(aMac)
+  const bArr = new Uint8Array(bMac)
+  let result = aArr.length === bArr.length ? 1 : 0
+  for (let i = 0; i < aArr.length; i++) {
+    result &= aArr[i] === bArr[i] ? 1 : 0
+  }
+  return result === 1
+}
 
-  // If credentials are not configured, skip auth.
-  if (!user || !password) {
+export async function middleware(req: NextRequest) {
+  if (
+    process.env.NODE_ENV === 'development' &&
+    process.env.BYPASS_AUTH === 'true'
+  ) {
     return NextResponse.next()
   }
 
-  const header = request.headers.get('authorization')
+  const basicAuth = req.headers.get('authorization')
+  const url = req.nextUrl
 
-  if (header) {
-    const [scheme, encoded] = header.split(' ')
-    if (scheme === 'Basic' && encoded) {
-      const decoded = atob(encoded)
-      const sep = decoded.indexOf(':')
-      if (sep !== -1) {
-        const providedUser = decoded.slice(0, sep)
-        const providedPassword = decoded.slice(sep + 1)
-        if (providedUser === user && providedPassword === password) {
-          return NextResponse.next()
-        }
+  const expectedUser = process.env.BASIC_AUTH_USER
+  const expectedPassword = process.env.BASIC_AUTH_PASSWORD
+
+  if (basicAuth && expectedUser && expectedPassword) {
+    try {
+      const authValue = basicAuth.split(' ')[1]
+      const [user, pwd] = atob(authValue).split(':')
+
+      const userMatch = await timingSafeEqual(user, expectedUser)
+      const pwdMatch = await timingSafeEqual(pwd, expectedPassword)
+
+      if (userMatch && pwdMatch) {
+        return NextResponse.next()
       }
+    } catch {
+      // Malformed Base64 in Authorization header
     }
   }
+  url.pathname = '/api/auth'
 
-  return new NextResponse('Authentication required', {
-    status: 401,
-    headers: {
-      'WWW-Authenticate': 'Basic realm="REJ Studio", charset="UTF-8"',
-    },
-  })
+  return NextResponse.rewrite(url)
 }
