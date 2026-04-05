@@ -1,0 +1,267 @@
+'use client'
+import * as React from 'react'
+import { useRef, useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { DNASplicer } from './dna-splicer'
+import { Form } from '@/components/ui/form'
+import {
+  Accordion,
+  AccordionItem,
+  AccordionTrigger,
+  AccordionContent,
+} from '@/components/ui/accordion'
+import type { DesignToolSpecies } from '@/features/design-tool/types/species-options'
+import type { ProcessResult } from '@/features/design-tool/types/process-result'
+import { validationSchema, FormValues } from '../types/form-schema'
+import { formatOptionsForReport } from '../utils/form-handler'
+import { useJob } from '@/features/design-tool/hooks/use-job'
+import { CustomizationOptions } from './customization-options'
+import { SpeciesOptions } from './species-options'
+import { CodonOptimizationOptions } from './optimization-options'
+import {
+  FiveFragmentOptions,
+  ThreeFragmentOptions,
+} from './stimulatory-intron-options'
+import {
+  CodonOptimizeWeight,
+  RemoveCrypticSpliceSitesWeight,
+  MinimizeCpGsWeight,
+  ReduceKmerComplexityWeight,
+} from './weight-inputs'
+import { SubmitButton } from './submit-button'
+import { ResultsPanel } from './results-panel'
+import { SequenceDiagnostics } from './sequence-diagnostics'
+import { StrategyPresets } from './strategy-presets'
+import { toast } from 'sonner'
+import { CircleAlert } from 'lucide-react'
+
+interface GeneSplitterFormProperties {
+  defaultCodingSequence?: string
+  defaultName?: string
+  defaultSpecies?: DesignToolSpecies
+  defaultPreset?: Partial<FormValues>
+  defaultJobId?: string
+}
+
+export function GeneSplitterForm({
+  defaultCodingSequence,
+  defaultName,
+  defaultSpecies,
+  defaultPreset,
+  defaultJobId,
+}: GeneSplitterFormProperties) {
+  const [result, setResult] = useState<ProcessResult | null>(null)
+  const resultsRef = useRef<HTMLDivElement>(null)
+  // Guards the one-shot form restore. Set true after we hydrate from a
+  // resumed URL job, or eagerly on submit so the new job's own persisted
+  // formValues don't ricochet back and overwrite the live form.
+  const didResetRef = useRef(false)
+  // Dedup error toasts: only toast a given jobId once per mount, so
+  // navigating back to a previously-failed job doesn't spam.
+  const toastedJobsRef = useRef<Set<string>>(new Set())
+  const job = useJob({ initialJobId: defaultJobId ?? null })
+
+  const methods = useForm<FormValues>({
+    resolver: zodResolver(validationSchema),
+    mode: 'onBlur',
+    defaultValues: {
+      removeCrypticSpliceSites: true,
+      '5PrimeStimulatoryIntron': true,
+      '3PrimeStimulatoryIntron': true,
+      codonOptimizeWeight: 1,
+      removeCrypticSpliceSitesWeight: 1,
+      minimizeCpgs: true,
+      minimizeCpgsWeight: 1,
+      reduceKmerComplexity: true,
+      reduceKmerComplexityWeight: 1,
+      enforceGcContent: true,
+      codingSequence: defaultCodingSequence ?? '',
+      name: defaultName ?? '',
+      species: defaultSpecies ?? 'none',
+      spliceJunctionPosition: defaultCodingSequence
+        ? Math.floor(defaultCodingSequence.length / 2)
+        : 1,
+      ...defaultPreset,
+    },
+  })
+
+  // Hydrate the form from a resumed URL job's stored formValues — once they
+  // appear in history (localStorage isn't populated on first render).
+  React.useEffect(() => {
+    if (didResetRef.current) return
+    if (job.formValues) {
+      methods.reset(job.formValues)
+      didResetRef.current = true
+    }
+  }, [job.formValues, methods])
+
+  // React to status changes: display result and scroll on completion, toast
+  // on failure. Storage is handled centrally (useJob on submit, JobWatcher
+  // on poll settle), so the form just presents.
+  React.useEffect(() => {
+    if (job.status === 'completed' && job.result) {
+      setResult(job.result)
+      setTimeout(() => {
+        resultsRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+        })
+      }, 100)
+    } else if (job.status === 'failed' && job.error && job.jobId) {
+      if (!toastedJobsRef.current.has(job.jobId)) {
+        toastedJobsRef.current.add(job.jobId)
+        toast.error(job.error)
+      }
+    }
+  }, [job.status, job.result, job.error, job.jobId])
+
+  const onSubmit = async (values: FormValues) => {
+    setResult(null)
+    // Mark as reset so the about-to-be-persisted formValues don't trigger
+    // the hydration effect above and overwrite the live form.
+    didResetRef.current = true
+    await job.submitJob(values)
+  }
+
+  return (
+    <Form {...methods}>
+      {}
+      {/* eslint-disable-next-line react-hooks/refs -- onSubmit only writes didResetRef in the submit event handler, never during render */}
+      <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-6">
+        {/* ── Card 1: Input ── */}
+        <Card>
+          <CardHeader>
+            <h1 className="text-2xl leading-none font-bold tracking-tight">
+              REJ Studio Design Tool
+            </h1>
+            <CardDescription>
+              Design a custom RNA sequence for end-joining experiments
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <CustomizationOptions />
+            <SequenceDiagnostics />
+            <SpeciesOptions />
+            <div className="space-y-2">
+              <p className="text-sm font-medium">Splice junction</p>
+              <p className="text-muted-foreground text-sm">
+                Set where the sequence splits into 5&apos; and 3&apos;
+                fragments.
+              </p>
+              <DNASplicer />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* ── Card 2: Strategy ── */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Optimization Strategy</CardTitle>
+            <CardDescription>
+              Choose a preset or fine-tune individual parameters.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <StrategyPresets />
+            <Accordion type="multiple">
+              <AccordionItem value="codon-optimization">
+                <AccordionTrigger>
+                  <div>
+                    <p>Codon optimization</p>
+                    <p className="text-muted-foreground text-sm">
+                      Control which sequence features are optimized.
+                    </p>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="pt-4 pb-8">
+                  <CodonOptimizationOptions />
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="fragment-options">
+                <AccordionTrigger>
+                  <div>
+                    <p>Stimulatory introns</p>
+                    <p className="text-muted-foreground text-sm">
+                      Add introns to boost fragment expression.
+                    </p>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="pt-4 pb-8">
+                  <div className="flex flex-col space-y-4">
+                    <FiveFragmentOptions />
+                    <ThreeFragmentOptions />
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="weights">
+                <AccordionTrigger>
+                  <div>
+                    <p>Parameter weights</p>
+                    <p className="text-muted-foreground text-sm">
+                      Control how much each objective influences the result.
+                    </p>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="pt-4 pb-8">
+                  <div className="flex flex-col space-y-4">
+                    <CodonOptimizeWeight />
+                    <RemoveCrypticSpliceSitesWeight />
+                    <MinimizeCpGsWeight />
+                    <ReduceKmerComplexityWeight />
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </CardContent>
+        </Card>
+
+        {/* ── Card 3: Review / Submit ── */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Review &amp; Run</CardTitle>
+            <CardDescription>
+              Run the optimizer to generate your split sequences.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex justify-end">
+              <SubmitButton
+                isJobRunning={job.isLoading}
+                isJobComplete={job.status === 'completed'}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {job.status === 'failed' && job.error && (
+          <Card className="border-destructive/50">
+            <CardContent className="flex items-start gap-3 pt-6">
+              <CircleAlert className="text-destructive mt-0.5 size-5 flex-shrink-0" />
+              <div className="space-y-1">
+                <p className="text-sm font-medium">Job failed</p>
+                <p className="text-muted-foreground text-sm">{job.error}</p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {result && (
+          <div ref={resultsRef}>
+            <ResultsPanel
+              result={result}
+              optionsUsed={formatOptionsForReport(methods.getValues())}
+            />
+          </div>
+        )}
+      </form>
+    </Form>
+  )
+}

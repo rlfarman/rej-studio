@@ -1,0 +1,121 @@
+'use client'
+
+import { create } from 'zustand'
+import { persist, createJSONStorage } from 'zustand/middleware'
+import type { ProcessResult } from '@/features/design-tool/types/process-result'
+import type { FormValues } from '@/features/design-tool/types/form-schema'
+
+const STORAGE_KEY = 'rej-studio:job-history'
+const MAX_ENTRIES = 50
+// How long to keep an entry stuck in the running state before we assume the
+// poll was abandoned (tab closed, Modal call_id expired) and drop it.
+const STALE_RUNNING_TTL_MS = 24 * 60 * 60 * 1000
+
+export type JobStatus = 'running' | 'completed' | 'failed'
+
+export interface JobHistoryEntry {
+  id: string
+  name: string
+  sequenceLength: number
+  createdAt: string
+  status: JobStatus
+  // Populated when status === 'completed'.
+  result: ProcessResult | null
+  // Populated when status === 'failed'.
+  error: string | null
+  // Form values that produced this job. Optional for backwards-compat.
+  formValues?: FormValues
+}
+
+// Partial input for upserting an entry — status is required, everything else
+// is optional (and either derived from `result`/`formValues` or preserved
+// from an existing entry with the same id).
+interface UpsertInput {
+  id: string
+  status: JobStatus
+  result?: ProcessResult | null
+  error?: string | null
+  formValues?: FormValues
+}
+
+interface JobHistoryState {
+  entries: JobHistoryEntry[]
+  upsertEntry: (input: UpsertInput) => string
+  removeEntry: (id: string) => void
+  clearHistory: () => void
+  getEntry: (id: string) => JobHistoryEntry | null
+}
+
+export const useJobHistory = create<JobHistoryState>()(
+  persist(
+    (set, get) => ({
+      entries: [],
+
+      // Upsert: if an entry with this id already exists, preserve its
+      // createdAt (so a running entry doesn't jump in the list when it
+      // completes) and overlay any fields we've learned. Otherwise insert
+      // at the top.
+      upsertEntry: ({ id, status, result, error, formValues }) => {
+        set((state) => {
+          const existing = state.entries.find((e) => e.id === id)
+          const nextResult = result ?? existing?.result ?? null
+          const nextFormValues = formValues ?? existing?.formValues
+          const name =
+            nextResult?.name ??
+            nextFormValues?.name ??
+            existing?.name ??
+            'Untitled'
+          const sequenceLength =
+            nextResult?.original_sequence.length ??
+            nextFormValues?.codingSequence.length ??
+            existing?.sequenceLength ??
+            0
+          const entry: JobHistoryEntry = {
+            id,
+            name,
+            sequenceLength,
+            createdAt: existing?.createdAt ?? new Date().toISOString(),
+            status,
+            result: nextResult,
+            error: error ?? existing?.error ?? null,
+            formValues: nextFormValues,
+          }
+          return {
+            entries: [entry, ...state.entries.filter((e) => e.id !== id)].slice(
+              0,
+              MAX_ENTRIES,
+            ),
+          }
+        })
+        return id
+      },
+
+      removeEntry: (id) =>
+        set((state) => ({
+          entries: state.entries.filter((e) => e.id !== id),
+        })),
+
+      clearHistory: () => set({ entries: [] }),
+
+      getEntry: (id) => get().entries.find((e) => e.id === id) ?? null,
+    }),
+    {
+      name: STORAGE_KEY,
+      storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({ entries: state.entries }),
+      // Sweep stale running entries on rehydrate. Orphans come from tabs
+      // closed mid-poll; after the TTL we assume they'll never resolve.
+      onRehydrateStorage: () => (state) => {
+        if (!state) return
+        const cutoff = Date.now() - STALE_RUNNING_TTL_MS
+        const fresh = state.entries.filter((e) => {
+          if (e.status !== 'running') return true
+          return new Date(e.createdAt).getTime() >= cutoff
+        })
+        if (fresh.length !== state.entries.length) {
+          state.entries = fresh
+        }
+      },
+    },
+  ),
+)
