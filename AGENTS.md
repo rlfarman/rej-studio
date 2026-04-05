@@ -9,7 +9,7 @@ REJ Studio is a bioinformatics web app for RNA End-Joining sequence design. User
 - **Next.js 16 (App Router)** — Frontend and server actions. Route groups: `(search)` for gene browsing, `(design-tool)` for the optimization form. Frontend source lives under `src/`.
 - **Bulletproof-react structure** — Code is organized into `src/features/<feature>/` (self-contained: `api/`, `components/`, `hooks/`, `stores/`, `types/`, `utils/`) plus shared layers (`src/components/`, `src/lib/`, `src/hooks/`, `src/stores/`). Cross-feature imports and shared→feature imports are forbidden by ESLint (`import/no-restricted-paths`).
 - **FastAPI (Python)** — Runs the DNA optimization algorithm. Single endpoint: `POST /api/py/process`. In development, Next.js proxies `/api/py/*` to `localhost:8000`.
-- **SQLite (better-sqlite3) + Drizzle ORM** — Read-only gene/isoform/sequence data. Database file is built from source data via `pnpm db:build` and checked in as `data/rej-studio.db.gz`. Schema in `src/drizzle/schema.ts`.
+- **Turso (libSQL) + Drizzle ORM** — Read-only gene/isoform/sequence data. The source of truth is a remote Turso database; the app uses an embedded local replica (`data/rej-studio.replica.db` in dev, `/tmp/rej-studio.replica.db` in prod) that is synced from Turso on startup (`src/instrumentation.node.ts`). Seed the Turso DB with `pnpm db:build` + `pnpm db:upload`. Schema in `src/drizzle/schema.ts`.
 - **shadcn/ui + Radix UI** — Component library. UI primitives live in `src/components/ui/`. Config in `components.json`.
 - **Zustand** — Global client state (favorites, recent genes, species filter) lives in `src/stores/` (shared) or `src/features/<feature>/stores/` (feature-owned).
 
@@ -39,8 +39,9 @@ pnpm lint         # ESLint
 pnpm lint:fix     # Auto-fix lint
 pnpm format       # Prettier
 pnpm type-check   # TypeScript check
-pnpm db:build     # Rebuild SQLite database from source data
-pnpm db:studio    # Browse the DB in Drizzle Studio (local.drizzle.studio)
+pnpm db:build     # Rebuild the local SQLite seed from source CSV (data/rej-studio.db)
+pnpm db:upload    # Dump local seed and load it into Turso (requires turso CLI)
+pnpm db:studio    # Browse Turso in Drizzle Studio (local.drizzle.studio)
 ```
 
 ## Code Conventions
@@ -55,13 +56,16 @@ pnpm db:studio    # Browse the DB in Drizzle Studio (local.drizzle.studio)
 
 ## Database
 
-Read-only SQLite database (`data/rej-studio.db`, decompressed from `data/rej-studio.db.gz` at build time). Schema is in `src/drizzle/schema.ts`; tables: `genes`, `isoforms`.
+Primary store is a Turso (libSQL) database. The Next.js server opens an **embedded replica** (`src/drizzle/db.ts`) — a local libSQL file that syncs from the Turso remote. Reads hit the local file; the replica refreshes on boot (`src/instrumentation.node.ts`) and on a background interval. Schema is in `src/drizzle/schema.ts`; tables: `genes`, `isoforms`, plus `genes_fts` (FTS5).
 
-Rebuild from source data with `pnpm db:build` (runs `scripts/build-db.py`).
+To seed / refresh Turso:
+
+1. `pnpm db:build` — regenerate `data/rej-studio.db` from `drizzle/transcript_metadata.csv`.
+2. `TURSO_DB_NAME=<name> pnpm db:upload` — dump + pipe into Turso (requires `turso` CLI).
 
 ## Environment Variables
 
-Defined in `.env.example`. Required: `SESSION_SECRET`.
+Defined in `.env.example`. Required: `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`, `SESSION_SECRET`.
 
 ## Commits & Branches
 
@@ -92,4 +96,4 @@ This symlinks `.env` and `venv/` from the main repo and runs `pnpm install` in t
 - **Adding a new feature**: Create `src/features/<name>/` with the standard subfolders. ESLint boundary rules apply automatically (no config changes needed).
 - **Adding shared code**: If used by ≥2 features, decide by domain: bio-specific → `src/lib/bio/` or `src/components/bio/`; generic → `src/lib/` or `src/components/`.
 - **Modifying the optimization algorithm**: Edit `api/algorithm.py`. The FastAPI endpoint is in `api/index.py`.
-- **Database schema changes**: Edit `src/drizzle/schema.ts` and update `scripts/build-db.py` so the generated SQLite file matches. Then run `pnpm db:build` and commit the updated `data/rej-studio.db.gz`.
+- **Database schema changes**: Edit `src/drizzle/schema.ts` and update `scripts/build-db.py` so the generated SQLite file matches. Then run `pnpm db:build` and `pnpm db:upload` to push the new data to Turso.

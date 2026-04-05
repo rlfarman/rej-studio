@@ -18,13 +18,13 @@ A web application for RNA End-Joining sequence design and optimization. Scientis
 
 ## Tech Stack
 
-| Layer    | Technology                                       |
-| -------- | ------------------------------------------------ |
-| Frontend | Next.js 16, React 19, TypeScript, Tailwind CSS   |
-| UI       | shadcn/ui, Radix UI primitives                   |
-| Backend  | FastAPI (Python) with dnachisel                  |
-| Database | SQLite (better-sqlite3), Drizzle ORM             |
-| Hosting  | Vercel                                           |
+| Layer    | Technology                                        |
+| -------- | ------------------------------------------------- |
+| Frontend | Next.js 16, React 19, TypeScript, Tailwind CSS    |
+| UI       | shadcn/ui, Radix UI primitives                    |
+| Backend  | FastAPI (Python) with dnachisel                   |
+| Database | Turso (libSQL) with embedded replica, Drizzle ORM |
+| Hosting  | Vercel                                            |
 
 ## Getting Started
 
@@ -54,14 +54,24 @@ A web application for RNA End-Joining sequence design and optimization. Scientis
 
    | Variable                | Description                          |
    | ----------------------- | ------------------------------------ |
+   | `TURSO_DATABASE_URL`    | libSQL URL of your Turso database    |
+   | `TURSO_AUTH_TOKEN`      | Auth token for the Turso database    |
    | `SESSION_SECRET`        | Random hex string for JWT signing    |
    | `BASIC_AUTH_USER`       | Basic auth username for landing page |
    | `BASIC_AUTH_PASSWORD`   | Basic auth password                  |
    | `BLOB_READ_WRITE_TOKEN` | Vercel Blob token (optional)         |
 
-3. **Unpack the database** (if not already present)
+3. **Populate the Turso database** (first time only)
 
-   The SQLite database is committed as `data/rej-studio.db.gz`. Decompress it to `data/rej-studio.db` before running the app, or rebuild from source data with `pnpm db:build`.
+   The app reads from a Turso (libSQL) database via an embedded local replica. To seed Turso from the source CSV:
+
+   ```bash
+   pnpm db:build                              # build data/rej-studio.db from CSV
+   turso db create rej-studio                 # if it doesn't exist yet
+   TURSO_DB_NAME=rej-studio pnpm db:upload    # dump + pipe into Turso
+   ```
+
+   On app startup (dev and prod), an embedded replica is created at `data/rej-studio.replica.db` (or `/tmp/` in production) and synced from Turso.
 
 ### Development
 
@@ -80,16 +90,18 @@ pnpm fastapi-dev   # FastAPI only
 
 ### Scripts
 
-| Command              | Description                      |
-| -------------------- | -------------------------------- |
-| `pnpm dev`        | Start both servers concurrently  |
-| `pnpm build`      | Production build (Next.js)       |
-| `pnpm start`      | Start production server          |
-| `pnpm lint`       | Run ESLint                       |
-| `pnpm lint:fix`   | Auto-fix lint issues             |
-| `pnpm format`     | Format with Prettier             |
-| `pnpm type-check` | TypeScript type checking         |
-| `pnpm db:build`   | Rebuild SQLite database from source data |
+| Command           | Description                                    |
+| ----------------- | ---------------------------------------------- |
+| `pnpm dev`        | Start both servers concurrently                |
+| `pnpm build`      | Production build (Next.js)                     |
+| `pnpm start`      | Start production server                        |
+| `pnpm lint`       | Run ESLint                                     |
+| `pnpm lint:fix`   | Auto-fix lint issues                           |
+| `pnpm format`     | Format with Prettier                           |
+| `pnpm type-check` | TypeScript type checking                       |
+| `pnpm db:build`   | Rebuild the local SQLite seed from source data |
+| `pnpm db:upload`  | Dump the local seed and pipe it into Turso     |
+| `pnpm db:studio`  | Browse Turso with Drizzle Studio               |
 
 ## Project Structure
 
