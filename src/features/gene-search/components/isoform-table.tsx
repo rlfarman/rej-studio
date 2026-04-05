@@ -1,5 +1,5 @@
 'use client'
-import { useMemo, useState, useCallback } from 'react'
+import { useMemo, useState, useCallback, useEffect } from 'react'
 import {
   Table,
   TableBody,
@@ -27,6 +27,7 @@ import {
   Beaker,
   Zap,
 } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -50,6 +51,7 @@ import type { IsoformListItem } from '@/features/gene-search/types/domain-types'
 
 interface IsoformListProps {
   isoforms: IsoformListItem[]
+  highlightedIsoformId?: string
 }
 
 type SortKey =
@@ -74,13 +76,18 @@ const SUITABILITY_RANK = {
   'triple-aav': 2,
 } as const
 
-export default function IsoformTable({ isoforms }: IsoformListProps) {
+export default function IsoformTable({
+  isoforms,
+  highlightedIsoformId,
+}: IsoformListProps) {
   const { species } = useSpeciesContext()
   const { copy, isCopied } = useCopyToClipboard({ showToast: false })
 
   const [sortKey, setSortKey] = useState<SortKey>('cdsLength')
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
-  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(() =>
+    highlightedIsoformId ? new Set([highlightedIsoformId]) : new Set(),
+  )
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
 
   const filteredIsoforms = useMemo(
@@ -234,6 +241,7 @@ export default function IsoformTable({ isoforms }: IsoformListProps) {
                 isoform={isoform}
                 isExpanded={isExpanded}
                 isSelected={isSelected}
+                isHighlighted={isoform.id === highlightedIsoformId}
                 suitability={suitability}
                 suitConfig={suitConfig}
                 cdsId={cdsId}
@@ -266,6 +274,7 @@ function IsoformRow({
   isoform,
   isExpanded,
   isSelected,
+  isHighlighted,
   suitability,
   suitConfig,
   cdsId,
@@ -278,6 +287,7 @@ function IsoformRow({
   isoform: IsoformListItem
   isExpanded: boolean
   isSelected: boolean
+  isHighlighted?: boolean
   suitability: ReturnType<typeof assessDesignSuitability>
   suitConfig: ReturnType<typeof getSuitabilityConfig>
   cdsId: string
@@ -287,10 +297,25 @@ function IsoformRow({
   onToggleExpanded: (id: string) => void
   onToggleSelected: (id: string) => void
 }) {
+  const [ringVisible, setRingVisible] = useState(!!isHighlighted)
+
+  useEffect(() => {
+    if (!isHighlighted) return
+    document
+      .getElementById(`isoform-row-${isoform.id}`)
+      ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    const timer = setTimeout(() => setRingVisible(false), 2000)
+    return () => clearTimeout(timer)
+  }, [isHighlighted, isoform.id])
+
   return (
     <>
       <TableRow
-        className="cursor-pointer"
+        id={`isoform-row-${isoform.id}`}
+        className={cn(
+          'cursor-pointer transition-shadow duration-1000',
+          ringVisible && 'ring-primary ring-2 ring-inset',
+        )}
         onClick={() => onToggleExpanded(isoform.id)}
       >
         <TableCell onClick={(e) => e.stopPropagation()}>

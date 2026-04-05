@@ -167,6 +167,75 @@ def insert_wggw_motif(sequence, split_point, min_distance=0, direction=0):
     
     return sequence, None
 
+def _serialize_evaluation_location(loc):
+    """Serialize a DNAChisel Location object to a JSON-safe dict."""
+    try:
+        start = int(getattr(loc, 'start', 0))
+        end = int(getattr(loc, 'end', 0))
+        strand = getattr(loc, 'strand', None)
+        if strand is not None:
+            try:
+                strand = int(strand)
+            except (TypeError, ValueError):
+                strand = None
+        return {'start': start, 'end': end, 'strand': strand}
+    except Exception:
+        return None
+
+
+def _serialize_evaluation(ev):
+    """Serialize a single DNAChisel ObjectiveEvaluation to a JSON-safe dict."""
+    try:
+        score = float(ev.score) if ev.score is not None else 0.0
+    except (TypeError, ValueError):
+        score = 0.0
+    try:
+        passes = bool(ev.passes)
+    except Exception:
+        passes = False
+    try:
+        spec = getattr(ev, 'specification', None) or getattr(ev, 'objective', None)
+        objective_str = str(spec) if spec is not None else '<unknown>'
+    except Exception:
+        objective_str = '<unknown>'
+    try:
+        message = str(ev.message) if getattr(ev, 'message', None) else ''
+    except Exception:
+        message = ''
+    locations = []
+    raw_locs = getattr(ev, 'locations', None) or []
+    for loc in raw_locs:
+        sl = _serialize_evaluation_location(loc)
+        if sl is not None:
+            locations.append(sl)
+    return {
+        'objective': objective_str,
+        'passes': passes,
+        'score': score,
+        'message': message,
+        'locations': locations,
+    }
+
+
+def build_objectives_report(problem):
+    """Build a structured JSON-safe report from DNAChisel objectives evaluations.
+
+    Falls back to an empty report if the DNAChisel API differs from expected.
+    """
+    try:
+        evaluations = problem.objectives_evaluations()
+        items = getattr(evaluations, 'evaluations', None)
+        if items is None and hasattr(evaluations, '__iter__'):
+            items = list(evaluations)
+        if items is None:
+            return {'entries': [], 'total_score': None}
+    except Exception:
+        return {'entries': [], 'total_score': None}
+    entries = [_serialize_evaluation(ev) for ev in items]
+    total = sum(e['score'] for e in entries) if entries else None
+    return {'entries': entries, 'total_score': total}
+
+
 def runOptimization(CDS, OPTIONS, on_progress=None):
     """
     Optimize a coding sequence (CDS) based on provided options.
@@ -272,11 +341,13 @@ def runOptimization(CDS, OPTIONS, on_progress=None):
     problem.resolve_constraints()
 
     objectives_before = problem.objectives_text_summary()
+    OPTIONS['objectives_report_before'] = build_objectives_report(problem)
     _emit(0.45, 'Optimizing sequence')
     problem.optimize()
     objectives_after = problem.objectives_text_summary()
+    OPTIONS['objectives_report_after'] = build_objectives_report(problem)
     _emit(0.90, 'Finalizing')
-    
+
     return problem.sequence, objectives_before, objectives_after
 
 def candidateSpliceSites(seq):
@@ -1024,6 +1095,12 @@ def process_single_request_json(CDS, name, OPTIONS, on_progress=None):
         'used_wggw_as_split': options_copy.get('used_wggw_as_split', False),
         'objectives_before': obj_before,
         'objectives_after': obj_after,
+        'objectives_report_before': options_copy.get(
+            'objectives_report_before'
+        ) or {'entries': [], 'total_score': None},
+        'objectives_report_after': options_copy.get(
+            'objectives_report_after'
+        ) or {'entries': [], 'total_score': None},
         'wggw_info': wggw_info,
         'processing_time_seconds': round(elapsed, 2),
     }

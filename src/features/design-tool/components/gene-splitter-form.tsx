@@ -40,9 +40,8 @@ import { SubmitButton } from './submit-button'
 import { ResultsPanel } from './results-panel'
 import { SequenceDiagnostics } from './sequence-diagnostics'
 import { StrategyPresets } from './strategy-presets'
+import { JobHeader, RunningPlaceholder } from './job-header'
 import { toast } from 'sonner'
-import { CircleAlert, RotateCw } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 
 interface GeneSplitterFormProperties {
   defaultCodingSequence?: string
@@ -60,6 +59,7 @@ export function GeneSplitterForm({
   defaultJobId,
 }: GeneSplitterFormProperties) {
   const [result, setResult] = useState<ProcessResult | null>(null)
+  const [isEditing, setIsEditing] = useState(false)
   const resultsRef = useRef<HTMLDivElement>(null)
   // Guards the one-shot form restore. Set true after we hydrate from a
   // resumed URL job, or eagerly on submit so the new job's own persisted
@@ -138,157 +138,166 @@ export function GeneSplitterForm({
     // Mark as reset so the about-to-be-persisted formValues don't trigger
     // the hydration effect above and overwrite the live form.
     didResetRef.current = true
+    setIsEditing(false)
     await job.submitJob(values)
   }
+
+  const handleRerun = async () => {
+    const valid = await methods.trigger()
+    if (!valid) {
+      setIsEditing(true)
+      toast.error('Fix the form errors before re-running.')
+      return
+    }
+    await methods
+      .handleSubmit(onSubmit)()
+      .catch(() => {})
+  }
+
+  const showForm = job.status === 'idle' || isEditing
+  const isRunning = job.status === 'submitting' || job.status === 'running'
+  // 'submitting' is the brief window while the POST is in flight; treat it
+  // as running for header/placeholder purposes so the UI doesn't blank out.
+  const headerStatus: 'running' | 'completed' | 'failed' | 'cancelled' | null =
+    job.status === 'submitting' || job.status === 'running'
+      ? 'running'
+      : job.status === 'completed' ||
+          job.status === 'failed' ||
+          job.status === 'cancelled'
+        ? job.status
+        : null
 
   return (
     <Form {...methods}>
       {}
       {/* eslint-disable-next-line react-hooks/refs -- onSubmit only writes didResetRef in the submit event handler, never during render */}
       <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-6">
-        {/* ── Card 1: Input ── */}
-        <Card>
-          <CardHeader>
-            <h1 className="text-2xl leading-none font-bold tracking-tight">
-              REJ Studio Design Tool
-            </h1>
-            <CardDescription>
-              Design a custom RNA sequence for end-joining experiments
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <CustomizationOptions />
-            <SequenceDiagnostics />
-            <SpeciesOptions />
-            <div className="space-y-2">
-              <p className="text-sm font-medium">Splice junction</p>
-              <p className="text-muted-foreground text-sm">
-                Set where the sequence splits into 5&apos; and 3&apos;
-                fragments.
-              </p>
-              <DNASplicer />
-            </div>
-          </CardContent>
-        </Card>
+        {!showForm && headerStatus && (
+          <JobHeader
+            name={methods.getValues('name')}
+            sequenceLength={methods.getValues('codingSequence').length}
+            species={methods.getValues('species')}
+            status={headerStatus}
+            processingTimeSeconds={result?.processing_time_seconds ?? null}
+            errorMessage={job.error?.message ?? null}
+            retriable={job.error?.retriable ?? true}
+            onEdit={() => setIsEditing(true)}
+            onRerun={handleRerun}
+            onCancel={isRunning ? job.cancelJob : undefined}
+          />
+        )}
 
-        {/* ── Card 2: Strategy ── */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Optimization Strategy</CardTitle>
-            <CardDescription>
-              Choose a preset or fine-tune individual parameters.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <StrategyPresets />
-            <Accordion type="multiple">
-              <AccordionItem value="codon-optimization">
-                <AccordionTrigger>
-                  <div>
-                    <p>Codon optimization</p>
-                    <p className="text-muted-foreground text-sm">
-                      Control which sequence features are optimized.
-                    </p>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="pt-4 pb-8">
-                  <CodonOptimizationOptions />
-                </AccordionContent>
-              </AccordionItem>
-              <AccordionItem value="fragment-options">
-                <AccordionTrigger>
-                  <div>
-                    <p>Stimulatory introns</p>
-                    <p className="text-muted-foreground text-sm">
-                      Add introns to boost fragment expression.
-                    </p>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="pt-4 pb-8">
-                  <div className="flex flex-col space-y-4">
-                    <FiveFragmentOptions />
-                    <ThreeFragmentOptions />
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-              <AccordionItem value="weights">
-                <AccordionTrigger>
-                  <div>
-                    <p>Parameter weights</p>
-                    <p className="text-muted-foreground text-sm">
-                      Control how much each objective influences the result.
-                    </p>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="pt-4 pb-8">
-                  <div className="flex flex-col space-y-4">
-                    <CodonOptimizeWeight />
-                    <RemoveCrypticSpliceSitesWeight />
-                    <MinimizeCpGsWeight />
-                    <ReduceKmerComplexityWeight />
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-          </CardContent>
-        </Card>
+        {!showForm && isRunning && !result && (
+          <RunningPlaceholder stage={job.stage} progress={job.progress} />
+        )}
 
-        {/* ── Card 3: Review / Submit ── */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Review &amp; Run</CardTitle>
-            <CardDescription>
-              Run the optimizer to generate your split sequences.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex justify-end">
-              <SubmitButton
-                isJobRunning={job.isLoading}
-                isJobComplete={job.status === 'completed'}
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {job.status === 'failed' && job.error && (
-          <Card className="border-destructive/50">
-            <CardContent className="flex items-start justify-between gap-3 pt-6">
-              <div className="flex items-start gap-3">
-                <CircleAlert className="text-destructive mt-0.5 size-5 flex-shrink-0" />
-                <div className="space-y-1">
-                  <p className="text-sm font-medium">
-                    {job.error.code === 'timeout'
-                      ? 'Timed out'
-                      : job.error.code === 'not_found'
-                        ? 'Job unavailable'
-                        : job.error.code === 'network'
-                          ? 'Connection failed'
-                          : 'Job failed'}
-                  </p>
+        {showForm && (
+          <>
+            {/* ── Card 1: Input ── */}
+            <Card>
+              <CardHeader>
+                <h1 className="text-2xl leading-none font-bold tracking-tight">
+                  REJ Studio Design Tool
+                </h1>
+                <CardDescription>
+                  Design a custom RNA sequence for end-joining experiments
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <CustomizationOptions />
+                <SequenceDiagnostics />
+                <SpeciesOptions />
+                <div className="space-y-2">
+                  <p className="text-sm font-medium">Splice junction</p>
                   <p className="text-muted-foreground text-sm">
-                    {job.error.message}
+                    Set where the sequence splits into 5&apos; and 3&apos;
+                    fragments.
                   </p>
+                  <DNASplicer />
                 </div>
-              </div>
-              {job.error.retriable && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    methods
-                      .handleSubmit(onSubmit)()
-                      .catch(() => {})
-                  }
-                  className="flex-shrink-0"
-                >
-                  <RotateCw className="size-4" />
-                  Run again
-                </Button>
-              )}
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+
+            {/* ── Card 2: Strategy ── */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Optimization Strategy</CardTitle>
+                <CardDescription>
+                  Choose a preset or fine-tune individual parameters.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <StrategyPresets />
+                <Accordion type="multiple">
+                  <AccordionItem value="codon-optimization">
+                    <AccordionTrigger>
+                      <div>
+                        <p>Codon optimization</p>
+                        <p className="text-muted-foreground text-sm">
+                          Control which sequence features are optimized.
+                        </p>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-4 pb-8">
+                      <CodonOptimizationOptions />
+                    </AccordionContent>
+                  </AccordionItem>
+                  <AccordionItem value="fragment-options">
+                    <AccordionTrigger>
+                      <div>
+                        <p>Stimulatory introns</p>
+                        <p className="text-muted-foreground text-sm">
+                          Add introns to boost fragment expression.
+                        </p>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-4 pb-8">
+                      <div className="flex flex-col space-y-4">
+                        <FiveFragmentOptions />
+                        <ThreeFragmentOptions />
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                  <AccordionItem value="weights">
+                    <AccordionTrigger>
+                      <div>
+                        <p>Parameter weights</p>
+                        <p className="text-muted-foreground text-sm">
+                          Control how much each objective influences the result.
+                        </p>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-4 pb-8">
+                      <div className="flex flex-col space-y-4">
+                        <CodonOptimizeWeight />
+                        <RemoveCrypticSpliceSitesWeight />
+                        <MinimizeCpGsWeight />
+                        <ReduceKmerComplexityWeight />
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+              </CardContent>
+            </Card>
+
+            {/* ── Card 3: Review / Submit ── */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Review &amp; Run</CardTitle>
+                <CardDescription>
+                  Run the optimizer to generate your split sequences.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex justify-end">
+                  <SubmitButton
+                    isJobRunning={job.isLoading}
+                    isJobComplete={job.status === 'completed'}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </>
         )}
 
         {result && (

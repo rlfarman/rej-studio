@@ -56,7 +56,7 @@ export function GeneSearch({
   const handleSelect = (gene: SavedGene) => {
     setIsOpen(false)
     addRecentGene(gene)
-    router.push(geneHref(gene.symbol, gene.species))
+    router.push(geneHref(gene.symbol, gene.species, gene.matchedIsoformId))
     setQuery(gene.symbol)
   }
 

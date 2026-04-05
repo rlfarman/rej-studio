@@ -49,12 +49,19 @@ notes.md
 /tmp
 
 # claude
-.claude/
+.claude/worktrees/
+.claude/settings.local.json
 
 src/drizzle/transcript_metadata.csv
 
-# sqlite database (raw, uncompressed — only .gz is committed)
+# sqlite data — the canonical DB lives in Turso. Local files are seeds or replicas.
 data/rej-studio.db
 data/rej-studio.db-shm
 data/rej-studio.db-wal
+data/rej-studio.replica.db
+data/rej-studio.replica.db-shm
+data/rej-studio.replica.db-wal
+data/rej-studio.replica.db-info
+data/rej-studio.replica.db-client_wal_index
+data/rej-studio.db.gz
 
