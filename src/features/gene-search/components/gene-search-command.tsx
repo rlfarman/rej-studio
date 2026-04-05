@@ -13,7 +13,8 @@ import { SpeciesIcon } from '@/components/bio/species-icon'
 import { TruncatedText } from '@/components/truncated-text'
 import { HighlightMatch } from '@/features/gene-search/utils/highlight-match'
 import { useState } from 'react'
-import { ClockIcon, HeartIcon } from 'lucide-react'
+import { ClockIcon, ExternalLink, HeartIcon } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import type { SavedGene } from '@/features/gene-search/types/domain-types'
 
 export function GeneResultsLoading() {
@@ -216,6 +217,28 @@ export function GeneSearchCommand({
                       </span>
                     )}
                   </div>
+                  {gene.matchedIsoformId && (
+                    <Button
+                      asChild
+                      variant="ghost"
+                      size="sm"
+                      className="ml-auto h-7 px-2"
+                      onClick={(e) => e.stopPropagation()}
+                      onMouseDown={(e) => e.stopPropagation()}
+                    >
+                      <Link
+                        href={`/design-tool?isoform=${gene.matchedIsoformId}`}
+                        aria-label={`Customize ${gene.matchedIsoformId}`}
+                        onClick={() => {
+                          setIsOpen(false)
+                          setShowList(false)
+                        }}
+                      >
+                        Customize
+                        <ExternalLink className="size-3.5" />
+                      </Link>
+                    </Button>
+                  )}
                 </CommandItem>
               ))}
             </>
