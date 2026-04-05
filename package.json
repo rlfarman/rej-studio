@@ -78,15 +78,6 @@
     "prettier-plugin-tailwindcss": "^0.7.2",
     "ts-node": "^10.9.2"
   },
-  "lint-staged": {
-    "!(.claude)/**/*.{js,jsx,ts,tsx,mjs,cjs}": [
-      "eslint --fix",
-      "prettier --write"
-    ],
-    "!(.claude)/**/*.{json,md,css,yml,yaml}": [
-      "prettier --write"
-    ]
-  },
   "pnpm": {
     "overrides": {
       "@types/react": "$@types/react",
