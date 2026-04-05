@@ -15,13 +15,11 @@ import {
   homopolymerCheck,
   tandemRepeatCheck,
 } from '@/components/bio/diag-badge'
-import { assessFragmentBalance } from '@/lib/bio/sequence-utils'
 import { AavPreflight } from './aav-size-estimator'
 
 export function SequenceDiagnostics() {
   const { watch } = useFormContext<FormValues>()
   const codingSequence = watch('codingSequence')
-  const spliceJunctionPosition = watch('spliceJunctionPosition')
 
   const seq = codingSequence?.toUpperCase() ?? ''
 
@@ -29,7 +27,6 @@ export function SequenceDiagnostics() {
     if (seq.length === 0) return null
 
     const bpLength = seq.length
-    const balance = assessFragmentBalance(spliceJunctionPosition, bpLength)
 
     const checks = [
       lengthCheck(seq),
@@ -49,8 +46,8 @@ export function SequenceDiagnostics() {
     const tr = tandemRepeatCheck(seq)
     if (tr) checks.push(tr)
 
-    return { checks, balance, bpLength }
-  }, [seq, spliceJunctionPosition])
+    return { checks, bpLength }
+  }, [seq])
 
   if (!diagnostics) return null
 
@@ -59,24 +56,6 @@ export function SequenceDiagnostics() {
       {diagnostics.checks.map((check) => (
         <DiagBadge key={check.label} {...check} />
       ))}
-
-      <DiagBadge
-        status={
-          diagnostics.balance === 'balanced'
-            ? 'good'
-            : diagnostics.balance === 'moderate'
-              ? 'warn'
-              : 'error'
-        }
-        label={`Split: ${Math.round((spliceJunctionPosition / diagnostics.bpLength) * 100)}% / ${Math.round(100 - (spliceJunctionPosition / diagnostics.bpLength) * 100)}%`}
-        tooltip={
-          diagnostics.balance === 'balanced'
-            ? 'Fragment sizes are well balanced.'
-            : diagnostics.balance === 'moderate'
-              ? 'Fragments are moderately imbalanced. Consider centering the split.'
-              : 'Fragments are highly imbalanced. This may cause issues with AAV packaging.'
-        }
-      />
 
       <AavPreflight sequenceLength={diagnostics.bpLength} />
     </div>

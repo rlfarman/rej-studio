@@ -7,6 +7,7 @@ import {
   slidingGcContent,
   rankWggwByBalance,
   computeGcPercent,
+  assessFragmentBalance,
 } from '@/lib/bio/sequence-utils'
 import { translateCodon, AMINO_ACID_NAMES } from '@/lib/bio/genetic-code'
 import { AAV_OVERHEAD_BP, AAV_PACKAGING_LIMIT } from './aav-size-estimator'
@@ -170,6 +171,34 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
   const threePrimeLength = fragmentStats?.three.length ?? 0
   const fivePct = (fivePrimeLength / seqLen) * 100
 
+  // Split-level warnings surfaced inside the slider itself.
+  const balance = assessFragmentBalance(position, seqLen)
+  const fiveExceeds = (fragmentStats?.five.aavTotal ?? 0) > AAV_PACKAGING_LIMIT
+  const threeExceeds =
+    (fragmentStats?.three.aavTotal ?? 0) > AAV_PACKAGING_LIMIT
+  const warnings: { level: 'warn' | 'error'; message: string }[] = []
+  if (fiveExceeds || threeExceeds) {
+    const which = [fiveExceeds && '5′', threeExceeds && '3′']
+      .filter(Boolean)
+      .join(' & ')
+    warnings.push({
+      level: 'error',
+      message: `${which} fragment + AAV overhead exceeds ~${AAV_PACKAGING_LIMIT.toLocaleString()} bp packaging limit.`,
+    })
+  }
+  if (balance === 'imbalanced') {
+    warnings.push({
+      level: 'error',
+      message:
+        'Fragments are highly imbalanced — consider a more centered split.',
+    })
+  } else if (balance === 'moderate' && warnings.length === 0) {
+    warnings.push({
+      level: 'warn',
+      message: 'Fragments are moderately imbalanced.',
+    })
+  }
+
   return (
     <div className="space-y-2">
       {/* Unified composite slider: viz bar + GC profile + WGGW ticks.
@@ -294,6 +323,27 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
             WGGW: {wggwMotifs.length} · drag or ←→ (shift ×10, home/end to ends)
           </span>
         </div>
+        {/* Inline split warnings — moved here from the diagnostics badges */}
+        {warnings.length > 0 && (
+          <div className="space-y-0.5">
+            {warnings.map((w, i) => (
+              <div
+                key={i}
+                className={cn(
+                  'flex items-center gap-1.5 rounded-sm border px-2 py-1 text-[10px]',
+                  w.level === 'error'
+                    ? 'border-red-500/40 bg-red-500/10 text-red-700 dark:text-red-300'
+                    : 'border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300',
+                )}
+              >
+                <span aria-hidden="true">
+                  {w.level === 'error' ? '⚠' : '!'}
+                </span>
+                {w.message}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Balanced WGGW candidates — ranked by one criterion: |pos − len/2| */}
