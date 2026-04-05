@@ -3,10 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { cn } from '@/lib/utils'
 import {
-  slidingGcContent,
   rankInducibleWggwByBalance,
-  computeGcPercent,
-  assessFragmentBalance,
   type RankedInducibleWggwCandidate,
 } from '@/lib/bio/sequence-utils'
 import { translateCodon, AMINO_ACID_NAMES } from '@/lib/bio/genetic-code'
@@ -16,7 +13,6 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { Keyboard } from 'lucide-react'
-import { AAV_OVERHEAD_BP, AAV_PACKAGING_LIMIT } from '@/lib/bio/aav'
 
 interface Props {
   sequence: string
@@ -24,43 +20,28 @@ interface Props {
   onSnap: (position: number) => void
 }
 
-const MAX_WGGW_MARKERS = 200
 const MIN_CONTEXT_WINDOW = 6 // minimum codons on each side of the split
 const MAX_CONTEXT_WINDOW = 30 // cap to keep text readable
 const PX_PER_CODON = 28 // approximate minimum width for a 3-base codon box
 
 /**
  * Context strip that sits directly under the splice-junction slider. It
- * surfaces raw, defensible measurements for the current cut rather than
- * combining them into an arbitrary composite score:
- *
- * - Drag-to-set GC micro-profile with the 40–60% reference band
- * - WGGW ticks aligned to the slider, snappable on click
- * - Balanced WGGW candidates — every motif in the sequence ranked by
- *   distance from a 50/50 split (single criterion: fragment balance)
- * - Per-fragment length, GC%, and AAV fit (hard ~4.7kb packaging limit)
- * - Codon-level frame-at-split readout with ±6 codons of context
+ * focuses on selecting a splice-junction candidate without overloading the
+ * user with secondary heuristics. It keeps the global WGGW-capable ticks and
+ * the local codon-level frame context.
  */
 export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
   const seqLen = sequence.length
   const trackRef = useRef<HTMLDivElement>(null)
 
-  const { gcPoints, wggwMotifs, nearestWggw, balancedWggw } = useMemo(() => {
+  const { wggwMotifs, nearestWggw } = useMemo(() => {
     if (seqLen < 12) {
       return {
-        gcPoints: [],
         wggwMotifs: [],
         nearestWggw: null,
-        balancedWggw: [],
       }
     }
-    // Window scales with sequence length: bigger windows for long CDSs,
-    // tighter windows for short ones. 30–120bp range feels sensible.
-    const window = Math.min(120, Math.max(30, Math.round(seqLen / 40)))
-    const step = Math.max(1, Math.round(window / 6))
-    const gcPoints = slidingGcContent(sequence, window, step)
-
-    const motifs = rankInducibleWggwByBalance(sequence).slice(0, MAX_WGGW_MARKERS)
+    const motifs = rankInducibleWggwByBalance(sequence)
 
     // Nearest WGGW to the current cut, for the "snap to nearest" button.
     let nearest: (RankedInducibleWggwCandidate & { distance: number }) | null =
@@ -72,28 +53,8 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
       }
     }
 
-    const balancedWggw = motifs.slice(0, 3)
-
-    return { gcPoints, wggwMotifs: motifs, nearestWggw: nearest, balancedWggw }
+    return { wggwMotifs: motifs, nearestWggw: nearest }
   }, [sequence, seqLen, position])
-
-  const fragmentStats = useMemo(() => {
-    if (seqLen < 2) return null
-    const fiveSeq = sequence.slice(0, position)
-    const threeSeq = sequence.slice(position)
-    return {
-      five: {
-        length: fiveSeq.length,
-        gc: computeGcPercent(fiveSeq.toUpperCase()),
-        aavTotal: fiveSeq.length + AAV_OVERHEAD_BP,
-      },
-      three: {
-        length: threeSeq.length,
-        gc: computeGcPercent(threeSeq.toUpperCase()),
-        aavTotal: threeSeq.length + AAV_OVERHEAD_BP,
-      },
-    }
-  }, [sequence, position, seqLen])
 
   const [contextWindow, setContextWindow] = useState(MIN_CONTEXT_WINDOW)
   const frameStripRef = useRef<HTMLDivElement>(null)
@@ -125,20 +86,7 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
 
   if (seqLen < 12) return null
 
-  // Build the GC polyline path within a fixed-height SVG (viewBox 100x20).
-  // We output a normalized x in [0,100] and y flipped so higher GC goes up.
-  const pathData = gcPoints
-    .map((p, i) => {
-      const x = (p.position / (seqLen - 1)) * 100
-      const y = 20 - (p.gc / 100) * 20
-      return `${i === 0 ? 'M' : 'L'} ${x.toFixed(2)} ${y.toFixed(2)}`
-    })
-    .join(' ')
-
   const positionPct = (position / seqLen) * 100
-  const candidateSet = new Set(
-    balancedWggw.map((c) => `${c.position}:${c.motifStart}`),
-  )
 
   // Drag-to-set: convert pointer X to a 1..seqLen-1 position.
   const positionFromPointer = (clientX: number): number => {
@@ -199,85 +147,10 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
     }
   }
 
-  const fivePrimeLength = fragmentStats?.five.length ?? 0
-  const threePrimeLength = fragmentStats?.three.length ?? 0
-  const fivePct = (fivePrimeLength / seqLen) * 100
-
-  // AAV capacity zones: which slider positions yield fragments that fit the
-  // ~4.7 kb packaging limit once ITR/promoter overhead is added. Surfaced
-  // proactively as a thin stripe above the fragment bar so users can see
-  // safe regions at a glance before committing to a cut.
-  const maxPayload = AAV_PACKAGING_LIMIT - AAV_OVERHEAD_BP
-  const tightPayload = AAV_PACKAGING_LIMIT + 300 - AAV_OVERHEAD_BP
-  const safeLeft = Math.max(1, seqLen - maxPayload)
-  const safeRight = Math.min(seqLen - 1, maxPayload)
-  const tightLeft = Math.max(1, seqLen - tightPayload)
-  const tightRight = Math.min(seqLen - 1, tightPayload)
-  const hasSafeZone = safeLeft <= safeRight
-  const showAavZones = seqLen > maxPayload
-
-  // Split-level warnings surfaced inside the slider itself. Thresholds mirror
-  // the AAV zone stripe above the fragment bar and FragmentPill's tight/exceeds
-  // labels: ≤limit = fits (green), ≤limit+300 = tight (yellow, warn), over = red (error).
-  const balance = assessFragmentBalance(position, seqLen)
-  const TIGHT_LIMIT = AAV_PACKAGING_LIMIT + 300
-  const fiveTotal = fragmentStats?.five.aavTotal ?? 0
-  const threeTotal = fragmentStats?.three.aavTotal ?? 0
-  const fiveExceeds = fiveTotal > TIGHT_LIMIT
-  const threeExceeds = threeTotal > TIGHT_LIMIT
-  const fiveTight = !fiveExceeds && fiveTotal > AAV_PACKAGING_LIMIT
-  const threeTight = !threeExceeds && threeTotal > AAV_PACKAGING_LIMIT
-  const warnings: { level: 'warn' | 'error'; message: string }[] = []
-  if (fiveExceeds || threeExceeds) {
-    const which = [fiveExceeds && '5′', threeExceeds && '3′']
-      .filter(Boolean)
-      .join(' & ')
-    warnings.push({
-      level: 'error',
-      message: `${which} fragment + AAV overhead exceeds ~${AAV_PACKAGING_LIMIT.toLocaleString()} bp packaging limit.`,
-    })
-  } else if (fiveTight || threeTight) {
-    const which = [fiveTight && '5′', threeTight && '3′']
-      .filter(Boolean)
-      .join(' & ')
-    warnings.push({
-      level: 'warn',
-      message: `${which} fragment + AAV overhead is tight (within 300 bp of the ~${AAV_PACKAGING_LIMIT.toLocaleString()} bp packaging limit).`,
-    })
-  }
-  if (balance === 'imbalanced') {
-    warnings.push({
-      level: 'error',
-      message:
-        'Fragments are highly imbalanced — consider a more centered split.',
-    })
-  } else if (balance === 'moderate' && warnings.length === 0) {
-    warnings.push({
-      level: 'warn',
-      message: 'Fragments are moderately imbalanced.',
-    })
-  }
-  // Splice-junction proximity to start/stop codon
-  const MIN_MARGIN = 150
-  if (seqLen > MIN_MARGIN * 2) {
-    if (position < MIN_MARGIN) {
-      warnings.push({
-        level: 'warn',
-        message: `Splice junction is within ${MIN_MARGIN} bp of the start codon — very little 5′ fragment for stable expression.`,
-      })
-    }
-    if (seqLen - position < MIN_MARGIN) {
-      warnings.push({
-        level: 'warn',
-        message: `Splice junction is within ${MIN_MARGIN} bp of the stop codon — very little 3′ fragment for stable expression.`,
-      })
-    }
-  }
-
   return (
     <div className="space-y-2">
-      {/* Unified composite slider: viz bar + GC profile + WGGW ticks.
-          Drag anywhere, arrow keys to nudge, Home/End to jump to ends. */}
+      {/* WGGW-capable split selector. Drag anywhere, arrow keys to nudge,
+          Home/End to jump to ends. */}
       <div className="space-y-1">
         <div
           ref={trackRef}
@@ -290,108 +163,14 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
           aria-valuetext={`bp ${position.toLocaleString()} of ${seqLen.toLocaleString()}`}
           onPointerDown={handleTrackPointerDown}
           onKeyDown={handleTrackKeyDown}
-          className="focus-visible:ring-ring relative cursor-ew-resize touch-none rounded-md border select-none focus:outline-none focus-visible:ring-2"
+          className="focus-visible:ring-ring bg-muted/20 relative h-8 cursor-ew-resize touch-none rounded-md border select-none focus:outline-none focus-visible:ring-2"
         >
-          {/* AAV capacity zones: green = both fragments fit, yellow = tight,
-              red = over ~4.7 kb packaging limit. Hidden for sequences that
-              already fit as a monomer. */}
-          {showAavZones && (
-            <div
-              className="relative h-1.5 w-full overflow-hidden rounded-t-[5px]"
-              aria-hidden="true"
-              title="AAV packaging zones: green fits, yellow tight, red over limit"
-            >
-              <div className="bg-destructive/25 absolute inset-0" />
-              <div
-                className="absolute inset-y-0 bg-yellow-400/40"
-                style={{
-                  left: `${(tightLeft / seqLen) * 100}%`,
-                  right: `${((seqLen - tightRight) / seqLen) * 100}%`,
-                }}
-              />
-              {hasSafeZone && (
-                <div
-                  className="absolute inset-y-0 bg-emerald-500/40"
-                  style={{
-                    left: `${(safeLeft / seqLen) * 100}%`,
-                    right: `${((seqLen - safeRight) / seqLen) * 100}%`,
-                  }}
-                />
-              )}
-            </div>
-          )}
-          {/* Top lane: 5′/3′ fragment bar */}
-          <div
-            className={cn(
-              'relative flex h-7 w-full overflow-hidden',
-              !showAavZones && 'rounded-t-[5px]',
-            )}
-          >
-            <div
-              className="bg-primary/15 flex min-w-0 items-center justify-center"
-              style={{ width: `${fivePct}%` }}
-            >
-              <span className="text-primary pointer-events-none truncate px-1.5 text-xs font-medium">
-                5′ · {fivePrimeLength.toLocaleString()} bp
-              </span>
-            </div>
-            <div className="bg-muted/50 flex min-w-0 flex-1 items-center justify-center">
-              <span className="text-muted-foreground pointer-events-none truncate px-1.5 text-xs font-medium">
-                3′ · {threePrimeLength.toLocaleString()} bp
-              </span>
-            </div>
-            {/* 40/60 balance target band — visual hint for the "balanced" range */}
-            <div
-              className="pointer-events-none absolute inset-y-0 border-x border-dashed border-emerald-500/50"
-              style={{ left: '40%', width: '20%' }}
-              aria-hidden="true"
-              title="Balanced split range (40–60%)"
-            />
-          </div>
-          {/* Middle lane: GC profile */}
-          <svg
-            viewBox="0 0 100 20"
-            preserveAspectRatio="none"
-            className="bg-muted/20 block h-8 w-full"
-            aria-hidden="true"
-          >
-            {/* 40-60% reference band */}
-            <rect
-              x={0}
-              y={20 - (60 / 100) * 20}
-              width={100}
-              height={((60 - 40) / 100) * 20}
-              className="fill-emerald-500/10"
-            />
-            {/* 50% reference line */}
-            <line
-              x1={0}
-              x2={100}
-              y1={10}
-              y2={10}
-              className="stroke-muted-foreground/30"
-              strokeWidth={0.3}
-              vectorEffect="non-scaling-stroke"
-              strokeDasharray="2 2"
-            />
-            {/* GC polyline */}
-            {pathData && (
-              <path
-                d={pathData}
-                className="stroke-primary fill-none"
-                strokeWidth={1.5}
-                vectorEffect="non-scaling-stroke"
-              />
-            )}
-          </svg>
-          {/* Bottom lane: WGGW ticks */}
-          <div className="bg-muted/30 relative h-3 w-full rounded-b-[5px]">
+          <div className="absolute inset-0 overflow-hidden rounded-md">
             {wggwMotifs.map((m, i) => {
               const mid = m.position
               const x = (mid / seqLen) * 100
               const isNearest =
                 nearestWggw !== null && nearestWggw.position === mid
-              const isCandidate = candidateSet.has(`${mid}:${m.motifStart}`)
               const sourceLabel = m.alreadyPresent
                 ? 'present in sequence'
                 : `inducible via synonymous recoding (${m.baseChanges} base${m.baseChanges === 1 ? '' : 's'} changed)`
@@ -412,18 +191,15 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
                     className={cn(
                       'rounded-sm transition-all',
                       'group-hover:w-[3px] group-hover:bg-emerald-400',
-                      isCandidate
-                        ? 'w-[2px] bg-amber-500'
-                        : isNearest
-                          ? 'w-[2px] bg-emerald-500'
-                          : 'w-[1px] bg-emerald-500/60',
+                      isNearest
+                        ? 'w-[2px] bg-emerald-500'
+                        : 'w-[1px] bg-emerald-500/60',
                     )}
                   />
                 </button>
               )
             })}
           </div>
-          {/* Current position indicator spanning all three lanes */}
           <div
             className="border-foreground pointer-events-none absolute inset-y-0 w-0 border-l-2"
             style={{ left: `${positionPct}%` }}
@@ -433,9 +209,7 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
         {/* Single readout */}
         <div className="text-muted-foreground flex items-center justify-between gap-2 text-[10px]">
           <span className="font-mono tabular-nums">
-            bp {position.toLocaleString()} ·{' '}
-            {Math.round((fivePrimeLength / seqLen) * 100)}/
-            {Math.round((threePrimeLength / seqLen) * 100)} 5′/3′
+            bp {position.toLocaleString()}
             {nearestWggw && (
               <>
                 {' · nearest WGGW '}
@@ -446,95 +220,12 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
               </>
             )}
           </span>
-          <span className="flex items-center gap-1.5">
-            <span>WGGW-capable: {wggwMotifs.length}</span>
-            <KeyboardHelp />
-          </span>
-        </div>
-        {/* Inline split warnings — moved here from the diagnostics badges */}
-        {warnings.length > 0 && (
-          <div className="space-y-0.5">
-            {warnings.map((w, i) => (
-              <div
-                key={i}
-                className={cn(
-                  'flex items-center gap-1.5 rounded-sm border px-2 py-1 text-[10px]',
-                  w.level === 'error'
-                    ? 'border-red-500/40 bg-red-500/10 text-red-700 dark:text-red-300'
-                    : 'border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300',
-                )}
-              >
-                <span aria-hidden="true">
-                  {w.level === 'error' ? '⚠' : '!'}
-                </span>
-                {w.message}
-              </div>
-            ))}
+            <span className="flex items-center gap-1.5">
+              <span>WGGW-capable: {wggwMotifs.length}</span>
+              <KeyboardHelp />
+            </span>
           </div>
-        )}
       </div>
-
-      {/* Balanced WGGW candidates — ranked by one criterion: |pos − len/2| */}
-      {balancedWggw.length > 0 && (
-        <div className="flex flex-wrap items-center gap-2 text-[10px]">
-          <span
-            className="text-muted-foreground"
-            title="WGGW-capable junctions ranked by distance from a 50/50 split"
-          >
-            Balanced WGGW candidates:
-          </span>
-          {balancedWggw.map((c, i) => {
-            const isCurrent = Math.abs(c.position - position) <= 1
-            const fiveAav = c.fivePrimeLength + AAV_OVERHEAD_BP
-            const threeAav = c.threePrimeLength + AAV_OVERHEAD_BP
-            const bothFit =
-              fiveAav <= AAV_PACKAGING_LIMIT && threeAav <= AAV_PACKAGING_LIMIT
-            return (
-              <button
-                type="button"
-                key={c.position}
-                onClick={() => onSnap(c.position)}
-                title={`${c.motif} at bp ${c.position.toLocaleString()} · ${c.alreadyPresent ? 'present' : `inducible with ${c.baseChanges} base change${c.baseChanges === 1 ? '' : 's'}`} · 5′ ${c.fivePrimeLength.toLocaleString()} bp · 3′ ${c.threePrimeLength.toLocaleString()} bp · ${c.distanceFromCenter.toLocaleString()} bp from center`}
-                className={cn(
-                  'rounded-sm border px-1.5 py-0.5 font-mono tabular-nums transition-colors',
-                  isCurrent
-                    ? 'border-primary bg-primary/10 text-primary'
-                    : 'hover:border-primary/60 hover:text-foreground text-muted-foreground',
-                )}
-              >
-                #{i + 1} {c.motif}@{c.position.toLocaleString()}
-                {!c.alreadyPresent && '*'}
-                {!bothFit && (
-                  <span
-                    className="ml-1 text-red-600 dark:text-red-400"
-                    title="One fragment + AAV overhead exceeds ~4,700 bp"
-                  >
-                    ⚠
-                  </span>
-                )}
-              </button>
-            )
-          })}
-        </div>
-      )}
-
-      {/* Per-fragment readout — length, GC%, AAV fit */}
-      {fragmentStats && (
-        <div className="grid grid-cols-2 gap-2 text-[10px]">
-          <FragmentPill
-            label="5′"
-            length={fragmentStats.five.length}
-            gc={fragmentStats.five.gc}
-            aavTotal={fragmentStats.five.aavTotal}
-          />
-          <FragmentPill
-            label="3′"
-            length={fragmentStats.three.length}
-            gc={fragmentStats.three.gc}
-            aavTotal={fragmentStats.three.aavTotal}
-          />
-        </div>
-      )}
 
       {/* Frame-at-split readout */}
       <FrameAtSplit
@@ -544,42 +235,6 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
         stripRef={frameStripRef}
         wggwMotifs={wggwMotifs}
       />
-    </div>
-  )
-}
-
-function FragmentPill({
-  label,
-  length,
-  gc,
-  aavTotal,
-}: {
-  label: string
-  length: number
-  gc: number
-  aavTotal: number
-}) {
-  const fits = aavTotal <= AAV_PACKAGING_LIMIT
-  const tight = !fits && aavTotal <= AAV_PACKAGING_LIMIT + 300
-  const fitLabel = fits ? 'fits' : tight ? 'tight' : 'exceeds'
-  const fitColor = fits
-    ? 'text-emerald-600 dark:text-emerald-400'
-    : tight
-      ? 'text-amber-600 dark:text-amber-400'
-      : 'text-red-600 dark:text-red-400'
-  return (
-    <div
-      className="bg-muted/30 flex items-center justify-between gap-2 rounded-sm border px-2 py-1"
-      title={`${label} fragment: ${length.toLocaleString()} bp + ${AAV_OVERHEAD_BP.toLocaleString()} bp overhead = ${aavTotal.toLocaleString()} bp (AAV limit ${AAV_PACKAGING_LIMIT.toLocaleString()} bp)`}
-    >
-      <span className="text-muted-foreground font-medium">{label}</span>
-      <div className="flex items-center gap-2 font-mono tabular-nums">
-        <span className="text-foreground">{length.toLocaleString()} bp</span>
-        <span className="text-muted-foreground">{gc.toFixed(0)}% GC</span>
-        <span className={cn('font-medium', fitColor)} title="AAV packaging">
-          {fitLabel}
-        </span>
-      </div>
     </div>
   )
 }
