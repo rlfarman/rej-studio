@@ -14,12 +14,7 @@ interface Warning {
   message: string
 }
 
-function computeWarnings(
-  seq: string,
-  spliceJunctionPosition: number,
-  stim5: boolean,
-  stim3: boolean,
-): Warning[] {
+function computeWarnings(seq: string): Warning[] {
   const warnings: Warning[] = []
   if (!seq || seq.length < 3) return warnings
 
@@ -35,56 +30,12 @@ function computeWarnings(
     })
   }
 
-  // --- AAV packaging warnings ---
-  // Estimate overhead per AAV: ~290bp ITRs + ~800bp promoter/polyA + ~150bp stim intron
-  const overheadPerVector = 290 + 800 + (stim5 || stim3 ? 150 : 0)
-  const fivePrimeFragment = spliceJunctionPosition
-  const threePrimeFragment = len - spliceJunctionPosition
-  const fivePrimeTotal = fivePrimeFragment + overheadPerVector
-  const threePrimeTotal = threePrimeFragment + overheadPerVector
-
-  if (fivePrimeTotal > AAV_PRACTICAL_LIMIT_BP) {
-    warnings.push({
-      key: 'aav-5prime',
-      level: 'warn',
-      message: `5\u2032 fragment (~${fivePrimeTotal.toLocaleString()} bp with vector elements) exceeds typical AAV packaging capacity (~${AAV_PRACTICAL_LIMIT_BP.toLocaleString()} bp). Consider moving the splice junction downstream.`,
-    })
-  }
-
-  if (threePrimeTotal > AAV_PRACTICAL_LIMIT_BP) {
-    warnings.push({
-      key: 'aav-3prime',
-      level: 'warn',
-      message: `3\u2032 fragment (~${threePrimeTotal.toLocaleString()} bp with vector elements) exceeds typical AAV packaging capacity (~${AAV_PRACTICAL_LIMIT_BP.toLocaleString()} bp). Consider moving the splice junction upstream.`,
-    })
-  }
-
-  if (
-    fivePrimeTotal <= AAV_PRACTICAL_LIMIT_BP &&
-    threePrimeTotal <= AAV_PRACTICAL_LIMIT_BP &&
-    len > AAV_PRACTICAL_LIMIT_BP
-  ) {
+  // --- Dual-AAV capacity info (sequence-length only) ---
+  if (len > AAV_PRACTICAL_LIMIT_BP) {
     warnings.push({
       key: 'aav-total',
       level: 'info',
-      message: `Total CDS (${len.toLocaleString()} bp) exceeds single-AAV capacity but fits within dual-AAV REJ split.`,
-    })
-  }
-
-  // --- Splice junction proximity warning ---
-  const minMargin = 150
-  if (spliceJunctionPosition < minMargin && len > minMargin * 2) {
-    warnings.push({
-      key: 'splice-near-start',
-      level: 'warn',
-      message: `Splice junction is within ${minMargin} bp of the start codon. This leaves very little 5\u2032 fragment for stable expression.`,
-    })
-  }
-  if (len - spliceJunctionPosition < minMargin && len > minMargin * 2) {
-    warnings.push({
-      key: 'splice-near-end',
-      level: 'warn',
-      message: `Splice junction is within ${minMargin} bp of the stop codon. This leaves very little 3\u2032 fragment for stable expression.`,
+      message: `Total CDS (${len.toLocaleString()} bp) exceeds single-AAV capacity. Dual-AAV REJ split required.`,
     })
   }
 
@@ -103,14 +54,8 @@ function computeWarnings(
 export function SequenceWarnings() {
   const { watch } = useFormContext<FormValues>()
   const seq = watch('codingSequence') ?? ''
-  const spliceJunctionPosition = watch('spliceJunctionPosition') ?? 1
-  const stim5 = watch('5PrimeStimulatoryIntron') ?? false
-  const stim3 = watch('3PrimeStimulatoryIntron') ?? false
 
-  const warnings = useMemo(
-    () => computeWarnings(seq, spliceJunctionPosition, stim5, stim3),
-    [seq, spliceJunctionPosition, stim5, stim3],
-  )
+  const warnings = useMemo(() => computeWarnings(seq), [seq])
 
   if (warnings.length === 0) return null
 

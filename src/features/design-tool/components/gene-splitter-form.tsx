@@ -305,6 +305,7 @@ export function GeneSplitterForm({
             <ResultsPanel
               result={result}
               optionsUsed={formatOptionsForReport(methods.getValues())}
+              species={methods.getValues('species')}
             />
           </div>
         )}

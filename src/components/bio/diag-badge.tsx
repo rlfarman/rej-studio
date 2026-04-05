@@ -13,6 +13,7 @@ import {
   getStopCodonStatus,
   findInvalidChars,
 } from '@/lib/bio/sequence-utils'
+import { toCodons, translateCodon } from '@/lib/bio/genetic-code'
 
 // ── Types ──
 
@@ -134,6 +135,61 @@ export function invalidCharsCheck(seq: string): DiagCheck | null {
     status: 'error',
     label: `${chars.length} invalid char${chars.length > 1 ? 's' : ''}`,
     tooltip: `Found invalid characters: ${chars.join(', ')}`,
+  }
+}
+
+export function homopolymerCheck(seq: string): DiagCheck | null {
+  // Flag runs of ≥8 identical bases — synthesis vendors often reject these
+  // and they create ambiguous regions for repeat-based optimizers.
+  const match = seq.toUpperCase().match(/([ACGT])\1{7,}/)
+  if (!match) return null
+  const base = match[1]
+  const runLength = match[0].length
+  const position = (match.index ?? 0) + 1
+  return {
+    status: 'warn',
+    label: `${base}×${runLength} run at bp ${position}`,
+    tooltip: `Found a run of ${runLength} ${base}'s starting at bp ${position}. Homopolymer runs ≥8 bp are hard to synthesize and may be rejected by synthesis vendors.`,
+  }
+}
+
+export function tandemRepeatCheck(seq: string): DiagCheck | null {
+  // Flag direct tandem repeats ≥12 bp (a 6+ bp unit repeated 2+ times).
+  // Keeps the regex bounded to avoid O(n²) blowup on long sequences.
+  const upper = seq.toUpperCase()
+  const match = upper.match(/([ACGT]{6,12})\1/)
+  if (!match) return null
+  const unit = match[1]
+  const position = (match.index ?? 0) + 1
+  return {
+    status: 'warn',
+    label: `Tandem repeat at bp ${position}`,
+    tooltip: `Direct repeat of "${unit}" (${match[0].length} bp) starting at bp ${position}. Tandem repeats complicate synthesis and can trigger recombination.`,
+  }
+}
+
+export function prematureStopCheck(seq: string): DiagCheck | null {
+  // Only meaningful for in-frame sequences with at least 2 codons.
+  if (seq.length < 6 || seq.length % 3 !== 0) return null
+  const codons = toCodons(seq)
+  const positions: number[] = []
+  for (let i = 0; i < codons.length - 1; i++) {
+    if (translateCodon(codons[i]) === '*') {
+      positions.push(i * 3 + 1)
+    }
+  }
+  if (positions.length === 0) return null
+  const firstLabel = `bp ${positions[0]}`
+  return {
+    status: 'error',
+    label:
+      positions.length === 1
+        ? `Premature stop at ${firstLabel}`
+        : `${positions.length} premature stops`,
+    tooltip:
+      positions.length === 1
+        ? `In-frame stop codon at ${firstLabel} truncates the protein before the end of the sequence.`
+        : `In-frame stop codons at bp ${positions.slice(0, 3).join(', ')}${positions.length > 3 ? '…' : ''}. These truncate the protein before the end of the sequence.`,
   }
 }
 

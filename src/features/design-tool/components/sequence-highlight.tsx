@@ -18,7 +18,7 @@ const highlightStyles: Record<HighlightType, string> = {
   'stop-codon': 'bg-emerald-400/30 dark:bg-emerald-500/30',
   'missing-stop': 'bg-red-400/30 dark:bg-red-500/30',
   'invalid-char': 'bg-red-500/40 dark:bg-red-500/50',
-  'internal-stop': 'bg-amber-400/40 dark:bg-amber-500/40',
+  'internal-stop': 'bg-red-400/40 dark:bg-red-500/40',
   remainder: 'bg-yellow-300/30 dark:bg-yellow-500/30',
   normal: '',
 }

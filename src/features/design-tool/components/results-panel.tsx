@@ -34,14 +34,22 @@ import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
 import type { ProcessResult } from '@/features/design-tool/types/process-result'
 import { toast } from 'sonner'
 import { downloadResultsZip } from '@/features/design-tool/utils/build-zip'
+import { SequenceVisualizations } from './sequence-visualizations'
+import { CodonChanges } from './codon-changes'
+import { JunctionContext } from './junction-context'
+import { RestrictionSiteMap } from './restriction-site-map'
+import { CodonDeltaStrip } from './codon-delta-strip'
 import { AavResults } from './aav-size-estimator'
 import { ObjectivesSummary } from './objectives-output'
 import { formatFasta } from '@/lib/bio/fasta'
+import { isSpecies } from '@/lib/bio/species'
+import type { DesignToolSpecies } from '@/features/design-tool/types/species-options'
 import { computeGcPercent, countCpG } from '@/lib/bio/sequence-utils'
 
 interface ResultsPanelProps {
   result: ProcessResult
   optionsUsed: string
+  species: DesignToolSpecies
 }
 
 /** Parse the DNAChisel objectives text into a digestible summary. */
@@ -407,7 +415,7 @@ function aavSummary(seq5: number, seq3: number) {
   return `5' ${label(seq5 + AAV_OVERHEAD_BP)} · 3' ${label(seq3 + AAV_OVERHEAD_BP)}`
 }
 
-function ResultsPanelImpl({ result, optionsUsed }: ResultsPanelProps) {
+function ResultsPanelImpl({ result, optionsUsed, species }: ResultsPanelProps) {
   const handleDownloadZip = () => {
     try {
       downloadResultsZip(result, optionsUsed)
@@ -477,6 +485,42 @@ function ResultsPanelImpl({ result, optionsUsed }: ResultsPanelProps) {
                 summary={`${wggwCount} site${wggwCount === 1 ? '' : 's'}`}
               >
                 <WggwTable wggwInfo={result.wggw_info} />
+              </ExpandableRow>
+            )}
+            <ExpandableRow title="Sequence visualizations">
+              <SequenceVisualizations
+                original={result.original_sequence}
+                optimized={result.optimized_sequence}
+                splitPoint={result.split_point}
+              />
+            </ExpandableRow>
+            <ExpandableRow title="Codon changes">
+              <CodonChanges
+                original={result.original_sequence}
+                optimized={result.optimized_sequence}
+                splitPoint={result.split_point}
+              />
+            </ExpandableRow>
+            <ExpandableRow title="Junction context">
+              <JunctionContext
+                sequence={result.optimized_sequence}
+                splitPoint={result.split_point}
+                wggwMotif={result.wggw_info?.main?.motif}
+              />
+            </ExpandableRow>
+            <ExpandableRow title="Restriction site map">
+              <RestrictionSiteMap
+                original={result.original_sequence}
+                optimized={result.optimized_sequence}
+              />
+            </ExpandableRow>
+            {isSpecies(species) && (
+              <ExpandableRow title="Codon usage delta">
+                <CodonDeltaStrip
+                  original={result.original_sequence}
+                  optimized={result.optimized_sequence}
+                  species={species}
+                />
               </ExpandableRow>
             )}
             <ExpandableRow title="Objectives report">
