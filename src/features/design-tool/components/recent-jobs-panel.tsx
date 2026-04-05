@@ -5,6 +5,7 @@ import {
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarMenu,
+  SidebarMenuAction,
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar'
@@ -14,7 +15,7 @@ import {
 } from '@/features/design-tool/hooks/use-job-history'
 import { Button } from '@/components/ui/button'
 import { TruncatedText } from '@/components/truncated-text'
-import { Loader2, CircleAlert } from 'lucide-react'
+import { Loader2, CircleAlert, X } from 'lucide-react'
 
 const COLLAPSED_COUNT = 5
 const EXPANDED_MAX = 15
@@ -37,7 +38,7 @@ interface RecentJobsProps {
 }
 
 export function RecentJobs({ onSelectJob }: RecentJobsProps) {
-  const { entries, clearHistory } = useJobHistory()
+  const { entries, clearHistory, removeEntry } = useJobHistory()
   const [expanded, setExpanded] = useState(false)
 
   const hiddenCount = entries.length - COLLAPSED_COUNT
@@ -85,12 +86,22 @@ export function RecentJobs({ onSelectJob }: RecentJobsProps) {
                     >
                       {entry.name}
                     </TruncatedText>
-                    <span className="text-muted-foreground ml-auto flex-shrink-0 text-[10px]">
+                    {/* Fade timestamp on hover so the X button can take its
+                        place without overlapping. */}
+                    <span className="text-muted-foreground ml-auto flex-shrink-0 text-[10px] transition-opacity group-focus-within/menu-item:opacity-0 group-hover/menu-item:opacity-0">
                       {entry.status === 'running'
                         ? 'running'
                         : formatTimeAgo(entry.createdAt)}
                     </span>
                   </SidebarMenuButton>
+                  <SidebarMenuAction
+                    showOnHover
+                    onClick={() => removeEntry(entry.id)}
+                    aria-label={`Remove ${entry.name} from recent jobs`}
+                    className="bg-sidebar hover:bg-sidebar-accent"
+                  >
+                    <X />
+                  </SidebarMenuAction>
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>

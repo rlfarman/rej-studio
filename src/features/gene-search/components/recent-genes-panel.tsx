@@ -5,6 +5,7 @@ import {
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarMenu,
+  SidebarMenuAction,
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar'
@@ -14,12 +15,13 @@ import { geneHref } from '@/lib/bio/species'
 import { Button } from '@/components/ui/button'
 import { TruncatedText } from '@/components/truncated-text'
 import { SpeciesIcon } from '@/components/bio/species-icon'
+import { X } from 'lucide-react'
 
 const COLLAPSED_COUNT = 5
 const EXPANDED_MAX = 15
 
 export function RecentGenes() {
-  const { recentGenes, clearRecentGenes } = useRecentGenes()
+  const { recentGenes, clearRecentGenes, removeRecentGene } = useRecentGenes()
   const [expanded, setExpanded] = useState(false)
 
   const hiddenCount = recentGenes.length - COLLAPSED_COUNT
@@ -66,12 +68,20 @@ export function RecentGenes() {
                       </span>
                       <TruncatedText
                         tooltip={gene.name}
-                        className="text-muted-foreground truncate text-xs"
+                        className="text-muted-foreground truncate pr-5 text-xs"
                       >
                         {gene.name}
                       </TruncatedText>
                     </Link>
                   </SidebarMenuButton>
+                  <SidebarMenuAction
+                    showOnHover
+                    onClick={() => removeRecentGene(gene.id)}
+                    aria-label={`Remove ${gene.symbol} from recent searches`}
+                    className="bg-sidebar hover:bg-sidebar-accent"
+                  >
+                    <X />
+                  </SidebarMenuAction>
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>

@@ -9,6 +9,7 @@ const MAX_RECENT = 10
 interface RecentGenesState {
   recentGenes: SavedGene[]
   addRecentGene: (gene: SavedGene) => void
+  removeRecentGene: (id: string) => void
   clearRecentGenes: () => void
 }
 
@@ -22,6 +23,10 @@ export const useRecentGenes = create<RecentGenesState>()(
             gene,
             ...state.recentGenes.filter((r) => r.id !== gene.id),
           ].slice(0, MAX_RECENT),
+        })),
+      removeRecentGene: (id) =>
+        set((state) => ({
+          recentGenes: state.recentGenes.filter((r) => r.id !== id),
         })),
       clearRecentGenes: () => set({ recentGenes: [] }),
     }),

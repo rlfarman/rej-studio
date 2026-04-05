@@ -41,6 +41,7 @@ import { ResultsPanel } from './results-panel'
 import { SequenceDiagnostics } from './sequence-diagnostics'
 import { StrategyPresets } from './strategy-presets'
 import { toast } from 'sonner'
+import { CircleAlert } from 'lucide-react'
 
 interface GeneSplitterFormProperties {
   defaultCodingSequence?: string
@@ -63,6 +64,9 @@ export function GeneSplitterForm({
   // resumed URL job, or eagerly on submit so the new job's own persisted
   // formValues don't ricochet back and overwrite the live form.
   const didResetRef = useRef(false)
+  // Dedup error toasts: only toast a given jobId once per mount, so
+  // navigating back to a previously-failed job doesn't spam.
+  const toastedJobsRef = useRef<Set<string>>(new Set())
   const job = useJob({ initialJobId: defaultJobId ?? null })
 
   const methods = useForm<FormValues>({
@@ -111,10 +115,13 @@ export function GeneSplitterForm({
           block: 'start',
         })
       }, 100)
-    } else if (job.status === 'failed' && job.error) {
-      toast.error(job.error)
+    } else if (job.status === 'failed' && job.error && job.jobId) {
+      if (!toastedJobsRef.current.has(job.jobId)) {
+        toastedJobsRef.current.add(job.jobId)
+        toast.error(job.error)
+      }
     }
-  }, [job.status, job.result, job.error])
+  }, [job.status, job.result, job.error, job.jobId])
 
   const onSubmit = async (values: FormValues) => {
     setResult(null)
@@ -233,6 +240,18 @@ export function GeneSplitterForm({
             </div>
           </CardContent>
         </Card>
+
+        {job.status === 'failed' && job.error && (
+          <Card className="border-destructive/50">
+            <CardContent className="flex items-start gap-3 pt-6">
+              <CircleAlert className="text-destructive mt-0.5 size-5 flex-shrink-0" />
+              <div className="space-y-1">
+                <p className="text-sm font-medium">Job failed</p>
+                <p className="text-muted-foreground text-sm">{job.error}</p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {result && (
           <div ref={resultsRef}>

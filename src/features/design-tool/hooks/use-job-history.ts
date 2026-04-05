@@ -1,7 +1,7 @@
 'use client'
 
-import { useCallback, useEffect } from 'react'
-import { useLocalStorage } from '@/hooks/use-local-storage'
+import { create } from 'zustand'
+import { persist, createJSONStorage } from 'zustand/middleware'
 import type { ProcessResult } from '@/features/design-tool/types/process-result'
 import type { FormValues } from '@/features/design-tool/types/form-schema'
 
@@ -27,8 +27,6 @@ export interface JobHistoryEntry {
   formValues?: FormValues
 }
 
-const EMPTY: JobHistoryEntry[] = []
-
 // Partial input for upserting an entry — status is required, everything else
 // is optional (and either derived from `result`/`formValues` or preserved
 // from an existing entry with the same id).
@@ -40,76 +38,84 @@ interface UpsertInput {
   formValues?: FormValues
 }
 
-export function useJobHistory() {
-  const [entries, setEntries] = useLocalStorage<JobHistoryEntry[]>(
-    STORAGE_KEY,
-    EMPTY,
-  )
-
-  // Sweep stale running entries on mount. Orphans come from tabs closed
-  // mid-poll; after the TTL we assume they'll never resolve.
-  useEffect(() => {
-    const cutoff = Date.now() - STALE_RUNNING_TTL_MS
-    setEntries((prev) => {
-      const fresh = prev.filter((e) => {
-        if (e.status !== 'running') return true
-        return new Date(e.createdAt).getTime() >= cutoff
-      })
-      return fresh.length === prev.length ? prev : fresh
-    })
-  }, [setEntries])
-
-  // Upsert: if an entry with this id already exists, preserve its createdAt
-  // (so a running entry doesn't jump in the list when it completes) and
-  // overlay any fields we've learned. Otherwise insert at the top.
-  const upsertEntry = useCallback(
-    ({ id, status, result, error, formValues }: UpsertInput) => {
-      setEntries((prev) => {
-        const existing = prev.find((e) => e.id === id)
-        const nextResult = result ?? existing?.result ?? null
-        const nextFormValues = formValues ?? existing?.formValues
-        const name =
-          nextResult?.name ??
-          nextFormValues?.name ??
-          existing?.name ??
-          'Untitled'
-        const sequenceLength =
-          nextResult?.original_sequence.length ??
-          nextFormValues?.codingSequence.length ??
-          existing?.sequenceLength ??
-          0
-        const entry: JobHistoryEntry = {
-          id,
-          name,
-          sequenceLength,
-          createdAt: existing?.createdAt ?? new Date().toISOString(),
-          status,
-          result: nextResult,
-          error: error ?? existing?.error ?? null,
-          formValues: nextFormValues,
-        }
-        return [entry, ...prev.filter((e) => e.id !== id)].slice(0, MAX_ENTRIES)
-      })
-      return id
-    },
-    [setEntries],
-  )
-
-  const removeEntry = useCallback(
-    (id: string) => {
-      setEntries((prev) => prev.filter((e) => e.id !== id))
-    },
-    [setEntries],
-  )
-
-  const clearHistory = useCallback(() => {
-    setEntries(EMPTY)
-  }, [setEntries])
-
-  const getEntry = useCallback(
-    (id: string) => entries.find((e) => e.id === id) ?? null,
-    [entries],
-  )
-
-  return { entries, upsertEntry, removeEntry, clearHistory, getEntry }
+interface JobHistoryState {
+  entries: JobHistoryEntry[]
+  upsertEntry: (input: UpsertInput) => string
+  removeEntry: (id: string) => void
+  clearHistory: () => void
+  getEntry: (id: string) => JobHistoryEntry | null
 }
+
+export const useJobHistory = create<JobHistoryState>()(
+  persist(
+    (set, get) => ({
+      entries: [],
+
+      // Upsert: if an entry with this id already exists, preserve its
+      // createdAt (so a running entry doesn't jump in the list when it
+      // completes) and overlay any fields we've learned. Otherwise insert
+      // at the top.
+      upsertEntry: ({ id, status, result, error, formValues }) => {
+        set((state) => {
+          const existing = state.entries.find((e) => e.id === id)
+          const nextResult = result ?? existing?.result ?? null
+          const nextFormValues = formValues ?? existing?.formValues
+          const name =
+            nextResult?.name ??
+            nextFormValues?.name ??
+            existing?.name ??
+            'Untitled'
+          const sequenceLength =
+            nextResult?.original_sequence.length ??
+            nextFormValues?.codingSequence.length ??
+            existing?.sequenceLength ??
+            0
+          const entry: JobHistoryEntry = {
+            id,
+            name,
+            sequenceLength,
+            createdAt: existing?.createdAt ?? new Date().toISOString(),
+            status,
+            result: nextResult,
+            error: error ?? existing?.error ?? null,
+            formValues: nextFormValues,
+          }
+          return {
+            entries: [entry, ...state.entries.filter((e) => e.id !== id)].slice(
+              0,
+              MAX_ENTRIES,
+            ),
+          }
+        })
+        return id
+      },
+
+      removeEntry: (id) =>
+        set((state) => ({
+          entries: state.entries.filter((e) => e.id !== id),
+        })),
+
+      clearHistory: () => set({ entries: [] }),
+
+      getEntry: (id) => get().entries.find((e) => e.id === id) ?? null,
+    }),
+    {
+      name: STORAGE_KEY,
+      storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({ entries: state.entries }),
+      // Sweep stale running entries on rehydrate. Orphans come from tabs
+      // closed mid-poll; after the TTL we assume they'll never resolve.
+      onRehydrateStorage: () => (state) => {
+        if (!state) return
+        const cutoff = Date.now() - STALE_RUNNING_TTL_MS
+        const fresh = state.entries.filter((e) => {
+          if (e.status !== 'running') return true
+          return new Date(e.createdAt).getTime() >= cutoff
+        })
+        if (fresh.length !== state.entries.length) {
+          state.entries = fresh
+        }
+      },
+    },
+  ),
+)

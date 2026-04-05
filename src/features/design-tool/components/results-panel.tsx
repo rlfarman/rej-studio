@@ -1,5 +1,6 @@
 'use client'
 
+import { memo } from 'react'
 import { m } from 'motion/react'
 import { Download, Copy, Check, Clock, Scissors, Info } from 'lucide-react'
 import {
@@ -327,7 +328,7 @@ function WggwDetails({
   )
 }
 
-export function ResultsPanel({ result, optionsUsed }: ResultsPanelProps) {
+function ResultsPanelImpl({ result, optionsUsed }: ResultsPanelProps) {
   const handleDownloadZip = () => {
     try {
       downloadResultsZip(result, optionsUsed)
@@ -430,3 +431,8 @@ export function ResultsPanel({ result, optionsUsed }: ResultsPanelProps) {
     </m.div>
   )
 }
+
+// Memoized: the parent form re-renders on every keystroke, but the result
+// object only changes when a new job completes. optionsUsed is a string
+// snapshot, so default referential equality is sufficient.
+export const ResultsPanel = memo(ResultsPanelImpl)
