@@ -301,6 +301,7 @@ function IsoformRow({
 
   useEffect(() => {
     if (!isHighlighted) return
+    setRingVisible(true)
     document
       .getElementById(`isoform-row-${isoform.id}`)
       ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
