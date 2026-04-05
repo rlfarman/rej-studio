@@ -145,6 +145,18 @@ export default function IsoformTable({
     })
   }, [])
 
+  const toggleExpandAll = useCallback(() => {
+    setExpandedIds((prev) => {
+      const allIds = filteredIsoforms.map((i) => i.id)
+      const allExpanded = allIds.every((id) => prev.has(id))
+      return allExpanded ? new Set() : new Set(allIds)
+    })
+  }, [filteredIsoforms])
+
+  const allExpanded =
+    filteredIsoforms.length > 0 &&
+    filteredIsoforms.every((i) => expandedIds.has(i.id))
+
   const toggleSelected = useCallback((id: string) => {
     setSelectedIds((prev) => {
       const next = new Set(prev)
@@ -179,8 +191,30 @@ export default function IsoformTable({
             <TableHead className="w-10">
               <span className="sr-only">Select</span>
             </TableHead>
-            <TableHead className="w-8">
-              <span className="sr-only">Expand</span>
+            <TableHead className="w-8 p-0">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    onClick={toggleExpandAll}
+                    className="hover:text-foreground text-muted-foreground flex h-full w-full items-center justify-center transition-colors"
+                    aria-label={
+                      allExpanded
+                        ? 'Collapse all isoforms'
+                        : 'Expand all isoforms'
+                    }
+                  >
+                    {allExpanded ? (
+                      <ChevronDown className="size-4" />
+                    ) : (
+                      <ChevronRight className="size-4" />
+                    )}
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {allExpanded ? 'Collapse all' : 'Expand all'}
+                </TooltipContent>
+              </Tooltip>
             </TableHead>
             <SortableHead
               label="CDS"
