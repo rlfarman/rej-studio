@@ -55,7 +55,6 @@ A web application for RNA End-Joining sequence design and optimization. Scientis
    | Variable                | Description                          |
    | ----------------------- | ------------------------------------ |
    | `DATABASE_URL`          | Postgres connection string (Neon)    |
-   | `SESSION_SECRET`        | Random hex string for JWT signing    |
    | `BASIC_AUTH_USER`       | Basic auth username for landing page |
    | `BASIC_AUTH_PASSWORD`   | Basic auth password                  |
    | `BLOB_READ_WRITE_TOKEN` | Vercel Blob token (optional)         |
