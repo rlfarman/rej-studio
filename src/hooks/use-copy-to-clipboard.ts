@@ -25,17 +25,52 @@ export function useCopyToClipboard({
 
   const copy = useCallback(
     async (text: string, id = 'default', options?: CopyOptions) => {
-      try {
-        await navigator.clipboard.writeText(text)
+      const succeed = () => {
         if (timeoutRef.current) clearTimeout(timeoutRef.current)
         setCopiedId(id)
         if (showToast) {
           toast.success(options?.successMessage ?? 'Copied to clipboard!')
         }
         timeoutRef.current = setTimeout(() => setCopiedId(null), resetDelay)
-      } catch {
-        toast.error(options?.errorMessage ?? 'Failed to copy to clipboard.')
       }
+
+      // Prefer the async clipboard API, fall back to a hidden textarea +
+      // execCommand. The fallback handles browsers without clipboard
+      // permission (e.g. the document isn't focused, the page isn't in a
+      // secure context, or the user is on an older browser).
+      try {
+        await navigator.clipboard.writeText(text)
+        succeed()
+        return
+      } catch {
+        // fall through to the legacy path
+      }
+      try {
+        const ta = document.createElement('textarea')
+        ta.value = text
+        ta.setAttribute('readonly', '')
+        ta.style.position = 'fixed'
+        ta.style.top = '0'
+        ta.style.left = '-9999px'
+        document.body.appendChild(ta)
+        const selection = document.getSelection()
+        const savedRange =
+          selection && selection.rangeCount > 0 ? selection.getRangeAt(0) : null
+        ta.select()
+        const ok = document.execCommand('copy')
+        document.body.removeChild(ta)
+        if (savedRange && selection) {
+          selection.removeAllRanges()
+          selection.addRange(savedRange)
+        }
+        if (ok) {
+          succeed()
+          return
+        }
+      } catch {
+        // fall through to error toast
+      }
+      toast.error(options?.errorMessage ?? 'Failed to copy to clipboard.')
     },
     [resetDelay, showToast],
   )
