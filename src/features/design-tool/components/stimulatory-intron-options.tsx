@@ -1,68 +1,52 @@
 'use client'
-import { useFormContext, Controller } from 'react-hook-form'
-import {
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormDescription,
-} from '@/components/ui/form'
-import { Checkbox } from '@/components/ui/checkbox'
-import { FormValues } from '../types/form-schema'
+import { ToggleCard } from './toggle-card'
 
-export function FiveFragmentOptions() {
-  const { control } = useFormContext<FormValues>()
+export function StimulatoryIntronOptions() {
   return (
-    <Controller
-      name="5PrimeStimulatoryIntron"
-      control={control}
-      render={({ field }) => (
-        <FormItem className="flex flex-row items-start space-y-0 space-x-3">
-          <FormControl>
-            <Checkbox
-              id="5PrimeStimulatoryIntron"
-              checked={field.value}
-              onCheckedChange={field.onChange}
-            />
-          </FormControl>
-          <div>
-            <FormLabel>5' Stimulatory Intron</FormLabel>
-            <FormDescription>
-              Inserts a stimulatory intron upstream of the main split point to
-              boost expression of the 5&apos; fragment. Placed ~150 bp before
-              the junction at the nearest compatible splice site.
-            </FormDescription>
-          </div>
-        </FormItem>
-      )}
-    />
+    <div className="space-y-3">
+      <SpliceJunctionDiagram />
+      <div className="grid gap-2 sm:grid-cols-2">
+        <ToggleCard
+          name="5PrimeStimulatoryIntron"
+          label="5′ stimulatory intron"
+          description="Inserted ~150 bp upstream of the junction, at the nearest compatible splice site, to boost 5′ fragment expression."
+        />
+        <ToggleCard
+          name="3PrimeStimulatoryIntron"
+          label="3′ stimulatory intron"
+          description="Inserted ~150 bp downstream of the junction, at the nearest compatible splice site, to boost 3′ fragment expression."
+        />
+      </div>
+    </div>
   )
 }
 
-export function ThreeFragmentOptions() {
-  const { control } = useFormContext<FormValues>()
+function SpliceJunctionDiagram() {
   return (
-    <Controller
-      name="3PrimeStimulatoryIntron"
-      control={control}
-      render={({ field }) => (
-        <FormItem className="flex flex-row items-start space-y-0 space-x-3">
-          <FormControl>
-            <Checkbox
-              id="3PrimeStimulatoryIntron"
-              checked={field.value}
-              onCheckedChange={field.onChange}
-            />
-          </FormControl>
-          <div>
-            <FormLabel>3' Stimulatory Intron</FormLabel>
-            <FormDescription>
-              Inserts a stimulatory intron downstream of the main split point to
-              boost expression of the 3&apos; fragment. Placed ~150 bp after the
-              junction at the nearest compatible splice site.
-            </FormDescription>
-          </div>
-        </FormItem>
-      )}
-    />
+    <div
+      className="bg-muted/40 text-muted-foreground rounded-md border px-3 py-2.5 text-[11px]"
+      aria-hidden="true"
+    >
+      <div className="flex items-center gap-2">
+        <span className="font-mono text-[10px] tracking-wider uppercase">
+          5′
+        </span>
+        <div className="bg-primary/15 border-primary/30 flex h-6 flex-1 items-center justify-center rounded-l-sm border-y border-l text-[10px]">
+          fragment
+        </div>
+        <div className="bg-primary/40 h-6 w-px" />
+        <div className="bg-primary/15 border-primary/30 flex h-6 flex-1 items-center justify-center rounded-r-sm border-y border-r text-[10px]">
+          fragment
+        </div>
+        <span className="font-mono text-[10px] tracking-wider uppercase">
+          3′
+        </span>
+      </div>
+      <div className="mt-1 flex items-center justify-center gap-1.5 text-center">
+        <span className="text-muted-foreground/80 text-[10px]">
+          splice junction
+        </span>
+      </div>
+    </div>
   )
 }
