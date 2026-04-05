@@ -79,11 +79,11 @@
     "ts-node": "^10.9.2"
   },
   "lint-staged": {
-    "*.{js,jsx,ts,tsx,mjs,cjs}": [
+    "!(.claude)/**/*.{js,jsx,ts,tsx,mjs,cjs}": [
       "eslint --fix",
       "prettier --write"
     ],
-    "*.{json,md,css,yml,yaml}": [
+    "!(.claude)/**/*.{json,md,css,yml,yaml}": [
       "prettier --write"
     ]
   },
