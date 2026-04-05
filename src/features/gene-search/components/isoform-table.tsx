@@ -82,16 +82,6 @@ export default function IsoformTable({
   const { species } = useSpeciesContext()
   const { copy, isCopied } = useCopyToClipboard({ showToast: false })
 
-  useEffect(() => {
-    if (!highlightedIsoformId) return
-    const timer = setTimeout(() => {
-      const url = new URL(window.location.href)
-      url.searchParams.delete('isoform')
-      window.history.replaceState(null, '', url.toString())
-    }, 200)
-    return () => clearTimeout(timer)
-  }, [highlightedIsoformId])
-
   const [sortKey, setSortKey] = useState<SortKey>('cdsLength')
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
   const [expandedIds, setExpandedIds] = useState<Set<string>>(() =>
