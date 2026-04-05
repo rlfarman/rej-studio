@@ -49,7 +49,8 @@ notes.md
 /tmp
 
 # claude
-.claude/
+.claude/worktrees/
+.claude/settings.local.json
 
 src/drizzle/transcript_metadata.csv
 
