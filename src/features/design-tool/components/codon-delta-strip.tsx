@@ -1,10 +1,9 @@
 'use client'
 
 import { useMemo } from 'react'
-import { TrendingUp } from 'lucide-react'
 import { toCodons } from '@/lib/bio/genetic-code'
 import { getRelativePreference } from '@/lib/bio/codon-usage'
-import { SPECIES_DISPLAY_NAME, type Species } from '@/lib/bio/species'
+import { type Species } from '@/lib/bio/species'
 
 interface Props {
   original: string
@@ -72,11 +71,7 @@ export function CodonDeltaStrip({ original, optimized, species }: Props) {
 
   return (
     <div className="space-y-1.5">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1.5 text-[11px] font-medium">
-          <TrendingUp className="text-muted-foreground size-3" />
-          Codon preference delta · {SPECIES_DISPLAY_NAME[species]}
-        </div>
+      <div className="flex items-center justify-end">
         <span className="text-muted-foreground text-[10px] tabular-nums">
           mean {(meanBefore * 100).toFixed(0)}% → {(meanAfter * 100).toFixed(0)}
           %

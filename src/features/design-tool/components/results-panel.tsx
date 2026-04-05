@@ -10,6 +10,13 @@ import {
   Scissors,
   ArrowRight,
   ChevronRight,
+  Package,
+  Link2,
+  Activity,
+  Shield,
+  FlaskConical,
+  TrendingUp,
+  ClipboardCheck,
 } from 'lucide-react'
 import {
   Card,
@@ -46,6 +53,8 @@ import { isSpecies } from '@/lib/bio/species'
 import type { DesignToolSpecies } from '@/features/design-tool/types/species-options'
 import { computeGcPercent, countCpG } from '@/lib/bio/sequence-utils'
 import { deriveKeyMetrics } from '@/features/design-tool/utils/objective-metrics'
+import { SPECIES_DISPLAY_NAME } from '@/lib/bio/species'
+import { toCodons } from '@/lib/bio/genetic-code'
 
 interface ResultsPanelProps {
   result: ProcessResult
@@ -369,11 +378,13 @@ function SequenceViewer({ result }: { result: ProcessResult }) {
 function ExpandableRow({
   title,
   summary,
+  icon: Icon,
   children,
   defaultOpen = false,
 }: {
   title: string
   summary?: string
+  icon: React.ComponentType<{ className?: string }>
   children: React.ReactNode
   defaultOpen?: boolean
 }) {
@@ -384,6 +395,7 @@ function ExpandableRow({
     >
       <summary className="flex cursor-pointer list-none items-center gap-2 py-1 text-sm select-none [&::-webkit-details-marker]:hidden">
         <ChevronRight className="text-muted-foreground size-4 shrink-0 transition-transform group-open:rotate-90" />
+        <Icon className="text-muted-foreground size-4 shrink-0" />
         <span className="font-medium">{title}</span>
         {summary && (
           <span className="text-muted-foreground text-xs">— {summary}</span>
@@ -470,6 +482,30 @@ function ResultsPanelImpl({ result, optionsUsed, species }: ResultsPanelProps) {
   const seq3Clean = result.seq3.replace(/\[REJ3\]/g, '')
   const wggwCount = result.wggw_info ? Object.keys(result.wggw_info).length : 0
 
+  const codonChangesSummary = useMemo(() => {
+    const orig = toCodons(result.original_sequence)
+    const opt = toCodons(result.optimized_sequence)
+    const total = Math.min(orig.length, opt.length)
+    let changed = 0
+    for (let i = 0; i < total; i++) {
+      if (
+        orig[i].toUpperCase().replace(/U/g, 'T') !==
+        opt[i].toUpperCase().replace(/U/g, 'T')
+      )
+        changed++
+    }
+    return `${changed.toLocaleString()} of ${total.toLocaleString()} codons changed`
+  }, [result.original_sequence, result.optimized_sequence])
+
+  const objectivesSummary = useMemo(() => {
+    const after = parseObjectives(result.objectives_after)
+    const total = after.passedCount + after.failedCount
+    if (total === 0) return undefined
+    return `${after.passedCount} of ${total} passed`
+  }, [result.objectives_after])
+
+  const junctionSummary = `±18 bp at ${result.split_point.toLocaleString()}`
+
   return (
     <m.div variants={fadeUp} initial="hidden" animate="visible">
       <Card>
@@ -513,6 +549,7 @@ function ResultsPanelImpl({ result, optionsUsed, species }: ResultsPanelProps) {
           <div className="-mx-1">
             <ExpandableRow
               title="AAV packaging"
+              icon={Package}
               summary={aavSummary(seq5Clean.length, seq3Clean.length)}
             >
               <AavResults
@@ -523,40 +560,53 @@ function ResultsPanelImpl({ result, optionsUsed, species }: ResultsPanelProps) {
             {wggwCount > 0 && result.wggw_info && (
               <ExpandableRow
                 title="WGGW motif details"
+                icon={Link2}
                 summary={`${wggwCount} site${wggwCount === 1 ? '' : 's'}`}
               >
                 <WggwTable wggwInfo={result.wggw_info} />
               </ExpandableRow>
             )}
-            <ExpandableRow title="Sequence visualizations">
+            <ExpandableRow title="Sequence visualizations" icon={Activity}>
               <SequenceVisualizations
                 original={result.original_sequence}
                 optimized={result.optimized_sequence}
                 splitPoint={result.split_point}
               />
             </ExpandableRow>
-            <ExpandableRow title="Codon changes">
+            <ExpandableRow
+              title="Codon changes"
+              icon={Shield}
+              summary={codonChangesSummary}
+            >
               <CodonChanges
                 original={result.original_sequence}
                 optimized={result.optimized_sequence}
                 splitPoint={result.split_point}
               />
             </ExpandableRow>
-            <ExpandableRow title="Junction context">
+            <ExpandableRow
+              title="Junction context"
+              icon={Scissors}
+              summary={junctionSummary}
+            >
               <JunctionContext
                 sequence={result.optimized_sequence}
                 splitPoint={result.split_point}
                 wggwMotif={result.wggw_info?.main?.motif}
               />
             </ExpandableRow>
-            <ExpandableRow title="Restriction site map">
+            <ExpandableRow title="Restriction site map" icon={FlaskConical}>
               <RestrictionSiteMap
                 original={result.original_sequence}
                 optimized={result.optimized_sequence}
               />
             </ExpandableRow>
             {isSpecies(species) && (
-              <ExpandableRow title="Codon usage delta">
+              <ExpandableRow
+                title="Codon usage delta"
+                icon={TrendingUp}
+                summary={SPECIES_DISPLAY_NAME[species]}
+              >
                 <CodonDeltaStrip
                   original={result.original_sequence}
                   optimized={result.optimized_sequence}
@@ -564,7 +614,11 @@ function ResultsPanelImpl({ result, optionsUsed, species }: ResultsPanelProps) {
                 />
               </ExpandableRow>
             )}
-            <ExpandableRow title="Objectives report">
+            <ExpandableRow
+              title="Objectives report"
+              icon={ClipboardCheck}
+              summary={objectivesSummary}
+            >
               <ObjectivesSummary
                 reportBefore={result.objectives_report_before}
                 reportAfter={result.objectives_report_after}
