@@ -8,6 +8,7 @@ import {
   FormMessage,
   FormDescription,
 } from '@/components/ui/form'
+import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 import { FormValues } from '../types/form-schema'
 
@@ -74,46 +75,62 @@ function WeightField({
               {!disabled && (
                 <span
                   className={cn(
-                    'text-xs tabular-nums',
+                    'text-xs',
                     isCustom ? 'text-muted-foreground' : 'text-primary',
                   )}
                 >
                   {isCustom
-                    ? `${TIERS[activeIndex].label} · ${numericValue}`
+                    ? `~ ${TIERS[activeIndex].label}`
                     : TIERS[activeIndex].label}
                 </span>
               )}
             </div>
             <FormControl>
-              <div
-                role="radiogroup"
-                aria-label={label}
-                className={cn(
-                  'bg-muted/40 grid grid-cols-4 gap-1 rounded-md p-1',
-                  disabled && 'pointer-events-none opacity-50',
-                )}
-              >
-                {TIERS.map((tier, index) => {
-                  const isActive = !disabled && index === activeIndex
-                  return (
-                    <button
-                      key={tier.label}
-                      type="button"
-                      role="radio"
-                      aria-checked={isActive}
-                      disabled={disabled}
-                      onClick={() => field.onChange(tier.value)}
-                      className={cn(
-                        'focus-visible:ring-ring rounded px-2 py-1.5 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:outline-hidden',
-                        isActive
-                          ? 'bg-background text-foreground shadow-sm'
-                          : 'text-muted-foreground hover:text-foreground',
-                      )}
-                    >
-                      {tier.label}
-                    </button>
-                  )
-                })}
+              <div className="flex items-stretch gap-2">
+                <div
+                  role="radiogroup"
+                  aria-label={`${label} tier`}
+                  className={cn(
+                    'bg-muted/40 grid flex-1 grid-cols-4 gap-1 rounded-md p-1',
+                    disabled && 'pointer-events-none opacity-50',
+                  )}
+                >
+                  {TIERS.map((tier, index) => {
+                    const isActive = !disabled && index === activeIndex
+                    return (
+                      <button
+                        key={tier.label}
+                        type="button"
+                        role="radio"
+                        aria-checked={isActive}
+                        disabled={disabled}
+                        onClick={() => field.onChange(tier.value)}
+                        className={cn(
+                          'focus-visible:ring-ring rounded px-2 py-1.5 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:outline-hidden',
+                          isActive
+                            ? 'bg-background text-foreground shadow-sm'
+                            : 'text-muted-foreground hover:text-foreground',
+                        )}
+                      >
+                        {tier.label}
+                      </button>
+                    )
+                  })}
+                </div>
+                <Input
+                  type="number"
+                  aria-label={`${label} exact weight`}
+                  value={numericValue}
+                  onChange={(e) => {
+                    const next = e.target.value
+                    field.onChange(next === '' ? 0 : Number(next))
+                  }}
+                  min={0}
+                  max={100}
+                  step={0.1}
+                  disabled={disabled}
+                  className="h-auto w-20 text-center tabular-nums"
+                />
               </div>
             </FormControl>
             <FormDescription>
