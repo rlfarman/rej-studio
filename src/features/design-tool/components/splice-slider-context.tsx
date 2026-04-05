@@ -256,18 +256,23 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
                     e.stopPropagation()
                     onSnap(mid)
                   }}
+                  onPointerDown={(e) => e.stopPropagation()}
                   title={`WGGW ${m.motif} at bp ${m.position}–${m.position + 3} · snap`}
-                  className={cn(
-                    'absolute top-0 h-full -translate-x-1/2 cursor-pointer rounded-sm transition-all',
-                    'hover:h-[140%] hover:bg-emerald-400',
-                    isCandidate
-                      ? 'w-[2px] bg-amber-500'
-                      : isNearest
-                        ? 'w-[2px] bg-emerald-500'
-                        : 'w-[1px] bg-emerald-500/60',
-                  )}
+                  className="group absolute top-0 flex h-full w-3 -translate-x-1/2 cursor-pointer items-stretch justify-center"
                   style={{ left: `${x}%` }}
-                />
+                >
+                  <span
+                    className={cn(
+                      'rounded-sm transition-all',
+                      'group-hover:w-[3px] group-hover:bg-emerald-400',
+                      isCandidate
+                        ? 'w-[2px] bg-amber-500'
+                        : isNearest
+                          ? 'w-[2px] bg-emerald-500'
+                          : 'w-[1px] bg-emerald-500/60',
+                    )}
+                  />
+                </button>
               )
             })}
           </div>
@@ -484,7 +489,7 @@ function FrameAtSplit({
         role="img"
         aria-label="Codon context around splice junction"
       >
-        <div className="flex items-center gap-[1px]">
+        <div className="flex w-full items-center gap-[1px]">
           {ctx.codons.map((c) => (
             <button
               type="button"
@@ -492,7 +497,7 @@ function FrameAtSplit({
               onClick={() => onSnap(c.idx * 3 + 1)}
               title={`Snap cut to start of codon ${c.idx + 1} (bp ${(c.idx * 3 + 1).toLocaleString()})`}
               className={cn(
-                'hover:bg-primary/10 hover:ring-primary/30 flex flex-col items-center gap-0.5 rounded-sm px-[3px] py-1 transition-colors hover:ring-1',
+                'hover:bg-primary/10 hover:ring-primary/30 flex flex-1 flex-col items-center gap-0.5 rounded-sm px-[3px] py-1 transition-colors hover:ring-1',
                 c.isSplit && 'bg-primary/15 ring-primary/40 ring-1',
               )}
             >
