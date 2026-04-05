@@ -467,6 +467,99 @@ function buildSummaryItems(
 
 // ---------- raw text fallback ----------
 
+// DNAChisel's objectives_text_summary() uses box-drawing characters as a
+// visual gutter (┍ for a root node, ├/│/└ for children). These render
+// inconsistently across fonts, so we strip them and recover the nesting as
+// a real CSS-bordered indent instead.
+const TREE_CHARS = /[┍┌├│└─┐┘┤┬┴┼╷╵╶╴]/g
+const TREE_CHARS_TEST = /[┍┌┐]/
+const TREE_CHILD_TEST = /[├│└]/
+
+function classifyRawLine(raw: string): {
+  depth: number
+  cleaned: string
+  status: 'pass' | 'fail' | null
+} {
+  const isRoot = TREE_CHARS_TEST.test(raw)
+  const isChild = !isRoot && TREE_CHILD_TEST.test(raw)
+  const depth = isChild ? 1 : 0
+  let status: 'pass' | 'fail' | null = null
+  if (/✔|✓/.test(raw) || /\bPASS\b/.test(raw)) status = 'pass'
+  else if (/✘|✗/.test(raw) || /\bFAIL\b/.test(raw)) status = 'fail'
+  const cleaned = raw.replace(TREE_CHARS, '').replace(/\s+/g, ' ').trim()
+  return { depth, cleaned, status }
+}
+
+function RawReportView({ text }: { text: string }) {
+  if (!text.trim()) {
+    return (
+      <div className="bg-muted text-muted-foreground rounded-md p-3 text-xs italic">
+        No objectives measured
+      </div>
+    )
+  }
+  const lines = text.split('\n')
+  const width = String(lines.length).length
+  return (
+    <div className="bg-muted max-h-64 overflow-auto rounded-md font-mono text-[11px]">
+      <div>
+        {lines.map((raw, i) => {
+          const { depth, cleaned, status } = classifyRawLine(raw)
+          if (!cleaned) {
+            return (
+              <div
+                key={i}
+                className="flex items-start gap-2 px-2"
+                aria-hidden="true"
+              >
+                <span
+                  className="text-muted-foreground/40 shrink-0 text-right tabular-nums select-none"
+                  style={{ width: `${width}ch` }}
+                >
+                  {i + 1}
+                </span>
+                <span>&nbsp;</span>
+              </div>
+            )
+          }
+          return (
+            <div
+              key={i}
+              id={`raw-line-${i + 1}`}
+              className="group flex items-start gap-2 px-2 hover:bg-black/[0.03] dark:hover:bg-white/[0.03]"
+            >
+              <span
+                className="text-muted-foreground/50 shrink-0 text-right tabular-nums select-none"
+                style={{ width: `${width}ch` }}
+              >
+                {i + 1}
+              </span>
+              <div
+                className={cn(
+                  'min-w-0 flex-1 break-words',
+                  depth > 0 && 'border-border/60 ml-2 border-l pl-2',
+                )}
+              >
+                {status === 'pass' && (
+                  <span className="text-emerald-700 dark:text-emerald-400">
+                    {cleaned}
+                  </span>
+                )}
+                {status === 'fail' && (
+                  <span className="text-red-700 dark:text-red-400">
+                    {cleaned}
+                  </span>
+                )}
+                {status === null && <span>{cleaned}</span>}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 function RawTextFallback({ before, after }: { before: string; after: string }) {
   return (
     <div className="grid gap-3 sm:grid-cols-2">
@@ -474,17 +567,13 @@ function RawTextFallback({ before, after }: { before: string; after: string }) {
         <span className="text-muted-foreground text-[10px] font-semibold tracking-wider uppercase">
           Before
         </span>
-        <pre className="bg-muted max-h-64 overflow-auto rounded-md p-3 font-mono text-[11px] whitespace-pre-wrap">
-          {before || 'No objectives measured'}
-        </pre>
+        <RawReportView text={before} />
       </div>
       <div className="space-y-1">
         <span className="text-muted-foreground text-[10px] font-semibold tracking-wider uppercase">
           After
         </span>
-        <pre className="bg-muted max-h-64 overflow-auto rounded-md p-3 font-mono text-[11px] whitespace-pre-wrap">
-          {after || 'No objectives measured'}
-        </pre>
+        <RawReportView text={after} />
       </div>
     </div>
   )
