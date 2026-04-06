@@ -332,6 +332,8 @@ function IsoformRow({
 
   useEffect(() => {
     if (!isHighlighted) return
+    // Intentional: triggers the highlight ring animation when isHighlighted changes.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setRingVisible(true)
     document
       .getElementById(`isoform-row-${isoform.id}`)

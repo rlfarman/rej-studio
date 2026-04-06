@@ -34,6 +34,7 @@ const sharedLayerZones = SHARED_LAYERS.map((layer) => ({
 }))
 
 const config = [
+  { ignores: ['coverage/**'] },
   ...nextConfig,
   {
     plugins: {
