@@ -49,7 +49,11 @@ export const isoforms = pgTable(
     proteinSequence: text('protein_sequence').notNull().default(''),
     species: text('species').notNull(),
   },
-  (table) => [index('idx_isoforms_gene_id').on(table.geneId)],
+  (table) => [
+    index('idx_isoforms_gene_id').on(table.geneId),
+    index('idx_isoforms_species').on(table.species),
+    index('idx_isoforms_cds_length').on(table.codingSequenceLength),
+  ],
 )
 
 export type SelectIsoform = typeof isoforms.$inferSelect

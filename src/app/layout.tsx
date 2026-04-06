@@ -37,6 +37,11 @@ export const metadata = {
   twitter: {
     card: 'summary_large_image',
   },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'REJ Studio',
+  },
 }
 
 export default async function RootLayout({

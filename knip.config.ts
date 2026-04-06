@@ -5,7 +5,7 @@ const config: KnipConfig = {
     'src/app/**/{page,layout,template,loading,error,not-found,route,default}.{ts,tsx}',
     'src/app/**/{opengraph,twitter}-image.{ts,tsx}',
     'src/app/{sitemap,robots,manifest,icon,apple-icon}.{ts,tsx}',
-    'src/middleware.ts',
+    'src/proxy.ts',
     'src/instrumentation.ts',
     'src/sentry.client.config.ts',
     'src/sentry.server.config.ts',

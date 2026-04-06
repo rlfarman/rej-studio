@@ -68,7 +68,15 @@ const nextConfig: NextConfig = {
           key: 'Permissions-Policy',
           value: 'camera=(), microphone=(), geolocation=()',
         },
-        // CSP is set per-request in middleware.ts with a unique nonce.
+        {
+          key: 'Strict-Transport-Security',
+          value: 'max-age=63072000; includeSubDomains; preload',
+        },
+        {
+          key: 'X-Permitted-Cross-Domain-Policies',
+          value: 'none',
+        },
+        // CSP is set per-request in proxy.ts with a unique nonce.
         // Do not add a static CSP header here — it would conflict.
       ],
     },

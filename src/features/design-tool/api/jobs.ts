@@ -198,6 +198,10 @@ export async function submitJob(
   params: JobParams,
 ): Promise<{ jobId: string; result?: Record<string, unknown> }> {
   const validated = jobParamsSchema.parse(params)
+  // Normalize to uppercase — the backend and algorithm expect uppercase
+  // nucleotides. This prevents case-confusion bugs between mixed-case input
+  // and the codon tables (which are uppercase).
+  validated.CDS = validated.CDS.toUpperCase()
 
   // Rate limit
   const hdrs = await headers()
