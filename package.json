@@ -83,6 +83,7 @@
   "devDependencies": {
     "@commitlint/cli": "^19.6.1",
     "@commitlint/config-conventional": "^19.6.0",
+    "@commitlint/types": "^20.5.0",
     "@electric-sql/pglite": "^0.4.3",
     "@next/bundle-analyzer": "^16.2.2",
     "@opennextjs/cloudflare": "^1.18.0",
@@ -95,7 +96,6 @@
     "openapi-typescript": "^7.13.0",
     "prettier": "^3.8.1",
     "prettier-plugin-tailwindcss": "^0.7.2",
-    "ts-node": "^10.9.2",
     "tsx": "^4.19.2",
     "wrangler": "^4.0.0"
   },

@@ -33,19 +33,19 @@ const jobIdSchema = z
   .max(200)
   .regex(/^[A-Za-z0-9_-]+$/, 'Invalid job id.')
 
-export interface JobParams {
+interface JobParams {
   CDS: string
   name: string
   options: Record<string, unknown>
 }
 
-export interface JobErrorPayload {
+interface JobErrorPayload {
   code: string
   message: string
   retriable: boolean
 }
 
-export interface JobStatusResult {
+interface JobStatusResult {
   status: 'running' | 'completed' | 'failed' | 'cancelled' | 'not_found'
   result?: Record<string, unknown>
   error?: JobErrorPayload
@@ -219,9 +219,7 @@ async function recordDeadLetter(entry: DeadLetterEntry) {
 }
 
 /** Expose DLQ for the health/admin endpoint. */
-export async function getDeadLetterQueue(): Promise<
-  readonly DeadLetterEntry[]
-> {
+async function getDeadLetterQueue(): Promise<readonly DeadLetterEntry[]> {
   if (redis) {
     try {
       const items = await redis.lrange(DLQ_KEY, 0, MAX_DLQ - 1)

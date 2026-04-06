@@ -110,6 +110,10 @@ jobs:
         env:
           NEXT_TELEMETRY_DISABLED: '1'
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          # Required by env.ts production validation but not exercised in CI.
+          COMPUTE_BACKEND: modal
+          MODAL_API_URL: https://placeholder.modal.run
+          NEXT_PUBLIC_SITE_URL: http://localhost:3000
       - name: Enforce bundle-size budget
         id: budget
         # Sums all First-Load JS chunks in .next/static/chunks/ and fails if

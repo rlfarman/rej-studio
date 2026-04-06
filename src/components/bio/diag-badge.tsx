@@ -17,9 +17,9 @@ import { toCodons, translateCodon } from '@/lib/bio/genetic-code'
 
 // ── Types ──
 
-export type DiagStatus = 'good' | 'warn' | 'error' | 'neutral'
+type DiagStatus = 'good' | 'warn' | 'error' | 'neutral'
 
-export interface DiagCheck {
+interface DiagCheck {
   status: DiagStatus
   label: string
   tooltip: string
@@ -203,7 +203,7 @@ export function shortCdsCheck(seq: string): DiagCheck | null {
   }
 }
 
-export function aavFitCheck(bpLength: number): DiagCheck {
+function aavFitCheck(bpLength: number): DiagCheck {
   const fits = bpLength <= 4700
   return {
     status: fits ? 'good' : 'warn',

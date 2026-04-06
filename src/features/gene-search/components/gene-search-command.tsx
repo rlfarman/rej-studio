@@ -17,7 +17,7 @@ import { ClockIcon, ExternalLink, HeartIcon, RefreshCwIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { SavedGene } from '@/features/gene-search/types/domain-types'
 
-export function GeneResultsLoading() {
+function GeneResultsLoading() {
   return (
     <div className="text-muted-foreground p-4 text-center text-sm">
       Searching...

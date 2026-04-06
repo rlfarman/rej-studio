@@ -43,6 +43,10 @@ jobs:
         env:
           NEXT_TELEMETRY_DISABLED: '1'
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          # Required by env.ts production validation but not exercised in CI.
+          COMPUTE_BACKEND: modal
+          MODAL_API_URL: https://placeholder.modal.run
+          NEXT_PUBLIC_SITE_URL: http://localhost:3000
 
       - name: Run Lighthouse CI
         uses: treosh/lighthouse-ci-action@3e7e23fb74242897f95c0ba9cabad3d0227b9b18 # v12.1.0

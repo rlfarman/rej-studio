@@ -126,7 +126,7 @@ export function findInvalidChars(seq: string): string[] {
 // ---------------------------------------------------------------------------
 
 /** Local GC % in a window centered on `position` (1-based cut). */
-export function localGcAt(seq: string, position: number, window = 40): number {
+function localGcAt(seq: string, position: number, window = 40): number {
   const len = seq.length
   if (len === 0) return 0
   const half = Math.floor(window / 2)
@@ -142,7 +142,7 @@ export function localGcAt(seq: string, position: number, window = 40): number {
   return w > 0 ? (gc / w) * 100 : 0
 }
 
-export interface WggwCandidate {
+interface WggwCandidate {
   /** 1-based cut position at the motif midpoint (between bases 2 and 3). */
   position: number
   /** The matched WGGW tetramer (e.g. "TGGA"). */

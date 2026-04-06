@@ -26,7 +26,7 @@ export const redis = createRedisClient()
  * survives redeploys — critical for production rate limiting on Vercel
  * (which auto-scales to multiple instances).
  */
-export interface RateLimitCheckResult {
+interface RateLimitCheckResult {
   ok: boolean
   remaining: number
   resetMs: number
