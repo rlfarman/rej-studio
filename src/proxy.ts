@@ -76,7 +76,7 @@ const MAX_BODY_BYTES = 256 * 1024
 function buildCsp(nonce: string): string {
   return [
     "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https://www.googletagmanager.com https://*.sentry.io`,
+    `script-src 'self' 'nonce-${nonce}' https://www.googletagmanager.com https://*.sentry.io`,
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob: https://www.googletagmanager.com",
     "font-src 'self'",
