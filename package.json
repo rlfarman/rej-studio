@@ -105,6 +105,12 @@
     "tsx": "^4.19.2",
     "wrangler": "^4.0.0"
   },
+  "nextBundleAnalysis": {
+    "budget": 2252800,
+    "budgetPercentIncreaseRed": 20,
+    "showDetails": true,
+    "minimumChangeThreshold": 0
+  },
   "pnpm": {
     "overrides": {
       "@types/react": "$@types/react",

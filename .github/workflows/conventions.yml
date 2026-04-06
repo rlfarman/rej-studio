@@ -36,16 +36,9 @@ jobs:
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:
-      - name: Validate branch name
-        env:
-          BRANCH: ${{ github.head_ref }}
-        run: |
-          pattern='^(main|master|develop|staging|(feature|bugfix|hotfix|release|chore|claude)/[a-z0-9._/-]+)$'
-          if ! echo "$BRANCH" | grep -Eq "$pattern"; then
-            echo "::warning::Branch '$BRANCH' does not follow Conventional Branch naming."
-            echo "Expected: main | master | develop | staging, or <type>/<description>"
-            echo "Types: feature, bugfix, hotfix, release, chore, claude"
-            echo "See: https://conventional-branch.github.io/"
-            exit 0
-          fi
-          echo "Branch '$BRANCH' ✓"
+      - uses: deepakputhraya/action-branch-name@e0f8db53a8e289f1ae6f6c3e8dc70a3d366fd876 # v1.0.0
+        with:
+          regex: '^(main|master|develop|staging|(feature|bugfix|hotfix|release|chore|claude)/[a-z0-9._/-]+)$'
+          allowed_prefixes: 'feature,bugfix,hotfix,release,chore,claude'
+          ignore: main,master,develop,staging
+          min_length: 3

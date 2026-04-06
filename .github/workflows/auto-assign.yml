@@ -13,20 +13,4 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
     steps:
-      - name: Assign the PR author as assignee
-        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.0.1
-        with:
-          script: |
-            const { owner, repo } = context.repo
-            const prNumber = context.payload.pull_request.number
-            const author = context.payload.pull_request.user.login
-
-            // Skip bots (dependabot, renovate, release-please, etc.)
-            if (context.payload.pull_request.user.type === 'Bot') return
-
-            await github.rest.issues.addAssignees({
-              owner,
-              repo,
-              issue_number: prNumber,
-              assignees: [author],
-            })
+      - uses: toshimaru/auto-author-assign@4d585cc37690897bd9015942ed6e766aa7cdb97f # v3.0.1
