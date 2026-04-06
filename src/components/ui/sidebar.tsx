@@ -349,7 +349,10 @@ function SidebarRail({ className, ...props }: React.ComponentProps<'button'>) {
         const clamped = Math.round(
           Math.min(
             SIDEBAR_WIDTH_MAX,
-            Math.max(SIDEBAR_WIDTH_MIN, startWidth.current + totalDelta.current),
+            Math.max(
+              SIDEBAR_WIDTH_MIN,
+              startWidth.current + totalDelta.current,
+            ),
           ),
         )
         document.cookie = `${SIDEBAR_WIDTH_COOKIE_NAME}=${clamped}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
