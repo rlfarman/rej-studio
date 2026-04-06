@@ -55,6 +55,11 @@ const serverSchema = z
     SENTRY_ORG: z.string().optional(),
     SENTRY_PROJECT: z.string().optional(),
     SENTRY_AUTH_TOKEN: z.string().optional(),
+
+    // OpenTelemetry — vendor-neutral. Axiom, Grafana, Honeycomb, etc.
+    OTEL_EXPORTER_OTLP_ENDPOINT: z.string().url().optional(),
+    OTEL_EXPORTER_OTLP_HEADERS: z.string().optional(),
+    OTEL_SERVICE_NAME: z.string().optional(),
   })
   .superRefine((data, ctx) => {
     // Production guardrails.
