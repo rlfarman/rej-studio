@@ -72,24 +72,26 @@ Hooks install automatically when you run `pnpm install` (via husky's `prepare` s
 
 The following jobs should be configured as **required status checks** on `main` in GitHub repo settings (Settings → Branches → Branch protection rules → `main`):
 
-| Check                       | Workflow               | Blocks merge? |
-| --------------------------- | ---------------------- | ------------- |
-| `Lint`                      | `ci.yml`               | ✅ required   |
-| `Format`                    | `ci.yml`               | ✅ required   |
-| `Type Check`                | `ci.yml`               | ✅ required   |
-| `Knip`                      | `ci.yml`               | ✅ required   |
-| `Build`                     | `ci.yml`               | ✅ required   |
-| `pnpm audit`                | `security.yml`         | ✅ required   |
-| `pip-audit`                 | `security.yml`         | ✅ required   |
-| `Gitleaks`                  | `secret-scanning.yml`  | ✅ required   |
-| `Lockfile drift`            | `lock-file-policy.yml` | ⚠️ advisory   |
-| `Ruff (lint + format)`      | `python-ci.yml`        | ✅ required   |
-| `Pyright`                   | `python-ci.yml`        | ⚠️ advisory   |
-| `Schema drift + migrations` | `db-ci.yml`            | ✅ required   |
-| `Commitlint`                | `conventions.yml`      | ⚠️ advisory   |
-| `PR Title`                  | `conventions.yml`      | ⚠️ advisory   |
-| `Branch Name`               | `conventions.yml`      | ⚠️ advisory   |
-| `Lighthouse CI`             | `lighthouse.yml`       | ⚠️ advisory   |
+| Check                       | Workflow                | Blocks merge? |
+| --------------------------- | ----------------------- | ------------- |
+| `Lint`                      | `ci.yml`                | ✅ required   |
+| `Format`                    | `ci.yml`                | ✅ required   |
+| `Type Check`                | `ci.yml`                | ✅ required   |
+| `Knip`                      | `ci.yml`                | ✅ required   |
+| `Build`                     | `ci.yml`                | ✅ required   |
+| `pnpm audit`                | `security.yml`          | ✅ required   |
+| `pip-audit`                 | `security.yml`          | ✅ required   |
+| `Gitleaks`                  | `secret-scanning.yml`   | ✅ required   |
+| `Lockfile drift`            | `lock-file-policy.yml`  | ⚠️ advisory   |
+| `Ruff (lint + format)`      | `python-ci.yml`         | ✅ required   |
+| `Pyright`                   | `python-ci.yml`         | ⚠️ advisory   |
+| `Schema drift + migrations` | `db-ci.yml`             | ✅ required   |
+| `Commitlint`                | `conventions.yml`       | ⚠️ advisory   |
+| `PR Title`                  | `conventions.yml`       | ⚠️ advisory   |
+| `Branch Name`               | `conventions.yml`       | ⚠️ advisory   |
+| `Lighthouse CI`             | `lighthouse.yml`        | ⚠️ advisory   |
+| `Dependency Review`         | `dependency-review.yml` | ⚠️ advisory   |
+| `Modal Canary`              | `modal-canary.yml`      | ⚠️ advisory   |
 
 The `ci.yml` jobs use `dorny/paths-filter` and are skipped for docs-only PRs; GitHub treats skipped required checks as passing. `python-ci.yml` and `db-ci.yml` are path-filtered too.
 

@@ -1,15 +1,31 @@
 'use client'
 
+import { useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import Link from 'next/link'
 
 export default function ErrorPage({
+  error,
   reset,
 }: {
-  error: Error
+  error: Error & { digest?: string }
   reset: () => void
 }) {
+  useEffect(() => {
+    // Report to Sentry if configured. Dynamic import keeps the bundle
+    // clean when Sentry isn't enabled.
+    import('@sentry/nextjs')
+      .then((Sentry) => {
+        Sentry.captureException(error, {
+          tags: { digest: error.digest },
+        })
+      })
+      .catch(() => {
+        // Sentry not installed or DSN not configured — ignore.
+      })
+  }, [error])
+
   return (
     <div className="flex min-h-screen items-center justify-center px-4">
       <Card className="w-full max-w-md">

@@ -1,28 +1,23 @@
 'use server'
 
-import { db } from '@/drizzle/db'
-import { SelectGene, genes, isoforms } from '@/drizzle/schema'
-import { sql, eq, or } from 'drizzle-orm'
 import {
-  ENST_REGEX,
-  ENSG_REGEX,
-} from '@/features/gene-search/utils/ensembl-regex'
+  fetchGenesBySearch,
+  fetchGeneBySymbol,
+} from '@/features/gene-search/api/gene-queries'
+import type { GeneSearchResult } from '@/features/gene-search/api/gene-queries'
 import { speciesFilterSchema, type SpeciesFilter } from '@/lib/bio/species'
 import { z } from 'zod'
+import { headers } from 'next/headers'
+import { createRateLimiter } from '@/lib/rate-limit'
+import { createLogger } from '@/lib/logger'
 
-export type GeneSearchResult = Pick<
-  SelectGene,
-  'id' | 'name' | 'symbol' | 'species'
-> & {
-  matchedIsoformId?: string
-}
+export type { GeneSearchResult }
 
-const geneSearchColumns = {
-  id: genes.id,
-  name: genes.name,
-  symbol: genes.symbol,
-  species: genes.species,
-} as const
+const log = createLogger('gene-search')
+
+// 30 searches per minute per IP. Generous for normal use but caps automated
+// scraping that would hammer the Neon DB.
+const searchLimiter = createRateLimiter({ windowMs: 60_000, max: 30 })
 
 // Defense-in-depth: server actions are reachable from any caller (client, other
 // server code), so re-validate inputs at the boundary even though call-sites
@@ -45,74 +40,33 @@ export async function searchGenes(
   const trimmedQuery = parsed.query.trim()
   if (trimmedQuery.length === 0) return []
 
-  if (ENST_REGEX.test(trimmedQuery)) {
-    const [result] = await db
-      .select({ ...geneSearchColumns, matchedIsoformId: isoforms.id })
-      .from(isoforms)
-      .innerJoin(genes, eq(isoforms.geneId, genes.id))
-      .where(eq(isoforms.id, trimmedQuery))
-      .limit(1)
-    return result ? [result] : []
+  const hdrs = await headers()
+  const ip = hdrs.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
+  const { ok: allowed } = searchLimiter.check(ip)
+  if (!allowed) {
+    throw new Error('Too many search requests. Please wait a moment.')
   }
 
-  if (ENSG_REGEX.test(trimmedQuery)) {
-    const [result] = await db
-      .select(geneSearchColumns)
-      .from(genes)
-      .where(eq(genes.id, trimmedQuery))
-      .limit(1)
-    return result ? [result] : []
+  try {
+    const results = await fetchGenesBySearch(trimmedQuery, parsed.species)
+    // Structured search analytics — log query, species filter, and result
+    // count so we can understand what users search for. No PII (IP is not
+    // included); the query itself is gene/disease terminology, not personal.
+    log.info('search', {
+      query: trimmedQuery,
+      species: parsed.species,
+      resultCount: results.length,
+    })
+    return results
+  } catch (err) {
+    log.error('search query failed', err, { query: trimmedQuery })
+    // Return empty results instead of crashing — the UI shows "no results"
+    // which is better than an error boundary for transient DB issues.
+    return []
   }
-
-  // Dialect-neutral search: LOWER(col) LIKE '%query%' works in Postgres, SQLite,
-  // and MySQL without modification (no ILIKE, no dialect-specific operators).
-  // alternateSymbols stores original casing (pipe-delimited) for display, so we
-  // LOWER() it at query time too.
-  const lowerQuery = trimmedQuery.toLowerCase()
-  const prefixPattern = `${lowerQuery}%`
-  const containsPattern = `%${lowerQuery}%`
-
-  const symbolMatch = sql`LOWER(${genes.symbol}) LIKE ${containsPattern}`
-  const nameMatch = sql`LOWER(${genes.name}) LIKE ${containsPattern}`
-  const altMatch = sql`LOWER(${genes.alternateSymbols}) LIKE ${containsPattern}`
-  const speciesMatch =
-    parsed.species !== 'both' ? eq(genes.species, parsed.species) : undefined
-
-  const rankExpression = sql<number>`
-    CASE
-      WHEN LOWER(${genes.symbol}) = ${lowerQuery} THEN 0
-      WHEN LOWER(${genes.symbol}) LIKE ${prefixPattern} THEN 1
-      WHEN LOWER(${genes.name}) LIKE ${prefixPattern} THEN 2
-      WHEN LOWER(${genes.symbol}) LIKE ${containsPattern} THEN 3
-      WHEN LOWER(${genes.name}) LIKE ${containsPattern} THEN 4
-      ELSE 5
-    END
-  `
-
-  return db
-    .select(geneSearchColumns)
-    .from(genes)
-    .where(
-      speciesMatch
-        ? sql`(${or(symbolMatch, nameMatch, altMatch)}) AND ${speciesMatch}`
-        : or(symbolMatch, nameMatch, altMatch),
-    )
-    .orderBy(rankExpression, genes.name)
-    .limit(6)
 }
 
 export async function getGeneBySymbol(symbol: string, species?: SpeciesFilter) {
   const parsed = geneSymbolInput.parse({ symbol, species })
-  const conditions =
-    parsed.species && parsed.species !== 'both'
-      ? sql`${eq(genes.symbol, parsed.symbol)} AND ${eq(genes.species, parsed.species)}`
-      : eq(genes.symbol, parsed.symbol)
-
-  const [gene] = await db
-    .select(geneSearchColumns)
-    .from(genes)
-    .where(conditions)
-    .limit(1)
-
-  return gene
+  return fetchGeneBySymbol(parsed.symbol, parsed.species)
 }

@@ -12,6 +12,7 @@ import { IsoformLengthChart } from '@/features/gene-search/components/isoform-le
 import { IsoformIdentityMatrix } from '@/features/gene-search/components/isoform-identity-matrix'
 import { Suspense } from 'react'
 import { FavoriteGeneButton } from '@/features/gene-search/components/favorite-gene-button'
+import { GeneJsonLd } from '@/features/gene-search/components/gene-jsonld'
 import { Metadata } from 'next'
 import { cache } from 'react'
 import {
@@ -38,9 +39,60 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   const gene = await resolveGene(props)
 
   return {
-    title: `${gene?.symbol ?? symbol} | REJ Studio`,
+    title: gene?.symbol ?? symbol,
     description: `View all isoforms for ${gene?.name ?? symbol} and download pre-optimized sequences or customize your own.`,
+    alternates: {
+      canonical: `/genes/${gene?.symbol ?? symbol}`,
+    },
   }
+}
+
+/**
+ * Async server component that fetches isoforms and renders the full isoform
+ * section. Wrapped in Suspense by the parent so the gene header streams
+ * immediately while the DB query resolves.
+ */
+async function IsoformSection({
+  gene,
+  highlightedIsoformId,
+}: {
+  gene: { id: string; symbol: string; name: string }
+  highlightedIsoformId?: string
+}) {
+  const isoforms = await getIsoformsByGene(gene.id)
+
+  const speciesAvailable = [
+    ...new Set(isoforms.map((i) => i.species)),
+  ] as Species[]
+
+  return (
+    <>
+      <GeneJsonLd
+        gene={gene}
+        isoformCount={isoforms.length}
+        species={speciesAvailable}
+      />
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-muted-foreground text-sm font-semibold">
+          Species
+        </span>
+        {speciesAvailable.map((s) => (
+          <Badge key={s} variant="secondary">
+            {SPECIES_DISPLAY_NAME[s]}
+          </Badge>
+        ))}
+      </div>
+      <Separator className="my-4" />
+      <h2 className="mb-2 text-lg font-semibold tracking-tight">Isoforms</h2>
+      <IsoformSummary isoforms={isoforms} />
+      <IsoformLengthChart isoforms={isoforms} />
+      <IsoformIdentityMatrix isoforms={isoforms} />
+      <IsoformTable
+        isoforms={isoforms}
+        highlightedIsoformId={highlightedIsoformId}
+      />
+    </>
+  )
 }
 
 export default async function GeneSymbolPage(props: Props) {
@@ -51,11 +103,6 @@ export default async function GeneSymbolPage(props: Props) {
   }
 
   const { isoform: highlightedIsoformId } = await props.searchParams
-  const isoforms = await getIsoformsByGene(gene.id)
-
-  const speciesAvailable = [
-    ...new Set(isoforms.map((i) => i.species)),
-  ] as Species[]
 
   return (
     <Card>
@@ -79,25 +126,10 @@ export default async function GeneSymbolPage(props: Props) {
             </div>
             <div className="font-mono">{gene.id}</div>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-muted-foreground text-sm font-semibold">
-              Species
-            </span>
-            {speciesAvailable.map((s) => (
-              <Badge key={s} variant="secondary">
-                {SPECIES_DISPLAY_NAME[s]}
-              </Badge>
-            ))}
-          </div>
         </div>
-        <Separator className="my-4" />
-        <h2 className="mb-2 text-lg font-semibold tracking-tight">Isoforms</h2>
-        <IsoformSummary isoforms={isoforms} />
-        <IsoformLengthChart isoforms={isoforms} />
-        <IsoformIdentityMatrix isoforms={isoforms} />
         <Suspense fallback={<IsoformTableLoading />}>
-          <IsoformTable
-            isoforms={isoforms}
+          <IsoformSection
+            gene={gene}
             highlightedIsoformId={highlightedIsoformId}
           />
         </Suspense>

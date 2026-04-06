@@ -10,6 +10,10 @@ import { z } from 'zod'
 import { headers } from 'next/headers'
 import { createRateLimiter } from '@/lib/rate-limit'
 import { env } from '@/lib/env'
+import { withRetry, isTransientError } from '@/lib/retry'
+import { createLogger } from '@/lib/logger'
+
+const log = createLogger('jobs')
 
 // --- Input validation ---
 
@@ -124,6 +128,36 @@ function circuitRecordFailure() {
   }
 }
 
+// --- Dead letter queue ---
+// Tracks failed Modal submissions in-memory so they can be inspected via the
+// health endpoint. Capped at MAX_DLQ entries to bound memory. In a future
+// iteration this could persist to the DB or an external queue.
+
+interface DeadLetterEntry {
+  timestamp: string
+  name: string
+  cdsLength: number
+  error: string
+  ip: string
+}
+
+const MAX_DLQ = 50
+const deadLetterQueue: DeadLetterEntry[] = []
+
+function recordDeadLetter(entry: DeadLetterEntry) {
+  log.error('job submission failed — added to DLQ', undefined, {
+    name: entry.name,
+    cdsLength: entry.cdsLength,
+  })
+  deadLetterQueue.push(entry)
+  if (deadLetterQueue.length > MAX_DLQ) deadLetterQueue.shift()
+}
+
+/** Expose DLQ for the health/admin endpoint. */
+export function getDeadLetterQueue(): readonly DeadLetterEntry[] {
+  return deadLetterQueue
+}
+
 // --- Backend routing ---
 
 type ComputeBackend = 'modal' | 'local'
@@ -191,26 +225,41 @@ export async function submitJob(
     }
 
     try {
-      const response = await fetch(`${getModalUrl()}/jobs`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(validated),
-        signal: AbortSignal.timeout(30_000),
-      })
-      if (!response.ok) {
-        const text = await response.text()
-        circuitRecordFailure()
-        throw new Error(`Modal API error: ${text}`)
-      }
-      const data = await response.json()
+      const data = await withRetry(
+        async () => {
+          const response = await fetch(`${getModalUrl()}/jobs`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(validated),
+            signal: AbortSignal.timeout(30_000),
+          })
+          if (!response.ok) {
+            const text = await response.text()
+            throw new Error(
+              `Modal API error (HTTP ${response.status}): ${text}`,
+            )
+          }
+          return response.json()
+        },
+        { maxAttempts: 3, baseDelayMs: 500, isRetryable: isTransientError },
+      )
       circuitRecordSuccess()
       setInflight(iKey, data.call_id)
+      log.info('job submitted', {
+        jobId: data.call_id,
+        name: validated.name,
+        cdsLength: validated.CDS.length,
+      })
       return { jobId: data.call_id }
     } catch (err) {
-      if (err instanceof Error && err.message.startsWith('Modal API error')) {
-        throw err
-      }
       circuitRecordFailure()
+      recordDeadLetter({
+        timestamp: new Date().toISOString(),
+        name: validated.name,
+        cdsLength: validated.CDS.length,
+        error: err instanceof Error ? err.message : String(err),
+        ip,
+      })
       throw err
     }
   }
@@ -240,7 +289,13 @@ export async function getJobStatus(jobId: string): Promise<JobStatusResult> {
       const text = await response.text()
       throw new Error(`Modal API error: ${text}`)
     }
-    return response.json()
+    const result: JobStatusResult = await response.json()
+    // Log terminal states for funnel analytics (submit → complete/fail).
+    // Intermediate "running" polls are not logged to avoid noise.
+    if (result.status === 'completed' || result.status === 'failed') {
+      log.info(`job ${result.status}`, { jobId: validatedId })
+    }
+    return result
   }
 
   return { status: 'not_found' }
@@ -258,6 +313,7 @@ export async function cancelJob(jobId: string): Promise<JobStatusResult> {
       const text = await response.text()
       throw new Error(`Modal API error: ${text}`)
     }
+    log.info('job cancelled', { jobId: validatedId })
     return response.json()
   }
 

@@ -9,6 +9,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
   changes:
     name: Detect Changes
@@ -115,3 +119,23 @@ jobs:
         env:
           BUDGET_KB: '1200'
         run: node scripts/check-bundle-size.mjs
+
+      - name: Record bundle size
+        if: github.ref == 'refs/heads/main'
+        run: node scripts/record-bundle-size.mjs
+
+      - name: Comment bundle size on PR
+        if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          # Read base branch bundle size from history file (if it exists)
+          BASE_KB=0
+          if [ -f bundle-size-history.json ]; then
+            BASE_KB=$(node -e "const h=JSON.parse(require('fs').readFileSync('bundle-size-history.json','utf-8'));console.log(h.length?h[h.length-1].totalKB:0)")
+          fi
+          export BASE_BUNDLE_KB="$BASE_KB"
+          BODY=$(node scripts/comment-bundle-size.mjs)
+          gh pr comment "${{ github.event.pull_request.number }}" --body "$BODY" || true

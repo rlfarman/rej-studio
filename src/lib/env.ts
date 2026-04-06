@@ -38,6 +38,14 @@ const serverSchema = z
 
     // Maintenance banner — when set, shows amber banner site-wide.
     MAINTENANCE_MESSAGE: z.string().optional(),
+
+    // Health endpoint auth — when set, full check details require this token.
+    HEALTH_AUTH_TOKEN: z.string().optional(),
+
+    // Sentry (server-side org/project for source-map uploads).
+    SENTRY_ORG: z.string().optional(),
+    SENTRY_PROJECT: z.string().optional(),
+    SENTRY_AUTH_TOKEN: z.string().optional(),
   })
   .superRefine((data, ctx) => {
     // Production guardrails: modal backend is mandatory, and it needs a URL.
@@ -75,6 +83,9 @@ const clientSchema = z.object({
     .string()
     .regex(/^G-[A-Z0-9]+$/, 'Expected GA4 measurement ID like "G-XXXXXXXXXX".')
     .optional(),
+
+  // Sentry DSN (client-side). When unset, Sentry is not initialised.
+  NEXT_PUBLIC_SENTRY_DSN: z.string().url().optional(),
 })
 
 function parseEnv() {

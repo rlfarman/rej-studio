@@ -1,7 +1,13 @@
-import { neon } from '@neondatabase/serverless'
+import { neon, neonConfig } from '@neondatabase/serverless'
 import { drizzle } from 'drizzle-orm/neon-http'
 import { env } from '@/lib/env'
 import * as schema from './schema'
+
+// Enable connection caching on the Neon proxy. This lets the proxy reuse
+// compute node lookups across HTTP requests, shaving ~10ms off query latency.
+// Safe for our use case (single-shot read queries per server action).
+// See: https://neon.com/blog/http-vs-websockets-for-postgres-queries-at-the-edge
+neonConfig.fetchConnectionCache = true
 
 const sql = neon(env.DATABASE_URL)
 

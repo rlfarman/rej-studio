@@ -4,19 +4,51 @@ import { sql } from 'drizzle-orm'
 import { db } from '@/drizzle/db'
 import { env } from '@/lib/env'
 import { createRateLimiter } from '@/lib/rate-limit'
+import { withCors } from '@/lib/api-cors'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
-// Rate limit: 20 requests per minute per IP. /api/health probes the DB, so
-// an unauthenticated caller could use it as a cheap amplification vector.
+// Rate limit: 20 requests per minute per IP.
 const limiter = createRateLimiter({ windowMs: 60_000, max: 20 })
 
+const HEALTH_AUTH_TOKEN = process.env.HEALTH_AUTH_TOKEN
+
+// --- Rolling latency tracker ------------------------------------------------
+// Keeps the last N DB latency samples so the health endpoint can report
+// percentiles (p50, p95, p99) over time, not just a point-in-time ping.
+const MAX_SAMPLES = 100
+const dbLatencySamples: number[] = []
+
+function recordLatency(ms: number) {
+  dbLatencySamples.push(ms)
+  if (dbLatencySamples.length > MAX_SAMPLES) dbLatencySamples.shift()
+}
+
+function percentile(sorted: number[], p: number): number {
+  if (sorted.length === 0) return 0
+  const idx = Math.ceil((p / 100) * sorted.length) - 1
+  return sorted[Math.max(0, idx)]
+}
+
+function getLatencyStats() {
+  if (dbLatencySamples.length === 0) return null
+  const sorted = [...dbLatencySamples].sort((a, b) => a - b)
+  return {
+    samples: sorted.length,
+    p50: percentile(sorted, 50),
+    p95: percentile(sorted, 95),
+    p99: percentile(sorted, 99),
+  }
+}
+
+// --- Types ------------------------------------------------------------------
 type CheckStatus = 'ok' | 'fail' | 'skipped'
 
 interface Check {
   status: CheckStatus
   latencyMs?: number
+  latencyStats?: ReturnType<typeof getLatencyStats>
   error?: string
 }
 
@@ -33,13 +65,15 @@ interface HealthResponse {
 async function checkDatabase(): Promise<Check> {
   const start = performance.now()
   try {
-    // Minimal round-trip to Neon — confirms connectivity without reading data.
     await db.execute(sql`SELECT 1`)
-    return { status: 'ok', latencyMs: Math.round(performance.now() - start) }
+    const ms = Math.round(performance.now() - start)
+    recordLatency(ms)
+    return { status: 'ok', latencyMs: ms, latencyStats: getLatencyStats() }
   } catch (err) {
+    const ms = Math.round(performance.now() - start)
     return {
       status: 'fail',
-      latencyMs: Math.round(performance.now() - start),
+      latencyMs: ms,
       error: err instanceof Error ? err.message : 'unknown error',
     }
   }
@@ -77,25 +111,52 @@ async function checkModal(): Promise<Check> {
 
 export async function GET() {
   const hdrs = await headers()
+  const origin = hdrs.get('origin')
   const ip = hdrs.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
   const { ok: allowed, remaining, resetMs } = limiter.check(ip)
 
   if (!allowed) {
-    return NextResponse.json(
-      { error: 'Rate limit exceeded. Try again later.' },
-      {
-        status: 429,
-        headers: {
-          'Retry-After': String(Math.ceil(resetMs / 1000)),
-          'X-RateLimit-Remaining': '0',
+    return withCors(
+      NextResponse.json(
+        { error: 'Rate limit exceeded. Try again later.' },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': String(Math.ceil(resetMs / 1000)),
+            'X-RateLimit-Remaining': '0',
+          },
         },
-      },
+      ),
+      origin,
     )
   }
 
   const [database, modal] = await Promise.all([checkDatabase(), checkModal()])
 
   const degraded = database.status === 'fail' || modal.status === 'fail'
+
+  // When HEALTH_AUTH_TOKEN is configured, require it to see full check details.
+  // Unauthenticated callers still get a status code (for load-balancer probes)
+  // but no internal info.
+  if (HEALTH_AUTH_TOKEN) {
+    const authHeader = hdrs.get('authorization')
+    const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null
+    if (token !== HEALTH_AUTH_TOKEN) {
+      return withCors(
+        NextResponse.json(
+          { status: degraded ? 'degraded' : 'ok' },
+          {
+            status: degraded ? 503 : 200,
+            headers: {
+              'Cache-Control': 'no-store, max-age=0',
+              'X-RateLimit-Remaining': String(remaining),
+            },
+          },
+        ),
+        origin,
+      )
+    }
+  }
 
   const body: HealthResponse = {
     status: degraded ? 'degraded' : 'ok',
@@ -104,11 +165,14 @@ export async function GET() {
     checks: { database, modal },
   }
 
-  return NextResponse.json(body, {
-    status: degraded ? 503 : 200,
-    headers: {
-      'Cache-Control': 'no-store, max-age=0',
-      'X-RateLimit-Remaining': String(remaining),
-    },
-  })
+  return withCors(
+    NextResponse.json(body, {
+      status: degraded ? 503 : 200,
+      headers: {
+        'Cache-Control': 'no-store, max-age=0',
+        'X-RateLimit-Remaining': String(remaining),
+      },
+    }),
+    origin,
+  )
 }

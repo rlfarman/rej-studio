@@ -12,6 +12,22 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, field_validator
 
+# Sentry — initialise early so errors during module import are captured.
+# Only active when SENTRY_DSN is set (production deploys).
+_sentry_dsn = os.environ.get("SENTRY_DSN")
+if _sentry_dsn:
+    try:
+        import sentry_sdk
+
+        sentry_sdk.init(
+            dsn=_sentry_dsn,
+            traces_sample_rate=0.1,
+            environment=os.environ.get("MODAL_ENVIRONMENT", "production"),
+            release=os.environ.get("GIT_SHA", "unknown"),
+        )
+    except ImportError:
+        pass  # sentry-sdk not installed — skip silently
+
 
 # --- Structured logging ---
 # Emit one JSON object per line to stdout. Modal captures stdout into its log
@@ -37,7 +53,7 @@ project_root = Path(__file__).parent.parent
 
 image = (
     modal.Image.debian_slim(python_version="3.11")
-    .pip_install("dnachisel", "tqdm", "fastapi[standard]")
+    .pip_install("dnachisel", "tqdm", "fastapi[standard]", "sentry-sdk[fastapi]")
     .add_local_file(project_root / "python" / "algorithm.py", remote_path="/root/algorithm.py")
 )
 

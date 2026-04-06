@@ -9,12 +9,31 @@ import { AppSidebar } from '@/app/_components/layout/app-sidebar'
 import { Toaster } from '@/components/ui/sonner'
 import { QueryProvider } from '@/app/_components/providers/query-provider'
 import { MaintenanceBanner } from '@/components/maintenance-banner'
-import { cookies } from 'next/headers'
+import { cookies, headers } from 'next/headers'
 import { GoogleAnalytics } from '@/components/google-analytics'
+import { WebVitals } from '@/components/web-vitals'
+
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://rejstudio.com'
 
 export const metadata = {
-  title: 'REJ Studio',
-  description: 'RNA End-joining made easy',
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: 'REJ Studio',
+    template: '%s | REJ Studio',
+  },
+  description:
+    'Search genes, browse isoforms, and design optimized RNA End-Joining sequences — all in one tool.',
+  alternates: {
+    canonical: '/',
+  },
+  openGraph: {
+    type: 'website',
+    siteName: 'REJ Studio',
+    locale: 'en_US',
+  },
+  twitter: {
+    card: 'summary_large_image',
+  },
 }
 
 export default async function RootLayout({
@@ -22,8 +41,9 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  const cookieStore = await cookies()
+  const [cookieStore, headerStore] = await Promise.all([cookies(), headers()])
   const defaultOpen = cookieStore.get('sidebar_state')?.value === 'true'
+  const nonce = headerStore.get('x-nonce') ?? undefined
   const maintenanceMessage = process.env.MAINTENANCE_MESSAGE?.trim()
 
   return (
@@ -72,7 +92,8 @@ export default async function RootLayout({
             <Toaster />
           </QueryProvider>
         </ThemeProvider>
-        <GoogleAnalytics />
+        <WebVitals />
+        <GoogleAnalytics nonce={nonce} />
       </body>
     </html>
   )
