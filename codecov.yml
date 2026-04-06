@@ -1,0 +1,83 @@
+# Codecov configuration
+# https://docs.codecov.io/docs/codecov-yaml
+#
+# Tokenless upload works for public repos. For private repos, set
+# CODECOV_TOKEN in GitHub Actions secrets.
+
+coverage:
+  status:
+    # Overall project coverage — informational, doesn't block PRs.
+    project:
+      default:
+        target: auto # use previous commit as baseline
+        threshold: 1% # allow 1% drop without failing
+        informational: true
+
+    # Per-patch coverage — covers only lines changed in the PR.
+    patch:
+      default:
+        target: 70%
+        informational: true
+
+  # Round coverage to 2 decimal places.
+  precision: 2
+
+# Comment on PRs with a coverage diff table. Updates existing comment
+# instead of posting a new one on each push.
+comment:
+  layout: 'reach,diff,flags,components'
+  behavior: default
+  require_changes: false
+  require_base: false
+  require_head: true
+
+# Flags separate TypeScript and Python coverage so they don't dilute
+# each other. Each flag maps to a CI upload that tags its files.
+flags:
+  typescript:
+    paths:
+      - src/
+    carryforward: true
+
+  python:
+    paths:
+      - python/
+    carryforward: true
+
+# Component-level coverage groups — shows per-area coverage in the PR
+# comment alongside the overall number.
+component_management:
+  individual_components:
+    - component_id: bio-utils
+      name: Bio Utilities
+      paths:
+        - src/lib/bio/**
+
+    - component_id: server-actions
+      name: Server Actions
+      paths:
+        - src/features/**/api/**
+
+    - component_id: stores
+      name: Stores
+      paths:
+        - src/stores/**
+        - src/features/**/stores/**
+
+    - component_id: python-algorithm
+      name: Python Algorithm
+      paths:
+        - python/algorithm.py
+
+    - component_id: python-api
+      name: Python API
+      paths:
+        - python/index.py
+
+# Ignore generated/vendored files from coverage reports.
+ignore:
+  - 'src/components/ui/**'
+  - 'src/drizzle/migrations/**'
+  - '**/*.test.ts'
+  - '**/*.test.tsx'
+  - 'src/test/**'
