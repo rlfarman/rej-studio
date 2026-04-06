@@ -114,8 +114,10 @@ const sentryWrapped = process.env.NEXT_PUBLIC_SENTRY_DSN
       silent: !process.env.CI,
       widenClientFileUpload: true,
       tunnelRoute: '/monitoring',
-      disableLogger: true,
-      automaticVercelMonitors: true,
+      webpack: {
+        treeshake: { removeDebugLogging: true },
+        automaticVercelMonitors: true,
+      },
     })
   : bundleAnalyzer(nextConfig)
 
