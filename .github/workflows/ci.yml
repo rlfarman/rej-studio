@@ -104,7 +104,21 @@ jobs:
           node-version: '24'
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
-      - run: pnpm test
+      - run: pnpm test:coverage
+      - name: Upload coverage
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: coverage
+          path: coverage/
+          retention-days: 7
+      - name: Comment coverage on PR
+        if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BODY=$(node scripts/comment-coverage.mjs)
+          gh pr comment "${{ github.event.pull_request.number }}" --body "$BODY" || true
 
   build:
     name: Build

@@ -8,11 +8,11 @@ export default defineConfig({
   test: {
     globals: false,
     environment: 'happy-dom',
-    include: ['src/**/*.test.ts'],
+    include: ['src/**/*.test.{ts,tsx}'],
     setupFiles: ['src/test/setup.ts'],
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'lcov'],
+      reporter: ['text', 'lcov', 'json-summary'],
       include: [
         'src/lib/bio/**',
         'src/lib/retry.ts',
