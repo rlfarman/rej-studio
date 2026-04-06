@@ -5,6 +5,7 @@
 
 const STATIC_ORIGINS = new Set([
   'https://rejstudio.com',
+  'https://www.rejstudio.com',
   'https://rej-studio.vercel.app',
   'https://rej-studio.rejstudio.workers.dev',
 ])
