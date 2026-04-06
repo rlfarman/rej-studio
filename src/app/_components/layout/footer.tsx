@@ -23,7 +23,7 @@ export function Footer() {
             onClick={() => copy(CITATION)}
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
-            aria-label="Copy citation to clipboard"
+            title="Copy citation to clipboard"
             className="text-muted-foreground text-sm hover:underline"
           >
             <span className="block text-xs sm:text-sm">
