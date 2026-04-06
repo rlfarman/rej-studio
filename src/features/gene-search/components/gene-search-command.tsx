@@ -71,6 +71,7 @@ export function GeneSearchCommand({
     >
       <CommandInput
         id="search"
+        aria-label="Search genes"
         placeholder="Search by gene symbol, name, or disease..."
         className="border-0 text-base ring-0 outline-0 focus:border-0 focus:ring-0 active:border-0 active:ring-0 sm:text-sm"
         value={query}
