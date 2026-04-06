@@ -32,6 +32,11 @@ export async function register() {
   // Enabled when OTEL_EXPORTER_OTLP_ENDPOINT is set (e.g. Axiom, Grafana,
   // Honeycomb). Next.js automatically creates spans for routes, server
   // actions, and fetches when the SDK is active.
+  //
+  // Ships traces, metrics, and logs over OTLP/HTTP to whatever collector is
+  // configured. Axiom example:
+  //   OTEL_EXPORTER_OTLP_ENDPOINT=https://api.axiom.co
+  //   OTEL_EXPORTER_OTLP_HEADERS=Authorization=Bearer <token>,X-Axiom-Dataset=<dataset>
   if (
     process.env.OTEL_EXPORTER_OTLP_ENDPOINT &&
     process.env.NEXT_RUNTIME === 'nodejs'
@@ -39,24 +44,38 @@ export async function register() {
     const { NodeSDK } = await import('@opentelemetry/sdk-node')
     const { OTLPTraceExporter } =
       await import('@opentelemetry/exporter-trace-otlp-http')
+    const { OTLPLogExporter } =
+      await import('@opentelemetry/exporter-logs-otlp-http')
+    const { OTLPMetricExporter } =
+      await import('@opentelemetry/exporter-metrics-otlp-http')
     const { getNodeAutoInstrumentations } =
       await import('@opentelemetry/auto-instrumentations-node')
     const { ATTR_SERVICE_NAME } =
       await import('@opentelemetry/semantic-conventions')
     const { resourceFromAttributes } = await import('@opentelemetry/resources')
+    const { SimpleLogRecordProcessor } = await import('@opentelemetry/sdk-logs')
+    const { PeriodicExportingMetricReader } =
+      await import('@opentelemetry/sdk-metrics')
 
     const sdk = new NodeSDK({
       resource: resourceFromAttributes({
         [ATTR_SERVICE_NAME]: process.env.OTEL_SERVICE_NAME ?? 'rej-studio',
       }),
       traceExporter: new OTLPTraceExporter(),
+      logRecordProcessors: [
+        new SimpleLogRecordProcessor(new OTLPLogExporter()),
+      ],
+      metricReader: new PeriodicExportingMetricReader({
+        exporter: new OTLPMetricExporter(),
+        exportIntervalMillis: 60_000,
+      }),
       instrumentations: [getNodeAutoInstrumentations()],
     })
 
     sdk.start()
 
-    // Flush pending spans on graceful shutdown so traces aren't lost
-    // when the process exits (container stop, deploy, etc.).
+    // Flush pending spans/logs/metrics on graceful shutdown so telemetry
+    // isn't lost when the process exits (container stop, deploy, etc.).
     process.on('SIGTERM', () => {
       sdk.shutdown().catch(console.error)
     })
