@@ -488,7 +488,13 @@ function FrameAtSplit({
                       : 'bg-amber-500/10 ring-amber-500/30 ring-1'),
                 )}
               >
-                <span className={cn('tabular-nums', roleStyles.aa)}>
+                <span
+                  className={cn(
+                    'tabular-nums',
+                    roleStyles.aa,
+                    selectedCodonIndices.has(c.idx) && 'text-foreground',
+                  )}
+                >
                   {c.aa ?? '·'}
                 </span>
                 <span className="flex">
@@ -564,8 +570,8 @@ function FrameAtSplit({
           })}
         </div>
       </div>
-      <div className="mx-auto w-full max-w-2xl">
-        <div className="bg-muted/30 min-h-32 space-y-2 rounded-sm border p-3 text-[10px]">
+      <div className="mx-auto mt-1 w-full max-w-xl">
+        <div className="bg-muted/30 min-h-28 space-y-2 rounded-sm border p-2.5 text-[10px]">
           {selectedSite && currentRewrite ? (
             <>
               <div className="flex items-center justify-between gap-2">
