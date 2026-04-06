@@ -25,6 +25,7 @@ A web application for RNA End-Joining sequence design and optimization. Scientis
 | State         | React Query (server state), Zustand (client state)                 |
 | Backend       | FastAPI (Python) with DNAChisel, deployed on Modal                 |
 | Database      | Neon (Postgres) via HTTP driver, Drizzle ORM                       |
+| Cache/Infra   | Upstash Redis (rate limiting, circuit breaker, idempotency, DLQ)   |
 | Hosting       | Vercel or Cloudflare Workers (Next.js) + Modal (Python)            |
 | Observability | Sentry (errors), OpenTelemetry (traces), Google Analytics (vitals) |
 
@@ -53,7 +54,7 @@ A web application for RNA End-Joining sequence design and optimization. Scientis
    cp .env.example .env
    ```
 
-   At minimum, set `DATABASE_URL` (Neon Postgres connection string). See `.env.example` for all available options.
+   At minimum, set `DATABASE_URL` (Neon Postgres connection string). For production, also set `COMPUTE_BACKEND=modal`, `MODAL_API_URL`, and `NEXT_PUBLIC_SITE_URL`. Optionally add `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` for distributed rate limiting (falls back to in-memory without them). See `.env.example` for all available options.
 
 3. **Populate the database** (first time only)
 
@@ -124,7 +125,8 @@ src/
 │   ├── ui/                       # shadcn/ui primitives
 │   └── bio/                      # Bio-domain widgets (species icon, DNA icon)
 ├── lib/                          # Shared utilities
-│   └── bio/                      # Bio-domain utils (species, FASTA, sequences)
+│   ├── bio/                      # Bio-domain utils (species, FASTA, sequences)
+│   └── analytics/                # Typed event tracking and consent
 ├── hooks/                        # Shared React hooks
 ├── stores/                       # Shared Zustand stores
 └── drizzle/                      # DB schema and client
@@ -140,7 +142,13 @@ Features are self-contained modules (`api/`, `components/`, `hooks/`, `stores/`,
 
 ## API
 
-The FastAPI backend exposes a single optimization endpoint:
+### Next.js API Routes
+
+- **`GET /api/health`** — System health check (DB latency, Modal status). Rate-limited; set `HEALTH_AUTH_TOKEN` for detailed output.
+- **`GET /api/version`** — Build SHA, timestamp, package version.
+- **`POST /api/auth`** — Basic auth endpoint (when `BASIC_AUTH_USER` / `BASIC_AUTH_PASSWORD` are set).
+
+### FastAPI Backend
 
 - **`POST /api/py/process`** — Accepts a coding sequence and optimization options, returns a ZIP containing a report and optimized sequences.
 
@@ -162,11 +170,40 @@ The Python backend deploys separately to **Modal**. See `modal/` and the CI work
 
 For details, see [docs/deployment.md](./docs/deployment.md).
 
+## Infrastructure
+
+### Rate Limiting & Distributed State
+
+All rate limiting, idempotency, circuit breaker, dead letter queue, and latency tracking are backed by **Upstash Redis** in production, with automatic in-memory fallback when Redis is unavailable. The free tier (10k requests/day) is sufficient for normal traffic.
+
+| Concern           | Redis key pattern   | Fallback                  |
+| ----------------- | ------------------- | ------------------------- |
+| Rate limiting     | `rl:<prefix>:*`     | In-memory sliding window  |
+| Idempotency       | `inflight:<hash>`   | In-memory Map (10m TTL)   |
+| Circuit breaker   | `circuit:modal`     | In-memory object          |
+| Dead letter queue | `dlq:jobs`          | In-memory array (cap 50)  |
+| DB latency        | `health:db_latency` | In-memory array (cap 100) |
+
+Set `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` to enable. Without them, everything falls back to per-instance in-memory state (fine for single-instance dev/preview).
+
+### Security
+
+- **HSTS** — `Strict-Transport-Security` with preload directive via `next.config.ts` headers.
+- **CSRF** — Origin validation in `src/proxy.ts` against a shared allowlist (`src/lib/allowed-origins.ts`).
+- **Rate-limited auth** — Basic auth login attempts capped at 5/min per IP (inline in proxy).
+- **Request size cap** — 256 KB body limit for mutating requests (proxy).
+- **Input validation** — Zod schemas at every server action boundary.
+
+### Health & Version Endpoints
+
+- **`GET /api/health`** — DB ping with latency percentiles (p50/p95/p99), Modal connectivity check. Supports `Authorization: Bearer <token>` for detailed output.
+- **`GET /api/version`** — Build SHA, timestamp, and package version.
+
 ## Observability
 
 - **Sentry** — Client and server error tracking. Set `NEXT_PUBLIC_SENTRY_DSN` to enable.
 - **OpenTelemetry** — Vendor-neutral distributed tracing. Set `OTEL_EXPORTER_OTLP_ENDPOINT` to ship traces (e.g. to Axiom).
-- **Google Analytics** — Web Vitals (LCP, CLS, INP) reporting. Set `NEXT_PUBLIC_GA_MEASUREMENT_ID`.
+- **Google Analytics** — Web Vitals (LCP, CLS, INP) reporting via GTM. Set `NEXT_PUBLIC_GTM_ID`.
 - **Structured logging** — JSON output in production (stdout/stderr), human-readable in dev. See `src/lib/logger.ts`.
 
 For details, see [docs/observability.md](./docs/observability.md).

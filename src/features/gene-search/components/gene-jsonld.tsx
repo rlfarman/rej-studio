@@ -11,10 +11,7 @@ export function GeneJsonLd({
   isoformCount: number
   species: string[]
 }) {
-  const baseUrl =
-    process.env.NEXT_PUBLIC_SITE_URL ??
-    process.env.NEXT_PUBLIC_BASE_URL ??
-    'https://rejstudio.com'
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://rejstudio.com'
 
   const jsonLd = {
     '@context': 'https://schema.org',

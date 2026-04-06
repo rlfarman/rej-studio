@@ -12,10 +12,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     .select({ symbol: genes.symbol, species: genes.species })
     .from(genes)
 
-  const baseUrl =
-    process.env.NEXT_PUBLIC_SITE_URL ??
-    process.env.NEXT_PUBLIC_BASE_URL ??
-    'https://rejstudio.com'
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://rejstudio.com'
 
   const geneEntries: MetadataRoute.Sitemap = allGenes.map((gene) => ({
     url: `${baseUrl}/genes/${gene.symbol}?species=${gene.species}`,
