@@ -6,9 +6,6 @@ import { env } from '@/lib/env'
 import { createUpstashRateLimiter, redis } from '@/lib/upstash'
 import { withCors } from '@/lib/api-cors'
 
-export const dynamic = 'force-dynamic'
-export const revalidate = 0
-
 // Rate limit: 20 requests per minute per IP.
 const limiter = createUpstashRateLimiter({
   prefix: 'health',

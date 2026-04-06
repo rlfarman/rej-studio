@@ -2,9 +2,6 @@ import { NextResponse } from 'next/server'
 import { headers } from 'next/headers'
 import { withCors } from '@/lib/api-cors'
 
-export const dynamic = 'force-dynamic'
-export const revalidate = 0
-
 /**
  * Lightweight version endpoint. Returns the commit SHA and build timestamp
  * so we can correlate "which deploy is throwing this error" without digging

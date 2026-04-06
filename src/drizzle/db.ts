@@ -5,14 +5,14 @@ import * as schema from './schema'
 const isDev = process.env.NODE_ENV === 'development'
 const databaseUrl = process.env.DATABASE_URL ?? ''
 
-// PGlite (embedded Postgres) for offline local development.
+// PGlite (embedded Postgres) for local development and CI.
 // Activates when DATABASE_URL is empty, a file path, or 'memory://'.
 // Full PostgreSQL compatibility — tsvector, GIN indexes, etc. all work.
-export const usePglite =
-  isDev &&
-  (databaseUrl === '' ||
-    databaseUrl.startsWith('file:') ||
-    databaseUrl.startsWith('memory:'))
+// Production is guarded by env.ts which requires a postgres:// URL.
+const usePglite =
+  databaseUrl === '' ||
+  databaseUrl.startsWith('file:') ||
+  databaseUrl.startsWith('memory:')
 
 const devLogger = {
   logQuery(query: string, params: unknown[]) {
@@ -75,7 +75,3 @@ export async function getDb(): Promise<Db> {
 
 // Synchronous Neon instance for production. Not used when usePglite is true.
 const neonDb: Db = usePglite ? (null as unknown as Db) : createNeonDb()
-
-// Legacy synchronous export — works with Neon. With PGlite, callers must
-// use getDb() instead. Existing server action code is already async.
-export const db: Db = neonDb
