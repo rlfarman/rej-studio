@@ -11,6 +11,9 @@ const bundleAnalyzer = withBundleAnalyzer({
 // In production, the Python backend runs on Modal and is called directly from
 // server actions (see src/features/design-tool/api/jobs.ts) — no rewrites.
 const nextConfig: NextConfig = {
+  // Emit standalone output for Docker production builds (see docker/prod.Dockerfile).
+  // Gated behind DOCKER_BUILD to avoid changing Vercel/CF deploy behavior.
+  ...(process.env.DOCKER_BUILD === 'true' && { output: 'standalone' }),
   cacheComponents: true,
   // PGlite uses native/WASM modules that must not be bundled by webpack/turbopack.
   serverExternalPackages: ['@electric-sql/pglite'],
@@ -85,18 +88,21 @@ const nextConfig: NextConfig = {
   ],
   rewrites: async () => {
     if (process.env.NODE_ENV === 'development') {
+      // LOCAL_API_URL defaults to localhost; in Docker it points to the
+      // fastapi service (e.g. http://fastapi:8000).
+      const pyBackend = process.env.LOCAL_API_URL ?? 'http://127.0.0.1:8000'
       return [
         {
           source: '/api/py/:path*',
-          destination: 'http://127.0.0.1:8000/api/py/:path*',
+          destination: `${pyBackend}/api/py/:path*`,
         },
         {
           source: '/docs',
-          destination: 'http://127.0.0.1:8000/api/py/docs',
+          destination: `${pyBackend}/api/py/docs`,
         },
         {
           source: '/openapi.json',
-          destination: 'http://127.0.0.1:8000/api/py/openapi.json',
+          destination: `${pyBackend}/api/py/openapi.json`,
         },
       ]
     }
