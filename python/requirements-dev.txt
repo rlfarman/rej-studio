@@ -7,3 +7,4 @@ pyright>=1.1.370
 # Testing
 pytest>=8.0.0
 pytest-timeout>=2.0.0
+pytest-cov>=6.0.0

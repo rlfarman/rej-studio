@@ -27,6 +27,10 @@ export default defineConfig({
       thresholds: {
         'src/lib/bio/**': { lines: 90 },
         'src/lib/retry.ts': { lines: 90 },
+        'src/lib/rate-limit.ts': { lines: 85 },
+        'src/lib/upstash.ts': { lines: 45 },
+        'src/features/**/types/**': { lines: 80 },
+        'src/stores/**': { lines: 65 },
       },
     },
   },
