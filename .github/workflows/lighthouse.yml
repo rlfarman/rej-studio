@@ -55,6 +55,7 @@ jobs:
           uploadArtifacts: true
           temporaryPublicStorage: true
         env:
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           COMPUTE_BACKEND: modal
           MODAL_API_URL: https://placeholder.modal.run
