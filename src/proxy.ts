@@ -73,10 +73,10 @@ const MAX_BODY_BYTES = 256 * 1024
 // Origin check (which only validates server actions, not API routes).
 // Origin allowlist is shared with API-route CORS in @/lib/allowed-origins.
 
-function buildCsp(nonce: string): string {
+function buildCsp(): string {
   return [
     "default-src 'self'",
-    `script-src 'self' 'unsafe-inline' 'nonce-${nonce}' https://www.googletagmanager.com https://*.sentry.io`,
+    "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://*.sentry.io",
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob: https://www.googletagmanager.com",
     "font-src 'self'",
@@ -116,12 +116,7 @@ export async function proxy(req: NextRequest) {
   const isDev = process.env.NODE_ENV === 'development'
   const requestHeaders = new Headers(req.headers)
 
-  let csp: string | undefined
-  if (!isDev) {
-    const nonce = Buffer.from(crypto.randomUUID()).toString('base64')
-    csp = buildCsp(nonce)
-    requestHeaders.set('x-nonce', nonce)
-  }
+  const csp = isDev ? undefined : buildCsp()
 
   // --- Basic auth (landing page only) ---
   const { pathname } = req.nextUrl
