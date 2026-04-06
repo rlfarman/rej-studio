@@ -49,11 +49,14 @@ export const metadata = {
 async function AppShell({ children }: { children: React.ReactNode }) {
   const cookieStore = await cookies()
   const defaultOpen = cookieStore.get('sidebar_state')?.value === 'true'
+  const widthCookie = cookieStore.get('sidebar_width')?.value
+  const defaultWidth = widthCookie ? Number(widthCookie) : undefined
   const maintenanceMessage = process.env.MAINTENANCE_MESSAGE?.trim()
 
   return (
     <SidebarProvider
       defaultOpen={defaultOpen}
+      defaultWidth={defaultWidth}
       className="relative flex h-full w-full flex-row overflow-hidden"
     >
       <AppSidebar />

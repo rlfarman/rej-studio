@@ -26,8 +26,11 @@ import {
 } from '@/components/ui/tooltip'
 
 const SIDEBAR_COOKIE_NAME = 'sidebar_state'
+const SIDEBAR_WIDTH_COOKIE_NAME = 'sidebar_width'
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
-const SIDEBAR_WIDTH = '16rem'
+const SIDEBAR_WIDTH_DEFAULT = 256
+const SIDEBAR_WIDTH_MIN = 200
+const SIDEBAR_WIDTH_MAX = 480
 const SIDEBAR_WIDTH_MOBILE = '18rem'
 const SIDEBAR_WIDTH_ICON = '3rem'
 const SIDEBAR_KEYBOARD_SHORTCUT = 'b'
@@ -40,6 +43,8 @@ type SidebarContext = {
   setOpenMobile: (open: boolean) => void
   isMobile: boolean
   toggleSidebar: () => void
+  width: number
+  setWidth: (width: number) => void
 }
 
 const SidebarContext = React.createContext<SidebarContext | null>(null)
@@ -55,6 +60,7 @@ function useSidebar() {
 
 function SidebarProvider({
   defaultOpen = true,
+  defaultWidth = SIDEBAR_WIDTH_DEFAULT,
   open: openProp,
   onOpenChange: setOpenProp,
   className,
@@ -63,6 +69,7 @@ function SidebarProvider({
   ...props
 }: React.ComponentProps<'div'> & {
   defaultOpen?: boolean
+  defaultWidth?: number
   open?: boolean
   onOpenChange?: (open: boolean) => void
 }) {
@@ -87,6 +94,15 @@ function SidebarProvider({
     },
     [setOpenProp, open],
   )
+
+  // Sidebar width state for drag-to-resize.
+  const [width, _setWidth] = React.useState(defaultWidth)
+  const setWidth = React.useCallback((w: number) => {
+    const clamped = Math.round(
+      Math.min(SIDEBAR_WIDTH_MAX, Math.max(SIDEBAR_WIDTH_MIN, w)),
+    )
+    _setWidth(clamped)
+  }, [])
 
   // Helper to toggle the sidebar.
   const toggleSidebar = React.useCallback(() => {
@@ -122,8 +138,20 @@ function SidebarProvider({
       openMobile,
       setOpenMobile,
       toggleSidebar,
+      width,
+      setWidth,
     }),
-    [state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar],
+    [
+      state,
+      open,
+      setOpen,
+      isMobile,
+      openMobile,
+      setOpenMobile,
+      toggleSidebar,
+      width,
+      setWidth,
+    ],
   )
 
   return (
@@ -133,7 +161,7 @@ function SidebarProvider({
           data-slot="sidebar-wrapper"
           style={
             {
-              '--sidebar-width': SIDEBAR_WIDTH,
+              '--sidebar-width': `${width}px`,
               '--sidebar-width-icon': SIDEBAR_WIDTH_ICON,
               ...style,
             } as React.CSSProperties
@@ -277,7 +305,67 @@ function SidebarTrigger({
 }
 
 function SidebarRail({ className, ...props }: React.ComponentProps<'button'>) {
-  const { toggleSidebar } = useSidebar()
+  const { toggleSidebar, setWidth, width, open } = useSidebar()
+  const isDragging = React.useRef(false)
+  const startX = React.useRef(0)
+  const startWidth = React.useRef(0)
+  const totalDelta = React.useRef(0)
+
+  const handlePointerDown = React.useCallback(
+    (e: React.PointerEvent) => {
+      if (!open) {
+        toggleSidebar()
+        return
+      }
+      e.preventDefault()
+      isDragging.current = true
+      startX.current = e.clientX
+      startWidth.current = width
+      totalDelta.current = 0
+      document.body.style.cursor = 'col-resize'
+      document.body.style.userSelect = 'none'
+
+      const handlePointerMove = (e: PointerEvent) => {
+        if (!isDragging.current) return
+        const delta = e.clientX - startX.current
+        totalDelta.current = delta
+        setWidth(startWidth.current + delta)
+      }
+
+      const handlePointerUp = () => {
+        document.body.style.cursor = ''
+        document.body.style.userSelect = ''
+        window.removeEventListener('pointermove', handlePointerMove)
+        window.removeEventListener('pointerup', handlePointerUp)
+
+        if (Math.abs(totalDelta.current) < 5) {
+          // Treat as a click — toggle sidebar
+          isDragging.current = false
+          toggleSidebar()
+          return
+        }
+
+        // Persist width to cookie
+        const clamped = Math.round(
+          Math.min(
+            SIDEBAR_WIDTH_MAX,
+            Math.max(SIDEBAR_WIDTH_MIN, startWidth.current + totalDelta.current),
+          ),
+        )
+        document.cookie = `${SIDEBAR_WIDTH_COOKIE_NAME}=${clamped}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
+        isDragging.current = false
+      }
+
+      window.addEventListener('pointermove', handlePointerMove)
+      window.addEventListener('pointerup', handlePointerUp)
+    },
+    [open, width, setWidth, toggleSidebar],
+  )
+
+  const handleDoubleClick = React.useCallback(() => {
+    setWidth(SIDEBAR_WIDTH_DEFAULT)
+    document.cookie = `${SIDEBAR_WIDTH_COOKIE_NAME}=${SIDEBAR_WIDTH_DEFAULT}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
+  }, [setWidth])
 
   return (
     <button
@@ -285,12 +373,13 @@ function SidebarRail({ className, ...props }: React.ComponentProps<'button'>) {
       data-slot="sidebar-rail"
       aria-label="Toggle Sidebar"
       tabIndex={-1}
-      onClick={toggleSidebar}
-      title="Toggle Sidebar"
+      onPointerDown={handlePointerDown}
+      onDoubleClick={handleDoubleClick}
+      title="Drag to resize — click to toggle — double-click to reset"
       className={cn(
         'hover:after:bg-sidebar-border absolute inset-y-0 z-20 hidden w-4 -translate-x-1/2 transition-all ease-linear group-data-[side=left]:-right-4 group-data-[side=right]:left-0 after:absolute after:inset-y-0 after:left-1/2 after:w-[2px] sm:flex',
-        'in-data-[side=left]:cursor-w-resize in-data-[side=right]:cursor-e-resize',
-        '[[data-side=left][data-state=collapsed]_&]:cursor-e-resize [[data-side=right][data-state=collapsed]_&]:cursor-w-resize',
+        'cursor-col-resize',
+        'hover:after:w-[4px] hover:after:-translate-x-[1px]',
         'hover:group-data-[collapsible=offcanvas]:bg-sidebar group-data-[collapsible=offcanvas]:translate-x-0 group-data-[collapsible=offcanvas]:after:left-full',
         '[[data-side=left][data-collapsible=offcanvas]_&]:-right-2',
         '[[data-side=right][data-collapsible=offcanvas]_&]:-left-2',
