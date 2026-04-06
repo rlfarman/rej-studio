@@ -92,7 +92,9 @@ Claude agents often run in git worktrees at `.claude/worktrees/<name>/`. A fresh
 ./scripts/bootstrap-worktree.sh
 ```
 
-This symlinks `.env` and `venv/` from the main repo and runs `pnpm install` in the worktree.
+This symlinks `.env` and `venv/` from the main repo, configures pnpm to share the virtual store with the main repo (saving ~1.3 GB per worktree), and runs `pnpm install` to create the thin symlink tree.
+
+To reclaim disk from existing worktrees that used per-worktree `node_modules`, run `./scripts/cleanup-worktree-modules.sh` from the main repo (use `--dry-run` to preview).
 
 **Always use absolute paths or paths relative to the worktree root** — do not assume the working directory is the main repo. When in doubt, `pwd` first. Edits, commits, and commands must happen inside the worktree (`.claude/worktrees/<name>/`), not the main repo at the project root.
 
