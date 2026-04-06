@@ -30,8 +30,8 @@ jobs:
           cache: 'pip'
           cache-dependency-path: python/requirements.txt
 
-      - name: Install Modal
-        run: pip install modal
+      - name: Install dependencies
+        run: pip install modal fastapi pydantic
 
       - name: Deploy
         env:

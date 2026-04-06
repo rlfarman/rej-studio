@@ -38,8 +38,8 @@ jobs:
           cache: 'pip'
           cache-dependency-path: python/requirements.txt
 
-      - name: Install Modal
-        run: pip install modal
+      - name: Install dependencies
+        run: pip install modal fastapi pydantic
 
       - name: Deploy to canary environment
         env:
@@ -89,8 +89,8 @@ jobs:
           cache: 'pip'
           cache-dependency-path: python/requirements.txt
 
-      - name: Install Modal
-        run: pip install modal
+      - name: Install dependencies
+        run: pip install modal fastapi pydantic
 
       - name: Deploy to production
         env:

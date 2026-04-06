@@ -1,6 +1,5 @@
 import {
   Command,
-  CommandEmpty,
   CommandGroup,
   CommandInput,
   CommandItem,
@@ -84,7 +83,10 @@ export function GeneSearchCommand({
         autoFocus
       />
       {showList && (
-        <CommandList className="max-h-[300px] overflow-y-auto">
+        <>
+          {/* Non-listbox states: render outside CommandList to avoid
+              aria-required-children violations (listbox must only contain
+              option-role children). */}
           {isLoading ? (
             <GeneResultsLoading />
           ) : error ? (
@@ -100,55 +102,40 @@ export function GeneSearchCommand({
                 Retry
               </Button>
             </div>
-          ) : showEmptyState ? (
-            hasAnySuggestions ? (
-              <>
-                {hasFavoriteGenes && (
-                  <CommandGroup heading="Favorites">
-                    {favoriteGenes.slice(0, 5).map((gene) => (
-                      <CommandItem
-                        key={`fav-${gene.id}`}
-                        value={`fav-${gene.id}`}
-                        onSelect={() => internalHandleSelect(gene)}
-                      >
-                        <HeartIcon className="text-muted-foreground h-4 w-4" />
-                        {gene.species && (
-                          <SpeciesIcon
-                            species={gene.species}
-                            className="text-muted-foreground h-3.5 w-3.5"
-                          />
-                        )}
-                        <span className="font-mono font-medium">
-                          {gene.symbol}
-                        </span>
-                        <div className="flex min-w-0 flex-col">
-                          <TruncatedText
-                            tooltip={gene.name}
-                            className="text-muted-foreground truncate"
-                          >
-                            {gene.name}
-                          </TruncatedText>
-                          {gene.matchedIsoformId && (
-                            <span className="text-muted-foreground font-mono text-xs">
-                              {gene.matchedIsoformId}
-                            </span>
-                          )}
-                        </div>
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                )}
-                {hasRecentGenes && (
-                  <>
-                    {hasFavoriteGenes && <CommandSeparator />}
-                    <CommandGroup heading="Recent Genes">
-                      {recentGenes.slice(0, 5).map((gene) => (
+          ) : showEmptyState && !hasAnySuggestions ? (
+            <div className="py-6 text-center text-sm">
+              Search by gene symbol, name, or disease.
+            </div>
+          ) : hasSearched && searchResults.length === 0 ? (
+            <div className="py-6 text-center text-sm">
+              No genes match &ldquo;{query}&rdquo;.{' '}
+              <Link
+                href="/design-tool"
+                className="text-primary font-medium underline underline-offset-4"
+                onClick={() => {
+                  setIsOpen(false)
+                  setShowList(false)
+                }}
+              >
+                Enter a custom sequence instead.
+              </Link>
+            </div>
+          ) : null}
+
+          {/* CommandList (role="listbox") only when there are CommandItem children. */}
+          {!isLoading && !error && (
+            <CommandList className="max-h-[300px] overflow-y-auto">
+              {showEmptyState && hasAnySuggestions && (
+                <>
+                  {hasFavoriteGenes && (
+                    <CommandGroup heading="Favorites">
+                      {favoriteGenes.slice(0, 5).map((gene) => (
                         <CommandItem
-                          key={`recent-${gene.id}`}
-                          value={`recent-${gene.id}`}
+                          key={`fav-${gene.id}`}
+                          value={`fav-${gene.id}`}
                           onSelect={() => internalHandleSelect(gene)}
                         >
-                          <ClockIcon className="text-muted-foreground h-4 w-4" />
+                          <HeartIcon className="text-muted-foreground h-4 w-4" />
                           {gene.species && (
                             <SpeciesIcon
                               species={gene.species}
@@ -174,35 +161,47 @@ export function GeneSearchCommand({
                         </CommandItem>
                       ))}
                     </CommandGroup>
-                  </>
-                )}
-              </>
-            ) : (
-              <CommandEmpty>
-                Search by gene symbol, name, or disease.
-              </CommandEmpty>
-            )
-          ) : (
-            <>
-              <CommandEmpty>
-                {!hasSearched ? (
-                  'Search by gene symbol, name, or disease.'
-                ) : (
-                  <div>
-                    No genes match &ldquo;{query}&rdquo;.{' '}
-                    <Link
-                      href="/design-tool"
-                      className="text-primary font-medium underline underline-offset-4"
-                      onClick={() => {
-                        setIsOpen(false)
-                        setShowList(false)
-                      }}
-                    >
-                      Enter a custom sequence instead.
-                    </Link>
-                  </div>
-                )}
-              </CommandEmpty>
+                  )}
+                  {hasRecentGenes && (
+                    <>
+                      {hasFavoriteGenes && <CommandSeparator />}
+                      <CommandGroup heading="Recent Genes">
+                        {recentGenes.slice(0, 5).map((gene) => (
+                          <CommandItem
+                            key={`recent-${gene.id}`}
+                            value={`recent-${gene.id}`}
+                            onSelect={() => internalHandleSelect(gene)}
+                          >
+                            <ClockIcon className="text-muted-foreground h-4 w-4" />
+                            {gene.species && (
+                              <SpeciesIcon
+                                species={gene.species}
+                                className="text-muted-foreground h-3.5 w-3.5"
+                              />
+                            )}
+                            <span className="font-mono font-medium">
+                              {gene.symbol}
+                            </span>
+                            <div className="flex min-w-0 flex-col">
+                              <TruncatedText
+                                tooltip={gene.name}
+                                className="text-muted-foreground truncate"
+                              >
+                                {gene.name}
+                              </TruncatedText>
+                              {gene.matchedIsoformId && (
+                                <span className="text-muted-foreground font-mono text-xs">
+                                  {gene.matchedIsoformId}
+                                </span>
+                              )}
+                            </div>
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </>
+                  )}
+                </>
+              )}
               {searchResults.map((gene) => (
                 <CommandItem
                   key={gene.id}
@@ -253,9 +252,9 @@ export function GeneSearchCommand({
                   )}
                 </CommandItem>
               ))}
-            </>
+            </CommandList>
           )}
-        </CommandList>
+        </>
       )}
     </Command>
   )
