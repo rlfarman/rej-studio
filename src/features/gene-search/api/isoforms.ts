@@ -1,5 +1,6 @@
 'use server'
 
+import { cache } from 'react'
 import {
   fetchIsoformsByGene,
   fetchIsoformAndGeneByIsoformId,
@@ -11,12 +12,17 @@ import { z } from 'zod'
 const geneIdSchema = z.string().min(1).max(100)
 const isoformIdSchema = z.string().min(1).max(100)
 
+// Wrap with React cache() to deduplicate identical calls within a single
+// server request (e.g. if a layout and page both need the same isoforms).
+const cachedFetchIsoformsByGene = cache(fetchIsoformsByGene)
+const cachedFetchIsoformAndGene = cache(fetchIsoformAndGeneByIsoformId)
+
 export async function getIsoformsByGene(geneId: string) {
   const validatedGeneId = geneIdSchema.parse(geneId)
-  return fetchIsoformsByGene(validatedGeneId)
+  return cachedFetchIsoformsByGene(validatedGeneId)
 }
 
 export async function getIsoformAndGeneByIsoformId(isoformId: string) {
   const validatedIsoformId = isoformIdSchema.parse(isoformId)
-  return fetchIsoformAndGeneByIsoformId(validatedIsoformId)
+  return cachedFetchIsoformAndGene(validatedIsoformId)
 }

@@ -3,26 +3,42 @@ import { headers } from 'next/headers'
 import { sql } from 'drizzle-orm'
 import { db } from '@/drizzle/db'
 import { env } from '@/lib/env'
-import { createRateLimiter } from '@/lib/rate-limit'
+import { createUpstashRateLimiter, redis } from '@/lib/upstash'
 import { withCors } from '@/lib/api-cors'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
 // Rate limit: 20 requests per minute per IP.
-const limiter = createRateLimiter({ windowMs: 60_000, max: 20 })
+const limiter = createUpstashRateLimiter({
+  prefix: 'health',
+  maxRequests: 20,
+  windowMs: 60_000,
+})
 
 const HEALTH_AUTH_TOKEN = process.env.HEALTH_AUTH_TOKEN
 
 // --- Rolling latency tracker ------------------------------------------------
 // Keeps the last N DB latency samples so the health endpoint can report
 // percentiles (p50, p95, p99) over time, not just a point-in-time ping.
+// When Redis is available, samples persist across redeploys and are shared
+// across instances. Falls back to in-memory otherwise.
 const MAX_SAMPLES = 100
-const dbLatencySamples: number[] = []
+const LATENCY_KEY = 'health:db_latency'
+const dbLatencySamplesLocal: number[] = []
 
-function recordLatency(ms: number) {
-  dbLatencySamples.push(ms)
-  if (dbLatencySamples.length > MAX_SAMPLES) dbLatencySamples.shift()
+async function recordLatency(ms: number) {
+  if (redis) {
+    try {
+      await redis.lpush(LATENCY_KEY, ms)
+      await redis.ltrim(LATENCY_KEY, 0, MAX_SAMPLES - 1)
+      return
+    } catch {
+      // Redis unavailable — fall through to local
+    }
+  }
+  dbLatencySamplesLocal.push(ms)
+  if (dbLatencySamplesLocal.length > MAX_SAMPLES) dbLatencySamplesLocal.shift()
 }
 
 function percentile(sorted: number[], p: number): number {
@@ -31,9 +47,21 @@ function percentile(sorted: number[], p: number): number {
   return sorted[Math.max(0, idx)]
 }
 
-function getLatencyStats() {
-  if (dbLatencySamples.length === 0) return null
-  const sorted = [...dbLatencySamples].sort((a, b) => a - b)
+async function getLatencyStats() {
+  let samples: number[]
+  if (redis) {
+    try {
+      const raw = await redis.lrange(LATENCY_KEY, 0, MAX_SAMPLES - 1)
+      samples = raw.map(Number)
+    } catch {
+      // Redis unavailable — fall through to local
+      samples = dbLatencySamplesLocal
+    }
+  } else {
+    samples = dbLatencySamplesLocal
+  }
+  if (samples.length === 0) return null
+  const sorted = [...samples].sort((a, b) => a - b)
   return {
     samples: sorted.length,
     p50: percentile(sorted, 50),
@@ -48,7 +76,7 @@ type CheckStatus = 'ok' | 'fail' | 'skipped'
 interface Check {
   status: CheckStatus
   latencyMs?: number
-  latencyStats?: ReturnType<typeof getLatencyStats>
+  latencyStats?: Awaited<ReturnType<typeof getLatencyStats>>
   error?: string
 }
 
@@ -67,8 +95,12 @@ async function checkDatabase(): Promise<Check> {
   try {
     await db.execute(sql`SELECT 1`)
     const ms = Math.round(performance.now() - start)
-    recordLatency(ms)
-    return { status: 'ok', latencyMs: ms, latencyStats: getLatencyStats() }
+    await recordLatency(ms)
+    return {
+      status: 'ok',
+      latencyMs: ms,
+      latencyStats: await getLatencyStats(),
+    }
   } catch (err) {
     const ms = Math.round(performance.now() - start)
     return {
@@ -113,7 +145,7 @@ export async function GET() {
   const hdrs = await headers()
   const origin = hdrs.get('origin')
   const ip = hdrs.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
-  const { ok: allowed, remaining, resetMs } = limiter.check(ip)
+  const { ok: allowed, remaining } = await limiter.check(ip)
 
   if (!allowed) {
     return withCors(
@@ -122,7 +154,7 @@ export async function GET() {
         {
           status: 429,
           headers: {
-            'Retry-After': String(Math.ceil(resetMs / 1000)),
+            'Retry-After': '60',
             'X-RateLimit-Remaining': '0',
           },
         },

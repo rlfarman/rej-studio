@@ -8,16 +8,25 @@ import type { GeneSearchResult } from '@/features/gene-search/api/gene-queries'
 import { speciesFilterSchema, type SpeciesFilter } from '@/lib/bio/species'
 import { z } from 'zod'
 import { headers } from 'next/headers'
-import { createRateLimiter } from '@/lib/rate-limit'
+import { createUpstashRateLimiter } from '@/lib/upstash'
 import { createLogger } from '@/lib/logger'
 
 export type { GeneSearchResult }
+
+export interface SearchGenesResult {
+  results: GeneSearchResult[]
+  error?: string
+}
 
 const log = createLogger('gene-search')
 
 // 30 searches per minute per IP. Generous for normal use but caps automated
 // scraping that would hammer the Neon DB.
-const searchLimiter = createRateLimiter({ windowMs: 60_000, max: 30 })
+const searchLimiter = createUpstashRateLimiter({
+  prefix: 'search',
+  maxRequests: 30,
+  windowMs: 60_000,
+})
 
 // Defense-in-depth: server actions are reachable from any caller (client, other
 // server code), so re-validate inputs at the boundary even though call-sites
@@ -35,14 +44,14 @@ const geneSymbolInput = z.object({
 export async function searchGenes(
   query: string,
   species: SpeciesFilter = 'both',
-): Promise<GeneSearchResult[]> {
+): Promise<SearchGenesResult> {
   const parsed = searchGenesInput.parse({ query, species })
   const trimmedQuery = parsed.query.trim()
-  if (trimmedQuery.length === 0) return []
+  if (trimmedQuery.length === 0) return { results: [] }
 
   const hdrs = await headers()
   const ip = hdrs.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
-  const { ok: allowed } = searchLimiter.check(ip)
+  const { ok: allowed } = await searchLimiter.check(ip)
   if (!allowed) {
     throw new Error('Too many search requests. Please wait a moment.')
   }
@@ -57,12 +66,12 @@ export async function searchGenes(
       species: parsed.species,
       resultCount: results.length,
     })
-    return results
+    return { results }
   } catch (err) {
     log.error('search query failed', err, { query: trimmedQuery })
-    // Return empty results instead of crashing — the UI shows "no results"
-    // which is better than an error boundary for transient DB issues.
-    return []
+    // Return empty results with an error flag instead of crashing — the UI
+    // can distinguish "no matches" from "search is broken" and show a warning.
+    return { results: [], error: 'Search is temporarily unavailable.' }
   }
 }
 

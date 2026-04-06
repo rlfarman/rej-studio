@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { isAllowedOrigin } from '@/lib/allowed-origins'
 
 export const config = {
   matcher: [
@@ -70,25 +71,7 @@ const MAX_BODY_BYTES = 256 * 1024
 // Next.js server actions use POST. Reject cross-origin POSTs that don't come
 // from our own domains. This is defense-in-depth on top of Next.js's built-in
 // Origin check (which only validates server actions, not API routes).
-
-const ALLOWED_ORIGINS = new Set([
-  'https://rejstudio.com',
-  'https://rej-studio.vercel.app',
-  'https://rej-studio.rejstudio.workers.dev',
-])
-
-if (process.env.NODE_ENV === 'development') {
-  ALLOWED_ORIGINS.add('http://localhost:3000')
-  ALLOWED_ORIGINS.add('http://127.0.0.1:3000')
-}
-
-function isAllowedOrigin(origin: string): boolean {
-  if (ALLOWED_ORIGINS.has(origin)) return true
-  if (/^https:\/\/rej-studio-[\w-]+\.vercel\.app$/.test(origin)) return true
-  if (/^https:\/\/[\w-]+-rej-studio\.rejstudio\.workers\.dev$/.test(origin))
-    return true
-  return false
-}
+// Origin allowlist is shared with API-route CORS in @/lib/allowed-origins.
 
 function buildCsp(nonce: string): string {
   return [

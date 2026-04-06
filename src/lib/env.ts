@@ -77,16 +77,32 @@ const serverSchema = z
     }
   })
 
-const clientSchema = z.object({
-  // Client-exposed vars must be prefixed with NEXT_PUBLIC_ so Next inlines them.
-  NEXT_PUBLIC_GTM_ID: z
-    .string()
-    .regex(/^GTM-[A-Z0-9]+$/, 'Expected GTM container ID like "GTM-XXXXXXX".')
-    .optional(),
+const clientSchema = z
+  .object({
+    // Client-exposed vars must be prefixed with NEXT_PUBLIC_ so Next inlines them.
+    NEXT_PUBLIC_GTM_ID: z
+      .string()
+      .regex(/^GTM-[A-Z0-9]+$/, 'Expected GTM container ID like "GTM-XXXXXXX".')
+      .optional(),
 
-  // Sentry DSN (client-side). When unset, Sentry is not initialised.
-  NEXT_PUBLIC_SENTRY_DSN: z.string().url().optional(),
-})
+    // Sentry DSN (client-side). When unset, Sentry is not initialised.
+    NEXT_PUBLIC_SENTRY_DSN: z.string().url().optional(),
+
+    // Canonical site URL for metadata, OG images, sitemap, and robots.txt.
+    // Required in production to prevent hardcoded fallback from silently
+    // serving the wrong URL. In dev, defaults to https://rejstudio.com.
+    NEXT_PUBLIC_SITE_URL: z.string().url().optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (isProd && !data.NEXT_PUBLIC_SITE_URL) {
+      ctx.addIssue({
+        path: ['NEXT_PUBLIC_SITE_URL'],
+        code: z.ZodIssueCode.custom,
+        message:
+          'NEXT_PUBLIC_SITE_URL is required in production to ensure correct canonical URLs, OG images, and sitemap entries.',
+      })
+    }
+  })
 
 function parseEnv() {
   const serverResult = serverSchema.safeParse(process.env)

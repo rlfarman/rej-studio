@@ -20,7 +20,15 @@ export async function GeneSearchResults({
   query,
   species,
 }: GeneSearchResultsProps) {
-  const results = await searchGenes(query, species)
+  const { results, error } = await searchGenes(query, species)
+
+  if (error) {
+    return (
+      <div className="text-destructive-foreground bg-destructive/10 rounded-lg py-6 text-center text-sm">
+        {error} Try again in a moment.
+      </div>
+    )
+  }
 
   if (results.length === 0) {
     return (

@@ -1,8 +1,13 @@
+import { NextResponse } from 'next/server'
+
 export async function GET() {
-  return new Response('Auth Required.', {
-    status: 401,
-    headers: {
-      'WWW-Authenticate': 'Basic realm="Secure Area"',
+  return NextResponse.json(
+    { error: 'Authentication required.' },
+    {
+      status: 401,
+      headers: {
+        'WWW-Authenticate': 'Basic realm="Secure Area"',
+      },
     },
-  })
+  )
 }
