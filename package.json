@@ -4,7 +4,7 @@
   "private": true,
   "packageManager": "pnpm@9.12.3",
   "engines": {
-    "node": ">=24.0.0"
+    "node": "24.x"
   },
   "scripts": {
     "fastapi-dev": "source venv/bin/activate && pip install -r python/requirements.txt && python3 -m uvicorn python.index:app --reload",
