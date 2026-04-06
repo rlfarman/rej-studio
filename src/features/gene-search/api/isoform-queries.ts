@@ -1,4 +1,4 @@
-import { db } from '@/drizzle/db'
+import { getDb } from '@/drizzle/db'
 import { genes, isoforms } from '@/drizzle/schema'
 import { eq } from 'drizzle-orm'
 import { cacheLife } from 'next/cache'
@@ -12,6 +12,7 @@ export async function fetchIsoformsByGene(geneId: string) {
   'use cache'
   cacheLife({ revalidate: 300 })
 
+  const db = await getDb()
   return db
     .select({
       id: isoforms.id,
@@ -30,6 +31,7 @@ export async function fetchIsoformAndGeneByIsoformId(isoformId: string) {
   'use cache'
   cacheLife({ revalidate: 300 })
 
+  const db = await getDb()
   const [result] = await db
     .select({
       isoform: {

@@ -12,6 +12,8 @@ const bundleAnalyzer = withBundleAnalyzer({
 // server actions (see src/features/design-tool/api/jobs.ts) — no rewrites.
 const nextConfig: NextConfig = {
   cacheComponents: true,
+  // PGlite uses native/WASM modules that must not be bundled by webpack/turbopack.
+  serverExternalPackages: ['@electric-sql/pglite'],
   turbopack: {
     root: path.resolve(__dirname),
   },

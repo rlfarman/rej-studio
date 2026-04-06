@@ -107,24 +107,27 @@ export async function proxy(req: NextRequest) {
     }
   }
 
-  // --- CSP nonce (all routes) ---
-  const nonce = Buffer.from(crypto.randomUUID()).toString('base64')
-  const csp = buildCsp(nonce)
-
+  // --- CSP nonce (production only) ---
+  // CSP is skipped in development because:
+  // 1. React dev mode requires eval() which CSP blocks
+  // 2. Next.js applies x-nonce to <Script> tags server-side, but browsers
+  //    strip nonce attributes from the DOM (HTML spec), causing hydration
+  //    mismatches that cannot be fixed without patching Next.js itself
+  const isDev = process.env.NODE_ENV === 'development'
   const requestHeaders = new Headers(req.headers)
-  requestHeaders.set('x-nonce', nonce)
+
+  let csp: string | undefined
+  if (!isDev) {
+    const nonce = Buffer.from(crypto.randomUUID()).toString('base64')
+    csp = buildCsp(nonce)
+    requestHeaders.set('x-nonce', nonce)
+  }
 
   // --- Basic auth (landing page only) ---
   const { pathname } = req.nextUrl
   const needsAuth = pathname === '/' || pathname === '/index'
 
-  if (
-    needsAuth &&
-    !(
-      process.env.NODE_ENV === 'development' &&
-      process.env.BYPASS_AUTH === 'true'
-    )
-  ) {
+  if (needsAuth && !(isDev && process.env.BYPASS_AUTH === 'true')) {
     const basicAuth = req.headers.get('authorization')
     const expectedUser = process.env.BASIC_AUTH_USER
     const expectedPassword = process.env.BASIC_AUTH_PASSWORD
@@ -155,14 +158,18 @@ export async function proxy(req: NextRequest) {
       const response = NextResponse.rewrite(url, {
         request: { headers: requestHeaders },
       })
-      response.headers.set('Content-Security-Policy', csp)
-      response.headers.set('Reporting-Endpoints', REPORTING_ENDPOINTS)
+      if (csp) {
+        response.headers.set('Content-Security-Policy', csp)
+        response.headers.set('Reporting-Endpoints', REPORTING_ENDPOINTS)
+      }
       return response
     }
   }
 
   const response = NextResponse.next({ request: { headers: requestHeaders } })
-  response.headers.set('Content-Security-Policy', csp)
-  response.headers.set('Reporting-Endpoints', REPORTING_ENDPOINTS)
+  if (csp) {
+    response.headers.set('Content-Security-Policy', csp)
+    response.headers.set('Reporting-Endpoints', REPORTING_ENDPOINTS)
+  }
   return response
 }

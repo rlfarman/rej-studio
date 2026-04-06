@@ -14,7 +14,7 @@
  */
 
 import { sql } from 'drizzle-orm'
-import { db } from '../src/drizzle/db'
+import { getDb } from '../src/drizzle/db'
 import { genes, isoforms } from '../src/drizzle/schema'
 
 let failures = 0
@@ -29,6 +29,7 @@ function assert(label: string, ok: boolean) {
 }
 
 async function main() {
+  const db = await getDb()
   console.log('Schema constraint tests\n')
 
   // 1. PK uniqueness — attempt a duplicate insert on genes.id

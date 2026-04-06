@@ -1,34 +1,81 @@
 import { neon, neonConfig } from '@neondatabase/serverless'
-import { drizzle } from 'drizzle-orm/neon-http'
-import { env } from '@/lib/env'
+import { drizzle as drizzleNeon } from 'drizzle-orm/neon-http'
 import * as schema from './schema'
 
-// Enable connection caching on the Neon proxy. This lets the proxy reuse
-// compute node lookups across HTTP requests, shaving ~10ms off query latency.
-// Safe for our use case (single-shot read queries per server action).
-// See: https://neon.com/blog/http-vs-websockets-for-postgres-queries-at-the-edge
-neonConfig.fetchConnectionCache = true
+const isDev = process.env.NODE_ENV === 'development'
+const databaseUrl = process.env.DATABASE_URL ?? ''
 
-const sql = neon(env.DATABASE_URL)
+// PGlite (embedded Postgres) for offline local development.
+// Activates when DATABASE_URL is empty, a file path, or 'memory://'.
+// Full PostgreSQL compatibility — tsvector, GIN indexes, etc. all work.
+export const usePglite =
+  isDev &&
+  (databaseUrl === '' ||
+    databaseUrl.startsWith('file:') ||
+    databaseUrl.startsWith('memory:'))
 
-export const db = drizzle(sql, {
-  schema,
-  logger: {
-    logQuery(query: string, params: unknown[]) {
-      if (process.env.NODE_ENV === 'development') {
-        const start = performance.now()
-        // Log after the query resolves — unfortunately the Drizzle logger
-        // fires before execution. We log the query text and params here so
-        // devs can spot slow/unexpected queries in the terminal. In prod,
-        // OpenTelemetry (via instrumentation.ts) captures per-query timings
-        // without this chatty log.
-        const latency = Math.round(performance.now() - start)
-        const truncated = query.length > 200 ? query.slice(0, 200) + '…' : query
-        console.debug(
-          `[drizzle] ${latency}ms ${truncated}`,
-          params.length > 0 ? params : '',
-        )
-      }
-    },
+const devLogger = {
+  logQuery(query: string, params: unknown[]) {
+    if (isDev) {
+      const truncated = query.length > 200 ? query.slice(0, 200) + '…' : query
+      console.debug(`[drizzle] ${truncated}`, params.length > 0 ? params : '')
+    }
   },
-})
+}
+
+function createNeonDb() {
+  // Enable connection caching on the Neon proxy. This lets the proxy reuse
+  // compute node lookups across HTTP requests, shaving ~10ms off query latency.
+  neonConfig.fetchConnectionCache = true
+  const sql = neon(databaseUrl)
+  return drizzleNeon(sql, { schema, logger: devLogger })
+}
+
+// Use Neon type as the base — the Drizzle query builder API is identical
+// across all PostgreSQL drivers.
+type Db = ReturnType<typeof drizzleNeon>
+
+// Lazy PGlite singleton — resolved on first query via getDb().
+let pgliteDb: Db | null = null
+let pgliteInitPromise: Promise<Db> | null = null
+
+async function initPglite(): Promise<Db> {
+  const { PGlite } = await import('@electric-sql/pglite')
+  const { drizzle: drizzlePglite } = await import('drizzle-orm/pglite')
+
+  let dataDir: string | undefined
+  if (databaseUrl.startsWith('file:')) {
+    dataDir = databaseUrl.slice(5)
+  } else if (databaseUrl.startsWith('memory:')) {
+    dataDir = undefined
+  } else {
+    dataDir = './data/local.db'
+  }
+
+  const client = new PGlite(dataDir)
+  console.log(`[pglite] Using embedded Postgres (${dataDir ?? 'in-memory'})`)
+
+  pgliteDb = drizzlePglite(client, {
+    schema,
+    logger: devLogger,
+  }) as unknown as Db
+  return pgliteDb
+}
+
+/**
+ * Get the database instance. Always use this in code that may run with PGlite.
+ * Resolves instantly with Neon; lazy-boots PGlite on first call.
+ */
+export async function getDb(): Promise<Db> {
+  if (!usePglite) return neonDb
+  if (pgliteDb) return pgliteDb
+  if (!pgliteInitPromise) pgliteInitPromise = initPglite()
+  return pgliteInitPromise
+}
+
+// Synchronous Neon instance for production. Not used when usePglite is true.
+const neonDb: Db = usePglite ? (null as unknown as Db) : createNeonDb()
+
+// Legacy synchronous export — works with Neon. With PGlite, callers must
+// use getDb() instead. Existing server action code is already async.
+export const db: Db = neonDb

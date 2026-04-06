@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { headers } from 'next/headers'
 import { sql } from 'drizzle-orm'
-import { db } from '@/drizzle/db'
+import { getDb } from '@/drizzle/db'
 import { env } from '@/lib/env'
 import { createUpstashRateLimiter, redis } from '@/lib/upstash'
 import { withCors } from '@/lib/api-cors'
@@ -93,6 +93,7 @@ interface HealthResponse {
 async function checkDatabase(): Promise<Check> {
   const start = performance.now()
   try {
+    const db = await getDb()
     await db.execute(sql`SELECT 1`)
     const ms = Math.round(performance.now() - start)
     await recordLatency(ms)

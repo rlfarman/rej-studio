@@ -1,4 +1,4 @@
-import { db } from '@/drizzle/db'
+import { getDb } from '@/drizzle/db'
 import { SelectGene, genes, isoforms } from '@/drizzle/schema'
 import { sql, eq } from 'drizzle-orm'
 import {
@@ -32,6 +32,8 @@ export async function fetchGenesBySearch(
 ): Promise<GeneSearchResult[]> {
   'use cache'
   cacheLife({ revalidate: 300 })
+
+  const db = await getDb()
 
   if (ENST_REGEX.test(trimmedQuery)) {
     const [result] = await db
@@ -113,6 +115,7 @@ export async function fetchGeneBySymbol(
       ? sql`${eq(genes.symbol, symbol)} AND ${eq(genes.species, species)}`
       : eq(genes.symbol, symbol)
 
+  const db = await getDb()
   const [gene] = await db
     .select(geneSearchColumns)
     .from(genes)
@@ -139,6 +142,7 @@ export async function fetchSimilarGenes(
   const shortPrefix =
     upperSymbol.length >= 3 ? `${upperSymbol.slice(0, 3)}%` : prefix
 
+  const db = await getDb()
   const results = await db
     .select({ symbol: genes.symbol, species: genes.species })
     .from(genes)

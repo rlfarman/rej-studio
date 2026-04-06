@@ -1,4 +1,4 @@
-import { db } from '@/drizzle/db'
+import { getDb } from '@/drizzle/db'
 import { genes } from '@/drizzle/schema'
 import type { MetadataRoute } from 'next'
 
@@ -8,6 +8,7 @@ import type { MetadataRoute } from 'next'
  * and let Next.js cache it.
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const db = await getDb()
   const allGenes = await db
     .select({ symbol: genes.symbol, species: genes.species })
     .from(genes)

@@ -9,7 +9,7 @@ import { AppSidebar } from '@/app/_components/layout/app-sidebar'
 import { Toaster } from '@/components/ui/sonner'
 import { QueryProvider } from '@/app/_components/providers/query-provider'
 import { MaintenanceBanner } from '@/components/maintenance-banner'
-import { cookies, headers } from 'next/headers'
+import { cookies } from 'next/headers'
 import { GoogleTagManager } from '@/components/google-tag-manager'
 import { AnalyticsPageview } from '@/components/analytics-pageview'
 import { AnalyticsProperties } from '@/components/analytics-properties'
@@ -44,16 +44,44 @@ export const metadata = {
   },
 }
 
-export default async function RootLayout({
+// Reads cookies (runtime data) inside Suspense so the static shell streams
+// immediately and the dynamic sidebar state resolves without blocking.
+async function AppShell({ children }: { children: React.ReactNode }) {
+  const cookieStore = await cookies()
+  const defaultOpen = cookieStore.get('sidebar_state')?.value === 'true'
+  const maintenanceMessage = process.env.MAINTENANCE_MESSAGE?.trim()
+
+  return (
+    <SidebarProvider
+      defaultOpen={defaultOpen}
+      className="relative flex h-full w-full flex-row overflow-hidden"
+    >
+      <AppSidebar />
+      <SidebarInset className="relative flex h-full min-h-screen max-w-full flex-1 flex-col overflow-hidden">
+        {maintenanceMessage && (
+          <MaintenanceBanner
+            message={maintenanceMessage}
+            signature={maintenanceMessage}
+          />
+        )}
+        <Header />
+        <main
+          id="main-content"
+          className="relative h-full w-full flex-1 overflow-auto"
+        >
+          {children}
+        </main>
+        <Footer />
+      </SidebarInset>
+    </SidebarProvider>
+  )
+}
+
+export default function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const [cookieStore, headerStore] = await Promise.all([cookies(), headers()])
-  const defaultOpen = cookieStore.get('sidebar_state')?.value === 'true'
-  const nonce = headerStore.get('x-nonce') ?? undefined
-  const maintenanceMessage = process.env.MAINTENANCE_MESSAGE?.trim()
-
   return (
     <html
       lang="en"
@@ -75,28 +103,9 @@ export default async function RootLayout({
             >
               Skip to content
             </a>
-            <SidebarProvider
-              defaultOpen={defaultOpen}
-              className="relative flex h-full w-full flex-row overflow-hidden"
-            >
-              <AppSidebar />
-              <SidebarInset className="relative flex h-full min-h-screen max-w-full flex-1 flex-col overflow-hidden">
-                {maintenanceMessage && (
-                  <MaintenanceBanner
-                    message={maintenanceMessage}
-                    signature={maintenanceMessage}
-                  />
-                )}
-                <Header />
-                <main
-                  id="main-content"
-                  className="relative h-full w-full flex-1 overflow-auto"
-                >
-                  {children}
-                </main>
-                <Footer />
-              </SidebarInset>
-            </SidebarProvider>
+            <Suspense>
+              <AppShell>{children}</AppShell>
+            </Suspense>
             <Toaster />
             <Suspense fallback={null}>
               <AnalyticsPageview />
@@ -105,7 +114,7 @@ export default async function RootLayout({
           </QueryProvider>
         </ThemeProvider>
         <WebVitals />
-        <GoogleTagManager nonce={nonce} />
+        <GoogleTagManager />
       </body>
     </html>
   )
