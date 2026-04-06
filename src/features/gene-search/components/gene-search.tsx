@@ -2,7 +2,7 @@
 import { useEffect, useState, useSyncExternalStore } from 'react'
 import { CommandDialog } from '@/components/ui/command'
 import { useRouter } from 'next/navigation'
-import { type GeneSearchResult } from '@/features/gene-search/api/genes'
+import { type SearchGenesResult } from '@/features/gene-search/api/genes'
 import { Button } from '@/components/ui/button'
 import { SearchIcon } from 'lucide-react'
 import { useGeneSearch } from '@/features/gene-search/hooks/use-gene-search'
@@ -17,7 +17,7 @@ interface GeneSearchProperties {
   searchGenes: (
     content: string,
     species?: SpeciesFilter,
-  ) => Promise<GeneSearchResult[]>
+  ) => Promise<SearchGenesResult>
   defaultQuery?: string
   isDialog?: boolean
 }
@@ -40,11 +40,18 @@ export function GeneSearch({
   isDialog = false,
 }: GeneSearchProperties) {
   const router = useRouter()
-  const { query, setQuery, hasSearched, searchResults, isLoading, error } =
-    useGeneSearch({
-      searchGenes,
-      defaultQuery,
-    })
+  const {
+    query,
+    setQuery,
+    hasSearched,
+    searchResults,
+    isLoading,
+    error,
+    retry,
+  } = useGeneSearch({
+    searchGenes,
+    defaultQuery,
+  })
   const [isOpen, setIsOpen] = useState(false)
   const { recentGenes, addRecentGene } = useRecentGenes()
   const { favoriteGenes } = useFavoriteGenes()
@@ -108,6 +115,7 @@ export function GeneSearch({
             setIsOpen={setIsOpen}
             handleSelect={handleSelect}
             error={error}
+            retry={retry}
             recentGenes={recentGenes}
             favoriteGenes={favoriteGenes}
           />
@@ -126,6 +134,7 @@ export function GeneSearch({
       setIsOpen={setIsOpen}
       handleSelect={handleSelect}
       error={error}
+      retry={retry}
       recentGenes={recentGenes}
       favoriteGenes={favoriteGenes}
     />

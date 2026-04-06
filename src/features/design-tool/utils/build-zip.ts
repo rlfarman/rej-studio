@@ -49,10 +49,7 @@ function buildSequencesText(result: ProcessResult): string {
  * Build a ZIP blob client-side from an already-computed ProcessResult.
  * Mirrors the format of the original /api/py/process endpoint.
  */
-export function buildResultsZip(
-  result: ProcessResult,
-  optionsUsed: string,
-): Blob {
+function buildResultsZip(result: ProcessResult, optionsUsed: string): Blob {
   const safeName = result.name.replace(/[^\w\-. ]/g, '_')
 
   const reportText = buildReportText(result, optionsUsed)

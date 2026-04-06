@@ -9,6 +9,11 @@ import Script from 'next/script'
 // modeled data for user-level metrics.
 //
 // Gated on NEXT_PUBLIC_GTM_ID so dev/preview stays clean.
+//
+// NOTE: Next.js applies the CSP nonce from the x-nonce header automatically.
+// Browsers strip nonce attributes from the DOM after parsing (HTML spec),
+// causing a dev-only hydration mismatch warning (nonce="abc" vs nonce="").
+// This is a known Next.js issue and does not affect production.
 export function GoogleTagManager() {
   const gtmId = process.env.NEXT_PUBLIC_GTM_ID
 

@@ -63,12 +63,18 @@ export function SidebarMenu() {
         ref={fileInputRef}
         type="file"
         accept=".json"
+        aria-label="Import user data"
         className="hidden"
         onChange={handleImport}
       />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="h-8 w-8">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            aria-label="More options"
+          >
             <MoreHorizontal className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>

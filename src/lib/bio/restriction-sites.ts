@@ -2,12 +2,12 @@
  * Common Type II restriction enzymes used in molecular cloning.
  * Palindromic recognition sites only — scanning the top strand is sufficient.
  */
-export interface Enzyme {
+interface Enzyme {
   name: string
   site: string
 }
 
-export const COMMON_ENZYMES: Enzyme[] = [
+const COMMON_ENZYMES: Enzyme[] = [
   { name: 'EcoRI', site: 'GAATTC' },
   { name: 'BamHI', site: 'GGATCC' },
   { name: 'HindIII', site: 'AAGCTT' },

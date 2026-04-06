@@ -49,6 +49,31 @@ If app code DOES need to change during a migration, that's a smell — either
 a new dialect-specific operator has crept in, or the abstraction needs
 tightening. Note it here and fix it.
 
+## Local development with PGlite
+
+For offline development without a Neon connection, the app uses
+[PGlite](https://pglite.dev/) — embedded PostgreSQL compiled to WASM. Since
+PGlite **is** Postgres, the schema, queries (including tsvector full-text search
+and GIN indexes), and seed scripts all work unchanged.
+
+To use PGlite, either leave `DATABASE_URL` empty or set it to a file path:
+
+```bash
+DATABASE_URL=                       # defaults to ./data/local.db
+DATABASE_URL=file:./data/local.db   # explicit path
+DATABASE_URL=memory://              # in-memory (lost on restart)
+```
+
+Then seed the local database:
+
+```bash
+pnpm db:push      # create tables
+pnpm db:upload    # load JSONL seed data
+```
+
+The local database file (`data/local.db/`) is gitignored. To reset, delete it
+and re-seed.
+
 ## What's intentionally NOT abstracted
 
 - **No repository pattern / interfaces.** DB access is already concentrated

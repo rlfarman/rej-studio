@@ -6,8 +6,10 @@ import { pickDefaultSplitPoint } from '@/features/design-tool/utils/default-spli
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Design Tool | REJ Studio',
-  description: 'Design your own gene with the REJ Studio design tool.',
+  title: 'Design Tool',
+  description:
+    'Optimize coding sequences for RNA End-Joining. Enter a custom CDS or start from a pre-loaded isoform.',
+  alternates: { canonical: '/design-tool' },
 }
 
 async function DesignToolPage({

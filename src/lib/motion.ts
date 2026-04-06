@@ -18,7 +18,7 @@ export const softSpring: Transition = {
 }
 
 /** Staggered entrance for hero-style layouts */
-export const staggerContainer: Variants = {
+const staggerContainer: Variants = {
   hidden: {},
   visible: {
     transition: { staggerChildren: 0.06 },

@@ -20,3 +20,10 @@ if ! echo "$branch" | grep -Eq "$pattern"; then
   echo "  See:          https://conventional-branch.github.io/"
   exit 1
 fi
+
+# Run the full verify suite before pushing so CI-blocking issues are
+# caught locally. Skipped when pnpm is unavailable (CI images, etc.).
+if command -v pnpm >/dev/null 2>&1; then
+  echo "Running pnpm verify before push..."
+  pnpm verify
+fi

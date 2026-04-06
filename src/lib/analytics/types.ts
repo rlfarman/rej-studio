@@ -3,19 +3,6 @@ import type { SpeciesFilter } from '@/lib/bio/species'
 // Window.dataLayer is declared by @next/third-parties/google (Object[]).
 
 // ---------------------------------------------------------------------------
-// Consent
-// ---------------------------------------------------------------------------
-
-export type ConsentValue = 'granted' | 'denied'
-
-export interface ConsentState {
-  analytics_storage: ConsentValue
-  ad_storage: ConsentValue
-  ad_user_data: ConsentValue
-  ad_personalization: ConsentValue
-}
-
-// ---------------------------------------------------------------------------
 // Analytics events — discriminated union on `event`
 // ---------------------------------------------------------------------------
 

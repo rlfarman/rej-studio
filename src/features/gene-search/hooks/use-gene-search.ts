@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useDebounce } from 'use-debounce'
-import { useQuery } from '@tanstack/react-query'
-import type { GeneSearchResult } from '@/features/gene-search/api/genes'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import type { GeneSearchResult } from '@/features/gene-search/api/gene-queries'
+import type { SearchGenesResult } from '@/features/gene-search/api/genes'
 import type { SpeciesFilter } from '@/lib/bio/species'
 import { useSpeciesContext } from '@/stores/species-store'
 import { trackEvent } from '@/lib/analytics'
@@ -10,7 +11,7 @@ interface UseGeneSearchProps {
   searchGenes: (
     content: string,
     species?: SpeciesFilter,
-  ) => Promise<GeneSearchResult[]>
+  ) => Promise<SearchGenesResult>
   defaultQuery?: string
 }
 
@@ -20,6 +21,7 @@ export function useGeneSearch({
   searchGenes,
   defaultQuery,
 }: UseGeneSearchProps) {
+  const queryClient = useQueryClient()
   const [query, setQuery] = useState(defaultQuery ?? '')
   const [debouncedQuery] = useDebounce(query, 250)
   const { species } = useSpeciesContext()
@@ -43,16 +45,29 @@ export function useGeneSearch({
       event: 'gene_search',
       query: trimmed,
       species,
-      result_count: data.length,
+      result_count: data.results.length,
     })
   }, [data, trimmed, species])
+
+  // Distinguish between: network error (isError), server-side DB error
+  // (data.error), and genuine empty results (data.results.length === 0).
+  const error = isError
+    ? 'Search failed. Please try again.'
+    : (data?.error ?? null)
+
+  const retry = useCallback(() => {
+    queryClient.invalidateQueries({
+      queryKey: ['gene-search', trimmed, species],
+    })
+  }, [queryClient, trimmed, species])
 
   return {
     query,
     setQuery,
     hasSearched: enabled && data !== undefined,
-    searchResults: data ?? EMPTY_RESULTS,
+    searchResults: data?.results ?? EMPTY_RESULTS,
     isLoading: enabled && isFetching,
-    error: isError ? 'Search failed. Please try again.' : null,
+    error,
+    retry,
   }
 }

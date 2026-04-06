@@ -25,6 +25,7 @@ export const validationSchema = z
         'Sequence must contain only valid nucleotides (A, C, G, T, or U).',
       )
       .max(50000, 'Sequence must be 50,000 characters or fewer.')
+      .transform((v) => v.toUpperCase())
       .refine((value) => value.length % 3 === 0, {
         message: 'Sequence length must be a multiple of 3 (complete codons).',
       })
