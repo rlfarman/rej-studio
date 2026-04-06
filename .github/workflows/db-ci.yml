@@ -44,6 +44,7 @@ jobs:
           node-version: '24'
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
+      - run: mkdir -p data
 
       - name: Apply migrations
         # Uses drizzle-kit's `push` against PGlite. Same code path as
