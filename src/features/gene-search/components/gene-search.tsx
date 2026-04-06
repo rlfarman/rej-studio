@@ -40,11 +40,18 @@ export function GeneSearch({
   isDialog = false,
 }: GeneSearchProperties) {
   const router = useRouter()
-  const { query, setQuery, hasSearched, searchResults, isLoading, error } =
-    useGeneSearch({
-      searchGenes,
-      defaultQuery,
-    })
+  const {
+    query,
+    setQuery,
+    hasSearched,
+    searchResults,
+    isLoading,
+    error,
+    retry,
+  } = useGeneSearch({
+    searchGenes,
+    defaultQuery,
+  })
   const [isOpen, setIsOpen] = useState(false)
   const { recentGenes, addRecentGene } = useRecentGenes()
   const { favoriteGenes } = useFavoriteGenes()
@@ -108,6 +115,7 @@ export function GeneSearch({
             setIsOpen={setIsOpen}
             handleSelect={handleSelect}
             error={error}
+            retry={retry}
             recentGenes={recentGenes}
             favoriteGenes={favoriteGenes}
           />
@@ -126,6 +134,7 @@ export function GeneSearch({
       setIsOpen={setIsOpen}
       handleSelect={handleSelect}
       error={error}
+      retry={retry}
       recentGenes={recentGenes}
       favoriteGenes={favoriteGenes}
     />

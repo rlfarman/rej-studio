@@ -283,14 +283,19 @@ export async function submitJob(
   // Rate limit
   const hdrs = await headers()
   const ip = hdrs.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
-  const { ok: allowed } = await submitLimiter.check(ip)
+  const { ok: allowed, resetMs } = await submitLimiter.check(ip)
   if (!allowed) {
+    const retrySeconds = Math.ceil(resetMs / 1000)
     throw new Error(
-      'Too many job submissions. Please wait a moment and try again.',
+      `Too many job submissions. Please wait ${retrySeconds}s and try again.`,
     )
   }
 
-  if (isModalBackend()) {
+  const backend = getComputeBackend()
+  const optionKeys = Object.keys(validated.options)
+  const startMs = performance.now()
+
+  if (backend === 'modal') {
     // Circuit breaker
     if ((await circuitCheck()).tripped) {
       throw new Error(
@@ -302,6 +307,7 @@ export async function submitJob(
     const iKey = await idempotencyKey(validated)
     const existing = await getInflight(iKey)
     if (existing) {
+      log.info('job deduplicated', { jobId: existing, name: validated.name })
       return { jobId: existing }
     }
 
@@ -328,8 +334,12 @@ export async function submitJob(
       await setInflight(iKey, data.call_id)
       log.info('job submitted', {
         jobId: data.call_id,
+        backend,
         name: validated.name,
         cdsLength: validated.CDS.length,
+        options: optionKeys,
+        submitLatencyMs: Math.round(performance.now() - startMs),
+        ip,
       })
       return { jobId: data.call_id }
     } catch (err) {
@@ -356,7 +366,17 @@ export async function submitJob(
     throw new Error(detail.detail ?? `Local API error: ${response.statusText}`)
   }
   const result = await response.json()
-  return { jobId: crypto.randomUUID(), result }
+  const jobId = crypto.randomUUID()
+  log.info('job submitted', {
+    jobId,
+    backend,
+    name: validated.name,
+    cdsLength: validated.CDS.length,
+    options: optionKeys,
+    submitLatencyMs: Math.round(performance.now() - startMs),
+    ip,
+  })
+  return { jobId, result }
 }
 
 export async function getJobStatus(jobId: string): Promise<JobStatusResult> {

@@ -26,12 +26,18 @@ export const redis = createRedisClient()
  * survives redeploys — critical for production rate limiting on Vercel
  * (which auto-scales to multiple instances).
  */
+export interface RateLimitCheckResult {
+  ok: boolean
+  remaining: number
+  resetMs: number
+}
+
 export function createUpstashRateLimiter(opts: {
   prefix: string
   maxRequests: number
   windowMs: number
 }): {
-  check: (key: string) => Promise<{ ok: boolean; remaining: number }>
+  check: (key: string) => Promise<RateLimitCheckResult>
 } {
   if (!redis) {
     // Fall back to in-memory rate limiter when Redis is not configured.
@@ -42,7 +48,11 @@ export function createUpstashRateLimiter(opts: {
     return {
       check: async (key: string) => {
         const result = limiter.check(key)
-        return { ok: result.ok, remaining: result.remaining }
+        return {
+          ok: result.ok,
+          remaining: result.remaining,
+          resetMs: result.resetMs,
+        }
       },
     }
   }
@@ -65,11 +75,20 @@ export function createUpstashRateLimiter(opts: {
     check: async (key: string) => {
       try {
         const result = await ratelimit.limit(key)
-        return { ok: result.success, remaining: result.remaining }
+        const resetMs = result.reset ? result.reset - Date.now() : opts.windowMs
+        return {
+          ok: result.success,
+          remaining: result.remaining,
+          resetMs: Math.max(0, resetMs),
+        }
       } catch {
         // Redis unavailable — fall back to in-memory limiter.
         const result = fallback.check(key)
-        return { ok: result.ok, remaining: result.remaining }
+        return {
+          ok: result.ok,
+          remaining: result.remaining,
+          resetMs: result.resetMs,
+        }
       }
     },
   }

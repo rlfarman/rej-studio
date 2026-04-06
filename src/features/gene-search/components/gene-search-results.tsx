@@ -10,6 +10,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { SpeciesIcon } from '@/components/bio/species-icon'
+import { SearchRetryButton } from './search-retry-button'
 
 interface GeneSearchResultsProps {
   query: string
@@ -24,8 +25,9 @@ export async function GeneSearchResults({
 
   if (error) {
     return (
-      <div className="text-destructive-foreground bg-destructive/10 rounded-lg py-6 text-center text-sm">
-        {error} Try again in a moment.
+      <div className="text-destructive-foreground bg-destructive/10 flex flex-col items-center gap-2 rounded-lg py-6 text-center text-sm">
+        <span>{error} Try again in a moment.</span>
+        <SearchRetryButton />
       </div>
     )
   }

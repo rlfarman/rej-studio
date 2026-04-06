@@ -3,6 +3,7 @@
 import {
   fetchGenesBySearch,
   fetchGeneBySymbol,
+  fetchSimilarGenes,
 } from '@/features/gene-search/api/gene-queries'
 import type { GeneSearchResult } from '@/features/gene-search/api/gene-queries'
 import { speciesFilterSchema, type SpeciesFilter } from '@/lib/bio/species'
@@ -51,9 +52,10 @@ export async function searchGenes(
 
   const hdrs = await headers()
   const ip = hdrs.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
-  const { ok: allowed } = await searchLimiter.check(ip)
+  const { ok: allowed, resetMs } = await searchLimiter.check(ip)
   if (!allowed) {
-    throw new Error('Too many search requests. Please wait a moment.')
+    const retrySeconds = Math.ceil(resetMs / 1000)
+    throw new Error(`Too many search requests. Please wait ${retrySeconds}s.`)
   }
 
   try {
@@ -78,4 +80,22 @@ export async function searchGenes(
 export async function getGeneBySymbol(symbol: string, species?: SpeciesFilter) {
   const parsed = geneSymbolInput.parse({ symbol, species })
   return fetchGeneBySymbol(parsed.symbol, parsed.species)
+}
+
+/**
+ * Find genes with symbols similar to the given input. Used for "did you mean?"
+ * suggestions on the 404 page. Uses prefix matching and LIKE patterns to find
+ * close matches without requiring pg_trgm.
+ */
+export async function findSimilarGenes(
+  symbol: string,
+): Promise<{ symbol: string; species: string }[]> {
+  const cleaned = symbol.trim().toUpperCase().slice(0, 20)
+  if (cleaned.length === 0) return []
+
+  try {
+    return await fetchSimilarGenes(cleaned)
+  } catch {
+    return []
+  }
 }

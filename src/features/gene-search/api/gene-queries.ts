@@ -121,3 +121,42 @@ export async function fetchGeneBySymbol(
 
   return gene ?? null
 }
+
+/**
+ * Find genes with symbols similar to the input. Tries prefix match first,
+ * then substring match, then partial prefix (first 3+ chars). Returns up
+ * to 5 distinct suggestions.
+ */
+export async function fetchSimilarGenes(
+  upperSymbol: string,
+): Promise<{ symbol: string; species: string }[]> {
+  'use cache'
+  cacheLife({ revalidate: 300 })
+
+  const prefix = `${upperSymbol}%`
+  const contains = `%${upperSymbol}%`
+  // For short symbols, try matching with just the first few characters
+  const shortPrefix =
+    upperSymbol.length >= 3 ? `${upperSymbol.slice(0, 3)}%` : prefix
+
+  const results = await db
+    .select({ symbol: genes.symbol, species: genes.species })
+    .from(genes)
+    .where(
+      sql`UPPER(${genes.symbol}) LIKE ${prefix}
+        OR UPPER(${genes.symbol}) LIKE ${contains}
+        OR UPPER(${genes.symbol}) LIKE ${shortPrefix}`,
+    )
+    .orderBy(
+      // Exact prefix matches first, then substring, then partial
+      sql`CASE
+        WHEN UPPER(${genes.symbol}) LIKE ${prefix} THEN 0
+        WHEN UPPER(${genes.symbol}) LIKE ${contains} THEN 1
+        ELSE 2
+      END`,
+      genes.symbol,
+    )
+    .limit(5)
+
+  return results
+}

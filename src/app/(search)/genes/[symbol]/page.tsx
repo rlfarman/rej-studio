@@ -13,6 +13,7 @@ import { IsoformIdentityMatrix } from '@/features/gene-search/components/isoform
 import { Suspense } from 'react'
 import { FavoriteGeneButton } from '@/features/gene-search/components/favorite-gene-button'
 import { GeneJsonLd } from '@/features/gene-search/components/gene-jsonld'
+import { GeneBreadcrumbJsonLd } from '@/features/gene-search/components/gene-breadcrumb-jsonld'
 import { TrackOnMount } from '@/components/track-on-mount'
 import { Metadata } from 'next'
 import { cache } from 'react'
@@ -114,35 +115,38 @@ export default async function GeneSymbolPage(props: Props) {
   const { isoform: highlightedIsoformId } = await props.searchParams
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center gap-4">
-        <h1 className="font-mono text-2xl leading-none font-bold tracking-tight">
-          {gene.symbol}
-        </h1>
-        <FavoriteGeneButton gene={gene} />
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-1 gap-4">
-          <div>
-            <div className="text-muted-foreground text-sm font-semibold">
-              Gene name
+    <>
+      <GeneBreadcrumbJsonLd gene={gene} />
+      <Card>
+        <CardHeader className="flex flex-row items-center gap-4">
+          <h1 className="font-mono text-2xl leading-none font-bold tracking-tight">
+            {gene.symbol}
+          </h1>
+          <FavoriteGeneButton gene={gene} />
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 gap-4">
+            <div>
+              <div className="text-muted-foreground text-sm font-semibold">
+                Gene name
+              </div>
+              <div>{gene.name}</div>
             </div>
-            <div>{gene.name}</div>
-          </div>
-          <div>
-            <div className="text-muted-foreground text-sm font-semibold">
-              Ensembl Gene ID
+            <div>
+              <div className="text-muted-foreground text-sm font-semibold">
+                Ensembl Gene ID
+              </div>
+              <div className="font-mono">{gene.id}</div>
             </div>
-            <div className="font-mono">{gene.id}</div>
           </div>
-        </div>
-        <Suspense fallback={<IsoformTableLoading />}>
-          <IsoformSection
-            gene={gene}
-            highlightedIsoformId={highlightedIsoformId}
-          />
-        </Suspense>
-      </CardContent>
-    </Card>
+          <Suspense fallback={<IsoformTableLoading />}>
+            <IsoformSection
+              gene={gene}
+              highlightedIsoformId={highlightedIsoformId}
+            />
+          </Suspense>
+        </CardContent>
+      </Card>
+    </>
   )
 }

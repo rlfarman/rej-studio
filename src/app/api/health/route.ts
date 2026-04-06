@@ -145,17 +145,19 @@ export async function GET() {
   const hdrs = await headers()
   const origin = hdrs.get('origin')
   const ip = hdrs.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
-  const { ok: allowed, remaining } = await limiter.check(ip)
+  const { ok: allowed, remaining, resetMs } = await limiter.check(ip)
 
   if (!allowed) {
+    const retryAfter = Math.ceil(resetMs / 1000)
     return withCors(
       NextResponse.json(
         { error: 'Rate limit exceeded. Try again later.' },
         {
           status: 429,
           headers: {
-            'Retry-After': '60',
+            'Retry-After': String(retryAfter),
             'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': String(retryAfter),
           },
         },
       ),

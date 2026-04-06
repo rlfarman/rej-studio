@@ -13,7 +13,7 @@ import { SpeciesIcon } from '@/components/bio/species-icon'
 import { TruncatedText } from '@/components/truncated-text'
 import { HighlightMatch } from '@/features/gene-search/utils/highlight-match'
 import { useState } from 'react'
-import { ClockIcon, ExternalLink, HeartIcon } from 'lucide-react'
+import { ClockIcon, ExternalLink, HeartIcon, RefreshCwIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { SavedGene } from '@/features/gene-search/types/domain-types'
 
@@ -34,6 +34,7 @@ interface GeneSearchInputProps {
   setIsOpen: (isLoading: boolean) => void
   handleSelect: (gene: SavedGene) => void
   error: string | null
+  retry: () => void
   recentGenes: SavedGene[]
   favoriteGenes: SavedGene[]
 }
@@ -47,6 +48,7 @@ export function GeneSearchCommand({
   setIsOpen,
   handleSelect,
   error,
+  retry,
   recentGenes,
   favoriteGenes,
 }: GeneSearchInputProps) {
@@ -85,8 +87,17 @@ export function GeneSearchCommand({
           {isLoading ? (
             <GeneResultsLoading />
           ) : error ? (
-            <div className="text-destructive-foreground p-4 text-center text-sm">
-              {error}
+            <div className="text-destructive-foreground flex flex-col items-center gap-2 p-4 text-center text-sm">
+              <span>{error}</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 gap-1.5 px-2 text-xs"
+                onClick={retry}
+              >
+                <RefreshCwIcon className="size-3" />
+                Retry
+              </Button>
             </div>
           ) : showEmptyState ? (
             hasAnySuggestions ? (

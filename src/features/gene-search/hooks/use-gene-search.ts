@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useDebounce } from 'use-debounce'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import type {
   GeneSearchResult,
   SearchGenesResult,
@@ -23,6 +23,7 @@ export function useGeneSearch({
   searchGenes,
   defaultQuery,
 }: UseGeneSearchProps) {
+  const queryClient = useQueryClient()
   const [query, setQuery] = useState(defaultQuery ?? '')
   const [debouncedQuery] = useDebounce(query, 250)
   const { species } = useSpeciesContext()
@@ -56,6 +57,12 @@ export function useGeneSearch({
     ? 'Search failed. Please try again.'
     : (data?.error ?? null)
 
+  const retry = useCallback(() => {
+    queryClient.invalidateQueries({
+      queryKey: ['gene-search', trimmed, species],
+    })
+  }, [queryClient, trimmed, species])
+
   return {
     query,
     setQuery,
@@ -63,5 +70,6 @@ export function useGeneSearch({
     searchResults: data?.results ?? EMPTY_RESULTS,
     isLoading: enabled && isFetching,
     error,
+    retry,
   }
 }

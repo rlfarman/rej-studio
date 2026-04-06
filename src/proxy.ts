@@ -84,8 +84,13 @@ function buildCsp(nonce: string): string {
     "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self'",
+    'report-uri /api/csp-report',
+    'report-to csp-endpoint',
   ].join('; ')
 }
+
+// Reporting-Endpoints header for the Reporting API v1 (report-to directive).
+const REPORTING_ENDPOINTS = 'csp-endpoint="/api/csp-report"'
 
 export async function proxy(req: NextRequest) {
   // --- CSRF check (mutating requests) ---
@@ -151,11 +156,13 @@ export async function proxy(req: NextRequest) {
         request: { headers: requestHeaders },
       })
       response.headers.set('Content-Security-Policy', csp)
+      response.headers.set('Reporting-Endpoints', REPORTING_ENDPOINTS)
       return response
     }
   }
 
   const response = NextResponse.next({ request: { headers: requestHeaders } })
   response.headers.set('Content-Security-Policy', csp)
+  response.headers.set('Reporting-Endpoints', REPORTING_ENDPOINTS)
   return response
 }
