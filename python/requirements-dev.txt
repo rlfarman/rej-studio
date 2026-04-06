@@ -3,3 +3,6 @@
 # Dev tooling — used by lint-staged pre-commit hook, CI, and local scripts.
 ruff>=0.6.0
 pyright>=1.1.370
+
+# Testing
+pytest>=8.0.0

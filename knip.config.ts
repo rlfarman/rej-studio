@@ -10,6 +10,7 @@ const config: KnipConfig = {
     'src/sentry.edge.config.ts',
     'next.config.{ts,js,mjs}',
     'scripts/**/*.{ts,tsx}',
+    'vitest.config.ts',
   ],
   project: ['src/**/*.{ts,tsx}', 'scripts/**/*.{ts,tsx}'],
   ignore: ['src/components/ui/**'],

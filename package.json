@@ -23,8 +23,11 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "type-check": "tsc --noEmit",
-    "verify": "pnpm lint && pnpm type-check",
+    "verify": "pnpm lint && pnpm type-check && pnpm test",
     "prepare": "husky"
   },
   "dependencies": {
@@ -90,6 +93,7 @@
     "@next/bundle-analyzer": "^16.2.2",
     "@opennextjs/cloudflare": "^1.18.0",
     "@types/node": "^24.0.0",
+    "@vitest/coverage-v8": "^4.1.2",
     "drizzle-kit": "^0.31.10",
     "eslint-plugin-react-hooks": "^7.0.1",
     "husky": "^9.1.7",
@@ -99,6 +103,7 @@
     "prettier": "^3.8.1",
     "prettier-plugin-tailwindcss": "^0.7.2",
     "tsx": "^4.19.2",
+    "vitest": "^4.1.2",
     "wrangler": "^4.0.0"
   },
   "pnpm": {
