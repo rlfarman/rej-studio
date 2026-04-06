@@ -5,7 +5,6 @@ types. If a field is added/removed/renamed on one side, this test catches
 the drift at CI time before it surfaces as a runtime bug.
 """
 
-
 from python.index import (
     ObjectiveEvaluationEntry,
     ObjectiveLocation,
