@@ -26,8 +26,14 @@ const serverSchema = z
     // Compute backend. In production, must be "modal". In dev, "local" (or
     // unset) falls through to the uvicorn dev server.
     COMPUTE_BACKEND: z.enum(['modal', 'local']).optional(),
-    MODAL_API_URL: z.string().url().optional(),
-    LOCAL_API_URL: z.string().url().optional(),
+    MODAL_API_URL: z.preprocess(
+      (v) => (v === '' ? undefined : v),
+      z.string().url().optional(),
+    ),
+    LOCAL_API_URL: z.preprocess(
+      (v) => (v === '' ? undefined : v),
+      z.string().url().optional(),
+    ),
 
     // Deploy target — drives target-specific next.config behavior.
     DEPLOY_TARGET: z.enum(['vercel', 'cloudflare']).optional(),
