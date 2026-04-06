@@ -182,7 +182,7 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
           aria-valuetext={`bp ${position.toLocaleString()} of ${seqLen.toLocaleString()}`}
           onPointerDown={handleTrackPointerDown}
           onKeyDown={handleTrackKeyDown}
-          className="focus-visible:ring-ring relative cursor-ew-resize touch-none rounded-xl border bg-background/80 select-none shadow-sm focus:outline-none focus-visible:ring-2"
+          className="focus-visible:ring-ring bg-background/80 relative cursor-ew-resize touch-none rounded-xl border shadow-sm select-none focus:outline-none focus-visible:ring-2"
         >
           <div className="relative flex h-16 w-full overflow-hidden rounded-xl">
             <div
@@ -199,7 +199,7 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
               </span>
             </div>
           </div>
-          <div className="absolute inset-x-0 bottom-0 h-5 overflow-hidden rounded-b-xl border-t bg-background/70">
+          <div className="bg-background/70 absolute inset-x-0 bottom-0 h-5 overflow-hidden rounded-b-xl border-t">
             {wggwSites.map((site, i) => {
               const mid = site.position
               const x = (mid / seqLen) * 100
@@ -225,7 +225,7 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
                       'rounded-full transition-all',
                       'group-hover:h-4',
                       isSelected
-                        ? 'h-4 w-1.5 bg-primary'
+                        ? 'bg-primary h-4 w-1.5'
                         : site.alreadyPresent
                           ? 'h-3 w-1 bg-emerald-500/75'
                           : 'h-3 w-1 bg-amber-500/90',
@@ -294,7 +294,9 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
                             : 'bg-amber-500/15 text-amber-700 dark:text-amber-300',
                         )}
                       >
-                        {site.alreadyPresent ? 'present' : `${site.baseChanges} bp`}
+                        {site.alreadyPresent
+                          ? 'present'
+                          : `${site.baseChanges} bp`}
                       </span>
                     </div>
                   </button>
@@ -365,13 +367,15 @@ function groupWggwSites(
         if (a.alreadyPresent !== b.alreadyPresent) {
           return a.alreadyPresent ? -1 : 1
         }
-        if (a.baseChanges !== b.baseChanges) return a.baseChanges - b.baseChanges
+        if (a.baseChanges !== b.baseChanges)
+          return a.baseChanges - b.baseChanges
         return a.newHexamer.localeCompare(b.newHexamer)
       })[0]
       const rewriteOptions = dedupeRewriteOptions(
         group.flatMap((candidate) => candidate.rewriteOptions),
       ).sort((a, b) => {
-        if (a.baseChanges !== b.baseChanges) return a.baseChanges - b.baseChanges
+        if (a.baseChanges !== b.baseChanges)
+          return a.baseChanges - b.baseChanges
         return a.newHexamer.localeCompare(b.newHexamer)
       })
       const primary = rewriteOptions[0]
@@ -575,7 +579,9 @@ function FrameAtSplit({
                     <SummaryBadge
                       label="Source"
                       value={
-                        selectedSite.alreadyPresent ? 'Already present' : 'Inducible'
+                        selectedSite.alreadyPresent
+                          ? 'Already present'
+                          : 'Inducible'
                       }
                     />
                     <SummaryBadge
@@ -590,7 +596,7 @@ function FrameAtSplit({
                 </div>
                 {selectedSite.rewriteOptions.length > 1 && (
                   <div className="flex max-w-full flex-wrap items-center gap-1.5 md:justify-end">
-                    <span className="text-muted-foreground text-[10px] font-medium uppercase tracking-[0.08em]">
+                    <span className="text-muted-foreground text-[10px] font-medium tracking-[0.08em] uppercase">
                       Synonymous rewrites
                     </span>
                     {selectedSite.rewriteOptions.map((option, index) => (
@@ -630,13 +636,14 @@ function FrameAtSplit({
                   Choose a WGGW site
                 </div>
                 <div className="text-muted-foreground text-[11px] leading-relaxed">
-                  Move the breakpoint bar to the right region, then select one of
-                  the nearby WGGW candidates to inspect the synonymous rewrite.
+                  Move the breakpoint bar to the right region, then select one
+                  of the nearby WGGW candidates to inspect the synonymous
+                  rewrite.
                 </div>
               </div>
-              <div className="grid gap-2 rounded-lg border bg-background/80 p-3 md:grid-cols-[minmax(0,1fr)_minmax(260px,320px)]">
+              <div className="bg-background/80 grid gap-2 rounded-lg border p-3 md:grid-cols-[minmax(0,1fr)_minmax(260px,320px)]">
                 <div className="space-y-2">
-                  <div className="text-muted-foreground text-[10px] font-medium uppercase tracking-[0.08em]">
+                  <div className="text-muted-foreground text-[10px] font-medium tracking-[0.08em] uppercase">
                     Junction consequence
                   </div>
                   <div className="grid gap-1.5 text-xs">
@@ -645,13 +652,15 @@ function FrameAtSplit({
                     <PlaceholderRow label="After" />
                   </div>
                 </div>
-                <div className="grid gap-2 rounded-md border bg-muted/30 p-3 text-[11px]">
+                <div className="bg-muted/30 grid gap-2 rounded-md border p-3 text-[11px]">
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-muted-foreground">Motif window</span>
                     <PlaceholderPill className="w-20" />
                   </div>
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-muted-foreground">Selected rewrite</span>
+                    <span className="text-muted-foreground">
+                      Selected rewrite
+                    </span>
                     <PlaceholderPill className="w-24" />
                   </div>
                   <div className="flex items-center justify-between gap-2">
@@ -686,8 +695,8 @@ function FrameAtSplit({
                   c.role === 'split' ? '' : roleStyles.container,
                   selectedCodonIndices.has(c.idx) &&
                     (selectedSite?.alreadyPresent
-                      ? 'bg-emerald-500/10 ring-emerald-500/30 ring-1'
-                      : 'bg-amber-500/10 ring-amber-500/30 ring-1'),
+                      ? 'bg-emerald-500/10 ring-1 ring-emerald-500/30'
+                      : 'bg-amber-500/10 ring-1 ring-amber-500/30'),
                 )}
               >
                 <span
@@ -718,7 +727,8 @@ function FrameAtSplit({
                             (selectedSite?.alreadyPresent
                               ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
                               : 'bg-amber-500/15 text-amber-700 dark:text-amber-300'),
-                          isChanged && 'underline decoration-2 underline-offset-2',
+                          isChanged &&
+                            'underline decoration-2 underline-offset-2',
                           isCutBase && 'border-primary border-r-2',
                         )}
                       >
@@ -762,7 +772,7 @@ function FrameAtSplit({
                     'rounded-md border px-1.5 py-0.5 text-[9px] leading-none',
                     isSelected
                       ? 'border-primary bg-primary/10 text-primary'
-                      : 'border-transparent text-muted-foreground',
+                      : 'text-muted-foreground border-transparent',
                   )}
                 >
                   {site.position}
@@ -777,9 +787,7 @@ function FrameAtSplit({
 }
 
 function translatePair(codons: [string, string]) {
-  return codons
-    .map((codon) => translateCodon(codon) ?? '?')
-    .join('')
+  return codons.map((codon) => translateCodon(codon) ?? '?').join('')
 }
 
 function RewritePreview({
@@ -804,9 +812,9 @@ function RewritePreview({
   alreadyPresent: boolean
 }) {
   return (
-    <div className="grid gap-3 rounded-lg border bg-background/80 p-3 md:grid-cols-[minmax(0,1fr)_minmax(260px,320px)]">
+    <div className="bg-background/80 grid gap-3 rounded-lg border p-3 md:grid-cols-[minmax(0,1fr)_minmax(260px,320px)]">
       <div className="space-y-2">
-        <div className="text-muted-foreground text-[10px] font-medium uppercase tracking-[0.08em]">
+        <div className="text-muted-foreground text-[10px] font-medium tracking-[0.08em] uppercase">
           Junction consequence
         </div>
         <div className="grid gap-1.5 font-mono text-xs">
@@ -844,7 +852,8 @@ function RewritePreview({
                           (alreadyPresent
                             ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
                             : 'bg-amber-500/15 text-amber-700 dark:text-amber-300'),
-                        isChanged && 'underline decoration-2 underline-offset-2',
+                        isChanged &&
+                          'underline decoration-2 underline-offset-2',
                         isCut && 'border-primary border-r-2',
                       )}
                     >
@@ -857,7 +866,7 @@ function RewritePreview({
           />
         </div>
       </div>
-      <div className="grid gap-2 rounded-md border bg-muted/30 p-3 text-[11px]">
+      <div className="bg-muted/30 grid gap-2 rounded-md border p-3 text-[11px]">
         <div className="flex items-center justify-between gap-2">
           <span className="text-muted-foreground">Motif window</span>
           <span className="font-mono font-semibold">
@@ -885,8 +894,8 @@ function RewritePreview({
 
 function SummaryBadge({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-md border bg-background/80 px-2 py-1">
-      <div className="text-muted-foreground text-[10px] uppercase tracking-[0.08em]">
+    <div className="bg-background/80 rounded-md border px-2 py-1">
+      <div className="text-muted-foreground text-[10px] tracking-[0.08em] uppercase">
         {label}
       </div>
       <div className="text-foreground text-xs font-medium">{value}</div>
@@ -894,16 +903,10 @@ function SummaryBadge({ label, value }: { label: string; value: string }) {
   )
 }
 
-function DiffRow({
-  label,
-  content,
-}: {
-  label: string
-  content: ReactNode
-}) {
+function DiffRow({ label, content }: { label: string; content: ReactNode }) {
   return (
     <div className="grid grid-cols-[52px_minmax(0,1fr)] items-center gap-2">
-      <span className="text-muted-foreground text-[10px] uppercase tracking-[0.08em]">
+      <span className="text-muted-foreground text-[10px] tracking-[0.08em] uppercase">
         {label}
       </span>
       <div>{content}</div>
@@ -914,7 +917,7 @@ function DiffRow({
 function PlaceholderRow({ label }: { label: string }) {
   return (
     <div className="grid grid-cols-[52px_minmax(0,1fr)] items-center gap-2">
-      <span className="text-muted-foreground text-[10px] uppercase tracking-[0.08em]">
+      <span className="text-muted-foreground text-[10px] tracking-[0.08em] uppercase">
         {label}
       </span>
       <div className="flex items-center">

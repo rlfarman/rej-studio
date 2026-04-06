@@ -12,9 +12,7 @@ export function computeGcPercent(seq: string): number {
  * Find all WGGW motif occurrences in a sequence. WGGW = [AT]GG[AT].
  * Returns 1-based positions of the first base of each motif.
  */
-export function findWggwMotifs(
-  seq: string,
-): { position: number; motif: string }[] {
+function findWggwMotifs(seq: string): { position: number; motif: string }[] {
   if (seq.length < 4) return []
   const upper = seq.toUpperCase().replace(/U/g, 'T')
   const matches: { position: number; motif: string }[] = []
@@ -101,7 +99,7 @@ const SYNONYMOUS_CODONS = Object.entries(GENETIC_CODE).reduce<
   return acc
 }, {})
 
-export const WGGW_RECODING_LOOKUP = Object.entries(GENETIC_CODE).reduce<
+const WGGW_RECODING_LOOKUP = Object.entries(GENETIC_CODE).reduce<
   Record<string, WggwRecodingOption[]>
 >((lookup, [codon1, aa1]) => {
   for (const [codon2, aa2] of Object.entries(GENETIC_CODE)) {
@@ -133,7 +131,7 @@ export const WGGW_RECODING_LOOKUP = Object.entries(GENETIC_CODE).reduce<
   return lookup
 }, {})
 
-export function enumerateInducibleWggwCandidates(
+function enumerateInducibleWggwCandidates(
   sequence: string,
 ): InducibleWggwCandidate[] {
   const upper = sequence.toUpperCase().replace(/U/g, 'T')
@@ -356,12 +354,14 @@ export function rankInducibleWggwByBalance(
   if (len < 4) return []
   const center = len / 2
   return enumerateInducibleWggwCandidates(sequence)
-    .map((candidate): RankedInducibleWggwCandidate => ({
-      ...candidate,
-      distanceFromCenter: Math.abs(candidate.position - center),
-      fivePrimeLength: candidate.position,
-      threePrimeLength: len - candidate.position,
-    }))
+    .map(
+      (candidate): RankedInducibleWggwCandidate => ({
+        ...candidate,
+        distanceFromCenter: Math.abs(candidate.position - center),
+        fivePrimeLength: candidate.position,
+        threePrimeLength: len - candidate.position,
+      }),
+    )
     .sort((a, b) => {
       if (a.distanceFromCenter !== b.distanceFromCenter) {
         return a.distanceFromCenter - b.distanceFromCenter
