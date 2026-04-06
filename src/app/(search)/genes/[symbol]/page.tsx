@@ -13,6 +13,7 @@ import { IsoformIdentityMatrix } from '@/features/gene-search/components/isoform
 import { Suspense } from 'react'
 import { FavoriteGeneButton } from '@/features/gene-search/components/favorite-gene-button'
 import { GeneJsonLd } from '@/features/gene-search/components/gene-jsonld'
+import { TrackOnMount } from '@/components/track-on-mount'
 import { Metadata } from 'next'
 import { cache } from 'react'
 import {
@@ -71,6 +72,14 @@ async function IsoformSection({
         gene={gene}
         isoformCount={isoforms.length}
         species={speciesAvailable}
+      />
+      <TrackOnMount
+        event={{
+          event: 'isoform_view',
+          gene_symbol: gene.symbol,
+          gene_id: gene.id,
+          isoform_count: isoforms.length,
+        }}
       />
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-muted-foreground text-sm font-semibold">

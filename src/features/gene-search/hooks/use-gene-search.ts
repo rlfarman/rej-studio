@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useDebounce } from 'use-debounce'
 import { useQuery } from '@tanstack/react-query'
 import type { GeneSearchResult } from '@/features/gene-search/api/genes'
 import type { SpeciesFilter } from '@/lib/bio/species'
 import { useSpeciesContext } from '@/stores/species-store'
+import { trackEvent } from '@/lib/analytics'
 
 interface UseGeneSearchProps {
   searchGenes: (
@@ -32,6 +33,19 @@ export function useGeneSearch({
     enabled,
     staleTime: 30_000,
   })
+
+  // Track completed searches (fires once per unique query+species+results).
+  const lastTrackedQuery = useRef('')
+  useEffect(() => {
+    if (!data || !trimmed || trimmed === lastTrackedQuery.current) return
+    lastTrackedQuery.current = trimmed
+    trackEvent({
+      event: 'gene_search',
+      query: trimmed,
+      species,
+      result_count: data.length,
+    })
+  }, [data, trimmed, species])
 
   return {
     query,

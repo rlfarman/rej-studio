@@ -35,6 +35,7 @@ import { SPECIES_DISPLAY_NAME } from '@/lib/bio/species'
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
 import { formatFasta } from '@/lib/bio/fasta'
 import { downloadTextFile } from '@/lib/download-file'
+import { trackEvent } from '@/lib/analytics'
 import {
   assessDesignSuitability,
   getSuitabilityConfig,
@@ -43,7 +44,6 @@ import { IsoformValidationBadges } from './isoform-validation-badges'
 import { IsoformMetricsStrip } from './isoform-metrics-strip'
 import { IsoformSplitPreview } from './isoform-split-preview'
 import { IsoformComparisonSheet } from './isoform-comparison-sheet'
-import { GcSparkline } from '@/components/bio/gc-sparkline'
 import type { IsoformListItem } from '@/features/gene-search/types/domain-types'
 
 interface IsoformListProps {
@@ -435,12 +435,16 @@ function IsoformRow({
                   variant="ghost"
                   size="icon"
                   className="size-8"
-                  onClick={() =>
+                  onClick={() => {
                     downloadTextFile(
                       `${isoform.id}.fasta`,
                       formatFasta(isoform.id, isoform.codingSequence),
                     )
-                  }
+                    trackEvent({
+                      event: 'sequence_download',
+                      isoform_id: isoform.id,
+                    })
+                  }}
                   aria-label="Download FASTA"
                 >
                   <Download className="size-3.5" />
@@ -491,8 +495,6 @@ function ExpandedDetails({ isoform }: { isoform: IsoformListItem }) {
           codingSequenceLength={isoform.codingSequenceLength}
         />
       )}
-
-      <GcSparkline sequence={isoform.codingSequence} />
     </div>
   )
 }

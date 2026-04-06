@@ -11,6 +11,7 @@ import { useRecentGenes } from '@/features/gene-search/stores/recent-genes-store
 import { useFavoriteGenes } from '@/features/gene-search/stores/favorite-genes-store'
 import { geneHref, type SpeciesFilter } from '@/lib/bio/species'
 import type { SavedGene } from '@/features/gene-search/types/domain-types'
+import { trackEvent } from '@/lib/analytics'
 
 interface GeneSearchProperties {
   searchGenes: (
@@ -56,6 +57,12 @@ export function GeneSearch({
   const handleSelect = (gene: SavedGene) => {
     setIsOpen(false)
     addRecentGene(gene)
+    trackEvent({
+      event: 'gene_select',
+      symbol: gene.symbol,
+      species: gene.species ?? 'unknown',
+      isoform_id: gene.matchedIsoformId,
+    })
     router.push(geneHref(gene.symbol, gene.species, gene.matchedIsoformId))
     setQuery(gene.symbol)
   }

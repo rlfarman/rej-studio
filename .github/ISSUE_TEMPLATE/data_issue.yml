@@ -1,0 +1,91 @@
+name: Data / Sequence Issue
+description: Report incorrect gene metadata, missing isoforms, or wrong sequence data
+title: 'data: '
+labels: ['data']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template when the **data** is wrong — the code may be working correctly, but a gene, isoform, or sequence in the database is incorrect or missing. For code bugs, use the Bug Report template instead.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What's wrong with the data?
+    validations:
+      required: true
+
+  - type: input
+    id: gene
+    attributes:
+      label: Gene symbol / ID
+      description: e.g. "TP53", "ENSG00000141510"
+    validations:
+      required: false
+
+  - type: input
+    id: transcript
+    attributes:
+      label: Transcript / isoform ID
+      description: e.g. "ENST00000269305", "NM_000546"
+    validations:
+      required: false
+
+  - type: dropdown
+    id: species
+    attributes:
+      label: Species
+      options:
+        - Human
+        - Mouse
+        - Rat
+        - Other
+        - Not applicable
+    validations:
+      required: false
+
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Kind of issue
+      options:
+        - Missing record (gene / isoform / sequence not in DB)
+        - Incorrect sequence (CDS, UTR, etc.)
+        - Incorrect metadata (name, coordinates, biotype, etc.)
+        - Duplicate / stale record
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected value
+      description: What should the data be? Paste the correct sequence / metadata if known.
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual value in DB
+      description: What's currently in REJ Studio? Screenshot or paste the wrong value.
+    validations:
+      required: true
+
+  - type: input
+    id: source
+    attributes:
+      label: Authoritative source
+      description: Link to NCBI / Ensembl / UCSC / other canonical reference.
+      placeholder: 'https://www.ncbi.nlm.nih.gov/gene/7157'
+    validations:
+      required: false
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Additional context
+    validations:
+      required: false

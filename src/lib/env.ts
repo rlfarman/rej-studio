@@ -79,9 +79,9 @@ const serverSchema = z
 
 const clientSchema = z.object({
   // Client-exposed vars must be prefixed with NEXT_PUBLIC_ so Next inlines them.
-  NEXT_PUBLIC_GA_MEASUREMENT_ID: z
+  NEXT_PUBLIC_GTM_ID: z
     .string()
-    .regex(/^G-[A-Z0-9]+$/, 'Expected GA4 measurement ID like "G-XXXXXXXXXX".')
+    .regex(/^GTM-[A-Z0-9]+$/, 'Expected GTM container ID like "GTM-XXXXXXX".')
     .optional(),
 
   // Sentry DSN (client-side). When unset, Sentry is not initialised.

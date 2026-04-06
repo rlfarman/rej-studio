@@ -5,6 +5,7 @@ import { Download, Upload } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { exportUserData, importUserData } from '@/lib/data-transfer'
 import { toast } from 'sonner'
+import { trackEvent } from '@/lib/analytics'
 
 export function DataTransfer() {
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -18,6 +19,7 @@ export function DataTransfer() {
       toast.success(
         `Imported ${imported} data ${imported === 1 ? 'category' : 'categories'}`,
       )
+      trackEvent({ event: 'data_import', category_count: imported })
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Import failed')
     }
@@ -39,7 +41,10 @@ export function DataTransfer() {
         variant="ghost"
         size="sm"
         className="justify-start"
-        onClick={exportUserData}
+        onClick={() => {
+          exportUserData()
+          trackEvent({ event: 'data_export' })
+        }}
       >
         <Download className="h-4 w-4" />
         Export data

@@ -62,7 +62,7 @@ function buildCsp(nonce: string): string {
     "default-src 'self'",
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https://www.googletagmanager.com https://*.sentry.io`,
     "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' data: blob:",
+    "img-src 'self' data: blob: https://www.googletagmanager.com",
     "font-src 'self'",
     "connect-src 'self' https://*.sentry.io https://www.google-analytics.com https://*.modal.run",
     "frame-ancestors 'none'",

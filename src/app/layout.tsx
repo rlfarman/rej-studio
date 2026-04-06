@@ -10,8 +10,11 @@ import { Toaster } from '@/components/ui/sonner'
 import { QueryProvider } from '@/app/_components/providers/query-provider'
 import { MaintenanceBanner } from '@/components/maintenance-banner'
 import { cookies, headers } from 'next/headers'
-import { GoogleAnalytics } from '@/components/google-analytics'
+import { GoogleTagManager } from '@/components/google-tag-manager'
+import { AnalyticsPageview } from '@/components/analytics-pageview'
+import { AnalyticsProperties } from '@/components/analytics-properties'
 import { WebVitals } from '@/components/web-vitals'
+import { Suspense } from 'react'
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://rejstudio.com'
 
@@ -90,10 +93,14 @@ export default async function RootLayout({
               </SidebarInset>
             </SidebarProvider>
             <Toaster />
+            <Suspense fallback={null}>
+              <AnalyticsPageview />
+            </Suspense>
+            <AnalyticsProperties />
           </QueryProvider>
         </ThemeProvider>
         <WebVitals />
-        <GoogleAnalytics nonce={nonce} />
+        <GoogleTagManager nonce={nonce} />
       </body>
     </html>
   )
