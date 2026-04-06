@@ -250,76 +250,6 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
             {position.toLocaleString()} bp
           </div>
         </div>
-        {nearbySites.length > 0 && (
-          <div className="grid gap-2 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-center">
-            <button
-              type="button"
-              onClick={() => {
-                const previous =
-                  selectedSiteIndex > 0
-                    ? wggwSites[selectedSiteIndex - 1]
-                    : nearbySites[0]
-                if (previous) onSnap(previous.position)
-              }}
-              className="text-muted-foreground hover:text-foreground inline-flex h-9 items-center justify-center gap-1 rounded-md border px-3 text-xs font-medium transition-colors"
-            >
-              <ChevronLeft className="size-3.5" />
-              Previous site
-            </button>
-            <div className="flex flex-wrap gap-2">
-              {nearbySites.map((site) => {
-                const isSelected = selectedSite?.position === site.position
-                return (
-                  <button
-                    type="button"
-                    key={site.position}
-                    onClick={() => onSnap(site.position)}
-                    className={cn(
-                      'min-h-10 rounded-md border px-3 py-2 text-left transition-colors',
-                      isSelected
-                        ? 'border-primary bg-primary/10 ring-primary/20 ring-1'
-                        : 'hover:border-primary/30 hover:bg-muted/50',
-                    )}
-                  >
-                    <div className="flex items-center gap-2 text-[11px] font-semibold">
-                      <span className="font-mono">{site.motif}</span>
-                      <span className="text-muted-foreground font-mono">
-                        {site.position}
-                      </span>
-                      <span
-                        className={cn(
-                          'rounded-full px-1.5 py-0.5 text-[10px] font-medium',
-                          site.alreadyPresent
-                            ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
-                            : 'bg-amber-500/15 text-amber-700 dark:text-amber-300',
-                        )}
-                      >
-                        {site.alreadyPresent
-                          ? 'present'
-                          : `${site.baseChanges} bp`}
-                      </span>
-                    </div>
-                  </button>
-                )
-              })}
-            </div>
-            <button
-              type="button"
-              onClick={() => {
-                const next =
-                  selectedSiteIndex >= 0 &&
-                  selectedSiteIndex < wggwSites.length - 1
-                    ? wggwSites[selectedSiteIndex + 1]
-                    : nearbySites.at(-1)
-                if (next) onSnap(next.position)
-              }}
-              className="text-muted-foreground hover:text-foreground inline-flex h-9 items-center justify-center gap-1 rounded-md border px-3 text-xs font-medium transition-colors"
-            >
-              Next site
-              <ChevronRight className="size-3.5" />
-            </button>
-          </div>
-        )}
         {/* Frame-at-split readout */}
         <FrameAtSplit
           ctx={frameContext}
@@ -329,6 +259,8 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
           wggwSites={wggwSites}
           selectedSite={selectedSite}
           selectedRewriteIndex={selectedRewriteIndex}
+          nearbySites={nearbySites}
+          selectedSiteIndex={selectedSiteIndex}
           onSelectRewrite={(index) =>
             setRewriteSelection({
               position: selectedSite?.position ?? null,
@@ -495,6 +427,8 @@ function FrameAtSplit({
   wggwSites,
   selectedSite,
   selectedRewriteIndex,
+  nearbySites,
+  selectedSiteIndex,
   onSelectRewrite,
 }: {
   ctx: FrameContext
@@ -504,6 +438,8 @@ function FrameAtSplit({
   wggwSites: WggwSiteCandidate[]
   selectedSite: WggwSiteCandidate | null
   selectedRewriteIndex: number
+  nearbySites: WggwSiteCandidate[]
+  selectedSiteIndex: number
   onSelectRewrite: (index: number) => void
 }) {
   const visibleBaseStart = ctx.codons[0]?.idx * 3 + 1
@@ -551,6 +487,178 @@ function FrameAtSplit({
 
   return (
     <div className="space-y-3">
+      <div
+        ref={stripRef}
+        className="bg-muted/40 rounded-lg border p-2 font-mono text-[10px] leading-none shadow-sm"
+        role="img"
+        aria-label="Codon context around splice junction"
+      >
+        <div className="mb-1 flex w-full items-center gap-[1px]">
+          {ctx.codons.map((c) => {
+            const roleStyles = roleStylesFor(c.role)
+            return (
+              <div
+                key={c.idx}
+                className={cn(
+                  'flex flex-1 flex-col items-center gap-0.5 rounded-sm px-[3px] py-1',
+                  c.role === 'split' ? '' : roleStyles.container,
+                  selectedCodonIndices.has(c.idx) &&
+                    (selectedSite?.alreadyPresent
+                      ? 'bg-emerald-500/10 ring-1 ring-emerald-500/30'
+                      : 'bg-amber-500/10 ring-1 ring-amber-500/30'),
+                )}
+              >
+                <span
+                  className={cn(
+                    'tabular-nums',
+                    roleStyles.aa,
+                    selectedCodonIndices.has(c.idx) && 'text-foreground',
+                  )}
+                >
+                  {c.aa ?? '·'}
+                </span>
+                <span className="flex">
+                  {[0, 1, 2].map((bi) => {
+                    const base = c.codon[bi]
+                    const basePos = c.idx * 3 + bi + 1 // 1-based
+                    const isCutBase =
+                      c.isSplit &&
+                      ((ctx.frameOffset === 1 && bi === 0) ||
+                        (ctx.frameOffset === 2 && bi === 1))
+                    const inSelected = selectedBases.has(basePos)
+                    const isChanged = selectedChangedBases.has(basePos)
+                    return (
+                      <span
+                        key={bi}
+                        className={cn(
+                          roleStyles.base,
+                          inSelected &&
+                            (selectedSite?.alreadyPresent
+                              ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
+                              : 'bg-amber-500/15 text-amber-700 dark:text-amber-300'),
+                          isChanged &&
+                            'underline decoration-2 underline-offset-2',
+                          isCutBase && 'border-primary border-r-2',
+                        )}
+                      >
+                        {base ?? '·'}
+                      </span>
+                    )
+                  })}
+                </span>
+              </div>
+            )
+          })}
+        </div>
+        <div className="relative h-8">
+          {localSites.map((site) => {
+            const left =
+              ((site.position - visibleBaseStart) /
+                Math.max(1, visibleBaseEnd - visibleBaseStart)) *
+              100
+            const isSelected = selectedSite?.position === site.position
+            return (
+              <button
+                type="button"
+                key={site.position}
+                onClick={() => onSnap(site.position)}
+                title={`${site.motif} at bp ${site.position.toLocaleString()} · ${site.alreadyPresent ? 'present' : 'inducible'}${site.rewriteOptions.length > 1 ? ` · ${site.rewriteOptions.length} rewrite options` : ''}`}
+                className="absolute top-0 flex min-h-8 -translate-x-1/2 flex-col items-center gap-1 px-1"
+                style={{ left: `${left}%` }}
+              >
+                <span
+                  className={cn(
+                    'block h-3.5 w-1 rounded-full',
+                    isSelected
+                      ? 'bg-primary'
+                      : site.alreadyPresent
+                        ? 'bg-emerald-500'
+                        : 'bg-amber-500',
+                  )}
+                />
+                <span
+                  className={cn(
+                    'rounded-md border px-1.5 py-0.5 text-[9px] leading-none',
+                    isSelected
+                      ? 'border-primary bg-primary/10 text-primary'
+                      : 'text-muted-foreground border-transparent',
+                  )}
+                >
+                  {site.position}
+                </span>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+      {nearbySites.length > 0 && (
+        <div className="grid gap-2 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-center">
+          <button
+            type="button"
+            onClick={() => {
+              const previous =
+                selectedSiteIndex > 0
+                  ? wggwSites[selectedSiteIndex - 1]
+                  : nearbySites[0]
+              if (previous) onSnap(previous.position)
+            }}
+            className="text-muted-foreground hover:text-foreground inline-flex h-9 items-center justify-center gap-1 rounded-md border px-3 text-xs font-medium transition-colors"
+          >
+            <ChevronLeft className="size-3.5" />
+            Previous site
+          </button>
+          <div className="flex flex-wrap gap-2">
+            {nearbySites.map((site) => {
+              const isSelected = selectedSite?.position === site.position
+              return (
+                <button
+                  type="button"
+                  key={site.position}
+                  onClick={() => onSnap(site.position)}
+                  className={cn(
+                    'min-h-10 rounded-md border px-3 py-2 text-left transition-colors',
+                    isSelected
+                      ? 'border-primary bg-primary/10 ring-primary/20 ring-1'
+                      : 'hover:border-primary/30 hover:bg-muted/50',
+                  )}
+                >
+                  <div className="flex items-center gap-2 text-[11px] font-semibold">
+                    <span className="font-mono">{site.motif}</span>
+                    <span className="text-muted-foreground font-mono">
+                      {site.position}
+                    </span>
+                    <span
+                      className={cn(
+                        'rounded-full px-1.5 py-0.5 text-[10px] font-medium',
+                        site.alreadyPresent
+                          ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
+                          : 'bg-amber-500/15 text-amber-700 dark:text-amber-300',
+                      )}
+                    >
+                      {site.alreadyPresent ? 'present' : `${site.baseChanges} bp`}
+                    </span>
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              const next =
+                selectedSiteIndex >= 0 &&
+                selectedSiteIndex < wggwSites.length - 1
+                  ? wggwSites[selectedSiteIndex + 1]
+                  : nearbySites.at(-1)
+              if (next) onSnap(next.position)
+            }}
+            className="text-muted-foreground hover:text-foreground inline-flex h-9 items-center justify-center gap-1 rounded-md border px-3 text-xs font-medium transition-colors"
+          >
+            Next site
+            <ChevronRight className="size-3.5" />
+          </button>
+        </div>
+      )}
       <div className="mx-auto w-full max-w-3xl">
         <div className="bg-muted/30 min-h-[228px] space-y-3 rounded-lg border p-3 text-[11px] shadow-sm">
           {selectedSite && currentRewrite ? (
@@ -675,111 +783,6 @@ function FrameAtSplit({
               </div>
             </div>
           )}
-        </div>
-      </div>
-
-      <div
-        ref={stripRef}
-        className="bg-muted/40 rounded-lg border p-2 font-mono text-[10px] leading-none shadow-sm"
-        role="img"
-        aria-label="Codon context around splice junction"
-      >
-        <div className="mb-1 flex w-full items-center gap-[1px]">
-          {ctx.codons.map((c) => {
-            const roleStyles = roleStylesFor(c.role)
-            return (
-              <div
-                key={c.idx}
-                className={cn(
-                  'flex flex-1 flex-col items-center gap-0.5 rounded-sm px-[3px] py-1',
-                  c.role === 'split' ? '' : roleStyles.container,
-                  selectedCodonIndices.has(c.idx) &&
-                    (selectedSite?.alreadyPresent
-                      ? 'bg-emerald-500/10 ring-1 ring-emerald-500/30'
-                      : 'bg-amber-500/10 ring-1 ring-amber-500/30'),
-                )}
-              >
-                <span
-                  className={cn(
-                    'tabular-nums',
-                    roleStyles.aa,
-                    selectedCodonIndices.has(c.idx) && 'text-foreground',
-                  )}
-                >
-                  {c.aa ?? '·'}
-                </span>
-                <span className="flex">
-                  {[0, 1, 2].map((bi) => {
-                    const base = c.codon[bi]
-                    const basePos = c.idx * 3 + bi + 1 // 1-based
-                    const isCutBase =
-                      c.isSplit &&
-                      ((ctx.frameOffset === 1 && bi === 0) ||
-                        (ctx.frameOffset === 2 && bi === 1))
-                    const inSelected = selectedBases.has(basePos)
-                    const isChanged = selectedChangedBases.has(basePos)
-                    return (
-                      <span
-                        key={bi}
-                        className={cn(
-                          roleStyles.base,
-                          inSelected &&
-                            (selectedSite?.alreadyPresent
-                              ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
-                              : 'bg-amber-500/15 text-amber-700 dark:text-amber-300'),
-                          isChanged &&
-                            'underline decoration-2 underline-offset-2',
-                          isCutBase && 'border-primary border-r-2',
-                        )}
-                      >
-                        {base ?? '·'}
-                      </span>
-                    )
-                  })}
-                </span>
-              </div>
-            )
-          })}
-        </div>
-        <div className="relative h-8">
-          {localSites.map((site) => {
-            const left =
-              ((site.position - visibleBaseStart) /
-                Math.max(1, visibleBaseEnd - visibleBaseStart)) *
-              100
-            const isSelected = selectedSite?.position === site.position
-            return (
-              <button
-                type="button"
-                key={site.position}
-                onClick={() => onSnap(site.position)}
-                title={`${site.motif} at bp ${site.position.toLocaleString()} · ${site.alreadyPresent ? 'present' : 'inducible'}${site.rewriteOptions.length > 1 ? ` · ${site.rewriteOptions.length} rewrite options` : ''}`}
-                className="absolute top-0 flex min-h-8 -translate-x-1/2 flex-col items-center gap-1 px-1"
-                style={{ left: `${left}%` }}
-              >
-                <span
-                  className={cn(
-                    'block h-3.5 w-1 rounded-full',
-                    isSelected
-                      ? 'bg-primary'
-                      : site.alreadyPresent
-                        ? 'bg-emerald-500'
-                        : 'bg-amber-500',
-                  )}
-                />
-                <span
-                  className={cn(
-                    'rounded-md border px-1.5 py-0.5 text-[9px] leading-none',
-                    isSelected
-                      ? 'border-primary bg-primary/10 text-primary'
-                      : 'text-muted-foreground border-transparent',
-                  )}
-                >
-                  {site.position}
-                </span>
-              </button>
-            )
-          })}
         </div>
       </div>
     </div>
