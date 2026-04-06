@@ -1,10 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useDebounce } from 'use-debounce'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import type {
-  GeneSearchResult,
-  SearchGenesResult,
-} from '@/features/gene-search/api/genes'
+import type { GeneSearchResult } from '@/features/gene-search/api/gene-queries'
+import type { SearchGenesResult } from '@/features/gene-search/api/genes'
 import type { SpeciesFilter } from '@/lib/bio/species'
 import { useSpeciesContext } from '@/stores/species-store'
 import { trackEvent } from '@/lib/analytics'

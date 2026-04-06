@@ -12,7 +12,10 @@ import { headers } from 'next/headers'
 import { createUpstashRateLimiter } from '@/lib/upstash'
 import { createLogger } from '@/lib/logger'
 
-export type { GeneSearchResult }
+// NOTE: GeneSearchResult is NOT re-exported from this 'use server' file.
+// Turbopack treats all exports from server action files as server actions,
+// which fails for type-only exports. Import GeneSearchResult directly from
+// '@/features/gene-search/api/gene-queries' instead.
 
 export interface SearchGenesResult {
   results: GeneSearchResult[]
