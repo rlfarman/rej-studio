@@ -1,11 +1,11 @@
+import io
+import os
+import re
+import zipfile
+
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, field_validator
-import os
-import zipfile
-import io
-import re
-from typing import Any
 
 from .algorithm import process_single_request, process_single_request_json
 
@@ -73,14 +73,17 @@ def process_gene(request: ProcessRequest):
             results_folder=results_folder,
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error processing gene: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error processing gene: {str(e)}") from e
 
     # Check if the output files were created
     if not report_filename or not os.path.exists(report_filename):
         raise HTTPException(status_code=500, detail="Failed to generate report.")
 
     if not sequences_filename or not os.path.exists(sequences_filename):
-        raise HTTPException(status_code=500, detail="Failed to generate optimized sequences. Check the report for details.")
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to generate optimized sequences. Check the report for details.",
+        )
 
     try:
         # Create an in-memory zip file
@@ -156,6 +159,6 @@ def process_gene_json(request: ProcessRequest):
             OPTIONS=request.options.model_dump(),
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error processing gene: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error processing gene: {str(e)}") from e
 
     return result

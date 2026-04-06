@@ -1,3 +1,4 @@
+# pyright: reportMissingImports=false, reportAttributeAccessIssue=false
 import json
 import logging
 import os
@@ -6,11 +7,12 @@ import time
 from pathlib import Path
 from typing import Any
 
-import modal
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, field_validator
+
+import modal
 
 # Sentry — initialise early so errors during module import are captured.
 # Only active when SENTRY_DSN is set (production deploys).
@@ -213,9 +215,7 @@ ALLOWED_ORIGINS = [
 # In development, allow localhost. Keep this behind an env guard so prod
 # never accidentally opens the door.
 if os.environ.get("MODAL_ENVIRONMENT") == "dev":
-    ALLOWED_ORIGINS.extend(
-        ["http://localhost:3000", "http://127.0.0.1:3000"]
-    )
+    ALLOWED_ORIGINS.extend(["http://localhost:3000", "http://127.0.0.1:3000"])
 
 # Request-size cap (bytes). CDS max is 50k chars ≈ 50 KB; add generous
 # headroom for JSON overhead + options but reject truly absurd payloads
