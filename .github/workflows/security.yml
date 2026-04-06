@@ -29,6 +29,7 @@ jobs:
         with:
           node-version: '24'
           cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
       - name: Audit production dependencies
         # Only fail on advisories affecting prod deps; dev-dep CVEs are noisy
         # and rarely ship to users. `--audit-level moderate` blocks on
@@ -71,6 +72,8 @@ jobs:
       - name: Generate npm SBOM (CycloneDX)
         # cdxgen supports pnpm natively; cyclonedx-npm only works with npm's lockfile
         run: npx --yes @cyclonedx/cdxgen -o sbom-npm.cdx.json -t js --no-recurse
+        env:
+          NODE_OPTIONS: '--max-old-space-size=4096'
       - name: Generate Python SBOM (CycloneDX)
         run: |
           pip install cyclonedx-bom
