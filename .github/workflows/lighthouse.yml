@@ -56,3 +56,6 @@ jobs:
           temporaryPublicStorage: true
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          COMPUTE_BACKEND: modal
+          MODAL_API_URL: https://placeholder.modal.run
+          NEXT_PUBLIC_SITE_URL: http://localhost:3000
