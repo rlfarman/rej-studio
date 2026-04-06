@@ -529,7 +529,16 @@ function FrameAtSplit({
             )
           })}
         </div>
-        <div className="relative h-6">
+        <div className="mb-1 flex items-center justify-between gap-2 text-[9px] font-medium tracking-[0.08em] text-muted-foreground/80 uppercase">
+          <span>Local WGGW Sites</span>
+          <span>
+            {selectedSite
+              ? 'Click another marker to compare'
+              : 'Click a marker to choose a site'}
+          </span>
+        </div>
+        <div className="bg-background/75 relative h-8 rounded-sm border px-2">
+          <div className="bg-border/70 absolute inset-x-2 top-3 h-px" />
           {localSites.map((site) => {
             const left =
               ((site.position - visibleBaseStart) /
@@ -542,25 +551,25 @@ function FrameAtSplit({
                 key={site.position}
                 onClick={() => onSnap(site.position)}
                 title={`${site.motif} at bp ${site.position.toLocaleString()} · ${site.alreadyPresent ? 'present' : 'inducible'}${site.rewriteOptions.length > 1 ? ` · ${site.rewriteOptions.length} rewrite options` : ''}`}
-                className="absolute top-0 flex -translate-x-1/2 flex-col items-center gap-1"
+                className="group absolute top-0 flex -translate-x-1/2 flex-col items-center"
                 style={{ left: `${left}%` }}
               >
                 <span
                   className={cn(
-                    'block h-3 w-[3px] rounded-full',
+                    'mt-[7px] block h-3 rounded-full transition-all',
                     isSelected
-                      ? 'bg-primary'
+                      ? 'bg-primary w-[4px]'
                       : site.alreadyPresent
-                        ? 'bg-emerald-500'
-                        : 'bg-amber-500',
+                        ? 'bg-emerald-500/90 w-[3px] group-hover:w-[4px]'
+                        : 'bg-amber-500/90 w-[3px] group-hover:w-[4px]',
                   )}
                 />
                 <span
                   className={cn(
-                    'rounded border px-1 py-0.5 text-[9px] leading-none',
+                    'absolute top-0 rounded-full border px-1.5 py-0.5 text-[9px] leading-none transition-opacity',
                     isSelected
-                      ? 'border-primary bg-primary/10 text-primary'
-                      : 'border-transparent text-muted-foreground',
+                      ? 'border-primary/50 bg-primary/10 text-primary opacity-100'
+                      : 'border-transparent bg-background/90 text-muted-foreground opacity-0 group-hover:opacity-100',
                   )}
                 >
                   {site.position}
@@ -574,24 +583,33 @@ function FrameAtSplit({
         <div className="bg-muted/30 min-h-28 space-y-2 rounded-sm border p-2.5 text-[10px]">
           {selectedSite && currentRewrite ? (
             <>
-              <div className="flex items-center justify-between gap-2">
-                <div className="text-muted-foreground">
-                  Selected WGGW{' '}
-                  <span
-                    className={cn(
-                      'font-mono',
-                      selectedSite.alreadyPresent
-                        ? 'text-emerald-700 dark:text-emerald-300'
-                        : 'text-amber-700 dark:text-amber-300',
-                    )}
-                  >
-                    {selectedSite.motif}
-                  </span>{' '}
-                  at bp {selectedSite.position.toLocaleString()}
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <div className="space-y-1">
+                  <div className="text-foreground text-[11px] font-medium">
+                    Rewrite Preview
+                  </div>
+                  <div className="flex items-center gap-2 text-[10px]">
+                    <span className="text-muted-foreground">
+                      bp {selectedSite.position.toLocaleString()}
+                    </span>
+                    <span
+                      className={cn(
+                        'rounded-full px-1.5 py-0.5 font-mono',
+                        selectedSite.alreadyPresent
+                          ? 'bg-emerald-500/12 text-emerald-700 dark:text-emerald-300'
+                          : 'bg-amber-500/12 text-amber-700 dark:text-amber-300',
+                      )}
+                    >
+                      {selectedSite.alreadyPresent ? 'present' : 'inducible'}{' '}
+                      {selectedSite.motif}
+                    </span>
+                  </div>
                 </div>
                 {selectedSite.rewriteOptions.length > 1 && (
-                  <div className="flex flex-wrap items-center gap-1">
-                    <span className="text-muted-foreground">Synonymous rewrites:</span>
+                  <div className="flex max-w-full flex-wrap items-center justify-end gap-1">
+                    <span className="text-muted-foreground">
+                      Synonymous rewrites
+                    </span>
                     {selectedSite.rewriteOptions.map((option, index) => (
                       <button
                         type="button"
@@ -601,7 +619,7 @@ function FrameAtSplit({
                           'rounded border px-1.5 py-0.5 font-mono',
                           index === selectedRewriteIndex
                             ? 'border-primary bg-primary/10 text-primary'
-                            : 'text-muted-foreground hover:border-primary/40',
+                            : 'text-muted-foreground hover:border-primary/40 hover:text-foreground',
                         )}
                       >
                         {option.newHexamer}
@@ -612,8 +630,6 @@ function FrameAtSplit({
               </div>
               <RewritePreview
                 peptide={translatePair(selectedSite.originalCodons)}
-                beforeCodons={selectedSite.originalCodons}
-                afterCodons={currentRewrite.newCodons}
                 beforeHexamer={selectedSite.originalHexamer}
                 afterHexamer={currentRewrite.newHexamer}
                 changedFrom={selectedSite.originalHexamer}
@@ -626,8 +642,8 @@ function FrameAtSplit({
             <div className="text-muted-foreground flex min-h-24 flex-col items-center justify-center gap-1 text-center">
               <div className="font-medium">No splice junction selected</div>
               <div>
-                Drag the top slider to inspect a region, then click a local
-                WGGW-capable marker below the sequence to preview a specific site.
+                Drag the slider to inspect a region, then click a local WGGW
+                marker to preview a specific rewrite.
               </div>
             </div>
           )}
@@ -645,8 +661,6 @@ function translatePair(codons: [string, string]) {
 
 function RewritePreview({
   peptide,
-  beforeCodons,
-  afterCodons,
   beforeHexamer,
   afterHexamer,
   motifStart,
@@ -655,8 +669,6 @@ function RewritePreview({
   alreadyPresent,
 }: {
   peptide: string
-  beforeCodons: [string, string]
-  afterCodons: [string, string]
   beforeHexamer: string
   afterHexamer: string
   motifStart: number
@@ -665,42 +677,76 @@ function RewritePreview({
   alreadyPresent: boolean
 }) {
   return (
-    <div className="space-y-1.5 rounded-sm border bg-background/70 p-2 font-mono">
-      <div className="flex items-center justify-between">
-        <span className="text-muted-foreground">Peptide</span>
-        <span>{peptide[0] ?? '·'} {peptide[1] ?? '·'}</span>
+    <div className="space-y-2 rounded-sm border bg-background/70 p-2 font-mono">
+      <div className="flex items-center justify-between text-[10px]">
+        <span className="text-muted-foreground">Peptide preserved</span>
+        <span className="tracking-[0.14em]">
+          {peptide[0] ?? '·'} {peptide[1] ?? '·'}
+        </span>
       </div>
-      <div className="flex items-center justify-between">
-        <span className="text-muted-foreground">Before</span>
-        <span>{beforeCodons[0]} {beforeCodons[1]}</span>
-      </div>
-      <div className="flex items-center justify-between">
-        <span className="text-muted-foreground">After</span>
-        <div className="flex">
-          {[...afterHexamer].map((base, index) => {
-            const inMotif = index >= motifStart && index < motifStart + 4
-            const isChanged = changedFrom[index] !== base
-            const isCut = index === cutOffset
-            return (
-              <span
-                key={index}
-                className={cn(
-                  'px-[1px]',
-                  index === 3 && 'ml-1',
-                  inMotif &&
-                    (alreadyPresent
-                      ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
-                      : 'bg-amber-500/15 text-amber-700 dark:text-amber-300'),
-                  isChanged && 'underline decoration-2 underline-offset-2',
-                  isCut && 'border-primary border-r-2',
-                )}
-              >
-                {base}
-              </span>
-            )
-          })}
+      <div className="grid gap-1.5 text-[11px]">
+        <div className="grid grid-cols-[3.5rem_1fr] items-center gap-2">
+          <span className="text-muted-foreground text-[10px]">Before</span>
+          <SequenceRow
+            sequence={beforeHexamer}
+            changedFrom={changedFrom}
+            motifStart={motifStart}
+            cutOffset={cutOffset}
+            alreadyPresent={alreadyPresent}
+          />
+        </div>
+        <div className="grid grid-cols-[3.5rem_1fr] items-center gap-2">
+          <span className="text-muted-foreground text-[10px]">After</span>
+          <SequenceRow
+            sequence={afterHexamer}
+            changedFrom={changedFrom}
+            motifStart={motifStart}
+            cutOffset={cutOffset}
+            alreadyPresent={alreadyPresent}
+          />
         </div>
       </div>
+    </div>
+  )
+}
+
+function SequenceRow({
+  sequence,
+  changedFrom,
+  motifStart,
+  cutOffset,
+  alreadyPresent,
+}: {
+  sequence: string
+  changedFrom: string
+  motifStart: number
+  cutOffset: number
+  alreadyPresent: boolean
+}) {
+  return (
+    <div className="flex min-w-0 items-center">
+      {[...sequence].map((base, index) => {
+        const inMotif = index >= motifStart && index < motifStart + 4
+        const isChanged = changedFrom[index] !== base
+        const isCut = index === cutOffset
+        return (
+          <span
+            key={index}
+            className={cn(
+              'px-[1px]',
+              index === 3 && 'ml-1',
+              inMotif &&
+                (alreadyPresent
+                  ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
+                  : 'bg-amber-500/15 text-amber-700 dark:text-amber-300'),
+              isChanged && 'underline decoration-2 underline-offset-2',
+              isCut && 'border-primary border-r-2',
+            )}
+          >
+            {base}
+          </span>
+        )
+      })}
     </div>
   )
 }
