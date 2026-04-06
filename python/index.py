@@ -8,9 +8,14 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, field_validator
 
 from .algorithm import process_single_request, process_single_request_json
+from .telemetry import init_telemetry
 
 # Create FastAPI instance with custom docs and openapi URL
 app = FastAPI(docs_url="/api/py/docs", openapi_url="/api/py/openapi.json")
+
+# OpenTelemetry — auto-instruments FastAPI routes. No-ops when
+# OTEL_EXPORTER_OTLP_ENDPOINT is not set (local dev without Axiom).
+init_telemetry(app)
 
 
 # Define input model for the request

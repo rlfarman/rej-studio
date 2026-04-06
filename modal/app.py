@@ -55,8 +55,18 @@ project_root = Path(__file__).parent.parent
 
 image = (
     modal.Image.debian_slim(python_version="3.11")
-    .pip_install("dnachisel", "tqdm", "fastapi[standard]", "sentry-sdk[fastapi]")
+    .pip_install(
+        "dnachisel",
+        "tqdm",
+        "fastapi[standard]",
+        "sentry-sdk[fastapi]",
+        "opentelemetry-api",
+        "opentelemetry-sdk",
+        "opentelemetry-exporter-otlp-proto-http",
+        "opentelemetry-instrumentation-fastapi",
+    )
     .add_local_file(project_root / "python" / "algorithm.py", remote_path="/root/algorithm.py")
+    .add_local_file(project_root / "python" / "telemetry.py", remote_path="/root/telemetry.py")
 )
 
 # Shared key-value store for in-flight job progress. Keyed by Modal call_id
@@ -223,6 +233,17 @@ if os.environ.get("MODAL_ENVIRONMENT") == "dev":
 MAX_REQUEST_BYTES = 256 * 1024  # 256 KB
 
 web_app = FastAPI()
+
+# OpenTelemetry — auto-instruments FastAPI routes. No-ops when
+# OTEL_EXPORTER_OTLP_ENDPOINT is not set. In production, set the env var
+# in the Modal secret so traces ship to Axiom alongside the Next.js ones.
+try:
+    sys.path.insert(0, "/root")
+    from telemetry import init_telemetry
+
+    init_telemetry(web_app)
+except Exception:
+    pass  # OTEL packages not available or misconfigured — skip silently
 
 web_app.add_middleware(
     CORSMiddleware,

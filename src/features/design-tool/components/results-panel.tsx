@@ -1,6 +1,6 @@
 'use client'
 
-import { memo, useMemo, useState } from 'react'
+import { memo, useMemo } from 'react'
 import { m } from 'motion/react'
 import {
   Download,
@@ -50,6 +50,7 @@ import { AavResults } from './aav-size-estimator'
 import { SplitBar } from '@/components/bio/split-bar'
 import { ObjectivesSummary } from './objectives-output'
 import { formatFasta } from '@/lib/bio/fasta'
+import { downloadTextFile } from '@/lib/download-file'
 import { isSpecies } from '@/lib/bio/species'
 import type { DesignToolSpecies } from '@/features/design-tool/types/species-options'
 import { computeGcPercent, countCpG } from '@/lib/bio/sequence-utils'
@@ -274,52 +275,28 @@ function MetricsStrip({ result }: { result: ProcessResult }) {
   )
 }
 
-type ViewerTab = 'seq5' | 'seq3' | 'full'
-
-function SequenceViewer({ result }: { result: ProcessResult }) {
-  const [active, setActive] = useState<ViewerTab>('seq5')
-  const { copy, isCopied } = useCopyToClipboard({ showToast: false })
-
-  const tabs: Array<{ id: ViewerTab; label: string }> = [
-    { id: 'seq5', label: "5' Sequence" },
-    { id: 'seq3', label: "3' Sequence" },
-    { id: 'full', label: 'Full optimized' },
-  ]
-
-  const current =
-    active === 'seq5'
-      ? { sequence: result.seq5, fastaSuffix: '5prime' }
-      : active === 'seq3'
-        ? { sequence: result.seq3, fastaSuffix: '3prime' }
-        : { sequence: result.optimized_sequence, fastaSuffix: 'optimized' }
-
-  const rawId = `seq-${active}-raw`
-  const fastaId = `seq-${active}-fasta`
-  const fastaName = `${result.name}_${current.fastaSuffix}`
+function SequenceCard({
+  label,
+  sequence,
+  fastaName,
+  copyHook,
+}: {
+  label: string
+  sequence: string
+  fastaName: string
+  copyHook: ReturnType<typeof useCopyToClipboard>
+}) {
+  const { copy, isCopied } = copyHook
+  const rawId = `seq-${fastaName}-raw`
+  const fastaId = `seq-${fastaName}-fasta`
 
   return (
-    <div className="space-y-2">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <div className="bg-muted/60 inline-flex rounded-md border p-0.5">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => setActive(tab.id)}
-                className={cn(
-                  'rounded px-2.5 py-1 text-xs font-medium transition-colors',
-                  active === tab.id
-                    ? 'bg-background text-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground',
-                )}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-          <Badge variant="secondary">
-            {current.sequence.length.toLocaleString()} bp
+    <div className="bg-muted/30 space-y-2 rounded-lg border p-3">
+      <div className="flex flex-wrap items-center justify-between gap-1.5">
+        <div className="flex items-center gap-1.5">
+          <span className="text-xs font-medium">{label}</span>
+          <Badge variant="secondary" className="text-[10px]">
+            {sequence.length.toLocaleString()} bp
           </Badge>
         </div>
         <div className="flex gap-1">
@@ -327,10 +304,23 @@ function SequenceViewer({ result }: { result: ProcessResult }) {
             type="button"
             variant="ghost"
             size="sm"
-            className="h-7 gap-1.5 px-2 text-xs"
+            className="h-6 gap-1 px-1.5 text-[11px]"
             onClick={() =>
-              copy(formatFasta(fastaName, current.sequence), fastaId)
+              downloadTextFile(
+                `${fastaName}.fasta`,
+                formatFasta(fastaName, sequence),
+              )
             }
+          >
+            <Download className="size-3" />
+            FASTA
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-6 gap-1 px-1.5 text-[11px]"
+            onClick={() => copy(formatFasta(fastaName, sequence), fastaId)}
           >
             {isCopied(fastaId) ? (
               <Check className="size-3" />
@@ -343,8 +333,8 @@ function SequenceViewer({ result }: { result: ProcessResult }) {
             type="button"
             variant="ghost"
             size="sm"
-            className="h-7 gap-1.5 px-2 text-xs"
-            onClick={() => copy(current.sequence, rawId)}
+            className="h-6 gap-1 px-1.5 text-[11px]"
+            onClick={() => copy(sequence, rawId)}
           >
             {isCopied(rawId) ? (
               <Check className="size-3" />
@@ -355,9 +345,36 @@ function SequenceViewer({ result }: { result: ProcessResult }) {
           </Button>
         </div>
       </div>
-      <pre className="bg-muted max-h-40 overflow-auto rounded-md p-3 font-mono text-xs break-all whitespace-pre-wrap">
-        {current.sequence}
+      <pre className="bg-muted max-h-40 overflow-auto rounded-md p-2.5 font-mono text-xs break-all whitespace-pre-wrap">
+        {sequence}
       </pre>
+    </div>
+  )
+}
+
+function SequenceViewer({ result }: { result: ProcessResult }) {
+  const copyHook = useCopyToClipboard({ showToast: false })
+
+  return (
+    <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
+      <SequenceCard
+        label="5' Sequence"
+        sequence={result.seq5}
+        fastaName={`${result.name}_5prime`}
+        copyHook={copyHook}
+      />
+      <SequenceCard
+        label="3' Sequence"
+        sequence={result.seq3}
+        fastaName={`${result.name}_3prime`}
+        copyHook={copyHook}
+      />
+      <SequenceCard
+        label="Full Optimized"
+        sequence={result.optimized_sequence}
+        fastaName={`${result.name}_optimized`}
+        copyHook={copyHook}
+      />
     </div>
   )
 }
@@ -534,25 +551,6 @@ function ResultsPanelImpl({ result, optionsUsed, species }: ResultsPanelProps) {
           <SequenceViewer result={result} />
 
           <div className="-mx-1">
-            <ExpandableRow
-              title="AAV packaging"
-              icon={Package}
-              summary={aavSummary(seq5Clean.length, seq3Clean.length)}
-            >
-              <AavResults
-                seq5Length={seq5Clean.length}
-                seq3Length={seq3Clean.length}
-              />
-            </ExpandableRow>
-            {wggwCount > 0 && result.wggw_info && (
-              <ExpandableRow
-                title="WGGW motif details"
-                icon={Link2}
-                summary={`${wggwCount} site${wggwCount === 1 ? '' : 's'}`}
-              >
-                <WggwTable wggwInfo={result.wggw_info} />
-              </ExpandableRow>
-            )}
             <ExpandableRow title="Sequence visualizations" icon={Activity}>
               <SequenceVisualizations
                 original={result.original_sequence}
@@ -599,6 +597,25 @@ function ResultsPanelImpl({ result, optionsUsed, species }: ResultsPanelProps) {
                   optimized={result.optimized_sequence}
                   species={species}
                 />
+              </ExpandableRow>
+            )}
+            <ExpandableRow
+              title="AAV packaging"
+              icon={Package}
+              summary={aavSummary(seq5Clean.length, seq3Clean.length)}
+            >
+              <AavResults
+                seq5Length={seq5Clean.length}
+                seq3Length={seq3Clean.length}
+              />
+            </ExpandableRow>
+            {wggwCount > 0 && result.wggw_info && (
+              <ExpandableRow
+                title="WGGW motif details"
+                icon={Link2}
+                summary={`${wggwCount} site${wggwCount === 1 ? '' : 's'}`}
+              >
+                <WggwTable wggwInfo={result.wggw_info} />
               </ExpandableRow>
             )}
             <ExpandableRow
