@@ -36,7 +36,7 @@ export function SpeciesSelect({
   return (
     <Select onValueChange={handleSpeciesChange} value={species}>
       <SelectTrigger
-        aria-label={`Species filter: ${speciesLabel}`}
+        aria-label={speciesLabel}
         className="hover:bg-accent z-10 w-fit cursor-pointer gap-2 border-none font-semibold shadow-none"
       >
         <SelectValue>
