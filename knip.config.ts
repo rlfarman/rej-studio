@@ -11,6 +11,7 @@ const config: KnipConfig = {
     'next.config.{ts,js,mjs}',
     'scripts/**/*.{ts,tsx}',
     'vitest.config.ts',
+    'src/test/**',
   ],
   project: ['src/**/*.{ts,tsx}', 'scripts/**/*.{ts,tsx}'],
   ignore: ['src/components/ui/**'],
