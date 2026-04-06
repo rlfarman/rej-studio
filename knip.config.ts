@@ -24,7 +24,7 @@ const config: KnipConfig = {
     '@radix-ui/react-slider',
     '@radix-ui/react-toggle',
   ],
-  ignoreBinaries: ['vercel', 'verify', 'pip', 'python3'],
+  ignoreBinaries: ['vercel', 'verify', 'pip', 'python3', 'report', 'compare'],
 }
 
 export default config
