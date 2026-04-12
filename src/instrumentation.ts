@@ -33,8 +33,11 @@ export async function register() {
   // Honeycomb). Next.js automatically creates spans for routes, server
   // actions, and fetches when the SDK is active.
   //
-  // Ships traces, metrics, and logs over OTLP/HTTP to whatever collector is
-  // configured. Axiom example:
+  // Ships traces only over OTLP/HTTP. Metrics and logs exporters were
+  // intentionally dropped: Vercel freezes serverless functions between
+  // requests, so periodic metric/log exporters never flush reliably. For
+  // logs/metrics, use Vercel's runtime log drain into Axiom instead.
+  // Axiom example:
   //   OTEL_EXPORTER_OTLP_ENDPOINT=https://api.axiom.co
   //   OTEL_EXPORTER_OTLP_HEADERS=Authorization=Bearer <token>,X-Axiom-Dataset=<dataset>
   if (
