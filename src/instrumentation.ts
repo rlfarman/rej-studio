@@ -44,32 +44,35 @@ export async function register() {
     const { NodeSDK } = await import('@opentelemetry/sdk-node')
     const { OTLPTraceExporter } =
       await import('@opentelemetry/exporter-trace-otlp-http')
-    const { OTLPLogExporter } =
-      await import('@opentelemetry/exporter-logs-otlp-http')
-    const { OTLPMetricExporter } =
-      await import('@opentelemetry/exporter-metrics-otlp-http')
     const { getNodeAutoInstrumentations } =
       await import('@opentelemetry/auto-instrumentations-node')
     const { ATTR_SERVICE_NAME } =
       await import('@opentelemetry/semantic-conventions')
     const { resourceFromAttributes } = await import('@opentelemetry/resources')
-    const { SimpleLogRecordProcessor } = await import('@opentelemetry/sdk-logs')
-    const { PeriodicExportingMetricReader } =
-      await import('@opentelemetry/sdk-metrics')
+    const { BatchSpanProcessor } = await import('@opentelemetry/sdk-trace-base')
+
+    const traceExporter = new OTLPTraceExporter()
 
     const sdk = new NodeSDK({
       resource: resourceFromAttributes({
         [ATTR_SERVICE_NAME]: process.env.OTEL_SERVICE_NAME ?? 'rej-studio',
       }),
-      traceExporter: new OTLPTraceExporter(),
-      logRecordProcessors: [
-        new SimpleLogRecordProcessor(new OTLPLogExporter()),
+      // BatchSpanProcessor with a short delay so spans flush before Vercel
+      // freezes the serverless function.
+      spanProcessors: [
+        new BatchSpanProcessor(traceExporter, {
+          maxExportBatchSize: 64,
+          scheduledDelayMillis: 1_000,
+        }),
       ],
-      metricReader: new PeriodicExportingMetricReader({
-        exporter: new OTLPMetricExporter(),
-        exportIntervalMillis: 60_000,
-      }),
-      instrumentations: [getNodeAutoInstrumentations()],
+      instrumentations: [
+        getNodeAutoInstrumentations({
+          // Disable noisy runtime metrics (V8 heap, event loop) — keep only
+          // HTTP, fetch, and DNS instrumentations that produce useful traces.
+          '@opentelemetry/instrumentation-runtime-node': { enabled: false },
+          '@opentelemetry/instrumentation-fs': { enabled: false },
+        }),
+      ],
     })
 
     sdk.start()
