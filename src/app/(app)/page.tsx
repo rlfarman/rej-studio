@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { GeneSearch } from '@/features/gene-search/components/gene-search'
 import { searchGenes } from '@/features/gene-search/api/genes'
 import { DnaIcon } from '@/components/bio/dna-icon'
-import { Hero, HeroItem, DnaFloat } from './_components/hero'
+import { Hero, HeroItem, DnaFloat } from '@/app/_components/hero'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {

@@ -1,0 +1,80 @@
+---
+title: Using the design tool
+description: What each optimization parameter does and how to choose sensible defaults.
+---
+
+The design tool takes a coding sequence (CDS) and a set of constraints,
+then hands them to the optimizer. You can open it two ways:
+
+1. **From an isoform** — the sequence is pre-filled and the gene symbol is
+   attached for reference.
+2. **Standalone** — paste your own CDS. It must start with `ATG`, end with
+   a stop codon, and be a multiple of 3.
+
+## Parameters
+
+### Codon optimization
+
+Rewrites each codon to the most-used synonym for the target organism,
+keeping the protein identical. Choose the species that matches your
+expression host — if you're expressing in human cells, pick human.
+
+Turn this off if you want to preserve the native codon usage, e.g. when you
+only care about motif removal.
+
+### Cryptic splice site removal
+
+Scans the sequence for cryptic 5′ and 3′ splice site motifs and rewrites
+them to break the motif without changing the protein. Recommended for any
+design intended to end up in a transcribed context — unintended splicing
+can silently delete internal exons.
+
+### CpG minimization
+
+Reduces the number of CpG dinucleotides. CpGs are a substrate for
+methylation and can trigger innate immune sensing. Lowering them is
+standard practice for therapeutic RNA and synthetic constructs.
+
+### K-mer complexity
+
+Penalizes repeated k-mers across the sequence. High-complexity sequences
+synthesize more reliably and behave better during manufacturing. The
+default k-mer size is 9 — longer is stricter, shorter is more permissive.
+
+### GC content
+
+Enforces a target GC-content window over a sliding window. The default
+window (50 bp) and range (35–65%) work for most mammalian targets. Tighten
+the range if downstream assembly or sequencing is sensitive to skew.
+
+### WGGW motif insertion
+
+Inserts WGGW motifs (W = A/T) at configurable density. This is specific to
+the RNA End-Joining use case — enable it when you need these motifs and
+leave it off otherwise.
+
+### Stimulatory intron
+
+Optional. Inserts a short intron that boosts expression in some contexts.
+Leaves the protein unchanged but adds length — skip it if sequence length
+matters for your downstream workflow.
+
+## Submitting
+
+Hitting **Submit** kicks off a job. You'll see a progress indicator while
+DNAChisel solves the constraint problem. Most jobs finish in a few seconds;
+longer sequences with tight GC windows can take a minute or more.
+
+If the solver can't satisfy every constraint, it returns the best
+compromise it found and flags the constraints that were relaxed. The report
+shows exactly which constraints were hard to meet.
+
+## Tips
+
+- **Start loose, then tighten.** Run once with defaults, look at the
+  report, then tighten the parameters that matter for your specific use.
+- **Watch the GC window.** If you're getting low-quality solutions, widening
+  the GC range is usually the cheapest fix.
+- **Codon optimization fights motif removal.** Maximum codon optimization
+  and aggressive motif removal sometimes conflict — the solver will
+  prioritize hard constraints over preferred codons.

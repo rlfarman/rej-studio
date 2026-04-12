@@ -2,6 +2,7 @@ import { withSentryConfig } from '@sentry/nextjs'
 import type { NextConfig } from 'next'
 import path from 'path'
 import withBundleAnalyzer from '@next/bundle-analyzer'
+import { createMDX } from 'fumadocs-mdx/next'
 
 const bundleAnalyzer = withBundleAnalyzer({
   enabled: process.env.ANALYZE === 'true',
@@ -97,10 +98,6 @@ const nextConfig: NextConfig = {
           destination: `${pyBackend}/api/py/:path*`,
         },
         {
-          source: '/docs',
-          destination: `${pyBackend}/api/py/docs`,
-        },
-        {
           source: '/openapi.json',
           destination: `${pyBackend}/api/py/openapi.json`,
         },
@@ -111,10 +108,12 @@ const nextConfig: NextConfig = {
   },
 }
 
+const withMDX = createMDX()
+
 // Sentry wrapping — only active when NEXT_PUBLIC_SENTRY_DSN is set.
 // In dev / CI without the DSN, this is a no-op pass-through.
 const sentryWrapped = process.env.NEXT_PUBLIC_SENTRY_DSN
-  ? withSentryConfig(bundleAnalyzer(nextConfig), {
+  ? withSentryConfig(bundleAnalyzer(withMDX(nextConfig)), {
       org: process.env.SENTRY_ORG,
       project: process.env.SENTRY_PROJECT,
       silent: !process.env.CI,
@@ -125,6 +124,6 @@ const sentryWrapped = process.env.NEXT_PUBLIC_SENTRY_DSN
         automaticVercelMonitors: true,
       },
     })
-  : bundleAnalyzer(nextConfig)
+  : bundleAnalyzer(withMDX(nextConfig))
 
 export default sentryWrapped
