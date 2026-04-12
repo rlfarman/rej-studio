@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.2.2](https://github.com/rlfarman/rej-studio/compare/v0.2.1...v0.2.2) (2026-04-12)
+
+
+### Features
+
+* **design-tool:** rearrange results panel and show sequences side-by-side ([#129](https://github.com/rlfarman/rej-studio/issues/129)) ([057b915](https://github.com/rlfarman/rej-studio/commit/057b915d5215e2d821c900f4a68713cd4d82a115))
+* **docker:** add dev and production Docker setup ([#128](https://github.com/rlfarman/rej-studio/issues/128)) ([3f092e5](https://github.com/rlfarman/rej-studio/commit/3f092e59ac005cd25819b4486bd8e99511706934))
+* **observability:** add full OTEL instrumentation with Axiom ([#133](https://github.com/rlfarman/rej-studio/issues/133)) ([20908f0](https://github.com/rlfarman/rej-studio/commit/20908f09135de3c7775ba175c84da2c9179c84c8))
+* **observability:** add Sentry error monitoring integration ([#131](https://github.com/rlfarman/rej-studio/issues/131)) ([516e34f](https://github.com/rlfarman/rej-studio/commit/516e34fbaaddc985d3783a0651064b62c0b4fe41))
+* **ui:** add drag-to-resize sidebar ([#127](https://github.com/rlfarman/rej-studio/issues/127)) ([4f55eb2](https://github.com/rlfarman/rej-studio/commit/4f55eb2df6f4ec74f758e678210f2ab12681336f))
+
+
+### Bug Fixes
+
+* **ci:** ignore auto-generated CHANGELOG.md in Prettier ([#125](https://github.com/rlfarman/rej-studio/issues/125)) ([8b5fa0a](https://github.com/rlfarman/rej-studio/commit/8b5fa0afea00d05370edf4540618dbce34b35fb5))
+* **deps:** bump next to 16.2.3 and vite to 8.0.8 for security advisories ([46108a7](https://github.com/rlfarman/rej-studio/commit/46108a71e485c255ea585f9de00644db24b99092))
+* **observability:** remove root instrumentation files shadowing OTEL setup ([241d02b](https://github.com/rlfarman/rej-studio/commit/241d02b7e49bdf41292394ce84c212cb743915b0))
+* **observability:** tune OTEL for Vercel serverless traces ([d6b829d](https://github.com/rlfarman/rej-studio/commit/d6b829dc97e698377b8f4fa7c2b45285dd6f768d))
+
 ## [0.2.1](https://github.com/rlfarman/rej-studio/compare/v0.2.0...v0.2.1) (2026-04-06)
 
 
