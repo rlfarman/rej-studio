@@ -10,53 +10,110 @@ export default function OgImage() {
       style={{
         display: 'flex',
         flexDirection: 'column',
-        justifyContent: 'center',
-        padding: '60px 80px',
+        justifyContent: 'space-between',
+        padding: '72px 80px',
         width: '100%',
         height: '100%',
         backgroundColor: '#09090b',
         color: '#fafafa',
         fontFamily: 'system-ui, sans-serif',
+        backgroundImage:
+          'radial-gradient(circle at 85% 15%, rgba(56,189,248,0.12) 0%, transparent 55%), radial-gradient(circle at 15% 85%, rgba(168,85,247,0.10) 0%, transparent 55%)',
       }}
     >
       <div
         style={{
-          fontSize: 64,
-          fontWeight: 700,
-          fontFamily: 'monospace',
-          letterSpacing: '-0.02em',
-          marginBottom: '16px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
         }}
       >
-        Design Tool
+        <span
+          style={{
+            fontSize: 22,
+            fontFamily: 'monospace',
+            letterSpacing: '0.1em',
+            color: '#d4d4d8',
+            textTransform: 'uppercase',
+          }}
+        >
+          REJ Studio
+        </span>
+        <span style={{ color: '#52525b', fontSize: 22 }}>/</span>
+        <span
+          style={{
+            fontSize: 22,
+            color: '#38bdf8',
+            fontWeight: 600,
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase',
+          }}
+        >
+          Design Tool
+        </span>
       </div>
-      <div style={{ fontSize: 28, color: '#d4d4d8', marginBottom: '40px' }}>
-        Optimize coding sequences for RNA End-Joining
-      </div>
+
       <div
         style={{
           display: 'flex',
+          flexDirection: 'column',
           gap: '24px',
-          fontSize: 22,
-          color: '#a1a1aa',
         }}
       >
-        <span>Custom CDS input</span>
-        <span style={{ color: '#52525b' }}>·</span>
-        <span>DNAChisel optimization</span>
-        <span style={{ color: '#52525b' }}>·</span>
-        <span>Downloadable results</span>
+        <div
+          style={{
+            fontSize: 72,
+            fontWeight: 700,
+            letterSpacing: '-0.03em',
+            lineHeight: 1.05,
+          }}
+        >
+          Optimize coding
+          <br />
+          sequences for REJ
+        </div>
+        <div
+          style={{
+            display: 'flex',
+            gap: '24px',
+            fontSize: 24,
+            color: '#a1a1aa',
+          }}
+        >
+          <span>Custom CDS input</span>
+          <span style={{ color: '#52525b' }}>·</span>
+          <span>DNAChisel optimization</span>
+          <span style={{ color: '#52525b' }}>·</span>
+          <span>Downloadable results</span>
+        </div>
       </div>
+
       <div
         style={{
-          position: 'absolute',
-          bottom: '40px',
-          right: '80px',
-          fontSize: 20,
-          color: '#52525b',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
         }}
       >
-        REJ Studio
+        <span
+          style={{
+            fontSize: 22,
+            fontFamily: 'monospace',
+            color: '#71717a',
+          }}
+        >
+          rejstudio.com/design-tool
+        </span>
+        <span
+          style={{
+            fontSize: 22,
+            fontFamily: 'monospace',
+            color: '#52525b',
+            letterSpacing: '0.08em',
+          }}
+        >
+          ATG · · · TAA
+        </span>
       </div>
     </div>,
     size,
