@@ -280,7 +280,7 @@ export default function IsoformTable({
               onSort={toggleSort}
               className="hidden lg:table-cell"
             />
-            <TableHead className="w-10" />
+            <TableHead className="w-28" />
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -408,70 +408,89 @@ function IsoformRow({
           </Badge>
         </TableCell>
         <TableCell onClick={(e) => e.stopPropagation()}>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-8"
-                aria-label={`Actions for ${isoform.id}`}
-              >
-                <MoreHorizontal className="size-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                onClick={() => copy(isoform.codingSequence, cdsId)}
-              >
-                <Copy className="size-4" />
-                {isCopied(cdsId) ? 'Copied!' : 'Copy CDS'}
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() =>
-                  copy(formatFasta(isoform.id, isoform.codingSequence), fastaId)
-                }
-              >
-                <FileText className="size-4" />
-                {isCopied(fastaId) ? 'Copied!' : 'Copy FASTA'}
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => {
-                  downloadTextFile(
-                    `${isoform.id}.fasta`,
-                    formatFasta(isoform.id, isoform.codingSequence),
-                  )
-                  trackEvent({
-                    event: 'sequence_download',
-                    isoform_id: isoform.id,
-                  })
-                }}
-              >
-                <Download className="size-4" />
-                Download FASTA
-              </DropdownMenuItem>
-              <DropdownMenuItem disabled>
-                <PackageOpen className="size-4" />
-                Download precomputed
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <a
-                  href={`https://ensembl.org/id/${isoform.id}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
+          <div className="flex items-center justify-end gap-1">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-8"
+                  disabled
+                  aria-label={`Download precomputed for ${isoform.id}`}
                 >
-                  <ExternalLink className="size-4" />
-                  View on Ensembl
-                </a>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href={`/design-tool?isoform=${isoform.id}`}>
-                  <ExternalLink className="size-4" />
-                  Customize
-                </Link>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                  <PackageOpen className="size-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Download precomputed</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="icon" className="size-8" asChild>
+                  <Link href={`/design-tool?isoform=${isoform.id}`}>
+                    <ExternalLink className="size-4" />
+                  </Link>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Customize</TooltipContent>
+            </Tooltip>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-8"
+                  aria-label={`Actions for ${isoform.id}`}
+                >
+                  <MoreHorizontal className="size-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  onClick={() => copy(isoform.codingSequence, cdsId)}
+                >
+                  <Copy className="size-4" />
+                  {isCopied(cdsId) ? 'Copied!' : 'Copy CDS'}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() =>
+                    copy(
+                      formatFasta(isoform.id, isoform.codingSequence),
+                      fastaId,
+                    )
+                  }
+                >
+                  <FileText className="size-4" />
+                  {isCopied(fastaId) ? 'Copied!' : 'Copy FASTA'}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => {
+                    downloadTextFile(
+                      `${isoform.id}.fasta`,
+                      formatFasta(isoform.id, isoform.codingSequence),
+                    )
+                    trackEvent({
+                      event: 'sequence_download',
+                      isoform_id: isoform.id,
+                    })
+                  }}
+                >
+                  <Download className="size-4" />
+                  Download FASTA
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <a
+                    href={`https://ensembl.org/id/${isoform.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <ExternalLink className="size-4" />
+                    View on Ensembl
+                  </a>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </TableCell>
       </TableRow>
 
