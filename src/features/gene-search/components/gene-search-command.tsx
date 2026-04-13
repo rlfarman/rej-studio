@@ -12,7 +12,13 @@ import { SpeciesIcon } from '@/components/bio/species-icon'
 import { TruncatedText } from '@/components/truncated-text'
 import { HighlightMatch } from '@/features/gene-search/utils/highlight-match'
 import { useState } from 'react'
-import { ClockIcon, ExternalLink, RefreshCwIcon, StarIcon } from 'lucide-react'
+import {
+  ClockIcon,
+  ExternalLink,
+  Loader2,
+  RefreshCwIcon,
+  StarIcon,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { SavedGene } from '@/features/gene-search/types/domain-types'
 import { useSpeciesContext } from '@/stores/species-store'
@@ -50,8 +56,9 @@ function SpeciesToggle() {
 
 function GeneResultsLoading() {
   return (
-    <div className="text-muted-foreground p-4 text-center text-sm">
-      Searching...
+    <div className="text-muted-foreground flex items-center justify-center gap-2 p-4 text-sm">
+      <Loader2 className="size-4 animate-spin" />
+      Searching…
     </div>
   )
 }

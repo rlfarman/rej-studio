@@ -398,7 +398,7 @@ function ExpandableRow({
       open={defaultOpen}
     >
       <summary className="flex cursor-pointer list-none items-center gap-2 py-1 text-sm select-none [&::-webkit-details-marker]:hidden">
-        <ChevronRight className="text-muted-foreground size-4 shrink-0 transition-transform group-open:rotate-90" />
+        <ChevronRight className="text-muted-foreground size-4 shrink-0 transition-transform duration-200 group-open:rotate-90" />
         <Icon className="text-muted-foreground size-4 shrink-0" />
         <span className="font-medium">{title}</span>
         {summary && (

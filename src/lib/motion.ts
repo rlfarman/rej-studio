@@ -17,6 +17,13 @@ export const softSpring: Transition = {
   damping: 25,
 }
 
+/** Snappy spring for small-scale transitions (icon swaps, badges) */
+export const snappySpring: Transition = {
+  type: 'spring',
+  stiffness: 700,
+  damping: 30,
+}
+
 /** Staggered entrance for hero-style layouts */
 const staggerContainer: Variants = {
   hidden: {},

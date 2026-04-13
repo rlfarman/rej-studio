@@ -9,6 +9,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { Skeleton } from '@/components/ui/skeleton'
 import { SpeciesIcon } from '@/components/bio/species-icon'
 import { SearchRetryButton } from './search-retry-button'
 
@@ -48,10 +49,11 @@ export async function GeneSearchResults({
 
   return (
     <div className="divide-border divide-y rounded-lg border">
-      {results.map((gene) => (
+      {results.map((gene, i) => (
         <div
           key={gene.id}
-          className="hover:bg-accent flex items-center gap-4 pr-2 transition-colors"
+          className="fade-up-stagger hover:bg-accent flex items-center gap-4 pr-2 transition-colors"
+          style={{ '--stagger': i } as React.CSSProperties}
         >
           <Link
             href={geneHref(gene.symbol, gene.species, gene.matchedIsoformId)}
@@ -92,10 +94,22 @@ export async function GeneSearchResults({
   )
 }
 
-export function GeneSearchResultsLoading() {
+export function GeneSearchResultsLoading({ rows = 5 }: { rows?: number } = {}) {
   return (
-    <div className="text-muted-foreground py-8 text-center text-sm">
-      Searching...
+    <div className="divide-border divide-y rounded-lg border">
+      {Array.from({ length: rows }, (_, i) => (
+        <div
+          key={i}
+          className="flex items-center gap-4 px-4 py-3"
+          style={{ '--stagger': i } as React.CSSProperties}
+        >
+          <Skeleton className="h-6 w-24 shrink-0 rounded-full" />
+          <div className="flex flex-1 flex-col gap-1.5">
+            <Skeleton className="h-4 w-48" />
+            <Skeleton className="h-3 w-32" />
+          </div>
+        </div>
+      ))}
     </div>
   )
 }
