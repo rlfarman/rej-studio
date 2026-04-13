@@ -34,7 +34,9 @@ function createWrapper() {
 }
 
 const FORM_VALUES = {
+  sequenceType: 'dna' as const,
   codingSequence: 'ATGAAATGA',
+  proteinSequence: '',
   name: 'Test',
   species: 'human' as const,
   codonOptimizeWeight: 50,

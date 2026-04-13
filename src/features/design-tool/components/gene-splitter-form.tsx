@@ -69,6 +69,7 @@ export function GeneSplitterForm({
     resolver: zodResolver(validationSchema),
     mode: 'onBlur',
     defaultValues: {
+      sequenceType: 'dna' as const,
       removeCrypticSpliceSites: true,
       '5PrimeStimulatoryIntron': true,
       '3PrimeStimulatoryIntron': true,
@@ -80,6 +81,7 @@ export function GeneSplitterForm({
       reduceKmerComplexityWeight: 1,
       enforceGcContent: true,
       codingSequence: defaultCodingSequence ?? '',
+      proteinSequence: '',
       name: defaultName ?? '',
       species: defaultSpecies ?? 'none',
       spliceJunctionPosition:
@@ -199,7 +201,8 @@ export function GeneSplitterForm({
                   REJ Studio Design Tool
                 </h1>
                 <CardDescription>
-                  Design a custom RNA sequence for end-joining experiments
+                  Optimize a DNA or protein sequence for RNA end-joining
+                  experiments
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">

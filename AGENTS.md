@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-REJ Studio is a bioinformatics web app for RNA End-Joining sequence design. Users search genes, view isoforms, and submit coding sequences for optimization via a Python/FastAPI backend that uses the dnachisel library.
+REJ Studio is a bioinformatics web app for RNA End-Joining sequence design. Users search genes, view isoforms, and submit coding sequences (DNA or protein) for optimization via a Python/FastAPI backend that uses the dnachisel library. Protein sequences are reverse-translated to DNA on the frontend using species-preferred codons before optimization.
 
 ## Architecture
 
@@ -15,20 +15,20 @@ REJ Studio is a bioinformatics web app for RNA End-Joining sequence design. User
 
 ## Key Directories
 
-| Path                  | Purpose                                                                            |
-| --------------------- | ---------------------------------------------------------------------------------- |
-| `src/app/`            | Next.js pages, layouts, and route-specific `_components/` (App Router)             |
-| `src/features/`       | Self-contained feature modules (`gene-search`, `design-tool`); server actions here |
-| `src/components/ui/`  | shadcn/ui primitives                                                               |
-| `src/components/bio/` | Bio-domain widgets (species select, diagnostic badges, DNA icon)                   |
-| `src/components/`     | Generic shared widgets (top-level)                                                 |
-| `src/lib/bio/`        | Bio-domain utilities (species types, FASTA, sequence utils, design suitability)    |
-| `src/lib/`            | Generic shared utilities (`cn`, motion, file download) at the top level            |
-| `src/hooks/`          | Generic shared React hooks                                                         |
-| `src/stores/`         | Shared Zustand stores (e.g. species filter)                                        |
-| `src/drizzle/`        | DB schema and client (`schema.ts`, `db.ts`)                                        |
-| `python/`             | FastAPI Python backend (`index.py`, `algorithm.py`, `requirements.txt`)            |
-| `modal/`              | Modal deployment for the Python backend (production compute)                       |
+| Path                  | Purpose                                                                                              |
+| --------------------- | ---------------------------------------------------------------------------------------------------- |
+| `src/app/`            | Next.js pages, layouts, and route-specific `_components/` (App Router)                               |
+| `src/features/`       | Self-contained feature modules (`gene-search`, `design-tool`); server actions here                   |
+| `src/components/ui/`  | shadcn/ui primitives                                                                                 |
+| `src/components/bio/` | Bio-domain widgets (species select, diagnostic badges, DNA icon)                                     |
+| `src/components/`     | Generic shared widgets (top-level)                                                                   |
+| `src/lib/bio/`        | Bio-domain utilities (species types, FASTA, sequence utils, reverse translation, design suitability) |
+| `src/lib/`            | Generic shared utilities (`cn`, motion, file download) at the top level                              |
+| `src/hooks/`          | Generic shared React hooks                                                                           |
+| `src/stores/`         | Shared Zustand stores (e.g. species filter)                                                          |
+| `src/drizzle/`        | DB schema and client (`schema.ts`, `db.ts`)                                                          |
+| `python/`             | FastAPI Python backend (`index.py`, `algorithm.py`, `requirements.txt`)                              |
+| `modal/`              | Modal deployment for the Python backend (production compute)                                         |
 
 ## Development Commands
 
@@ -53,7 +53,7 @@ pnpm db:studio    # Browse DB in Drizzle Studio (local.drizzle.studio)
 - TypeScript throughout the frontend. Strict mode.
 - Server Components by default; `"use client"` only when needed.
 - Server actions co-located with the feature that owns them (e.g. `src/features/gene-search/api/genes.ts`).
-- Form validation with Zod schemas (see `src/features/design-tool/types/form-schema.ts`).
+- Form validation with Zod schemas (see `src/features/design-tool/types/form-schema.ts`). The design tool form supports both DNA and protein input; `sequenceType` controls conditional validation.
 - Tailwind CSS for styling. No CSS modules.
 - ESLint + Prettier for formatting (config in `eslint.config.mjs`, `prettier.config.mjs`).
 - ESLint enforces feature boundaries: features cannot import from each other, and shared layers (`src/components`, `src/lib`, `src/hooks`, `src/stores`) cannot import from features or app. Features auto-discovered from `src/features/` at config load.

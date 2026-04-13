@@ -14,14 +14,19 @@ import { DESIGN_TOOL_SPECIES_OPTIONS } from '../types/species-options'
 import { FormValues } from '../types/form-schema'
 
 export function SpeciesOptions() {
-  const { control } = useFormContext<FormValues>()
+  const { control, watch } = useFormContext<FormValues>()
+  const sequenceType = watch('sequenceType')
+  const isProtein = sequenceType === 'protein'
   return (
     <FormField
       name="species"
       control={control}
       render={({ field }) => (
         <FormItem>
-          <FormLabel>Harmonize codon usage for species</FormLabel>
+          <FormLabel>
+            Harmonize codon usage for species
+            {isProtein && <span aria-hidden="true"> *</span>}
+          </FormLabel>
           <FormControl>
             <div
               role="radiogroup"
