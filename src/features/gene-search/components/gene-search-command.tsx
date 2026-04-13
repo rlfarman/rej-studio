@@ -106,7 +106,12 @@ export function GeneSearchCommand({
           }
         }}
         autoFocus
-        suffix={<SpeciesSelect labelVisibilityClass="hidden sm:block" />}
+        suffix={
+          <SpeciesSelect
+            labelVisibilityClass="hidden sm:block"
+            triggerClassName="h-7 rounded-sm px-2 text-xs focus-visible:ring-0"
+          />
+        }
       />
       {showList && (
         <>
