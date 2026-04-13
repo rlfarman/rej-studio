@@ -190,7 +190,10 @@ export function GeneSplitterForm({
         {showForm && (
           <>
             {/* ── Card 1: Input ── */}
-            <Card>
+            <Card
+              className="fade-up-stagger"
+              style={{ '--stagger': 0 } as React.CSSProperties}
+            >
               <CardHeader>
                 <h1 className="text-2xl leading-none font-bold tracking-tight">
                   REJ Studio Design Tool
@@ -214,7 +217,10 @@ export function GeneSplitterForm({
             </Card>
 
             {/* ── Card 2: Strategy ── */}
-            <Card>
+            <Card
+              className="fade-up-stagger"
+              style={{ '--stagger': 1 } as React.CSSProperties}
+            >
               <CardHeader>
                 <CardTitle>Optimization</CardTitle>
                 <CardDescription>
@@ -272,7 +278,10 @@ export function GeneSplitterForm({
             </Card>
 
             {/* ── Card 3: Review / Submit ── */}
-            <Card>
+            <Card
+              className="fade-up-stagger"
+              style={{ '--stagger': 2 } as React.CSSProperties}
+            >
               <CardHeader>
                 <CardTitle>Review &amp; Run</CardTitle>
                 <CardDescription>
@@ -292,7 +301,7 @@ export function GeneSplitterForm({
         )}
 
         {result && (
-          <div ref={resultsRef}>
+          <div ref={resultsRef} className="fade-up">
             <ResultsPanel
               result={result}
               optionsUsed={formatOptionsForReport(methods.getValues())}

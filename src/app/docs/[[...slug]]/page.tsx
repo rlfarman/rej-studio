@@ -68,8 +68,10 @@ export default async function Page(props: {
           : undefined
       }
     >
-      <DocsTitle>{page.data.title}</DocsTitle>
-      <DocsDescription>{page.data.description}</DocsDescription>
+      <div className="fade-up">
+        <DocsTitle>{page.data.title}</DocsTitle>
+        <DocsDescription>{page.data.description}</DocsDescription>
+      </div>
       <DocsBody>
         <MDX
           components={getMDXComponents({

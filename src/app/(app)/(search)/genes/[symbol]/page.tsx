@@ -10,7 +10,7 @@ import IsoformTable, {
 import { IsoformSummary } from '@/features/gene-search/components/isoform-summary'
 import { IsoformLengthChart } from '@/features/gene-search/components/isoform-length-chart'
 import { IsoformIdentityMatrix } from '@/features/gene-search/components/isoform-identity-matrix'
-import { Suspense } from 'react'
+import { Suspense, ViewTransition } from 'react'
 import { FavoriteGeneButton } from '@/features/gene-search/components/favorite-gene-button'
 import { GeneJsonLd } from '@/features/gene-search/components/gene-jsonld'
 import { GeneBreadcrumbJsonLd } from '@/features/gene-search/components/gene-breadcrumb-jsonld'
@@ -119,7 +119,7 @@ export default async function GeneSymbolPage(props: Props) {
   return (
     <>
       <GeneBreadcrumbJsonLd gene={gene} />
-      <Card>
+      <Card className="fade-up">
         <CardHeader className="flex flex-row items-center gap-4">
           <h1 className="font-mono text-2xl leading-none font-bold tracking-tight">
             {gene.symbol}
@@ -142,10 +142,12 @@ export default async function GeneSymbolPage(props: Props) {
             </div>
           </div>
           <Suspense fallback={<IsoformTableLoading />}>
-            <IsoformSection
-              gene={gene}
-              highlightedIsoformId={highlightedIsoformId}
-            />
+            <ViewTransition enter="suspense-reveal" default="none">
+              <IsoformSection
+                gene={gene}
+                highlightedIsoformId={highlightedIsoformId}
+              />
+            </ViewTransition>
           </Suspense>
         </CardContent>
       </Card>
