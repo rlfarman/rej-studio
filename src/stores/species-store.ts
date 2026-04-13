@@ -7,6 +7,7 @@ import { trackEvent } from '@/lib/analytics'
 
 interface SpeciesState {
   species: SpeciesFilter
+  setSpecies: (value: SpeciesFilter) => void
   handleSpeciesChange: (value: SpeciesFilter) => void
 }
 
@@ -21,6 +22,7 @@ export const useSpeciesStore = create<SpeciesState>()(
   persist(
     (set, get) => ({
       species: 'both',
+      setSpecies: (value) => set({ species: value }),
       handleSpeciesChange: (value) => {
         const previous = get().species
         set({ species: value })
