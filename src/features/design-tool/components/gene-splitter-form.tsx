@@ -55,7 +55,6 @@ export function GeneSplitterForm({
 }: GeneSplitterFormProperties) {
   const [result, setResult] = useState<ProcessResult | null>(null)
   const [isEditing, setIsEditing] = useState(false)
-  const resultsRef = useRef<HTMLDivElement>(null)
   // Guards the one-shot form restore. Set true after we hydrate from a
   // resumed URL job, or eagerly on submit so the new job's own persisted
   // formValues don't ricochet back and overwrite the live form.
@@ -117,12 +116,6 @@ export function GeneSplitterForm({
   React.useEffect(() => {
     if (job.status === 'completed' && job.result) {
       setResult(job.result)
-      setTimeout(() => {
-        resultsRef.current?.scrollIntoView({
-          behavior: 'smooth',
-          block: 'start',
-        })
-      }, 100)
     } else if (job.status === 'failed' && job.error && job.jobId) {
       if (!toastedJobsRef.current.has(job.jobId)) {
         toastedJobsRef.current.add(job.jobId)
@@ -304,7 +297,7 @@ export function GeneSplitterForm({
         )}
 
         {result && (
-          <div ref={resultsRef} className="fade-up">
+          <div className="fade-up">
             <ResultsPanel
               result={result}
               optionsUsed={formatOptionsForReport(methods.getValues())}
