@@ -1,6 +1,4 @@
 'use client'
-import Link from 'next/link'
-import { WandSparkles } from 'lucide-react'
 import { SpeciesSelect } from '@/components/bio/species-select'
 import { GeneSearch } from '@/features/gene-search/components/gene-search'
 import { searchGenes } from '@/features/gene-search/api/genes'
@@ -11,43 +9,13 @@ import {
   TooltipContent,
 } from '@/components/ui/tooltip'
 import { Suspense } from 'react'
-import { Button } from '@/components/ui/button'
 import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar'
-
-function GeneSearchTooltip() {
-  const { state } = useSidebar()
-  // When the sidebar is open it eats enough width that the centered
-  // search bar and the "Design Tool" label can collide — push the label
-  // one breakpoint higher while the sidebar is expanded.
-  const labelClass =
-    state === 'expanded' ? 'hidden lg:inline' : 'hidden sm:inline'
-  const tooltipHiddenClass = state === 'expanded' ? 'lg:hidden' : 'sm:hidden'
-
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <Button variant="ghost" asChild>
-          <Link href="/design-tool" aria-label="Design Tool">
-            <WandSparkles className="size-5" />
-            <span className={labelClass}>Design Tool</span>
-          </Link>
-        </Button>
-      </TooltipTrigger>
-      {/* Redundant once the label is visible; only show when label is hidden */}
-      <TooltipContent className={tooltipHiddenClass}>
-        Go to Design Tool
-      </TooltipContent>
-    </Tooltip>
-  )
-}
 
 export function Header() {
   const pathname = usePathname()
   const isHomePage = pathname === '/'
   const { state } = useSidebar()
   const sidebarLabel = state === 'expanded' ? 'Close sidebar' : 'Open sidebar'
-  // Keep the species label in sync with the Design Tool label breakpoint —
-  // they share the same row so they should appear/disappear together.
   const headerLabelClass =
     state === 'expanded' ? 'hidden lg:block' : 'hidden sm:block'
 
@@ -65,7 +33,6 @@ export function Header() {
             </TooltipTrigger>
             <TooltipContent>{sidebarLabel}</TooltipContent>
           </Tooltip>
-          <GeneSearchTooltip />
         </div>
         <Suspense fallback={<div className="h-9 w-32" />}>
           <SpeciesSelect labelVisibilityClass={headerLabelClass} />
