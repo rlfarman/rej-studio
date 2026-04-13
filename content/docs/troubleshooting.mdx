@@ -1,0 +1,120 @@
+---
+title: Troubleshooting
+description: Common errors, warnings, and surprises — and what to do about them.
+---
+
+If you hit something unexpected, start here. Most of the errors the
+design tool reports map to one of a handful of root causes.
+
+## The sequence won't accept at all
+
+### "Coding sequence must contain only A, C, G, T, or U"
+
+You have characters the validator doesn't recognise — usually one of:
+
+- **Lowercase letters** in a sequence you copied from a viewer.
+  Upper-case it and try again; the validator is case-insensitive but
+  only matches the uppercase alphabet.
+- **IUPAC ambiguity codes** (N, R, Y, W, S, etc.). The optimizer needs
+  a concrete sequence, not one with alternatives. Replace the ambiguous
+  bases or pick a specific variant.
+- **Whitespace or line numbers** from a FASTA export. Strip everything
+  that isn't a base.
+
+### "Coding sequence length must be a multiple of 3"
+
+The validator is enforcing a valid reading frame. Common causes:
+
+- You pasted a **partial CDS** that stops mid-codon.
+- You pasted a **full transcript** including the UTRs. REJ Studio wants
+  the CDS only — from the start codon through the stop codon.
+- You **trimmed the stop codon**. REJ Studio keeps the stop; if you
+  dropped it manually, add it back.
+
+### "Name must not be empty" / "Name must be 250 characters or less"
+
+Give the design a short identifier. It's used in the filename of the
+download so you can tell multiple runs apart — keep it under a
+sentence.
+
+## The form works but the result is wrong
+
+### "GC content constraint violated"
+
+The GC range is a **hard constraint**. The optimizer tried to keep the
+sequence inside 35–60% across a sliding window and couldn't. Usual
+fixes, in order:
+
+1. **Disable the other objectives you care about least**, one at a
+   time. Aggressive codon optimization or CpG minimization can fight
+   the GC window. Start with CpG minimization.
+2. **Relax the GC objective weight** on other parameters so the solver
+   has more room to maneuver.
+3. Check whether your input is already outside 35–60% GC. If it is,
+   the solver may have to rewrite a lot of codons, and some input
+   shapes are unrecoverable.
+
+### "Could not find a WGGW motif near the midpoint"
+
+The splitter couldn't find a valid join within its search window. This
+almost always means the input is short (under ~200 bp) or genuinely
+free of WGGW motifs. Try:
+
+- **Widening the acceptable distance** on the splice-junction slider.
+- **Expanding the search range** by picking a different isoform for the
+  same gene — longer transcripts almost always have more candidate
+  motifs.
+
+### "Optimized sequence is shorter/longer than expected"
+
+If stimulatory introns are enabled, each fragment picks up extra bases
+from the intron. Disable the 5′ and 3′ intron toggles to see the pure
+coding-equivalent rewrite length.
+
+### "Codon optimization is suspiciously mild"
+
+If cryptic-splice removal, CpG minimization, or k-mer complexity is
+running with a high weight, it can pin codons in ways that prevent the
+optimizer from moving them to the species-preferred synonym. Check the
+report — each objective's score shows how much the solver had to
+compromise. If codon optimization is near 0, one of the other
+objectives is dominating.
+
+## The job ran but something feels off
+
+### "The 5′ and 3′ halves are very unbalanced"
+
+The splitter ranks WGGW motifs by proximity to the midpoint, but the
+highest-ranked motif isn't always the midpoint itself. If the split
+is skewed, drag the junction slider to a closer motif manually — the
+slider shows every valid WGGW position.
+
+### "My recent job isn't showing in the UI"
+
+Results live in the current browser session only. If you closed the
+tab or navigated away mid-run, the job is gone. Re-submit it.
+Downloads are the only permanent record; save them before closing.
+
+### "The optimizer keeps picking a different result each run"
+
+DNAChisel is a constraint solver with some stochastic elements. Runs
+with identical inputs usually return the same sequence, but minor
+variation is expected when the solver has multiple equally-good
+solutions. If you need exact reproducibility, note the run and save the
+FASTA — don't rely on re-running to reproduce it.
+
+## General advice
+
+- **Read the report, not just the badges.** The badges are a glance;
+  the per-objective report tells you what the solver actually did and
+  which constraints were hard.
+- **Start from defaults, change one thing at a time.** If the result
+  gets worse, you know which knob did it.
+- **When in doubt, widen a constraint.** Loosening is usually the
+  right move when the solver is trapped; tightening is for when the
+  result is too permissive.
+
+Still stuck? Open an issue on
+[the GitHub repo](https://github.com/rlfarman/rej-studio/issues) with
+the input you submitted and the report you got back — that's enough
+context to debug most problems.

@@ -132,6 +132,15 @@ export async function GET(
         </span>
       </div>
     </div>,
-    size,
+    {
+      ...size,
+      headers: {
+        // Long-lived CDN cache: scrapers and feed readers shouldn't touch
+        // the renderer more than once per hour per slug. SWR lets stale
+        // assets keep serving while the edge refreshes in the background.
+        'Cache-Control':
+          'public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400',
+      },
+    },
   )
 }
