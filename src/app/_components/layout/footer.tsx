@@ -6,7 +6,6 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { Separator } from '@/components/ui/separator'
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
 
 const CITATION = `Bachmann L, Hsu RH, Hermann K, Williams CE, Farman RL, Criales N, Kramer S, Lettieri K, Pfaff SL
@@ -19,7 +18,6 @@ export function Footer() {
 
   return (
     <footer className="mx-auto mt-auto w-full max-w-4xl px-4 pt-4 pb-6 sm:px-6 lg:px-4">
-      <Separator className="mb-4" />
       <div className="flex items-center justify-between gap-4">
         <a
           href="https://www.salk.edu"
