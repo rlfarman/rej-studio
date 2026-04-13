@@ -1,5 +1,5 @@
 'use client'
-import { DnaIcon } from '@/components/bio/dna-icon'
+import { Dna } from 'lucide-react'
 import {
   Sidebar,
   SidebarContent,
@@ -37,7 +37,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <SidebarMenuButton asChild size="lg" tooltip="REJ Studio">
               <Link href="/">
                 <div className="flex aspect-square size-8 items-center justify-center">
-                  <DnaIcon className="size-5" />
+                  <Dna className="size-5" />
                 </div>
                 <div className="grid flex-1 text-left leading-tight opacity-0 transition-opacity duration-150 group-data-[state=expanded]:opacity-100 group-data-[state=expanded]:delay-200">
                   <span className="truncate font-mono text-sm font-semibold">

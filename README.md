@@ -168,8 +168,6 @@ pnpm deploy:cf     # Deploy to Cloudflare Workers
 
 The Python backend deploys separately to **Modal**. See `modal/` and the CI workflows in `.github/workflows/modal-deploy.yml`.
 
-For details, see [docs/deployment.md](./docs/deployment.md).
-
 ## Infrastructure
 
 ### Rate Limiting & Distributed State
@@ -205,8 +203,6 @@ Set `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` to enable. Without t
 - **OpenTelemetry** — Vendor-neutral distributed tracing. Set `OTEL_EXPORTER_OTLP_ENDPOINT` to ship traces (e.g. to Axiom).
 - **Google Analytics** — Web Vitals (LCP, CLS, INP) reporting via GTM. Set `NEXT_PUBLIC_GTM_ID`.
 - **Structured logging** — JSON output in production (stdout/stderr), human-readable in dev. See `src/lib/logger.ts`.
-
-For details, see [docs/observability.md](./docs/observability.md).
 
 ## CI
 

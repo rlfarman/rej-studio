@@ -11,6 +11,19 @@ import type { Metadata } from 'next'
 import { createRelativeLink } from 'fumadocs-ui/mdx'
 import { execSync } from 'node:child_process'
 import { env } from '@/lib/env'
+import {
+  DocsDiagBadge,
+  DocsSplitBar,
+  DocsSpeciesIcon,
+  DocsAavPreflight,
+  DocsAavResults,
+  DiagBadgeShowcase,
+  SplitBarShowcase,
+  GcSparklineShowcase,
+  MetricsStripShowcase,
+  ValidationBadgesShowcase,
+  AavResultsShowcase,
+} from '../_components/doc-examples'
 
 function getGitLastModified(relativePath: string): Date | undefined {
   try {
@@ -61,6 +74,19 @@ export default async function Page(props: {
         <MDX
           components={getMDXComponents({
             a: createRelativeLink(source, page),
+            // Direct-prop components — use with any values in MDX
+            DiagBadge: DocsDiagBadge,
+            SplitBar: DocsSplitBar,
+            SpeciesIcon: DocsSpeciesIcon,
+            AavPreflight: DocsAavPreflight,
+            AavResults: DocsAavResults,
+            // Showcase components — baked-in sample data
+            DiagBadgeShowcase,
+            SplitBarShowcase,
+            GcSparklineShowcase,
+            MetricsStripShowcase,
+            ValidationBadgesShowcase,
+            AavResultsShowcase,
           })}
         />
       </DocsBody>

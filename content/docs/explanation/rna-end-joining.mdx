@@ -3,21 +3,21 @@ title: What is RNA End-Joining?
 description: The technique REJ Studio is built around, and why sequence design matters for it.
 ---
 
-REJ Studio is a design tool for a specific technique — **RNA End-Joining**
-(REJ) — and most of the parameters in the app only make sense once you
-know what that technique is trying to do. This page gives you the
-background. If you already know all this, skip to
-[How it works](/docs/how-it-works).
+REJ Studio is a design tool for a specific technique — **RNA
+End-Joining** (REJ) — and most of the parameters in the app only make
+sense once you know what that technique is trying to do. This page
+gives you the background. If you already know all this, skip to the
+[tutorial](/docs/tutorials/getting-started).
 
 ## The technique in one paragraph
 
-RNA End-Joining is a method for expressing a protein from **two separate
-RNA fragments** that get joined together in the cell, rather than from a
-single full-length transcript. You design a coding sequence, split it
-into a 5′ half and a 3′ half at a specific kind of motif, deliver each
-half as its own transcript, and rely on the cell's end-joining
-machinery to fuse them back into the original protein. The protein is
-the same; the delivery is split.
+RNA End-Joining is a method for expressing a protein from **two
+separate RNA fragments** that get joined together in the cell, rather
+than from a single full-length transcript. You design a coding
+sequence, split it into a 5' half and a 3' half at a specific kind of
+motif, deliver each half as its own transcript, and rely on the cell's
+end-joining machinery to fuse them back into the original protein. The
+protein is the same; the delivery is split.
 
 ## Why split a coding sequence at all?
 
@@ -34,25 +34,27 @@ A few reasons people care about this:
   present, which is handy for constructs where uncontrolled expression
   is a problem.
 
-None of these concerns matter if the protein still comes out wrong. The
-whole point of sequence design for REJ is to make sure the split happens
-at a place the cell machinery will _actually_ rejoin, and that each
-half is well-behaved as its own transcript.
+None of these concerns matter if the protein still comes out wrong.
+The whole point of sequence design for REJ is to make sure the split
+happens at a place the cell machinery will _actually_ rejoin, and that
+each half is well-behaved as its own transcript.
 
 ## What makes REJ-ready sequence different from a normal CDS?
 
 Two big things:
 
-1. **The join has to land on a WGGW motif.** `WGGW` (where `W` is A or T)
-   is the recognition substrate for the end-joining reaction — your
-   split point needs one, ideally one close to the middle of the CDS so
-   the two halves are balanced. See
-   [the glossary](/docs/glossary#wggw-motif) for the full definition.
+1. **The join has to land on a WGGW motif.** `WGGW` (where `W` is A
+   or T) is the recognition substrate for the end-joining reaction —
+   your split point needs one, ideally close to the middle of the CDS
+   so the two halves are balanced. See
+   [the glossary](/docs/reference/glossary#wggw-motif) for the full
+   definition.
 2. **Each fragment has to behave like a proper transcript on its own.**
    That means no cryptic splice sites silently deleting exons, no
    repeat-heavy regions that make synthesis flaky, controlled GC
    content, and (optionally) stimulatory introns to help expression.
-   These are the knobs in the [design tool](/docs/design-tool).
+   These are the knobs in the
+   [design tool](/docs/guides/design-sequence).
 
 Everything REJ Studio does is in service of those two requirements:
 find a good split point, then clean up each half so it expresses
@@ -72,19 +74,11 @@ hygiene), not a general-purpose molecular biology platform.
 
 ## What REJ Studio does _not_ do
 
-- **No wet-lab validation.** The optimizer is deterministic; biology is
-  not. Every sequence you design here should be tested before you
+- **No wet-lab validation.** The optimizer is deterministic; biology
+  is not. Every sequence you design here should be tested before you
   trust it.
 - **No claim about the specific end-joining chemistry.** The tool is
   agnostic to which end-joining pathway you're relying on — it just
   makes sure the sequence meets the structural requirements.
 - **No prediction of expression, stability, or immunogenicity.** Those
   are downstream questions REJ Studio doesn't try to answer.
-
-## What to read next
-
-<Cards>
-  <Card title="How it works" href="/docs/how-it-works" />
-  <Card title="Using the design tool" href="/docs/design-tool" />
-  <Card title="Glossary" href="/docs/glossary" />
-</Cards>

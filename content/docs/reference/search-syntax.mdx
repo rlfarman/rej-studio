@@ -1,0 +1,36 @@
+---
+title: Search syntax
+description: Every query type the search box accepts, plus keyboard shortcuts.
+---
+
+## Accepted query types
+
+The search box on the homepage accepts any of the following:
+
+| Format | Example |
+|---|---|
+| Gene symbol | `ATM`, `TP53`, `BRCA1` |
+| Gene name | `ataxia telangiectasia mutated` |
+| Ensembl gene ID | `ENSG00000149311` |
+| Ensembl transcript ID | `ENST00000278616` |
+| MIM number | `607585` |
+| Disease / phenotype term | `ataxia`, `breast cancer` |
+
+## Result ranking
+
+Matches are ranked in this order:
+
+1. Exact symbol hits
+2. Name prefixes
+3. Full-text matches on descriptions and disease terms
+4. Substring fallbacks
+
+Most searches return in under a second.
+
+## Keyboard shortcuts
+
+| Shortcut | Action |
+|---|---|
+| `⌘K` / `Ctrl+K` | Open the command palette from anywhere |
+| `/` | Focus the search box on the homepage |
+| `Esc` | Close the command palette |
