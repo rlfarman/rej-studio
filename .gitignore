@@ -45,6 +45,9 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# fumadocs-mdx generated content
+/.source
+
 # python
 __pycache__/
 

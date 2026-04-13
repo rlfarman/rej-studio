@@ -13,16 +13,19 @@ export function CodonOptimizationOptions() {
             name="removeCrypticSpliceSites"
             label="Remove cryptic splice sites"
             description="Eliminates donor- and acceptor-like motifs to prevent unintended mRNA splicing in mammalian cells."
+            helpHref="/docs/design-tool#remove-cryptic-splice-sites"
           />
           <ToggleCard
             name="minimizeCpgs"
             label="Minimize CpG sites"
             description="Reduces CpG dinucleotides to lower silencing risk from DNA methylation."
+            helpHref="/docs/design-tool#minimize-cpgs"
           />
           <ToggleCard
             name="reduceKmerComplexity"
             label="Reduce k-mer complexity"
             description="Diversifies 10-mer repeats to ease synthesis and reduce recombination risk."
+            helpHref="/docs/design-tool#kmer-complexity"
           />
         </div>
       </div>
@@ -36,6 +39,7 @@ export function CodonOptimizationOptions() {
           label="Enforce 35–60% GC content"
           description="Keeps GC content within the range optimal for mRNA stability and expression."
           badge="Hard constraint"
+          helpHref="/docs/design-tool#gc-content"
         />
       </div>
     </div>

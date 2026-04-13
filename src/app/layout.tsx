@@ -1,15 +1,9 @@
 import '@/styles/globals.css'
-import { Header } from '@/app/_components/layout/header'
 import { GeistSans } from 'geist/font/sans'
 import { GeistMono } from 'geist/font/mono'
-import { Footer } from '@/app/_components/layout/footer'
 import { ThemeProvider } from '@/app/_components/layout/theme-provider'
-import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
-import { AppSidebar } from '@/app/_components/layout/app-sidebar'
 import { Toaster } from '@/components/ui/sonner'
 import { QueryProvider } from '@/app/_components/providers/query-provider'
-import { MaintenanceBanner } from '@/components/maintenance-banner'
-import { cookies } from 'next/headers'
 import { GoogleTagManager } from '@/components/google-tag-manager'
 import { AnalyticsPageview } from '@/components/analytics-pageview'
 import { AnalyticsProperties } from '@/components/analytics-properties'
@@ -44,42 +38,6 @@ export const metadata = {
   },
 }
 
-// Reads cookies (runtime data) inside Suspense so the static shell streams
-// immediately and the dynamic sidebar state resolves without blocking.
-async function AppShell({ children }: { children: React.ReactNode }) {
-  const cookieStore = await cookies()
-  const defaultOpen = cookieStore.get('sidebar_state')?.value === 'true'
-  const widthCookie = cookieStore.get('sidebar_width')?.value
-  const defaultWidth = widthCookie ? Number(widthCookie) : undefined
-  const maintenanceMessage = process.env.MAINTENANCE_MESSAGE?.trim()
-
-  return (
-    <SidebarProvider
-      defaultOpen={defaultOpen}
-      defaultWidth={defaultWidth}
-      className="relative flex h-full w-full flex-row overflow-hidden"
-    >
-      <AppSidebar />
-      <SidebarInset className="relative flex h-full min-h-screen max-w-full flex-1 flex-col overflow-hidden">
-        {maintenanceMessage && (
-          <MaintenanceBanner
-            message={maintenanceMessage}
-            signature={maintenanceMessage}
-          />
-        )}
-        <Header />
-        <main
-          id="main-content"
-          className="relative h-full w-full flex-1 overflow-auto"
-        >
-          {children}
-        </main>
-        <Footer />
-      </SidebarInset>
-    </SidebarProvider>
-  )
-}
-
 export default function RootLayout({
   children,
 }: {
@@ -106,9 +64,7 @@ export default function RootLayout({
             >
               Skip to content
             </a>
-            <Suspense>
-              <AppShell>{children}</AppShell>
-            </Suspense>
+            {children}
             <Toaster />
             <Suspense fallback={null}>
               <AnalyticsPageview />

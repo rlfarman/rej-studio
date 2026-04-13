@@ -1,0 +1,11 @@
+{
+  "title": "Docs",
+  "pages": [
+    "index",
+    "how-it-works",
+    "gene-search",
+    "design-tool",
+    "results",
+    "glossary"
+  ]
+}

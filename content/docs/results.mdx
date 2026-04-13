@@ -1,0 +1,54 @@
+---
+title: Reading your results
+description: What you get back after an optimization job finishes and how to interpret it.
+---
+
+When a job finishes you'll see three things: the **optimized sequence**,
+an **optimization report**, and a set of **diagnostic badges**.
+
+## The optimized sequence
+
+A coding-equivalent rewrite of your input — same protein, different DNA.
+Download it as FASTA using the button in the header. The filename includes
+the gene symbol (or `Custom` if you pasted your own) so you can stack
+multiple designs without collisions.
+
+## The optimization report
+
+The report is a per-constraint summary of what the solver did. For each
+constraint you enabled you'll see:
+
+- Whether it was **satisfied**, **partially satisfied**, or **violated**.
+- The **score** the solver ended on (lower is better for most constraints).
+- A short **explanation** of what changed — e.g. "3 CpG sites removed",
+  "splice site at position 412 neutralized", "GC window tightened to
+  54% across bases 200–250".
+
+A constraint that shows up as "violated" is usually either (a) impossible
+given your other constraints, or (b) impossible given the amino acid
+sequence. The report will tell you which. Relaxing or disabling the
+offending constraint and re-running is the normal fix.
+
+## Diagnostic badges
+
+The header shows a few quick-read indicators:
+
+- **GC%** — overall GC content. Green if inside your target range.
+- **CpG count** — number of CpG dinucleotides. Lower is usually better.
+- **Max k-mer repeat** — the most-repeated k-mer. Helpful for spotting
+  complexity issues at a glance.
+- **Length** — total bp, for sanity-checking against your input.
+
+These badges are a summary, not a substitute for the full report. If you
+care about a specific constraint, read its report entry.
+
+## What to do next
+
+- **Save the sequence.** Results live in the browser session. Download the
+  FASTA before closing the tab.
+- **Re-run with tweaks.** The form remembers your last parameters. Adjust
+  one thing at a time and compare reports to understand which constraint
+  was doing what.
+- **Validate experimentally.** The optimizer is deterministic given the
+  same input, but biology isn't. Nothing in the report predicts
+  expression, stability, or function — that still has to be measured.

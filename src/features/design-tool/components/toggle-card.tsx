@@ -4,6 +4,7 @@ import type { Path } from 'react-hook-form'
 import { FormItem, FormControl } from '@/components/ui/form'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Badge } from '@/components/ui/badge'
+import { HelpLink } from '@/components/ui/help-link'
 import { cn } from '@/lib/utils'
 import { FormValues } from '../types/form-schema'
 
@@ -16,6 +17,8 @@ interface ToggleCardProperties {
   label: string
   description: string
   badge?: string
+  /** Docs URL shown on a small "?" icon at the edge of the card. */
+  helpHref?: string
   children?: React.ReactNode
 }
 
@@ -24,6 +27,7 @@ export function ToggleCard({
   label,
   description,
   badge,
+  helpHref,
   children,
 }: ToggleCardProperties) {
   const { control } = useFormContext<FormValues>()
@@ -35,40 +39,51 @@ export function ToggleCard({
         const checked = field.value as boolean
         return (
           <FormItem className="space-y-0">
-            <label
-              htmlFor={name}
+            <div
               className={cn(
-                'flex cursor-pointer flex-row items-start gap-3 rounded-lg border p-3 transition-colors',
+                'flex flex-row items-start gap-1 rounded-lg border p-3 transition-colors',
                 checked
                   ? 'border-primary/40 bg-primary/5'
                   : 'hover:bg-muted/50',
               )}
             >
-              <FormControl>
-                <Checkbox
-                  id={name}
-                  checked={checked}
-                  onCheckedChange={field.onChange}
-                  className="mt-0.5"
-                />
-              </FormControl>
-              <div className="flex-1 space-y-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-sm leading-none font-medium">
-                    {label}
-                  </span>
-                  {badge ? (
-                    <Badge variant="outline" className="text-[10px]">
-                      {badge}
-                    </Badge>
-                  ) : null}
+              <label
+                htmlFor={name}
+                className="flex flex-1 cursor-pointer flex-row items-start gap-3"
+              >
+                <FormControl>
+                  <Checkbox
+                    id={name}
+                    checked={checked}
+                    onCheckedChange={field.onChange}
+                    className="mt-0.5"
+                  />
+                </FormControl>
+                <div className="flex-1 space-y-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-sm leading-none font-medium">
+                      {label}
+                    </span>
+                    {badge ? (
+                      <Badge variant="outline" className="text-[10px]">
+                        {badge}
+                      </Badge>
+                    ) : null}
+                  </div>
+                  <p className="text-muted-foreground text-[13px] leading-snug">
+                    {description}
+                  </p>
+                  {children}
                 </div>
-                <p className="text-muted-foreground text-[13px] leading-snug">
-                  {description}
-                </p>
-                {children}
-              </div>
-            </label>
+              </label>
+              {helpHref && (
+                <HelpLink
+                  href={helpHref}
+                  topic={label}
+                  className="-mt-1 -mr-1"
+                />
+              )}
+            </div>
           </FormItem>
         )
       }}

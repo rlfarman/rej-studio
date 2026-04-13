@@ -1,0 +1,34 @@
+---
+title: Welcome to REJ Studio
+description: An interactive tool for searching genes, browsing isoforms, and designing optimized RNA End-Joining sequences.
+---
+
+REJ Studio helps researchers design **RNA End-Joining (REJ)** sequences from
+coding DNA. Search for a gene, inspect its isoforms, pick a transcript, and run
+it through a configurable optimization pipeline — all in the browser.
+
+## What you can do
+
+- **Search** human and mouse genes by symbol, name, Ensembl ID, or disease
+  association.
+- **Browse** isoforms for a gene, compare lengths, and download coding or
+  protein sequences.
+- **Design** an optimized sequence by choosing a transcript (or pasting your
+  own CDS) and tuning the optimization constraints.
+- **Download** the optimized sequence and an optimization report when the job
+  finishes.
+
+## Where to start
+
+<Cards>
+  <Card title="How it works" href="/docs/how-it-works" />
+  <Card title="Searching for a gene" href="/docs/gene-search" />
+  <Card title="Using the design tool" href="/docs/design-tool" />
+  <Card title="Reading your results" href="/docs/results" />
+</Cards>
+
+## A note on scope
+
+REJ Studio is a research tool. The optimization pipeline is deterministic
+given the same inputs and constraints, but the biology downstream of the
+sequence is not — validate any designed sequence experimentally before use.

@@ -2,6 +2,7 @@ import { withSentryConfig } from '@sentry/nextjs'
 import type { NextConfig } from 'next'
 import path from 'path'
 import withBundleAnalyzer from '@next/bundle-analyzer'
+import { createMDX } from 'fumadocs-mdx/next'
 
 const bundleAnalyzer = withBundleAnalyzer({
   enabled: process.env.ANALYZE === 'true',
@@ -32,6 +33,22 @@ const nextConfig: NextConfig = {
       process.env.VERCEL_GIT_COMMIT_SHA ??
       'unknown',
     BUILD_TIMESTAMP: new Date().toISOString(),
+    // GitHub repo info — used by docs "edit this page" links and the nav
+    // GitHub button. Falls back to Vercel's git env so deployments get
+    // correct values with zero config; override by setting any of the
+    // NEXT_PUBLIC_GITHUB_* vars explicitly.
+    NEXT_PUBLIC_GITHUB_OWNER:
+      process.env.NEXT_PUBLIC_GITHUB_OWNER ??
+      process.env.VERCEL_GIT_REPO_OWNER ??
+      '',
+    NEXT_PUBLIC_GITHUB_REPO:
+      process.env.NEXT_PUBLIC_GITHUB_REPO ??
+      process.env.VERCEL_GIT_REPO_SLUG ??
+      '',
+    NEXT_PUBLIC_GITHUB_BRANCH:
+      process.env.NEXT_PUBLIC_GITHUB_BRANCH ??
+      process.env.VERCEL_GIT_COMMIT_REF ??
+      '',
   },
   headers: async () => [
     // Stale-while-revalidate for sitemap and OG images — CDN serves the
@@ -97,10 +114,6 @@ const nextConfig: NextConfig = {
           destination: `${pyBackend}/api/py/:path*`,
         },
         {
-          source: '/docs',
-          destination: `${pyBackend}/api/py/docs`,
-        },
-        {
           source: '/openapi.json',
           destination: `${pyBackend}/api/py/openapi.json`,
         },
@@ -111,10 +124,12 @@ const nextConfig: NextConfig = {
   },
 }
 
+const withMDX = createMDX()
+
 // Sentry wrapping — only active when NEXT_PUBLIC_SENTRY_DSN is set.
 // In dev / CI without the DSN, this is a no-op pass-through.
 const sentryWrapped = process.env.NEXT_PUBLIC_SENTRY_DSN
-  ? withSentryConfig(bundleAnalyzer(nextConfig), {
+  ? withSentryConfig(bundleAnalyzer(withMDX(nextConfig)), {
       org: process.env.SENTRY_ORG,
       project: process.env.SENTRY_PROJECT,
       silent: !process.env.CI,
@@ -125,6 +140,6 @@ const sentryWrapped = process.env.NEXT_PUBLIC_SENTRY_DSN
         automaticVercelMonitors: true,
       },
     })
-  : bundleAnalyzer(nextConfig)
+  : bundleAnalyzer(withMDX(nextConfig))
 
 export default sentryWrapped

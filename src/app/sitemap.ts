@@ -1,5 +1,6 @@
 import { getDb } from '@/drizzle/db'
 import { genes } from '@/drizzle/schema'
+import { source } from '@/lib/source'
 import type { MetadataRoute } from 'next'
 
 /**
@@ -21,6 +22,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }))
 
+  const docEntries: MetadataRoute.Sitemap = source.getPages().map((page) => ({
+    url: `${baseUrl}${page.url}`,
+    changeFrequency: 'monthly',
+    priority: 0.6,
+  }))
+
   return [
     {
       url: baseUrl,
@@ -33,6 +40,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.9,
     },
     // design-tool is disallowed in robots.txt (functional tool, not content)
+    ...docEntries,
     ...geneEntries,
   ]
 }
