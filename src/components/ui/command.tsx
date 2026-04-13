@@ -55,11 +55,8 @@ function CommandDialog({
 
 function CommandInput({
   className,
-  suffix,
   ...props
-}: React.ComponentProps<typeof CommandPrimitive.Input> & {
-  suffix?: React.ReactNode
-}) {
+}: React.ComponentProps<typeof CommandPrimitive.Input>) {
   return (
     <div
       data-slot="command-input-wrapper"
@@ -74,7 +71,6 @@ function CommandInput({
         )}
         {...props}
       />
-      {suffix}
     </div>
   )
 }

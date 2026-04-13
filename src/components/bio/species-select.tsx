@@ -10,7 +10,6 @@ import {
 } from '@/components/ui/select'
 import { SpeciesIcon } from './species-icon'
 import { useSpeciesContext } from '@/stores/species-store'
-import { cn } from '@/lib/utils'
 
 interface SpeciesSelectProps {
   alwaysShowLabel?: boolean
@@ -20,13 +19,11 @@ interface SpeciesSelectProps {
    * e.g. `hidden sm:block` when there's more room on the row.
    */
   labelVisibilityClass?: string
-  triggerClassName?: string
 }
 
 export function SpeciesSelect({
   alwaysShowLabel = false,
   labelVisibilityClass = 'hidden md:block',
-  triggerClassName,
 }: SpeciesSelectProps) {
   const { species, handleSpeciesChange } = useSpeciesContext()
   const speciesLabel =
@@ -40,10 +37,7 @@ export function SpeciesSelect({
     <Select onValueChange={handleSpeciesChange} value={species}>
       <SelectTrigger
         aria-label={speciesLabel}
-        className={cn(
-          'hover:bg-accent z-10 w-fit cursor-pointer gap-2 border-none font-semibold shadow-none',
-          triggerClassName,
-        )}
+        className="hover:bg-accent z-10 w-fit cursor-pointer gap-2 border-none font-semibold shadow-none"
       >
         <SelectValue>
           <div className="flex items-center">
