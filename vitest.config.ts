@@ -10,6 +10,11 @@ export default defineConfig({
     environment: 'happy-dom',
     include: ['src/**/*.test.{ts,tsx}'],
     setupFiles: ['src/test/setup.ts'],
+    // PGlite's cold-start (wasm unpack + schema apply) can exceed the
+    // default 10s when the full suite runs in parallel, flaking
+    // queries.integration.test.ts. 30s gives headroom without masking
+    // genuinely slow tests.
+    hookTimeout: 30_000,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'lcov', 'json-summary'],
