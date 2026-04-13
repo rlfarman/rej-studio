@@ -51,7 +51,9 @@ sequence into 5' and 3' fragments.
 The position in a CDS where REJ Studio splits the sequence into two
 fragments. The splitter prefers WGGW motifs closest to the midpoint so
 the two halves are roughly balanced and both carry a valid REJ substrate
-at the joint.
+at the joint. A balanced split looks like this:
+
+<SplitBar fivePrimeLength={1836} threePrimeLength={1920} />
 
 ### Stimulatory intron
 
@@ -103,6 +105,7 @@ much each one changed from the input. See
 
 ### Diagnostic badges
 
-Quick-read indicators shown above the optimized sequence — GC%, CpG
-count, max k-mer repeat, length. Use them for a glance-level sanity
-check; use the full report for the details.
+Quick-read indicators shown above the optimized sequence. Use them
+for a glance-level sanity check; use the full report for the details.
+
+<DiagBadge status="good" label="GC 48.2%" tooltip="GC content is in the optimal 35–60% range." /> <DiagBadge status="warn" label="CpG: 24" tooltip="CpG count is moderate." /> <DiagBadge status="neutral" label="1,182 bp / 393 aa" tooltip="Sequence length." />
