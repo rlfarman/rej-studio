@@ -14,13 +14,10 @@ export default function Icon() {
         justifyContent: 'center',
         background: '#09090b',
         borderRadius: 36,
-        fontSize: 120,
-        fontWeight: 700,
-        color: '#0EA5E9',
-        fontFamily: 'monospace',
+        fontSize: 128,
       }}
     >
-      R
+      🧬
     </div>,
     { ...size },
   )
