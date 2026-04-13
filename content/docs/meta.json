@@ -2,10 +2,12 @@
   "title": "Docs",
   "pages": [
     "index",
+    "background",
     "how-it-works",
     "gene-search",
     "design-tool",
     "results",
+    "troubleshooting",
     "glossary"
   ]
 }
