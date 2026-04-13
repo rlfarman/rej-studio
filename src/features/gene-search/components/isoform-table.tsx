@@ -475,13 +475,22 @@ function IsoformRow({
         </TableCell>
       </TableRow>
 
-      {isExpanded && (
-        <TableRow>
-          <TableCell colSpan={COLUMN_COUNT} className="bg-muted/30 px-6 py-4">
-            <ExpandedDetails isoform={isoform} />
-          </TableCell>
-        </TableRow>
-      )}
+      <TableRow>
+        <TableCell colSpan={COLUMN_COUNT} className="p-0">
+          <div
+            className={cn(
+              'grid transition-[grid-template-rows] duration-300 ease-out',
+              isExpanded ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]',
+            )}
+          >
+            <div className="overflow-hidden">
+              <div className="bg-muted/30 px-6 py-4">
+                <ExpandedDetails isoform={isoform} />
+              </div>
+            </div>
+          </div>
+        </TableCell>
+      </TableRow>
     </>
   )
 }
@@ -523,7 +532,7 @@ function SortableHead({
   return (
     <TableHead className={className}>
       <button
-        className="hover:text-foreground inline-flex items-center gap-1"
+        className="hover:text-foreground inline-flex items-center gap-1 transition-colors"
         onClick={() => onSort(sortKey)}
       >
         {label}

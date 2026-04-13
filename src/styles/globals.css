@@ -291,3 +291,13 @@ html {
     transform: translateX(100%);
   }
 }
+
+/* Skeleton shimmer — smoother than animate-pulse, sweeps a highlight across. */
+@keyframes skeleton-shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
