@@ -14,6 +14,7 @@ import { Suspense, ViewTransition } from 'react'
 import { FavoriteGeneButton } from '@/features/gene-search/components/favorite-gene-button'
 import { GeneJsonLd } from '@/features/gene-search/components/gene-jsonld'
 import { GeneBreadcrumbJsonLd } from '@/features/gene-search/components/gene-breadcrumb-jsonld'
+import { SpeciesSync } from '@/features/gene-search/components/species-sync'
 import { TrackOnMount } from '@/components/track-on-mount'
 import { Metadata } from 'next'
 import { cache } from 'react'
@@ -118,6 +119,7 @@ export default async function GeneSymbolPage(props: Props) {
 
   return (
     <>
+      <SpeciesSync species={gene.species} />
       <GeneBreadcrumbJsonLd gene={gene} />
       <Card>
         <CardHeader className="flex flex-row items-center gap-4">
