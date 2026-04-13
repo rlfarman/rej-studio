@@ -8,7 +8,6 @@ import { GoogleTagManager } from '@/components/google-tag-manager'
 import { AnalyticsPageview } from '@/components/analytics-pageview'
 import { AnalyticsProperties } from '@/components/analytics-properties'
 import { WebVitals } from '@/components/web-vitals'
-import { RootProvider } from 'fumadocs-ui/provider/next'
 import { Suspense } from 'react'
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://rejstudio.com'
@@ -65,7 +64,7 @@ export default function RootLayout({
             >
               Skip to content
             </a>
-            <RootProvider theme={{ enabled: false }}>{children}</RootProvider>
+            {children}
             <Toaster />
             <Suspense fallback={null}>
               <AnalyticsPageview />

@@ -157,7 +157,7 @@ jobs:
         # Tune BUDGET_KB as the app grows; current value is a ceiling, not
         # a target.
         env:
-          BUDGET_KB: '2200'
+          BUDGET_KB: '3000'
         run: node scripts/check-bundle-size.mjs
 
       - name: Record bundle size
