@@ -9,9 +9,10 @@ import {
 import Link from 'next/link'
 import type { GeneSearchResult } from '@/features/gene-search/api/gene-queries'
 import { SpeciesIcon } from '@/components/bio/species-icon'
+import { SpeciesSelect } from '@/components/bio/species-select'
 import { TruncatedText } from '@/components/truncated-text'
 import { HighlightMatch } from '@/features/gene-search/utils/highlight-match'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import {
   ClockIcon,
   ExternalLink,
@@ -22,37 +23,6 @@ import {
 import { Button } from '@/components/ui/button'
 import type { SavedGene } from '@/features/gene-search/types/domain-types'
 import { useSpeciesContext } from '@/stores/species-store'
-import type { SpeciesFilter } from '@/lib/bio/species'
-
-const SPECIES_OPTIONS: { value: SpeciesFilter; label: string }[] = [
-  { value: 'both', label: 'All' },
-  { value: 'human', label: 'Human' },
-  { value: 'mouse', label: 'Mouse' },
-]
-
-function SpeciesToggle() {
-  const { species, handleSpeciesChange } = useSpeciesContext()
-
-  return (
-    <div className="flex gap-1 border-b px-3 py-2">
-      {SPECIES_OPTIONS.map(({ value, label }) => (
-        <button
-          key={value}
-          type="button"
-          onClick={() => handleSpeciesChange(value)}
-          className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
-            species === value
-              ? 'bg-accent text-accent-foreground'
-              : 'text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground'
-          }`}
-        >
-          <SpeciesIcon species={value} className="!size-3.5" />
-          {label}
-        </button>
-      ))}
-    </div>
-  )
-}
 
 function GeneResultsLoading() {
   return (
@@ -91,15 +61,31 @@ export function GeneSearchCommand({
   favoriteGenes,
 }: GeneSearchInputProps) {
   const [showList, setShowList] = useState(true)
+  const { species } = useSpeciesContext()
 
   const internalHandleSelect = (gene: SavedGene) => {
     setShowList(false)
     handleSelect(gene)
   }
 
+  const filteredRecents = useMemo(
+    () =>
+      species === 'both'
+        ? recentGenes
+        : recentGenes.filter((g) => g.species === species),
+    [recentGenes, species],
+  )
+  const filteredFavorites = useMemo(
+    () =>
+      species === 'both'
+        ? favoriteGenes
+        : favoriteGenes.filter((g) => g.species === species),
+    [favoriteGenes, species],
+  )
+
   const showEmptyState = query.trim() === '' && !hasSearched
-  const hasRecentGenes = recentGenes.length > 0
-  const hasFavoriteGenes = favoriteGenes.length > 0
+  const hasRecentGenes = filteredRecents.length > 0
+  const hasFavoriteGenes = filteredFavorites.length > 0
   const hasAnySuggestions = hasRecentGenes || hasFavoriteGenes
 
   return (
@@ -120,8 +106,8 @@ export function GeneSearchCommand({
           }
         }}
         autoFocus
+        suffix={<SpeciesSelect labelVisibilityClass="hidden sm:block" />}
       />
-      <SpeciesToggle />
       {showList && (
         <>
           {/* Non-listbox states: render outside CommandList to avoid
@@ -169,7 +155,7 @@ export function GeneSearchCommand({
                 <>
                   {hasFavoriteGenes && (
                     <CommandGroup heading="Favorites">
-                      {favoriteGenes.slice(0, 3).map((gene) => (
+                      {filteredFavorites.slice(0, 3).map((gene) => (
                         <CommandItem
                           key={`fav-${gene.id}`}
                           value={`fav-${gene.id}`}
@@ -206,7 +192,7 @@ export function GeneSearchCommand({
                     <>
                       {hasFavoriteGenes && <CommandSeparator />}
                       <CommandGroup heading="Recent Genes">
-                        {recentGenes.slice(0, 3).map((gene) => (
+                        {filteredRecents.slice(0, 3).map((gene) => (
                           <CommandItem
                             key={`recent-${gene.id}`}
                             value={`recent-${gene.id}`}
