@@ -199,9 +199,11 @@ export function GeneSplitterForm({
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <CustomizationOptions />
+                <div data-tour="dt-sequence">
+                  <CustomizationOptions />
+                </div>
                 <SpeciesOptions />
-                <div className="space-y-2">
+                <div className="space-y-2" data-tour="dt-splicer">
                   <p className="text-sm font-medium">Splice junction</p>
                   <p className="text-muted-foreground text-sm">
                     Set where the sequence splits into 5&apos; and 3&apos;
@@ -216,6 +218,7 @@ export function GeneSplitterForm({
             <Card
               className="fade-up-stagger"
               style={{ '--stagger': 1 } as React.CSSProperties}
+              data-tour="dt-optimization"
             >
               <CardHeader>
                 <CardTitle>Optimization</CardTitle>
@@ -277,6 +280,7 @@ export function GeneSplitterForm({
             <Card
               className="fade-up-stagger"
               style={{ '--stagger': 2 } as React.CSSProperties}
+              data-tour="dt-submit"
             >
               <CardHeader>
                 <CardTitle>Review &amp; Run</CardTitle>

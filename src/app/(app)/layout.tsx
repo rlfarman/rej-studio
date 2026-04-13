@@ -3,6 +3,7 @@ import { Footer } from '@/app/_components/layout/footer'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { AppSidebar } from '@/app/_components/layout/app-sidebar'
 import { MaintenanceBanner } from '@/components/maintenance-banner'
+import { WelcomeDialog } from '@/features/onboarding/components/welcome-dialog'
 import { cookies } from 'next/headers'
 import { Suspense } from 'react'
 
@@ -34,6 +35,7 @@ async function AppShell({ children }: { children: React.ReactNode }) {
         >
           {children}
         </main>
+        <WelcomeDialog />
         <Footer />
       </SidebarInset>
     </SidebarProvider>
