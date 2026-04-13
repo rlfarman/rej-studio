@@ -17,7 +17,7 @@ import { TruncatedText } from '@/components/truncated-text'
 import { SpeciesIcon } from '@/components/bio/species-icon'
 import { X } from 'lucide-react'
 
-const COLLAPSED_COUNT = 5
+const COLLAPSED_COUNT = 3
 const EXPANDED_MAX = 15
 
 export function FavoriteGenes() {
@@ -31,13 +31,13 @@ export function FavoriteGenes() {
 
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>Favorites</SidebarGroupLabel>
+      <SidebarGroupLabel className="bg-sidebar sticky top-0 z-10">
+        Favorites
+      </SidebarGroupLabel>
       <SidebarGroupContent>
         {favoriteGenes.length > 0 ? (
           <>
-            <SidebarMenu
-              className={expanded ? 'max-h-80 overflow-y-auto' : undefined}
-            >
+            <SidebarMenu>
               {visibleItems.map((gene) => (
                 <SidebarMenuItem key={gene.id}>
                   <SidebarMenuButton asChild>

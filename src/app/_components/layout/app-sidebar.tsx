@@ -90,7 +90,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </SidebarMenuItem>
           </SidebarMenuPrimitive>
         </SidebarGroup>
-        <div className="min-w-0 overflow-hidden opacity-0 transition-opacity duration-150 group-data-[collapsible=icon]:max-h-0 group-data-[state=expanded]:opacity-100 group-data-[state=expanded]:delay-200 [[data-mobile=true]_&]:max-h-none [[data-mobile=true]_&]:opacity-100">
+        <div className="min-w-0 opacity-0 transition-opacity duration-150 group-data-[collapsible=icon]:max-h-0 group-data-[collapsible=icon]:overflow-hidden group-data-[state=expanded]:opacity-100 group-data-[state=expanded]:delay-200 [[data-mobile=true]_&]:max-h-none [[data-mobile=true]_&]:opacity-100">
           <FavoriteGenes />
           <RecentGenes />
           <RecentJobs onSelectJob={handleSelectJob} />
