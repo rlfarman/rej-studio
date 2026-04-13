@@ -75,3 +75,6 @@ data/local.db/
 
 # Sentry Config File
 .env.sentry-build-plugin
+
+# Worktrees
+.worktrees/
