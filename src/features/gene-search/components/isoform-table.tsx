@@ -455,6 +455,16 @@ function IsoformRow({
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
+                <a
+                  href={`https://ensembl.org/id/${isoform.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <ExternalLink className="size-4" />
+                  View on Ensembl
+                </a>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
                 <Link href={`/design-tool?isoform=${isoform.id}`}>
                   <ExternalLink className="size-4" />
                   Customize
