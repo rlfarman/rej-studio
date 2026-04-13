@@ -37,7 +37,6 @@ import { cn } from '@/lib/utils'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Checkbox } from '@/components/ui/checkbox'
 import { SpeciesSelect } from '@/components/bio/species-select'
 import { useSpeciesContext } from '@/stores/species-store'
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
@@ -55,7 +54,6 @@ import {
 } from '@/lib/bio/sequence-utils'
 import { IsoformValidationBadges } from './isoform-validation-badges'
 import { IsoformSplitPreview } from './isoform-split-preview'
-import { IsoformComparisonSheet } from './isoform-comparison-sheet'
 import type { IsoformListItem } from '@/features/gene-search/types/domain-types'
 
 interface IsoformListProps {
@@ -79,7 +77,7 @@ const SUITABILITY_VARIANT_MAP = {
   'triple-aav': 'destructive',
 } as const
 
-const COLUMN_COUNT = 10
+const COLUMN_COUNT = 9
 
 const SUITABILITY_RANK = {
   'single-aav': 0,
@@ -99,7 +97,6 @@ export default function IsoformTable({
   const [expandedIds, setExpandedIds] = useState<Set<string>>(() =>
     highlightedIsoformId ? new Set([highlightedIsoformId]) : new Set(),
   )
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
 
   const filteredIsoforms = useMemo(
     () =>
@@ -179,20 +176,6 @@ export default function IsoformTable({
     filteredIsoforms.length > 0 &&
     filteredIsoforms.every((i) => expandedIds.has(i.id))
 
-  const toggleSelected = useCallback((id: string) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
-  }, [])
-
-  const selectedIsoforms = useMemo(
-    () => isoforms.filter((i) => selectedIds.has(i.id)),
-    [isoforms, selectedIds],
-  )
-
   if (filteredIsoforms.length === 0) {
     return (
       <div className="flex flex-col items-center gap-4 py-8 text-center">
@@ -210,9 +193,6 @@ export default function IsoformTable({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-10">
-              <span className="sr-only">Select</span>
-            </TableHead>
             <TableHead className="w-8 p-0">
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -305,7 +285,6 @@ export default function IsoformTable({
         <TableBody>
           {sortedIsoforms.map((isoform) => {
             const isExpanded = expandedIds.has(isoform.id)
-            const isSelected = selectedIds.has(isoform.id)
             const suitability = assessDesignSuitability(isoform.codingSequence)
             const suitConfig = getSuitabilityConfig(suitability)
             const cdsId = `cds-${isoform.id}`
@@ -316,7 +295,6 @@ export default function IsoformTable({
                 key={isoform.id}
                 isoform={isoform}
                 isExpanded={isExpanded}
-                isSelected={isSelected}
                 isHighlighted={isoform.id === highlightedIsoformId}
                 suitability={suitability}
                 suitConfig={suitConfig}
@@ -325,23 +303,11 @@ export default function IsoformTable({
                 isCopied={isCopied}
                 copy={copy}
                 onToggleExpanded={toggleExpanded}
-                onToggleSelected={toggleSelected}
               />
             )
           })}
         </TableBody>
       </Table>
-
-      {selectedIds.size > 0 && (
-        <div className="sticky bottom-4 z-10 mt-4 flex justify-center">
-          <IsoformComparisonSheet isoforms={selectedIsoforms}>
-            <Button size="sm">
-              Compare {selectedIds.size} isoform
-              {selectedIds.size > 1 ? 's' : ''}
-            </Button>
-          </IsoformComparisonSheet>
-        </div>
-      )}
     </>
   )
 }
@@ -349,7 +315,6 @@ export default function IsoformTable({
 function IsoformRow({
   isoform,
   isExpanded,
-  isSelected,
   isHighlighted,
   suitability,
   suitConfig,
@@ -358,11 +323,9 @@ function IsoformRow({
   isCopied,
   copy,
   onToggleExpanded,
-  onToggleSelected,
 }: {
   isoform: IsoformListItem
   isExpanded: boolean
-  isSelected: boolean
   isHighlighted?: boolean
   suitability: ReturnType<typeof assessDesignSuitability>
   suitConfig: ReturnType<typeof getSuitabilityConfig>
@@ -371,7 +334,6 @@ function IsoformRow({
   isCopied: (id: string) => boolean
   copy: (text: string, id: string) => void
   onToggleExpanded: (id: string) => void
-  onToggleSelected: (id: string) => void
 }) {
   const [ringVisible, setRingVisible] = useState(!!isHighlighted)
 
@@ -409,13 +371,6 @@ function IsoformRow({
         )}
         onClick={() => onToggleExpanded(isoform.id)}
       >
-        <TableCell onClick={(e) => e.stopPropagation()}>
-          <Checkbox
-            checked={isSelected}
-            onCheckedChange={() => onToggleSelected(isoform.id)}
-            aria-label={`Select ${isoform.id}`}
-          />
-        </TableCell>
         <TableCell>
           {isExpanded ? (
             <ChevronDown className="text-muted-foreground size-4" />
@@ -580,7 +535,6 @@ export function IsoformTableLoading() {
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead className="w-10" />
           <TableHead className="w-8" />
           <TableHead>
             <span className="hidden sm:inline">Ensembl Transcript ID</span>
