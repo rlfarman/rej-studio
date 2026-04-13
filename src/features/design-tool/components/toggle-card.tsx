@@ -17,6 +17,7 @@ interface ToggleCardProperties {
   label: string
   description: string
   badge?: string
+  /** Docs URL shown on a small "?" icon at the edge of the card. */
   helpHref?: string
   children?: React.ReactNode
 }
@@ -38,16 +39,17 @@ export function ToggleCard({
         const checked = field.value as boolean
         return (
           <FormItem className="space-y-0">
-            <div className="relative">
+            <div
+              className={cn(
+                'flex flex-row items-start gap-1 rounded-lg border p-3 transition-colors',
+                checked
+                  ? 'border-primary/40 bg-primary/5'
+                  : 'hover:bg-muted/50',
+              )}
+            >
               <label
                 htmlFor={name}
-                className={cn(
-                  'flex cursor-pointer flex-row items-start gap-3 rounded-lg border p-3 transition-colors',
-                  helpHref && 'pr-10',
-                  checked
-                    ? 'border-primary/40 bg-primary/5'
-                    : 'hover:bg-muted/50',
-                )}
+                className="flex flex-1 cursor-pointer flex-row items-start gap-3"
               >
                 <FormControl>
                   <Checkbox
@@ -77,8 +79,8 @@ export function ToggleCard({
               {helpHref && (
                 <HelpLink
                   href={helpHref}
-                  label={`Learn more about ${label}`}
-                  className="absolute top-2 right-2"
+                  topic={label}
+                  className="-mt-1 -mr-1"
                 />
               )}
             </div>
