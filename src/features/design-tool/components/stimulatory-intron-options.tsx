@@ -10,11 +10,13 @@ export function StimulatoryIntronOptions() {
           name="5PrimeStimulatoryIntron"
           label="5′ stimulatory intron"
           description="Inserted ~150 bp upstream of the junction, at the nearest compatible splice site, to boost 5′ fragment expression."
+          helpHref="/docs/design-tool#stim-5"
         />
         <ToggleCard
           name="3PrimeStimulatoryIntron"
           label="3′ stimulatory intron"
           description="Inserted ~150 bp downstream of the junction, at the nearest compatible splice site, to boost 3′ fragment expression."
+          helpHref="/docs/design-tool#stim-3"
         />
       </div>
     </div>

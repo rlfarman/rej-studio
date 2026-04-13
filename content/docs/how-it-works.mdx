@@ -6,60 +6,99 @@ description: A tour of what happens between typing a gene symbol and downloading
 ## The short version
 
 REJ Studio is a Next.js frontend over a curated gene database and a Python
-optimization backend. You search a gene, pick a transcript, tune parameters,
-and submit. The backend runs the sequence through
+optimization backend. You search a gene, pick a transcript, choose a split
+point, tune parameters, and submit. The backend splits the sequence at a
+[WGGW motif](/docs/glossary#wggw-motif), runs each fragment through
 [DNAChisel](https://edinburgh-genome-foundry.github.io/DnaChisel/) with the
-constraints you chose, and streams back the optimized sequence plus a report.
+constraints you picked, and returns the optimized fragments plus a report.
 
-## The pieces
+## The pipeline
 
-### Gene database
+<Steps>
 
-Human and mouse genes and their isoforms live in a read-only Postgres
-database. Every transcript has its coding sequence, length, exon count, and a
-handful of descriptive fields (gene symbol, name, Ensembl IDs, MIM, disease
-associations). You can search by any of those — the database has a full-text
-index plus a substring fallback so partial matches still work.
+<Step>
 
-### The frontend
+### Search a gene
 
-The UI is a server-rendered Next.js app. The homepage is the gene search;
-each gene has a detail page that lists its isoforms; and the design tool is a
-form you can open either from an isoform or on its own with a pasted
-sequence. Favorites and recent searches are kept in the browser.
+Type a symbol, name, Ensembl ID, or disease term. Results are ranked;
+matches usually return in under a second. See
+[Searching for a gene](/docs/gene-search).
 
-### The optimization backend
+</Step>
 
-Submitting the design form sends your sequence and chosen constraints to a
-Python service. That service:
+<Step>
 
-1. Validates the input (length, alphabet, start/stop codons).
-2. Builds a DNAChisel problem with the constraints you selected (codon
-   optimization, CpG minimization, GC content, splice site avoidance, etc.).
-3. Runs the solver.
-4. Returns the optimized sequence, a per-constraint report, and diagnostic
-   metadata.
+### Pick an isoform
 
-The backend is stateless — each submission is independent. Long-running jobs
-are tracked by an ID so you can close the tab and come back.
+Every annotated transcript for the gene is listed with length and exon
+count. Clicking one opens it in the design tool with its CDS pre-filled.
+You can also paste your own CDS — it just needs a start codon, stop
+codon, and a length that's a multiple of three.
+
+</Step>
+
+<Step>
+
+### Choose a split point
+
+REJ Studio scans the CDS for WGGW motifs and ranks them by distance to
+the midpoint — balanced splits carry real RNA End-Joining substrate at
+the joint. You can take the suggested split or override it on the
+slider.
+
+</Step>
+
+<Step>
+
+### Tune optimization parameters
+
+Enable the objectives you care about (remove cryptic splice sites,
+minimize CpGs, reduce k-mer complexity), pick whether to enforce GC
+content, optionally add 5′ or 3′ stimulatory introns, and weight the
+objectives if the defaults don't match your priorities. See
+[Using the design tool](/docs/design-tool).
+
+</Step>
+
+<Step>
+
+### Submit and wait
+
+The form posts to the Python backend. DNAChisel runs a constraint
+solver on each fragment independently, then the results are reassembled
+and returned.
+
+</Step>
+
+<Step>
+
+### Review and download
+
+You'll see two optimized fragments, a set of
+[diagnostic badges](/docs/glossary#diagnostic-badges), and a full
+[optimization report](/docs/results). Download the FASTA before closing
+the tab — results are held in session only.
+
+</Step>
+
+</Steps>
 
 ## What the optimizer actually does
 
-DNAChisel is a constrained codon-optimization library. It doesn't "invent"
-sequences — it searches for a coding-equivalent sequence (same protein) that
+DNAChisel is a constraint-based codon-optimization library. It doesn't
+"invent" sequences — it searches for a coding-equivalent sequence that
 satisfies the constraints you picked. Think of it as rewriting the DNA
 without changing the amino acids, while steering away from patterns you
-don't want.
+don't want (and toward patterns you do).
 
-The constraints REJ Studio exposes are the ones most relevant for RNA
-End-Joining design: cryptic splice site removal, CpG minimization, k-mer
-complexity, GC content, and optional WGGW motif insertion. See
-[the design tool page](/docs/design-tool) for what each one means in practice.
+The [constraints REJ Studio exposes](/docs/design-tool) are the ones
+most relevant for RNA End-Joining design: cryptic splice site removal,
+CpG minimization, k-mer complexity, and a hard GC content window.
 
 ## What it does _not_ do
 
 - It does not predict expression, stability, or immunogenicity.
 - It does not validate the biology — if the protein you're encoding is
   toxic, the optimizer will happily optimize it.
-- It does not store your submissions long-term. Results are available while
-  the job is active; download them before closing the tab.
+- It does not store your submissions long-term. Results are available
+  while the job is active; download them before closing the tab.

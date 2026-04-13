@@ -33,6 +33,22 @@ const nextConfig: NextConfig = {
       process.env.VERCEL_GIT_COMMIT_SHA ??
       'unknown',
     BUILD_TIMESTAMP: new Date().toISOString(),
+    // GitHub repo info — used by docs "edit this page" links and the nav
+    // GitHub button. Falls back to Vercel's git env so deployments get
+    // correct values with zero config; override by setting any of the
+    // NEXT_PUBLIC_GITHUB_* vars explicitly.
+    NEXT_PUBLIC_GITHUB_OWNER:
+      process.env.NEXT_PUBLIC_GITHUB_OWNER ??
+      process.env.VERCEL_GIT_REPO_OWNER ??
+      '',
+    NEXT_PUBLIC_GITHUB_REPO:
+      process.env.NEXT_PUBLIC_GITHUB_REPO ??
+      process.env.VERCEL_GIT_REPO_SLUG ??
+      '',
+    NEXT_PUBLIC_GITHUB_BRANCH:
+      process.env.NEXT_PUBLIC_GITHUB_BRANCH ??
+      process.env.VERCEL_GIT_COMMIT_REF ??
+      '',
   },
   headers: async () => [
     // Stale-while-revalidate for sitemap and OG images — CDN serves the
