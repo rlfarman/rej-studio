@@ -16,6 +16,7 @@ import { GeneJsonLd } from '@/features/gene-search/components/gene-jsonld'
 import { GeneBreadcrumbJsonLd } from '@/features/gene-search/components/gene-breadcrumb-jsonld'
 import { SpeciesSync } from '@/features/gene-search/components/species-sync'
 import { TrackOnMount } from '@/components/track-on-mount'
+import { GeneDetailTour } from '@/features/onboarding/components/gene-detail-tour'
 import { ExternalLink } from 'lucide-react'
 import { Metadata } from 'next'
 import { cache } from 'react'
@@ -140,13 +141,16 @@ export default async function GeneSymbolPage(props: Props) {
     <>
       <SpeciesSync species={gene.species} />
       <GeneBreadcrumbJsonLd gene={gene} />
+      <GeneDetailTour />
       <Card>
         <CardHeader>
           <div className="flex items-center gap-3">
             <h1 className="font-mono text-3xl leading-none font-bold tracking-tight">
               {gene.symbol}
             </h1>
-            <FavoriteGeneButton gene={gene} />
+            <span data-tour="gene-favorite">
+              <FavoriteGeneButton gene={gene} />
+            </span>
           </div>
           <p className="text-muted-foreground text-sm">{gene.name}</p>
           <div className="mt-1">

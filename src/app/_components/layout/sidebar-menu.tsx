@@ -5,6 +5,7 @@ import { useTheme } from 'next-themes'
 import {
   Download,
   Eraser,
+  GraduationCap,
   Monitor,
   Moon,
   Settings,
@@ -30,6 +31,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from '@/components/ui/sidebar'
+import { useOnboarding } from '@/features/onboarding/stores/onboarding-store'
 
 const THEMES = [
   { value: 'light', label: 'Light', icon: Sun },
@@ -41,6 +43,7 @@ export function SidebarMenu() {
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const resetAllTours = useOnboarding((s) => s.resetAllTours)
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- detecting client-side mount
@@ -105,6 +108,18 @@ export function SidebarMenu() {
               <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>
                 <Upload className="h-4 w-4" />
                 Import data
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => {
+                  resetAllTours()
+                  toast.success(
+                    'Tours reset — they will appear on your next visit',
+                  )
+                }}
+              >
+                <GraduationCap className="h-4 w-4" />
+                Restart tours
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem

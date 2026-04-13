@@ -191,7 +191,7 @@ export default function IsoformTable({
 
   return (
     <>
-      <Table>
+      <Table data-tour="isoform-table">
         <TableHeader>
           <TableRow>
             <TableHead className="w-8 p-0">
@@ -408,7 +408,10 @@ function IsoformRow({
           </Badge>
         </TableCell>
         <TableCell onClick={(e) => e.stopPropagation()}>
-          <div className="flex items-center justify-end gap-1">
+          <div
+            className="flex items-center justify-end gap-1"
+            data-tour="isoform-actions"
+          >
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button

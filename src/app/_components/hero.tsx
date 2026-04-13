@@ -19,15 +19,15 @@ export function HeroItem({
   children,
   className,
   index = 0,
-}: {
-  children: ReactNode
-  className?: string
+  ...rest
+}: React.ComponentProps<'div'> & {
   index?: number
 }) {
   return (
     <div
       className={`hero-stagger ${className ?? ''}`}
       style={{ '--stagger': index } as React.CSSProperties}
+      {...rest}
     >
       {children}
     </div>

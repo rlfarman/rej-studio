@@ -3,6 +3,7 @@ import { GeneSearch } from '@/features/gene-search/components/gene-search'
 import { searchGenes } from '@/features/gene-search/api/genes'
 import { Dna } from 'lucide-react'
 import { Hero, HeroItem, DnaFloat } from '@/app/_components/hero'
+import { HomeTour } from '@/features/onboarding/components/home-tour'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -45,7 +46,7 @@ export default function HomePage() {
             </h1>
           </HeroItem>
           <HeroItem index={3}>
-            <p className="text-muted-foreground">
+            <p className="text-muted-foreground" data-tour="home-design-link">
               Try searching for a gene, or{' '}
               <Link
                 href={{
@@ -63,10 +64,12 @@ export default function HomePage() {
         <HeroItem
           index={4}
           className="mx-auto mt-8 w-full max-w-2xl px-4 sm:px-6 lg:px-8"
+          data-tour="home-search"
         >
           <GeneSearch searchGenes={searchGenes} />
         </HeroItem>
       </Hero>
+      <HomeTour />
     </div>
   )
 }
