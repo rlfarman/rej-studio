@@ -1,10 +1,46 @@
 import { ImageResponse } from 'next/og'
+import { getGeneBySymbol } from '@/features/gene-search/api/genes'
+import { getIsoformsByGene } from '@/features/gene-search/api/isoforms'
+import { parseSpeciesParam } from '@/lib/bio/species'
 
-export const alt = 'Design Tool — REJ Studio'
 export const size = { width: 1200, height: 630 }
-export const contentType = 'image/png'
 
-export default function OgImage() {
+export async function GET(
+  request: Request,
+  context: { params: Promise<{ symbol: string }> },
+) {
+  const { symbol } = await context.params
+  const { searchParams } = new URL(request.url)
+  const gene = await getGeneBySymbol(
+    symbol,
+    parseSpeciesParam(searchParams.get('species') ?? undefined),
+  )
+
+  if (!gene) {
+    return new ImageResponse(
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: '100%',
+          height: '100%',
+          backgroundColor: '#09090b',
+          color: '#fafafa',
+          fontSize: 48,
+          fontFamily: 'monospace',
+        }}
+      >
+        {symbol} — Gene not found
+      </div>,
+      size,
+    )
+  }
+
+  const isoforms = await getIsoformsByGene(gene.id)
+  const isoformCount = isoforms.length
+  const species = [...new Set(isoforms.map((i) => i.species))]
+
   return new ImageResponse(
     <div
       style={{
@@ -49,7 +85,7 @@ export default function OgImage() {
             textTransform: 'uppercase',
           }}
         >
-          Design Tool
+          Gene Search
         </span>
       </div>
 
@@ -62,29 +98,48 @@ export default function OgImage() {
       >
         <div
           style={{
-            fontSize: 72,
-            fontWeight: 700,
-            letterSpacing: '-0.03em',
-            lineHeight: 1.05,
+            display: 'flex',
+            alignItems: 'baseline',
+            gap: '20px',
           }}
         >
-          Optimize coding
-          <br />
-          sequences for REJ
+          <span
+            style={{
+              fontSize: 80,
+              fontWeight: 700,
+              fontFamily: 'monospace',
+              letterSpacing: '-0.03em',
+            }}
+          >
+            {gene.symbol}
+          </span>
+          <span style={{ fontSize: 28, color: '#a1a1aa' }}>
+            {species.join(' & ')}
+          </span>
+        </div>
+        <div
+          style={{
+            fontSize: 32,
+            color: '#d4d4d8',
+            lineHeight: 1.35,
+            maxWidth: '90%',
+          }}
+        >
+          {gene.name}
         </div>
         <div
           style={{
             display: 'flex',
-            gap: '24px',
+            gap: '40px',
             fontSize: 24,
             color: '#a1a1aa',
           }}
         >
-          <span>Custom CDS input</span>
+          <span>
+            {isoformCount} isoform{isoformCount !== 1 ? 's' : ''}
+          </span>
           <span style={{ color: '#52525b' }}>·</span>
-          <span>DNAChisel optimization</span>
-          <span style={{ color: '#52525b' }}>·</span>
-          <span>Downloadable results</span>
+          <span>{gene.id}</span>
         </div>
       </div>
 
@@ -102,7 +157,7 @@ export default function OgImage() {
             color: '#71717a',
           }}
         >
-          rejstudio.com/design-tool
+          rejstudio.com/genes/{symbol.toLowerCase()}
         </span>
         <span
           style={{
@@ -116,6 +171,12 @@ export default function OgImage() {
         </span>
       </div>
     </div>,
-    size,
+    {
+      ...size,
+      headers: {
+        'Cache-Control':
+          'public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400',
+      },
+    },
   )
 }

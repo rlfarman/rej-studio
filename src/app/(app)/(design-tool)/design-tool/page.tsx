@@ -10,6 +10,20 @@ export const metadata: Metadata = {
   description:
     'Optimize coding sequences for RNA End-Joining. Enter a custom CDS or start from a pre-loaded isoform.',
   alternates: { canonical: '/design-tool' },
+  openGraph: {
+    title: 'Design Tool',
+    description:
+      'Optimize coding sequences for RNA End-Joining. Enter a custom CDS or start from a pre-loaded isoform.',
+    url: '/design-tool',
+    images: [
+      {
+        url: '/api/og?title=Optimize+coding%0Asequences+for+REJ&section=Design+Tool&description=Custom+CDS+input+%C2%B7+DNAChisel+optimization+%C2%B7+Downloadable+results&url=rejstudio.com/design-tool',
+        width: 1200,
+        height: 630,
+        alt: 'Design Tool — REJ Studio',
+      },
+    ],
+  },
 }
 
 async function DesignToolPage({

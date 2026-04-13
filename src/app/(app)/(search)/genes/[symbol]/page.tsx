@@ -40,13 +40,31 @@ async function resolveGene({ params, searchParams }: Props) {
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const { symbol } = await props.params
+  const { species } = await props.searchParams
   const gene = await resolveGene(props)
 
+  const displaySymbol = gene?.symbol ?? symbol
+  const description = `View all isoforms for ${gene?.name ?? symbol} and download pre-optimized sequences or customize your own.`
+  const ogUrl = `/api/og/gene/${encodeURIComponent(displaySymbol)}${species ? `?species=${encodeURIComponent(species)}` : ''}`
+
   return {
-    title: gene?.symbol ?? symbol,
-    description: `View all isoforms for ${gene?.name ?? symbol} and download pre-optimized sequences or customize your own.`,
+    title: displaySymbol,
+    description,
     alternates: {
-      canonical: `/genes/${gene?.symbol ?? symbol}`,
+      canonical: `/genes/${displaySymbol}`,
+    },
+    openGraph: {
+      title: displaySymbol,
+      description,
+      url: `/genes/${displaySymbol}`,
+      images: [
+        {
+          url: ogUrl,
+          width: 1200,
+          height: 630,
+          alt: `${displaySymbol} — REJ Studio`,
+        },
+      ],
     },
   }
 }

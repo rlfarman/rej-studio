@@ -1,10 +1,15 @@
 import { ImageResponse } from 'next/og'
 
-export const alt = 'Gene Search — REJ Studio'
 export const size = { width: 1200, height: 630 }
-export const contentType = 'image/png'
 
-export default function OgImage() {
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url)
+
+  const title = searchParams.get('title') ?? 'REJ Studio'
+  const description = searchParams.get('description') ?? ''
+  const section = searchParams.get('section')
+  const url = searchParams.get('url') ?? 'rejstudio.com'
+
   return new ImageResponse(
     <div
       style={{
@@ -39,18 +44,22 @@ export default function OgImage() {
         >
           REJ Studio
         </span>
-        <span style={{ color: '#52525b', fontSize: 22 }}>/</span>
-        <span
-          style={{
-            fontSize: 22,
-            color: '#38bdf8',
-            fontWeight: 600,
-            letterSpacing: '0.08em',
-            textTransform: 'uppercase',
-          }}
-        >
-          Gene Search
-        </span>
+        {section && (
+          <>
+            <span style={{ color: '#52525b', fontSize: 22 }}>/</span>
+            <span
+              style={{
+                fontSize: 22,
+                color: '#38bdf8',
+                fontWeight: 600,
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+              }}
+            >
+              {section}
+            </span>
+          </>
+        )}
       </div>
 
       <div
@@ -66,26 +75,24 @@ export default function OgImage() {
             fontWeight: 700,
             letterSpacing: '-0.03em',
             lineHeight: 1.05,
+            color: '#fafafa',
+            maxWidth: '100%',
           }}
         >
-          Search by symbol,
-          <br />
-          name, or disease
+          {title}
         </div>
-        <div
-          style={{
-            display: 'flex',
-            gap: '24px',
-            fontSize: 24,
-            color: '#a1a1aa',
-          }}
-        >
-          <span>Human &amp; Mouse</span>
-          <span style={{ color: '#52525b' }}>·</span>
-          <span>Full-text search</span>
-          <span style={{ color: '#52525b' }}>·</span>
-          <span>Pre-optimized sequences</span>
-        </div>
+        {description && (
+          <div
+            style={{
+              fontSize: 28,
+              color: '#a1a1aa',
+              lineHeight: 1.35,
+              maxWidth: '90%',
+            }}
+          >
+            {description}
+          </div>
+        )}
       </div>
 
       <div
@@ -102,7 +109,7 @@ export default function OgImage() {
             color: '#71717a',
           }}
         >
-          rejstudio.com/genes
+          {url}
         </span>
         <span
           style={{
@@ -116,6 +123,12 @@ export default function OgImage() {
         </span>
       </div>
     </div>,
-    size,
+    {
+      ...size,
+      headers: {
+        'Cache-Control':
+          'public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400',
+      },
+    },
   )
 }
