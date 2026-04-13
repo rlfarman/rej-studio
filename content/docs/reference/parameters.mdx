@@ -1,0 +1,96 @@
+---
+title: Parameters
+description: Every form field, constraint, and weight in the design tool.
+---
+
+## Input
+
+### Species
+
+Sets the codon usage table the optimizer adapts to. Pick the organism
+you'll express the sequence in — human and mouse have different usage
+preferences and the wrong choice will push codon optimization in the
+wrong direction.
+
+### Splice junction
+
+The position where REJ Studio splits your CDS into 5' and 3'
+fragments. The slider defaults to the
+[WGGW motif](/docs/reference/glossary#wggw-motif) closest to the
+midpoint — a balanced split with a valid RNA End-Joining substrate at
+the joint. Drag it to pick a different motif if you have a reason to.
+
+## Soft objectives
+
+Soft objectives are things the solver _tries_ to optimize. Each has a
+weight controlling how much it pulls on the final sequence relative to
+the others. See [weights](#parameter-weights) below.
+
+### Remove cryptic splice sites [#remove-cryptic-splice-sites]
+
+Scans each fragment for cryptic 5' and 3' splice site motifs and
+rewrites them to break the motif without changing the protein.
+Recommended for any design intended to end up in a transcribed
+context — unintended splicing can silently delete internal exons.
+
+### Minimize CpG sites [#minimize-cpgs]
+
+Reduces the number of
+[CpG dinucleotides](/docs/reference/glossary#cpg-dinucleotide). CpGs
+are substrates for methylation and can trigger innate immune sensing.
+Lowering them is standard practice for therapeutic RNA and synthetic
+constructs.
+
+### Reduce k-mer complexity [#kmer-complexity]
+
+Penalizes repeated 10-mers across the sequence.
+[High-complexity sequences](/docs/reference/glossary#k-mer-complexity)
+synthesize more reliably and behave better during manufacturing and
+sequencing.
+
+## Hard constraints
+
+Hard constraints must be satisfied. If the solver can't meet one, the
+job reports it as violated.
+
+### Enforce 35-60% GC content [#gc-content]
+
+Keeps GC content inside the mammalian-friendly range over a sliding
+window. If the solver can't hit the window given your other
+constraints, you'll see it called out in the report. Leave this on
+unless you have a specific reason to run without a GC constraint.
+
+## Stimulatory introns
+
+Optional. REJ Studio can insert a short optimized intron into either
+fragment to boost expression. The protein is unchanged but each intron
+adds length.
+
+### 5' stimulatory intron [#stim-5]
+
+Inserts an intron into the 5' fragment. Useful when the 5' half is
+the limiting piece for expression.
+
+### 3' stimulatory intron [#stim-3]
+
+Inserts an intron into the 3' fragment. Useful when the 3' half is
+the limiting piece.
+
+Enable one, both, or neither based on downstream context. They stack
+cleanly with the rest of the optimization.
+
+## Parameter weights [#parameter-weights]
+
+Each soft objective has a weight that controls how much it pulls on
+the final sequence relative to the others. You only need to touch
+these when the defaults give you a result that's good at one thing
+and weak at another.
+
+| Weight | What it controls |
+|---|---|
+| **Codon optimization** | How hard the solver pushes toward the species-preferred codon table. |
+| **Cryptic splice site** | How hard it pushes to eliminate splice-like motifs. |
+| **CpG minimization** | How hard it pushes CpG count down. |
+| **K-mer complexity** | How hard it pushes to break up repeated k-mers. |
+
+Hard constraints (GC content) always take priority over any weight.

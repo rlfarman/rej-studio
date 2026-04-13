@@ -1,0 +1,10 @@
+{
+  "title": "How-to Guides",
+  "description": "Practical steps for common tasks.",
+  "pages": [
+    "gene-search",
+    "design-sequence",
+    "reading-results",
+    "troubleshooting"
+  ]
+}
