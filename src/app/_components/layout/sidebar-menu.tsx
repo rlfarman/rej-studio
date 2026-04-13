@@ -7,25 +7,30 @@ import {
   Eraser,
   Monitor,
   Moon,
-  MoreHorizontal,
+  Settings,
   Sprout,
   Sun,
   Upload,
 } from 'lucide-react'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-  DropdownMenuLabel,
-} from '@/components/ui/dropdown-menu'
 import { Button } from '@/components/ui/button'
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from '@/components/ui/sheet'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import { Label } from '@/components/ui/label'
+import { Separator } from '@/components/ui/separator'
 import { exportUserData, importUserData } from '@/lib/data-transfer'
 import { seedUserData, clearSeedUserData } from '@/app/_components/seed-data'
 import { toast } from 'sonner'
+import {
+  SidebarMenu as SidebarMenuPrimitive,
+  SidebarMenuItem,
+  SidebarMenuButton,
+} from '@/components/ui/sidebar'
 
 const THEMES = [
   { value: 'light', label: 'Light', icon: Sun },
@@ -36,6 +41,7 @@ const THEMES = [
 export function SidebarMenu() {
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
+  const [open, setOpen] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -67,70 +73,110 @@ export function SidebarMenu() {
         className="hidden"
         onChange={handleImport}
       />
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            aria-label="More options"
-          >
-            <MoreHorizontal className="h-4 w-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent side="top" align="start">
-          {mounted && (
-            <>
-              <DropdownMenuLabel>Theme</DropdownMenuLabel>
-              <DropdownMenuRadioGroup value={theme} onValueChange={setTheme}>
-                {THEMES.map(({ value, label, icon: Icon }) => (
-                  <DropdownMenuRadioItem key={value} value={value}>
-                    <Icon className="h-4 w-4" />
-                    {label}
-                  </DropdownMenuRadioItem>
-                ))}
-              </DropdownMenuRadioGroup>
-              <DropdownMenuSeparator />
-            </>
-          )}
-          <DropdownMenuItem onClick={exportUserData}>
-            <Download className="h-4 w-4" />
-            Export data
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>
-            <Upload className="h-4 w-4" />
-            Import data
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            onClick={() => {
-              const { favorites, recents, jobs } = seedUserData()
-              toast.success(
-                `Seeded ${favorites} favorites, ${recents} recents, ${jobs} jobs`,
-              )
-            }}
-          >
-            <Sprout className="h-4 w-4" />
-            Seed data
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={() => {
-              const { favorites, recents, jobs } = clearSeedUserData()
-              const total = favorites + recents + jobs
-              if (total === 0) {
-                toast.info('No seed data to clear')
-              } else {
-                toast.success(
-                  `Cleared ${favorites} favorites, ${recents} recents, ${jobs} jobs`,
-                )
-              }
-            }}
-          >
-            <Eraser className="h-4 w-4" />
-            Clear seed data
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <SidebarMenuPrimitive>
+        <SidebarMenuItem>
+          <SidebarMenuButton onClick={() => setOpen(true)} tooltip="Settings">
+            <Settings />
+            <span>Settings</span>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      </SidebarMenuPrimitive>
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetContent side="left">
+          <SheetHeader>
+            <SheetTitle>Settings</SheetTitle>
+            <SheetDescription>Customize your experience.</SheetDescription>
+          </SheetHeader>
+          <div className="flex flex-col gap-6 px-4">
+            {mounted && (
+              <div className="flex flex-col gap-3">
+                <h3 className="text-sm font-medium">Theme</h3>
+                <RadioGroup
+                  value={theme}
+                  onValueChange={setTheme}
+                  className="flex flex-col gap-2"
+                >
+                  {THEMES.map(({ value, label, icon: Icon }) => (
+                    <div key={value} className="flex items-center gap-3">
+                      <RadioGroupItem value={value} id={`theme-${value}`} />
+                      <Label
+                        htmlFor={`theme-${value}`}
+                        className="flex items-center gap-2 font-normal"
+                      >
+                        <Icon className="h-4 w-4" />
+                        {label}
+                      </Label>
+                    </div>
+                  ))}
+                </RadioGroup>
+              </div>
+            )}
+
+            <Separator />
+
+            <div className="flex flex-col gap-2">
+              <h3 className="text-sm font-medium">Data</h3>
+              <Button
+                variant="outline"
+                size="sm"
+                className="justify-start"
+                onClick={exportUserData}
+              >
+                <Download className="h-4 w-4" />
+                Export data
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="justify-start"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Upload className="h-4 w-4" />
+                Import data
+              </Button>
+            </div>
+
+            <Separator />
+
+            <div className="flex flex-col gap-2">
+              <h3 className="text-sm font-medium">Developer</h3>
+              <Button
+                variant="outline"
+                size="sm"
+                className="justify-start"
+                onClick={() => {
+                  const { favorites, recents, jobs } = seedUserData()
+                  toast.success(
+                    `Seeded ${favorites} favorites, ${recents} recents, ${jobs} jobs`,
+                  )
+                }}
+              >
+                <Sprout className="h-4 w-4" />
+                Seed data
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="justify-start"
+                onClick={() => {
+                  const { favorites, recents, jobs } = clearSeedUserData()
+                  const total = favorites + recents + jobs
+                  if (total === 0) {
+                    toast.info('No seed data to clear')
+                  } else {
+                    toast.success(
+                      `Cleared ${favorites} favorites, ${recents} recents, ${jobs} jobs`,
+                    )
+                  }
+                }}
+              >
+                <Eraser className="h-4 w-4" />
+                Clear seed data
+              </Button>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
     </>
   )
 }

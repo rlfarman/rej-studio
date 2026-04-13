@@ -1,6 +1,6 @@
 'use client'
 import Link from 'next/link'
-import { BookOpen, WandSparkles } from 'lucide-react'
+import { WandSparkles } from 'lucide-react'
 import { SpeciesSelect } from '@/components/bio/species-select'
 import { GeneSearch } from '@/features/gene-search/components/gene-search'
 import { searchGenes } from '@/features/gene-search/api/genes'
@@ -41,21 +41,6 @@ function GeneSearchTooltip() {
   )
 }
 
-function DocsTooltip() {
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <Button variant="ghost" size="icon" asChild>
-          <Link href="/docs" aria-label="Documentation">
-            <BookOpen className="size-5" />
-          </Link>
-        </Button>
-      </TooltipTrigger>
-      <TooltipContent>Documentation</TooltipContent>
-    </Tooltip>
-  )
-}
-
 export function Header() {
   const pathname = usePathname()
   const isHomePage = pathname === '/'
@@ -81,7 +66,6 @@ export function Header() {
             <TooltipContent>{sidebarLabel}</TooltipContent>
           </Tooltip>
           <GeneSearchTooltip />
-          <DocsTooltip />
         </div>
         <Suspense fallback={<div className="h-9 w-32" />}>
           <SpeciesSelect labelVisibilityClass={headerLabelClass} />
