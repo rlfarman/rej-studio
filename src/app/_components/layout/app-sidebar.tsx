@@ -113,7 +113,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarFooter>
         <SidebarMenuPrimitive>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild size="sm" tooltip="Salk Institute">
+            <SidebarMenuButton asChild tooltip="Salk Institute">
               <a
                 href="https://www.salk.edu"
                 target="_blank"

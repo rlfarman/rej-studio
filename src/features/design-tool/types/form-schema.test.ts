@@ -3,7 +3,9 @@ import { describe, expect, it } from 'vitest'
 import { validationSchema } from './form-schema'
 
 const VALID_BASE = {
+  sequenceType: 'dna' as const,
   codingSequence: 'ATGAAATGA',
+  proteinSequence: '',
   name: 'Test Gene',
   species: 'human' as const,
   codonOptimizeWeight: 50,
