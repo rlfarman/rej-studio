@@ -6,10 +6,11 @@ import {
   FormItem,
   FormLabel,
   FormControl,
+  FormMessage,
 } from '@/components/ui/form'
 import { Button } from '@/components/ui/button'
-import { Upload } from 'lucide-react'
-import { FormValues } from '../types/form-schema'
+import { Upload, Dna, FlaskConical } from 'lucide-react'
+import { FormValues, type SequenceType } from '../types/form-schema'
 import { SequenceDiagnostics } from './sequence-diagnostics'
 import { SequenceHighlight } from './sequence-highlight'
 import { GcSparkline } from '@/components/bio/gc-sparkline'
@@ -17,16 +18,70 @@ import { CodonUsageStrip } from './codon-usage-strip'
 import { cn } from '@/lib/utils'
 import { cleanSequence, parseFasta } from '@/lib/bio/fasta'
 import { toast } from 'sonner'
-import { isSpecies } from '@/lib/bio/species'
+import { isSpecies, type Species } from '@/lib/bio/species'
 import { pickDefaultSplitPoint } from '../utils/default-split-point'
+import { reverseTranslate } from '@/lib/bio/reverse-translate'
 
-const MAX_LENGTH = 50_000
+const MAX_DNA_LENGTH = 50_000
+const MAX_PROTEIN_LENGTH = 16_666
+
+function SequenceTypeToggle({
+  value,
+  onChange,
+}: {
+  value: SequenceType
+  onChange: (v: SequenceType) => void
+}) {
+  const options: { value: SequenceType; label: string; icon: typeof Dna }[] = [
+    { value: 'dna', label: 'DNA', icon: Dna },
+    { value: 'protein', label: 'Protein', icon: FlaskConical },
+  ]
+
+  return (
+    <div
+      role="radiogroup"
+      aria-label="Sequence type"
+      className="bg-muted inline-flex gap-0.5 rounded-lg p-0.5"
+    >
+      {options.map((opt) => {
+        const Icon = opt.icon
+        const isActive = value === opt.value
+        return (
+          <button
+            key={opt.value}
+            type="button"
+            role="radio"
+            aria-checked={isActive}
+            onClick={() => onChange(opt.value)}
+            className={cn(
+              'inline-flex items-center gap-1.5 rounded-md px-3 py-1 text-sm font-medium transition-colors',
+              isActive
+                ? 'bg-background text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground',
+            )}
+          >
+            <Icon className="size-3.5" />
+            {opt.label}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
 
 export function CodingSequenceInput() {
-  const { control, watch, setValue } = useFormContext<FormValues>()
-  const value = watch('codingSequence')
+  const { control, watch, setValue, clearErrors } = useFormContext<FormValues>()
+  const sequenceType = watch('sequenceType') ?? 'dna'
+  const isProtein = sequenceType === 'protein'
+
+  const dnaValue = watch('codingSequence')
+  const proteinValue = watch('proteinSequence')
   const species = watch('species')
-  const length = value?.length ?? 0
+
+  const activeValue = isProtein ? proteinValue : dnaValue
+  const length = activeValue?.length ?? 0
+  const maxLength = isProtein ? MAX_PROTEIN_LENGTH : MAX_DNA_LENGTH
+
   const fileInputRef = useRef<HTMLInputElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const backdropRef = useRef<HTMLDivElement>(null)
@@ -38,11 +93,27 @@ export function CodingSequenceInput() {
     }
   }, [])
 
+  const applyReverseTranslation = useCallback(
+    (protein: string) => {
+      if (!isSpecies(species)) return
+      try {
+        const dna = reverseTranslate(protein, species as Species)
+        setValue('codingSequence', dna, { shouldValidate: false })
+        setValue('spliceJunctionPosition', pickDefaultSplitPoint(dna), {
+          shouldValidate: false,
+        })
+      } catch {
+        // Validation errors are shown via the form schema
+        setValue('codingSequence', '', { shouldValidate: false })
+      }
+    },
+    [species, setValue],
+  )
+
   const applyCleanedSequence = useCallback(
     (text: string, source: string) => {
+      const mode = isProtein ? 'protein' : 'dna'
       // If the input contains multiple FASTA entries, use only the first
-      // sequence (concatenating them would produce an invalid composite
-      // coding sequence).
       let textToClean = text
       let ignoredSequences = 0
       if (text.includes('>')) {
@@ -58,23 +129,32 @@ export function CodingSequenceInput() {
         }
       }
 
-      const { cleaned, removedChars, removedHeaders } =
-        cleanSequence(textToClean)
+      const { cleaned, removedChars, removedHeaders } = cleanSequence(
+        textToClean,
+        mode,
+      )
 
       if (cleaned.length === 0) {
-        toast.error('No valid nucleotide characters found.')
+        toast.error(
+          isProtein
+            ? 'No valid amino acid characters found.'
+            : 'No valid nucleotide characters found.',
+        )
         return
       }
 
-      setValue('codingSequence', cleaned, { shouldValidate: true })
-      // Replace the splice position with a sensible default for the new
-      // sequence (WGGW best when splitting, midpoint otherwise). Without
-      // this, the slider's proportional-scaling effect can snap to the
-      // very end when a sequence is pasted into an empty form.
-      setValue('spliceJunctionPosition', pickDefaultSplitPoint(cleaned), {
-        shouldValidate: true,
-      })
+      const field = isProtein ? 'proteinSequence' : 'codingSequence'
+      setValue(field as keyof FormValues, cleaned, { shouldValidate: true })
 
+      if (!isProtein) {
+        setValue('spliceJunctionPosition', pickDefaultSplitPoint(cleaned), {
+          shouldValidate: true,
+        })
+      } else {
+        applyReverseTranslation(cleaned)
+      }
+
+      const charType = isProtein ? 'non-amino-acid' : 'non-nucleotide'
       const parts: string[] = []
       if (ignoredSequences > 0)
         parts.push(
@@ -86,29 +166,30 @@ export function CodingSequenceInput() {
         )
       if (removedChars > 0)
         parts.push(
-          `${removedChars} non-nucleotide character${removedChars > 1 ? 's' : ''} removed`,
+          `${removedChars} ${charType} character${removedChars > 1 ? 's' : ''} removed`,
         )
 
       if (parts.length > 0) {
         toast.info(`${source}: ${parts.join(', ')}.`)
       }
     },
-    [setValue],
+    [setValue, isProtein, applyReverseTranslation],
   )
 
   const handlePaste = useCallback(
     (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
       const text = e.clipboardData.getData('text')
-      // Only intercept if the pasted text looks like it needs cleaning
-      // (has FASTA headers, line numbers, or significant non-nucleotide chars)
       const hasHeaders = text.includes('>')
-      const nonNuc = text.replace(/[ACGTUacgtu\s\r\n]/g, '')
-      if (hasHeaders || nonNuc.length > 3) {
+      const validChars = isProtein
+        ? /[ACDEFGHIKLMNPQRSTVWYacdefghiklmnpqrstvwy*\s\r\n]/g
+        : /[ACGTUacgtu\s\r\n]/g
+      const nonValid = text.replace(validChars, '')
+      if (hasHeaders || nonValid.length > 3) {
         e.preventDefault()
         applyCleanedSequence(text, 'Paste cleaned')
       }
     },
-    [applyCleanedSequence],
+    [applyCleanedSequence, isProtein],
   )
 
   const handleFileUpload = useCallback(
@@ -122,7 +203,6 @@ export function CodingSequenceInput() {
         const entries = parseFasta(text)
 
         if (entries.length > 0 && entries[0].header) {
-          // Use FASTA header as name if name field is empty
           const currentName = watch('name')
           if (!currentName) {
             setValue('name', entries[0].header.slice(0, 250))
@@ -132,26 +212,49 @@ export function CodingSequenceInput() {
         applyCleanedSequence(text, 'FASTA imported')
       }
       reader.readAsText(file)
-
-      // Reset file input so re-selecting the same file triggers onChange
       e.target.value = ''
     },
     [applyCleanedSequence, setValue, watch],
   )
+
+  const handleSequenceTypeChange = useCallback(
+    (newType: SequenceType) => {
+      if (newType === sequenceType) return
+      // Clear both sequence fields when switching modes
+      setValue('sequenceType', newType)
+      setValue('codingSequence', '', { shouldValidate: false })
+      setValue('proteinSequence', '', { shouldValidate: false })
+      setValue('spliceJunctionPosition', 1, { shouldValidate: false })
+      clearErrors(['codingSequence', 'proteinSequence', 'species'])
+    },
+    [sequenceType, setValue, clearErrors],
+  )
+
+  const activeField = isProtein ? 'proteinSequence' : 'codingSequence'
+  const fileAccept = isProtein ? '.fasta,.fa,.faa,.txt' : '.fasta,.fa,.fna,.txt'
 
   const sharedTextStyles =
     'px-3 py-2 font-mono text-sm leading-normal break-all whitespace-pre-wrap'
 
   return (
     <FormField
-      name="codingSequence"
+      name={activeField}
       control={control}
       render={({ field }) => (
         <FormItem>
           <div className="flex items-center justify-between">
-            <FormLabel>
-              Enter your coding sequence <span aria-hidden="true">*</span>
-            </FormLabel>
+            <div className="flex items-center gap-3">
+              <FormLabel>
+                {isProtein
+                  ? 'Enter your protein sequence'
+                  : 'Enter your coding sequence'}{' '}
+                <span aria-hidden="true">*</span>
+              </FormLabel>
+              <SequenceTypeToggle
+                value={sequenceType}
+                onChange={handleSequenceTypeChange}
+              />
+            </div>
             <Button
               type="button"
               variant="ghost"
@@ -165,37 +268,49 @@ export function CodingSequenceInput() {
             <input
               ref={fileInputRef}
               type="file"
-              accept=".fasta,.fa,.fna,.txt"
+              accept={fileAccept}
               className="hidden"
               onChange={handleFileUpload}
             />
           </div>
           <FormControl>
             <div className="relative min-h-[6.5rem]">
-              {/* Highlight backdrop */}
-              <div
-                ref={backdropRef}
-                aria-hidden="true"
-                className={cn(
-                  sharedTextStyles,
-                  'pointer-events-none absolute inset-0 overflow-hidden rounded-md border border-transparent',
-                  'text-foreground',
-                )}
-              >
-                {value ? (
-                  <SequenceHighlight sequence={value} />
-                ) : (
-                  <span className="text-transparent">placeholder</span>
-                )}
-              </div>
-              {/* Transparent textarea on top */}
+              {/* Highlight backdrop — DNA mode only */}
+              {!isProtein && (
+                <div
+                  ref={backdropRef}
+                  aria-hidden="true"
+                  className={cn(
+                    sharedTextStyles,
+                    'pointer-events-none absolute inset-0 overflow-hidden rounded-md border border-transparent',
+                    'text-foreground',
+                  )}
+                >
+                  {activeValue ? (
+                    <SequenceHighlight sequence={activeValue} />
+                  ) : (
+                    <span className="text-transparent">placeholder</span>
+                  )}
+                </div>
+              )}
               <textarea
-                placeholder="ATGATTACA... (paste sequence or upload FASTA)"
+                placeholder={
+                  isProtein
+                    ? 'MVLSPADKTN... (paste amino acid sequence or upload FASTA)'
+                    : 'ATGATTACA... (paste sequence or upload FASTA)'
+                }
                 rows={4}
                 aria-required="true"
                 {...field}
+                onChange={(e) => {
+                  field.onChange(e)
+                  // In protein mode, reverse-translate on each change
+                  if (isProtein) {
+                    const val = e.target.value.toUpperCase().replace(/\s/g, '')
+                    applyReverseTranslation(val)
+                  }
+                }}
                 ref={(el) => {
-                  // Merge refs: react-hook-form's ref + our local ref
                   field.ref(el)
                   ;(
                     textareaRef as React.MutableRefObject<HTMLTextAreaElement | null>
@@ -208,28 +323,50 @@ export function CodingSequenceInput() {
                   'border-input placeholder:text-muted-foreground selection:bg-primary/30 relative flex w-full min-w-0 rounded-md border bg-transparent shadow-xs transition-[color,box-shadow] outline-none disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
                   'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
                   'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
-                  'caret-foreground resize-y text-transparent',
+                  // In DNA mode, text is transparent (highlight backdrop shows through)
+                  // In protein mode, text is visible directly
+                  isProtein
+                    ? 'caret-foreground resize-y'
+                    : 'caret-foreground resize-y text-transparent',
                 )}
               />
             </div>
           </FormControl>
+          <FormMessage />
           <p
             className={cn(
               'text-sm leading-5 tabular-nums',
-              length > MAX_LENGTH
+              length > maxLength
                 ? 'text-destructive-foreground'
                 : 'text-muted-foreground',
             )}
           >
-            {length.toLocaleString()} / {MAX_LENGTH.toLocaleString()}
+            {length.toLocaleString()} {isProtein ? 'residues' : 'bp'} /{' '}
+            {maxLength.toLocaleString()}
           </p>
-          <SequenceDiagnostics />
-          {value && value.length >= 60 && (
+          {isProtein && isSpecies(species) && dnaValue && (
+            <p className="text-muted-foreground text-sm">
+              → {dnaValue.length.toLocaleString()} bp DNA generated ({species}{' '}
+              codon preferences)
+            </p>
+          )}
+          {isProtein && !isSpecies(species) && length > 0 && (
+            <p className="text-muted-foreground text-sm text-amber-600 dark:text-amber-400">
+              Select a species above to generate the DNA sequence.
+            </p>
+          )}
+          {!isProtein && <SequenceDiagnostics />}
+          {!isProtein && dnaValue && dnaValue.length >= 60 && (
             <div className="space-y-2 pt-1">
-              <GcSparkline sequence={value} />
-              {isSpecies(species) && value.length % 3 === 0 && (
-                <CodonUsageStrip sequence={value} species={species} />
+              <GcSparkline sequence={dnaValue} />
+              {isSpecies(species) && dnaValue.length % 3 === 0 && (
+                <CodonUsageStrip sequence={dnaValue} species={species} />
               )}
+            </div>
+          )}
+          {isProtein && dnaValue && dnaValue.length >= 60 && (
+            <div className="space-y-2 pt-1">
+              <GcSparkline sequence={dnaValue} />
             </div>
           )}
         </FormItem>

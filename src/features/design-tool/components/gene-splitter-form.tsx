@@ -69,6 +69,7 @@ export function GeneSplitterForm({
     resolver: zodResolver(validationSchema),
     mode: 'onBlur',
     defaultValues: {
+      sequenceType: 'dna' as const,
       removeCrypticSpliceSites: true,
       '5PrimeStimulatoryIntron': true,
       '3PrimeStimulatoryIntron': true,
@@ -80,6 +81,7 @@ export function GeneSplitterForm({
       reduceKmerComplexityWeight: 1,
       enforceGcContent: true,
       codingSequence: defaultCodingSequence ?? '',
+      proteinSequence: '',
       name: defaultName ?? '',
       species: defaultSpecies ?? 'none',
       spliceJunctionPosition:

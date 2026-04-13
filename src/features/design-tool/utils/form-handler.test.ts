@@ -3,7 +3,9 @@ import type { FormValues } from '../types/form-schema'
 import { buildJobParams, formatOptionsForReport } from './form-handler'
 
 const BASE_VALUES: FormValues = {
+  sequenceType: 'dna',
   codingSequence: 'ATGAAATGA',
+  proteinSequence: '',
   name: 'Test Gene',
   species: 'human',
   codonOptimizeWeight: 50,
