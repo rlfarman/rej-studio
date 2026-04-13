@@ -156,16 +156,8 @@ CDS input is normalized to uppercase at two levels:
 **New files:**
 
 - `src/app/manifest.ts` — PWA manifest (standalone, start_url `/genes`)
-- `public/icon-192.png` — 192x192 app icon
-- `public/icon-512.png` — 512x512 app icon
-- `src/app/apple-icon.png` — 180x180 Apple touch icon
-- `scripts/generate-icons.mjs` — regenerate icons from `public/images/rej-studio-logo.svg`
-
-**Action needed:** To regenerate icons after changing the logo:
-
-```bash
-npx sharp-cli   # or: node scripts/generate-icons.mjs (needs sharp installed)
-```
+- `src/app/icon.tsx` — dynamically generated favicon (32x32)
+- `src/app/apple-icon.tsx` — dynamically generated Apple touch icon (180x180)
 
 ---
 

@@ -10,59 +10,90 @@ export default function OgImage() {
       style={{
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
+        justifyContent: 'space-between',
+        padding: '72px 80px',
         width: '100%',
         height: '100%',
         backgroundColor: '#09090b',
         color: '#fafafa',
         fontFamily: 'system-ui, sans-serif',
+        backgroundImage:
+          'radial-gradient(circle at 85% 15%, rgba(56,189,248,0.12) 0%, transparent 55%), radial-gradient(circle at 15% 85%, rgba(168,85,247,0.10) 0%, transparent 55%)',
       }}
     >
       <div
         style={{
-          fontSize: 28,
+          fontSize: 22,
           fontFamily: 'monospace',
-          color: '#a1a1aa',
-          marginBottom: '16px',
           letterSpacing: '0.1em',
-        }}
-      >
-        &#x1F9EC;
-      </div>
-      <div
-        style={{
-          fontSize: 64,
-          fontWeight: 700,
-          fontFamily: 'monospace',
-          letterSpacing: '-0.02em',
-          marginBottom: '16px',
+          color: '#d4d4d8',
+          textTransform: 'uppercase',
         }}
       >
         REJ Studio
       </div>
-      <div
-        style={{
-          fontSize: 28,
-          color: '#d4d4d8',
-          marginBottom: '40px',
-        }}
-      >
-        RNA End-Joining sequence design
-      </div>
+
       <div
         style={{
           display: 'flex',
-          gap: '32px',
-          fontSize: 20,
-          color: '#a1a1aa',
+          flexDirection: 'column',
+          gap: '24px',
         }}
       >
-        <span>Search genes</span>
-        <span style={{ color: '#52525b' }}>·</span>
-        <span>Browse isoforms</span>
-        <span style={{ color: '#52525b' }}>·</span>
-        <span>Optimize sequences</span>
+        <div
+          style={{
+            fontSize: 72,
+            fontWeight: 700,
+            letterSpacing: '-0.03em',
+            lineHeight: 1.05,
+          }}
+        >
+          RNA End-Joining
+          <br />
+          sequence design
+        </div>
+        <div
+          style={{
+            display: 'flex',
+            gap: '32px',
+            fontSize: 24,
+            color: '#a1a1aa',
+          }}
+        >
+          <span>Search genes</span>
+          <span style={{ color: '#52525b' }}>·</span>
+          <span>Browse isoforms</span>
+          <span style={{ color: '#52525b' }}>·</span>
+          <span>Optimize sequences</span>
+        </div>
+      </div>
+
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}
+      >
+        <span
+          style={{
+            fontSize: 22,
+            fontFamily: 'monospace',
+            color: '#71717a',
+          }}
+        >
+          rejstudio.com
+        </span>
+        <span
+          style={{
+            fontSize: 22,
+            fontFamily: 'monospace',
+            color: '#52525b',
+            letterSpacing: '0.08em',
+          }}
+        >
+          ATG · · · TAA
+        </span>
       </div>
     </div>,
     size,

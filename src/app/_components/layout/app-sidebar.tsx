@@ -1,5 +1,5 @@
 'use client'
-import { DnaIcon } from '@/components/bio/dna-icon'
+import { Dna } from 'lucide-react'
 import {
   Sidebar,
   SidebarContent,
@@ -31,7 +31,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           href="/"
           className="hover:text-primary group flex items-center hover:underline"
         >
-          <DnaIcon className="mt-2 ml-2 size-6 transition-transform duration-300 group-hover:rotate-12" />
+          <Dna className="mt-2 ml-2 size-6 transition-transform duration-300 group-hover:rotate-12" />
           <span className="mt-2 ml-2 font-mono text-lg font-semibold">
             REJ Studio
           </span>
