@@ -50,17 +50,30 @@ Modal logs are available via `modal logs` CLI and the Modal dashboard. To ship t
 
 The structured `_log()` function already emits JSON with `ts`, `event`, `call_id`, `stage_timings_s`, etc. — these are directly parseable by any log aggregator.
 
-## Better Stack Uptime
+## OpenStatus (Uptime + Status Page)
 
-[Better Stack](https://betterstack.com/uptime) can be configured to monitor the health endpoint:
+Uptime monitoring and the public status page are hosted on [OpenStatus](https://openstatus.dev).
 
-- **URL**: `https://<domain>/api/health`
-- **Method**: GET
-- **Headers**: `Authorization: Bearer <HEALTH_AUTH_TOKEN>` (if auth is configured)
-- **Expected status**: 200
-- **Check interval**: 60s
+### Setup
 
-This complements the GitHub Actions `uptime.yml` workflow which runs every 10 minutes.
+1. Sign up at [openstatus.dev](https://openstatus.dev), create a workspace and a public status page.
+2. Create three HTTP monitors:
+   - **Production health** — `https://<domain>/api/health`, expect `200`. Add `Authorization: Bearer <HEALTH_AUTH_TOKEN>` if health auth is configured.
+   - **Homepage** — `https://<domain>/`, expect `200`.
+   - **Modal backend** — the `MODAL_API_URL` health/ping endpoint, expect `200`.
+3. Attach each monitor to the status page as a component (e.g. "App", "Homepage", "Compute").
+4. Configure notifications (Slack/Discord/email/PagerDuty) per monitor.
+5. Set env vars:
+   - `NEXT_PUBLIC_OPENSTATUS_SLUG` — public page slug, powers the footer `StatusWidget`.
+   - `OPENSTATUS_API_KEY` — workspace API key, powers the server-side SDK (`src/lib/openstatus.ts`) for programmatic monitor/incident access.
+
+### Footer widget
+
+`src/app/_components/layout/footer.tsx` renders `@openstatus/react`'s `StatusWidget` (a React Server Component) when `NEXT_PUBLIC_OPENSTATUS_SLUG` is set. It fetches status on each render via OpenStatus's public API — no API key required for display.
+
+### SDK
+
+`src/lib/openstatus.ts` exposes `getOpenStatusClient()` which returns a configured `@openstatus/sdk-node` client (or `null` when `OPENSTATUS_API_KEY` is unset). Use it from server actions to list/create monitors, report incidents, or query summaries programmatically.
 
 ## Health Endpoint Auth
 

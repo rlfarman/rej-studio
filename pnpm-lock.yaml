@@ -21,6 +21,12 @@ importers:
       '@next/third-parties':
         specifier: ^16.2.2
         version: 16.2.2(next@16.2.3(@babel/core@7.29.0)(@opentelemetry/api@1.9.1)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)
+      '@openstatus/react':
+        specifier: ^0.0.3
+        version: 0.0.3(react@19.2.4)
+      '@openstatus/sdk-node':
+        specifier: ^0.1.4
+        version: 0.1.4
       '@opentelemetry/auto-instrumentations-node':
         specifier: ^0.72.0
         version: 0.72.0(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.6.1(@opentelemetry/api@1.9.1))
@@ -821,6 +827,12 @@ packages:
       }
     engines: { node: '>=18' }
 
+  '@bufbuild/protobuf@2.11.0':
+    resolution:
+      {
+        integrity: sha512-sBXGT13cpmPR5BMgHE6UEEfEaShh5Ror6rfN3yEK5si7QVrtZg8LEPQb0VVhiLRUslD2yLnXtnRzG035J/mZXQ==,
+      }
+
   '@cloudflare/kv-asset-handler@0.4.2':
     resolution:
       {
@@ -1011,6 +1023,24 @@ packages:
         integrity: sha512-ZJoS8oSq2CAZEpc/YI9SulLrdiIyXeHb/OGqGrkUP6Q7YV+0ouNAa7GjqRdXeQPncHQIDz/jbCTlHScvYvO/gA==,
       }
     engines: { node: '>=v18' }
+
+  '@connectrpc/connect-node@2.1.1':
+    resolution:
+      {
+        integrity: sha512-s3TfsI1XF+n+1z6MBS9rTnFsxxR4Rw5wmdEnkQINli81ESGxcsfaEet8duzq8LVuuCupmhUsgpRo0Nv9pZkufg==,
+      }
+    engines: { node: '>=20' }
+    peerDependencies:
+      '@bufbuild/protobuf': ^2.7.0
+      '@connectrpc/connect': 2.1.1
+
+  '@connectrpc/connect@2.1.1':
+    resolution:
+      {
+        integrity: sha512-JzhkaTvM73m2K1URT6tv53k2RwngSmCXLZJgK580qNQOXRzZRR/BCMfZw3h+90JpnG6XksP5bYT+cz0rpUzUWQ==,
+      }
+    peerDependencies:
+      '@bufbuild/protobuf': ^2.7.0
 
   '@cspotcode/source-map-support@0.8.1':
     resolution:
@@ -3203,6 +3233,20 @@ packages:
     peerDependencies:
       next: ~15.0.8 || ~15.1.12 || ~15.2.9 || ~15.3.9 || ~15.4.11 || ~15.5.10 || ~16.0.11 || ^16.1.5
       wrangler: ^4.65.0
+
+  '@openstatus/react@0.0.3':
+    resolution:
+      {
+        integrity: sha512-uDiegz7e3H67pG8lTT+op+6w5keTT7XpcENrREaqlWl5j53TYyO8nheOG1PeNw2/Qgd5KaGeRJJFn1crhTUSYw==,
+      }
+    peerDependencies:
+      react: ^18.0.0
+
+  '@openstatus/sdk-node@0.1.4':
+    resolution:
+      {
+        integrity: sha512-/uL6e1w0yW1rNFSDq83eiJ1KKuJsgSMBYcryCmLYBnRFnRIIq/UaznaTcnhtFNt0qplJ/oPbk5qBOKo3sDs8+w==,
+      }
 
   '@opentelemetry/api-logs@0.207.0':
     resolution:
@@ -14606,6 +14650,8 @@ snapshots:
 
   '@bcoe/v8-coverage@1.0.2': {}
 
+  '@bufbuild/protobuf@2.11.0': {}
+
   '@cloudflare/kv-asset-handler@0.4.2': {}
 
   '@cloudflare/unenv-preset@2.16.0(unenv@2.0.0-rc.24)(workerd@1.20260401.1)':
@@ -14743,6 +14789,15 @@ snapshots:
     dependencies:
       conventional-commits-parser: 6.4.0
       picocolors: 1.1.1
+
+  '@connectrpc/connect-node@2.1.1(@bufbuild/protobuf@2.11.0)(@connectrpc/connect@2.1.1(@bufbuild/protobuf@2.11.0))':
+    dependencies:
+      '@bufbuild/protobuf': 2.11.0
+      '@connectrpc/connect': 2.1.1(@bufbuild/protobuf@2.11.0)
+
+  '@connectrpc/connect@2.1.1(@bufbuild/protobuf@2.11.0)':
+    dependencies:
+      '@bufbuild/protobuf': 2.11.0
 
   '@cspotcode/source-map-support@0.8.1':
     dependencies:
@@ -15729,6 +15784,16 @@ snapshots:
       - aws-crt
       - encoding
       - supports-color
+
+  '@openstatus/react@0.0.3(react@19.2.4)':
+    dependencies:
+      react: 19.2.4
+
+  '@openstatus/sdk-node@0.1.4':
+    dependencies:
+      '@bufbuild/protobuf': 2.11.0
+      '@connectrpc/connect': 2.1.1(@bufbuild/protobuf@2.11.0)
+      '@connectrpc/connect-node': 2.1.1(@bufbuild/protobuf@2.11.0)(@connectrpc/connect@2.1.1(@bufbuild/protobuf@2.11.0))
 
   '@opentelemetry/api-logs@0.207.0':
     dependencies:
