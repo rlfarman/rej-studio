@@ -32,15 +32,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <Link
-          href="/"
-          className="hover:text-primary group flex items-center hover:underline"
-        >
-          <DnaIcon className="mt-2 ml-2 size-6 transition-transform duration-300 group-hover:rotate-12" />
-          <span className="mt-2 ml-2 font-mono text-lg font-semibold group-data-[collapsible=icon]:hidden">
-            REJ Studio
-          </span>
-        </Link>
+        <SidebarMenuPrimitive>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild size="lg" tooltip="REJ Studio">
+              <Link href="/">
+                <DnaIcon className="size-5 transition-transform duration-300 group-hover/menu-item:rotate-12" />
+                <span className="font-mono text-lg font-semibold">
+                  REJ Studio
+                </span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenuPrimitive>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
@@ -71,9 +74,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </SidebarMenuItem>
           </SidebarMenuPrimitive>
         </SidebarGroup>
-        <FavoriteGenes />
-        <RecentGenes />
-        <RecentJobs onSelectJob={handleSelectJob} />
+        <div className="group-data-[collapsible=icon]:hidden">
+          <FavoriteGenes />
+          <RecentGenes />
+          <RecentJobs onSelectJob={handleSelectJob} />
+        </div>
       </SidebarContent>
       <JobWatcher />
       <SidebarFooter>
