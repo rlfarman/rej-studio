@@ -11,7 +11,7 @@ import type { GeneSearchResult } from '@/features/gene-search/api/gene-queries'
 import { SpeciesIcon } from '@/components/bio/species-icon'
 import { TruncatedText } from '@/components/truncated-text'
 import { HighlightMatch } from '@/features/gene-search/utils/highlight-match'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import {
   ClockIcon,
   ExternalLink,
@@ -91,15 +91,31 @@ export function GeneSearchCommand({
   favoriteGenes,
 }: GeneSearchInputProps) {
   const [showList, setShowList] = useState(true)
+  const { species } = useSpeciesContext()
 
   const internalHandleSelect = (gene: SavedGene) => {
     setShowList(false)
     handleSelect(gene)
   }
 
+  const filteredRecents = useMemo(
+    () =>
+      species === 'both'
+        ? recentGenes
+        : recentGenes.filter((g) => g.species === species),
+    [recentGenes, species],
+  )
+  const filteredFavorites = useMemo(
+    () =>
+      species === 'both'
+        ? favoriteGenes
+        : favoriteGenes.filter((g) => g.species === species),
+    [favoriteGenes, species],
+  )
+
   const showEmptyState = query.trim() === '' && !hasSearched
-  const hasRecentGenes = recentGenes.length > 0
-  const hasFavoriteGenes = favoriteGenes.length > 0
+  const hasRecentGenes = filteredRecents.length > 0
+  const hasFavoriteGenes = filteredFavorites.length > 0
   const hasAnySuggestions = hasRecentGenes || hasFavoriteGenes
 
   return (
@@ -169,7 +185,7 @@ export function GeneSearchCommand({
                 <>
                   {hasFavoriteGenes && (
                     <CommandGroup heading="Favorites">
-                      {favoriteGenes.slice(0, 3).map((gene) => (
+                      {filteredFavorites.slice(0, 3).map((gene) => (
                         <CommandItem
                           key={`fav-${gene.id}`}
                           value={`fav-${gene.id}`}
@@ -206,7 +222,7 @@ export function GeneSearchCommand({
                     <>
                       {hasFavoriteGenes && <CommandSeparator />}
                       <CommandGroup heading="Recent Genes">
-                        {recentGenes.slice(0, 3).map((gene) => (
+                        {filteredRecents.slice(0, 3).map((gene) => (
                           <CommandItem
                             key={`recent-${gene.id}`}
                             value={`recent-${gene.id}`}
