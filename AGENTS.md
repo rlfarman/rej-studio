@@ -80,7 +80,8 @@ This repo enforces [Conventional Commits](https://www.conventionalcommits.org/en
 
 ## Testing
 
-No test suite is currently configured.
+- **Unit / component tests** — Vitest + happy-dom + @testing-library/react. Specs live next to the code as `*.test.ts(x)` under `src/`. Run with `pnpm test` (or `pnpm test:watch`, `pnpm test:coverage`).
+- **End-to-end tests** — Playwright. Specs live in `e2e/`. Config: `playwright.config.ts` (auto-starts `pnpm next-dev` and sets `BYPASS_AUTH=true` so the landing-page Basic Auth gate in `src/proxy.ts` is skipped in dev). Install browsers once with `pnpm test:e2e:install`, then run `pnpm test:e2e` (or `pnpm test:e2e:ui` for the Playwright UI).
 
 ## Working in Git Worktrees
 

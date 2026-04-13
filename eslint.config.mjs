@@ -34,7 +34,15 @@ const sharedLayerZones = SHARED_LAYERS.map((layer) => ({
 }))
 
 const config = [
-  { ignores: ['coverage/**', '.claude/worktrees/', '.vercel/'] },
+  {
+    ignores: [
+      'coverage/**',
+      '.claude/worktrees/',
+      '.vercel/',
+      'playwright-report/**',
+      'test-results/**',
+    ],
+  },
   ...nextConfig,
   {
     plugins: {

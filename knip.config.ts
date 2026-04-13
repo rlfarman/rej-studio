@@ -11,8 +11,9 @@ const config: KnipConfig = {
     'next.config.{ts,js,mjs}',
     'scripts/**/*.{ts,tsx}',
     'src/test/**',
+    'e2e/**/*.{ts,tsx}',
   ],
-  project: ['src/**/*.{ts,tsx}', 'scripts/**/*.{ts,tsx}'],
+  project: ['src/**/*.{ts,tsx}', 'scripts/**/*.{ts,tsx}', 'e2e/**/*.{ts,tsx}'],
   ignore: ['src/components/ui/**'],
   ignoreDependencies: [
     // Tailwind / PostCSS pipeline — imported by PostCSS, not by app code

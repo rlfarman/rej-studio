@@ -7,6 +7,9 @@
 
 # testing
 /coverage
+/test-results
+/playwright-report
+/playwright/.cache
 
 # next.js
 /.next/
@@ -72,3 +75,4 @@ data/local.db/
 
 # Sentry Config File
 .env.sentry-build-plugin
+.worktrees/
