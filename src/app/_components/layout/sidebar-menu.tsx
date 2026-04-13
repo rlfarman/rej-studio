@@ -30,6 +30,7 @@ import {
   SidebarMenu as SidebarMenuPrimitive,
   SidebarMenuItem,
   SidebarMenuButton,
+  useSidebar,
 } from '@/components/ui/sidebar'
 import { useOnboarding } from '@/features/onboarding/stores/onboarding-store'
 
@@ -44,6 +45,7 @@ export function SidebarMenu() {
   const [mounted, setMounted] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const resetAllTours = useOnboarding((s) => s.resetAllTours)
+  const { isMobile, setOpenMobile } = useSidebar()
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- detecting client-side mount
@@ -113,6 +115,7 @@ export function SidebarMenu() {
               <DropdownMenuItem
                 onClick={() => {
                   resetAllTours()
+                  if (isMobile) setOpenMobile(false)
                   toast.success(
                     'Tours reset — they will appear on your next visit',
                   )

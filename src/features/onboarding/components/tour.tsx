@@ -63,8 +63,8 @@ function useTargetRect(selector: string | null) {
   return { rect, remeasure: measure }
 }
 
-/** Extra viewport margin to reserve for the step card popover */
-const CARD_MARGIN = 200
+/** Height reserved for the step card + gap */
+const CARD_HEIGHT = 200
 
 function scrollTargetIntoView(
   selector: string,
@@ -76,34 +76,21 @@ function scrollTargetIntoView(
   const r = el.getBoundingClientRect()
   const vh = window.innerHeight
 
-  // Check if target + card margin fits in viewport
-  const topMargin = placement === 'top' ? CARD_MARGIN : 40
-  const bottomMargin = placement === 'bottom' ? CARD_MARGIN : 40
-  const fits = r.top >= topMargin && r.bottom <= vh - bottomMargin
+  // Check whether the target AND the card both fit in the viewport
+  const cardAbove = placement === 'top'
+  const neededTop = cardAbove ? CARD_HEIGHT : 60
+  const neededBottom = cardAbove ? 60 : CARD_HEIGHT
+  const fits = r.top >= neededTop && r.bottom <= vh - neededBottom
 
   if (fits) return Promise.resolve()
 
-  // Scroll the main content container, not the window
-  const main = document.getElementById('main-content')
-  const scroller = main ?? document.documentElement
+  // Place the target so there's room for the card on the correct side.
+  // 'start' pushes the element to the top → room below for the card.
+  // 'end' pushes the element to the bottom → room above for the card.
+  const block: ScrollLogicalPosition = cardAbove ? 'end' : 'start'
+  el.scrollIntoView({ behavior: 'smooth', block })
 
-  // Calculate the target's position relative to the document
-  const scrollTop = main ? main.scrollTop : window.scrollY
-  const targetTop = r.top + scrollTop - (main?.getBoundingClientRect().top ?? 0)
-
-  // Center the target, biased toward leaving room for the card
-  const offset =
-    placement === 'bottom' ? topMargin : vh - bottomMargin - r.height
-  const scrollTo = targetTop - offset
-
-  if (main) {
-    main.scrollTo({ top: scrollTo, behavior: 'smooth' })
-  } else {
-    window.scrollTo({ top: scrollTo, behavior: 'smooth' })
-  }
-
-  // Wait for smooth scroll to settle
-  return new Promise((resolve) => setTimeout(resolve, 400))
+  return new Promise((resolve) => setTimeout(resolve, 450))
 }
 
 function useScrollLock(active: boolean, ready: boolean) {
