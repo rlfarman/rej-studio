@@ -18,7 +18,7 @@ import { RecentJobs } from '@/features/design-tool/components/recent-jobs-panel'
 import { JobWatcher } from '@/features/design-tool/components/job-watcher'
 import { SidebarMenu } from '@/app/_components/layout/sidebar-menu'
 import type { JobHistoryEntry } from '@/features/design-tool/hooks/use-job-history'
-import { Home, BookOpen, WandSparkles } from 'lucide-react'
+import { Home, BookOpen, WandSparkles, Layers } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
 
@@ -46,35 +46,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   </span>
                 </div>
               </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild size="lg" tooltip="Salk Institute">
-              <a
-                href="https://www.salk.edu"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <div className="flex aspect-square size-8 items-center justify-center">
-                  <Image
-                    src="/branding/SalkLogo-WCB-K.png"
-                    alt="Salk Institute"
-                    width={20}
-                    height={20}
-                    className="block dark:hidden"
-                  />
-                  <Image
-                    src="/branding/SalkLogo-WCB-W.png"
-                    alt="Salk Institute"
-                    width={20}
-                    height={20}
-                    className="hidden dark:block"
-                  />
-                </div>
-                <span className="truncate text-xs opacity-0 transition-opacity duration-150 group-data-[state=expanded]:opacity-100 group-data-[state=expanded]:delay-200 [[data-mobile=true]_&]:opacity-100">
-                  Salk Institute
-                </span>
-              </a>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenuPrimitive>
@@ -109,6 +80,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <SidebarMenuItem>
               <SidebarMenuButton
                 asChild
+                isActive={pathname === '/design-tool/batch'}
+                tooltip="Batch Optimization"
+              >
+                <Link href="/design-tool/batch">
+                  <Layers />
+                  <span>Batch</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
                 isActive={pathname.startsWith('/docs')}
                 tooltip="Documentation"
               >
@@ -128,6 +111,33 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarContent>
       <JobWatcher />
       <SidebarFooter>
+        <SidebarMenuPrimitive>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild size="sm" tooltip="Salk Institute">
+              <a
+                href="https://www.salk.edu"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Image
+                  src="/branding/SalkLogo-WCB-K.png"
+                  alt="Salk Institute"
+                  width={16}
+                  height={16}
+                  className="block dark:hidden"
+                />
+                <Image
+                  src="/branding/SalkLogo-WCB-W.png"
+                  alt="Salk Institute"
+                  width={16}
+                  height={16}
+                  className="hidden dark:block"
+                />
+                <span>Salk Institute</span>
+              </a>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenuPrimitive>
         <SidebarMenu />
       </SidebarFooter>
       <SidebarRail />
