@@ -15,9 +15,9 @@ import { useState } from 'react'
 import {
   ClockIcon,
   ExternalLink,
-  HeartIcon,
   Loader2,
   RefreshCwIcon,
+  StarIcon,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { SavedGene } from '@/features/gene-search/types/domain-types'
@@ -169,13 +169,13 @@ export function GeneSearchCommand({
                 <>
                   {hasFavoriteGenes && (
                     <CommandGroup heading="Favorites">
-                      {favoriteGenes.slice(0, 5).map((gene) => (
+                      {favoriteGenes.slice(0, 3).map((gene) => (
                         <CommandItem
                           key={`fav-${gene.id}`}
                           value={`fav-${gene.id}`}
                           onSelect={() => internalHandleSelect(gene)}
                         >
-                          <HeartIcon className="text-muted-foreground h-4 w-4" />
+                          <StarIcon className="text-muted-foreground h-4 w-4" />
                           {gene.species && (
                             <SpeciesIcon
                               species={gene.species}
@@ -206,7 +206,7 @@ export function GeneSearchCommand({
                     <>
                       {hasFavoriteGenes && <CommandSeparator />}
                       <CommandGroup heading="Recent Genes">
-                        {recentGenes.slice(0, 5).map((gene) => (
+                        {recentGenes.slice(0, 3).map((gene) => (
                           <CommandItem
                             key={`recent-${gene.id}`}
                             value={`recent-${gene.id}`}

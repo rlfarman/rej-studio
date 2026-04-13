@@ -1,4 +1,5 @@
 'use client'
+import Image from 'next/image'
 import { Dna } from 'lucide-react'
 import {
   Sidebar,
@@ -45,6 +46,35 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   </span>
                 </div>
               </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild size="lg" tooltip="Salk Institute">
+              <a
+                href="https://www.salk.edu"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <div className="flex aspect-square size-8 items-center justify-center">
+                  <Image
+                    src="/branding/SalkLogo-WCB-K.png"
+                    alt="Salk Institute"
+                    width={20}
+                    height={20}
+                    className="block dark:hidden"
+                  />
+                  <Image
+                    src="/branding/SalkLogo-WCB-W.png"
+                    alt="Salk Institute"
+                    width={20}
+                    height={20}
+                    className="hidden dark:block"
+                  />
+                </div>
+                <span className="truncate text-xs opacity-0 transition-opacity duration-150 group-data-[state=expanded]:opacity-100 group-data-[state=expanded]:delay-200 [[data-mobile=true]_&]:opacity-100">
+                  Salk Institute
+                </span>
+              </a>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenuPrimitive>
