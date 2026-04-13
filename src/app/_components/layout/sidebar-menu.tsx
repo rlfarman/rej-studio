@@ -7,7 +7,7 @@ import {
   Eraser,
   Monitor,
   Moon,
-  MoreHorizontal,
+  Settings,
   Sprout,
   Sun,
   Upload,
@@ -22,10 +22,14 @@ import {
   DropdownMenuTrigger,
   DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu'
-import { Button } from '@/components/ui/button'
 import { exportUserData, importUserData } from '@/lib/data-transfer'
 import { seedUserData, clearSeedUserData } from '@/app/_components/seed-data'
 import { toast } from 'sonner'
+import {
+  SidebarMenu as SidebarMenuPrimitive,
+  SidebarMenuItem,
+  SidebarMenuButton,
+} from '@/components/ui/sidebar'
 
 const THEMES = [
   { value: 'light', label: 'Light', icon: Sun },
@@ -67,70 +71,73 @@ export function SidebarMenu() {
         className="hidden"
         onChange={handleImport}
       />
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            aria-label="More options"
-          >
-            <MoreHorizontal className="h-4 w-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent side="top" align="start">
-          {mounted && (
-            <>
-              <DropdownMenuLabel>Theme</DropdownMenuLabel>
-              <DropdownMenuRadioGroup value={theme} onValueChange={setTheme}>
-                {THEMES.map(({ value, label, icon: Icon }) => (
-                  <DropdownMenuRadioItem key={value} value={value}>
-                    <Icon className="h-4 w-4" />
-                    {label}
-                  </DropdownMenuRadioItem>
-                ))}
-              </DropdownMenuRadioGroup>
+      <SidebarMenuPrimitive>
+        <SidebarMenuItem>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <SidebarMenuButton tooltip="Settings">
+                <Settings />
+                <span>Settings</span>
+              </SidebarMenuButton>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent side="top" align="start">
+              {mounted && (
+                <>
+                  <DropdownMenuLabel>Theme</DropdownMenuLabel>
+                  <DropdownMenuRadioGroup
+                    value={theme}
+                    onValueChange={setTheme}
+                  >
+                    {THEMES.map(({ value, label, icon: Icon }) => (
+                      <DropdownMenuRadioItem key={value} value={value}>
+                        <Icon className="h-4 w-4" />
+                        {label}
+                      </DropdownMenuRadioItem>
+                    ))}
+                  </DropdownMenuRadioGroup>
+                  <DropdownMenuSeparator />
+                </>
+              )}
+              <DropdownMenuItem onClick={exportUserData}>
+                <Download className="h-4 w-4" />
+                Export data
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>
+                <Upload className="h-4 w-4" />
+                Import data
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
-            </>
-          )}
-          <DropdownMenuItem onClick={exportUserData}>
-            <Download className="h-4 w-4" />
-            Export data
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>
-            <Upload className="h-4 w-4" />
-            Import data
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            onClick={() => {
-              const { favorites, recents, jobs } = seedUserData()
-              toast.success(
-                `Seeded ${favorites} favorites, ${recents} recents, ${jobs} jobs`,
-              )
-            }}
-          >
-            <Sprout className="h-4 w-4" />
-            Seed data
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={() => {
-              const { favorites, recents, jobs } = clearSeedUserData()
-              const total = favorites + recents + jobs
-              if (total === 0) {
-                toast.info('No seed data to clear')
-              } else {
-                toast.success(
-                  `Cleared ${favorites} favorites, ${recents} recents, ${jobs} jobs`,
-                )
-              }
-            }}
-          >
-            <Eraser className="h-4 w-4" />
-            Clear seed data
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+              <DropdownMenuItem
+                onClick={() => {
+                  const { favorites, recents, jobs } = seedUserData()
+                  toast.success(
+                    `Seeded ${favorites} favorites, ${recents} recents, ${jobs} jobs`,
+                  )
+                }}
+              >
+                <Sprout className="h-4 w-4" />
+                Seed data
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  const { favorites, recents, jobs } = clearSeedUserData()
+                  const total = favorites + recents + jobs
+                  if (total === 0) {
+                    toast.info('No seed data to clear')
+                  } else {
+                    toast.success(
+                      `Cleared ${favorites} favorites, ${recents} recents, ${jobs} jobs`,
+                    )
+                  }
+                }}
+              >
+                <Eraser className="h-4 w-4" />
+                Clear seed data
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </SidebarMenuItem>
+      </SidebarMenuPrimitive>
     </>
   )
 }

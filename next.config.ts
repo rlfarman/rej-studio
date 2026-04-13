@@ -16,6 +16,9 @@ const nextConfig: NextConfig = {
   // Gated behind DOCKER_BUILD to avoid changing Vercel/CF deploy behavior.
   ...(process.env.DOCKER_BUILD === 'true' && { output: 'standalone' }),
   cacheComponents: true,
+  experimental: {
+    viewTransition: true,
+  },
   // PGlite uses native/WASM modules that must not be bundled by webpack/turbopack.
   serverExternalPackages: ['@electric-sql/pglite'],
   turbopack: {

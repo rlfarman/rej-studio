@@ -196,9 +196,12 @@ html {
   }
 }
 
-/* Hero staggered fade-up entrance — CSS-driven so it starts on first paint,
-   no JS hydration needed. */
-@keyframes hero-fade-up {
+/* Fade-up entrance — CSS-driven so it starts on first paint,
+   no JS hydration needed.
+   .fade-up        — single element entrance (no stagger)
+   .fade-up-stagger — staggered entrance, set --stagger (0-based index) per child
+   .hero-stagger    — alias for homepage (legacy compat) */
+@keyframes fade-up {
   from {
     opacity: 0;
     translate: 0 12px;
@@ -209,10 +212,74 @@ html {
   }
 }
 
+.fade-up {
+  animation: fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.fade-up-stagger {
+  --stagger: 0;
+  animation: fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1)
+    calc(var(--stagger) * 80ms) both;
+}
+
 .hero-stagger {
   --stagger: 0;
-  animation: hero-fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1)
+  animation: fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1)
     calc(var(--stagger) * 60ms) both;
+}
+
+/* Align Fumadocs sidebar with the app sidebar. */
+#nd-docs-layout {
+  --fd-sidebar-width: 256px;
+}
+
+#nd-sidebar {
+  --color-fd-card: var(--sidebar);
+  --color-fd-foreground: var(--sidebar-foreground);
+  --color-fd-muted-foreground: var(--sidebar-foreground);
+  --color-fd-accent: var(--sidebar-accent);
+  --color-fd-accent-foreground: var(--sidebar-accent-foreground);
+  --color-fd-border: var(--sidebar-border);
+  --color-fd-primary: var(--sidebar-accent-foreground);
+}
+
+.dark #nd-sidebar {
+  --color-fd-muted-foreground: oklch(0.7 0 0);
+}
+
+/* Match Fumadocs page background to the app background. */
+#nd-docs-layout {
+  --color-fd-background: var(--background);
+}
+
+/* View Transitions — crossfade on full-layout changes (e.g. app ↔ docs). */
+::view-transition-old(root) {
+  animation: vt-fade-out 150ms ease-in both;
+}
+
+::view-transition-new(root) {
+  animation: vt-fade-in 200ms ease-out 100ms both;
+}
+
+/* Suspense reveal — content fading in after async data resolves. */
+::view-transition-old(.suspense-reveal) {
+  animation: none;
+}
+
+::view-transition-new(.suspense-reveal) {
+  animation: fade-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes vt-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes vt-fade-in {
+  from {
+    opacity: 0;
+  }
 }
 
 /* Progress-bar shimmer sweep — signals activity even when width is static. */
