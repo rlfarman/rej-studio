@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import Image from 'next/image'
 import {
   Tooltip,
   TooltipContent,
@@ -17,6 +18,20 @@ export function Footer() {
 
   return (
     <footer className="mx-auto mt-auto max-w-4xl px-4 pt-4 pb-6 text-center sm:px-6 lg:px-4">
+      <Image
+        src="/branding/SalkLogo-WCB-K.png"
+        alt="Salk Institute"
+        width={60}
+        height={40}
+        className="mx-auto mb-3 block dark:hidden"
+      />
+      <Image
+        src="/branding/SalkLogo-WCB-W.png"
+        alt="Salk Institute"
+        width={60}
+        height={40}
+        className="mx-auto mb-3 hidden dark:block"
+      />
       <Tooltip open={copied || hovered}>
         <TooltipTrigger asChild>
           <button
