@@ -15,6 +15,7 @@ import { FavoriteGeneButton } from '@/features/gene-search/components/favorite-g
 import { GeneJsonLd } from '@/features/gene-search/components/gene-jsonld'
 import { GeneBreadcrumbJsonLd } from '@/features/gene-search/components/gene-breadcrumb-jsonld'
 import { TrackOnMount } from '@/components/track-on-mount'
+import { ExternalLink } from 'lucide-react'
 import { Metadata } from 'next'
 import { cache } from 'react'
 import {
@@ -120,27 +121,27 @@ export default async function GeneSymbolPage(props: Props) {
     <>
       <GeneBreadcrumbJsonLd gene={gene} />
       <Card>
-        <CardHeader className="flex flex-row items-center gap-4">
-          <h1 className="font-mono text-2xl leading-none font-bold tracking-tight">
-            {gene.symbol}
-          </h1>
-          <FavoriteGeneButton gene={gene} />
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <h1 className="font-mono text-3xl leading-none font-bold tracking-tight">
+              {gene.symbol}
+            </h1>
+            <FavoriteGeneButton gene={gene} />
+          </div>
+          <p className="text-muted-foreground text-sm">{gene.name}</p>
+          <div className="mt-1">
+            <a
+              href={`https://ensembl.org/id/${gene.id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 font-mono text-xs transition-colors"
+            >
+              {gene.id}
+              <ExternalLink className="size-3" />
+            </a>
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 gap-4">
-            <div>
-              <div className="text-muted-foreground text-sm font-semibold">
-                Gene name
-              </div>
-              <div>{gene.name}</div>
-            </div>
-            <div>
-              <div className="text-muted-foreground text-sm font-semibold">
-                Ensembl Gene ID
-              </div>
-              <div className="font-mono">{gene.id}</div>
-            </div>
-          </div>
           <Suspense fallback={<IsoformTableLoading />}>
             <ViewTransition enter="suspense-reveal" default="none">
               <IsoformSection
