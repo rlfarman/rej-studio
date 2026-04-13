@@ -198,7 +198,8 @@ export function GeneSplitterForm({
                   REJ Studio Design Tool
                 </h1>
                 <CardDescription>
-                  Design a custom RNA sequence for end-joining experiments
+                  Optimize a DNA or protein sequence for RNA end-joining
+                  experiments
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
