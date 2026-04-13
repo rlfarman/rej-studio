@@ -18,7 +18,7 @@ import { Button } from '@/components/ui/button'
 import { TruncatedText } from '@/components/truncated-text'
 import { Loader2, CircleAlert, X } from 'lucide-react'
 
-const COLLAPSED_COUNT = 5
+const COLLAPSED_COUNT = 3
 const EXPANDED_MAX = 15
 
 function formatTimeAgo(dateString: string): string {
@@ -74,7 +74,7 @@ export function RecentJobs({ onSelectJob }: RecentJobsProps) {
 
   return (
     <SidebarGroup>
-      <div className="flex items-center justify-between">
+      <div className="bg-sidebar sticky top-0 z-10 flex items-center justify-between">
         <SidebarGroupLabel>Recent Jobs</SidebarGroupLabel>
         {entries.length > 0 && (
           <Button
@@ -90,9 +90,7 @@ export function RecentJobs({ onSelectJob }: RecentJobsProps) {
       <SidebarGroupContent>
         {entries.length > 0 ? (
           <>
-            <SidebarMenu
-              className={expanded ? 'max-h-80 overflow-y-auto' : undefined}
-            >
+            <SidebarMenu>
               {visibleItems.map((entry) => (
                 <SidebarMenuItem key={entry.id}>
                   <SidebarMenuButton onClick={() => onSelectJob?.(entry)}>
