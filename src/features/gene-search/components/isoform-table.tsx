@@ -33,6 +33,7 @@ import {
   MoreHorizontal,
   PackageOpen,
 } from 'lucide-react'
+import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -530,7 +531,7 @@ function SortableHead({
   )
 }
 
-export function IsoformTableLoading() {
+export function IsoformTableLoading({ rows = 4 }: { rows?: number } = {}) {
   return (
     <Table>
       <TableHeader>
@@ -550,14 +551,35 @@ export function IsoformTableLoading() {
         </TableRow>
       </TableHeader>
       <TableBody>
-        <TableRow>
-          <TableCell
-            colSpan={COLUMN_COUNT}
-            className="text-muted-foreground text-center"
-          >
-            Loading isoforms...
-          </TableCell>
-        </TableRow>
+        {Array.from({ length: rows }, (_, i) => (
+          <TableRow key={i}>
+            <TableCell>
+              <ChevronRight className="text-muted-foreground/40 size-4" />
+            </TableCell>
+            <TableCell>
+              <Skeleton className="h-4 w-36" />
+            </TableCell>
+            <TableCell>
+              <Skeleton className="h-4 w-16" />
+            </TableCell>
+            <TableCell className="hidden md:table-cell">
+              <Skeleton className="h-4 w-14" />
+            </TableCell>
+            <TableCell className="hidden md:table-cell">
+              <Skeleton className="h-4 w-12" />
+            </TableCell>
+            <TableCell className="hidden lg:table-cell">
+              <Skeleton className="h-4 w-10" />
+            </TableCell>
+            <TableCell className="hidden lg:table-cell">
+              <Skeleton className="h-4 w-10" />
+            </TableCell>
+            <TableCell className="hidden lg:table-cell">
+              <Skeleton className="h-5 w-20 rounded-full" />
+            </TableCell>
+            <TableCell />
+          </TableRow>
+        ))}
       </TableBody>
     </Table>
   )

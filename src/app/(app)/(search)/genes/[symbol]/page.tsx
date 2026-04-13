@@ -119,7 +119,7 @@ export default async function GeneSymbolPage(props: Props) {
   return (
     <>
       <GeneBreadcrumbJsonLd gene={gene} />
-      <Card className="fade-up">
+      <Card>
         <CardHeader className="flex flex-row items-center gap-4">
           <h1 className="font-mono text-2xl leading-none font-bold tracking-tight">
             {gene.symbol}
