@@ -7,7 +7,7 @@ import { SpliceSliderContext } from './splice-slider-context'
 
 export function DNASplicer() {
   const { setValue, watch } = useFormContext<FormValues>()
-  const codingSequence = watch('codingSequence')
+  const codingSequence = watch('codingSequence') ?? ''
   const seqLength = codingSequence.length || 1
 
   const prevSeqLengthRef = React.useRef(seqLength)
