@@ -20,7 +20,7 @@ export function Header() {
   const geneSymbol = geneSymbolMatch ? geneSymbolMatch[1] : undefined
 
   return (
-    <header className="bg-background sticky top-0 z-10 mb-1.5 flex items-center p-3 md:px-6">
+    <header className="bg-background sticky top-0 z-10 mb-1.5 flex min-h-15 items-center p-3 md:px-6">
       <div className="z-10 flex items-center">
         <Tooltip>
           <TooltipTrigger asChild>
