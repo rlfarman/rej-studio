@@ -36,10 +36,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenuItem>
             <SidebarMenuButton asChild size="lg" tooltip="REJ Studio">
               <Link href="/">
-                <DnaIcon className="size-5 transition-transform duration-300 group-hover/menu-item:rotate-12" />
-                <span className="font-mono text-lg font-semibold">
-                  REJ Studio
-                </span>
+                <div className="flex aspect-square size-8 items-center justify-center">
+                  <DnaIcon className="size-5" />
+                </div>
+                <div className="grid flex-1 text-left leading-tight opacity-0 transition-opacity duration-150 group-data-[state=expanded]:opacity-100 group-data-[state=expanded]:delay-200">
+                  <span className="truncate font-mono text-sm font-semibold">
+                    REJ Studio
+                  </span>
+                </div>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -86,7 +90,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </SidebarMenuItem>
           </SidebarMenuPrimitive>
         </SidebarGroup>
-        <div className="group-data-[collapsible=icon]:hidden">
+        <div className="min-w-0 overflow-hidden opacity-0 transition-opacity duration-150 group-data-[collapsible=icon]:max-h-0 group-data-[state=expanded]:opacity-100 group-data-[state=expanded]:delay-200">
           <FavoriteGenes />
           <RecentGenes />
           <RecentJobs onSelectJob={handleSelectJob} />
