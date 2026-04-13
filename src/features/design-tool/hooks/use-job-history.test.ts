@@ -70,13 +70,13 @@ describe('useJobHistory', () => {
     expect(useJobHistory.getState().getEntry('job-1')!.sequenceLength).toBe(9)
   })
 
-  it('caps at 50 entries', () => {
-    for (let i = 0; i < 55; i++) {
+  it('caps at 200 entries', () => {
+    for (let i = 0; i < 205; i++) {
       useJobHistory
         .getState()
         .upsertEntry({ id: `job-${i}`, status: 'running' })
     }
-    expect(useJobHistory.getState().entries).toHaveLength(50)
+    expect(useJobHistory.getState().entries).toHaveLength(200)
   })
 
   it('removes entry', () => {

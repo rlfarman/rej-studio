@@ -37,6 +37,8 @@ import { SubmitButton } from './submit-button'
 import { ResultsPanel } from './results-panel'
 import { JobHeader, RunningPlaceholder } from './job-header'
 import { toast } from 'sonner'
+import Link from 'next/link'
+import { Layers } from 'lucide-react'
 
 interface GeneSplitterFormProperties {
   defaultCodingSequence?: string
@@ -190,13 +192,24 @@ export function GeneSplitterForm({
               style={{ '--stagger': 0 } as React.CSSProperties}
             >
               <CardHeader>
-                <h1 className="text-2xl leading-none font-bold tracking-tight">
-                  REJ Studio Design Tool
-                </h1>
-                <CardDescription>
-                  Optimize a DNA or protein sequence for RNA end-joining
-                  experiments
-                </CardDescription>
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h1 className="text-2xl leading-none font-bold tracking-tight">
+                      REJ Studio Design Tool
+                    </h1>
+                    <CardDescription>
+                      Optimize a DNA or protein sequence for RNA end-joining
+                      experiments
+                    </CardDescription>
+                  </div>
+                  <Link
+                    href="/design-tool/batch"
+                    className="text-muted-foreground hover:text-foreground flex items-center gap-1.5 text-xs transition-colors"
+                  >
+                    <Layers className="size-3.5" />
+                    Batch mode
+                  </Link>
+                </div>
               </CardHeader>
               <CardContent className="space-y-6">
                 <CustomizationOptions />

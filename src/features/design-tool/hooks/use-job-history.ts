@@ -6,7 +6,7 @@ import type { ProcessResult } from '@/features/design-tool/types/process-result'
 import type { FormValues } from '@/features/design-tool/types/form-schema'
 
 const STORAGE_KEY = 'rej-studio:job-history'
-const MAX_ENTRIES = 50
+const MAX_ENTRIES = 200
 
 // Prefix for all seed-demo entries. Used by JobWatcher to skip polling the
 // backend for seeded running jobs (they have no backend counterpart), by
