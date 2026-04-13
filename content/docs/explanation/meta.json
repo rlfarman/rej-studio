@@ -1,0 +1,5 @@
+{
+  "title": "Explanation",
+  "description": "Background concepts and how things work under the hood.",
+  "pages": ["rna-end-joining", "optimization-engine"]
+}

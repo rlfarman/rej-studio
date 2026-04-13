@@ -1,0 +1,56 @@
+---
+title: Searching for a gene
+description: How to find genes, filter by species, and manage favorites.
+---
+
+## Search for a gene
+
+Type into the search box on the homepage. REJ Studio accepts gene
+symbols, full names, Ensembl IDs, MIM numbers, and disease terms.
+Results are ranked — exact symbol hits first, then name prefixes, then
+full-text matches, then substring fallbacks. Most searches return in
+under a second.
+
+See [Search syntax](/docs/reference/search-syntax) for the full list
+of accepted query formats.
+
+## Filter by species
+
+A species filter lives in the sidebar. The default is "all species" —
+toggling to human-only or mouse-only scopes every search, the
+recent-genes list, and favorites. The filter persists across sessions.
+
+## Browse isoforms
+
+Clicking a search result opens the gene detail page. You'll see:
+
+- **Header** — symbol, full name, chromosome location, and external
+  links (Ensembl, UniProt, MIM).
+- **Isoform list** — every annotated transcript, sorted by length.
+  Each row shows the transcript ID, biotype, length, and exon count.
+- **Isoform actions** — download the CDS or protein sequence as FASTA,
+  or open the isoform directly in the design tool.
+
+Each isoform shows a metrics strip summarizing key properties at a
+glance:
+
+<MetricsStripShowcase />
+
+Below the metrics, validation badges flag anything that needs
+attention before you proceed to optimization:
+
+<ValidationBadgesShowcase />
+
+## Use favorites and recents
+
+- Click the star on a gene to favorite it. Favorites appear in the
+  sidebar for quick access.
+- Every gene you open is added to the **recent** list, capped at 20.
+
+Both are stored in your browser — clearing site data wipes them.
+
+## Open an isoform in the design tool
+
+Click **Open in design tool** on any isoform row. The CDS, gene
+symbol, and species are pre-filled. From there, see
+[Design a sequence](/docs/guides/design-sequence).

@@ -1,0 +1,5 @@
+{
+  "title": "Reference",
+  "description": "Technical details for every parameter, field, and term.",
+  "pages": ["parameters", "search-syntax", "glossary"]
+}

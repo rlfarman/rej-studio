@@ -62,7 +62,7 @@ pnpm db:studio    # Browse DB in Drizzle Studio (local.drizzle.studio)
 
 Primary store is a Neon (Postgres) database. The Next.js server connects via the Neon HTTP driver (`src/drizzle/db.ts`); every query is a serverless HTTP round-trip. Schema is in `src/drizzle/schema.ts`; tables: `genes`, `isoforms`.
 
-App code uses dialect-neutral SQL (Drizzle query builder + `LOWER(col) LIKE '%x%'`) so the DB backend can be swapped without touching queries. See [docs/db-migration.md](./docs/db-migration.md) for the switching checklist.
+App code uses dialect-neutral SQL (Drizzle query builder + `LOWER(col) LIKE '%x%'`) so the DB backend can be swapped without touching queries.
 
 To seed / refresh:
 
@@ -122,5 +122,5 @@ Shared Claude Code permissions, deny rules, and sandbox config live in `.agents/
 - **Adding shared code**: If used by ≥2 features, decide by domain: bio-specific → `src/lib/bio/` or `src/components/bio/`; generic → `src/lib/` or `src/components/`.
 - **Modifying the optimization algorithm**: Edit `python/algorithm.py`. The FastAPI endpoint is in `python/index.py`. In production this runs on Modal (see `modal/app.py`), so redeploy Modal after changes.
 - **Database schema changes**: Edit `src/drizzle/schema.ts`, update `scripts/build-db.py` if the JSONL shape needs to change, then `pnpm db:build && pnpm db:push && pnpm db:upload`.
-- **Switching DB backend**: See [docs/db-migration.md](./docs/db-migration.md) — it's a 5-file change.
-- **Switching deploy target (Vercel ↔ Cloudflare)**: See [docs/deployment.md](./docs/deployment.md).
+- **Switching DB backend**: Edit `src/drizzle/db.ts` and the connection driver — it's a 5-file change.
+- **Switching deploy target (Vercel ↔ Cloudflare)**: Update `next.config.ts` and build scripts.

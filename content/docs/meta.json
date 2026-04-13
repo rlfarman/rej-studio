@@ -1,13 +1,4 @@
 {
   "title": "Docs",
-  "pages": [
-    "index",
-    "background",
-    "how-it-works",
-    "gene-search",
-    "design-tool",
-    "results",
-    "troubleshooting",
-    "glossary"
-  ]
+  "pages": ["index", "tutorials", "guides", "reference", "explanation"]
 }
