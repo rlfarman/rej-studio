@@ -94,13 +94,15 @@ async function IsoformSection({
       </div>
       <Separator className="my-4" />
       <h2 className="mb-2 text-lg font-semibold tracking-tight">Isoforms</h2>
-      <IsoformSummary isoforms={isoforms} />
       <IsoformTable
         isoforms={isoforms}
         highlightedIsoformId={highlightedIsoformId}
       />
-      <IsoformLengthChart isoforms={isoforms} />
-      <IsoformIdentityMatrix isoforms={isoforms} />
+      <div className="mt-8 space-y-6">
+        <IsoformSummary isoforms={isoforms} />
+        <IsoformLengthChart isoforms={isoforms} />
+        <IsoformIdentityMatrix isoforms={isoforms} />
+      </div>
     </>
   )
 }
