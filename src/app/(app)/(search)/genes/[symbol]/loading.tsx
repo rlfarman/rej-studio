@@ -6,24 +6,16 @@ import { IsoformTableLoading } from '@/features/gene-search/components/isoform-t
 export default function Loading() {
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center gap-4">
-        <Skeleton className="h-8 w-28" />
+      <CardHeader>
+        <div className="flex items-center gap-3">
+          <Skeleton className="h-9 w-28" />
+        </div>
+        <Skeleton className="h-4 w-64" />
+        <div className="mt-1">
+          <Skeleton className="h-3.5 w-44" />
+        </div>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 gap-4">
-          <div>
-            <div className="text-muted-foreground text-sm font-semibold">
-              Gene name
-            </div>
-            <Skeleton className="mt-1 h-5 w-48" />
-          </div>
-          <div>
-            <div className="text-muted-foreground text-sm font-semibold">
-              Ensembl Gene ID
-            </div>
-            <Skeleton className="mt-1 h-5 w-40" />
-          </div>
-        </div>
         <Separator className="my-4" />
         <h2 className="mb-2 text-lg font-semibold tracking-tight">Isoforms</h2>
         <IsoformTableLoading />
