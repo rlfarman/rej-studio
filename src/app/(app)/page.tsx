@@ -10,6 +10,20 @@ export const metadata: Metadata = {
   description:
     'Search genes, browse isoforms, and design optimized RNA End-Joining sequences — all in one tool.',
   alternates: { canonical: '/' },
+  openGraph: {
+    title: 'RNA End-Joining sequence design',
+    description:
+      'Search genes, browse isoforms, and design optimized RNA End-Joining sequences.',
+    url: '/',
+    images: [
+      {
+        url: '/api/og?title=RNA+End-Joining%0Asequence+design&description=Search+genes+%C2%B7+Browse+isoforms+%C2%B7+Optimize+sequences&url=rejstudio.com',
+        width: 1200,
+        height: 630,
+        alt: 'REJ Studio — RNA End-Joining made easy',
+      },
+    ],
+  },
 }
 
 export default function HomePage() {
