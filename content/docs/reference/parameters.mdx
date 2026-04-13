@@ -56,9 +56,14 @@ job reports it as violated.
 ### Enforce 35-60% GC content [#gc-content]
 
 Keeps GC content inside the mammalian-friendly range over a sliding
-window. If the solver can't hit the window given your other
-constraints, you'll see it called out in the report. Leave this on
-unless you have a specific reason to run without a GC constraint.
+window. The GC sparkline visualizes how content varies across the
+sequence — the green band marks the 40-60% target:
+
+<GcSparklineShowcase />
+
+If the solver can't hit the window given your other constraints,
+you'll see it called out in the report. Leave this on unless you
+have a specific reason to run without a GC constraint.
 
 ## Stimulatory introns
 

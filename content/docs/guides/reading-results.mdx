@@ -9,14 +9,17 @@ badges**.
 
 ## Check the diagnostic badges
 
-The header shows quick-read indicators:
+The header shows quick-read indicators. Here's what a typical set
+of badges looks like:
 
-- **GC%** — overall GC content. Green if inside your target range.
-- **CpG count** — number of CpG dinucleotides. Lower is usually
-  better.
-- **Max k-mer repeat** — the most-repeated k-mer. Helpful for
-  spotting complexity issues at a glance.
-- **Length** — total bp, for sanity-checking against your input.
+<DiagBadgeShowcase />
+
+Each badge is color-coded:
+
+- **Green** (good) — within the optimal range.
+- **Yellow** (warn) — outside the optimal range but not critical.
+- **Red** (error) — a problem that may need attention.
+- **Gray** (neutral) — informational (e.g. sequence length).
 
 These badges are a summary, not a substitute for the full report.
 
@@ -49,6 +52,17 @@ If a constraint is violated:
 
 See [Troubleshooting](/docs/guides/troubleshooting) for specific
 error messages.
+
+## Review AAV packaging estimates
+
+If your sequence is large enough to require dual-vector delivery,
+the results page shows an AAV packaging estimate for each fragment:
+
+<AavResultsShowcase />
+
+This tells you whether each half fits within the AAV packaging limit
+(~4,700 bp including overhead) and helps you decide whether to
+adjust the split point.
 
 ## Download and save
 
