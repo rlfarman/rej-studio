@@ -230,7 +230,13 @@ html {
 
 /* Align Fumadocs sidebar with the app sidebar. */
 #nd-docs-layout {
-  --fd-sidebar-width: 256px;
+  --fd-sidebar-width: 0px;
+}
+
+@media (min-width: 768px) {
+  #nd-docs-layout {
+    --fd-sidebar-width: 256px;
+  }
 }
 
 #nd-sidebar {
