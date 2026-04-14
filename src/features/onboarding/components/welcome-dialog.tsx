@@ -15,7 +15,7 @@ import { useOnboarding } from '../stores/onboarding-store'
 import { usePathname } from 'next/navigation'
 import { Dna, Search, FlaskConical, Download } from 'lucide-react'
 import { popSpring } from '@/lib/motion'
-import type { TourId } from '../types'
+import type { TourId } from '../tours'
 
 const FEATURES = [
   {

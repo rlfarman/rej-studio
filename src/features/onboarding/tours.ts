@@ -1,24 +1,34 @@
-import type { TourDefinition } from './types'
+import type { DriveStep } from 'driver.js'
+
+export type TourId = 'home' | 'gene-detail' | 'design-tool'
+
+export interface TourDefinition {
+  id: TourId
+  steps: DriveStep[]
+}
 
 export const homeTour: TourDefinition = {
   id: 'home',
   steps: [
     {
-      id: 'home-search',
-      target: '[data-tour="home-search"]',
-      title: 'Search for genes',
-      description:
-        'Type a gene symbol like ATM or TP53 to get started. You can also press ⌘K from any page to open search.',
-      placement: 'bottom',
-      spotlightPadding: 12,
+      element: '[data-tour="home-search"]',
+      popover: {
+        title: 'Search for genes',
+        description:
+          'Type a gene symbol like ATM or TP53 to get started. You can also press ⌘K from any page to open search.',
+        side: 'bottom',
+        align: 'center',
+      },
     },
     {
-      id: 'home-design-link',
-      target: '[data-tour="home-design-link"]',
-      title: 'Or paste your own sequence',
-      description:
-        'Already have a coding sequence? Jump straight to the Design Tool and paste it in.',
-      placement: 'bottom',
+      element: '[data-tour="home-design-link"]',
+      popover: {
+        title: 'Or paste your own sequence',
+        description:
+          'Already have a coding sequence? Jump straight to the Design Tool and paste it in.',
+        side: 'bottom',
+        align: 'center',
+      },
     },
   ],
 }
@@ -27,29 +37,34 @@ export const geneDetailTour: TourDefinition = {
   id: 'gene-detail',
   steps: [
     {
-      id: 'gene-favorite',
-      target: '[data-tour="gene-favorite"]',
-      title: 'Save to favorites',
-      description:
-        'Star genes you work with frequently. They appear in the sidebar for quick access.',
-      placement: 'bottom',
+      element: '[data-tour="gene-favorite"]',
+      popover: {
+        title: 'Save to favorites',
+        description:
+          'Star genes you work with frequently. They appear in the sidebar for quick access.',
+        side: 'bottom',
+        align: 'center',
+      },
     },
     {
-      id: 'gene-isoform-table',
-      target: '[data-tour="isoform-table"]',
-      title: 'Compare isoforms',
-      description:
-        'Sort by CDS length, GC content, or suitability score. Click a row to expand and preview the split.',
-      placement: 'bottom',
-      spotlightPadding: 4,
+      element: '[data-tour="isoform-table"]',
+      popover: {
+        title: 'Compare isoforms',
+        description:
+          'Sort by CDS length, GC content, or suitability score. Click a row to expand and preview the split.',
+        side: 'bottom',
+        align: 'center',
+      },
     },
     {
-      id: 'gene-customize',
-      target: '[data-tour="isoform-actions"]',
-      title: 'Customize or download',
-      description:
-        'Send any isoform to the Design Tool for optimization, or download the sequence directly as FASTA.',
-      placement: 'left',
+      element: '[data-tour="isoform-actions"]',
+      popover: {
+        title: 'Customize or download',
+        description:
+          'Send any isoform to the Design Tool for optimization, or download the sequence directly as FASTA.',
+        side: 'left',
+        align: 'center',
+      },
     },
   ],
 }
@@ -58,39 +73,44 @@ export const designToolTour: TourDefinition = {
   id: 'design-tool',
   steps: [
     {
-      id: 'dt-sequence',
-      target: '[data-tour="dt-sequence"]',
-      title: 'Name & sequence',
-      description:
-        'Give your job a name and paste a coding sequence. Toggle between DNA and protein input — protein is auto-reverse-translated.',
-      placement: 'bottom',
-      spotlightPadding: 6,
+      element: '[data-tour="dt-sequence"]',
+      popover: {
+        title: 'Name & sequence',
+        description:
+          'Give your job a name and paste a coding sequence. Toggle between DNA and protein input — protein is auto-reverse-translated.',
+        side: 'bottom',
+        align: 'center',
+      },
     },
     {
-      id: 'dt-splicer',
-      target: '[data-tour="dt-splicer"]',
-      title: 'Set the split point',
-      description:
-        'Drag the scissors to control where the sequence divides into 5\u2032 and 3\u2032 fragments for dual-AAV delivery.',
-      placement: 'bottom',
-      spotlightPadding: 6,
+      element: '[data-tour="dt-splicer"]',
+      popover: {
+        title: 'Set the split point',
+        description:
+          'Drag the scissors to control where the sequence divides into 5\u2032 and 3\u2032 fragments for dual-AAV delivery.',
+        side: 'bottom',
+        align: 'center',
+      },
     },
     {
-      id: 'dt-optimization',
-      target: '[data-tour="dt-optimization"]',
-      title: 'Tune optimization',
-      description:
-        'Configure codon optimization, splice site removal, CpG minimization, and stimulatory introns.',
-      placement: 'top',
-      spotlightPadding: 4,
+      element: '[data-tour="dt-optimization"]',
+      popover: {
+        title: 'Tune optimization',
+        description:
+          'Configure codon optimization, splice site removal, CpG minimization, and stimulatory introns.',
+        side: 'top',
+        align: 'center',
+      },
     },
     {
-      id: 'dt-submit',
-      target: '[data-tour="dt-submit"]',
-      title: 'Run the optimizer',
-      description:
-        'Submit your sequence. Results include optimized fragments, codon changes, restriction sites, and downloadable files.',
-      placement: 'top',
+      element: '[data-tour="dt-submit"]',
+      popover: {
+        title: 'Run the optimizer',
+        description:
+          'Submit your sequence. Results include optimized fragments, codon changes, restriction sites, and downloadable files.',
+        side: 'top',
+        align: 'center',
+      },
     },
   ],
 }

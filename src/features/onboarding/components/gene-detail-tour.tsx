@@ -1,8 +1,9 @@
 'use client'
 
-import { Tour } from './tour'
+import { useTour } from '../hooks/use-tour'
 import { geneDetailTour } from '../tours'
 
 export function GeneDetailTour() {
-  return <Tour tour={geneDetailTour} />
+  useTour({ tour: geneDetailTour })
+  return null
 }

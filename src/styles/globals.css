@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import '../features/onboarding/tour.css';
 @import 'fumadocs-ui/css/neutral.css';
 @import 'fumadocs-ui/css/preset.css';
 @source '../../node_modules/fumadocs-ui/dist/**/*.js';

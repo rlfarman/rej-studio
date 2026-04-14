@@ -111,6 +111,9 @@ importers:
       concurrently:
         specifier: ^9.1.2
         version: 9.2.1
+      driver.js:
+        specifier: ^1.4.0
+        version: 1.4.0
       drizzle-orm:
         specifier: ^0.45.2
         version: 0.45.2(@electric-sql/pglite@0.4.3)(@libsql/client@0.17.2)(@neondatabase/serverless@0.10.4)(@opentelemetry/api@1.9.1)(@types/better-sqlite3@7.6.13)(@types/pg@8.15.6)(@upstash/redis@1.37.0)(better-sqlite3@12.8.0)
@@ -8270,6 +8273,12 @@ packages:
         integrity: sha512-uBq4egWHTcTt33a72vpSG0z3HnPuIl6NqYcTrKEg2azoEyl2hpW0zqlxysq2pK9HlDIHyHyakeYaYnSAwd8bow==,
       }
     engines: { node: '>=12' }
+
+  driver.js@1.4.0:
+    resolution:
+      {
+        integrity: sha512-Gm64jm6PmcU+si21sQhBrTAM1JvUrR0QhNmjkprNLxohOBzul9+pNHXgQaT9lW84gwg9GMLB3NZGuGolsz5uew==,
+      }
 
   drizzle-kit@0.31.10:
     resolution:
@@ -19285,6 +19294,8 @@ snapshots:
       is-obj: 2.0.0
 
   dotenv@16.6.1: {}
+
+  driver.js@1.4.0: {}
 
   drizzle-kit@0.31.10:
     dependencies:
