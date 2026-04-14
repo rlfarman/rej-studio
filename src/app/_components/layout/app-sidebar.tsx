@@ -18,7 +18,7 @@ import { RecentJobs } from '@/features/design-tool/components/recent-jobs-panel'
 import { JobWatcher } from '@/features/design-tool/components/job-watcher'
 import { SidebarMenu } from '@/app/_components/layout/sidebar-menu'
 import type { JobHistoryEntry } from '@/features/design-tool/hooks/use-job-history'
-import { Home, BookOpen, WandSparkles, Layers } from 'lucide-react'
+import { Home, BookOpen, WandSparkles } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
 
@@ -74,18 +74,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <Link href="/design-tool">
                   <WandSparkles />
                   <span>Design Tool</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                asChild
-                isActive={pathname === '/design-tool/batch'}
-                tooltip="Batch Optimization"
-              >
-                <Link href="/design-tool/batch">
-                  <Layers />
-                  <span>Batch</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
