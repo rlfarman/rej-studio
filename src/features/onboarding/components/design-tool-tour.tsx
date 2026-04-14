@@ -1,8 +1,9 @@
 'use client'
 
-import { Tour } from './tour'
+import { useTour } from '../hooks/use-tour'
 import { designToolTour } from '../tours'
 
 export function DesignToolTour() {
-  return <Tour tour={designToolTour} />
+  useTour({ tour: designToolTour })
+  return null
 }

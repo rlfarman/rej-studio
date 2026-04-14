@@ -1,8 +1,9 @@
 'use client'
 
-import { Tour } from './tour'
+import { useTour } from '../hooks/use-tour'
 import { homeTour } from '../tours'
 
 export function HomeTour() {
-  return <Tour tour={homeTour} />
+  useTour({ tour: homeTour })
+  return null
 }
