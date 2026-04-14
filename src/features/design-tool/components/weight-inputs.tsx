@@ -86,12 +86,13 @@ function WeightField({
               )}
             </div>
             <FormControl>
-              <div className="flex items-stretch gap-2">
+              <div className="flex flex-wrap items-stretch gap-2">
                 <div
                   role="radiogroup"
                   aria-label={`${label} tier`}
                   className={cn(
-                    'bg-muted/40 grid flex-1 grid-cols-4 gap-1 rounded-md p-1',
+                    'bg-muted/40 grid flex-1 grid-cols-2 gap-1 rounded-md p-1 sm:grid-cols-4',
+                    'min-w-0',
                     disabled && 'pointer-events-none opacity-50',
                   )}
                 >
