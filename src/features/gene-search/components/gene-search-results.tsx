@@ -75,12 +75,12 @@ export async function GeneSearchResults({
           {gene.matchedIsoformId && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button asChild variant="ghost" size="sm">
+                <Button asChild variant="ghost" size="sm" className="shrink-0">
                   <Link
                     href={`/design-tool?isoform=${gene.matchedIsoformId}`}
                     aria-label={`Customize ${gene.matchedIsoformId}`}
                   >
-                    Customize
+                    <span className="hidden sm:inline">Customize</span>
                     <ExternalLink className="size-3.5" />
                   </Link>
                 </Button>

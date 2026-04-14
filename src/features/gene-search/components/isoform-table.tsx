@@ -280,7 +280,7 @@ export default function IsoformTable({
               onSort={toggleSort}
               className="hidden lg:table-cell"
             />
-            <TableHead className="w-28" />
+            <TableHead className="w-auto sm:w-28" />
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -417,7 +417,7 @@ function IsoformRow({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="size-8"
+                  className="hidden size-8 sm:inline-flex"
                   disabled
                   aria-label={`Download precomputed for ${isoform.id}`}
                 >
