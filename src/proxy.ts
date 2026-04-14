@@ -118,11 +118,8 @@ export async function proxy(req: NextRequest) {
 
   const csp = isDev ? undefined : buildCsp()
 
-  // --- Basic auth (landing page only) ---
-  const { pathname } = req.nextUrl
-  const needsAuth = pathname === '/' || pathname === '/index'
-
-  if (needsAuth && !(isDev && process.env.BYPASS_AUTH === 'true')) {
+  // --- Basic auth (all routes) ---
+  if (!(isDev && process.env.BYPASS_AUTH === 'true')) {
     const basicAuth = req.headers.get('authorization')
     const expectedUser = process.env.BASIC_AUTH_USER
     const expectedPassword = process.env.BASIC_AUTH_PASSWORD
