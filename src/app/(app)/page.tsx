@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { GeneSearch } from '@/features/gene-search/components/gene-search'
 import { searchGenes } from '@/features/gene-search/api/genes'
 import { Dna } from 'lucide-react'
-import { Hero, HeroItem, DnaFloat } from '@/app/_components/hero'
+import { Hero, HeroItem } from '@/app/_components/hero'
 import { HomeTour } from '@/features/onboarding/components/home-tour'
 import type { Metadata } from 'next'
 
@@ -33,9 +33,7 @@ export default function HomePage() {
       <Hero>
         <div className="mx-auto mt-0 w-full max-w-4xl px-4 text-center sm:px-6 lg:px-8">
           <HeroItem index={0} className="mb-4 flex items-center justify-center">
-            <DnaFloat>
-              <Dna className="mt-2 ml-2 size-6" />
-            </DnaFloat>
+            <Dna className="mt-2 ml-2 size-6" />
           </HeroItem>
           <HeroItem index={1} className="pb-2 font-mono">
             RNA END-JOINING (REJ) Studio

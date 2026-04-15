@@ -259,10 +259,11 @@ export function CodingSequenceInput() {
               type="button"
               variant="ghost"
               size="sm"
-              className="h-7 gap-1.5 px-2 text-xs"
+              className="h-9 gap-1.5 px-3 text-xs"
               onClick={() => fileInputRef.current?.click()}
+              aria-label="Upload FASTA file"
             >
-              <Upload className="size-3" />
+              <Upload className="size-3.5" />
               <span className="hidden sm:inline">Upload FASTA</span>
               <span className="sm:hidden">FASTA</span>
             </Button>
@@ -271,6 +272,8 @@ export function CodingSequenceInput() {
               type="file"
               accept={fileAccept}
               className="hidden"
+              aria-hidden="true"
+              tabIndex={-1}
               onChange={handleFileUpload}
             />
           </div>

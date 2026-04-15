@@ -299,33 +299,35 @@ function SequenceCard({
             {sequence.length.toLocaleString()} bp
           </Badge>
         </div>
-        <div className="flex gap-1">
+        <div className="flex flex-wrap gap-1.5">
           <Button
             type="button"
             variant="ghost"
             size="sm"
-            className="h-8 gap-1.5 px-2 text-xs"
+            className="h-9 gap-1.5 px-3 text-xs"
             onClick={() =>
               downloadTextFile(
                 `${fastaName}.fasta`,
                 formatFasta(fastaName, sequence),
               )
             }
+            aria-label={`Download ${label} as FASTA`}
           >
-            <Download className="size-3" />
+            <Download className="size-3.5" />
             FASTA
           </Button>
           <Button
             type="button"
             variant="ghost"
             size="sm"
-            className="h-8 gap-1.5 px-2 text-xs"
+            className="h-9 gap-1.5 px-3 text-xs"
             onClick={() => copy(formatFasta(fastaName, sequence), fastaId)}
+            aria-label={`Copy ${label} FASTA to clipboard`}
           >
             {isCopied(fastaId) ? (
-              <Check className="size-3" />
+              <Check className="size-3.5" />
             ) : (
-              <Copy className="size-3" />
+              <Copy className="size-3.5" />
             )}
             FASTA
           </Button>
@@ -333,13 +335,14 @@ function SequenceCard({
             type="button"
             variant="ghost"
             size="sm"
-            className="h-8 gap-1.5 px-2 text-xs"
+            className="h-9 gap-1.5 px-3 text-xs"
             onClick={() => copy(sequence, rawId)}
+            aria-label={`Copy ${label} raw sequence to clipboard`}
           >
             {isCopied(rawId) ? (
-              <Check className="size-3" />
+              <Check className="size-3.5" />
             ) : (
-              <Copy className="size-3" />
+              <Copy className="size-3.5" />
             )}
             {isCopied(rawId) ? 'Copied' : 'Copy'}
           </Button>

@@ -410,13 +410,13 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
                 >
                   <span
                     className={cn(
-                      'rounded-sm transition-colors',
-                      'group-hover:w-[3px] group-hover:bg-emerald-400',
+                      'w-[3px] rounded-sm transition-colors',
+                      'group-hover:bg-emerald-400',
                       isCandidate
-                        ? 'w-[2px] bg-amber-500'
+                        ? 'bg-amber-500'
                         : isNearest
-                          ? 'w-[2px] bg-emerald-500'
-                          : 'w-[1px] bg-emerald-500/60',
+                          ? 'bg-emerald-500'
+                          : 'bg-emerald-500/60',
                     )}
                   />
                 </button>
