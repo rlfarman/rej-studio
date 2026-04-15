@@ -1,4 +1,5 @@
 import { ImageResponse } from 'next/og'
+import { OG_BG } from '@/lib/og-theme'
 
 export const size = { width: 1200, height: 630 }
 
@@ -19,7 +20,7 @@ export async function GET(request: Request) {
         padding: '72px 80px',
         width: '100%',
         height: '100%',
-        backgroundColor: '#09090b',
+        backgroundColor: OG_BG,
         color: '#fafafa',
         fontFamily: 'system-ui, sans-serif',
         backgroundImage:

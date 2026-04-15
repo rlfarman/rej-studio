@@ -3,9 +3,9 @@ import { type ReactNode } from 'react'
 import { m } from 'motion/react'
 
 const dnaFloat = {
-  rotate: [0, 8, 0],
+  rotate: [0, 3, 0],
   transition: {
-    duration: 4,
+    duration: 6,
     ease: 'easeInOut' as const,
     repeat: Infinity,
   },

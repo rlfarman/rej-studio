@@ -134,19 +134,31 @@ export function CodonChanges({ original, optimized, splitPoint }: Props) {
             Show codon-by-codon diff ({changes.length})
           </summary>
           <div className="mt-2 max-h-64 overflow-auto rounded-md border">
-            <table className="w-full text-xs">
+            <table className="w-full min-w-[32rem] text-xs">
               <thead className="bg-muted/50 sticky top-0">
                 <tr className="text-left">
-                  <th className="text-muted-foreground px-2 py-1.5 font-medium">
+                  <th
+                    scope="col"
+                    className="text-muted-foreground px-2 py-1.5 font-medium"
+                  >
                     #
                   </th>
-                  <th className="text-muted-foreground px-2 py-1.5 font-medium">
+                  <th
+                    scope="col"
+                    className="text-muted-foreground px-2 py-1.5 font-medium"
+                  >
                     bp
                   </th>
-                  <th className="text-muted-foreground px-2 py-1.5 font-medium">
+                  <th
+                    scope="col"
+                    className="text-muted-foreground px-2 py-1.5 font-medium"
+                  >
                     Change
                   </th>
-                  <th className="text-muted-foreground px-2 py-1.5 font-medium">
+                  <th
+                    scope="col"
+                    className="text-muted-foreground px-2 py-1.5 font-medium"
+                  >
                     Amino acid
                   </th>
                 </tr>

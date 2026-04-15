@@ -40,6 +40,7 @@ function SpeciesToggle() {
           key={value}
           type="button"
           onClick={() => handleSpeciesChange(value)}
+          aria-pressed={species === value}
           className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
             species === value
               ? 'bg-accent text-accent-foreground'

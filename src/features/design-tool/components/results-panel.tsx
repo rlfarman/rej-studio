@@ -217,7 +217,7 @@ function MetricsStrip({ result }: { result: ProcessResult }) {
   const showCai = stats.keyAfter.caiScore !== null
 
   return (
-    <div className="bg-border grid grid-cols-2 gap-px overflow-hidden rounded-lg border sm:grid-cols-3 lg:grid-cols-5">
+    <div className="bg-border grid grid-cols-1 gap-px overflow-hidden rounded-lg border sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
       <MetricCell
         label="Score"
         before={stats.before.totalScore}
@@ -304,7 +304,7 @@ function SequenceCard({
             type="button"
             variant="ghost"
             size="sm"
-            className="h-6 gap-1 px-1.5 text-[11px]"
+            className="h-8 gap-1.5 px-2 text-xs"
             onClick={() =>
               downloadTextFile(
                 `${fastaName}.fasta`,
@@ -319,7 +319,7 @@ function SequenceCard({
             type="button"
             variant="ghost"
             size="sm"
-            className="h-6 gap-1 px-1.5 text-[11px]"
+            className="h-8 gap-1.5 px-2 text-xs"
             onClick={() => copy(formatFasta(fastaName, sequence), fastaId)}
           >
             {isCopied(fastaId) ? (
@@ -333,7 +333,7 @@ function SequenceCard({
             type="button"
             variant="ghost"
             size="sm"
-            className="h-6 gap-1 px-1.5 text-[11px]"
+            className="h-8 gap-1.5 px-2 text-xs"
             onClick={() => copy(sequence, rawId)}
           >
             {isCopied(rawId) ? (
