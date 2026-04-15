@@ -6,9 +6,11 @@ import { baseOptions } from '@/lib/layout.shared'
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <RootProvider theme={{ enabled: false }}>
-      <DocsLayout tree={source.pageTree} {...baseOptions()}>
-        {children}
-      </DocsLayout>
+      <main id="main-content">
+        <DocsLayout tree={source.pageTree} {...baseOptions()}>
+          {children}
+        </DocsLayout>
+      </main>
     </RootProvider>
   )
 }

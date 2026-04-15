@@ -143,23 +143,24 @@ function EnzymeTrack({
   originalLen: number
   optimizedLen: number
 }) {
-  // Classify each hit as added/removed/kept relative to the other strand.
-  const windowSize = Math.max(6, Math.round(maxLen * 0.005))
-  const beforeChanges: { hit: RestrictionHit; change: Change }[] =
-    row.before.map((b) => {
-      const kept = row.after.some(
-        (a) => Math.abs(a.position - b.position) <= windowSize,
-      )
-      return { hit: b, change: kept ? 'kept' : 'removed' }
-    })
-  const afterChanges: { hit: RestrictionHit; change: Change }[] = row.after.map(
-    (a) => {
-      const kept = row.before.some(
-        (b) => Math.abs(b.position - a.position) <= windowSize,
-      )
-      return { hit: a, change: kept ? 'kept' : 'added' }
-    },
-  )
+  const { beforeChanges, afterChanges } = useMemo(() => {
+    const windowSize = Math.max(6, Math.round(maxLen * 0.005))
+    const beforeChanges: { hit: RestrictionHit; change: Change }[] =
+      row.before.map((b) => {
+        const kept = row.after.some(
+          (a) => Math.abs(a.position - b.position) <= windowSize,
+        )
+        return { hit: b, change: kept ? 'kept' : 'removed' }
+      })
+    const afterChanges: { hit: RestrictionHit; change: Change }[] =
+      row.after.map((a) => {
+        const kept = row.before.some(
+          (b) => Math.abs(b.position - a.position) <= windowSize,
+        )
+        return { hit: a, change: kept ? 'kept' : 'added' }
+      })
+    return { beforeChanges, afterChanges }
+  }, [row, maxLen])
 
   return (
     <div className="group flex items-center gap-2 text-[10px]">
@@ -210,8 +211,13 @@ function Lane({
   axisLen: number
 }) {
   const lanePct = (seqLen / axisLen) * 100
+  const laneLabel = `${label} strand: ${hits.length} site${hits.length === 1 ? '' : 's'}`
   return (
-    <div className="bg-muted/30 relative h-2.5 w-full rounded-sm" title={label}>
+    <div
+      className="bg-muted/30 relative h-2.5 w-full rounded-sm"
+      role="img"
+      aria-label={laneLabel}
+    >
       <div
         className="bg-muted/50 absolute inset-y-0 left-0 rounded-sm"
         style={{ width: `${lanePct}%` }}

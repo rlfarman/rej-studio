@@ -404,12 +404,13 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
                   }}
                   onPointerDown={(e) => e.stopPropagation()}
                   title={`WGGW ${m.motif} at bp ${m.position}–${m.position + 3} · snap`}
+                  aria-label={`Snap to WGGW motif ${m.motif} at position ${m.position}`}
                   className="group absolute top-0 flex h-full w-3 -translate-x-1/2 cursor-pointer items-stretch justify-center"
                   style={{ left: `${x}%` }}
                 >
                   <span
                     className={cn(
-                      'rounded-sm transition-all',
+                      'rounded-sm transition-colors',
                       'group-hover:w-[3px] group-hover:bg-emerald-400',
                       isCandidate
                         ? 'w-[2px] bg-amber-500'

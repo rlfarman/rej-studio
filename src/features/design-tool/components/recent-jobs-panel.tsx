@@ -90,7 +90,7 @@ export function RecentJobs({ onSelectJob }: RecentJobsProps) {
       <SidebarGroupContent>
         {entries.length > 0 ? (
           <>
-            <SidebarMenu>
+            <SidebarMenu aria-live="polite" aria-label="Recent jobs">
               {visibleItems.map((entry) => (
                 <SidebarMenuItem key={entry.id}>
                   <SidebarMenuButton onClick={() => onSelectJob?.(entry)}>

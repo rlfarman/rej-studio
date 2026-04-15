@@ -2,6 +2,7 @@ import { ImageResponse } from 'next/og'
 import { getGeneBySymbol } from '@/features/gene-search/api/genes'
 import { getIsoformsByGene } from '@/features/gene-search/api/isoforms'
 import { parseSpeciesParam } from '@/lib/bio/species'
+import { OG_BG } from '@/lib/og-theme'
 
 export const size = { width: 1200, height: 630 }
 
@@ -25,7 +26,7 @@ export async function GET(
           justifyContent: 'center',
           width: '100%',
           height: '100%',
-          backgroundColor: '#09090b',
+          backgroundColor: OG_BG,
           color: '#fafafa',
           fontSize: 48,
           fontFamily: 'monospace',
@@ -50,7 +51,7 @@ export async function GET(
         padding: '72px 80px',
         width: '100%',
         height: '100%',
-        backgroundColor: '#09090b',
+        backgroundColor: OG_BG,
         color: '#fafafa',
         fontFamily: 'system-ui, sans-serif',
         backgroundImage:
