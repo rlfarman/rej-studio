@@ -221,7 +221,9 @@ export function GeneSplitterForm({
               data-tour="dt-optimization"
             >
               <CardHeader>
-                <CardTitle>Optimization</CardTitle>
+                <CardTitle asChild>
+                  <h2>Optimization</h2>
+                </CardTitle>
                 <CardDescription>
                   Fine-tune individual parameters.
                 </CardDescription>

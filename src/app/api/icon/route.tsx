@@ -1,5 +1,6 @@
 import { ImageResponse } from 'next/og'
 import { dnaIconSvg } from '@/lib/dna-icon-svg'
+import { OG_BG } from '@/lib/og-theme'
 
 const MIN_SIZE = 16
 const MAX_SIZE = 1024
@@ -19,7 +20,7 @@ export async function GET(request: Request) {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: '#09090b',
+        background: OG_BG,
         borderRadius: radius,
       }}
     >
