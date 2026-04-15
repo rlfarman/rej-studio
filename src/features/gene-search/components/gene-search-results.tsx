@@ -57,16 +57,16 @@ export async function GeneSearchResults({
         >
           <Link
             href={geneHref(gene.symbol, gene.species, gene.matchedIsoformId)}
-            className="flex flex-1 items-center gap-4 px-4 py-3"
+            className="flex min-w-0 flex-1 items-center gap-4 px-4 py-3"
           >
             <Badge className="grid w-24 shrink-0 grid-cols-[24px_1fr] items-center gap-2 font-mono">
               <SpeciesIcon species={gene.species} className="h-4 w-4" />
               <span className="truncate">{gene.symbol}</span>
             </Badge>
-            <div className="flex flex-col gap-0.5">
-              <span className="text-sm">{gene.name}</span>
+            <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+              <span className="truncate text-sm">{gene.name}</span>
               {gene.matchedIsoformId && (
-                <span className="text-muted-foreground font-mono text-xs">
+                <span className="text-muted-foreground truncate font-mono text-xs">
                   {gene.matchedIsoformId}
                 </span>
               )}
