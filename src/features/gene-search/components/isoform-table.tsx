@@ -537,9 +537,75 @@ function IsoformRow({
 
 function ExpandedDetails({ isoform }: { isoform: IsoformListItem }) {
   const needsSplit = isoform.codingSequenceLength > 4700
+  const gcPercent = computeGcPercent(isoform.codingSequence)
+  const cpgCount = countCpG(isoform.codingSequence)
+  const wggwCount = rankWggwByBalance(isoform.codingSequence).length
+  const suitability = assessDesignSuitability(isoform.codingSequence)
+  const suitConfig = getSuitabilityConfig(suitability)
 
   return (
     <div className="space-y-4">
+      <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs sm:hidden sm:grid-cols-3">
+        <div>
+          <dt className="text-muted-foreground">Protein</dt>
+          <dd className="font-mono tabular-nums">
+            {isoform.proteinSequenceLength.toLocaleString()} aa
+          </dd>
+        </div>
+        <div>
+          <dt className="text-muted-foreground">GC</dt>
+          <dd className="font-mono tabular-nums">{gcPercent.toFixed(1)}%</dd>
+        </div>
+        <div>
+          <dt className="text-muted-foreground">CpG</dt>
+          <dd className="font-mono tabular-nums">
+            {cpgCount.toLocaleString()}
+          </dd>
+        </div>
+        <div>
+          <dt className="text-muted-foreground">WGGW</dt>
+          <dd className="font-mono tabular-nums">
+            {wggwCount.toLocaleString()}
+          </dd>
+        </div>
+        <div className="col-span-2">
+          <dt className="text-muted-foreground">Suitability</dt>
+          <dd>
+            <Badge
+              variant={SUITABILITY_VARIANT_MAP[suitability]}
+              className="text-xs"
+            >
+              {suitConfig.label}
+            </Badge>
+          </dd>
+        </div>
+      </dl>
+      <dl className="hidden grid-cols-3 gap-x-4 gap-y-2 text-xs sm:grid md:hidden">
+        <div>
+          <dt className="text-muted-foreground">CpG</dt>
+          <dd className="font-mono tabular-nums">
+            {cpgCount.toLocaleString()}
+          </dd>
+        </div>
+        <div>
+          <dt className="text-muted-foreground">WGGW</dt>
+          <dd className="font-mono tabular-nums">
+            {wggwCount.toLocaleString()}
+          </dd>
+        </div>
+        <div>
+          <dt className="text-muted-foreground">Suitability</dt>
+          <dd>
+            <Badge
+              variant={SUITABILITY_VARIANT_MAP[suitability]}
+              className="text-xs"
+            >
+              {suitConfig.label}
+            </Badge>
+          </dd>
+        </div>
+      </dl>
+
       <IsoformValidationBadges codingSequence={isoform.codingSequence} />
 
       {needsSplit && (
