@@ -1,6 +1,6 @@
 'use client'
 import Image from 'next/image'
-import { Dna } from 'lucide-react'
+import { HelixMark } from '@/components/bio/helix-mark'
 import {
   Sidebar,
   SidebarContent,
@@ -37,12 +37,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenuItem>
             <SidebarMenuButton asChild size="lg" tooltip="REJ Studio">
               <Link href="/">
-                <div className="flex aspect-square size-8 items-center justify-center">
-                  <Dna className="size-5" />
+                <div className="border-sidebar-border/60 bg-sidebar-accent/60 relative flex aspect-square size-8 items-center justify-center overflow-hidden rounded-md border">
+                  <HelixMark className="h-5 w-auto" />
                 </div>
                 <div className="grid flex-1 text-left leading-tight opacity-0 transition-opacity duration-150 group-data-[state=expanded]:opacity-100 group-data-[state=expanded]:delay-200 [[data-mobile=true]_&]:opacity-100">
-                  <span className="truncate font-mono text-sm font-semibold">
-                    REJ Studio
+                  <span className="font-display text-sidebar-foreground truncate text-base tracking-tight">
+                    REJ <span className="text-brand italic">Studio</span>
                   </span>
                 </div>
               </Link>

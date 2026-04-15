@@ -1,8 +1,7 @@
 import { searchGenes } from '@/features/gene-search/api/genes'
 import { geneHref, type SpeciesFilter } from '@/lib/bio/species'
 import Link from 'next/link'
-import { ExternalLink } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
+import { ArrowUpRight, ExternalLink } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Tooltip,
@@ -48,29 +47,42 @@ export async function GeneSearchResults({
   }
 
   return (
-    <div className="divide-border divide-y rounded-lg border">
+    <ol className="border-border/60 bg-card/40 divide-border/60 relative divide-y overflow-hidden rounded-xl border">
       {results.map((gene, i) => (
-        <div
+        <li
           key={gene.id}
-          className="fade-up-stagger hover:bg-accent flex items-center gap-4 pr-2 transition-colors"
+          className="fade-up-stagger group hover:bg-accent/40 relative flex items-center gap-4 pr-2 transition-colors"
           style={{ '--stagger': i } as React.CSSProperties}
         >
+          <span
+            aria-hidden="true"
+            className="from-brand to-accent-warm absolute inset-y-2 left-0 w-[3px] origin-center scale-y-0 rounded-full bg-gradient-to-b transition-transform duration-300 ease-out group-hover:scale-y-100"
+          />
           <Link
             href={geneHref(gene.symbol, gene.species, gene.matchedIsoformId)}
-            className="flex flex-1 items-center gap-4 px-4 py-3"
+            className="flex flex-1 items-center gap-5 py-4 pr-4 pl-6"
           >
-            <Badge className="grid w-24 shrink-0 grid-cols-[24px_1fr] items-center gap-2 font-mono">
-              <SpeciesIcon species={gene.species} className="h-4 w-4" />
+            <span className="border-border/70 bg-background/60 text-foreground grid w-28 shrink-0 grid-cols-[20px_1fr] items-center gap-2 rounded-md border px-2.5 py-1 font-mono text-[13px] font-medium tracking-tight tabular-nums transition-colors group-hover:border-[color-mix(in_oklch,var(--brand)_40%,transparent)]">
+              <SpeciesIcon
+                species={gene.species}
+                className="text-brand h-4 w-4"
+              />
               <span className="truncate">{gene.symbol}</span>
-            </Badge>
-            <div className="flex flex-col gap-0.5">
-              <span className="text-sm">{gene.name}</span>
+            </span>
+            <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+              <span className="text-foreground text-sm leading-snug">
+                {gene.name}
+              </span>
               {gene.matchedIsoformId && (
-                <span className="text-muted-foreground font-mono text-xs">
+                <span className="text-muted-foreground font-mono text-[11px] tracking-tight">
                   {gene.matchedIsoformId}
                 </span>
               )}
             </div>
+            <ArrowUpRight
+              className="text-muted-foreground/60 group-hover:text-brand size-4 shrink-0 -translate-x-1 opacity-0 transition-all duration-200 group-hover:translate-x-0 group-hover:opacity-100"
+              aria-hidden="true"
+            />
           </Link>
           {gene.matchedIsoformId && (
             <Tooltip>
@@ -88,22 +100,22 @@ export async function GeneSearchResults({
               <TooltipContent>Customize {gene.matchedIsoformId}</TooltipContent>
             </Tooltip>
           )}
-        </div>
+        </li>
       ))}
-    </div>
+    </ol>
   )
 }
 
 export function GeneSearchResultsLoading({ rows = 5 }: { rows?: number } = {}) {
   return (
-    <div className="divide-border divide-y rounded-lg border">
+    <div className="border-border/60 bg-card/40 divide-border/60 divide-y overflow-hidden rounded-xl border">
       {Array.from({ length: rows }, (_, i) => (
         <div
           key={i}
-          className="flex items-center gap-4 px-4 py-3"
+          className="flex items-center gap-5 py-4 pr-4 pl-6"
           style={{ '--stagger': i } as React.CSSProperties}
         >
-          <Skeleton className="h-6 w-24 shrink-0 rounded-full" />
+          <Skeleton className="h-7 w-28 shrink-0 rounded-md" />
           <div className="flex flex-1 flex-col gap-1.5">
             <Skeleton className="h-4 w-48" />
             <Skeleton className="h-3 w-32" />

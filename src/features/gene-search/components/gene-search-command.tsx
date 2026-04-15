@@ -120,7 +120,7 @@ export function GeneSearchCommand({
 
   return (
     <Command
-      className="rounded-lg border md:min-w-[450px]"
+      className="bg-card/80 supports-[backdrop-filter]:bg-card/60 brand-glow relative rounded-xl border backdrop-blur-sm md:min-w-[450px]"
       shouldFilter={false}
     >
       <CommandInput

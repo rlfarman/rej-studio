@@ -3,16 +3,22 @@ import { type ReactNode } from 'react'
 import { m } from 'motion/react'
 
 const dnaFloat = {
-  rotate: [0, 8, 0],
+  rotate: [0, 4, -4, 0],
+  y: [0, -3, 0],
   transition: {
-    duration: 4,
+    duration: 6,
     ease: 'easeInOut' as const,
     repeat: Infinity,
   },
 }
 
 export function Hero({ children }: { children: ReactNode }) {
-  return <div>{children}</div>
+  return (
+    <div className="relative isolate w-full">
+      <div className="ambient-halo" aria-hidden="true" />
+      <div className="relative z-10">{children}</div>
+    </div>
+  )
 }
 
 export function HeroItem({
