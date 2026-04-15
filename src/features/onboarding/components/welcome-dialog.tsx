@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { m, AnimatePresence } from 'motion/react'
 import {
   Dialog,
   DialogContent,
@@ -14,7 +13,6 @@ import { Button } from '@/components/ui/button'
 import { useOnboarding } from '../stores/onboarding-store'
 import { usePathname } from 'next/navigation'
 import { Dna, Search, FlaskConical, Download } from 'lucide-react'
-import { popSpring } from '@/lib/motion'
 import type { TourId } from '../tours'
 
 const FEATURES = [
@@ -81,26 +79,10 @@ export function WelcomeDialog() {
   return (
     <Dialog open={open} onOpenChange={(v) => !v && handleSkip()}>
       <DialogContent className="gap-0 overflow-hidden p-0 sm:max-w-md">
-        {/* Animated header band */}
         <div className="bg-primary/5 relative flex items-center justify-center overflow-hidden py-8">
-          <AnimatePresence>
-            {open && (
-              <m.div
-                initial={{ scale: 0, rotate: -180 }}
-                animate={{ scale: 1, rotate: 0 }}
-                transition={{
-                  type: 'spring',
-                  stiffness: 200,
-                  damping: 20,
-                  delay: 0.15,
-                }}
-              >
-                <div className="bg-primary/10 flex size-16 items-center justify-center rounded-2xl">
-                  <Dna className="text-primary size-8" />
-                </div>
-              </m.div>
-            )}
-          </AnimatePresence>
+          <div className="bg-primary/10 flex size-16 items-center justify-center rounded-2xl">
+            <Dna className="text-primary size-8" />
+          </div>
         </div>
 
         <div className="p-6">
@@ -111,16 +93,9 @@ export function WelcomeDialog() {
             </DialogDescription>
           </DialogHeader>
 
-          {/* Feature list */}
           <div className="space-y-3">
-            {FEATURES.map((feature, i) => (
-              <m.div
-                key={feature.title}
-                className="flex items-start gap-3"
-                initial={{ opacity: 0, x: -12 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ ...popSpring, delay: 0.25 + i * 0.08 }}
-              >
+            {FEATURES.map((feature) => (
+              <div key={feature.title} className="flex items-start gap-3">
                 <div className="bg-muted flex size-9 shrink-0 items-center justify-center rounded-lg">
                   <feature.icon className="text-muted-foreground size-4" />
                 </div>
@@ -132,7 +107,7 @@ export function WelcomeDialog() {
                     {feature.description}
                   </p>
                 </div>
-              </m.div>
+              </div>
             ))}
           </div>
 
