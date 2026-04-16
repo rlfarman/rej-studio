@@ -51,6 +51,11 @@ export const Neutral: Story = {
 
 export const DiagStrip: Story = {
   name: 'Diagnostic Strip (multiple)',
+  args: {
+    status: 'neutral',
+    label: '2,400 bp / 800 aa',
+    tooltip: 'Sequence length',
+  },
   render: () => (
     <div className="flex flex-wrap gap-1.5">
       <DiagBadge
