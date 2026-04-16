@@ -48,19 +48,12 @@ export function WelcomeDialog() {
   const { hasSeenWelcome, markWelcomeSeen, startTour } = useOnboarding()
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
-  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  useEffect(() => {
-    if (!mounted) return
-    if (!hasSeenWelcome) {
-      const timer = setTimeout(() => setOpen(true), 400)
-      return () => clearTimeout(timer)
-    }
-  }, [mounted, hasSeenWelcome])
+    if (hasSeenWelcome) return
+    const timer = setTimeout(() => setOpen(true), 400)
+    return () => clearTimeout(timer)
+  }, [hasSeenWelcome])
 
   function handleStart() {
     markWelcomeSeen()
@@ -75,8 +68,6 @@ export function WelcomeDialog() {
     markWelcomeSeen()
     setOpen(false)
   }
-
-  if (!mounted) return null
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && handleSkip()}>

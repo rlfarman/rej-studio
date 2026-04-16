@@ -1,5 +1,6 @@
 import { ImageResponse } from 'next/og'
 import { source } from '@/lib/source'
+import { OG_BG } from '@/lib/og-theme'
 
 /**
  * Per-page OpenGraph image for /docs pages.
@@ -34,7 +35,7 @@ export async function GET(
         padding: '72px 80px',
         width: '100%',
         height: '100%',
-        backgroundColor: '#09090b',
+        backgroundColor: OG_BG,
         color: '#fafafa',
         fontFamily: 'system-ui, sans-serif',
         backgroundImage:

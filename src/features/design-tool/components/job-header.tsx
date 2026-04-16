@@ -50,14 +50,12 @@ export function RunningPlaceholder({
           <div className="w-full max-w-xs">
             <div className="bg-muted relative h-1.5 w-full overflow-hidden rounded-full">
               <div
-                className="bg-primary h-full transition-[width] duration-700 ease-out"
-                style={{ width: `${displayedPct}%` }}
+                className="bg-primary absolute inset-y-0 left-0 w-full origin-left transition-transform duration-700 ease-out"
+                style={{ transform: `scaleX(${displayedPct / 100})` }}
               />
-              {/* Shimmer overlay signals continued activity even when the
-                  filled width sits on the same checkpoint for a while. */}
               <span
                 aria-hidden
-                className="pointer-events-none absolute inset-0 -translate-x-full animate-[shimmer_1.6s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-white/25 to-transparent"
+                className="via-foreground/25 pointer-events-none absolute inset-0 -translate-x-full animate-[shimmer_1.6s_ease-in-out_infinite] bg-gradient-to-r from-transparent to-transparent"
               />
             </div>
             <p className="text-muted-foreground mt-1.5 text-center text-[10px] tabular-nums">
@@ -91,6 +89,7 @@ function useSmoothedProgress(target: number | null): number | null {
 
     let raf = 0
     let lastTick = performance.now()
+    let stopped = false
     const tick = (now: number) => {
       const dt = (now - lastTick) / 1000
       lastTick = now
@@ -100,12 +99,15 @@ function useSmoothedProgress(target: number | null): number | null {
         // Creep up to +6 points above the last real checkpoint, but never
         // reach 100 via creep — real completion is signalled elsewhere.
         const ceiling = Math.min(99, t + 6)
-        if (prev >= ceiling) return prev
+        if (prev >= ceiling) {
+          stopped = true
+          return prev
+        }
         // ~1.5 points/second, tapered.
         const delta = dt * 1.5 * (1 - (prev - t) / 6)
         return Math.min(ceiling, prev + delta)
       })
-      raf = requestAnimationFrame(tick)
+      if (!stopped) raf = requestAnimationFrame(tick)
     }
     raf = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(raf)

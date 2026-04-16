@@ -194,12 +194,13 @@ export default function IsoformTable({
       <Table data-tour="isoform-table">
         <TableHeader>
           <TableRow>
-            <TableHead className="w-8 p-0">
+            <TableHead className="w-11 min-w-11 p-0">
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button
                     type="button"
                     onClick={toggleExpandAll}
+                    aria-expanded={allExpanded}
                     className="hover:text-foreground text-muted-foreground flex h-full w-full items-center justify-center transition-colors"
                     aria-label={
                       allExpanded
@@ -246,7 +247,7 @@ export default function IsoformTable({
               currentKey={sortKey}
               direction={sortDirection}
               onSort={toggleSort}
-              className="hidden md:table-cell"
+              className="hidden sm:table-cell"
             />
             <SortableHead
               label="GC %"
@@ -254,7 +255,7 @@ export default function IsoformTable({
               currentKey={sortKey}
               direction={sortDirection}
               onSort={toggleSort}
-              className="hidden md:table-cell"
+              className="hidden sm:table-cell"
             />
             <SortableHead
               label="CpG"
@@ -280,7 +281,9 @@ export default function IsoformTable({
               onSort={toggleSort}
               className="hidden lg:table-cell"
             />
-            <TableHead className="w-auto sm:w-28" />
+            <TableHead className="w-auto sm:w-28">
+              <span className="sr-only">Actions</span>
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -372,24 +375,36 @@ function IsoformRow({
         )}
         onClick={() => onToggleExpanded(isoform.id)}
       >
-        <TableCell>
-          {isExpanded ? (
-            <ChevronDown className="text-muted-foreground size-4" />
-          ) : (
-            <ChevronRight className="text-muted-foreground size-4" />
-          )}
+        <TableCell className="p-0">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation()
+              onToggleExpanded(isoform.id)
+            }}
+            className="text-muted-foreground hover:text-foreground focus-visible:ring-ring flex size-11 items-center justify-center rounded-sm focus-visible:ring-2 focus-visible:outline-none"
+            aria-expanded={isExpanded}
+            aria-controls={`isoform-row-${isoform.id}-details`}
+            aria-label={`${isExpanded ? 'Collapse' : 'Expand'} ${isoform.id} details`}
+          >
+            {isExpanded ? (
+              <ChevronDown className="size-4" />
+            ) : (
+              <ChevronRight className="size-4" />
+            )}
+          </button>
         </TableCell>
         <TableCell className="font-mono">{isoform.id}</TableCell>
         <TableCell className="font-mono tabular-nums">
           {isoform.codingSequenceLength.toLocaleString()}{' '}
           <span className="text-muted-foreground text-xs">bp</span>
         </TableCell>
-        <TableCell className="hidden font-mono tabular-nums md:table-cell">
+        <TableCell className="hidden font-mono tabular-nums sm:table-cell">
           {isoform.proteinSequenceLength.toLocaleString()}{' '}
           <span className="text-muted-foreground text-xs">aa</span>
         </TableCell>
         <TableCell
-          className={cn('hidden font-mono tabular-nums md:table-cell', gcClass)}
+          className={cn('hidden font-mono tabular-nums sm:table-cell', gcClass)}
         >
           {gcPercent.toFixed(1)}%
         </TableCell>
@@ -429,7 +444,10 @@ function IsoformRow({
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="ghost" size="icon" className="size-8" asChild>
-                  <Link href={`/design-tool?isoform=${isoform.id}`}>
+                  <Link
+                    href={`/design-tool?isoform=${isoform.id}`}
+                    aria-label={`Customize ${isoform.id} in design tool`}
+                  >
                     <ExternalLink className="size-4" />
                   </Link>
                 </Button>
@@ -497,7 +515,7 @@ function IsoformRow({
         </TableCell>
       </TableRow>
 
-      <TableRow>
+      <TableRow id={`isoform-row-${isoform.id}-details`}>
         <TableCell colSpan={COLUMN_COUNT} className="p-0">
           <div
             className={cn(
@@ -519,9 +537,75 @@ function IsoformRow({
 
 function ExpandedDetails({ isoform }: { isoform: IsoformListItem }) {
   const needsSplit = isoform.codingSequenceLength > 4700
+  const gcPercent = computeGcPercent(isoform.codingSequence)
+  const cpgCount = countCpG(isoform.codingSequence)
+  const wggwCount = rankWggwByBalance(isoform.codingSequence).length
+  const suitability = assessDesignSuitability(isoform.codingSequence)
+  const suitConfig = getSuitabilityConfig(suitability)
 
   return (
     <div className="space-y-4">
+      <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs sm:hidden sm:grid-cols-3">
+        <div>
+          <dt className="text-muted-foreground">Protein</dt>
+          <dd className="font-mono tabular-nums">
+            {isoform.proteinSequenceLength.toLocaleString()} aa
+          </dd>
+        </div>
+        <div>
+          <dt className="text-muted-foreground">GC</dt>
+          <dd className="font-mono tabular-nums">{gcPercent.toFixed(1)}%</dd>
+        </div>
+        <div>
+          <dt className="text-muted-foreground">CpG</dt>
+          <dd className="font-mono tabular-nums">
+            {cpgCount.toLocaleString()}
+          </dd>
+        </div>
+        <div>
+          <dt className="text-muted-foreground">WGGW</dt>
+          <dd className="font-mono tabular-nums">
+            {wggwCount.toLocaleString()}
+          </dd>
+        </div>
+        <div className="col-span-2">
+          <dt className="text-muted-foreground">Suitability</dt>
+          <dd>
+            <Badge
+              variant={SUITABILITY_VARIANT_MAP[suitability]}
+              className="text-xs"
+            >
+              {suitConfig.label}
+            </Badge>
+          </dd>
+        </div>
+      </dl>
+      <dl className="hidden grid-cols-3 gap-x-4 gap-y-2 text-xs sm:grid md:hidden">
+        <div>
+          <dt className="text-muted-foreground">CpG</dt>
+          <dd className="font-mono tabular-nums">
+            {cpgCount.toLocaleString()}
+          </dd>
+        </div>
+        <div>
+          <dt className="text-muted-foreground">WGGW</dt>
+          <dd className="font-mono tabular-nums">
+            {wggwCount.toLocaleString()}
+          </dd>
+        </div>
+        <div>
+          <dt className="text-muted-foreground">Suitability</dt>
+          <dd>
+            <Badge
+              variant={SUITABILITY_VARIANT_MAP[suitability]}
+              className="text-xs"
+            >
+              {suitConfig.label}
+            </Badge>
+          </dd>
+        </div>
+      </dl>
+
       <IsoformValidationBadges codingSequence={isoform.codingSequence} />
 
       {needsSplit && (

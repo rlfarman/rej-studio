@@ -110,12 +110,11 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
       const width = el.clientWidth
       if (width <= 0) return
       const fit = Math.floor(width / PX_PER_CODON)
-      // Total codons = 2*window + 1 ≤ fit → window ≤ (fit - 1) / 2
-      const half = Math.max(
-        MIN_CONTEXT_WINDOW,
-        Math.min(MAX_CONTEXT_WINDOW, Math.floor((fit - 1) / 2)),
-      )
-      setContextWindow(half)
+      // Total codons = 2*window + 1 ≤ fit → window ≤ (fit - 1) / 2.
+      // On narrow viewports this can fall below MIN_CONTEXT_WINDOW; shrink
+      // below the preferred minimum rather than overflow the container.
+      const raw = Math.floor((fit - 1) / 2)
+      setContextWindow(Math.max(1, Math.min(MAX_CONTEXT_WINDOW, raw)))
     }
     update()
     const ro = new ResizeObserver(update)
@@ -404,18 +403,19 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
                   }}
                   onPointerDown={(e) => e.stopPropagation()}
                   title={`WGGW ${m.motif} at bp ${m.position}–${m.position + 3} · snap`}
+                  aria-label={`Snap to WGGW motif ${m.motif} at position ${m.position}`}
                   className="group absolute top-0 flex h-full w-3 -translate-x-1/2 cursor-pointer items-stretch justify-center"
                   style={{ left: `${x}%` }}
                 >
                   <span
                     className={cn(
-                      'rounded-sm transition-all',
-                      'group-hover:w-[3px] group-hover:bg-emerald-400',
+                      'w-[3px] rounded-sm transition-colors',
+                      'group-hover:bg-emerald-400',
                       isCandidate
-                        ? 'w-[2px] bg-amber-500'
+                        ? 'bg-amber-500'
                         : isNearest
-                          ? 'w-[2px] bg-emerald-500'
-                          : 'w-[1px] bg-emerald-500/60',
+                          ? 'bg-emerald-500'
+                          : 'bg-emerald-500/60',
                     )}
                   />
                 </button>
@@ -791,7 +791,7 @@ function FrameAtSplit({
                 onClick={() => onSnap(snapTarget)}
                 title={`${roleLabel ? roleLabel + ' · ' : ''}codon ${c.idx + 1}${c.aa ? ` (${c.codon} = ${c.aa})` : ''} · snap cut to ${snapLabel}`}
                 className={cn(
-                  'hover:bg-primary/10 hover:ring-primary/30 flex flex-1 flex-col items-center gap-0.5 rounded-sm px-[3px] py-1 transition-colors hover:ring-1',
+                  'hover:bg-primary/10 hover:ring-primary/30 flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-sm px-[3px] py-1 transition-colors hover:ring-1',
                   roleStyles.container,
                 )}
               >

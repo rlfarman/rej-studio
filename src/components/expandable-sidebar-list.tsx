@@ -20,6 +20,7 @@ interface ExpandableSidebarListProps<T> {
   onClear?: () => void
   collapsedCount?: number
   expandedMax?: number
+  menuAriaLabel?: string
 }
 
 export function ExpandableSidebarList<T>({
@@ -31,6 +32,7 @@ export function ExpandableSidebarList<T>({
   onClear,
   collapsedCount = DEFAULT_COLLAPSED_COUNT,
   expandedMax = DEFAULT_EXPANDED_MAX,
+  menuAriaLabel,
 }: ExpandableSidebarListProps<T>) {
   const [expanded, setExpanded] = useState(false)
 
@@ -64,7 +66,7 @@ export function ExpandableSidebarList<T>({
       <SidebarGroupContent>
         {hasItems ? (
           <>
-            <SidebarMenu>
+            <SidebarMenu aria-live="polite" aria-label={menuAriaLabel}>
               {visibleItems.map((item) => (
                 <Fragment key={getItemKey(item)}>{renderItem(item)}</Fragment>
               ))}

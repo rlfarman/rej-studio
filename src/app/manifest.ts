@@ -1,4 +1,5 @@
 import type { MetadataRoute } from 'next'
+import { OG_BG, OG_BRAND } from '@/lib/og-theme'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
@@ -8,8 +9,8 @@ export default function manifest(): MetadataRoute.Manifest {
       'Search genes, browse isoforms, and design optimized RNA End-Joining sequences.',
     start_url: '/genes',
     display: 'standalone',
-    background_color: '#09090b',
-    theme_color: '#0EA5E9',
+    background_color: OG_BG,
+    theme_color: OG_BRAND,
     icons: [
       {
         src: '/api/icon?size=192',

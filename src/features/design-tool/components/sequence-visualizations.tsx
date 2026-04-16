@@ -68,7 +68,7 @@ function GcContentTrack({ original, optimized, splitPoint }: Props) {
           <Activity className="text-muted-foreground size-4" />
           GC Content (sliding window)
         </div>
-        <div className="flex items-center gap-3 text-[10px]">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
           <span className="text-muted-foreground flex items-center gap-1">
             <span className="bg-muted-foreground/40 h-0.5 w-4 rounded-full" />
             Original

@@ -28,6 +28,12 @@ const SUITABILITY_LABEL: Record<Suitability, string> = {
   'triple-aav': 'Triple AAV',
 }
 
+const SUITABILITY_SHORT: Record<Suitability, string> = {
+  'single-aav': '1×',
+  'dual-aav': '2×',
+  'triple-aav': '3×',
+}
+
 // AAV packaging thresholds from design-suitability.ts
 const SINGLE_AAV_MAX = 4000
 const DUAL_AAV_MAX = 8000
@@ -105,6 +111,7 @@ export function IsoformLengthChart({ isoforms }: Props) {
               scroll={false}
               className="group hover:bg-muted/40 focus-visible:ring-ring -mx-1 flex items-center gap-2 rounded-sm px-1 py-0.5 text-[10px] transition-colors focus-visible:ring-2 focus-visible:outline-none"
               title={`${row.id} · ${row.length.toLocaleString()} bp · ${SUITABILITY_LABEL[row.suitability]}`}
+              aria-label={`${row.id}, ${row.length.toLocaleString()} base pairs, ${SUITABILITY_LABEL[row.suitability]}`}
             >
               <span className="text-muted-foreground group-hover:text-foreground w-28 shrink-0 truncate font-mono">
                 {row.id}
@@ -128,6 +135,12 @@ export function IsoformLengthChart({ isoforms }: Props) {
                   aria-hidden="true"
                 />
               </div>
+              <span
+                className="text-muted-foreground w-6 shrink-0 text-center font-mono tabular-nums"
+                aria-hidden="true"
+              >
+                {SUITABILITY_SHORT[row.suitability]}
+              </span>
               <span className="text-muted-foreground w-16 shrink-0 text-right font-mono tabular-nums">
                 {row.length.toLocaleString()}
               </span>

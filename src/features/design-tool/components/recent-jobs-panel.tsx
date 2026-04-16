@@ -65,6 +65,7 @@ export function RecentJobs({ onSelectJob }: RecentJobsProps) {
       getItemKey={(entry) => entry.id}
       onClear={clearHistory}
       emptyMessage="Your completed optimization jobs will appear here."
+      menuAriaLabel="Recent jobs"
       renderItem={(entry) => (
         <SidebarMenuItem>
           <SidebarMenuButton onClick={() => onSelectJob?.(entry)}>

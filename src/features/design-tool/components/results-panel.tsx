@@ -152,7 +152,7 @@ function MetricsStrip({ result }: { result: ProcessResult }) {
   const showCai = stats.keyAfter.caiScore !== null
 
   return (
-    <div className="bg-border grid grid-cols-2 gap-px overflow-hidden rounded-lg border sm:grid-cols-3 lg:grid-cols-5">
+    <div className="bg-border grid grid-cols-1 gap-px overflow-hidden rounded-lg border sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
       <MetricCell
         label="Score"
         before={stats.before.totalScore}
@@ -228,32 +228,35 @@ function SequenceCard({
             {sequence.length.toLocaleString()} bp
           </Badge>
         </div>
-        <div className="flex gap-1">
+        <div className="flex flex-wrap gap-1.5">
           <Button
             type="button"
             variant="ghost"
             size="sm"
-            className="h-6 gap-1 px-1.5 text-[11px]"
+            className="h-9 gap-1.5 px-3 text-xs"
             onClick={() =>
               downloadTextFile(
                 `${fastaName}.fasta`,
                 formatFasta(fastaName, sequence),
               )
             }
+            aria-label={`Download ${label} as FASTA`}
           >
-            <Download className="size-3" />
+            <Download className="size-3.5" />
             FASTA
           </Button>
           <CopyButton
             text={() => formatFasta(fastaName, sequence)}
-            className="h-6 gap-1 px-1.5 text-[11px]"
+            className="h-9 gap-1.5 px-3 text-xs"
+            aria-label={`Copy ${label} FASTA to clipboard`}
           >
             FASTA
           </CopyButton>
           <CopyButton
             text={sequence}
-            className="h-6 gap-1 px-1.5 text-[11px]"
+            className="h-9 gap-1.5 px-3 text-xs"
             copiedLabel="Copied"
+            aria-label={`Copy ${label} raw sequence to clipboard`}
           >
             Copy
           </CopyButton>

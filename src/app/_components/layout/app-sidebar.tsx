@@ -112,14 +112,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   alt="Salk Institute"
                   width={16}
                   height={16}
-                  className="block dark:hidden"
+                  className="block size-4 object-contain dark:hidden"
                 />
                 <Image
                   src="/branding/SalkLogo-WCB-W.png"
                   alt="Salk Institute"
                   width={16}
                   height={16}
-                  className="hidden dark:block"
+                  className="hidden size-4 object-contain dark:block"
                 />
                 <span>Salk Institute</span>
               </a>

@@ -61,7 +61,13 @@ export function SubmitButton({
   }, [isJobComplete])
 
   return (
-    <Button type="submit" className="inline" disabled={isProcessing}>
+    <Button
+      type="submit"
+      className="inline"
+      disabled={isProcessing}
+      aria-busy={isProcessing}
+      aria-live="polite"
+    >
       <AnimatePresence mode="wait" initial={false}>
         {isProcessing ? (
           <m.span
