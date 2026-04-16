@@ -8,6 +8,7 @@ import {
   type Suitability,
 } from '@/lib/bio/design-suitability'
 import type { IsoformListItem } from '@/features/gene-search/types/domain-types'
+import { geneSearchCopy } from '@/features/gene-search/copy'
 
 interface IsoformSummaryProps {
   isoforms: IsoformListItem[]
@@ -26,9 +27,9 @@ const SUITABILITY_COLOR: Record<Suitability, string> = {
 }
 
 const SUITABILITY_LABEL: Record<Suitability, string> = {
-  'single-aav': 'Single',
-  'dual-aav': 'Dual',
-  'triple-aav': 'Triple',
+  'single-aav': geneSearchCopy.isoformSummary.suitabilityShortLabels.single,
+  'dual-aav': geneSearchCopy.isoformSummary.suitabilityShortLabels.dual,
+  'triple-aav': geneSearchCopy.isoformSummary.suitabilityShortLabels.triple,
 }
 
 export function IsoformSummary({ isoforms }: IsoformSummaryProps) {
@@ -66,17 +67,22 @@ export function IsoformSummary({ isoforms }: IsoformSummaryProps) {
 
   return (
     <div className="mb-4 flex flex-wrap items-center gap-x-6 gap-y-3 rounded-md border px-4 py-3 text-sm">
-      <Stat label="Isoforms" value={String(filtered.length)} />
       <Stat
-        label="CDS range"
+        label={geneSearchCopy.isoformSummary.isoforms}
+        value={String(filtered.length)}
+      />
+      <Stat
+        label={geneSearchCopy.isoformSummary.cdsRange}
         value={`${stats.shortest.toLocaleString()} – ${stats.longest.toLocaleString()} bp`}
       />
       <div className="flex min-w-[12rem] flex-1 items-center gap-2">
-        <span className="text-muted-foreground text-xs">AAV fit</span>
+        <span className="text-muted-foreground text-xs">
+          {geneSearchCopy.isoformSummary.aavFit}
+        </span>
         <div
           className="flex h-4 flex-1 overflow-hidden rounded-sm border"
           role="img"
-          aria-label="AAV suitability distribution"
+          aria-label={geneSearchCopy.isoformSummary.aavFitAriaLabel}
         >
           {SUITABILITY_ORDER.map((s) => {
             if (counts[s] === 0) return null
@@ -89,7 +95,10 @@ export function IsoformSummary({ isoforms }: IsoformSummaryProps) {
                   SUITABILITY_COLOR[s],
                 )}
                 style={{ width: `${pct}%` }}
-                title={`${SUITABILITY_LABEL[s]} AAV · ${counts[s]} isoform${counts[s] > 1 ? 's' : ''}`}
+                title={geneSearchCopy.isoformSummary.aavSegmentTooltip(
+                  SUITABILITY_LABEL[s],
+                  counts[s],
+                )}
               >
                 {pct > 12 ? counts[s] : ''}
               </div>

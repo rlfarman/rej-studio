@@ -6,9 +6,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
-
-const CITATION = `Bachmann L, Hsu RH, Hermann K, Williams CE, Farman RL, Criales N, Kramer S, Lettieri K, Pfaff SL
-A combinatorial system for gene expression using RNA-fragment end joining (REJ). In preparation. (2026)`
+import { appCopy } from '@/lib/copy'
 
 export function Footer() {
   const { copy, isCopied } = useCopyToClipboard({ showToast: false })
@@ -20,17 +18,17 @@ export function Footer() {
       <Tooltip open={copied || hovered}>
         <TooltipTrigger asChild>
           <button
-            onClick={() => copy(CITATION)}
+            onClick={() => copy(appCopy.footer.citationFull)}
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
-            title="Copy citation to clipboard"
+            title={appCopy.footer.copyTitle}
             className="text-muted-foreground w-full text-center text-xs opacity-50 transition-opacity hover:underline hover:opacity-80"
           >
-            Bachmann et al. (2026) — RNA-fragment end joining (REJ)
+            {appCopy.footer.citation}
           </button>
         </TooltipTrigger>
         <TooltipContent side="top">
-          {copied ? 'Copied!' : 'Click to copy the citation to your clipboard.'}
+          {copied ? appCopy.footer.copied : appCopy.footer.copyPrompt}
         </TooltipContent>
       </Tooltip>
     </footer>

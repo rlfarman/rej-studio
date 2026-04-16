@@ -11,6 +11,7 @@ import {
 } from '@/lib/bio/design-suitability'
 import { useSpeciesContext } from '@/stores/species-store'
 import type { IsoformListItem } from '@/features/gene-search/types/domain-types'
+import { geneSearchCopy } from '@/features/gene-search/copy'
 
 interface Props {
   isoforms: IsoformListItem[]
@@ -23,9 +24,9 @@ const SUITABILITY_COLOR: Record<Suitability, string> = {
 }
 
 const SUITABILITY_LABEL: Record<Suitability, string> = {
-  'single-aav': 'Single AAV',
-  'dual-aav': 'Dual AAV',
-  'triple-aav': 'Triple AAV',
+  'single-aav': geneSearchCopy.isoformLengthChart.suitabilityLabels.single,
+  'dual-aav': geneSearchCopy.isoformLengthChart.suitabilityLabels.dual,
+  'triple-aav': geneSearchCopy.isoformLengthChart.suitabilityLabels.triple,
 }
 
 // AAV packaging thresholds from design-suitability.ts
@@ -80,7 +81,7 @@ export function IsoformLengthChart({ isoforms }: Props) {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 text-sm font-medium">
           <BarChart3 className="text-muted-foreground size-4" />
-          CDS length by isoform
+          {geneSearchCopy.isoformLengthChart.heading}
         </div>
         <div className="flex items-center gap-3 text-[10px]">
           {(['single-aav', 'dual-aav', 'triple-aav'] as const).map((s) => (
@@ -104,7 +105,11 @@ export function IsoformLengthChart({ isoforms }: Props) {
               href={buildHref(row.id)}
               scroll={false}
               className="group hover:bg-muted/40 focus-visible:ring-ring -mx-1 flex items-center gap-2 rounded-sm px-1 py-0.5 text-[10px] transition-colors focus-visible:ring-2 focus-visible:outline-none"
-              title={`${row.id} · ${row.length.toLocaleString()} bp · ${SUITABILITY_LABEL[row.suitability]}`}
+              title={geneSearchCopy.isoformLengthChart.rowTooltip(
+                row.id,
+                row.length,
+                SUITABILITY_LABEL[row.suitability],
+              )}
             >
               <span className="text-muted-foreground group-hover:text-foreground w-28 shrink-0 truncate font-mono">
                 {row.id}
@@ -153,7 +158,9 @@ export function IsoformLengthChart({ isoforms }: Props) {
             {DUAL_AAV_MAX.toLocaleString()}
           </span>
         </div>
-        <span className="w-16 shrink-0 text-right">bp</span>
+        <span className="w-16 shrink-0 text-right">
+          {geneSearchCopy.isoformLengthChart.bpUnit}
+        </span>
       </div>
     </div>
   )

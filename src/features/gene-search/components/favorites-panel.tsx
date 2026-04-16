@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button'
 import { TruncatedText } from '@/components/truncated-text'
 import { SpeciesIcon } from '@/components/bio/species-icon'
 import { X } from 'lucide-react'
+import { geneSearchCopy } from '@/features/gene-search/copy'
 
 const COLLAPSED_COUNT = 3
 const EXPANDED_MAX = 15
@@ -32,7 +33,7 @@ export function FavoriteGenes() {
   return (
     <SidebarGroup>
       <SidebarGroupLabel className="bg-sidebar sticky top-0 z-10">
-        Favorites
+        {geneSearchCopy.favoritesPanel.heading}
       </SidebarGroupLabel>
       <SidebarGroupContent>
         {favoriteGenes.length > 0 ? (
@@ -62,7 +63,9 @@ export function FavoriteGenes() {
                   <SidebarMenuAction
                     showOnHover
                     onClick={() => removeFavoriteGene(gene.id)}
-                    aria-label={`Remove ${gene.symbol} from favorites`}
+                    aria-label={geneSearchCopy.favoritesPanel.removeAriaLabel(
+                      gene.symbol,
+                    )}
                     className="bg-sidebar hover:bg-sidebar-accent"
                   >
                     <X />
@@ -77,13 +80,15 @@ export function FavoriteGenes() {
                 onClick={() => setExpanded(!expanded)}
                 className="text-muted-foreground w-full text-xs"
               >
-                {expanded ? 'Show less' : `+ Show ${hiddenCount} more`}
+                {expanded
+                  ? geneSearchCopy.favoritesPanel.showLess
+                  : geneSearchCopy.favoritesPanel.showMore(hiddenCount)}
               </Button>
             )}
           </>
         ) : (
           <div className="text-muted-foreground p-4 text-xs">
-            No favorites yet. Star a gene to save it here.
+            {geneSearchCopy.favoritesPanel.emptyState}
           </div>
         )}
       </SidebarGroupContent>

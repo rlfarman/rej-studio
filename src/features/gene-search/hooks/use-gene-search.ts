@@ -6,6 +6,7 @@ import type { SearchGenesResult } from '@/features/gene-search/api/genes'
 import type { SpeciesFilter } from '@/lib/bio/species'
 import { useSpeciesContext } from '@/stores/species-store'
 import { trackEvent } from '@/lib/analytics'
+import { geneSearchCopy } from '@/features/gene-search/copy'
 
 interface UseGeneSearchProps {
   searchGenes: (
@@ -52,7 +53,7 @@ export function useGeneSearch({
   // Distinguish between: network error (isError), server-side DB error
   // (data.error), and genuine empty results (data.results.length === 0).
   const error = isError
-    ? 'Search failed. Please try again.'
+    ? geneSearchCopy.search.errors.failed
     : (data?.error ?? null)
 
   const retry = useCallback(() => {

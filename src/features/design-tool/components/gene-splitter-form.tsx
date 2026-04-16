@@ -37,6 +37,7 @@ import { SubmitButton } from './submit-button'
 import { ResultsPanel } from './results-panel'
 import { JobHeader, RunningPlaceholder } from './job-header'
 import { toast } from 'sonner'
+import { designToolCopy } from '../copy'
 
 interface GeneSplitterFormProperties {
   defaultCodingSequence?: string
@@ -103,9 +104,7 @@ export function GeneSplitterForm({
     if (parsed.success) {
       methods.reset(parsed.data)
     } else {
-      toast.warning(
-        'Saved inputs from this job were incompatible with the current form — defaults were used instead.',
-      )
+      toast.warning(designToolCopy.toasts.incompatibleSavedInputs)
     }
     didResetRef.current = true
   }, [job.formValues, methods])
@@ -137,7 +136,7 @@ export function GeneSplitterForm({
     const valid = await methods.trigger()
     if (!valid) {
       setIsEditing(true)
-      toast.error('Fix the form errors before re-running.')
+      toast.error(designToolCopy.toasts.fixErrorsBeforeRerun)
       return
     }
     await methods
@@ -191,11 +190,10 @@ export function GeneSplitterForm({
             >
               <CardHeader>
                 <h1 className="text-2xl leading-none font-bold tracking-tight">
-                  REJ Studio Design Tool
+                  {designToolCopy.page.title}
                 </h1>
                 <CardDescription>
-                  Optimize a DNA or protein sequence for RNA end-joining
-                  experiments
+                  {designToolCopy.page.description}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -204,10 +202,11 @@ export function GeneSplitterForm({
                 </div>
                 <SpeciesOptions />
                 <div className="space-y-2" data-tour="dt-splicer">
-                  <p className="text-sm font-medium">Splice junction</p>
+                  <p className="text-sm font-medium">
+                    {designToolCopy.form.splicer.label}
+                  </p>
                   <p className="text-muted-foreground text-sm">
-                    Set where the sequence splits into 5&apos; and 3&apos;
-                    fragments.
+                    {designToolCopy.form.splicer.description}
                   </p>
                   <DNASplicer />
                 </div>
@@ -221,9 +220,9 @@ export function GeneSplitterForm({
               data-tour="dt-optimization"
             >
               <CardHeader>
-                <CardTitle>Optimization</CardTitle>
+                <CardTitle>{designToolCopy.form.optimization.title}</CardTitle>
                 <CardDescription>
-                  Fine-tune individual parameters.
+                  {designToolCopy.form.optimization.description}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -231,9 +230,14 @@ export function GeneSplitterForm({
                   <AccordionItem value="codon-optimization">
                     <AccordionTrigger>
                       <div>
-                        <p>Codon optimization</p>
+                        <p>
+                          {designToolCopy.form.sections.codonOptimization.label}
+                        </p>
                         <p className="text-muted-foreground text-sm">
-                          Control which sequence features are optimized.
+                          {
+                            designToolCopy.form.sections.codonOptimization
+                              .description
+                          }
                         </p>
                       </div>
                     </AccordionTrigger>
@@ -244,9 +248,17 @@ export function GeneSplitterForm({
                   <AccordionItem value="fragment-options">
                     <AccordionTrigger>
                       <div>
-                        <p>Stimulatory introns</p>
+                        <p>
+                          {
+                            designToolCopy.form.sections.stimulatoryIntrons
+                              .label
+                          }
+                        </p>
                         <p className="text-muted-foreground text-sm">
-                          Add introns to boost fragment expression.
+                          {
+                            designToolCopy.form.sections.stimulatoryIntrons
+                              .description
+                          }
                         </p>
                       </div>
                     </AccordionTrigger>
@@ -257,9 +269,9 @@ export function GeneSplitterForm({
                   <AccordionItem value="weights">
                     <AccordionTrigger>
                       <div>
-                        <p>Parameter weights</p>
+                        <p>{designToolCopy.form.sections.weights.label}</p>
                         <p className="text-muted-foreground text-sm">
-                          Control how much each objective influences the result.
+                          {designToolCopy.form.sections.weights.description}
                         </p>
                       </div>
                     </AccordionTrigger>
@@ -283,9 +295,9 @@ export function GeneSplitterForm({
               data-tour="dt-submit"
             >
               <CardHeader>
-                <CardTitle>Review &amp; Run</CardTitle>
+                <CardTitle>{designToolCopy.form.review.title}</CardTitle>
                 <CardDescription>
-                  Run the optimizer to generate your split sequences.
+                  {designToolCopy.form.review.description}
                 </CardDescription>
               </CardHeader>
               <CardContent>

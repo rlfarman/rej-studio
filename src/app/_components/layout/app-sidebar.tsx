@@ -21,6 +21,7 @@ import type { JobHistoryEntry } from '@/features/design-tool/hooks/use-job-histo
 import { Home, BookOpen, WandSparkles } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
+import { appCopy } from '@/lib/copy'
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const router = useRouter()
@@ -35,14 +36,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader>
         <SidebarMenuPrimitive>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild size="lg" tooltip="REJ Studio">
+            <SidebarMenuButton asChild size="lg" tooltip={appCopy.siteName}>
               <Link href="/">
                 <div className="flex aspect-square size-8 items-center justify-center">
                   <Dna className="size-5" />
                 </div>
                 <div className="grid flex-1 text-left leading-tight opacity-0 transition-opacity duration-150 group-data-[state=expanded]:opacity-100 group-data-[state=expanded]:delay-200 [[data-mobile=true]_&]:opacity-100">
                   <span className="truncate font-mono text-sm font-semibold">
-                    REJ Studio
+                    {appCopy.siteName}
                   </span>
                 </div>
               </Link>
@@ -57,11 +58,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               <SidebarMenuButton
                 asChild
                 isActive={pathname === '/'}
-                tooltip="Home"
+                tooltip={appCopy.nav.home}
               >
                 <Link href="/">
                   <Home />
-                  <span>Home</span>
+                  <span>{appCopy.nav.home}</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -69,11 +70,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               <SidebarMenuButton
                 asChild
                 isActive={pathname.startsWith('/design-tool')}
-                tooltip="Design Tool"
+                tooltip={appCopy.nav.designTool}
               >
                 <Link href="/design-tool">
                   <WandSparkles />
-                  <span>Design Tool</span>
+                  <span>{appCopy.nav.designTool}</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -81,11 +82,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               <SidebarMenuButton
                 asChild
                 isActive={pathname.startsWith('/docs')}
-                tooltip="Documentation"
+                tooltip={appCopy.nav.documentation}
               >
                 <Link href="/docs">
                   <BookOpen />
-                  <span>Documentation</span>
+                  <span>{appCopy.nav.documentation}</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -101,7 +102,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarFooter>
         <SidebarMenuPrimitive>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild tooltip="Salk Institute">
+            <SidebarMenuButton asChild tooltip={appCopy.nav.salkInstitute}>
               <a
                 href="https://www.salk.edu"
                 target="_blank"
@@ -109,19 +110,19 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               >
                 <Image
                   src="/branding/SalkLogo-WCB-K.png"
-                  alt="Salk Institute"
+                  alt={appCopy.nav.salkImageAlt}
                   width={16}
                   height={16}
                   className="block dark:hidden"
                 />
                 <Image
                   src="/branding/SalkLogo-WCB-W.png"
-                  alt="Salk Institute"
+                  alt={appCopy.nav.salkImageAlt}
                   width={16}
                   height={16}
                   className="hidden dark:block"
                 />
-                <span>Salk Institute</span>
+                <span>{appCopy.nav.salkInstitute}</span>
               </a>
             </SidebarMenuButton>
           </SidebarMenuItem>

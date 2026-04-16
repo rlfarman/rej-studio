@@ -7,6 +7,7 @@ import { Grid3x3 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useSpeciesContext } from '@/stores/species-store'
 import type { IsoformListItem } from '@/features/gene-search/types/domain-types'
+import { geneSearchCopy } from '@/features/gene-search/copy'
 
 interface Props {
   isoforms: IsoformListItem[]
@@ -89,12 +90,12 @@ export function IsoformIdentityMatrix({ isoforms }: Props) {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 text-sm font-medium">
           <Grid3x3 className="text-muted-foreground size-4" />
-          Pairwise identity
+          {geneSearchCopy.isoformIdentity.heading}
         </div>
         <div className="text-muted-foreground flex items-center gap-2 text-[10px]">
-          <span>0%</span>
+          <span>{geneSearchCopy.isoformIdentity.scaleLow}</span>
           <span className="h-2 w-20 rounded-sm bg-gradient-to-r from-slate-200 via-amber-400 to-emerald-600 dark:from-slate-800" />
-          <span>100%</span>
+          <span>{geneSearchCopy.isoformIdentity.scaleHigh}</span>
         </div>
       </div>
 
@@ -132,9 +133,7 @@ export function IsoformIdentityMatrix({ isoforms }: Props) {
       </div>
 
       <p className="text-muted-foreground text-[10px] leading-relaxed">
-        Identity estimated from shared prefix + suffix of protein sequences.
-        Pairs ≥95% share most coding content — consider optimizing one per
-        cluster.
+        {geneSearchCopy.isoformIdentity.description}
       </p>
     </div>
   )
@@ -157,7 +156,7 @@ function Row({
         href={href}
         scroll={false}
         className="text-muted-foreground hover:text-foreground focus-visible:text-foreground pr-2 text-right font-mono whitespace-nowrap hover:underline focus-visible:outline-none"
-        title={`Jump to ${id}`}
+        title={geneSearchCopy.isoformIdentity.jumpTo(id)}
       >
         {id}
       </Link>
@@ -174,7 +173,11 @@ function Row({
             style={{
               backgroundColor: hidden ? 'transparent' : identityColor(v),
             }}
-            title={hidden ? undefined : `${v.toFixed(1)}% identity`}
+            title={
+              hidden
+                ? undefined
+                : geneSearchCopy.isoformIdentity.identityTooltip(v)
+            }
           />
         )
       })}

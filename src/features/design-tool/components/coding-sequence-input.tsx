@@ -21,6 +21,7 @@ import { toast } from 'sonner'
 import { isSpecies, type Species } from '@/lib/bio/species'
 import { pickDefaultSplitPoint } from '../utils/default-split-point'
 import { reverseTranslate } from '@/lib/bio/reverse-translate'
+import { designToolCopy } from '../copy'
 
 const MAX_DNA_LENGTH = 50_000
 const MAX_PROTEIN_LENGTH = 16_666
@@ -33,14 +34,18 @@ function SequenceTypeToggle({
   onChange: (v: SequenceType) => void
 }) {
   const options: { value: SequenceType; label: string; icon: typeof Dna }[] = [
-    { value: 'dna', label: 'DNA', icon: Dna },
-    { value: 'protein', label: 'Protein', icon: FlaskConical },
+    { value: 'dna', label: designToolCopy.form.sequence.typeDna, icon: Dna },
+    {
+      value: 'protein',
+      label: designToolCopy.form.sequence.typeProtein,
+      icon: FlaskConical,
+    },
   ]
 
   return (
     <div
       role="radiogroup"
-      aria-label="Sequence type"
+      aria-label={designToolCopy.form.sequence.typeToggleAriaLabel}
       className="bg-muted inline-flex gap-0.5 rounded-lg p-0.5"
     >
       {options.map((opt) => {
@@ -137,8 +142,8 @@ export function CodingSequenceInput() {
       if (cleaned.length === 0) {
         toast.error(
           isProtein
-            ? 'No valid amino acid characters found.'
-            : 'No valid nucleotide characters found.',
+            ? designToolCopy.toasts.noValidAminoAcids
+            : designToolCopy.toasts.noValidNucleotides,
         )
         return
       }
@@ -158,19 +163,19 @@ export function CodingSequenceInput() {
       const parts: string[] = []
       if (ignoredSequences > 0)
         parts.push(
-          `used first sequence (${ignoredSequences} additional sequence${ignoredSequences > 1 ? 's' : ''} ignored)`,
+          designToolCopy.toasts.cleaned.extraSequencesIgnored(ignoredSequences),
         )
       if (removedHeaders > 0)
         parts.push(
-          `${removedHeaders} header${removedHeaders > 1 ? 's' : ''} stripped`,
+          designToolCopy.toasts.cleaned.headersStripped(removedHeaders),
         )
       if (removedChars > 0)
         parts.push(
-          `${removedChars} ${charType} character${removedChars > 1 ? 's' : ''} removed`,
+          designToolCopy.toasts.cleaned.charsRemoved(removedChars, charType),
         )
 
       if (parts.length > 0) {
-        toast.info(`${source}: ${parts.join(', ')}.`)
+        toast.info(designToolCopy.toasts.cleanedSummary(source, parts))
       }
     },
     [setValue, isProtein, applyReverseTranslation],
@@ -186,7 +191,7 @@ export function CodingSequenceInput() {
       const nonValid = text.replace(validChars, '')
       if (hasHeaders || nonValid.length > 3) {
         e.preventDefault()
-        applyCleanedSequence(text, 'Paste cleaned')
+        applyCleanedSequence(text, designToolCopy.toasts.cleaned.pasteSource)
       }
     },
     [applyCleanedSequence, isProtein],
@@ -209,7 +214,7 @@ export function CodingSequenceInput() {
           }
         }
 
-        applyCleanedSequence(text, 'FASTA imported')
+        applyCleanedSequence(text, designToolCopy.toasts.cleaned.fastaSource)
       }
       reader.readAsText(file)
       e.target.value = ''
@@ -246,8 +251,8 @@ export function CodingSequenceInput() {
             <div className="flex flex-wrap items-center gap-2 sm:gap-3">
               <FormLabel>
                 {isProtein
-                  ? 'Enter your protein sequence'
-                  : 'Enter your coding sequence'}{' '}
+                  ? designToolCopy.form.sequence.labelProtein
+                  : designToolCopy.form.sequence.labelDna}{' '}
                 <span aria-hidden="true">*</span>
               </FormLabel>
               <SequenceTypeToggle
@@ -263,8 +268,12 @@ export function CodingSequenceInput() {
               onClick={() => fileInputRef.current?.click()}
             >
               <Upload className="size-3" />
-              <span className="hidden sm:inline">Upload FASTA</span>
-              <span className="sm:hidden">FASTA</span>
+              <span className="hidden sm:inline">
+                {designToolCopy.form.sequence.uploadLong}
+              </span>
+              <span className="sm:hidden">
+                {designToolCopy.form.sequence.uploadShort}
+              </span>
             </Button>
             <input
               ref={fileInputRef}
@@ -297,8 +306,8 @@ export function CodingSequenceInput() {
               <textarea
                 placeholder={
                   isProtein
-                    ? 'MVLSPADKTN... (paste amino acid sequence or upload FASTA)'
-                    : 'ATGATTACA... (paste sequence or upload FASTA)'
+                    ? designToolCopy.form.sequence.placeholderProtein
+                    : designToolCopy.form.sequence.placeholderDna
                 }
                 rows={4}
                 aria-required="true"
@@ -342,18 +351,23 @@ export function CodingSequenceInput() {
                 : 'text-muted-foreground',
             )}
           >
-            {length.toLocaleString()} {isProtein ? 'residues' : 'bp'} /{' '}
-            {maxLength.toLocaleString()}
+            {length.toLocaleString()}{' '}
+            {isProtein
+              ? designToolCopy.form.sequence.unitProtein
+              : designToolCopy.form.sequence.unitDna}{' '}
+            / {maxLength.toLocaleString()}
           </p>
           {isProtein && isSpecies(species) && dnaValue && (
             <p className="text-muted-foreground text-sm">
-              → {dnaValue.length.toLocaleString()} bp DNA generated ({species}{' '}
-              codon preferences)
+              {designToolCopy.form.sequence.reverseTranslatedNote(
+                dnaValue.length,
+                species,
+              )}
             </p>
           )}
           {isProtein && !isSpecies(species) && length > 0 && (
             <p className="text-muted-foreground text-sm text-amber-600 dark:text-amber-400">
-              Select a species above to generate the DNA sequence.
+              {designToolCopy.form.sequence.selectSpeciesToTranslate}
             </p>
           )}
           {!isProtein && <SequenceDiagnostics />}

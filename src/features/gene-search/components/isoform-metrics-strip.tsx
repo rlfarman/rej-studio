@@ -11,6 +11,7 @@ import {
   assessDesignSuitability,
   getSuitabilityConfig,
 } from '@/lib/bio/design-suitability'
+import { geneSearchCopy } from '@/features/gene-search/copy'
 
 interface IsoformMetricsStripProps {
   codingSequence: string
@@ -67,18 +68,27 @@ export function IsoformMetricsStrip({
 
   return (
     <div className="bg-border grid grid-cols-2 gap-px overflow-hidden rounded-lg border sm:grid-cols-3 lg:grid-cols-5">
-      <MetricCell label="Length" value={`${metrics.bp.toLocaleString()} bp`} />
       <MetricCell
-        label="GC %"
+        label={geneSearchCopy.isoformMetrics.length}
+        value={`${metrics.bp.toLocaleString()} bp`}
+      />
+      <MetricCell
+        label={geneSearchCopy.isoformMetrics.gcPercent}
         value={`${metrics.gc.toFixed(1)}%`}
         valueClassName={metrics.gcClass}
       />
-      <MetricCell label="CpG" value={metrics.cpg.toLocaleString()} />
       <MetricCell
-        label="WGGW motifs"
+        label={geneSearchCopy.isoformMetrics.cpg}
+        value={metrics.cpg.toLocaleString()}
+      />
+      <MetricCell
+        label={geneSearchCopy.isoformMetrics.wggwMotifs}
         value={metrics.wggwCount.toLocaleString()}
       />
-      <MetricCell label="AAV strategy" value={metrics.suitabilityLabel} />
+      <MetricCell
+        label={geneSearchCopy.isoformMetrics.aavStrategy}
+        value={metrics.suitabilityLabel}
+      />
     </div>
   )
 }

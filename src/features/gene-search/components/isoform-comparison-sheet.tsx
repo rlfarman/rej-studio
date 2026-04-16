@@ -31,6 +31,9 @@ import {
   getSuitabilityConfig,
 } from '@/lib/bio/design-suitability'
 import type { IsoformListItem } from '@/features/gene-search/types/domain-types'
+import { geneSearchCopy } from '@/features/gene-search/copy'
+
+const compareCopy = geneSearchCopy.compare
 
 interface IsoformComparisonSheetProps {
   isoforms: IsoformListItem[]
@@ -71,9 +74,9 @@ export function IsoformComparisonSheet({
       <SheetTrigger asChild>{children}</SheetTrigger>
       <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-lg">
         <SheetHeader>
-          <SheetTitle>Compare Isoforms</SheetTitle>
+          <SheetTitle>{compareCopy.title}</SheetTitle>
           <SheetDescription>
-            Side-by-side comparison of {isoforms.length} selected isoforms
+            {compareCopy.description(isoforms.length)}
           </SheetDescription>
         </SheetHeader>
 
@@ -81,7 +84,9 @@ export function IsoformComparisonSheet({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="min-w-24">Property</TableHead>
+                <TableHead className="min-w-24">
+                  {compareCopy.property}
+                </TableHead>
                 {analyses.map((iso) => (
                   <TableHead
                     key={iso.id}
@@ -94,17 +99,17 @@ export function IsoformComparisonSheet({
             </TableHeader>
             <TableBody>
               <CompRow
-                label="Species"
+                label={compareCopy.rows.species}
                 values={analyses.map(
                   (a) =>
                     SPECIES_DISPLAY_NAME[
                       a.species as keyof typeof SPECIES_DISPLAY_NAME
-                    ] ?? 'Unknown',
+                    ] ?? compareCopy.values.unknown,
                 )}
                 diffClass={diffClass(analyses.map((a) => a.species))}
               />
               <CompRow
-                label="CDS Length"
+                label={compareCopy.rows.cdsLength}
                 values={analyses.map(
                   (a) => `${a.codingSequenceLength.toLocaleString()} bp`,
                 )}
@@ -113,7 +118,7 @@ export function IsoformComparisonSheet({
                 )}
               />
               <CompRow
-                label="Protein Length"
+                label={compareCopy.rows.proteinLength}
                 values={analyses.map(
                   (a) => `${a.proteinSequenceLength.toLocaleString()} aa`,
                 )}
@@ -122,25 +127,31 @@ export function IsoformComparisonSheet({
                 )}
               />
               <CompRow
-                label="GC Content"
+                label={compareCopy.rows.gcContent}
                 values={analyses.map((a) => `${a.gc.toFixed(1)}%`)}
                 diffClass={diffClass(analyses.map((a) => Math.round(a.gc)))}
               />
               <CompRow
-                label="Start Codon"
-                values={analyses.map((a) => (a.startCodon ? 'ATG' : 'Missing'))}
+                label={compareCopy.rows.startCodon}
+                values={analyses.map((a) =>
+                  a.startCodon
+                    ? compareCopy.values.startAtg
+                    : compareCopy.values.missing,
+                )}
                 diffClass={diffClass(analyses.map((a) => a.startCodon))}
               />
               <CompRow
-                label="Stop Codon"
+                label={compareCopy.rows.stopCodon}
                 values={analyses.map((a) =>
-                  a.stopCodon === 'present' ? 'Present' : 'Missing',
+                  a.stopCodon === 'present'
+                    ? compareCopy.values.present
+                    : compareCopy.values.missing,
                 )}
                 diffClass={diffClass(analyses.map((a) => a.stopCodon))}
               />
               <TableRow>
                 <TableCell className="text-muted-foreground text-xs font-semibold">
-                  Suitability
+                  {compareCopy.rows.suitability}
                 </TableCell>
                 {analyses.map((a) => (
                   <TableCell
@@ -158,14 +169,14 @@ export function IsoformComparisonSheet({
               </TableRow>
               <TableRow>
                 <TableCell className="text-muted-foreground text-xs font-semibold">
-                  Design
+                  {compareCopy.rows.design}
                 </TableCell>
                 {analyses.map((a) => (
                   <TableCell key={a.id}>
                     <Button variant="outline" size="sm" asChild>
                       <Link href={`/design-tool?isoform=${a.id}`}>
                         <ExternalLink className="size-3.5" />
-                        Design
+                        {compareCopy.designAction}
                       </Link>
                     </Button>
                   </TableCell>

@@ -1,9 +1,17 @@
+import { appCopy } from '@/lib/copy'
+
 export type Suitability = 'single-aav' | 'dual-aav' | 'triple-aav'
 
 const SUITABILITY_CONFIG = {
-  'single-aav': { label: 'Single AAV', variant: 'default' },
-  'dual-aav': { label: 'Dual AAV', variant: 'secondary' },
-  'triple-aav': { label: 'Triple AAV', variant: 'destructive' },
+  'single-aav': {
+    label: appCopy.suitability['single-aav'],
+    variant: 'default',
+  },
+  'dual-aav': { label: appCopy.suitability['dual-aav'], variant: 'secondary' },
+  'triple-aav': {
+    label: appCopy.suitability['triple-aav'],
+    variant: 'destructive',
+  },
 } as const
 
 export function getSuitabilityConfig(suitability: Suitability) {

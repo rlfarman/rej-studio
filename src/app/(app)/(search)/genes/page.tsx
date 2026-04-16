@@ -13,20 +13,26 @@ import {
   HydrationBoundary,
   QueryClient,
 } from '@tanstack/react-query'
+import { geneSearchCopy } from '@/features/gene-search/copy'
+import { ogImageUrl } from '@/lib/og'
 
 export const metadata: Metadata = {
-  title: 'Search Genes',
-  description:
-    'Search by gene symbol, name, or disease across human and mouse genomes. Browse isoforms and download optimized sequences.',
+  title: geneSearchCopy.metadata.title,
+  description: geneSearchCopy.metadata.description,
   alternates: { canonical: '/genes' },
   openGraph: {
-    title: 'Search Genes',
-    description:
-      'Search by gene symbol, name, or disease across human and mouse genomes.',
+    title: geneSearchCopy.metadata.title,
+    description: geneSearchCopy.metadata.ogDescription,
     url: '/genes',
     images: [
       {
-        url: '/api/og?title=Search+by+symbol%2C%0Aname%2C+or+disease&section=Gene+Search&description=Human+%26+Mouse+%C2%B7+Full-text+search+%C2%B7+Pre-optimized+sequences&url=rejstudio.com/genes',
+        url: ogImageUrl({
+          title: 'Search by symbol,\nname, or disease',
+          section: 'Gene Search',
+          description:
+            'Human & Mouse · Full-text search · Pre-optimized sequences',
+          url: 'rejstudio.com/genes',
+        }),
         width: 1200,
         height: 630,
         alt: 'Gene Search — REJ Studio',

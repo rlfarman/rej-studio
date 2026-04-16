@@ -1,21 +1,23 @@
 'use client'
 import { ToggleCard } from './toggle-card'
+import { designToolCopy } from '../copy'
 
 export function StimulatoryIntronOptions() {
+  const { stim5Prime, stim3Prime } = designToolCopy.toggles
   return (
     <div className="space-y-3">
       <SpliceJunctionDiagram />
       <div className="grid gap-2 sm:grid-cols-2">
         <ToggleCard
           name="5PrimeStimulatoryIntron"
-          label="5′ stimulatory intron"
-          description="Inserted ~150 bp upstream of the junction, at the nearest compatible splice site, to boost 5′ fragment expression."
+          label={stim5Prime.label}
+          description={stim5Prime.description}
           helpHref="/docs/design-tool#stim-5"
         />
         <ToggleCard
           name="3PrimeStimulatoryIntron"
-          label="3′ stimulatory intron"
-          description="Inserted ~150 bp downstream of the junction, at the nearest compatible splice site, to boost 3′ fragment expression."
+          label={stim3Prime.label}
+          description={stim3Prime.description}
           helpHref="/docs/design-tool#stim-3"
         />
       </div>

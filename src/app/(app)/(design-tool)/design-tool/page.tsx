@@ -4,6 +4,7 @@ import type { DesignToolSpecies } from '@/features/design-tool/types/species-opt
 import { isSpecies } from '@/lib/bio/species'
 import { pickDefaultSplitPoint } from '@/features/design-tool/utils/default-split-point'
 import { Metadata } from 'next'
+import { ogImageUrl } from '@/lib/og'
 
 export const metadata: Metadata = {
   title: 'Design Tool',
@@ -17,7 +18,13 @@ export const metadata: Metadata = {
     url: '/design-tool',
     images: [
       {
-        url: '/api/og?title=Optimize+coding%0Asequences+for+REJ&section=Design+Tool&description=Custom+CDS+input+%C2%B7+DNAChisel+optimization+%C2%B7+Downloadable+results&url=rejstudio.com/design-tool',
+        url: ogImageUrl({
+          title: 'Optimize coding\nsequences for REJ',
+          section: 'Design Tool',
+          description:
+            'Custom CDS input · DNAChisel optimization · Downloadable results',
+          url: 'rejstudio.com/design-tool',
+        }),
         width: 1200,
         height: 630,
         alt: 'Design Tool — REJ Studio',

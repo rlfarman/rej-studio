@@ -1,0 +1,14 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`onboardingCopy > matches the expected key structure 1`] = `
+[
+  "features[]",
+  "tours.designTool.steps[]",
+  "tours.geneDetail.steps[]",
+  "tours.home.steps[]",
+  "welcome.description",
+  "welcome.skipButton",
+  "welcome.startButton",
+  "welcome.title",
+]
+`;

@@ -16,26 +16,9 @@ import { usePathname } from 'next/navigation'
 import { Dna, Search, FlaskConical, Download } from 'lucide-react'
 import { popSpring } from '@/lib/motion'
 import type { TourId } from '../tours'
+import { onboardingCopy } from '../copy'
 
-const FEATURES = [
-  {
-    icon: Search,
-    title: 'Search genes',
-    description: 'Browse 30,000+ genes across human and mouse genomes',
-  },
-  {
-    icon: FlaskConical,
-    title: 'Compare isoforms',
-    description:
-      'View isoform metrics, suitability scores, and sequence identity',
-  },
-  {
-    icon: Download,
-    title: 'Optimize sequences',
-    description:
-      'Design split-intein sequences with codon optimization and more',
-  },
-] as const
+const FEATURE_ICONS = [Search, FlaskConical, Download] as const
 
 function tourForPath(pathname: string): TourId | null {
   if (pathname === '/') return 'home'
@@ -105,42 +88,49 @@ export function WelcomeDialog() {
 
         <div className="p-6">
           <DialogHeader className="mb-4">
-            <DialogTitle className="text-xl">Welcome to REJ Studio</DialogTitle>
+            <DialogTitle className="text-xl">
+              {onboardingCopy.welcome.title}
+            </DialogTitle>
             <DialogDescription>
-              Design optimized RNA End-Joining sequences in three steps.
+              {onboardingCopy.welcome.description}
             </DialogDescription>
           </DialogHeader>
 
           {/* Feature list */}
           <div className="space-y-3">
-            {FEATURES.map((feature, i) => (
-              <m.div
-                key={feature.title}
-                className="flex items-start gap-3"
-                initial={{ opacity: 0, x: -12 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ ...popSpring, delay: 0.25 + i * 0.08 }}
-              >
-                <div className="bg-muted flex size-9 shrink-0 items-center justify-center rounded-lg">
-                  <feature.icon className="text-muted-foreground size-4" />
-                </div>
-                <div>
-                  <p className="text-sm leading-tight font-medium">
-                    {feature.title}
-                  </p>
-                  <p className="text-muted-foreground text-[13px] leading-snug">
-                    {feature.description}
-                  </p>
-                </div>
-              </m.div>
-            ))}
+            {onboardingCopy.features.map((feature, i) => {
+              const Icon = FEATURE_ICONS[i]
+              return (
+                <m.div
+                  key={feature.title}
+                  className="flex items-start gap-3"
+                  initial={{ opacity: 0, x: -12 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ ...popSpring, delay: 0.25 + i * 0.08 }}
+                >
+                  <div className="bg-muted flex size-9 shrink-0 items-center justify-center rounded-lg">
+                    <Icon className="text-muted-foreground size-4" />
+                  </div>
+                  <div>
+                    <p className="text-sm leading-tight font-medium">
+                      {feature.title}
+                    </p>
+                    <p className="text-muted-foreground text-[13px] leading-snug">
+                      {feature.description}
+                    </p>
+                  </div>
+                </m.div>
+              )
+            })}
           </div>
 
           <DialogFooter className="mt-6">
             <Button variant="ghost" onClick={handleSkip}>
-              Skip for now
+              {onboardingCopy.welcome.skipButton}
             </Button>
-            <Button onClick={handleStart}>Take the tour</Button>
+            <Button onClick={handleStart}>
+              {onboardingCopy.welcome.startButton}
+            </Button>
           </DialogFooter>
         </div>
       </DialogContent>

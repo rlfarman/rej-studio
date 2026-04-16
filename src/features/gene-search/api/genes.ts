@@ -11,6 +11,7 @@ import { z } from 'zod'
 import { headers } from 'next/headers'
 import { createUpstashRateLimiter } from '@/lib/upstash'
 import { createLogger } from '@/lib/logger'
+import { geneSearchCopy } from '@/features/gene-search/copy'
 
 // NOTE: GeneSearchResult is NOT re-exported from this 'use server' file.
 // Turbopack treats all exports from server action files as server actions,
@@ -58,7 +59,7 @@ export async function searchGenes(
   const { ok: allowed, resetMs } = await searchLimiter.check(ip)
   if (!allowed) {
     const retrySeconds = Math.ceil(resetMs / 1000)
-    throw new Error(`Too many search requests. Please wait ${retrySeconds}s.`)
+    throw new Error(geneSearchCopy.search.errors.rateLimited(retrySeconds))
   }
 
   try {
@@ -76,7 +77,7 @@ export async function searchGenes(
     log.error('search query failed', err, { query: trimmedQuery })
     // Return empty results with an error flag instead of crashing — the UI
     // can distinguish "no matches" from "search is broken" and show a warning.
-    return { results: [], error: 'Search is temporarily unavailable.' }
+    return { results: [], error: geneSearchCopy.search.errors.unavailable }
   }
 }
 

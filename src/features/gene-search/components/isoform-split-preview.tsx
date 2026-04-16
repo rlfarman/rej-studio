@@ -9,6 +9,9 @@ import {
 } from '@/lib/bio/sequence-utils'
 import { AAV_OVERHEAD_BP, AAV_PACKAGING_LIMIT } from '@/lib/bio/aav'
 import { SplitBar } from '@/components/bio/split-bar'
+import { geneSearchCopy } from '@/features/gene-search/copy'
+
+const splitCopy = geneSearchCopy.isoformSplitPreview
 
 interface IsoformSplitPreviewProps {
   codingSequence: string
@@ -21,11 +24,7 @@ const BALANCE_CLASS = {
   imbalanced: 'text-red-600 dark:text-red-400',
 } as const
 
-const BALANCE_LABEL = {
-  balanced: 'balanced',
-  moderate: 'moderate',
-  imbalanced: 'imbalanced',
-} as const
+const BALANCE_LABEL = splitCopy.balance
 
 export function IsoformSplitPreview({
   codingSequence,
@@ -67,7 +66,7 @@ export function IsoformSplitPreview({
     return (
       <div className="text-muted-foreground flex items-center gap-2 text-xs">
         <Scissors className="size-3.5" />
-        No WGGW motifs found — this sequence cannot be split by REJ.
+        {splitCopy.noWggw}
       </div>
     )
   }
@@ -86,9 +85,9 @@ export function IsoformSplitPreview({
     <div className="space-y-1.5">
       <div className="flex items-center gap-1.5 text-xs">
         <Scissors className="size-3.5" />
-        <span className="text-muted-foreground">Best REJ split:</span>
+        <span className="text-muted-foreground">{splitCopy.bestSplit}</span>
         <span className="font-mono tabular-nums">{best.motif}</span>
-        <span className="text-muted-foreground">at bp</span>
+        <span className="text-muted-foreground">{splitCopy.atBp}</span>
         <span className="tabular-nums">{best.position.toLocaleString()}</span>
         <span className={cn('font-medium', BALANCE_CLASS[balance])}>
           ({BALANCE_LABEL[balance]})
@@ -102,7 +101,7 @@ export function IsoformSplitPreview({
 
       <div className="text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[10px] tabular-nums">
         <span>
-          5′ AAV: {fiveAavTotal.toLocaleString()} bp{' '}
+          {splitCopy.aav5Label} {fiveAavTotal.toLocaleString()} bp{' '}
           <span
             className={
               fiveFits
@@ -110,11 +109,11 @@ export function IsoformSplitPreview({
                 : 'text-red-600 dark:text-red-400'
             }
           >
-            ({fiveFits ? 'fits' : 'over limit'})
+            ({fiveFits ? splitCopy.fits : splitCopy.overLimit})
           </span>
         </span>
         <span>
-          3′ AAV: {threeAavTotal.toLocaleString()} bp{' '}
+          {splitCopy.aav3Label} {threeAavTotal.toLocaleString()} bp{' '}
           <span
             className={
               threeFits
@@ -122,21 +121,20 @@ export function IsoformSplitPreview({
                 : 'text-red-600 dark:text-red-400'
             }
           >
-            ({threeFits ? 'fits' : 'over limit'})
+            ({threeFits ? splitCopy.fits : splitCopy.overLimit})
           </span>
         </span>
         <span className="opacity-70">
-          (includes {AAV_OVERHEAD_BP.toLocaleString()} bp ITR/promoter/polyA
-          overhead)
+          {splitCopy.overheadNote(AAV_OVERHEAD_BP)}
         </span>
       </div>
 
       {alternatives.length > 0 && (
         <div
           className="text-muted-foreground flex flex-wrap items-center gap-1.5 text-[10px]"
-          title="Next balanced WGGW candidates — adjust to these in the design tool if the best one doesn't fit AAV."
+          title={splitCopy.alternativesTooltip}
         >
-          <span>Alternatives:</span>
+          <span>{splitCopy.alternativesLabel}</span>
           {alternatives.map((c, i) => (
             <span
               key={c.position}
@@ -147,7 +145,7 @@ export function IsoformSplitPreview({
               {!c.bothFit && (
                 <span
                   className="ml-1 text-red-600 dark:text-red-400"
-                  title="One fragment + AAV overhead exceeds ~4,700 bp"
+                  title={splitCopy.overLimitTooltip}
                 >
                   ⚠
                 </span>

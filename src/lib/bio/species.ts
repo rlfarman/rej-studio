@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { appCopy } from '@/lib/copy'
 
 export const speciesSchema = z.enum(['human', 'mouse'])
 export const speciesFilterSchema = z.enum(['human', 'mouse', 'both'])
@@ -9,16 +10,10 @@ export type SpeciesFilter = z.infer<typeof speciesFilterSchema>
 const SPECIES_OPTIONS: Species[] = ['human', 'mouse']
 const SPECIES_FILTER_OPTIONS: SpeciesFilter[] = ['human', 'mouse', 'both']
 
-export const SPECIES_DISPLAY_NAME: Record<Species, string> = {
-  human: 'Human',
-  mouse: 'Mouse',
-}
+export const SPECIES_DISPLAY_NAME: Record<Species, string> = appCopy.species
 
-const SPECIES_FILTER_DISPLAY_NAME: Record<SpeciesFilter, string> = {
-  human: 'Humans',
-  mouse: 'Mice',
-  both: 'Humans & Mice',
-}
+const SPECIES_FILTER_DISPLAY_NAME: Record<SpeciesFilter, string> =
+  appCopy.speciesFilter
 
 export function isSpecies(value: string): value is Species {
   return value === 'human' || value === 'mouse'

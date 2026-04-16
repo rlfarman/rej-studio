@@ -56,6 +56,9 @@ import {
 import { IsoformValidationBadges } from './isoform-validation-badges'
 import { IsoformSplitPreview } from './isoform-split-preview'
 import type { IsoformListItem } from '@/features/gene-search/types/domain-types'
+import { geneSearchCopy } from '@/features/gene-search/copy'
+
+const tableCopy = geneSearchCopy.isoformTable
 
 interface IsoformListProps {
   isoforms: IsoformListItem[]
@@ -181,8 +184,7 @@ export default function IsoformTable({
     return (
       <div className="flex flex-col items-center gap-4 py-8 text-center">
         <p className="text-muted-foreground max-w-lg text-sm">
-          No isoforms available for this species. Try selecting a different
-          species filter.
+          {tableCopy.emptyForSpecies}
         </p>
         <SpeciesSelect alwaysShowLabel />
       </div>
@@ -203,8 +205,8 @@ export default function IsoformTable({
                     className="hover:text-foreground text-muted-foreground flex h-full w-full items-center justify-center transition-colors"
                     aria-label={
                       allExpanded
-                        ? 'Collapse all isoforms'
-                        : 'Expand all isoforms'
+                        ? tableCopy.collapseAllAriaLabel
+                        : tableCopy.expandAllAriaLabel
                     }
                   >
                     {allExpanded ? (
@@ -215,7 +217,9 @@ export default function IsoformTable({
                   </button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  {allExpanded ? 'Collapse all' : 'Expand all'}
+                  {allExpanded
+                    ? tableCopy.collapseAllTooltip
+                    : tableCopy.expandAllTooltip}
                 </TooltipContent>
               </Tooltip>
             </TableHead>
@@ -223,9 +227,11 @@ export default function IsoformTable({
               label={
                 <>
                   <span className="hidden sm:inline">
-                    Ensembl Transcript ID
+                    {tableCopy.columns.enstLong}
                   </span>
-                  <span className="sm:hidden">ENST</span>
+                  <span className="sm:hidden">
+                    {tableCopy.columns.enstShort}
+                  </span>
                 </>
               }
               sortKey="enst"
@@ -234,14 +240,14 @@ export default function IsoformTable({
               onSort={toggleSort}
             />
             <SortableHead
-              label="CDS"
+              label={tableCopy.columns.cds}
               sortKey="cdsLength"
               currentKey={sortKey}
               direction={sortDirection}
               onSort={toggleSort}
             />
             <SortableHead
-              label="Protein"
+              label={tableCopy.columns.protein}
               sortKey="proteinLength"
               currentKey={sortKey}
               direction={sortDirection}
@@ -249,7 +255,7 @@ export default function IsoformTable({
               className="hidden md:table-cell"
             />
             <SortableHead
-              label="GC %"
+              label={tableCopy.columns.gcPercent}
               sortKey="gcPercent"
               currentKey={sortKey}
               direction={sortDirection}
@@ -257,7 +263,7 @@ export default function IsoformTable({
               className="hidden md:table-cell"
             />
             <SortableHead
-              label="CpG"
+              label={tableCopy.columns.cpg}
               sortKey="cpg"
               currentKey={sortKey}
               direction={sortDirection}
@@ -265,7 +271,7 @@ export default function IsoformTable({
               className="hidden lg:table-cell"
             />
             <SortableHead
-              label="WGGW"
+              label={tableCopy.columns.wggw}
               sortKey="wggw"
               currentKey={sortKey}
               direction={sortDirection}
@@ -273,7 +279,7 @@ export default function IsoformTable({
               className="hidden lg:table-cell"
             />
             <SortableHead
-              label="Suitability"
+              label={tableCopy.columns.suitability}
               sortKey="suitability"
               currentKey={sortKey}
               direction={sortDirection}
@@ -382,11 +388,15 @@ function IsoformRow({
         <TableCell className="font-mono">{isoform.id}</TableCell>
         <TableCell className="font-mono tabular-nums">
           {isoform.codingSequenceLength.toLocaleString()}{' '}
-          <span className="text-muted-foreground text-xs">bp</span>
+          <span className="text-muted-foreground text-xs">
+            {tableCopy.units.bp}
+          </span>
         </TableCell>
         <TableCell className="hidden font-mono tabular-nums md:table-cell">
           {isoform.proteinSequenceLength.toLocaleString()}{' '}
-          <span className="text-muted-foreground text-xs">aa</span>
+          <span className="text-muted-foreground text-xs">
+            {tableCopy.units.aa}
+          </span>
         </TableCell>
         <TableCell
           className={cn('hidden font-mono tabular-nums md:table-cell', gcClass)}
@@ -419,12 +429,16 @@ function IsoformRow({
                   size="icon"
                   className="hidden size-8 sm:inline-flex"
                   disabled
-                  aria-label={`Download precomputed for ${isoform.id}`}
+                  aria-label={tableCopy.actions.downloadPrecomputedAriaLabel(
+                    isoform.id,
+                  )}
                 >
                   <PackageOpen className="size-4" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>Download precomputed</TooltipContent>
+              <TooltipContent>
+                {tableCopy.actions.downloadPrecomputed}
+              </TooltipContent>
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -434,7 +448,7 @@ function IsoformRow({
                   </Link>
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>Customize</TooltipContent>
+              <TooltipContent>{tableCopy.actions.customize}</TooltipContent>
             </Tooltip>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -442,7 +456,7 @@ function IsoformRow({
                   variant="ghost"
                   size="icon"
                   className="size-8"
-                  aria-label={`Actions for ${isoform.id}`}
+                  aria-label={tableCopy.actionsAriaLabel(isoform.id)}
                 >
                   <MoreHorizontal className="size-4" />
                 </Button>
@@ -452,7 +466,9 @@ function IsoformRow({
                   onClick={() => copy(isoform.codingSequence, cdsId)}
                 >
                   <Copy className="size-4" />
-                  {isCopied(cdsId) ? 'Copied!' : 'Copy CDS'}
+                  {isCopied(cdsId)
+                    ? tableCopy.actions.copied
+                    : tableCopy.actions.copyCds}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() =>
@@ -463,7 +479,9 @@ function IsoformRow({
                   }
                 >
                   <FileText className="size-4" />
-                  {isCopied(fastaId) ? 'Copied!' : 'Copy FASTA'}
+                  {isCopied(fastaId)
+                    ? tableCopy.actions.copied
+                    : tableCopy.actions.copyFasta}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => {
@@ -478,7 +496,7 @@ function IsoformRow({
                   }}
                 >
                   <Download className="size-4" />
-                  Download FASTA
+                  {tableCopy.actions.downloadFasta}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
@@ -488,7 +506,7 @@ function IsoformRow({
                     rel="noopener noreferrer"
                   >
                     <ExternalLink className="size-4" />
-                    View on Ensembl
+                    {tableCopy.actions.viewOnEnsembl}
                   </a>
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -579,15 +597,27 @@ export function IsoformTableLoading({ rows = 4 }: { rows?: number } = {}) {
         <TableRow>
           <TableHead className="w-8" />
           <TableHead>
-            <span className="hidden sm:inline">Ensembl Transcript ID</span>
-            <span className="sm:hidden">ENST</span>
+            <span className="hidden sm:inline">
+              {tableCopy.columns.enstLong}
+            </span>
+            <span className="sm:hidden">{tableCopy.columns.enstShort}</span>
           </TableHead>
-          <TableHead>CDS</TableHead>
-          <TableHead className="hidden md:table-cell">Protein</TableHead>
-          <TableHead className="hidden md:table-cell">GC %</TableHead>
-          <TableHead className="hidden lg:table-cell">CpG</TableHead>
-          <TableHead className="hidden lg:table-cell">WGGW</TableHead>
-          <TableHead className="hidden lg:table-cell">Suitability</TableHead>
+          <TableHead>{tableCopy.columns.cds}</TableHead>
+          <TableHead className="hidden md:table-cell">
+            {tableCopy.columns.protein}
+          </TableHead>
+          <TableHead className="hidden md:table-cell">
+            {tableCopy.columns.gcPercent}
+          </TableHead>
+          <TableHead className="hidden lg:table-cell">
+            {tableCopy.columns.cpg}
+          </TableHead>
+          <TableHead className="hidden lg:table-cell">
+            {tableCopy.columns.wggw}
+          </TableHead>
+          <TableHead className="hidden lg:table-cell">
+            {tableCopy.columns.suitability}
+          </TableHead>
           <TableHead className="w-10" />
         </TableRow>
       </TableHeader>

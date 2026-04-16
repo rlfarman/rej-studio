@@ -12,6 +12,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { SpeciesIcon } from '@/components/bio/species-icon'
 import { SearchRetryButton } from './search-retry-button'
+import { geneSearchCopy } from '@/features/gene-search/copy'
 
 interface GeneSearchResultsProps {
   query: string
@@ -27,7 +28,9 @@ export async function GeneSearchResults({
   if (error) {
     return (
       <div className="text-destructive-foreground bg-destructive/10 flex flex-col items-center gap-2 rounded-lg py-6 text-center text-sm">
-        <span>{error} Try again in a moment.</span>
+        <span>
+          {error} {geneSearchCopy.search.tryAgainLater}
+        </span>
         <SearchRetryButton />
       </div>
     )
@@ -36,12 +39,12 @@ export async function GeneSearchResults({
   if (results.length === 0) {
     return (
       <div className="text-muted-foreground py-8 text-center text-sm">
-        No genes match &ldquo;{query}&rdquo;.{' '}
+        {geneSearchCopy.search.noMatches(query)}{' '}
         <Link
           href="/design-tool"
           className="text-primary font-medium underline underline-offset-4"
         >
-          Enter a custom sequence instead.
+          {geneSearchCopy.search.customSequenceLink}
         </Link>
       </div>
     )
@@ -78,14 +81,22 @@ export async function GeneSearchResults({
                 <Button asChild variant="ghost" size="sm" className="shrink-0">
                   <Link
                     href={`/design-tool?isoform=${gene.matchedIsoformId}`}
-                    aria-label={`Customize ${gene.matchedIsoformId}`}
+                    aria-label={geneSearchCopy.search.customizeAriaLabel(
+                      gene.matchedIsoformId,
+                    )}
                   >
-                    <span className="hidden sm:inline">Customize</span>
+                    <span className="hidden sm:inline">
+                      {geneSearchCopy.search.customizeAction}
+                    </span>
                     <ExternalLink className="size-3.5" />
                   </Link>
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>Customize {gene.matchedIsoformId}</TooltipContent>
+              <TooltipContent>
+                {geneSearchCopy.search.customizeAriaLabel(
+                  gene.matchedIsoformId,
+                )}
+              </TooltipContent>
             </Tooltip>
           )}
         </div>

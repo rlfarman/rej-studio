@@ -8,12 +8,16 @@ import {
   TooltipContent,
 } from '@/components/ui/tooltip'
 import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar'
+import { appCopy } from '@/lib/copy'
 
 export function Header() {
   const pathname = usePathname()
   const isHomePage = pathname === '/'
   const { state } = useSidebar()
-  const sidebarLabel = state === 'expanded' ? 'Close sidebar' : 'Open sidebar'
+  const sidebarLabel =
+    state === 'expanded'
+      ? appCopy.sidebar.closeLabel
+      : appCopy.sidebar.openLabel
 
   // Extract the gene symbol from the path
   const geneSymbolMatch = pathname.match(/\/genes\/([^/]+)/)

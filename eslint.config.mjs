@@ -50,6 +50,34 @@ const config = [
   {
     files: ['src/**/*.{ts,tsx}'],
     rules: {
+      // Enforce copy centralisation: user-facing strings must come from
+      // copy modules, not be inlined as JSX text or string-literal props.
+      // Whitespace-only and single-char punctuation are ignored.
+      'react/jsx-no-literals': [
+        'warn',
+        {
+          noStrings: true,
+          allowedStrings: [
+            ' ',
+            '.',
+            ',',
+            ':',
+            ';',
+            '·',
+            '—',
+            '–',
+            '|',
+            '/',
+            '#',
+            '(',
+            ')',
+            '…',
+            '\u2019',
+          ],
+          ignoreProps: true,
+          noAttributeStrings: false,
+        },
+      ],
       'import/no-restricted-paths': [
         'error',
         {

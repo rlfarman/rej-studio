@@ -1,30 +1,32 @@
 'use client'
 import { ToggleCard } from './toggle-card'
+import { designToolCopy } from '../copy'
 
 export function CodonOptimizationOptions() {
+  const { toggles, form } = designToolCopy
   return (
     <div className="space-y-4">
       <div className="space-y-2">
         <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-          Sequence objectives
+          {form.sections.objectives}
         </p>
         <div className="flex flex-col space-y-2">
           <ToggleCard
             name="removeCrypticSpliceSites"
-            label="Remove cryptic splice sites"
-            description="Eliminates donor- and acceptor-like motifs to prevent unintended mRNA splicing in mammalian cells."
+            label={toggles.removeCrypticSpliceSites.label}
+            description={toggles.removeCrypticSpliceSites.description}
             helpHref="/docs/design-tool#remove-cryptic-splice-sites"
           />
           <ToggleCard
             name="minimizeCpgs"
-            label="Minimize CpG sites"
-            description="Reduces CpG dinucleotides to lower silencing risk from DNA methylation."
+            label={toggles.minimizeCpgs.label}
+            description={toggles.minimizeCpgs.description}
             helpHref="/docs/design-tool#minimize-cpgs"
           />
           <ToggleCard
             name="reduceKmerComplexity"
-            label="Reduce k-mer complexity"
-            description="Diversifies 10-mer repeats to ease synthesis and reduce recombination risk."
+            label={toggles.reduceKmerComplexity.label}
+            description={toggles.reduceKmerComplexity.description}
             helpHref="/docs/design-tool#kmer-complexity"
           />
         </div>
@@ -32,13 +34,13 @@ export function CodonOptimizationOptions() {
 
       <div className="space-y-2">
         <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-          Constraints
+          {form.sections.constraints}
         </p>
         <ToggleCard
           name="enforceGcContent"
-          label="Enforce 35–60% GC content"
-          description="Keeps GC content within the range optimal for mRNA stability and expression."
-          badge="Hard constraint"
+          label={toggles.enforceGcContent.label}
+          description={toggles.enforceGcContent.description}
+          badge={toggles.enforceGcContent.badge}
           helpHref="/docs/design-tool#gc-content"
         />
       </div>

@@ -25,6 +25,7 @@ import {
   parseSpeciesParam,
   type Species,
 } from '@/lib/bio/species'
+import { geneSearchCopy } from '@/features/gene-search/copy'
 
 type Props = {
   params: Promise<{ symbol: string }>
@@ -45,7 +46,9 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   const gene = await resolveGene(props)
 
   const displaySymbol = gene?.symbol ?? symbol
-  const description = `View all isoforms for ${gene?.name ?? symbol} and download pre-optimized sequences or customize your own.`
+  const description = geneSearchCopy.genePage.metadataDescription(
+    gene?.name ?? symbol,
+  )
   const ogUrl = `/api/og/gene/${encodeURIComponent(displaySymbol)}${species ? `?species=${encodeURIComponent(species)}` : ''}`
 
   return {
@@ -63,7 +66,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
           url: ogUrl,
           width: 1200,
           height: 630,
-          alt: `${displaySymbol} — REJ Studio`,
+          alt: geneSearchCopy.genePage.ogImageAlt(displaySymbol),
         },
       ],
     },
@@ -105,7 +108,7 @@ async function IsoformSection({
       />
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-muted-foreground text-sm font-semibold">
-          Species
+          {geneSearchCopy.genePage.speciesLabel}
         </span>
         {speciesAvailable.map((s) => (
           <Badge key={s} variant="secondary">
@@ -114,7 +117,9 @@ async function IsoformSection({
         ))}
       </div>
       <Separator className="my-4" />
-      <h2 className="mb-2 text-lg font-semibold tracking-tight">Isoforms</h2>
+      <h2 className="mb-2 text-lg font-semibold tracking-tight">
+        {geneSearchCopy.genePage.isoformsHeading}
+      </h2>
       <IsoformTable
         isoforms={isoforms}
         highlightedIsoformId={highlightedIsoformId}

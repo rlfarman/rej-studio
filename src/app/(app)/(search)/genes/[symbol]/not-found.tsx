@@ -5,6 +5,9 @@ import { SearchIcon } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { SpeciesIcon } from '@/components/bio/species-icon'
 import { findSimilarGenes } from '@/features/gene-search/api/genes'
+import { geneSearchCopy } from '@/features/gene-search/copy'
+
+const notFoundCopy = geneSearchCopy.notFound
 
 /**
  * Gene not-found page. Renders fuzzy "did you mean?" suggestions when the
@@ -26,29 +29,29 @@ export default async function GeneNotFound() {
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-center font-mono text-4xl font-bold tracking-tight">
-            404
+            {notFoundCopy.status}
           </CardTitle>
         </CardHeader>
         <CardContent className="text-center">
           <p className="text-muted-foreground mb-1 text-base">
             {symbol ? (
               <>
-                Gene &ldquo;
-                <span className="font-mono font-semibold">{symbol}</span>&rdquo;
-                not found.
+                {notFoundCopy.foundWithSymbolPrefix}
+                <span className="font-mono font-semibold">{symbol}</span>
+                {notFoundCopy.foundWithSymbolSuffix}
               </>
             ) : (
-              'Gene not found in our database.'
+              notFoundCopy.foundWithoutSymbol
             )}
           </p>
           <p className="text-muted-foreground mb-6 text-sm">
-            The symbol may be misspelled, or it hasn&apos;t been indexed yet.
+            {notFoundCopy.subtext}
           </p>
 
           {suggestions.length > 0 && (
             <div className="mb-6">
               <p className="text-muted-foreground mb-2 text-sm font-medium">
-                Did you mean?
+                {notFoundCopy.didYouMean}
               </p>
               <div className="flex flex-wrap justify-center gap-2">
                 {suggestions.map((gene) => (
@@ -76,11 +79,13 @@ export default async function GeneNotFound() {
             <Link href="/genes">
               <Button>
                 <SearchIcon className="size-4" />
-                Search Genes
+                {notFoundCopy.searchAction}
               </Button>
             </Link>
             <Link href="/design-tool">
-              <Button variant="outline">Enter Custom Sequence</Button>
+              <Button variant="outline">
+                {notFoundCopy.customSequenceAction}
+              </Button>
             </Link>
           </div>
         </CardContent>

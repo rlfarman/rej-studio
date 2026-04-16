@@ -11,18 +11,14 @@ import {
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 import { FormValues } from '../types/form-schema'
+import { designToolCopy } from '../copy'
 
 // Semantic tiers mapped to numeric weights. The algorithm takes a 0-100
 // weight, but in practice presets use 1-10 and useful range tops out ~50.
 // Surfacing these as named tiers matches the language in the help text
 // ("1 = gentle, 10 = strong, 50+ = aggressive") and removes the guesswork
 // of picking an arbitrary number.
-const TIERS = [
-  { label: 'Gentle', value: 1 },
-  { label: 'Moderate', value: 3 },
-  { label: 'Strong', value: 10 },
-  { label: 'Aggressive', value: 50 },
-] as const
+const TIERS = designToolCopy.weights.tiers
 
 function nearestTierIndex(value: number): number {
   let bestIndex = 0
@@ -171,19 +167,20 @@ function EnableLink({
 export function CodonOptimizeWeight() {
   const { watch, setValue } = useFormContext<FormValues>()
   const disabled = watch('species') === 'none'
+  const copy = designToolCopy.weights.codonOptimize
 
   return (
     <WeightField
       name="codonOptimizeWeight"
-      label="Codon optimization"
-      description="How strongly to prefer codons favored by the target species."
+      label={copy.label}
+      description={copy.description}
       disabled={disabled}
       disabledHint={
         <EnableLink
           onClick={() => setValue('species', 'human')}
-          suffix="above to enable codon optimization."
+          suffix={copy.enableSuffix}
         >
-          Select a species
+          {copy.enableLink}
         </EnableLink>
       }
     />
@@ -193,19 +190,20 @@ export function CodonOptimizeWeight() {
 export function RemoveCrypticSpliceSitesWeight() {
   const { watch, setValue } = useFormContext<FormValues>()
   const disabled = !watch('removeCrypticSpliceSites')
+  const copy = designToolCopy.weights.removeCrypticSpliceSites
 
   return (
     <WeightField
       name="removeCrypticSpliceSitesWeight"
-      label="Cryptic splice site removal"
-      description="How aggressively to eliminate splice-like motifs. Higher values remove more sites but constrain codon choice."
+      label={copy.label}
+      description={copy.description}
       disabled={disabled}
       disabledHint={
         <EnableLink
           onClick={() => setValue('removeCrypticSpliceSites', true)}
-          suffix="above to set this weight."
+          suffix={copy.enableSuffix}
         >
-          Enable cryptic splice site removal
+          {copy.enableLink}
         </EnableLink>
       }
     />
@@ -215,19 +213,20 @@ export function RemoveCrypticSpliceSitesWeight() {
 export function MinimizeCpGsWeight() {
   const { watch, setValue } = useFormContext<FormValues>()
   const disabled = !watch('minimizeCpgs')
+  const copy = designToolCopy.weights.minimizeCpgs
 
   return (
     <WeightField
       name="minimizeCpgsWeight"
-      label="CpG minimization"
-      description="How strongly to avoid CpG dinucleotides. High values greatly reduce CpGs but may lower GC content."
+      label={copy.label}
+      description={copy.description}
       disabled={disabled}
       disabledHint={
         <EnableLink
           onClick={() => setValue('minimizeCpgs', true)}
-          suffix="above to set this weight."
+          suffix={copy.enableSuffix}
         >
-          Enable CpG minimization
+          {copy.enableLink}
         </EnableLink>
       }
     />
@@ -237,19 +236,20 @@ export function MinimizeCpGsWeight() {
 export function ReduceKmerComplexityWeight() {
   const { watch, setValue } = useFormContext<FormValues>()
   const disabled = !watch('reduceKmerComplexity')
+  const copy = designToolCopy.weights.reduceKmerComplexity
 
   return (
     <WeightField
       name="reduceKmerComplexityWeight"
-      label="k-mer complexity reduction"
-      description="How strongly to diversify 10-mer repeats. Helps synthesis and reduces recombination risk."
+      label={copy.label}
+      description={copy.description}
       disabled={disabled}
       disabledHint={
         <EnableLink
           onClick={() => setValue('reduceKmerComplexity', true)}
-          suffix="above to set this weight."
+          suffix={copy.enableSuffix}
         >
-          Enable k-mer complexity reduction
+          {copy.enableLink}
         </EnableLink>
       }
     />

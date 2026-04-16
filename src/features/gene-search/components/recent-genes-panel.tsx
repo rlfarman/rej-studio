@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button'
 import { TruncatedText } from '@/components/truncated-text'
 import { SpeciesIcon } from '@/components/bio/species-icon'
 import { X } from 'lucide-react'
+import { geneSearchCopy } from '@/features/gene-search/copy'
 
 const COLLAPSED_COUNT = 3
 const EXPANDED_MAX = 15
@@ -32,7 +33,9 @@ export function RecentGenes() {
   return (
     <SidebarGroup>
       <div className="bg-sidebar sticky top-0 z-10 flex items-center justify-between">
-        <SidebarGroupLabel>Recent Searches</SidebarGroupLabel>
+        <SidebarGroupLabel>
+          {geneSearchCopy.recentPanel.heading}
+        </SidebarGroupLabel>
         {recentGenes.length > 0 && (
           <Button
             variant="ghost"
@@ -40,7 +43,7 @@ export function RecentGenes() {
             onClick={clearRecentGenes}
             className="text-xs"
           >
-            Clear
+            {geneSearchCopy.recentPanel.clear}
           </Button>
         )}
       </div>
@@ -75,7 +78,9 @@ export function RecentGenes() {
                   <SidebarMenuAction
                     showOnHover
                     onClick={() => removeRecentGene(gene.id)}
-                    aria-label={`Remove ${gene.symbol} from recent searches`}
+                    aria-label={geneSearchCopy.recentPanel.removeAriaLabel(
+                      gene.symbol,
+                    )}
                     className="bg-sidebar hover:bg-sidebar-accent"
                   >
                     <X />
@@ -90,13 +95,15 @@ export function RecentGenes() {
                 onClick={() => setExpanded(!expanded)}
                 className="text-muted-foreground w-full text-xs"
               >
-                {expanded ? 'Show less' : `+ Show ${hiddenCount} more`}
+                {expanded
+                  ? geneSearchCopy.recentPanel.showLess
+                  : geneSearchCopy.recentPanel.showMore(hiddenCount)}
               </Button>
             )}
           </>
         ) : (
           <div className="text-muted-foreground p-4 text-xs">
-            Your recent gene searches will appear here.
+            {geneSearchCopy.recentPanel.emptyState}
           </div>
         )}
       </SidebarGroupContent>

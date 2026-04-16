@@ -9,23 +9,23 @@ import { AnalyticsPageview } from '@/components/analytics-pageview'
 import { AnalyticsProperties } from '@/components/analytics-properties'
 import { WebVitals } from '@/components/web-vitals'
 import { Suspense } from 'react'
+import { appCopy } from '@/lib/copy'
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://rejstudio.com'
 
 export const metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: 'REJ Studio',
-    template: '%s | REJ Studio',
+    default: appCopy.rootMetadata.titleDefault,
+    template: appCopy.rootMetadata.titleTemplate,
   },
-  description:
-    'Search genes, browse isoforms, and design optimized RNA End-Joining sequences — all in one tool.',
+  description: appCopy.rootMetadata.description,
   alternates: {
     canonical: '/',
   },
   openGraph: {
     type: 'website',
-    siteName: 'REJ Studio',
+    siteName: appCopy.rootMetadata.ogSiteName,
     locale: 'en_US',
   },
   twitter: {
@@ -34,7 +34,7 @@ export const metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'REJ Studio',
+    title: appCopy.rootMetadata.appleWebAppTitle,
   },
 }
 
@@ -62,7 +62,7 @@ export default function RootLayout({
               href="#main-content"
               className="focus:bg-background focus:text-foreground focus:ring-ring sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:rounded-md focus:px-4 focus:py-2 focus:shadow-md focus:ring-2"
             >
-              Skip to content
+              {appCopy.skipToContent}
             </a>
             {children}
             <Toaster />

@@ -5,23 +5,27 @@ import { Dna } from 'lucide-react'
 import { Hero, HeroItem, DnaFloat } from '@/app/_components/hero'
 import { HomeTour } from '@/features/onboarding/components/home-tour'
 import type { Metadata } from 'next'
+import { appCopy } from '@/lib/copy'
+import { ogImageUrl } from '@/lib/og'
 
 export const metadata: Metadata = {
-  title: 'REJ Studio — RNA End-Joining sequence design',
-  description:
-    'Search genes, browse isoforms, and design optimized RNA End-Joining sequences — all in one tool.',
+  title: appCopy.home.title,
+  description: appCopy.home.description,
   alternates: { canonical: '/' },
   openGraph: {
-    title: 'RNA End-Joining sequence design',
-    description:
-      'Search genes, browse isoforms, and design optimized RNA End-Joining sequences.',
+    title: appCopy.home.ogTitle,
+    description: appCopy.home.ogDescription,
     url: '/',
     images: [
       {
-        url: '/api/og?title=RNA+End-Joining%0Asequence+design&description=Search+genes+%C2%B7+Browse+isoforms+%C2%B7+Optimize+sequences&url=rejstudio.com',
+        url: ogImageUrl({
+          title: 'RNA End-Joining\nsequence design',
+          description: 'Search genes · Browse isoforms · Optimize sequences',
+          url: 'rejstudio.com',
+        }),
         width: 1200,
         height: 630,
-        alt: 'REJ Studio — RNA End-Joining made easy',
+        alt: appCopy.home.ogImageAlt,
       },
     ],
   },
@@ -38,16 +42,16 @@ export default function HomePage() {
             </DnaFloat>
           </HeroItem>
           <HeroItem index={1} className="pb-2 font-mono">
-            RNA END-JOINING (REJ) Studio
+            {appCopy.home.subtitle}
           </HeroItem>
           <HeroItem index={2}>
             <h1 className="text-primary pb-2 text-3xl font-bold tracking-tight sm:text-4xl">
-              What gene are you optimizing?
+              {appCopy.home.heading}
             </h1>
           </HeroItem>
           <HeroItem index={3}>
             <p className="text-muted-foreground" data-tour="home-design-link">
-              Try searching for a gene, or{' '}
+              {appCopy.home.designPromptPrefix}
               <Link
                 href={{
                   pathname: '/design-tool',
@@ -55,9 +59,9 @@ export default function HomePage() {
                 }}
                 className="text-primary font-medium underline underline-offset-4"
               >
-                design your own
+                {appCopy.home.designPromptLink}
               </Link>
-              .
+              {appCopy.home.designPromptSuffix}
             </p>
           </HeroItem>
         </div>

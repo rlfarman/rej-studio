@@ -10,6 +10,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { FormValues } from '../types/form-schema'
 import { cn } from '@/lib/utils'
+import { designToolCopy } from '../copy'
 
 const MAX_NAME_LENGTH = 250
 
@@ -25,13 +26,12 @@ export function NameInput() {
       render={({ field }) => (
         <FormItem>
           <FormLabel>
-            Choose a name for your coding sequence{' '}
-            <span aria-hidden="true">*</span>
+            {designToolCopy.form.name.label} <span aria-hidden="true">*</span>
           </FormLabel>
           <FormControl>
             <Input
               type="text"
-              placeholder="My Custom Sequence"
+              placeholder={designToolCopy.form.name.placeholder}
               aria-required="true"
               maxLength={MAX_NAME_LENGTH}
               {...field}
