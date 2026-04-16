@@ -78,3 +78,6 @@ data/local.db/
 
 # Worktrees
 .worktrees/
+
+# storybook
+storybook-static/
