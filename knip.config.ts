@@ -14,6 +14,10 @@ const config: KnipConfig = {
   ],
   project: ['src/**/*.{ts,tsx}', 'scripts/**/*.{ts,tsx}'],
   ignore: ['src/components/ui/**'],
+  storybook: {
+    config: ['.storybook/main.ts', '.storybook/preview.ts'],
+    entry: ['src/**/*.stories.{ts,tsx}'],
+  },
   ignoreDependencies: [
     // Tailwind / PostCSS pipeline — imported by PostCSS, not by app code
     'tailwindcss',
