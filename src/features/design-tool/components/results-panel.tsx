@@ -4,11 +4,8 @@ import { memo, useMemo } from 'react'
 import { m } from 'motion/react'
 import {
   Download,
-  Copy,
-  Check,
   Clock,
   Scissors,
-  ArrowRight,
   ChevronRight,
   Package,
   Link2,
@@ -35,9 +32,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { cn } from '@/lib/utils'
 import { fadeUp } from '@/lib/motion'
-import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
+import { MetricCell } from '@/components/metric-cell'
+import { CopyButton } from '@/components/copy-button'
 import type { ProcessResult } from '@/features/design-tool/types/process-result'
 import { toast } from 'sonner'
 import { downloadResultsZip } from '@/features/design-tool/utils/build-zip'
@@ -101,68 +98,6 @@ function SplitVisualization({
         </span>
       </div>
       <SplitBar fivePrimeLength={seq5Length} threePrimeLength={seq3Length} />
-    </div>
-  )
-}
-
-function MetricCell({
-  label,
-  before,
-  after,
-  unit,
-  lowerIsBetter,
-  formatter,
-  className,
-}: {
-  label: string
-  before: number | null
-  after: number | null
-  unit?: string
-  lowerIsBetter?: boolean
-  formatter?: (n: number) => string
-  className?: string
-}) {
-  const fmt =
-    formatter ??
-    ((n: number) => (Number.isInteger(n) ? n.toLocaleString() : n.toFixed(1)))
-  const hasBoth = before !== null && after !== null
-  const delta = hasBoth ? after - before : 0
-  const improved = lowerIsBetter ? delta < 0 : delta > 0
-  const worsened = lowerIsBetter ? delta > 0 : delta < 0
-
-  return (
-    <div className={cn('bg-muted/30 min-w-0 px-3 py-2', className)}>
-      <div className="text-muted-foreground truncate text-[10px] font-medium tracking-wider uppercase">
-        {label}
-      </div>
-      <div className="mt-0.5 flex min-w-0 items-center gap-1 text-sm tabular-nums">
-        {hasBoth ? (
-          <>
-            <span className="text-muted-foreground truncate">
-              {fmt(before)}
-              {unit}
-            </span>
-            <ArrowRight className="text-muted-foreground size-3 shrink-0" />
-            <span
-              className={cn(
-                'truncate font-medium',
-                improved && 'text-emerald-600 dark:text-emerald-400',
-                worsened && 'text-red-600 dark:text-red-400',
-              )}
-            >
-              {fmt(after)}
-              {unit}
-            </span>
-          </>
-        ) : after !== null ? (
-          <span className="truncate font-medium">
-            {fmt(after)}
-            {unit}
-          </span>
-        ) : (
-          <span className="text-muted-foreground">—</span>
-        )}
-      </div>
     </div>
   )
 }
@@ -279,17 +214,11 @@ function SequenceCard({
   label,
   sequence,
   fastaName,
-  copyHook,
 }: {
   label: string
   sequence: string
   fastaName: string
-  copyHook: ReturnType<typeof useCopyToClipboard>
 }) {
-  const { copy, isCopied } = copyHook
-  const rawId = `seq-${fastaName}-raw`
-  const fastaId = `seq-${fastaName}-fasta`
-
   return (
     <div className="bg-muted/30 space-y-2 rounded-lg border p-3">
       <div className="flex flex-wrap items-center justify-between gap-1.5">
@@ -316,36 +245,21 @@ function SequenceCard({
             <Download className="size-3.5" />
             FASTA
           </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
+          <CopyButton
+            text={() => formatFasta(fastaName, sequence)}
             className="h-9 gap-1.5 px-3 text-xs"
-            onClick={() => copy(formatFasta(fastaName, sequence), fastaId)}
             aria-label={`Copy ${label} FASTA to clipboard`}
           >
-            {isCopied(fastaId) ? (
-              <Check className="size-3.5" />
-            ) : (
-              <Copy className="size-3.5" />
-            )}
             FASTA
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
+          </CopyButton>
+          <CopyButton
+            text={sequence}
             className="h-9 gap-1.5 px-3 text-xs"
-            onClick={() => copy(sequence, rawId)}
+            copiedLabel="Copied"
             aria-label={`Copy ${label} raw sequence to clipboard`}
           >
-            {isCopied(rawId) ? (
-              <Check className="size-3.5" />
-            ) : (
-              <Copy className="size-3.5" />
-            )}
-            {isCopied(rawId) ? 'Copied' : 'Copy'}
-          </Button>
+            Copy
+          </CopyButton>
         </div>
       </div>
       <pre className="bg-muted max-h-40 overflow-auto rounded-md p-2.5 font-mono text-xs break-all whitespace-pre-wrap">
@@ -356,27 +270,22 @@ function SequenceCard({
 }
 
 function SequenceViewer({ result }: { result: ProcessResult }) {
-  const copyHook = useCopyToClipboard({ showToast: false })
-
   return (
     <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
       <SequenceCard
         label="5' Sequence"
         sequence={result.seq5}
         fastaName={`${result.name}_5prime`}
-        copyHook={copyHook}
       />
       <SequenceCard
         label="3' Sequence"
         sequence={result.seq3}
         fastaName={`${result.name}_3prime`}
-        copyHook={copyHook}
       />
       <SequenceCard
         label="Full Optimized"
         sequence={result.optimized_sequence}
         fastaName={`${result.name}_optimized`}
-        copyHook={copyHook}
       />
     </div>
   )

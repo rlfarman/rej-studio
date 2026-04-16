@@ -2,9 +2,7 @@
 
 import { useCallback, useDeferredValue, useMemo, useRef, useState } from 'react'
 import {
-  Check,
   ChevronRight,
-  Copy,
   FileText,
   Search,
   X,
@@ -12,9 +10,8 @@ import {
   ArrowDown,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
 import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
+import { CopyButton } from '@/components/copy-button'
 import type {
   ObjectiveEvaluationEntry,
   ObjectivesReport,
@@ -242,8 +239,6 @@ function ComparisonPanel({
   scrollRef,
   onScroll,
 }: ComparisonPanelProps) {
-  const { copy, isCopied } = useCopyToClipboard({ showToast: false })
-  const copyId = `objectives-${label.toLowerCase()}`
   const isAfter = label === 'After'
 
   return (
@@ -252,21 +247,14 @@ function ComparisonPanel({
         <span className="text-muted-foreground text-[10px] font-semibold tracking-wider uppercase">
           {label}
         </span>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
+        <CopyButton
+          text={rawText}
+          copiedLabel="Copied"
           className="h-6 gap-1 px-1.5 text-[10px]"
-          onClick={() => copy(rawText, copyId)}
           disabled={!rawText}
         >
-          {isCopied(copyId) ? (
-            <Check className="size-3" />
-          ) : (
-            <Copy className="size-3" />
-          )}
-          {isCopied(copyId) ? 'Copied' : 'Copy raw'}
-        </Button>
+          Copy raw
+        </CopyButton>
       </div>
       <div
         ref={scrollRef}
@@ -751,9 +739,6 @@ export function ObjectivesSummary({
   const afterRef = useRef<HTMLDivElement | null>(null)
   const syncingRef = useRef(false)
 
-  const { copy: copyMarkdown, isCopied: isMdCopied } = useCopyToClipboard({
-    showToast: false,
-  })
   const markdownReport = useMemo(
     () => buildMarkdownReport(reportBefore, reportAfter),
     [reportBefore, reportAfter],
@@ -834,20 +819,15 @@ export function ObjectivesSummary({
                     </button>
                   )}
                 </div>
-                <Button
-                  type="button"
+                <CopyButton
+                  text={markdownReport}
+                  icon={FileText}
                   variant="outline"
-                  size="sm"
+                  copiedLabel="Copied"
                   className="h-7 shrink-0 gap-1 px-2 text-[11px]"
-                  onClick={() => copyMarkdown(markdownReport, 'md-report')}
                 >
-                  {isMdCopied('md-report') ? (
-                    <Check className="size-3" />
-                  ) : (
-                    <FileText className="size-3" />
-                  )}
-                  {isMdCopied('md-report') ? 'Copied' : 'Copy as MD'}
-                </Button>
+                  Copy as MD
+                </CopyButton>
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <ComparisonPanel

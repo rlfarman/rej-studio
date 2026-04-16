@@ -1,7 +1,6 @@
 'use client'
 
 import { useMemo } from 'react'
-import { cn } from '@/lib/utils'
 import {
   computeGcPercent,
   countCpG,
@@ -11,28 +10,10 @@ import {
   assessDesignSuitability,
   getSuitabilityConfig,
 } from '@/lib/bio/design-suitability'
+import { MetricCell } from '@/components/metric-cell'
 
 interface IsoformMetricsStripProps {
   codingSequence: string
-}
-
-function MetricCell({
-  label,
-  value,
-  valueClassName,
-}: {
-  label: string
-  value: string
-  valueClassName?: string
-}) {
-  return (
-    <div className="bg-muted/30 min-w-0 px-3 py-2">
-      <div className="text-muted-foreground text-[10px] font-medium tracking-wider uppercase">
-        {label}
-      </div>
-      <div className={cn('text-sm tabular-nums', valueClassName)}>{value}</div>
-    </div>
-  )
 }
 
 export function IsoformMetricsStrip({
