@@ -257,7 +257,7 @@ export function GeneSearchCommand({
                           <span className="font-mono font-medium">
                             {gene.symbol}
                           </span>
-                          <div className="flex min-w-0 flex-col">
+                          <div className="flex min-w-0 flex-1 flex-col">
                             <TruncatedText
                               tooltip={gene.name}
                               className="text-muted-foreground truncate"
@@ -294,7 +294,7 @@ export function GeneSearchCommand({
                             <span className="font-mono font-medium">
                               {gene.symbol}
                             </span>
-                            <div className="flex min-w-0 flex-col">
+                            <div className="flex min-w-0 flex-1 flex-col">
                               <TruncatedText
                                 tooltip={gene.name}
                                 className="text-muted-foreground truncate"
@@ -328,7 +328,7 @@ export function GeneSearchCommand({
                     <span className="font-mono font-medium">
                       <HighlightMatch text={gene.symbol} query={query} />
                     </span>
-                    <div className="flex min-w-0 flex-col">
+                    <div className="flex min-w-0 flex-1 flex-col">
                       <TruncatedText
                         tooltip={gene.name}
                         className="text-muted-foreground truncate"
