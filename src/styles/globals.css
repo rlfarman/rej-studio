@@ -318,3 +318,39 @@ html {
     transform: translateX(100%);
   }
 }
+
+/* DnaLoader — rungs light up left-to-right in sequence. */
+@keyframes dna-rung-glow {
+  0%,
+  100% {
+    opacity: 0.15;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* DnaLoader — subtle current flowing along a helix strand. Tiled dash
+   pattern drifts by exactly one tile so the loop has no seam. */
+@keyframes dna-strand-flow {
+  0% {
+    stroke-dashoffset: 0;
+  }
+  100% {
+    stroke-dashoffset: -24;
+  }
+}
+
+/* DnaLoader — soft stroke-width/opacity breathe on each strand, paired
+   with flow for a living, slightly unsettled feel. */
+@keyframes dna-strand-breathe {
+  0%,
+  100% {
+    stroke-width: 1.25;
+    opacity: 0.7;
+  }
+  50% {
+    stroke-width: 1.75;
+    opacity: 1;
+  }
+}
