@@ -33,7 +33,7 @@ describe('ErrorPage (root)', () => {
     const error = new Error('test error')
     const reset = vi.fn()
     const { getAllByText } = render(<ErrorPage error={error} reset={reset} />)
-    fireEvent.click(getAllByText('Try Again')[0])
+    fireEvent.click(getAllByText('Try again')[0])
     expect(reset).toHaveBeenCalledTimes(1)
   })
 

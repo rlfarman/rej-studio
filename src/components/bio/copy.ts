@@ -2,7 +2,7 @@ export const bioWidgetsCopy = {
   speciesSelect: {
     mice: 'Mice',
     humans: 'Humans',
-    allSpecies: 'All Species',
+    allSpecies: 'All species',
     choose: 'Choose a species',
     descriptions: {
       all: 'Show all genes and isoforms',
