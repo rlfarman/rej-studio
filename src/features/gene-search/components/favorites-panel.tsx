@@ -47,7 +47,6 @@ export function FavoriteGenes() {
             showOnHover
             onClick={() => removeFavoriteGene(gene.id)}
             aria-label={copy.removeAria(gene.symbol)}
-            className="bg-sidebar hover:bg-sidebar-accent"
           >
             <X />
           </SidebarMenuAction>
