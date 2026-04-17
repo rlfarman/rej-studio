@@ -1,6 +1,5 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import { m, AnimatePresence } from 'motion/react'
 import {
   Dialog,
@@ -45,19 +44,17 @@ function tourForPath(pathname: string): TourId | null {
 }
 
 export function WelcomeDialog() {
-  const { hasSeenWelcome, markWelcomeSeen, startTour } = useOnboarding()
+  const {
+    welcomeDialogOpen: open,
+    closeWelcome,
+    markWelcomeSeen,
+    startTour,
+  } = useOnboarding()
   const pathname = usePathname()
-  const [open, setOpen] = useState(false)
-
-  useEffect(() => {
-    if (hasSeenWelcome) return
-    const timer = setTimeout(() => setOpen(true), 400)
-    return () => clearTimeout(timer)
-  }, [hasSeenWelcome])
 
   function handleStart() {
     markWelcomeSeen()
-    setOpen(false)
+    closeWelcome()
     const tourId = tourForPath(pathname)
     if (tourId) {
       setTimeout(() => startTour(tourId), 300)
@@ -66,7 +63,7 @@ export function WelcomeDialog() {
 
   function handleSkip() {
     markWelcomeSeen()
-    setOpen(false)
+    closeWelcome()
   }
 
   return (

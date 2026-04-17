@@ -8,6 +8,7 @@ interface OnboardingState {
   completedTours: TourId[]
   hasSeenWelcome: boolean
   activeTourId: TourId | null
+  welcomeDialogOpen: boolean
 
   markTourCompleted: (tourId: TourId) => void
   markWelcomeSeen: () => void
@@ -15,6 +16,8 @@ interface OnboardingState {
   endTour: () => void
   resetAllTours: () => void
   isTourCompleted: (tourId: TourId) => boolean
+  openWelcome: () => void
+  closeWelcome: () => void
 }
 
 export const useOnboarding = create<OnboardingState>()(
@@ -23,6 +26,7 @@ export const useOnboarding = create<OnboardingState>()(
       completedTours: [],
       hasSeenWelcome: false,
       activeTourId: null,
+      welcomeDialogOpen: false,
 
       markTourCompleted: (tourId) =>
         set((state) => ({
@@ -55,6 +59,9 @@ export const useOnboarding = create<OnboardingState>()(
         }),
 
       isTourCompleted: (tourId) => get().completedTours.includes(tourId),
+
+      openWelcome: () => set({ welcomeDialogOpen: true }),
+      closeWelcome: () => set({ welcomeDialogOpen: false }),
     }),
     {
       name: 'rej-studio:onboarding',

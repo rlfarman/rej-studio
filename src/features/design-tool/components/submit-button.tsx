@@ -63,7 +63,7 @@ export function SubmitButton({
   return (
     <Button
       type="submit"
-      className="inline"
+      className="inline bg-[oklch(0.82_0.2_125)] text-[oklch(0.2_0.06_140)] hover:bg-[oklch(0.77_0.2_125)]"
       disabled={isProcessing}
       aria-busy={isProcessing}
       aria-live="polite"

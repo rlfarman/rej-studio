@@ -33,7 +33,6 @@ import {
   MoreHorizontal,
   PackageOpen,
 } from 'lucide-react'
-import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -656,56 +655,10 @@ function SortableHead({
   )
 }
 
-export function IsoformTableLoading({ rows = 4 }: { rows?: number } = {}) {
+export function IsoformTableLoading() {
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead className="w-8" />
-          <TableHead>
-            <span className="hidden sm:inline">Ensembl Transcript ID</span>
-            <span className="sm:hidden">ENST</span>
-          </TableHead>
-          <TableHead>CDS</TableHead>
-          <TableHead className="hidden md:table-cell">Protein</TableHead>
-          <TableHead className="hidden md:table-cell">GC %</TableHead>
-          <TableHead className="hidden lg:table-cell">CpG</TableHead>
-          <TableHead className="hidden lg:table-cell">WGGW</TableHead>
-          <TableHead className="hidden lg:table-cell">Suitability</TableHead>
-          <TableHead className="w-10" />
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {Array.from({ length: rows }, (_, i) => (
-          <TableRow key={i}>
-            <TableCell>
-              <ChevronRight className="text-muted-foreground/40 size-4" />
-            </TableCell>
-            <TableCell>
-              <Skeleton className="h-4 w-36" />
-            </TableCell>
-            <TableCell>
-              <Skeleton className="h-4 w-16" />
-            </TableCell>
-            <TableCell className="hidden md:table-cell">
-              <Skeleton className="h-4 w-14" />
-            </TableCell>
-            <TableCell className="hidden md:table-cell">
-              <Skeleton className="h-4 w-12" />
-            </TableCell>
-            <TableCell className="hidden lg:table-cell">
-              <Skeleton className="h-4 w-10" />
-            </TableCell>
-            <TableCell className="hidden lg:table-cell">
-              <Skeleton className="h-4 w-10" />
-            </TableCell>
-            <TableCell className="hidden lg:table-cell">
-              <Skeleton className="h-5 w-20 rounded-full" />
-            </TableCell>
-            <TableCell />
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+    <p className="text-muted-foreground px-2 py-4 text-sm" aria-live="polite">
+      Loading isoforms…
+    </p>
   )
 }

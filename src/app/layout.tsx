@@ -1,6 +1,27 @@
 import '@/styles/globals.css'
-import { GeistSans } from 'geist/font/sans'
-import { GeistMono } from 'geist/font/mono'
+import {
+  Source_Code_Pro,
+  Source_Sans_3,
+  Source_Serif_4,
+} from 'next/font/google'
+
+const fontSans = Source_Sans_3({
+  subsets: ['latin'],
+  variable: '--font-geist-sans',
+  display: 'swap',
+})
+
+const fontMono = Source_Code_Pro({
+  subsets: ['latin'],
+  variable: '--font-geist-mono',
+  display: 'swap',
+})
+
+const fontDisplay = Source_Serif_4({
+  subsets: ['latin'],
+  variable: '--font-source-serif',
+  display: 'swap',
+})
 import { ThemeProvider } from '@/app/_components/layout/theme-provider'
 import { Toaster } from '@/components/ui/sonner'
 import { QueryProvider } from '@/app/_components/providers/query-provider'
@@ -46,7 +67,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${GeistSans.variable} ${GeistMono.variable}`}
+      className={`${fontSans.variable} ${fontMono.variable} ${fontDisplay.variable}`}
       suppressHydrationWarning
     >
       <head />
