@@ -12,18 +12,21 @@ import { cancelJob as cancelJobAction } from '@/features/design-tool/api/jobs'
 import { ExpandableSidebarList } from '@/components/expandable-sidebar-list'
 import { TruncatedText } from '@/components/truncated-text'
 import { Loader2, CircleAlert, X } from 'lucide-react'
+import { designToolCopy } from '../copy'
+
+const copy = designToolCopy.recentJobs
 
 function formatTimeAgo(dateString: string): string {
   const seconds = Math.floor(
     (Date.now() - new Date(dateString).getTime()) / 1000,
   )
-  if (seconds < 60) return 'just now'
+  if (seconds < 60) return copy.justNow
   const minutes = Math.floor(seconds / 60)
-  if (minutes < 60) return `${minutes}m ago`
+  if (minutes < 60) return copy.minutesAgo(minutes)
   const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `${hours}h ago`
+  if (hours < 24) return copy.hoursAgo(hours)
   const days = Math.floor(hours / 24)
-  return `${days}d ago`
+  return copy.daysAgo(days)
 }
 
 interface RecentJobsProps {
@@ -48,7 +51,7 @@ export function RecentJobs({ onSelectJob }: RecentJobsProps) {
         status: 'cancelled',
         error: {
           code: 'cancelled',
-          message: 'Cancelled',
+          message: copy.cancelledMessage,
           retriable: true,
         },
       })
@@ -60,12 +63,12 @@ export function RecentJobs({ onSelectJob }: RecentJobsProps) {
 
   return (
     <ExpandableSidebarList
-      label="Recent Jobs"
+      label={copy.label}
       items={entries}
       getItemKey={(entry) => entry.id}
       onClear={clearHistory}
-      emptyMessage="Your completed optimization jobs will appear here."
-      menuAriaLabel="Recent jobs"
+      emptyMessage={copy.empty}
+      menuAriaLabel={copy.menuAria}
       renderItem={(entry) => (
         <SidebarMenuItem>
           <SidebarMenuButton
@@ -95,7 +98,7 @@ export function RecentJobs({ onSelectJob }: RecentJobsProps) {
                 ? (entry.stage ??
                   (entry.progress !== undefined
                     ? `${Math.round(entry.progress * 100)}%`
-                    : 'running'))
+                    : copy.running))
                 : formatTimeAgo(entry.createdAt)}
             </span>
           </SidebarMenuButton>
@@ -104,8 +107,8 @@ export function RecentJobs({ onSelectJob }: RecentJobsProps) {
             onClick={() => handleRemove(entry)}
             aria-label={
               entry.status === 'running'
-                ? `Cancel ${entry.name}`
-                : `Remove ${entry.name} from recent jobs`
+                ? copy.cancelAria(entry.name)
+                : copy.removeAria(entry.name)
             }
             className="bg-sidebar hover:bg-sidebar-accent"
           >

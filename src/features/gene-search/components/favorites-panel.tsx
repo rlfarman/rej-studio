@@ -11,16 +11,19 @@ import { ExpandableSidebarList } from '@/components/expandable-sidebar-list'
 import { TruncatedText } from '@/components/truncated-text'
 import { SpeciesIcon } from '@/components/bio/species-icon'
 import { X } from 'lucide-react'
+import { geneSearchCopy } from '../copy'
+
+const copy = geneSearchCopy.favoritesPanel
 
 export function FavoriteGenes() {
   const { favoriteGenes, removeFavoriteGene } = useFavoriteGenes()
 
   return (
     <ExpandableSidebarList
-      label="Favorites"
+      label={copy.label}
       items={favoriteGenes}
       getItemKey={(gene) => gene.id}
-      emptyMessage="No favorites yet. Star a gene to save it here."
+      emptyMessage={copy.empty}
       renderItem={(gene) => (
         <SidebarMenuItem>
           <SidebarMenuButton asChild size="sm" className="[&>svg]:size-3">
@@ -43,7 +46,7 @@ export function FavoriteGenes() {
           <SidebarMenuAction
             showOnHover
             onClick={() => removeFavoriteGene(gene.id)}
-            aria-label={`Remove ${gene.symbol} from favorites`}
+            aria-label={copy.removeAria(gene.symbol)}
             className="bg-sidebar hover:bg-sidebar-accent"
           >
             <X />

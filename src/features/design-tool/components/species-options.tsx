@@ -12,6 +12,7 @@ import { Dna } from 'lucide-react'
 import { useFormContext } from 'react-hook-form'
 import { DESIGN_TOOL_SPECIES_OPTIONS } from '../types/species-options'
 import { FormValues } from '../types/form-schema'
+import { designToolCopy } from '../copy'
 
 export function SpeciesOptions() {
   const { control, watch } = useFormContext<FormValues>()
@@ -24,13 +25,13 @@ export function SpeciesOptions() {
       render={({ field }) => (
         <FormItem>
           <FormLabel>
-            Harmonize codon usage for species
+            {designToolCopy.speciesOptions.label}
             {isProtein && <span aria-hidden="true"> *</span>}
           </FormLabel>
           <FormControl>
             <div
               role="radiogroup"
-              aria-label="Harmonize codon usage for species"
+              aria-label={designToolCopy.speciesOptions.label}
               className="grid grid-cols-1 gap-2 sm:grid-cols-3"
             >
               {DESIGN_TOOL_SPECIES_OPTIONS.map(({ label, value }) => {

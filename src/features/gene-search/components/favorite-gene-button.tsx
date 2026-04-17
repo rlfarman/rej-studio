@@ -6,6 +6,7 @@ import { AnimatePresence, m } from 'motion/react'
 import { popSpring } from '@/lib/motion'
 import type { SavedGene } from '@/features/gene-search/types/domain-types'
 import { trackEvent } from '@/lib/analytics'
+import { geneSearchCopy } from '../copy'
 
 interface FavoriteButtonProps {
   gene: SavedGene
@@ -35,7 +36,11 @@ export function FavoriteGeneButton({ gene }: FavoriteButtonProps) {
       onClick={handleFavoriteClick}
       variant="ghost"
       size="icon"
-      aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+      aria-label={
+        isFavorite
+          ? geneSearchCopy.favoriteButton.remove
+          : geneSearchCopy.favoriteButton.add
+      }
     >
       <AnimatePresence mode="wait" initial={false}>
         <m.div

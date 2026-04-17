@@ -15,24 +15,25 @@ import { usePathname } from 'next/navigation'
 import { Dna, Search, FlaskConical, Download } from 'lucide-react'
 import { popSpring } from '@/lib/motion'
 import type { TourId } from '../tours'
+import { onboardingCopy } from '../copy'
+
+const copy = onboardingCopy.welcomeDialog
 
 const FEATURES = [
   {
     icon: Search,
-    title: 'Search genes',
-    description: 'Browse 30,000+ genes across human and mouse genomes',
+    title: copy.features.searchGenes.title,
+    description: copy.features.searchGenes.description,
   },
   {
     icon: FlaskConical,
-    title: 'Compare isoforms',
-    description:
-      'View isoform metrics, suitability scores, and sequence identity',
+    title: copy.features.compareIsoforms.title,
+    description: copy.features.compareIsoforms.description,
   },
   {
     icon: Download,
-    title: 'Optimize sequences',
-    description:
-      'Design split-intein sequences with codon optimization and more',
+    title: copy.features.optimizeSequences.title,
+    description: copy.features.optimizeSequences.description,
   },
 ] as const
 
@@ -93,10 +94,8 @@ export function WelcomeDialog() {
 
         <div className="p-6">
           <DialogHeader className="mb-4">
-            <DialogTitle className="text-xl">Welcome to REJ Studio</DialogTitle>
-            <DialogDescription>
-              Design optimized RNA End-Joining sequences in three steps.
-            </DialogDescription>
+            <DialogTitle className="text-xl">{copy.title}</DialogTitle>
+            <DialogDescription>{copy.description}</DialogDescription>
           </DialogHeader>
 
           {/* Feature list */}
@@ -126,9 +125,9 @@ export function WelcomeDialog() {
 
           <DialogFooter className="mt-6">
             <Button variant="ghost" onClick={handleSkip}>
-              Skip for now
+              {copy.skip}
             </Button>
-            <Button onClick={handleStart}>Take the tour</Button>
+            <Button onClick={handleStart}>{copy.takeTour}</Button>
           </DialogFooter>
         </div>
       </DialogContent>

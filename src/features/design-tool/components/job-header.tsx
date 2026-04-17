@@ -14,6 +14,9 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import type { DesignToolSpecies } from '@/features/design-tool/types/species-options'
+import { designToolCopy } from '../copy'
+
+const copy = designToolCopy.jobHeader
 
 interface RunningPlaceholderProps {
   stage?: string
@@ -40,10 +43,9 @@ export function RunningPlaceholder({
           <Loader2 className="text-primary relative size-6 animate-spin" />
         </div>
         <div className="space-y-1 text-center">
-          <p className="text-sm font-medium">Optimizing your sequence…</p>
+          <p className="text-sm font-medium">{copy.running.title}</p>
           <p className="text-muted-foreground text-xs">
-            {stage ??
-              'Running DNAChisel on the server. This usually takes a few seconds.'}
+            {stage ?? copy.running.defaultStage}
           </p>
         </div>
         {displayedPct !== null && (
@@ -131,11 +133,7 @@ interface JobHeaderProps {
   onCancel?: () => void
 }
 
-const SPECIES_LABEL: Record<DesignToolSpecies, string> = {
-  none: '',
-  human: 'Human',
-  mouse: 'Mouse',
-}
+const SPECIES_LABEL: Record<DesignToolSpecies, string> = copy.speciesLabel
 
 function StatusDot({ status }: { status: JobHeaderStatus }) {
   const classes = cn(
@@ -166,13 +164,13 @@ function statusMessage({
   processingTimeSeconds,
   errorMessage,
 }: Pick<JobHeaderProps, 'status' | 'processingTimeSeconds' | 'errorMessage'>) {
-  if (status === 'running') return 'Optimizing codons…'
+  if (status === 'running') return copy.statusRunning
   if (status === 'completed')
     return processingTimeSeconds != null
-      ? `Completed in ${processingTimeSeconds}s`
-      : 'Completed'
-  if (status === 'failed') return errorMessage ?? 'Job failed'
-  return 'Cancelled'
+      ? copy.statusCompletedIn(processingTimeSeconds)
+      : copy.statusCompleted
+  if (status === 'failed') return errorMessage ?? copy.statusFailedDefault
+  return copy.statusCancelled
 }
 
 export function JobHeader({
@@ -200,7 +198,7 @@ export function JobHeader({
             <div className="min-w-0 space-y-0.5">
               <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
                 <h2 className="truncate text-sm font-semibold">
-                  {name || 'Untitled run'}
+                  {name || copy.untitled}
                 </h2>
                 <span className="text-muted-foreground text-xs tabular-nums">
                   · {sequenceLength.toLocaleString()} bp
@@ -231,24 +229,24 @@ export function JobHeader({
                 size="sm"
                 onClick={onCancel}
               >
-                Cancel
+                {copy.buttonCancel}
               </Button>
             )}
             <Button type="button" variant="outline" size="sm" onClick={onEdit}>
               <Pencil className="size-3.5" />
-              Edit
+              {copy.buttonEdit}
             </Button>
             {canRerun && (
               <Button type="button" size="sm" onClick={onRerun}>
                 {status === 'failed' ? (
                   <>
                     <RotateCw className="size-3.5" />
-                    Run again
+                    {copy.buttonRunAgain}
                   </>
                 ) : (
                   <>
                     <Play className="size-3.5" />
-                    Re-run
+                    {copy.buttonRerun}
                   </>
                 )}
               </Button>

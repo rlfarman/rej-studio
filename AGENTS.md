@@ -15,20 +15,21 @@ REJ Studio is a bioinformatics web app for RNA End-Joining sequence design. User
 
 ## Key Directories
 
-| Path                  | Purpose                                                                                              |
-| --------------------- | ---------------------------------------------------------------------------------------------------- |
-| `src/app/`            | Next.js pages, layouts, and route-specific `_components/` (App Router)                               |
-| `src/features/`       | Self-contained feature modules (`gene-search`, `design-tool`); server actions here                   |
-| `src/components/ui/`  | shadcn/ui primitives                                                                                 |
-| `src/components/bio/` | Bio-domain widgets (species select, diagnostic badges, DNA icon)                                     |
-| `src/components/`     | Generic shared widgets (top-level)                                                                   |
-| `src/lib/bio/`        | Bio-domain utilities (species types, FASTA, sequence utils, reverse translation, design suitability) |
-| `src/lib/`            | Generic shared utilities (`cn`, motion, file download) at the top level                              |
-| `src/hooks/`          | Generic shared React hooks                                                                           |
-| `src/stores/`         | Shared Zustand stores (e.g. species filter)                                                          |
-| `src/drizzle/`        | DB schema and client (`schema.ts`, `db.ts`)                                                          |
-| `python/`             | FastAPI Python backend (`index.py`, `algorithm.py`, `requirements.txt`)                              |
-| `modal/`              | Modal deployment for the Python backend (production compute)                                         |
+| Path                  | Purpose                                                                                                        |
+| --------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `src/app/`            | Next.js pages, layouts, and route-specific `_components/` (App Router)                                         |
+| `src/features/`       | Self-contained feature modules (`gene-search`, `design-tool`); server actions here                             |
+| `src/components/ui/`  | shadcn/ui primitives                                                                                           |
+| `src/components/bio/` | Bio-domain widgets (species select, diagnostic badges, DNA icon)                                               |
+| `src/components/`     | Generic shared widgets (top-level)                                                                             |
+| `src/lib/bio/`        | Bio-domain utilities (species types, FASTA, sequence utils, reverse translation, design suitability)           |
+| `src/lib/`            | Generic shared utilities (`cn`, motion, file download) at the top level                                        |
+| `src/hooks/`          | Generic shared React hooks                                                                                     |
+| `src/stores/`         | Shared Zustand stores (e.g. species filter)                                                                    |
+| `src/copy/`           | Shared user-facing copy (`errors.ts`, `common.ts`, `app.ts`). Feature copy lives in `src/features/<f>/copy.ts` |
+| `src/drizzle/`        | DB schema and client (`schema.ts`, `db.ts`)                                                                    |
+| `python/`             | FastAPI Python backend (`index.py`, `algorithm.py`, `requirements.txt`)                                        |
+| `modal/`              | Modal deployment for the Python backend (production compute)                                                   |
 
 ## Development Commands
 
@@ -47,6 +48,18 @@ pnpm db:push      # Create/update tables in $DATABASE_URL from schema.ts
 pnpm db:upload    # Load JSONL into $DATABASE_URL via Drizzle (dialect-neutral)
 pnpm db:studio    # Browse DB in Drizzle Studio (local.drizzle.studio)
 ```
+
+## User-Facing Copy
+
+User-facing strings (headings, descriptions, toasts, validation messages, tour content, error pages, button labels, aria-labels with real text) are centralized in typed objects rather than inlined in JSX:
+
+- **Feature-owned copy** lives in `src/features/<feature>/copy.ts` and is consumed only from within that feature.
+- **Shared copy** lives in `src/copy/` (`errors.ts`, `common.ts`, `app.ts`) for strings used by ≥2 features or by app chrome.
+- **Bio widget copy** for shared bio components lives in `src/components/bio/copy.ts`.
+- **Zod validation messages** are pulled from the feature's `copy.ts` — don't inline them in schemas.
+- **Interpolation** uses functions on the copy object, not template literals at the call site: `copy.recent.cancelAria(name)` rather than `` `Cancel ${name}` ``.
+- **Don't move** tightly-coupled domain vocabulary (e.g. table headers like "Score", "GC", "CpG", "Identity") — those are terminology, not copy.
+- **Don't move** strings from shared UI primitives in `src/components/ui/` — callers pass text in; primitives stay reusable.
 
 ## Code Conventions
 

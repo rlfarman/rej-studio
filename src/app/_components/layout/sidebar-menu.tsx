@@ -33,11 +33,15 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar'
 import { useOnboarding } from '@/features/onboarding/stores/onboarding-store'
+import { commonCopy } from '@/copy/common'
+import { errorsCopy } from '@/copy/errors'
+
+const menuCopy = commonCopy.menu
 
 const THEMES = [
-  { value: 'light', label: 'Light', icon: Sun },
-  { value: 'dark', label: 'Dark', icon: Moon },
-  { value: 'system', label: 'System', icon: Monitor },
+  { value: 'light', label: menuCopy.theme.light, icon: Sun },
+  { value: 'dark', label: menuCopy.theme.dark, icon: Moon },
+  { value: 'system', label: menuCopy.theme.system, icon: Monitor },
 ] as const
 
 export function SidebarMenu() {
@@ -57,11 +61,11 @@ export function SidebarMenu() {
     if (!file) return
     try {
       const { imported } = await importUserData(file)
-      toast.success(
-        `Imported ${imported} data ${imported === 1 ? 'category' : 'categories'}`,
-      )
+      toast.success(errorsCopy.importUserData.success(imported))
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Import failed')
+      toast.error(
+        err instanceof Error ? err.message : errorsCopy.importUserData.failure,
+      )
     }
     e.target.value = ''
   }
@@ -72,7 +76,7 @@ export function SidebarMenu() {
         ref={fileInputRef}
         type="file"
         accept=".json"
-        aria-label="Import user data"
+        aria-label={menuCopy.importUserData}
         className="hidden"
         onChange={handleImport}
       />
@@ -80,15 +84,15 @@ export function SidebarMenu() {
         <SidebarMenuItem>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <SidebarMenuButton tooltip="Settings">
+              <SidebarMenuButton tooltip={menuCopy.settings}>
                 <Settings />
-                <span>Settings</span>
+                <span>{menuCopy.settings}</span>
               </SidebarMenuButton>
             </DropdownMenuTrigger>
             <DropdownMenuContent side="top" align="start">
               {mounted && (
                 <>
-                  <DropdownMenuLabel>Theme</DropdownMenuLabel>
+                  <DropdownMenuLabel>{menuCopy.theme.label}</DropdownMenuLabel>
                   <DropdownMenuRadioGroup
                     value={theme}
                     onValueChange={setTheme}
@@ -105,52 +109,48 @@ export function SidebarMenu() {
               )}
               <DropdownMenuItem onClick={exportUserData}>
                 <Download className="h-4 w-4" />
-                Export data
+                {menuCopy.exportData}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>
                 <Upload className="h-4 w-4" />
-                Import data
+                {menuCopy.importData}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={() => {
                   resetAllTours()
                   if (isMobile) setOpenMobile(false)
-                  toast.success(
-                    'Tours reset — they will appear on your next visit',
-                  )
+                  toast.success(menuCopy.toursReset)
                 }}
               >
                 <GraduationCap className="h-4 w-4" />
-                Restart tours
+                {menuCopy.restartTours}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={() => {
                   const { favorites, recents, jobs } = seedUserData()
-                  toast.success(
-                    `Seeded ${favorites} favorites, ${recents} recents, ${jobs} jobs`,
-                  )
+                  toast.success(menuCopy.seedResult(favorites, recents, jobs))
                 }}
               >
                 <Sprout className="h-4 w-4" />
-                Seed data
+                {menuCopy.seedData}
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => {
                   const { favorites, recents, jobs } = clearSeedUserData()
                   const total = favorites + recents + jobs
                   if (total === 0) {
-                    toast.info('No seed data to clear')
+                    toast.info(menuCopy.noSeedToClear)
                   } else {
                     toast.success(
-                      `Cleared ${favorites} favorites, ${recents} recents, ${jobs} jobs`,
+                      menuCopy.seedCleared(favorites, recents, jobs),
                     )
                   }
                 }}
               >
                 <Eraser className="h-4 w-4" />
-                Clear seed data
+                {menuCopy.clearSeedData}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

@@ -4,6 +4,8 @@ import { useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import Link from 'next/link'
+import { appCopy } from '@/copy/app'
+import { commonCopy } from '@/copy/common'
 
 export default function ErrorPage({
   error,
@@ -31,21 +33,23 @@ export default function ErrorPage({
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-center text-2xl font-bold">
-            Something went wrong
+            {appCopy.errorBoundary.title}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-center">
             <p className="text-muted-foreground mb-1 text-base">
-              An unexpected mutation occurred in our process.
+              {appCopy.errorBoundary.description}
             </p>
             <p className="text-muted-foreground mb-6 text-sm">
-              Don&apos;t worry — no sequences were harmed.
+              {appCopy.errorBoundary.reassurance}
             </p>
             <div className="flex justify-center gap-2">
-              <Button onClick={() => reset()}>Try Again</Button>
+              <Button onClick={() => reset()}>
+                {commonCopy.actions.tryAgain}
+              </Button>
               <Link href="/">
-                <Button variant="outline">Go Home</Button>
+                <Button variant="outline">{commonCopy.actions.goHome}</Button>
               </Link>
             </div>
           </div>

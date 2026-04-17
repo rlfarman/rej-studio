@@ -23,11 +23,14 @@ import { Button } from '@/components/ui/button'
 import type { SavedGene } from '@/features/gene-search/types/domain-types'
 import { useSpeciesContext } from '@/stores/species-store'
 import type { SpeciesFilter } from '@/lib/bio/species'
+import { geneSearchCopy } from '../copy'
+
+const copy = geneSearchCopy.command
 
 const SPECIES_OPTIONS: { value: SpeciesFilter; label: string }[] = [
-  { value: 'both', label: 'All' },
-  { value: 'human', label: 'Human' },
-  { value: 'mouse', label: 'Mouse' },
+  { value: 'both', label: copy.speciesOptions.all },
+  { value: 'human', label: copy.speciesOptions.human },
+  { value: 'mouse', label: copy.speciesOptions.mouse },
 ]
 
 function SpeciesToggle() {
@@ -59,7 +62,7 @@ function GeneResultsLoading() {
   return (
     <div className="text-muted-foreground flex items-center justify-center gap-2 p-4 text-sm">
       <Loader2 className="size-4 animate-spin" />
-      Searching…
+      {copy.searching}
     </div>
   )
 }
@@ -126,8 +129,8 @@ export function GeneSearchCommand({
     >
       <CommandInput
         id="search"
-        aria-label="Search genes"
-        placeholder="Search by gene symbol, name, or disease..."
+        aria-label={copy.inputAria}
+        placeholder={copy.placeholder}
         className="border-0 text-base ring-0 outline-0 focus:border-0 focus:ring-0 active:border-0 active:ring-0 sm:text-sm"
         value={query}
         onValueChange={(q) => {
@@ -156,16 +159,14 @@ export function GeneSearchCommand({
                 onClick={retry}
               >
                 <RefreshCwIcon className="size-3" />
-                Retry
+                {copy.retry}
               </Button>
             </div>
           ) : showEmptyState && !hasAnySuggestions ? (
-            <div className="py-6 text-center text-sm">
-              Search by gene symbol, name, or disease.
-            </div>
+            <div className="py-6 text-center text-sm">{copy.promptEmpty}</div>
           ) : hasSearched && searchResults.length === 0 ? (
             <div className="py-6 text-center text-sm">
-              No genes match &ldquo;{query}&rdquo;.{' '}
+              {geneSearchCopy.results.noMatches(query)}{' '}
               <Link
                 href="/design-tool"
                 className="text-primary font-medium underline underline-offset-4"
@@ -174,7 +175,7 @@ export function GeneSearchCommand({
                   setShowList(false)
                 }}
               >
-                Enter a custom sequence instead.
+                {geneSearchCopy.results.enterCustom}
               </Link>
             </div>
           ) : null}
@@ -185,7 +186,7 @@ export function GeneSearchCommand({
               {showEmptyState && hasAnySuggestions && (
                 <>
                   {hasFavoriteGenes && (
-                    <CommandGroup heading="Favorites">
+                    <CommandGroup heading={copy.favorites}>
                       {filteredFavorites.slice(0, 3).map((gene) => (
                         <CommandItem
                           key={`fav-${gene.id}`}
@@ -222,7 +223,7 @@ export function GeneSearchCommand({
                   {hasRecentGenes && (
                     <>
                       {hasFavoriteGenes && <CommandSeparator />}
-                      <CommandGroup heading="Recent Genes">
+                      <CommandGroup heading={copy.recentGenes}>
                         {filteredRecents.slice(0, 3).map((gene) => (
                           <CommandItem
                             key={`recent-${gene.id}`}
@@ -296,13 +297,13 @@ export function GeneSearchCommand({
                     >
                       <Link
                         href={`/design-tool?isoform=${gene.matchedIsoformId}`}
-                        aria-label={`Customize ${gene.matchedIsoformId}`}
+                        aria-label={copy.customizeAria(gene.matchedIsoformId)}
                         onClick={() => {
                           setIsOpen(false)
                           setShowList(false)
                         }}
                       >
-                        Customize
+                        {copy.customize}
                         <ExternalLink className="size-3.5" />
                       </Link>
                     </Button>

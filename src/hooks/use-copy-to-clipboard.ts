@@ -1,6 +1,7 @@
 'use client'
 import { useCallback, useRef, useState } from 'react'
 import { toast } from 'sonner'
+import { errorsCopy } from '@/copy/errors'
 
 interface UseCopyToClipboardOptions {
   /** How long the "copied" state persists (ms) */
@@ -29,7 +30,7 @@ export function useCopyToClipboard({
         if (timeoutRef.current) clearTimeout(timeoutRef.current)
         setCopiedId(id)
         if (showToast) {
-          toast.success(options?.successMessage ?? 'Copied to clipboard!')
+          toast.success(options?.successMessage ?? errorsCopy.clipboard.success)
         }
         timeoutRef.current = setTimeout(() => setCopiedId(null), resetDelay)
       }
@@ -70,7 +71,7 @@ export function useCopyToClipboard({
       } catch {
         // fall through to error toast
       }
-      toast.error(options?.errorMessage ?? 'Failed to copy to clipboard.')
+      toast.error(options?.errorMessage ?? errorsCopy.clipboard.failure)
     },
     [resetDelay, showToast],
   )
