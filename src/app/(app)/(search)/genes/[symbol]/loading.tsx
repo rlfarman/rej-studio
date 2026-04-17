@@ -1,7 +1,15 @@
+import { DnaLoader } from '@/components/bio/dna-loader'
+
 export default function Loading() {
   return (
-    <p className="text-muted-foreground px-2 py-6 text-sm" aria-live="polite">
-      Loading gene…
-    </p>
+    <div
+      role="status"
+      aria-live="polite"
+      aria-label="Loading gene"
+      className="flex min-h-[50vh] flex-col items-center justify-center gap-4"
+    >
+      <DnaLoader className="h-10 w-[120px]" />
+      <p className="text-muted-foreground text-sm">Loading gene…</p>
+    </div>
   )
 }

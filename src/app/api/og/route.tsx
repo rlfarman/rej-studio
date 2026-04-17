@@ -1,5 +1,13 @@
 import { ImageResponse } from 'next/og'
-import { OG_BG } from '@/lib/og-theme'
+import {
+  OG_ACCENT,
+  OG_BG,
+  OG_BORDER,
+  OG_FG,
+  OG_MUTED,
+  OG_PRIMARY,
+  loadDisplayFont,
+} from '@/lib/og-theme'
 
 export const size = { width: 1200, height: 630 }
 
@@ -11,6 +19,8 @@ export async function GET(request: Request) {
   const section = searchParams.get('section')
   const url = searchParams.get('url') ?? 'rejstudio.com'
 
+  const displayFont = await loadDisplayFont()
+
   return new ImageResponse(
     <div
       style={{
@@ -21,25 +31,24 @@ export async function GET(request: Request) {
         width: '100%',
         height: '100%',
         backgroundColor: OG_BG,
-        color: '#fafafa',
+        color: OG_FG,
         fontFamily: 'system-ui, sans-serif',
-        backgroundImage:
-          'radial-gradient(circle at 85% 15%, rgba(56,189,248,0.12) 0%, transparent 55%), radial-gradient(circle at 15% 85%, rgba(168,85,247,0.10) 0%, transparent 55%)',
+        backgroundImage: `radial-gradient(circle at 85% 10%, ${OG_ACCENT}99 0%, transparent 55%), radial-gradient(circle at 10% 95%, ${OG_PRIMARY}26 0%, transparent 60%)`,
       }}
     >
       <div
         style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '12px',
+          gap: '14px',
         }}
       >
         <span
           style={{
             fontSize: 22,
             fontFamily: 'monospace',
-            letterSpacing: '0.1em',
-            color: '#d4d4d8',
+            letterSpacing: '0.12em',
+            color: OG_MUTED,
             textTransform: 'uppercase',
           }}
         >
@@ -47,13 +56,13 @@ export async function GET(request: Request) {
         </span>
         {section && (
           <>
-            <span style={{ color: '#52525b', fontSize: 22 }}>/</span>
+            <span style={{ color: OG_BORDER, fontSize: 22 }}>/</span>
             <span
               style={{
                 fontSize: 22,
-                color: '#38bdf8',
+                color: OG_PRIMARY,
                 fontWeight: 600,
-                letterSpacing: '0.08em',
+                letterSpacing: '0.1em',
                 textTransform: 'uppercase',
               }}
             >
@@ -72,11 +81,12 @@ export async function GET(request: Request) {
       >
         <div
           style={{
-            fontSize: 72,
+            fontSize: 76,
+            fontFamily: '"Source Serif 4", serif',
             fontWeight: 700,
-            letterSpacing: '-0.03em',
+            letterSpacing: '-0.025em',
             lineHeight: 1.05,
-            color: '#fafafa',
+            color: OG_FG,
             maxWidth: '100%',
           }}
         >
@@ -86,7 +96,7 @@ export async function GET(request: Request) {
           <div
             style={{
               fontSize: 28,
-              color: '#a1a1aa',
+              color: OG_MUTED,
               lineHeight: 1.35,
               maxWidth: '90%',
             }}
@@ -101,13 +111,15 @@ export async function GET(request: Request) {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
+          borderTop: `1px solid ${OG_BORDER}`,
+          paddingTop: 24,
         }}
       >
         <span
           style={{
             fontSize: 22,
             fontFamily: 'monospace',
-            color: '#71717a',
+            color: OG_MUTED,
           }}
         >
           {url}
@@ -116,8 +128,8 @@ export async function GET(request: Request) {
           style={{
             fontSize: 22,
             fontFamily: 'monospace',
-            color: '#52525b',
-            letterSpacing: '0.08em',
+            color: OG_PRIMARY,
+            letterSpacing: '0.1em',
           }}
         >
           ATG · · · TAA
@@ -126,6 +138,14 @@ export async function GET(request: Request) {
     </div>,
     {
       ...size,
+      fonts: [
+        {
+          name: 'Source Serif 4',
+          data: displayFont,
+          weight: 700,
+          style: 'normal',
+        },
+      ],
       headers: {
         'Cache-Control':
           'public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400',
