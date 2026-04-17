@@ -1,7 +1,7 @@
 import { type ReactNode } from 'react'
 
 export function Hero({ children }: { children: ReactNode }) {
-  return <div>{children}</div>
+  return <div className="w-full min-w-0">{children}</div>
 }
 
 export function HeroItem({
