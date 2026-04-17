@@ -62,7 +62,7 @@ export default async function GeneSearchPage({
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <div className="flex flex-col gap-4">
+      <div className="mx-auto flex max-w-3xl flex-col gap-8 px-4 py-8 md:py-12">
         <h1 className="sr-only">Search genes</h1>
         <GeneSearch searchGenes={searchGenes} defaultQuery={query} />
         {trimmedQuery.length > 0 && (

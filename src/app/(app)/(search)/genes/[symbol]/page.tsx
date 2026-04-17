@@ -1,6 +1,4 @@
 import { notFound } from 'next/navigation'
-import { Separator } from '@/components/ui/separator'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { getGeneBySymbol } from '@/features/gene-search/api/genes'
 import { getIsoformsByGene } from '@/features/gene-search/api/isoforms'
@@ -18,10 +16,12 @@ import { SpeciesSync } from '@/features/gene-search/components/species-sync'
 import { TrackOnMount } from '@/components/track-on-mount'
 import { GeneDetailTour } from '@/features/onboarding/components/gene-detail-tour'
 import { ExternalLink } from 'lucide-react'
+import { SpeciesIcon } from '@/components/bio/species-icon'
 import { Metadata } from 'next'
 import { cache } from 'react'
 import {
   SPECIES_DISPLAY_NAME,
+  isSpecies,
   parseSpeciesParam,
   type Species,
 } from '@/lib/bio/species'
@@ -103,27 +103,15 @@ async function IsoformSection({
           isoform_count: isoforms.length,
         }}
       />
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="text-muted-foreground text-sm font-semibold">
-          Species
-        </span>
-        {speciesAvailable.map((s) => (
-          <Badge key={s} variant="secondary">
-            {SPECIES_DISPLAY_NAME[s]}
-          </Badge>
-        ))}
-      </div>
-      <Separator className="my-4" />
-      <h2 className="mb-2 text-lg font-semibold tracking-tight">Isoforms</h2>
       <IsoformTable
         isoforms={isoforms}
         highlightedIsoformId={highlightedIsoformId}
       />
-      <div className="mt-8 space-y-6">
+      <section className="flex flex-col gap-6">
         <IsoformSummary isoforms={isoforms} />
         <IsoformLengthChart isoforms={isoforms} />
         <IsoformIdentityMatrix isoforms={isoforms} />
-      </div>
+      </section>
     </>
   )
 }
@@ -142,18 +130,20 @@ export default async function GeneSymbolPage(props: Props) {
       <SpeciesSync species={gene.species} />
       <GeneBreadcrumbJsonLd gene={gene} />
       <GeneDetailTour />
-      <Card>
-        <CardHeader>
+      <div className="flex flex-col gap-5 pt-6 md:pt-10">
+        <header className="flex flex-col gap-1">
           <div className="flex items-center gap-3">
-            <h1 className="font-mono text-3xl leading-none font-bold tracking-tight">
+            <h1 className="font-mono text-3xl leading-none font-bold tracking-tight md:text-4xl">
               {gene.symbol}
             </h1>
             <span data-tour="gene-favorite">
               <FavoriteGeneButton gene={gene} />
             </span>
           </div>
-          <p className="text-muted-foreground text-sm">{gene.name}</p>
-          <div className="mt-1">
+          <p className="text-muted-foreground text-sm md:text-base">
+            {gene.name}
+          </p>
+          <div className="flex items-center gap-3">
             <a
               href={`https://ensembl.org/id/${gene.id}`}
               target="_blank"
@@ -163,19 +153,29 @@ export default async function GeneSymbolPage(props: Props) {
               {gene.id}
               <ExternalLink className="size-3" />
             </a>
+            {isSpecies(gene.species) && (
+              <>
+                <span className="text-border">·</span>
+                <Badge
+                  variant="secondary"
+                  className="inline-flex items-center gap-1.5 text-xs"
+                >
+                  <SpeciesIcon species={gene.species} className="size-3.5" />
+                  {SPECIES_DISPLAY_NAME[gene.species]}
+                </Badge>
+              </>
+            )}
           </div>
-        </CardHeader>
-        <CardContent>
-          <Suspense fallback={<IsoformTableLoading />}>
-            <ViewTransition enter="suspense-reveal" default="none">
-              <IsoformSection
-                gene={gene}
-                highlightedIsoformId={highlightedIsoformId}
-              />
-            </ViewTransition>
-          </Suspense>
-        </CardContent>
-      </Card>
+        </header>
+        <Suspense fallback={<IsoformTableLoading />}>
+          <ViewTransition enter="suspense-reveal" default="none">
+            <IsoformSection
+              gene={gene}
+              highlightedIsoformId={highlightedIsoformId}
+            />
+          </ViewTransition>
+        </Suspense>
+      </div>
     </>
   )
 }

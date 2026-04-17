@@ -50,11 +50,9 @@ export function DNASplicer() {
 
   if (!hasSequence) {
     return (
-      <div className="flex h-24 items-center justify-center rounded-md border border-dashed">
-        <p className="text-muted-foreground text-sm">
-          Add a coding sequence above to configure the splice junction
-        </p>
-      </div>
+      <p className="text-muted-foreground rounded-md border border-dashed px-3 py-2 text-xs">
+        Add a coding sequence above to configure the splice junction.
+      </p>
     )
   }
 

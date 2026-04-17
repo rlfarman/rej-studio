@@ -7,6 +7,7 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
@@ -161,8 +162,11 @@ export function GeneSplitterForm({
   return (
     <Form {...methods}>
       {}
-      {/* eslint-disable-next-line react-hooks/refs -- onSubmit only writes didResetRef in the submit event handler, never during render */}
-      <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-6">
+      {/* eslint-disable react-hooks/refs -- onSubmit only writes didResetRef in the submit event handler, never during render */}
+      <form
+        onSubmit={methods.handleSubmit(onSubmit)}
+        className="flex flex-col gap-6"
+      >
         {!showForm && headerStatus && (
           <JobHeader
             name={methods.getValues('name')}
@@ -198,12 +202,12 @@ export function GeneSplitterForm({
                   experiments
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="flex flex-col gap-8">
                 <div data-tour="dt-sequence">
                   <CustomizationOptions />
                 </div>
                 <SpeciesOptions />
-                <div className="space-y-2" data-tour="dt-splicer">
+                <div className="flex flex-col gap-2" data-tour="dt-splicer">
                   <p className="text-sm font-medium">Splice junction</p>
                   <p className="text-muted-foreground text-sm">
                     Set where the sequence splits into 5&apos; and 3&apos;
@@ -214,7 +218,7 @@ export function GeneSplitterForm({
               </CardContent>
             </Card>
 
-            {/* ── Card 2: Strategy ── */}
+            {/* ── Card 2: Strategy + Submit ── */}
             <Card
               className="fade-up-stagger"
               style={{ '--stagger': 1 } as React.CSSProperties}
@@ -225,10 +229,10 @@ export function GeneSplitterForm({
                   <h2>Optimization</h2>
                 </CardTitle>
                 <CardDescription>
-                  Fine-tune individual parameters.
+                  Fine-tune individual parameters, then run the optimizer.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent>
                 <Accordion type="multiple">
                   <AccordionItem value="codon-optimization">
                     <AccordionTrigger>
@@ -266,7 +270,7 @@ export function GeneSplitterForm({
                       </div>
                     </AccordionTrigger>
                     <AccordionContent className="pt-4 pb-8">
-                      <div className="flex flex-col space-y-4">
+                      <div className="flex flex-col gap-4">
                         <CodonOptimizeWeight />
                         <RemoveCrypticSpliceSitesWeight />
                         <MinimizeCpGsWeight />
@@ -276,28 +280,12 @@ export function GeneSplitterForm({
                   </AccordionItem>
                 </Accordion>
               </CardContent>
-            </Card>
-
-            {/* ── Card 3: Review / Submit ── */}
-            <Card
-              className="fade-up-stagger"
-              style={{ '--stagger': 2 } as React.CSSProperties}
-              data-tour="dt-submit"
-            >
-              <CardHeader>
-                <CardTitle>Review &amp; Run</CardTitle>
-                <CardDescription>
-                  Run the optimizer to generate your split sequences.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex justify-end">
-                  <SubmitButton
-                    isJobRunning={job.isLoading}
-                    isJobComplete={job.status === 'completed'}
-                  />
-                </div>
-              </CardContent>
+              <CardFooter className="justify-end" data-tour="dt-submit">
+                <SubmitButton
+                  isJobRunning={job.isLoading}
+                  isJobComplete={job.status === 'completed'}
+                />
+              </CardFooter>
             </Card>
           </>
         )}
@@ -312,6 +300,7 @@ export function GeneSplitterForm({
           </div>
         )}
       </form>
+      {/* eslint-enable react-hooks/refs */}
     </Form>
   )
 }
