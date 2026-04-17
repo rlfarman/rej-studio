@@ -1,30 +1,33 @@
 'use client'
 import { ToggleCard } from './toggle-card'
+import { designToolCopy } from '../copy'
+
+const copy = designToolCopy.optimizationOptions
 
 export function CodonOptimizationOptions() {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
         <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-          Sequence objectives
+          {copy.objectivesHeading}
         </p>
         <div className="flex flex-col space-y-2">
           <ToggleCard
             name="removeCrypticSpliceSites"
-            label="Remove cryptic splice sites"
-            description="Eliminates donor- and acceptor-like motifs to prevent unintended mRNA splicing in mammalian cells."
+            label={copy.removeCrypticSpliceSites.label}
+            description={copy.removeCrypticSpliceSites.description}
             helpHref="/docs/design-tool#remove-cryptic-splice-sites"
           />
           <ToggleCard
             name="minimizeCpgs"
-            label="Minimize CpG sites"
-            description="Reduces CpG dinucleotides to lower silencing risk from DNA methylation."
+            label={copy.minimizeCpGs.label}
+            description={copy.minimizeCpGs.description}
             helpHref="/docs/design-tool#minimize-cpgs"
           />
           <ToggleCard
             name="reduceKmerComplexity"
-            label="Reduce k-mer complexity"
-            description="Diversifies 10-mer repeats to ease synthesis and reduce recombination risk."
+            label={copy.reduceKmer.label}
+            description={copy.reduceKmer.description}
             helpHref="/docs/design-tool#kmer-complexity"
           />
         </div>
@@ -32,13 +35,13 @@ export function CodonOptimizationOptions() {
 
       <div className="space-y-2">
         <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-          Constraints
+          {copy.constraintsHeading}
         </p>
         <ToggleCard
           name="enforceGcContent"
-          label="Enforce 35–60% GC content"
-          description="Keeps GC content within the range optimal for mRNA stability and expression."
-          badge="Hard constraint"
+          label={copy.enforceGc.label}
+          description={copy.enforceGc.description}
+          badge={copy.enforceGc.badge}
           helpHref="/docs/design-tool#gc-content"
         />
       </div>

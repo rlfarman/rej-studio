@@ -4,6 +4,8 @@ import { useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import Link from 'next/link'
+import { appCopy } from '@/copy/app'
+import { commonCopy } from '@/copy/common'
 
 export default function DesignToolError({
   error,
@@ -27,18 +29,21 @@ export default function DesignToolError({
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-center text-xl font-bold">
-            Design tool error
+            {appCopy.errorBoundary.designTool.title}
           </CardTitle>
         </CardHeader>
         <CardContent className="text-center">
           <p className="text-muted-foreground mb-6 text-sm">
-            Something went wrong loading the design tool. Your work has not been
-            lost.
+            {appCopy.errorBoundary.designTool.description}
           </p>
           <div className="flex justify-center gap-2">
-            <Button onClick={() => reset()}>Try Again</Button>
+            <Button onClick={() => reset()}>
+              {commonCopy.actions.tryAgain}
+            </Button>
             <Link href="/genes">
-              <Button variant="outline">Back to Search</Button>
+              <Button variant="outline">
+                {appCopy.errorBoundary.designTool.backToSearch}
+              </Button>
             </Link>
           </div>
         </CardContent>

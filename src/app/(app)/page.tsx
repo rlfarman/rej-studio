@@ -5,16 +5,15 @@ import { Dna } from 'lucide-react'
 import { Hero, HeroItem } from '@/app/_components/hero'
 import { HomeTour } from '@/features/onboarding/components/home-tour'
 import type { Metadata } from 'next'
+import { appCopy } from '@/copy/app'
 
 export const metadata: Metadata = {
-  title: 'REJ Studio — RNA End-Joining sequence design',
-  description:
-    'Search genes, browse isoforms, and design optimized RNA End-Joining sequences — all in one tool.',
+  title: appCopy.home.metadataTitle,
+  description: appCopy.home.metadataDescription,
   alternates: { canonical: '/' },
   openGraph: {
-    title: 'RNA End-Joining sequence design',
-    description:
-      'Search genes, browse isoforms, and design optimized RNA End-Joining sequences.',
+    title: appCopy.home.ogTitle,
+    description: appCopy.home.ogDescription,
     url: '/',
     images: [
       {
@@ -40,7 +39,7 @@ export default function HomePage() {
           </HeroItem>
           <HeroItem index={1}>
             <h1 className="text-primary text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
-              What gene are you optimizing?
+              {appCopy.home.searchPrompt}
             </h1>
           </HeroItem>
           <HeroItem index={2} className="mt-3">
@@ -48,7 +47,7 @@ export default function HomePage() {
               className="text-muted-foreground text-base"
               data-tour="home-design-link"
             >
-              Search by symbol, name, or disease — or{' '}
+              {appCopy.home.orPrefix}{' '}
               <Link
                 href={{
                   pathname: '/design-tool',
@@ -56,7 +55,7 @@ export default function HomePage() {
                 }}
                 className="text-primary font-medium underline underline-offset-4"
               >
-                design your own
+                {appCopy.home.designLink}
               </Link>
               .
             </p>

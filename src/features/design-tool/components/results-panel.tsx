@@ -65,6 +65,10 @@ import { computeGcPercent, countCpG } from '@/lib/bio/sequence-utils'
 import { deriveKeyMetrics } from '@/features/design-tool/utils/objective-metrics'
 import { SPECIES_DISPLAY_NAME } from '@/lib/bio/species'
 import { toCodons } from '@/lib/bio/genetic-code'
+import { designToolCopy } from '../copy'
+import { errorsCopy } from '@/copy/errors'
+
+const resultsCopy = designToolCopy.results
 
 interface ResultsPanelProps {
   result: ProcessResult
@@ -101,11 +105,14 @@ function SplitVisualization({
       <div className="flex items-center gap-2 text-sm">
         <Scissors className="text-muted-foreground size-4" />
         <span>
-          Split at position{' '}
+          {resultsCopy.splitAtPosition}{' '}
           <span className="font-mono font-medium">
             {splitPoint.toLocaleString()}
           </span>{' '}
-          ({Math.round(percentage)}% / {Math.round(100 - percentage)}%)
+          {resultsCopy.splitRatio(
+            Math.round(percentage),
+            Math.round(100 - percentage),
+          )}
         </span>
       </div>
       <SplitBar fivePrimeLength={seq5Length} threePrimeLength={seq3Length} />
@@ -248,14 +255,16 @@ function SequenceCard({
               variant="ghost"
               size="sm"
               className="h-9 gap-1.5 px-3 text-xs"
-              aria-label={`Export or copy ${label}`}
+              aria-label={resultsCopy.sequenceCard.exportAria(label)}
             >
               {justCopied ? (
                 <Check className="size-3.5" />
               ) : (
                 <Download className="size-3.5" />
               )}
-              {justCopied ? 'Copied' : 'Export'}
+              {justCopied
+                ? resultsCopy.sequenceCard.copied
+                : resultsCopy.sequenceCard.exportLabel}
               <ChevronDown className="size-3.5 opacity-60" />
             </Button>
           </DropdownMenuTrigger>
@@ -264,11 +273,11 @@ function SequenceCard({
               onClick={() => copy(formatFasta(fastaName, sequence), 'fasta')}
             >
               <FileText className="size-4" />
-              Copy FASTA
+              {resultsCopy.sequenceCard.copyFasta}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => copy(sequence, 'seq')}>
               <Copy className="size-4" />
-              Copy sequence
+              {resultsCopy.sequenceCard.copySequence}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
@@ -280,7 +289,7 @@ function SequenceCard({
               }
             >
               <Download className="size-4" />
-              Download FASTA
+              {resultsCopy.sequenceCard.downloadFasta}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -296,17 +305,17 @@ function SequenceViewer({ result }: { result: ProcessResult }) {
   return (
     <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
       <SequenceCard
-        label="5' Sequence"
+        label={resultsCopy.sequenceCard.fiveLabel}
         sequence={result.seq5}
         fastaName={`${result.name}_5prime`}
       />
       <SequenceCard
-        label="3' Sequence"
+        label={resultsCopy.sequenceCard.threeLabel}
         sequence={result.seq3}
         fastaName={`${result.name}_3prime`}
       />
       <SequenceCard
-        label="Full Optimized"
+        label={resultsCopy.sequenceCard.fullLabel}
         sequence={result.optimized_sequence}
         fastaName={`${result.name}_optimized`}
       />
@@ -351,21 +360,21 @@ function WggwTable({
   wggwInfo: NonNullable<ProcessResult['wggw_info']>
 }) {
   const siteLabels: Record<string, string> = {
-    main: 'Main Junction',
-    stim5: "5' Stimulatory",
-    stim3: "3' Stimulatory",
+    main: resultsCopy.wggwTable.main,
+    stim5: resultsCopy.wggwTable.stim5,
+    stim3: resultsCopy.wggwTable.stim3,
   }
   return (
     <div className="overflow-auto rounded-md border">
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Site</TableHead>
-            <TableHead>Position</TableHead>
-            <TableHead>Motif</TableHead>
-            <TableHead>Distance</TableHead>
-            <TableHead>Original Codons</TableHead>
-            <TableHead>New Codons</TableHead>
+            <TableHead>{resultsCopy.wggwTable.headers.site}</TableHead>
+            <TableHead>{resultsCopy.wggwTable.headers.position}</TableHead>
+            <TableHead>{resultsCopy.wggwTable.headers.motif}</TableHead>
+            <TableHead>{resultsCopy.wggwTable.headers.distance}</TableHead>
+            <TableHead>{resultsCopy.wggwTable.headers.originalCodons}</TableHead>
+            <TableHead>{resultsCopy.wggwTable.headers.newCodons}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -412,7 +421,9 @@ function ResultsPanelImpl({ result, optionsUsed, species }: ResultsPanelProps) {
     try {
       downloadResultsZip(result, optionsUsed)
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Download failed.')
+      toast.error(
+        error instanceof Error ? error.message : errorsCopy.download.failure,
+      )
     }
   }
 
@@ -433,17 +444,22 @@ function ResultsPanelImpl({ result, optionsUsed, species }: ResultsPanelProps) {
       )
         changed++
     }
-    return `${changed.toLocaleString()} of ${total.toLocaleString()} codons changed`
+    return resultsCopy.summaries.codonsChanged(
+      changed.toLocaleString(),
+      total.toLocaleString(),
+    )
   }, [result.original_sequence, result.optimized_sequence])
 
   const objectivesSummary = useMemo(() => {
     const after = parseObjectives(result.objectives_after)
     const total = after.passedCount + after.failedCount
     if (total === 0) return undefined
-    return `${after.passedCount} of ${total} passed`
+    return resultsCopy.summaries.objectivesPassed(after.passedCount, total)
   }, [result.objectives_after])
 
-  const junctionSummary = `±18 bp at ${result.split_point.toLocaleString()}`
+  const junctionSummary = resultsCopy.summaries.junction(
+    result.split_point.toLocaleString(),
+  )
 
   return (
     <m.div variants={fadeUp} initial="hidden" animate="visible">
@@ -451,13 +467,13 @@ function ResultsPanelImpl({ result, optionsUsed, species }: ResultsPanelProps) {
         <CardHeader>
           <div className="flex items-center justify-between gap-3">
             <div>
-              <CardTitle>Results</CardTitle>
+              <CardTitle>{resultsCopy.heading}</CardTitle>
               <CardDescription className="flex items-center gap-1.5">
                 <Clock className="size-3" />
-                Completed in {result.processing_time_seconds}s
+                {resultsCopy.completedIn(result.processing_time_seconds)}
                 {result.used_wggw_as_split && (
                   <Badge variant="secondary" className="ml-1">
-                    WGGW split
+                    {resultsCopy.wggwSplitBadge}
                   </Badge>
                 )}
               </CardDescription>
@@ -470,7 +486,7 @@ function ResultsPanelImpl({ result, optionsUsed, species }: ResultsPanelProps) {
               onClick={handleDownloadZip}
             >
               <Download className="size-4" />
-              Download ZIP
+              {resultsCopy.downloadZip}
             </Button>
           </div>
         </CardHeader>
@@ -486,7 +502,7 @@ function ResultsPanelImpl({ result, optionsUsed, species }: ResultsPanelProps) {
           <SequenceViewer result={result} />
 
           <div className="-mx-1">
-            <ExpandableRow title="Sequence visualizations" icon={Activity}>
+            <ExpandableRow title={resultsCopy.sections.visualizations} icon={Activity}>
               <SequenceVisualizations
                 original={result.original_sequence}
                 optimized={result.optimized_sequence}
@@ -494,7 +510,7 @@ function ResultsPanelImpl({ result, optionsUsed, species }: ResultsPanelProps) {
               />
             </ExpandableRow>
             <ExpandableRow
-              title="Codon changes"
+              title={resultsCopy.sections.codonChanges}
               icon={Shield}
               summary={codonChangesSummary}
             >
@@ -505,7 +521,7 @@ function ResultsPanelImpl({ result, optionsUsed, species }: ResultsPanelProps) {
               />
             </ExpandableRow>
             <ExpandableRow
-              title="Junction context"
+              title={resultsCopy.sections.junctionContext}
               icon={Scissors}
               summary={junctionSummary}
             >
@@ -515,7 +531,10 @@ function ResultsPanelImpl({ result, optionsUsed, species }: ResultsPanelProps) {
                 wggwMotif={result.wggw_info?.main?.motif}
               />
             </ExpandableRow>
-            <ExpandableRow title="Restriction site map" icon={FlaskConical}>
+            <ExpandableRow
+              title={resultsCopy.sections.restrictionSites}
+              icon={FlaskConical}
+            >
               <RestrictionSiteMap
                 original={result.original_sequence}
                 optimized={result.optimized_sequence}
@@ -523,7 +542,7 @@ function ResultsPanelImpl({ result, optionsUsed, species }: ResultsPanelProps) {
             </ExpandableRow>
             {isSpecies(species) && (
               <ExpandableRow
-                title="Codon usage delta"
+                title={resultsCopy.sections.codonUsageDelta}
                 icon={TrendingUp}
                 summary={SPECIES_DISPLAY_NAME[species]}
               >
@@ -535,7 +554,7 @@ function ResultsPanelImpl({ result, optionsUsed, species }: ResultsPanelProps) {
               </ExpandableRow>
             )}
             <ExpandableRow
-              title="AAV packaging"
+              title={resultsCopy.sections.aavPackaging}
               icon={Package}
               summary={aavSummary(seq5Clean.length, seq3Clean.length)}
             >
@@ -546,15 +565,15 @@ function ResultsPanelImpl({ result, optionsUsed, species }: ResultsPanelProps) {
             </ExpandableRow>
             {wggwCount > 0 && result.wggw_info && (
               <ExpandableRow
-                title="WGGW motif details"
+                title={resultsCopy.sections.wggwDetails}
                 icon={Link2}
-                summary={`${wggwCount} site${wggwCount === 1 ? '' : 's'}`}
+                summary={resultsCopy.summaries.wggwSites(wggwCount)}
               >
                 <WggwTable wggwInfo={result.wggw_info} />
               </ExpandableRow>
             )}
             <ExpandableRow
-              title="Objectives report"
+              title={resultsCopy.sections.objectivesReport}
               icon={ClipboardCheck}
               summary={objectivesSummary}
             >

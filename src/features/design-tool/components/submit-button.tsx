@@ -6,12 +6,13 @@ import { Loader2, Check, Play } from 'lucide-react'
 import { FormValues } from '../types/form-schema'
 import { AnimatePresence, m } from 'motion/react'
 import { quickFade, softSpring } from '@/lib/motion'
+import { designToolCopy } from '../copy'
 
 const PROCESSING_STAGES = [
-  'Optimizing codons\u2026',
-  'Finding split points\u2026',
-  'Inserting WGGW motifs\u2026',
-  'Generating sequences\u2026',
+  designToolCopy.submit.stageCodons,
+  designToolCopy.submit.stageSplit,
+  designToolCopy.submit.stageWggw,
+  designToolCopy.submit.stageGenerate,
 ]
 
 function useProcessingStage(isSubmitting: boolean) {
@@ -91,7 +92,7 @@ export function SubmitButton({
             className="inline-flex items-center gap-2"
           >
             <Check className="size-4" />
-            Optimization complete
+            {designToolCopy.submit.success}
           </m.span>
         ) : (
           <m.span
@@ -103,7 +104,7 @@ export function SubmitButton({
             className="inline-flex items-center gap-2"
           >
             <Play className="size-4" />
-            Run optimizer
+            {designToolCopy.submit.idle}
           </m.span>
         )}
       </AnimatePresence>

@@ -1,5 +1,8 @@
 'use client'
 import { ToggleCard } from './toggle-card'
+import { designToolCopy } from '../copy'
+
+const copy = designToolCopy.stimulatoryIntrons
 
 export function StimulatoryIntronOptions() {
   return (
@@ -8,14 +11,14 @@ export function StimulatoryIntronOptions() {
       <div className="grid gap-2 sm:grid-cols-2">
         <ToggleCard
           name="5PrimeStimulatoryIntron"
-          label="5′ stimulatory intron"
-          description="Inserted ~150 bp upstream of the junction, at the nearest compatible splice site, to boost 5′ fragment expression."
+          label={copy.fivePrime.label}
+          description={copy.fivePrime.description}
           helpHref="/docs/design-tool#stim-5"
         />
         <ToggleCard
           name="3PrimeStimulatoryIntron"
-          label="3′ stimulatory intron"
-          description="Inserted ~150 bp downstream of the junction, at the nearest compatible splice site, to boost 3′ fragment expression."
+          label={copy.threePrime.label}
+          description={copy.threePrime.description}
           helpHref="/docs/design-tool#stim-3"
         />
       </div>
@@ -34,11 +37,11 @@ function SpliceJunctionDiagram() {
           5′
         </span>
         <div className="bg-primary/15 border-primary/30 flex h-6 flex-1 items-center justify-center rounded-l-sm border-y border-l text-[10px]">
-          fragment
+          {copy.diagramFragment}
         </div>
         <div className="bg-primary/40 h-6 w-px" />
         <div className="bg-primary/15 border-primary/30 flex h-6 flex-1 items-center justify-center rounded-r-sm border-y border-r text-[10px]">
-          fragment
+          {copy.diagramFragment}
         </div>
         <span className="font-mono text-[10px] tracking-wider uppercase">
           3′
@@ -46,7 +49,7 @@ function SpliceJunctionDiagram() {
       </div>
       <div className="mt-1 flex items-center justify-center gap-1.5 text-center">
         <span className="text-muted-foreground/80 text-[10px]">
-          splice junction
+          {copy.diagramSpliceJunction}
         </span>
       </div>
     </div>

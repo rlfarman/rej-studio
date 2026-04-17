@@ -10,6 +10,9 @@ import {
 } from '@/components/ui/select'
 import { SpeciesIcon } from './species-icon'
 import { useSpeciesContext } from '@/stores/species-store'
+import { bioWidgetsCopy } from './copy'
+
+const copy = bioWidgetsCopy.speciesSelect
 
 interface SpeciesSelectProps {
   alwaysShowLabel?: boolean
@@ -28,10 +31,10 @@ export function SpeciesSelect({
   const { species, handleSpeciesChange } = useSpeciesContext()
   const speciesLabel =
     species === 'mouse'
-      ? 'Mice'
+      ? copy.mice
       : species === 'human'
-        ? 'Humans'
-        : 'All Species'
+        ? copy.humans
+        : copy.allSpecies
 
   return (
     <Select onValueChange={handleSpeciesChange} value={species}>
@@ -54,15 +57,13 @@ export function SpeciesSelect({
       </SelectTrigger>
       <SelectContent>
         <SelectGroup>
-          <SelectLabel>Choose a species</SelectLabel>
+          <SelectLabel>{copy.choose}</SelectLabel>
           <SelectItem value="both">
             <div className="flex items-center justify-between">
               <SpeciesIcon species="both" />
               <div className="ml-4">
-                <span>All Species</span>
-                <p className="text-muted-foreground">
-                  Show all genes and isoforms
-                </p>
+                <span>{copy.allSpecies}</span>
+                <p className="text-muted-foreground">{copy.descriptions.all}</p>
               </div>
             </div>
           </SelectItem>
@@ -70,9 +71,9 @@ export function SpeciesSelect({
             <div className="flex items-center justify-between">
               <SpeciesIcon species="human" />
               <div className="ml-4">
-                <span>Humans</span>
+                <span>{copy.humans}</span>
                 <p className="text-muted-foreground">
-                  Show only human genes and isoforms
+                  {copy.descriptions.human}
                 </p>
               </div>
             </div>
@@ -81,9 +82,9 @@ export function SpeciesSelect({
             <div className="flex items-center justify-between">
               <SpeciesIcon species="mouse" />
               <div className="ml-4">
-                <span>Mice</span>
+                <span>{copy.mice}</span>
                 <p className="text-muted-foreground">
-                  Show only mouse genes and isoforms
+                  {copy.descriptions.mouse}
                 </p>
               </div>
             </div>

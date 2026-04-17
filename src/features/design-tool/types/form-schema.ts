@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { designToolCopy } from '../copy'
 
 const STOP_CODONS = new Set(['TAA', 'TAG', 'TGA', 'UAA', 'UAG', 'UGA'])
 
@@ -21,25 +22,19 @@ const PROTEIN_RE = /^[ACDEFGHIKLMNPQRSTVWYacdefghiklmnpqrstvwy*]+$/
 
 const dnaSequenceSchema = z
   .string()
-  .nonempty('Coding sequence is required.')
-  .regex(
-    /^[ACGTUacgtu]+$/,
-    'Sequence must contain only valid nucleotides (A, C, G, T, or U).',
-  )
-  .max(50000, 'Sequence must be 50,000 characters or fewer.')
+  .nonempty(designToolCopy.validation.dna.required)
+  .regex(/^[ACGTUacgtu]+$/, designToolCopy.validation.dna.invalidNucleotides)
+  .max(50000, designToolCopy.validation.dna.tooLong)
   .transform((v) => v.toUpperCase())
   .refine((value) => value.length % 3 === 0, {
-    message: 'Sequence length must be a multiple of 3 (complete codons).',
+    message: designToolCopy.validation.dna.notMultipleOfThree,
   })
   .refine(
     (value) => {
       const first3 = value.slice(0, 3).toUpperCase()
       return first3 === 'ATG' || first3 === 'AUG'
     },
-    {
-      message:
-        'Sequence must begin with a start codon (ATG). Without it, translation cannot initiate.',
-    },
+    { message: designToolCopy.validation.dna.missingStartCodon },
   )
   .refine(
     (value) => {
@@ -47,29 +42,22 @@ const dnaSequenceSchema = z
       const last3 = value.slice(-3).toUpperCase()
       return STOP_CODONS.has(last3)
     },
-    {
-      message:
-        'Sequence must end with a stop codon (TAA, TAG, or TGA). Without it, the ribosome will read through into downstream sequence.',
-    },
+    { message: designToolCopy.validation.dna.missingStopCodon },
   )
   .refine(
     (value) => {
       if (value.length < 6) return true
       return findInternalStopCodons(value).length === 0
     },
-    {
-      message:
-        'Sequence contains premature stop codon(s) in the reading frame. This will produce a truncated protein.',
-    },
+    { message: designToolCopy.validation.dna.prematureStopCodon },
   )
 
 const proteinSequenceSchema = z
   .string()
-  .nonempty('Protein sequence is required.')
-  .max(16666, 'Protein sequence must be 16,666 residues or fewer.')
+  .nonempty(designToolCopy.validation.protein.required)
+  .max(16666, designToolCopy.validation.protein.tooLong)
   .refine((v) => PROTEIN_RE.test(v), {
-    message:
-      'Sequence must contain only standard amino acid letters (A, C, D, E, F, G, H, I, K, L, M, N, P, Q, R, S, T, V, W, Y) or * for stop.',
+    message: designToolCopy.validation.protein.invalidAminoAcids,
   })
   .transform((v) => v.toUpperCase())
   .refine(
@@ -78,10 +66,7 @@ const proteinSequenceSchema = z
       const body = value.endsWith('*') ? value.slice(0, -1) : value
       return !body.includes('*')
     },
-    {
-      message:
-        'Sequence contains internal stop character(s) (*). Only a terminal * is allowed.',
-    },
+    { message: designToolCopy.validation.protein.internalStop },
   )
 
 export const validationSchema = z
@@ -91,8 +76,8 @@ export const validationSchema = z
     proteinSequence: z.string(),
     name: z
       .string()
-      .nonempty('A name is required.')
-      .max(250, 'Name must be 250 characters or fewer.'),
+      .nonempty(designToolCopy.validation.name.required)
+      .max(250, designToolCopy.validation.name.tooLong),
     species: z.enum(['none', 'human', 'mouse']),
     codonOptimizeWeight: z.number().min(0).max(100),
     removeCrypticSpliceSites: z.boolean(),
@@ -130,8 +115,7 @@ export const validationSchema = z
         ctx.addIssue({
           path: ['species'],
           code: z.ZodIssueCode.custom,
-          message:
-            'Species selection is required for protein sequences (needed for codon preference during reverse translation).',
+          message: designToolCopy.validation.speciesRequiredForProtein,
         })
       }
     }
@@ -146,7 +130,7 @@ export const validationSchema = z
         ctx.addIssue({
           path: ['spliceJunctionPosition'],
           code: z.ZodIssueCode.custom,
-          message: `Split position must be ≤ ${max} (sequence length − 1).`,
+          message: designToolCopy.validation.spliceTooLarge(max),
         })
       }
     }

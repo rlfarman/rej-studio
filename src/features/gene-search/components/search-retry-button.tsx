@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { RefreshCwIcon } from 'lucide-react'
+import { geneSearchCopy } from '../copy'
 
 /**
  * Client component that retries a failed server-side search by calling
@@ -19,7 +20,7 @@ export function SearchRetryButton() {
       onClick={() => router.refresh()}
     >
       <RefreshCwIcon className="size-3" />
-      Retry
+      {geneSearchCopy.command.retry}
     </Button>
   )
 }

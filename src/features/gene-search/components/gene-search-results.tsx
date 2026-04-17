@@ -11,6 +11,9 @@ import {
 } from '@/components/ui/tooltip'
 import { SpeciesIcon } from '@/components/bio/species-icon'
 import { SearchRetryButton } from './search-retry-button'
+import { geneSearchCopy } from '../copy'
+
+const copy = geneSearchCopy.results
 
 interface GeneSearchResultsProps {
   query: string
@@ -26,7 +29,9 @@ export async function GeneSearchResults({
   if (error) {
     return (
       <div className="text-destructive-foreground bg-destructive/10 flex flex-col items-center gap-2 rounded-lg py-6 text-center text-sm">
-        <span>{error} Try again in a moment.</span>
+        <span>
+          {error} {copy.errorSuffix}
+        </span>
         <SearchRetryButton />
       </div>
     )
@@ -35,12 +40,12 @@ export async function GeneSearchResults({
   if (results.length === 0) {
     return (
       <div className="text-muted-foreground py-8 text-center text-sm">
-        No genes match &ldquo;{query}&rdquo;.{' '}
+        {copy.noMatches(query)}{' '}
         <Link
           href="/design-tool"
           className="text-primary font-medium underline underline-offset-4"
         >
-          Enter a custom sequence instead.
+          {copy.enterCustom}
         </Link>
       </div>
     )
@@ -86,15 +91,19 @@ export async function GeneSearchResults({
                   >
                     <Link
                       href={`/design-tool?isoform=${gene.matchedIsoformId}`}
-                      aria-label={`Customize ${gene.matchedIsoformId}`}
+                      aria-label={geneSearchCopy.command.customizeAria(
+                        gene.matchedIsoformId,
+                      )}
                     >
-                      <span className="hidden sm:inline">Customize</span>
+                      <span className="hidden sm:inline">
+                        {geneSearchCopy.command.customize}
+                      </span>
                       <ExternalLink className="size-3.5" />
                     </Link>
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  Customize {gene.matchedIsoformId}
+                  {geneSearchCopy.command.customizeAria(gene.matchedIsoformId)}
                 </TooltipContent>
               </Tooltip>
             )}

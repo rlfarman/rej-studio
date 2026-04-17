@@ -4,6 +4,8 @@ import { useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import Link from 'next/link'
+import { appCopy } from '@/copy/app'
+import { commonCopy } from '@/copy/common'
 
 export default function SearchError({
   error,
@@ -27,18 +29,19 @@ export default function SearchError({
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-center text-xl font-bold">
-            Search unavailable
+            {appCopy.errorBoundary.search.title}
           </CardTitle>
         </CardHeader>
         <CardContent className="text-center">
           <p className="text-muted-foreground mb-6 text-sm">
-            We couldn&apos;t load gene data right now. This is usually
-            temporary.
+            {appCopy.errorBoundary.search.description}
           </p>
           <div className="flex justify-center gap-2">
-            <Button onClick={() => reset()}>Try Again</Button>
+            <Button onClick={() => reset()}>
+              {commonCopy.actions.tryAgain}
+            </Button>
             <Link href="/">
-              <Button variant="outline">Go Home</Button>
+              <Button variant="outline">{commonCopy.actions.goHome}</Button>
             </Link>
           </div>
         </CardContent>

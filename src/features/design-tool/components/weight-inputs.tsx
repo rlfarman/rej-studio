@@ -11,6 +11,9 @@ import {
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 import { FormValues } from '../types/form-schema'
+import { designToolCopy } from '../copy'
+
+const copy = designToolCopy.weights
 
 // Semantic tiers mapped to numeric weights. The algorithm takes a 0-100
 // weight, but in practice presets use 1-10 and useful range tops out ~50.
@@ -18,10 +21,10 @@ import { FormValues } from '../types/form-schema'
 // ("1 = gentle, 10 = strong, 50+ = aggressive") and removes the guesswork
 // of picking an arbitrary number.
 const TIERS = [
-  { label: 'Gentle', value: 1 },
-  { label: 'Moderate', value: 3 },
-  { label: 'Strong', value: 10 },
-  { label: 'Aggressive', value: 50 },
+  { label: copy.tiers.gentle, value: 1 },
+  { label: copy.tiers.moderate, value: 3 },
+  { label: copy.tiers.strong, value: 10 },
+  { label: copy.tiers.aggressive, value: 50 },
 ] as const
 
 function nearestTierIndex(value: number): number {
@@ -89,7 +92,7 @@ function WeightField({
               <div className="flex flex-wrap items-stretch gap-2">
                 <div
                   role="radiogroup"
-                  aria-label={`${label} tier`}
+                  aria-label={copy.tierAria(label)}
                   className={cn(
                     'bg-muted/40 grid flex-1 grid-cols-2 gap-1 rounded-md p-1 sm:grid-cols-4',
                     'min-w-0',
@@ -120,7 +123,7 @@ function WeightField({
                 </div>
                 <Input
                   type="number"
-                  aria-label={`${label} exact weight`}
+                  aria-label={copy.exactAria(label)}
                   value={numericValue}
                   onChange={(e) => {
                     const next = e.target.value
@@ -175,15 +178,15 @@ export function CodonOptimizeWeight() {
   return (
     <WeightField
       name="codonOptimizeWeight"
-      label="Codon optimization"
-      description="How strongly to prefer codons favored by the target species."
+      label={copy.codonOptimize.label}
+      description={copy.codonOptimize.description}
       disabled={disabled}
       disabledHint={
         <EnableLink
           onClick={() => setValue('species', 'human')}
-          suffix="above to enable codon optimization."
+          suffix={copy.codonOptimize.enableSuffix}
         >
-          Select a species
+          {copy.codonOptimize.enableLinkText}
         </EnableLink>
       }
     />
@@ -197,15 +200,15 @@ export function RemoveCrypticSpliceSitesWeight() {
   return (
     <WeightField
       name="removeCrypticSpliceSitesWeight"
-      label="Cryptic splice site removal"
-      description="How aggressively to eliminate splice-like motifs. Higher values remove more sites but constrain codon choice."
+      label={copy.removeSplice.label}
+      description={copy.removeSplice.description}
       disabled={disabled}
       disabledHint={
         <EnableLink
           onClick={() => setValue('removeCrypticSpliceSites', true)}
-          suffix="above to set this weight."
+          suffix={copy.removeSplice.enableSuffix}
         >
-          Enable cryptic splice site removal
+          {copy.removeSplice.enableLinkText}
         </EnableLink>
       }
     />
@@ -219,15 +222,15 @@ export function MinimizeCpGsWeight() {
   return (
     <WeightField
       name="minimizeCpgsWeight"
-      label="CpG minimization"
-      description="How strongly to avoid CpG dinucleotides. High values greatly reduce CpGs but may lower GC content."
+      label={copy.minimizeCpG.label}
+      description={copy.minimizeCpG.description}
       disabled={disabled}
       disabledHint={
         <EnableLink
           onClick={() => setValue('minimizeCpgs', true)}
-          suffix="above to set this weight."
+          suffix={copy.minimizeCpG.enableSuffix}
         >
-          Enable CpG minimization
+          {copy.minimizeCpG.enableLinkText}
         </EnableLink>
       }
     />
@@ -241,15 +244,15 @@ export function ReduceKmerComplexityWeight() {
   return (
     <WeightField
       name="reduceKmerComplexityWeight"
-      label="k-mer complexity reduction"
-      description="How strongly to diversify 10-mer repeats. Helps synthesis and reduces recombination risk."
+      label={copy.reduceKmer.label}
+      description={copy.reduceKmer.description}
       disabled={disabled}
       disabledHint={
         <EnableLink
           onClick={() => setValue('reduceKmerComplexity', true)}
-          suffix="above to set this weight."
+          suffix={copy.reduceKmer.enableSuffix}
         >
-          Enable k-mer complexity reduction
+          {copy.reduceKmer.enableLinkText}
         </EnableLink>
       }
     />

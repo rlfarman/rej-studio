@@ -38,6 +38,9 @@ import { SubmitButton } from './submit-button'
 import { ResultsPanel } from './results-panel'
 import { JobHeader, RunningPlaceholder } from './job-header'
 import { toast } from 'sonner'
+import { designToolCopy } from '../copy'
+
+const copy = designToolCopy.form
 
 interface GeneSplitterFormProperties {
   defaultCodingSequence?: string
@@ -104,9 +107,7 @@ export function GeneSplitterForm({
     if (parsed.success) {
       methods.reset(parsed.data)
     } else {
-      toast.warning(
-        'Saved inputs from this job were incompatible with the current form — defaults were used instead.',
-      )
+      toast.warning(copy.savedInputsIncompatible)
     }
     didResetRef.current = true
   }, [job.formValues, methods])
@@ -138,7 +139,7 @@ export function GeneSplitterForm({
     const valid = await methods.trigger()
     if (!valid) {
       setIsEditing(true)
-      toast.error('Fix the form errors before re-running.')
+      toast.error(copy.fixErrorsBeforeRerun)
       return
     }
     await methods
@@ -195,12 +196,9 @@ export function GeneSplitterForm({
             >
               <CardHeader>
                 <h1 className="text-2xl leading-none font-bold tracking-tight">
-                  REJ Studio Design Tool
+                  {copy.title}
                 </h1>
-                <CardDescription>
-                  Optimize a DNA or protein sequence for RNA end-joining
-                  experiments
-                </CardDescription>
+                <CardDescription>{copy.description}</CardDescription>
               </CardHeader>
               <CardContent className="flex flex-col gap-8">
                 <div data-tour="dt-sequence">
@@ -208,10 +206,11 @@ export function GeneSplitterForm({
                 </div>
                 <SpeciesOptions />
                 <div className="flex flex-col gap-2" data-tour="dt-splicer">
-                  <p className="text-sm font-medium">Splice junction</p>
+                  <p className="text-sm font-medium">
+                    {copy.spliceJunctionLabel}
+                  </p>
                   <p className="text-muted-foreground text-sm">
-                    Set where the sequence splits into 5&apos; and 3&apos;
-                    fragments.
+                    {copy.spliceJunctionHint}
                   </p>
                   <DNASplicer />
                 </div>
@@ -226,10 +225,10 @@ export function GeneSplitterForm({
             >
               <CardHeader>
                 <CardTitle asChild>
-                  <h2>Optimization</h2>
+                  <h2>{copy.optimizationHeading}</h2>
                 </CardTitle>
                 <CardDescription>
-                  Fine-tune individual parameters, then run the optimizer.
+                  {copy.optimizationDescription}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -237,9 +236,9 @@ export function GeneSplitterForm({
                   <AccordionItem value="codon-optimization">
                     <AccordionTrigger>
                       <div>
-                        <p>Codon optimization</p>
+                        <p>{copy.accordion.codonOptimization}</p>
                         <p className="text-muted-foreground text-sm">
-                          Control which sequence features are optimized.
+                          {copy.accordion.codonOptimizationHint}
                         </p>
                       </div>
                     </AccordionTrigger>
@@ -250,9 +249,9 @@ export function GeneSplitterForm({
                   <AccordionItem value="fragment-options">
                     <AccordionTrigger>
                       <div>
-                        <p>Stimulatory introns</p>
+                        <p>{copy.accordion.stimulatoryIntrons}</p>
                         <p className="text-muted-foreground text-sm">
-                          Add introns to boost fragment expression.
+                          {copy.accordion.stimulatoryIntronsHint}
                         </p>
                       </div>
                     </AccordionTrigger>
@@ -263,9 +262,9 @@ export function GeneSplitterForm({
                   <AccordionItem value="weights">
                     <AccordionTrigger>
                       <div>
-                        <p>Parameter weights</p>
+                        <p>{copy.accordion.parameterWeights}</p>
                         <p className="text-muted-foreground text-sm">
-                          Control how much each objective influences the result.
+                          {copy.accordion.parameterWeightsHint}
                         </p>
                       </div>
                     </AccordionTrigger>
