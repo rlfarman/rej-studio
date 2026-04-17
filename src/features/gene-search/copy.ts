@@ -6,6 +6,7 @@ export const geneSearchCopy = {
   command: {
     inputAria: 'Search genes',
     placeholder: 'Search by gene symbol, name, or disease...',
+    placeholderMobile: 'Search genes…',
     searching: 'Searching…',
     retry: 'Retry',
     promptEmpty: 'Search by gene symbol, name, or disease.',
