@@ -2,7 +2,15 @@ import { ImageResponse } from 'next/og'
 import { getGeneBySymbol } from '@/features/gene-search/api/genes'
 import { getIsoformsByGene } from '@/features/gene-search/api/isoforms'
 import { parseSpeciesParam } from '@/lib/bio/species'
-import { OG_BG } from '@/lib/og-theme'
+import {
+  OG_ACCENT,
+  OG_BG,
+  OG_BORDER,
+  OG_FG,
+  OG_MUTED,
+  OG_PRIMARY,
+  loadDisplayFont,
+} from '@/lib/og-theme'
 
 export const size = { width: 1200, height: 630 }
 
@@ -16,6 +24,7 @@ export async function GET(
     symbol,
     parseSpeciesParam(searchParams.get('species') ?? undefined),
   )
+  const displayFont = await loadDisplayFont()
 
   if (!gene) {
     return new ImageResponse(
@@ -27,7 +36,7 @@ export async function GET(
           width: '100%',
           height: '100%',
           backgroundColor: OG_BG,
-          color: '#fafafa',
+          color: OG_FG,
           fontSize: 48,
           fontFamily: 'monospace',
         }}
@@ -52,37 +61,36 @@ export async function GET(
         width: '100%',
         height: '100%',
         backgroundColor: OG_BG,
-        color: '#fafafa',
+        color: OG_FG,
         fontFamily: 'system-ui, sans-serif',
-        backgroundImage:
-          'radial-gradient(circle at 85% 15%, rgba(56,189,248,0.12) 0%, transparent 55%), radial-gradient(circle at 15% 85%, rgba(168,85,247,0.10) 0%, transparent 55%)',
+        backgroundImage: `radial-gradient(circle at 85% 10%, ${OG_ACCENT}99 0%, transparent 55%), radial-gradient(circle at 10% 95%, ${OG_PRIMARY}26 0%, transparent 60%)`,
       }}
     >
       <div
         style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '12px',
+          gap: '14px',
         }}
       >
         <span
           style={{
             fontSize: 22,
             fontFamily: 'monospace',
-            letterSpacing: '0.1em',
-            color: '#d4d4d8',
+            letterSpacing: '0.12em',
+            color: OG_MUTED,
             textTransform: 'uppercase',
           }}
         >
           REJ Studio
         </span>
-        <span style={{ color: '#52525b', fontSize: 22 }}>/</span>
+        <span style={{ color: OG_BORDER, fontSize: 22 }}>/</span>
         <span
           style={{
             fontSize: 22,
-            color: '#38bdf8',
+            color: OG_PRIMARY,
             fontWeight: 600,
-            letterSpacing: '0.08em',
+            letterSpacing: '0.1em',
             textTransform: 'uppercase',
           }}
         >
@@ -106,23 +114,27 @@ export async function GET(
         >
           <span
             style={{
-              fontSize: 80,
+              fontSize: 84,
               fontWeight: 700,
               fontFamily: 'monospace',
-              letterSpacing: '-0.03em',
+              letterSpacing: '-0.02em',
+              color: OG_FG,
             }}
           >
             {gene.symbol}
           </span>
-          <span style={{ fontSize: 28, color: '#a1a1aa' }}>
+          <span style={{ fontSize: 28, color: OG_MUTED }}>
             {species.join(' & ')}
           </span>
         </div>
         <div
           style={{
-            fontSize: 32,
-            color: '#d4d4d8',
-            lineHeight: 1.35,
+            fontSize: 36,
+            fontFamily: '"Source Serif 4", serif',
+            fontWeight: 700,
+            color: OG_FG,
+            lineHeight: 1.25,
+            letterSpacing: '-0.02em',
             maxWidth: '90%',
           }}
         >
@@ -133,13 +145,13 @@ export async function GET(
             display: 'flex',
             gap: '40px',
             fontSize: 24,
-            color: '#a1a1aa',
+            color: OG_MUTED,
           }}
         >
           <span>
             {isoformCount} isoform{isoformCount !== 1 ? 's' : ''}
           </span>
-          <span style={{ color: '#52525b' }}>·</span>
+          <span style={{ color: OG_BORDER }}>·</span>
           <span>{gene.id}</span>
         </div>
       </div>
@@ -149,13 +161,15 @@ export async function GET(
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
+          borderTop: `1px solid ${OG_BORDER}`,
+          paddingTop: 24,
         }}
       >
         <span
           style={{
             fontSize: 22,
             fontFamily: 'monospace',
-            color: '#71717a',
+            color: OG_MUTED,
           }}
         >
           rejstudio.com/genes/{symbol.toLowerCase()}
@@ -164,8 +178,8 @@ export async function GET(
           style={{
             fontSize: 22,
             fontFamily: 'monospace',
-            color: '#52525b',
-            letterSpacing: '0.08em',
+            color: OG_PRIMARY,
+            letterSpacing: '0.1em',
           }}
         >
           ATG · · · TAA
@@ -174,6 +188,14 @@ export async function GET(
     </div>,
     {
       ...size,
+      fonts: [
+        {
+          name: 'Source Serif 4',
+          data: displayFont,
+          weight: 700,
+          style: 'normal',
+        },
+      ],
       headers: {
         'Cache-Control':
           'public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400',
