@@ -7,6 +7,10 @@ import {
   Clock,
   Scissors,
   ChevronRight,
+  ChevronDown,
+  Check,
+  Copy,
+  FileText,
   Package,
   Link2,
   Activity,
@@ -34,7 +38,14 @@ import {
 } from '@/components/ui/table'
 import { fadeUp } from '@/lib/motion'
 import { MetricCell } from '@/components/metric-cell'
-import { CopyButton } from '@/components/copy-button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
 import type { ProcessResult } from '@/features/design-tool/types/process-result'
 import { toast } from 'sonner'
 import { downloadResultsZip } from '@/features/design-tool/utils/build-zip'
@@ -219,6 +230,8 @@ function SequenceCard({
   sequence: string
   fastaName: string
 }) {
+  const { copy, isCopied } = useCopyToClipboard({ showToast: false })
+  const justCopied = isCopied('fasta') || isCopied('seq')
   return (
     <div className="bg-muted/30 space-y-2 rounded-lg border p-3">
       <div className="flex flex-wrap items-center justify-between gap-1.5">
@@ -228,39 +241,49 @@ function SequenceCard({
             {sequence.length.toLocaleString()} bp
           </Badge>
         </div>
-        <div className="flex flex-wrap gap-1.5">
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="h-9 gap-1.5 px-3 text-xs"
-            onClick={() =>
-              downloadTextFile(
-                `${fastaName}.fasta`,
-                formatFasta(fastaName, sequence),
-              )
-            }
-            aria-label={`Download ${label} as FASTA`}
-          >
-            <Download className="size-3.5" />
-            FASTA
-          </Button>
-          <CopyButton
-            text={() => formatFasta(fastaName, sequence)}
-            className="h-9 gap-1.5 px-3 text-xs"
-            aria-label={`Copy ${label} FASTA to clipboard`}
-          >
-            FASTA
-          </CopyButton>
-          <CopyButton
-            text={sequence}
-            className="h-9 gap-1.5 px-3 text-xs"
-            copiedLabel="Copied"
-            aria-label={`Copy ${label} raw sequence to clipboard`}
-          >
-            Copy
-          </CopyButton>
-        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-9 gap-1.5 px-3 text-xs"
+              aria-label={`Export or copy ${label}`}
+            >
+              {justCopied ? (
+                <Check className="size-3.5" />
+              ) : (
+                <Download className="size-3.5" />
+              )}
+              {justCopied ? 'Copied' : 'Export'}
+              <ChevronDown className="size-3.5 opacity-60" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem
+              onClick={() => copy(formatFasta(fastaName, sequence), 'fasta')}
+            >
+              <FileText className="size-4" />
+              Copy FASTA
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => copy(sequence, 'seq')}>
+              <Copy className="size-4" />
+              Copy sequence
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={() =>
+                downloadTextFile(
+                  `${fastaName}.fasta`,
+                  formatFasta(fastaName, sequence),
+                )
+              }
+            >
+              <Download className="size-4" />
+              Download FASTA
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
       <pre className="bg-muted max-h-40 overflow-auto rounded-md p-2.5 font-mono text-xs break-all whitespace-pre-wrap">
         {sequence}
