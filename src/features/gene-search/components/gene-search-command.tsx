@@ -19,6 +19,7 @@ import { DnaLoader } from '@/components/bio/dna-loader'
 import type { SavedGene } from '@/features/gene-search/types/domain-types'
 import { useSpeciesContext } from '@/stores/species-store'
 import type { SpeciesFilter } from '@/lib/bio/species'
+import { useIsMobile } from '@/hooks/use-mobile'
 import { geneSearchCopy } from '../copy'
 
 const copy = geneSearchCopy.command
@@ -118,6 +119,7 @@ export function GeneSearchCommand({
 }: GeneSearchInputProps) {
   const [showList, setShowList] = useState(true)
   const { species } = useSpeciesContext()
+  const isMobile = useIsMobile()
 
   const internalHandleSelect = (gene: SavedGene) => {
     setShowList(false)
@@ -175,7 +177,7 @@ export function GeneSearchCommand({
         <CommandInput
           id="search"
           aria-label={copy.inputAria}
-          placeholder={copy.placeholder}
+          placeholder={isMobile ? copy.placeholderMobile : copy.placeholder}
           className="border-0 text-base ring-0 outline-0 focus:border-0 focus:ring-0 active:border-0 active:ring-0 sm:text-sm"
           value={query}
           onValueChange={(q) => {
