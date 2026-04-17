@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useDebounce } from 'use-debounce'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import {
+  keepPreviousData,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query'
 import type { GeneSearchResult } from '@/features/gene-search/api/gene-queries'
 import type { SearchGenesResult } from '@/features/gene-search/api/genes'
 import type { SpeciesFilter } from '@/lib/bio/species'
@@ -34,6 +38,10 @@ export function useGeneSearch({
     queryFn: () => searchGenes(trimmed, species),
     enabled,
     staleTime: 30_000,
+    // Keep the previous query's results mounted while a new query loads, so
+    // the list doesn't blank out between keystrokes. Pairs with a delayed
+    // inline loader in the input to avoid flash-of-loading on fast queries.
+    placeholderData: keepPreviousData,
   })
 
   // Track completed searches (fires once per unique query+species+results).

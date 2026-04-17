@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { DnaLoader } from '@/components/bio/dna-loader'
 import { cn } from '@/lib/utils'
 import type { DesignToolSpecies } from '@/features/design-tool/types/species-options'
 import { designToolCopy } from '../copy'
@@ -37,11 +38,13 @@ export function RunningPlaceholder({
   const displayedPct = useSmoothedProgress(pct)
   return (
     <Card>
-      <CardContent className="flex flex-col items-center justify-center gap-4 py-12">
-        <div className="relative flex size-12 items-center justify-center">
-          <span className="bg-primary/10 absolute inset-0 animate-ping rounded-full" />
-          <Loader2 className="text-primary relative size-6 animate-spin" />
-        </div>
+      <CardContent
+        role="status"
+        aria-live="polite"
+        aria-label={copy.running.title}
+        className="flex flex-col items-center justify-center gap-4 py-12"
+      >
+        <DnaLoader className="h-10 w-[120px]" />
         <div className="space-y-1 text-center">
           <p className="text-sm font-medium">{copy.running.title}</p>
           <p className="text-muted-foreground text-xs">
