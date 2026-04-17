@@ -35,15 +35,12 @@ export default function HomePage() {
           <HeroItem index={0} className="mb-4 flex items-center justify-center">
             <Dna className="mt-2 ml-2 size-6" />
           </HeroItem>
-          <HeroItem index={1} className="pb-2 font-mono">
-            RNA END-JOINING (REJ) Studio
-          </HeroItem>
-          <HeroItem index={2}>
+          <HeroItem index={1}>
             <h1 className="text-primary pb-2 text-3xl font-bold tracking-tight sm:text-4xl">
               What gene are you optimizing?
             </h1>
           </HeroItem>
-          <HeroItem index={3}>
+          <HeroItem index={2}>
             <p className="text-muted-foreground" data-tour="home-design-link">
               Try searching for a gene, or{' '}
               <Link
@@ -60,7 +57,7 @@ export default function HomePage() {
           </HeroItem>
         </div>
         <HeroItem
-          index={4}
+          index={3}
           className="mx-auto mt-8 w-full max-w-2xl px-4 sm:px-6 lg:px-8"
           data-tour="home-search"
         >
