@@ -55,7 +55,7 @@ export async function GeneSearchResults({
         {results.map((gene, i) => (
           <li
             key={gene.id}
-            className="fade-up-stagger hover:bg-accent/60 flex items-center gap-4 rounded-md pr-1 transition-colors"
+            className="fade-up-stagger group/gene-row hover:bg-accent/60 flex items-center gap-4 rounded-md pr-1 transition-colors"
             style={{ '--stagger': i } as React.CSSProperties}
           >
             <Link
@@ -69,7 +69,7 @@ export async function GeneSearchResults({
               <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                 <span className="truncate text-sm">{gene.name}</span>
                 {gene.matchedIsoformId && (
-                  <span className="text-muted-foreground truncate font-mono text-xs">
+                  <span className="text-muted-foreground group-hover/gene-row:text-accent-foreground truncate font-mono text-xs">
                     {gene.matchedIsoformId}
                   </span>
                 )}
