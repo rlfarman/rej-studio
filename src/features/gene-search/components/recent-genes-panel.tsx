@@ -51,7 +51,6 @@ export function RecentGenes() {
             showOnHover
             onClick={() => removeRecentGene(gene.id)}
             aria-label={copy.removeAria(gene.symbol)}
-            className="bg-sidebar hover:bg-sidebar-accent"
           >
             <X />
           </SidebarMenuAction>

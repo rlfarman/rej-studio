@@ -110,7 +110,6 @@ export function RecentJobs({ onSelectJob }: RecentJobsProps) {
                 ? copy.cancelAria(entry.name)
                 : copy.removeAria(entry.name)
             }
-            className="bg-sidebar hover:bg-sidebar-accent"
           >
             <X />
           </SidebarMenuAction>
