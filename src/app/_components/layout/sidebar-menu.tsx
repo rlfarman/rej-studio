@@ -8,14 +8,11 @@ import {
   GraduationCap,
   Monitor,
   Moon,
-  Palette,
   Settings,
   Sprout,
   Sun,
   Upload,
 } from 'lucide-react'
-import { usePalette } from '@/app/_components/layout/palette-provider'
-import { PALETTES } from '@/lib/palette'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -45,7 +42,6 @@ const THEMES = [
 
 export function SidebarMenu() {
   const { theme, setTheme } = useTheme()
-  const { palette, setPalette } = usePalette()
   const [mounted, setMounted] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const resetAllTours = useOnboarding((s) => s.resetAllTours)
@@ -101,24 +97,6 @@ export function SidebarMenu() {
                       <DropdownMenuRadioItem key={value} value={value}>
                         <Icon className="h-4 w-4" />
                         {label}
-                      </DropdownMenuRadioItem>
-                    ))}
-                  </DropdownMenuRadioGroup>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuLabel>Palette</DropdownMenuLabel>
-                  <DropdownMenuRadioGroup
-                    value={palette}
-                    onValueChange={(v) =>
-                      setPalette(v as (typeof PALETTES)[number]['value'])
-                    }
-                  >
-                    {PALETTES.map(({ value, label, hint }) => (
-                      <DropdownMenuRadioItem key={value} value={value}>
-                        <Palette className="h-4 w-4" />
-                        <span className="flex-1">{label}</span>
-                        <span className="text-muted-foreground text-xs">
-                          {hint}
-                        </span>
                       </DropdownMenuRadioItem>
                     ))}
                   </DropdownMenuRadioGroup>
