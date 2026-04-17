@@ -24,7 +24,7 @@ export function RecentGenes() {
       emptyMessage="Your recent gene searches will appear here."
       renderItem={(gene) => (
         <SidebarMenuItem>
-          <SidebarMenuButton asChild>
+          <SidebarMenuButton asChild size="sm" className="[&>svg]:size-3">
             <Link
               href={geneHref(gene.symbol, gene.species)}
               className="flex items-center gap-2"
@@ -32,13 +32,13 @@ export function RecentGenes() {
               {gene.species && (
                 <SpeciesIcon
                   species={gene.species}
-                  className="text-muted-foreground h-3.5 w-3.5 flex-shrink-0"
+                  className="text-muted-foreground flex-shrink-0"
                 />
               )}
               <span className="font-mono font-medium">{gene.symbol}</span>
               <TruncatedText
                 tooltip={gene.name}
-                className="text-muted-foreground truncate pr-5 text-xs"
+                className="text-muted-foreground truncate pr-5"
               >
                 {gene.name}
               </TruncatedText>
