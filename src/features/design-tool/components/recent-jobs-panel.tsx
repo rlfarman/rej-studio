@@ -68,12 +68,16 @@ export function RecentJobs({ onSelectJob }: RecentJobsProps) {
       menuAriaLabel="Recent jobs"
       renderItem={(entry) => (
         <SidebarMenuItem>
-          <SidebarMenuButton onClick={() => onSelectJob?.(entry)}>
+          <SidebarMenuButton
+            size="sm"
+            className="[&>svg]:size-3"
+            onClick={() => onSelectJob?.(entry)}
+          >
             {entry.status === 'running' && (
-              <Loader2 className="size-3 flex-shrink-0 animate-spin" />
+              <Loader2 className="flex-shrink-0 animate-spin" />
             )}
             {(entry.status === 'failed' || entry.status === 'cancelled') && (
-              <CircleAlert className="text-destructive size-3 flex-shrink-0" />
+              <CircleAlert className="text-destructive flex-shrink-0" />
             )}
             <TruncatedText
               tooltip={
@@ -82,7 +86,7 @@ export function RecentJobs({ onSelectJob }: RecentJobsProps) {
                   ? entry.error.message
                   : entry.name
               }
-              className="truncate text-xs"
+              className="truncate"
             >
               {entry.name}
             </TruncatedText>

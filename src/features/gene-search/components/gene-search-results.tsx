@@ -48,68 +48,83 @@ export async function GeneSearchResults({
   }
 
   return (
-    <div className="divide-border divide-y rounded-lg border">
-      {results.map((gene, i) => (
-        <div
-          key={gene.id}
-          className="fade-up-stagger hover:bg-accent flex items-center gap-4 pr-2 transition-colors"
-          style={{ '--stagger': i } as React.CSSProperties}
-        >
-          <Link
-            href={geneHref(gene.symbol, gene.species, gene.matchedIsoformId)}
-            className="flex min-w-0 flex-1 items-center gap-4 px-4 py-3"
+    <div className="flex flex-col gap-2">
+      <p className="text-muted-foreground px-1 text-xs font-medium tracking-wide uppercase">
+        {results.length} {results.length === 1 ? 'result' : 'results'}
+      </p>
+      <ul className="divide-border divide-y">
+        {results.map((gene, i) => (
+          <li
+            key={gene.id}
+            className="fade-up-stagger hover:bg-accent/60 flex items-center gap-4 rounded-md pr-1 transition-colors"
+            style={{ '--stagger': i } as React.CSSProperties}
           >
-            <Badge className="grid w-24 shrink-0 grid-cols-[24px_1fr] items-center gap-2 font-mono">
-              <SpeciesIcon species={gene.species} className="h-4 w-4" />
-              <span className="truncate">{gene.symbol}</span>
-            </Badge>
-            <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-              <span className="truncate text-sm">{gene.name}</span>
-              {gene.matchedIsoformId && (
-                <span className="text-muted-foreground truncate font-mono text-xs">
-                  {gene.matchedIsoformId}
-                </span>
-              )}
-            </div>
-          </Link>
-          {gene.matchedIsoformId && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button asChild variant="ghost" size="sm" className="shrink-0">
-                  <Link
-                    href={`/design-tool?isoform=${gene.matchedIsoformId}`}
-                    aria-label={`Customize ${gene.matchedIsoformId}`}
+            <Link
+              href={geneHref(gene.symbol, gene.species, gene.matchedIsoformId)}
+              className="flex min-w-0 flex-1 items-center gap-4 px-2 py-2.5"
+            >
+              <Badge className="grid w-24 shrink-0 grid-cols-[24px_1fr] items-center gap-2 font-mono">
+                <SpeciesIcon species={gene.species} className="h-4 w-4" />
+                <span className="truncate">{gene.symbol}</span>
+              </Badge>
+              <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                <span className="truncate text-sm">{gene.name}</span>
+                {gene.matchedIsoformId && (
+                  <span className="text-muted-foreground truncate font-mono text-xs">
+                    {gene.matchedIsoformId}
+                  </span>
+                )}
+              </div>
+            </Link>
+            {gene.matchedIsoformId && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    asChild
+                    variant="ghost"
+                    size="sm"
+                    className="shrink-0"
                   >
-                    <span className="hidden sm:inline">Customize</span>
-                    <ExternalLink className="size-3.5" />
-                  </Link>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Customize {gene.matchedIsoformId}</TooltipContent>
-            </Tooltip>
-          )}
-        </div>
-      ))}
+                    <Link
+                      href={`/design-tool?isoform=${gene.matchedIsoformId}`}
+                      aria-label={`Customize ${gene.matchedIsoformId}`}
+                    >
+                      <span className="hidden sm:inline">Customize</span>
+                      <ExternalLink className="size-3.5" />
+                    </Link>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  Customize {gene.matchedIsoformId}
+                </TooltipContent>
+              </Tooltip>
+            )}
+          </li>
+        ))}
+      </ul>
     </div>
   )
 }
 
 export function GeneSearchResultsLoading({ rows = 5 }: { rows?: number } = {}) {
   return (
-    <div className="divide-border divide-y rounded-lg border">
-      {Array.from({ length: rows }, (_, i) => (
-        <div
-          key={i}
-          className="flex items-center gap-4 px-4 py-3"
-          style={{ '--stagger': i } as React.CSSProperties}
-        >
-          <Skeleton className="h-6 w-24 shrink-0 rounded-full" />
-          <div className="flex flex-1 flex-col gap-1.5">
-            <Skeleton className="h-4 w-48" />
-            <Skeleton className="h-3 w-32" />
+    <div className="flex flex-col gap-2">
+      <Skeleton className="h-3 w-16" />
+      <div className="divide-border divide-y">
+        {Array.from({ length: rows }, (_, i) => (
+          <div
+            key={i}
+            className="flex items-center gap-4 px-2 py-2.5"
+            style={{ '--stagger': i } as React.CSSProperties}
+          >
+            <Skeleton className="h-6 w-24 shrink-0 rounded-full" />
+            <div className="flex flex-1 flex-col gap-1.5">
+              <Skeleton className="h-4 w-48" />
+              <Skeleton className="h-3 w-32" />
+            </div>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   )
 }

@@ -18,10 +18,10 @@ async function AppShell({ children }: { children: React.ReactNode }) {
     <SidebarProvider
       defaultOpen={defaultOpen}
       defaultWidth={defaultWidth}
-      className="relative flex h-full w-full flex-row overflow-hidden"
+      className="relative h-svh min-h-0 w-full flex-row overflow-hidden"
     >
       <AppSidebar />
-      <SidebarInset className="relative flex h-full min-h-screen max-w-full flex-1 flex-col overflow-hidden">
+      <SidebarInset className="relative flex h-svh min-h-0 max-w-full flex-1 flex-col overflow-hidden">
         {maintenanceMessage && (
           <MaintenanceBanner
             message={maintenanceMessage}
