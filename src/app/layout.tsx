@@ -1,13 +1,17 @@
 import '@/styles/globals.css'
-import { Inter, JetBrains_Mono, Source_Serif_4 } from 'next/font/google'
+import {
+  Source_Code_Pro,
+  Source_Sans_3,
+  Source_Serif_4,
+} from 'next/font/google'
 
-const fontSans = Inter({
+const fontSans = Source_Sans_3({
   subsets: ['latin'],
   variable: '--font-geist-sans',
   display: 'swap',
 })
 
-const fontMono = JetBrains_Mono({
+const fontMono = Source_Code_Pro({
   subsets: ['latin'],
   variable: '--font-geist-mono',
   display: 'swap',
