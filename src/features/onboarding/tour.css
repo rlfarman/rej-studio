@@ -92,34 +92,43 @@
 .driver-popover.rej-tour-popover .driver-popover-footer button {
   font-size: 0.8125rem;
   font-weight: 500;
+  border: 1px solid transparent;
   border-radius: calc(var(--radius) - 2px);
   padding: 0.25rem 0.75rem;
   height: 1.75rem;
   line-height: 1.25rem;
+  text-shadow: none;
   transition:
     background-color 0.15s,
-    color 0.15s;
+    color 0.15s,
+    border-color 0.15s;
 }
 
 /* Previous button — ghost style */
-.driver-popover.rej-tour-popover .driver-popover-prev-btn {
-  background-color: transparent;
-  border-color: transparent;
-  color: var(--popover-foreground);
+.driver-popover.rej-tour-popover .driver-popover-prev-btn,
+.driver-popover.rej-tour-popover .driver-popover-prev-btn:focus {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--muted-foreground);
+  text-shadow: none;
 }
 
 .driver-popover.rej-tour-popover .driver-popover-prev-btn:hover {
-  background-color: var(--accent);
-  color: var(--accent-foreground);
+  background: var(--muted);
+  color: var(--popover-foreground);
 }
 
 /* Next/Done button — primary style */
-.driver-popover.rej-tour-popover .driver-popover-next-btn {
-  background-color: var(--primary);
-  border-color: var(--primary);
+.driver-popover.rej-tour-popover .driver-popover-next-btn,
+.driver-popover.rej-tour-popover .driver-popover-next-btn:focus {
+  background: var(--primary);
+  border: 1px solid var(--primary);
   color: var(--primary-foreground);
+  text-shadow: none;
 }
 
 .driver-popover.rej-tour-popover .driver-popover-next-btn:hover {
-  background-color: color-mix(in srgb, var(--primary) 90%, transparent);
+  background: color-mix(in srgb, var(--primary) 88%, black);
+  border-color: color-mix(in srgb, var(--primary) 88%, black);
+  color: var(--primary-foreground);
 }

@@ -2,6 +2,7 @@ import '@/styles/globals.css'
 import { GeistSans } from 'geist/font/sans'
 import { GeistMono } from 'geist/font/mono'
 import { ThemeProvider } from '@/app/_components/layout/theme-provider'
+import { PaletteProvider } from '@/app/_components/layout/palette-provider'
 import { Toaster } from '@/components/ui/sonner'
 import { QueryProvider } from '@/app/_components/providers/query-provider'
 import { GoogleTagManager } from '@/components/google-tag-manager'
@@ -51,27 +52,29 @@ export default function RootLayout({
     >
       <head />
       <body>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <QueryProvider>
-            <a
-              href="#main-content"
-              className="focus:bg-background focus:text-foreground focus:ring-ring sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:rounded-md focus:px-4 focus:py-2 focus:shadow-md focus:ring-2"
-            >
-              Skip to content
-            </a>
-            {children}
-            <Toaster />
-            <Suspense fallback={null}>
-              <AnalyticsPageview />
-            </Suspense>
-            <AnalyticsProperties />
-          </QueryProvider>
-        </ThemeProvider>
+        <PaletteProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <QueryProvider>
+              <a
+                href="#main-content"
+                className="focus:bg-background focus:text-foreground focus:ring-ring sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:rounded-md focus:px-4 focus:py-2 focus:shadow-md focus:ring-2"
+              >
+                Skip to content
+              </a>
+              {children}
+              <Toaster />
+              <Suspense fallback={null}>
+                <AnalyticsPageview />
+              </Suspense>
+              <AnalyticsProperties />
+            </QueryProvider>
+          </ThemeProvider>
+        </PaletteProvider>
         <WebVitals />
         <GoogleTagManager />
       </body>
