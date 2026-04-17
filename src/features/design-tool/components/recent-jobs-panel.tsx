@@ -93,7 +93,7 @@ export function RecentJobs({ onSelectJob }: RecentJobsProps) {
             >
               {entry.name}
             </TruncatedText>
-            <span className="text-muted-foreground ml-auto flex-shrink-0 text-[10px]">
+            <span className="text-muted-foreground group-hover/menu-button:text-sidebar-accent-foreground ml-auto flex-shrink-0 text-[10px]">
               {entry.status === 'running'
                 ? (entry.stage ??
                   (entry.progress !== undefined

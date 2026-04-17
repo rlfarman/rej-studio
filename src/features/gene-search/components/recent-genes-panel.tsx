@@ -35,13 +35,13 @@ export function RecentGenes() {
               {gene.species && (
                 <SpeciesIcon
                   species={gene.species}
-                  className="text-muted-foreground flex-shrink-0"
+                  className="text-muted-foreground group-hover/menu-button:text-sidebar-accent-foreground flex-shrink-0"
                 />
               )}
               <span className="font-mono font-medium">{gene.symbol}</span>
               <TruncatedText
                 tooltip={gene.name}
-                className="text-muted-foreground truncate pr-5"
+                className="text-muted-foreground group-hover/menu-button:text-sidebar-accent-foreground truncate pr-5"
               >
                 {gene.name}
               </TruncatedText>
