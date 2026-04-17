@@ -239,16 +239,11 @@ export function JobHeader({
             {canRerun && (
               <Button type="button" size="sm" onClick={onRerun}>
                 {status === 'failed' ? (
-                  <>
-                    <RotateCw className="size-3.5" />
-                    {copy.buttonRunAgain}
-                  </>
+                  <RotateCw className="size-3.5" />
                 ) : (
-                  <>
-                    <Play className="size-3.5" />
-                    {copy.buttonRerun}
-                  </>
+                  <Play className="size-3.5" />
                 )}
+                {copy.buttonRunAgain}
               </Button>
             )}
           </div>

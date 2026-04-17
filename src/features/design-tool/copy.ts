@@ -8,7 +8,7 @@ export const designToolCopy = {
       notMultipleOfThree:
         'Sequence length must be a multiple of 3 (complete codons).',
       missingStartCodon:
-        'Sequence must begin with a start codon (ATG). Without it, translation cannot initiate.',
+        'Sequence must begin with a start codon (ATG). Without it, translation can’t start.',
       missingStopCodon:
         'Sequence must end with a stop codon (TAA, TAG, or TGA). Without it, the ribosome will read through into downstream sequence.',
       prematureStopCodon:
@@ -157,10 +157,10 @@ export const designToolCopy = {
   form: {
     title: 'REJ Studio Design Tool',
     description:
-      'Optimize a DNA or protein sequence for RNA end-joining experiments',
+      'Paste a coding sequence, tune the objectives, and generate optimized fragments for RNA end-joining.',
     spliceJunctionLabel: 'Splice junction',
     spliceJunctionHint:
-      "Set where the sequence splits into 5' and 3' fragments.",
+      'Set where the sequence splits into 5′ and 3′ fragments.',
     optimizationHeading: 'Optimization',
     optimizationDescription:
       'Fine-tune individual parameters, then run the optimizer.',
@@ -179,7 +179,7 @@ export const designToolCopy = {
   },
   jobHeader: {
     untitled: 'Untitled run',
-    statusRunning: 'Optimizing codons…',
+    statusRunning: 'Optimizing sequence…',
     statusCompleted: 'Completed',
     statusCompletedIn: (seconds: number) => `Completed in ${seconds}s`,
     statusFailedDefault: 'Job failed',
@@ -187,7 +187,6 @@ export const designToolCopy = {
     buttonCancel: 'Cancel',
     buttonEdit: 'Edit',
     buttonRunAgain: 'Run again',
-    buttonRerun: 'Re-run',
     running: {
       title: 'Optimizing your sequence…',
       defaultStage:
@@ -200,8 +199,8 @@ export const designToolCopy = {
     },
   },
   recentJobs: {
-    label: 'Recent Jobs',
-    empty: 'Your completed optimization jobs will appear here.',
+    label: 'Recent jobs',
+    empty: 'No recent jobs. Run an optimization to see it here.',
     menuAria: 'Recent jobs',
     justNow: 'just now',
     minutesAgo: (m: number) => `${m}m ago`,
@@ -220,9 +219,9 @@ export const designToolCopy = {
     splitAtPosition: 'Split at position',
     splitRatio: (left: number, right: number) => `(${left}% / ${right}%)`,
     sequenceCard: {
-      fiveLabel: "5' Sequence",
-      threeLabel: "3' Sequence",
-      fullLabel: 'Full Optimized',
+      fiveLabel: '5′ sequence',
+      threeLabel: '3′ sequence',
+      fullLabel: 'Full optimized',
       exportAria: (label: string) => `Export or copy ${label}`,
       exportLabel: 'Export',
       copied: 'Copied',
@@ -249,16 +248,16 @@ export const designToolCopy = {
       wggwSites: (count: number) => `${count} site${count === 1 ? '' : 's'}`,
     },
     wggwTable: {
-      main: 'Main Junction',
-      stim5: "5' Stimulatory",
-      stim3: "3' Stimulatory",
+      main: 'Main junction',
+      stim5: '5′ stimulatory',
+      stim3: '3′ stimulatory',
       headers: {
         site: 'Site',
         position: 'Position',
         motif: 'Motif',
         distance: 'Distance',
-        originalCodons: 'Original Codons',
-        newCodons: 'New Codons',
+        originalCodons: 'Original codons',
+        newCodons: 'New codons',
       },
     },
   },
@@ -270,9 +269,9 @@ export const designToolCopy = {
       exceeds: 'Exceeds AAV',
     },
     results: {
-      heading: 'AAV Packaging Estimate',
-      fiveVector: "5' Vector",
-      threeVector: "3' Vector",
+      heading: 'AAV packaging estimate',
+      fiveVector: '5′ vector',
+      threeVector: '3′ vector',
       fits: 'Fits',
       tight: 'Tight',
       overLimit: 'Over limit',

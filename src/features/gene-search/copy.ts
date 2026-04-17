@@ -1,6 +1,6 @@
 export const geneSearchCopy = {
   trigger: {
-    label: 'Search for Genes',
+    label: 'Search for genes',
     kbdHintPrefix: 'Press',
   },
   command: {
@@ -10,7 +10,7 @@ export const geneSearchCopy = {
     retry: 'Retry',
     promptEmpty: 'Search by gene symbol, name, or disease.',
     favorites: 'Favorites',
-    recentGenes: 'Recent Genes',
+    recentGenes: 'Recent genes',
     customize: 'Customize',
     customizeAria: (id: string) => `Customize ${id}`,
     speciesOptions: {
@@ -29,8 +29,8 @@ export const geneSearchCopy = {
     add: 'Add to favorites',
   },
   recentGenesPanel: {
-    label: 'Recent Searches',
-    empty: 'Your recent gene searches will appear here.',
+    label: 'Recent searches',
+    empty: 'No recent searches. Search for a gene to get started.',
     removeAria: (symbol: string) => `Remove ${symbol} from recent searches`,
   },
   favoritesPanel: {

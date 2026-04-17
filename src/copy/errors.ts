@@ -4,11 +4,11 @@ export const errorsCopy = {
     failure: 'Failed to copy to clipboard.',
   },
   download: {
-    failure: 'Download failed.',
+    failure: 'Download failed. Check your connection and try again.',
   },
   importUserData: {
     success: (imported: number) =>
-      `Imported ${imported} data ${imported === 1 ? 'category' : 'categories'}`,
-    failure: 'Import failed',
+      `Imported ${imported} ${imported === 1 ? 'category' : 'categories'}`,
+    failure: 'Import failed. Check the file format and try again.',
   },
 } as const

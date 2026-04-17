@@ -1,7 +1,8 @@
 export const appCopy = {
   errorBoundary: {
     title: 'Something went wrong',
-    description: 'An unexpected mutation occurred in our process.',
+    description:
+      'An unexpected mutation occurred. Try again, or reload the page.',
     reassurance: 'Don’t worry — no sequences were harmed.',
     search: {
       title: 'Search unavailable',
@@ -11,14 +12,15 @@ export const appCopy = {
     designTool: {
       title: 'Design tool error',
       description:
-        'Something went wrong loading the design tool. Your work has not been lost.',
+        'Something went wrong loading the design tool. Your work is safe.',
       backToSearch: 'Back to Search',
     },
   },
   notFound: {
     code: '404',
     description: 'This sequence doesn’t map to anything.',
-    detail: 'The page you’re looking for may have been spliced out.',
+    detail:
+      'The page you’re looking for may have been spliced out. Head back or return home.',
   },
   home: {
     metadataTitle: 'REJ Studio — RNA End-Joining sequence design',

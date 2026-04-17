@@ -4,10 +4,9 @@ export const commonCopy = {
     close: 'Close sidebar',
   },
   actions: {
-    tryAgain: 'Try Again',
-    goHome: 'Go Home',
-    goBack: 'Go Back',
-    retry: 'Retry',
+    tryAgain: 'Try again',
+    goHome: 'Go home',
+    goBack: 'Go back',
     cancel: 'Cancel',
     edit: 'Edit',
     copy: 'Copy',
@@ -24,7 +23,7 @@ export const commonCopy = {
     exportData: 'Export data',
     importData: 'Import data',
     restartTours: 'Restart tours',
-    toursReset: 'Tours reset — they will appear on your next visit',
+    toursReset: 'Tours will reappear on your next visit.',
     seedData: 'Seed data',
     clearSeedData: 'Clear seed data',
     seedResult: (favorites: number, recents: number, jobs: number) =>
