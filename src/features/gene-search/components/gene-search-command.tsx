@@ -73,11 +73,15 @@ function SpeciesToggle() {
  */
 function useDelayedTrue(flag: boolean, delayMs: number) {
   const [delayed, setDelayed] = useState(false)
+  const [prevFlag, setPrevFlag] = useState(flag)
+  // Reset during render when flag flips so the delayed signal restarts from
+  // scratch — React's documented pattern for "adjust state while rendering".
+  if (prevFlag !== flag) {
+    setPrevFlag(flag)
+    setDelayed(false)
+  }
   useEffect(() => {
-    if (!flag) {
-      setDelayed(false)
-      return
-    }
+    if (!flag) return
     const t = setTimeout(() => setDelayed(true), delayMs)
     return () => clearTimeout(t)
   }, [flag, delayMs])
