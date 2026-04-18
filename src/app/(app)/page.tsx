@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { GeneSearch } from '@/features/gene-search/components/gene-search'
+import { GeneSearchShell } from '@/app/_components/gene-search-shell'
 import { searchGenes } from '@/features/gene-search/api/genes'
 import { Dna } from 'lucide-react'
 import { Hero, HeroItem } from '@/app/_components/hero'
@@ -66,7 +66,7 @@ export default function HomePage() {
           className="mx-auto mt-10 w-full max-w-2xl"
           data-tour="home-search"
         >
-          <GeneSearch searchGenes={searchGenes} />
+          <GeneSearchShell searchGenes={searchGenes} />
         </HeroItem>
       </Hero>
       <HomeTour />
