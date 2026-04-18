@@ -135,12 +135,12 @@ export function Header() {
       data-scrolled={scrolled}
       data-hidden={isHidden}
       className={cn(
-        'sticky top-0 z-10 flex items-center px-3 will-change-transform md:px-6',
-        'border-b transition-[height,transform,opacity,background-color,border-color] duration-200 ease-out motion-reduce:transition-none',
+        'sticky top-0 z-10 flex items-center px-3 md:px-6',
+        'border-b transition-[height,margin-top,opacity,background-color,border-color] duration-200 ease-out motion-reduce:transition-none',
         scrolled
           ? 'bg-background/80 border-border/60 h-12 backdrop-blur'
           : 'bg-background h-15 border-transparent',
-        isHidden && 'pointer-events-none -translate-y-full opacity-0',
+        isHidden && 'pointer-events-none -mt-12 opacity-0',
       )}
     >
       <div className="z-10 flex items-center">
