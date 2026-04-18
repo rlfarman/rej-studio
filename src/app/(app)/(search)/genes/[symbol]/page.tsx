@@ -9,6 +9,7 @@ import { IsoformSummary } from '@/features/gene-search/components/isoform-summar
 import { IsoformLengthChart } from '@/features/gene-search/components/isoform-length-chart'
 import { IsoformIdentityMatrix } from '@/features/gene-search/components/isoform-identity-matrix'
 import { Suspense, ViewTransition } from 'react'
+import { GeneDetailTabs } from './_components/gene-detail-tabs'
 import { FavoriteGeneButton } from '@/features/gene-search/components/favorite-gene-button'
 import { GeneJsonLd } from '@/features/gene-search/components/gene-jsonld'
 import { GeneBreadcrumbJsonLd } from '@/features/gene-search/components/gene-breadcrumb-jsonld'
@@ -88,6 +89,13 @@ async function IsoformSection({
     ...new Set(isoforms.map((i) => i.species)),
   ] as Species[]
 
+  const mapIsoforms = isoforms.map((i) => ({
+    id: i.id,
+    codingSequence: i.codingSequence,
+    codingSequenceLength: i.codingSequenceLength,
+    proteinSequenceLength: i.proteinSequenceLength,
+  }))
+
   return (
     <>
       <GeneJsonLd
@@ -103,15 +111,20 @@ async function IsoformSection({
           isoform_count: isoforms.length,
         }}
       />
-      <IsoformTable
-        isoforms={isoforms}
-        highlightedIsoformId={highlightedIsoformId}
-      />
-      <section className="flex flex-col gap-6">
-        <IsoformSummary isoforms={isoforms} />
-        <IsoformLengthChart isoforms={isoforms} />
-        <IsoformIdentityMatrix isoforms={isoforms} />
-      </section>
+      <GeneDetailTabs
+        isoforms={mapIsoforms}
+        initialIsoformId={highlightedIsoformId}
+      >
+        <IsoformTable
+          isoforms={isoforms}
+          highlightedIsoformId={highlightedIsoformId}
+        />
+        <section className="flex flex-col gap-6">
+          <IsoformSummary isoforms={isoforms} />
+          <IsoformLengthChart isoforms={isoforms} />
+          <IsoformIdentityMatrix isoforms={isoforms} />
+        </section>
+      </GeneDetailTabs>
     </>
   )
 }

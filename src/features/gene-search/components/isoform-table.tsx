@@ -1,5 +1,11 @@
 'use client'
-import { useMemo, useState, useCallback, useEffect } from 'react'
+import {
+  useMemo,
+  useState,
+  useCallback,
+  useEffect,
+  ViewTransition,
+} from 'react'
 import {
   Table,
   TableBody,
@@ -30,6 +36,7 @@ import {
   Copy,
   Download,
   FileText,
+  Map as MapIcon,
   MoreHorizontal,
   PackageOpen,
 } from 'lucide-react'
@@ -393,7 +400,11 @@ function IsoformRow({
             )}
           </button>
         </TableCell>
-        <TableCell className="font-mono">{isoform.id}</TableCell>
+        <TableCell className="font-mono">
+          <ViewTransition name={`isoform-map-${isoform.id}`}>
+            <span>{isoform.id}</span>
+          </ViewTransition>
+        </TableCell>
         <TableCell className="font-mono tabular-nums">
           {isoform.codingSequenceLength.toLocaleString()}{' '}
           <span className="text-muted-foreground text-xs">bp</span>
@@ -439,6 +450,20 @@ function IsoformRow({
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Download precomputed</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="icon" className="size-8" asChild>
+                  <Link
+                    href={`?tab=map&isoform=${isoform.id}`}
+                    scroll={false}
+                    aria-label={`View ${isoform.id} in gene map`}
+                  >
+                    <MapIcon className="size-4" />
+                  </Link>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>View in map</TooltipContent>
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
