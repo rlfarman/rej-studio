@@ -1,5 +1,5 @@
 'use client'
-import { Check } from 'lucide-react'
+import { Check, Copy } from 'lucide-react'
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
 import { cn } from '@/lib/utils'
 
@@ -24,13 +24,25 @@ export function Footer() {
           Bachmann et al. (2026) — RNA-fragment end joining
           <span className="hidden sm:inline"> (REJ)</span>
         </span>
-        <Check
+        <span
           aria-hidden
-          className={cn(
-            'size-3.5 shrink-0 text-emerald-600 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] dark:text-emerald-400',
-            copied ? 'w-3.5 scale-100 opacity-100' : 'w-0 scale-75 opacity-0',
-          )}
-        />
+          className="relative inline-flex size-3.5 shrink-0 items-center justify-center"
+        >
+          <Copy
+            className={cn(
+              'absolute size-3.5 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]',
+              copied
+                ? 'scale-75 opacity-0'
+                : 'scale-100 opacity-60 group-hover:opacity-100',
+            )}
+          />
+          <Check
+            className={cn(
+              'absolute size-3.5 text-emerald-600 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] dark:text-emerald-400',
+              copied ? 'scale-100 opacity-100' : 'scale-75 opacity-0',
+            )}
+          />
+        </span>
       </button>
       <span className="sr-only" role="status" aria-live="polite">
         {copied ? 'Citation copied to clipboard.' : ''}
