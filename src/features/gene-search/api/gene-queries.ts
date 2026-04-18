@@ -5,7 +5,12 @@ import {
   ENST_REGEX,
   ENSG_REGEX,
 } from '@/features/gene-search/utils/ensembl-regex'
-import { cacheLife } from 'next/cache'
+import { cacheLife, cacheTag } from 'next/cache'
+
+// Tag all gene/isoform query caches so the entire gene corpus can be
+// invalidated in one call (`revalidateTag('genes')`) after a reseed, without
+// tracking every query variant we ever cached.
+const GENES_CACHE_TAG = 'genes'
 
 export type GeneSearchResult = Pick<
   SelectGene,
@@ -22,16 +27,18 @@ const geneSearchColumns = {
 } as const
 
 /**
- * Cached gene search. Gene data is read-only (only changes on re-seed),
- * so a 5-minute cache window avoids redundant Neon round-trips for
- * repeated searches.
+ * Cached gene search. Gene data is read-only (only changes on re-seed), so
+ * we cache for an hour and tag entries so a reseed can invalidate everything
+ * at once via `revalidateTag('genes')`. Debounced typing produces a fresh
+ * cache key per character, so a long TTL pays off across sessions.
  */
 export async function fetchGenesBySearch(
   trimmedQuery: string,
   species: string,
 ): Promise<GeneSearchResult[]> {
   'use cache'
-  cacheLife({ revalidate: 300 })
+  cacheTag(GENES_CACHE_TAG)
+  cacheLife({ revalidate: 3600 })
 
   const db = await getDb()
 
@@ -108,7 +115,8 @@ export async function fetchGeneBySymbol(
   species: string | undefined,
 ) {
   'use cache'
-  cacheLife({ revalidate: 300 })
+  cacheTag(GENES_CACHE_TAG)
+  cacheLife({ revalidate: 3600 })
 
   const conditions =
     species && species !== 'both'
@@ -134,7 +142,8 @@ export async function fetchSimilarGenes(
   upperSymbol: string,
 ): Promise<{ symbol: string; species: string }[]> {
   'use cache'
-  cacheLife({ revalidate: 300 })
+  cacheTag(GENES_CACHE_TAG)
+  cacheLife({ revalidate: 3600 })
 
   const prefix = `${upperSymbol}%`
   const contains = `%${upperSymbol}%`
