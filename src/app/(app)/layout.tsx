@@ -7,46 +7,59 @@ import { MaintenanceBanner } from '@/components/maintenance-banner'
 import { WelcomeDialog } from '@/features/onboarding/components/welcome-dialog'
 import { HelpButton } from '@/features/onboarding/components/help-button'
 
-// Reading process.env.MAINTENANCE_MESSAGE at runtime forces dynamic
-// rendering under `cacheComponents`; isolate it in its own async component
-// so the rest of the layout stays static and streams immediately.
-async function MaintenanceBannerSlot() {
-  'use cache'
-  const message = process.env.MAINTENANCE_MESSAGE?.trim()
-  if (!message) return null
-  return <MaintenanceBanner message={message} signature={message} />
-}
-
 // Sidebar state persists in localStorage; an inline script in the root
-// layout (src/app/layout.tsx) applies it to <html> before hydration so this
-// layout stays fully static — no cookies(), no per-request dynamic SSR.
-// Children are wrapped in Suspense so pages that read dynamic APIs
-// (params/searchParams) can stream without blocking the shell.
-export default function AppGroupLayout({
+// layout (src/app/layout.tsx) applies it to <html> before hydration, so
+// the layout no longer needs `cookies()` to SSR the correct initial state.
+//
+// The shell still streams under one Suspense boundary because `AppSidebar`,
+// `Header`, and `WelcomeDialog` all call `usePathname()`, and under Next 16
+// `cacheComponents` any request-time data (including dynamic route params
+// reached by child pages) must live below a Suspense boundary. Matching
+// the pre-refactor structure keeps it predictable — Next prerenders the
+// static HTML frame (html/body/theme/query providers) and streams the
+// interactive shell at request time.
+function AppShell({
   children,
+  maintenanceMessage,
 }: {
   children: React.ReactNode
+  maintenanceMessage: string | undefined
 }) {
   return (
     <SidebarProvider className="relative h-svh min-h-0 w-full flex-row overflow-hidden">
       <AppSidebar />
       <SidebarInset className="relative flex h-svh min-h-0 max-w-full flex-1 flex-col overflow-hidden">
-        <Suspense fallback={null}>
-          <MaintenanceBannerSlot />
-        </Suspense>
+        {maintenanceMessage && (
+          <MaintenanceBanner
+            message={maintenanceMessage}
+            signature={maintenanceMessage}
+          />
+        )}
         <Header />
         <main
           id="main-content"
           className="relative flex h-full w-full flex-1 flex-col overflow-auto"
         >
-          <div className="flex-1">
-            <Suspense fallback={null}>{children}</Suspense>
-          </div>
+          <div className="flex-1">{children}</div>
           <Footer />
         </main>
         <WelcomeDialog />
         <HelpButton />
       </SidebarInset>
     </SidebarProvider>
+  )
+}
+
+export default function AppGroupLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  const maintenanceMessage = process.env.MAINTENANCE_MESSAGE?.trim()
+
+  return (
+    <Suspense fallback={null}>
+      <AppShell maintenanceMessage={maintenanceMessage}>{children}</AppShell>
+    </Suspense>
   )
 }
