@@ -11,9 +11,9 @@ const H = 24
 const PAD_Y = 2
 
 /**
- * Tiny inline GC sparkline. Shows a sliding-window GC trace with a 40–60%
- * target band, plus the overall GC% numerically. Hidden for sequences
- * shorter than 60 bp (not enough data to be informative).
+ * Tiny inline GC sparkline. Shows a sliding-window GC trace with a 35–60%
+ * target band that matches the enforced GC constraint, plus the overall
+ * GC% numerically. Hidden for sequences shorter than 60 bp.
  */
 export function GcSparkline({ sequence }: Props) {
   const { path, overallGc, len } = useMemo(() => {
@@ -42,7 +42,7 @@ export function GcSparkline({ sequence }: Props) {
   if (len < 60) return null
 
   const bandTop = PAD_Y + (1 - 0.6) * (H - PAD_Y * 2)
-  const bandBottom = PAD_Y + (1 - 0.4) * (H - PAD_Y * 2)
+  const bandBottom = PAD_Y + (1 - 0.35) * (H - PAD_Y * 2)
 
   return (
     <div className="flex min-w-0 items-center gap-2">

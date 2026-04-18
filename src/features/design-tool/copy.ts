@@ -67,7 +67,7 @@ export const designToolCopy = {
     placeholder: 'My Custom Sequence',
   },
   speciesOptions: {
-    label: 'Harmonize codon usage for species',
+    label: 'Optimize codon usage for species',
   },
   submit: {
     stageCodons: 'Optimizing codons…',
@@ -83,22 +83,22 @@ export const designToolCopy = {
     removeCrypticSpliceSites: {
       label: 'Remove cryptic splice sites',
       description:
-        'Eliminates donor- and acceptor-like motifs to prevent unintended mRNA splicing in mammalian cells.',
+        'Penalizes 5′ donor- and 3′ acceptor-like motifs the spliceosome could use to silently excise part of the CDS in mammalian cells.',
     },
     minimizeCpGs: {
       label: 'Minimize CpG sites',
       description:
-        'Reduces CpG dinucleotides to lower silencing risk from DNA methylation.',
+        'Reduces CpG dinucleotides, which can trigger TLR9-mediated innate immune sensing — and, for constructs that integrate, promoter-level methylation.',
     },
     reduceKmer: {
       label: 'Reduce k-mer complexity',
       description:
-        'Diversifies 10-mer repeats to ease synthesis and reduce recombination risk.',
+        'Pushes for unique 10-base k-mers across the sequence. Repeats at this length make synthesis flakier and increase homologous-recombination risk during assembly.',
     },
     enforceGc: {
       label: 'Enforce 35–60% GC content',
       description:
-        'Keeps GC content within the range optimal for mRNA stability and expression.',
+        'Keeps GC content in the 35–60% window typical of stable mammalian CDSs. Values outside this range often correlate with poor transcript stability or synthesis issues.',
       badge: 'Hard constraint',
     },
   },
@@ -144,23 +144,22 @@ export const designToolCopy = {
     fivePrime: {
       label: '5′ stimulatory intron',
       description:
-        'Inserted ~150 bp upstream of the junction, at the nearest compatible splice site, to boost 5′ fragment expression.',
+        'Marks a site ~150 bp upstream of the split (at the nearest WGGW-compatible position) where you can place an intron during synthesis — intended to enhance 5′ fragment expression.',
     },
     threePrime: {
       label: '3′ stimulatory intron',
       description:
-        'Inserted ~150 bp downstream of the junction, at the nearest compatible splice site, to boost 3′ fragment expression.',
+        'Marks a site ~150 bp downstream of the split (at the nearest WGGW-compatible position) where you can place an intron during synthesis — intended to enhance 3′ fragment expression.',
     },
     diagramFragment: 'fragment',
-    diagramSpliceJunction: 'splice junction',
+    diagramSpliceJunction: 'split point',
   },
   form: {
     title: 'REJ Studio Design Tool',
     description:
       'Paste a coding sequence, tune the objectives, and generate optimized fragments for RNA end-joining.',
-    spliceJunctionLabel: 'Splice junction',
-    spliceJunctionHint:
-      'Set where the sequence splits into 5′ and 3′ fragments.',
+    spliceJunctionLabel: 'Split point',
+    spliceJunctionHint: 'Set where the CDS divides into 5′ and 3′ fragments.',
     optimizationHeading: 'Optimization',
     optimizationDescription:
       'Fine-tune individual parameters, then run the optimizer.',
@@ -266,7 +265,7 @@ export const designToolCopy = {
       single: 'Single AAV',
       dual: 'Dual vector',
       dualTight: 'Dual vector (tight)',
-      exceeds: 'Exceeds AAV',
+      exceeds: 'Over AAV limit',
     },
     results: {
       heading: 'AAV packaging estimate',

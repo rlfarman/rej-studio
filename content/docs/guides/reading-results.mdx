@@ -4,8 +4,8 @@ description: How to interpret the optimization output and decide what to do next
 ---
 
 When a job finishes you'll see three things: the **optimized
-sequence**, an **optimization report**, and a set of **diagnostic
-badges**.
+fragments** (5′ and 3′), an **optimization report**, and a set of
+**diagnostic badges**.
 
 ## Check the diagnostic badges
 
@@ -35,9 +35,11 @@ For each constraint you enabled you'll see:
 - A short **explanation** of what changed — e.g. "3 CpG sites
   removed", "splice site at position 412 neutralized".
 
-A constraint that shows "violated" is usually either impossible given
-your other constraints, or impossible given the amino acid sequence.
-The report will tell you which.
+A constraint that shows "violated" is usually either unreachable given
+your other constraints (the solver can't satisfy all of them
+simultaneously) or unreachable given the amino acid sequence (no
+synonymous rewrite exists that meets it). The report will tell you
+which.
 
 ## Handle violations
 
@@ -61,8 +63,9 @@ the results page shows an AAV packaging estimate for each fragment:
 <AavResultsShowcase />
 
 This tells you whether each half fits within the AAV packaging limit
-(~4,700 bp including overhead) and helps you decide whether to
-adjust the split point.
+(~4.7 kb of total cargo, including ITRs, promoter, poly-A, and any
+other regulatory elements) and helps you decide whether to adjust the
+split point.
 
 ## Download and save
 
@@ -77,7 +80,9 @@ the tab — there is no way to recover a lost result.
 
 ## Validate experimentally
 
-The optimizer is deterministic given the same input, but biology
-isn't. Nothing in the report predicts expression, stability, or
-function — that still has to be measured. Every sequence designed here
-should be tested before you trust it.
+The optimizer is a constraint solver; the report tells you what
+sequence-level properties it achieved, not what the construct will do
+in cells. Nothing in the report predicts protein expression level,
+mRNA stability, folding, immunogenicity, or end-joining efficiency —
+those all have to be measured. Every sequence designed here should be
+tested before you trust it.

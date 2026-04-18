@@ -13,10 +13,12 @@ UTRs, introns, or full genomic sequences.
 
 ### Isoform (transcript)
 
-A distinct mRNA produced from a gene. A single gene typically has
-multiple isoforms that differ in exon usage, start site, or stop site,
-producing related but non-identical proteins. REJ Studio's gene pages
-list every annotated isoform.
+A distinct transcript variant produced from a gene. A single gene
+typically has multiple isoforms that differ in exon composition,
+transcription start site, or polyadenylation site. They usually encode
+related — but not always identical — proteins; some isoforms differ
+only in untranslated regions and produce the same protein. REJ Studio's
+gene pages list every annotated isoform.
 
 ### Codon
 
@@ -27,17 +29,22 @@ codes for.
 
 ### CpG dinucleotide
 
-A cytosine followed by a guanine on the same strand. CpGs are substrates
-for DNA methylation and can trigger innate immune sensing via TLR9. For
+A cytosine immediately 5′ of a guanine on the same strand
+(5′-C-p-G-3′). Unmethylated CpGs in delivered nucleic acids are
+recognized by TLR9 and drive innate immune responses; for constructs
+that integrate into genomic DNA, CpG-rich regions are also preferential
+substrates for DNA methylation, which can silence transcription. For
 therapeutic constructs you typically want fewer of them.
 
 ### Cryptic splice site
 
-A sequence motif that resembles a real 5' or 3' splice site enough that
-the spliceosome may accidentally use it. If your construct is
-transcribed in a cell with active splicing, a cryptic site can delete
-part of your coding sequence silently. Removing them keeps the intended
-CDS intact.
+A sequence motif that resembles a bona fide 5′ donor or 3′ acceptor
+splice site closely enough that the spliceosome may use it instead of
+(or in addition to) the intended site. If your construct is transcribed
+in a cell with active splicing machinery, a cryptic site can cause
+silent excision of a portion of the CDS, producing a truncated or
+frame-shifted protein. Avoiding these motifs keeps the intended reading
+frame intact.
 
 ### WGGW motif
 
@@ -46,21 +53,28 @@ A four-base motif where `W = A or T`, i.e. `[AT]GG[AT]` — `AGGA`,
 End-Joining, and REJ Studio uses them to choose where to split a coding
 sequence into 5' and 3' fragments.
 
-### Splice junction
+### Split point
 
-The position in a CDS where REJ Studio splits the sequence into two
-fragments. The splitter prefers WGGW motifs closest to the midpoint so
-the two halves are roughly balanced and both carry a valid REJ substrate
-at the joint. A balanced split looks like this:
+The position in a CDS where REJ Studio divides the sequence into 5′ and
+3′ fragments. The splitter prefers WGGW motifs closest to the midpoint
+so the two halves are roughly balanced and both carry a WGGW substrate
+at the joint. "Split point" is distinct from a spliceosomal splice
+junction (an exon–intron boundary); it refers only to where the
+construct is cleaved for REJ delivery. A balanced split looks like
+this:
 
 <SplitBar fivePrimeLength={1836} threePrimeLength={1920} />
 
 ### Stimulatory intron
 
-A short, optimized intron inserted into a fragment to increase
-expression. REJ Studio can optionally add a 5' or 3' stimulatory intron
-to either fragment; the protein is unchanged but the transcript is
-processed more efficiently in many mammalian contexts.
+A short intron placed in a transcript to raise steady-state mRNA and
+protein levels via intron-mediated enhancement (coupling to splicing,
+export, and translation). REJ Studio does not embed an intron sequence
+itself — when this option is enabled it marks a `[STIMINTRON]`
+placeholder in the output FASTA at a WGGW-compatible position roughly
+150 bp from the split. You substitute your chosen intron sequence at
+that marker during synthesis. The protein is unchanged; enhancement is
+expected but is not guaranteed for every construct or cell context.
 
 ## Algorithm
 
@@ -83,16 +97,22 @@ weights that control how much each one pulls on the final sequence.
 
 ### K-mer complexity
 
-A measure of how repetitive a sequence is at a given window length. A
-sequence with many repeated 10-mers is low-complexity and harder to
-synthesize, assemble, and sequence cleanly. REJ Studio's optimizer
-penalizes repeated k-mers so the result is easier to manufacture.
+A measure of sequence diversity at a given window length _k_. A
+sequence where every _k_-long substring is unique is maximally complex
+at that window; one with many repeated _k_-mers is low-complexity.
+Repeats of 10+ bases are a common failure mode in commercial DNA
+synthesis and can drive homologous recombination during assembly. REJ
+Studio's optimizer uses DNAChisel's `UniquifyAllKmers` to push toward
+unique 10-mers across each fragment.
 
 ### Codon adaptation
 
-Rewriting each codon to favor the most-used synonym for a target
-organism. Human and mouse have different usage tables, so picking the
-right species matters if expression efficiency is the goal.
+Rewriting each codon to favor the synonym preferred by a target
+organism's tRNA pool, without changing the encoded protein. Different
+species have different usage tables, so picking the right one matters
+if translation efficiency is the goal. REJ Studio uses DNAChisel's
+`CodonOptimize` spec against _H. sapiens_ or _M. musculus_ frequency
+tables.
 
 ## Output
 

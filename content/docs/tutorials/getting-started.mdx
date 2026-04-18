@@ -23,9 +23,9 @@ Open REJ Studio and type `TP53` into the search box. The first result
 should be **TP53 — tumor protein p53** (human). Click it.
 
 <Callout type="info">
-You can also search by full gene name, Ensembl ID, MIM number, or
-disease term. See [Search syntax](/docs/reference/search-syntax) for
-the full list.
+You can also search by full gene name, Ensembl ID, OMIM ID, or disease
+term. See [Search syntax](/docs/reference/search-syntax) for the full
+list.
 </Callout>
 
 ## 2. Pick an isoform
@@ -41,8 +41,8 @@ at the top of the list. Click **Open in design tool** on that row.
 The design tool opens with the CDS already loaded. You'll see:
 
 - **Species** set to _Homo sapiens_ (inherited from the gene).
-- **Splice junction** defaulting to the WGGW motif closest to the
-  midpoint of the CDS — this gives you a balanced split.
+- **Split point** defaulting to the WGGW motif closest to the midpoint
+  of the CDS — this gives you a balanced split.
 - **Optimization parameters** at their defaults (all enabled).
 
 For your first run, leave everything as-is. The defaults are designed
@@ -92,7 +92,7 @@ job is gone. Always download before navigating away.
 
 Now that you've completed a default run, try these variations:
 
-- **Change the split point.** Drag the splice junction slider to a
+- **Change the split point.** Drag the split-point slider to a
   different WGGW motif and compare the report.
 - **Toggle an objective off.** Disable CpG minimization, re-run, and
   see how the result changes.

@@ -258,19 +258,19 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
       message: 'Fragments are moderately imbalanced.',
     })
   }
-  // Splice-junction proximity to start/stop codon
+  // Split-point proximity to start/stop codon
   const MIN_MARGIN = 150
   if (seqLen > MIN_MARGIN * 2) {
     if (position < MIN_MARGIN) {
       warnings.push({
         level: 'warn',
-        message: `Splice junction is within ${MIN_MARGIN} bp of the start codon — very little 5′ fragment for stable expression.`,
+        message: `Split point is within ${MIN_MARGIN} bp of the start codon — very little 5′ fragment for stable expression.`,
       })
     }
     if (seqLen - position < MIN_MARGIN) {
       warnings.push({
         level: 'warn',
-        message: `Splice junction is within ${MIN_MARGIN} bp of the stop codon — very little 3′ fragment for stable expression.`,
+        message: `Split point is within ${MIN_MARGIN} bp of the stop codon — very little 3′ fragment for stable expression.`,
       })
     }
   }
@@ -284,7 +284,7 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
           ref={trackRef}
           role="slider"
           tabIndex={0}
-          aria-label="Splice junction position"
+          aria-label="Split point position"
           aria-valuemin={1}
           aria-valuemax={seqLen - 1}
           aria-valuenow={position}
@@ -773,7 +773,7 @@ function FrameAtSplit({
         ref={stripRef}
         className="bg-muted/40 rounded-sm border p-1.5 font-mono text-[10px] leading-none"
         role="img"
-        aria-label="Codon context around splice junction"
+        aria-label="Codon context around split point"
       >
         <div className="flex w-full items-center gap-[1px]">
           {ctx.codons.map((c) => {
