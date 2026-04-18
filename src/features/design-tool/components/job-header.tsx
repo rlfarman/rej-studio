@@ -142,8 +142,7 @@ function StatusDot({ status }: { status: JobHeaderStatus }) {
   const classes = cn(
     'flex size-7 shrink-0 items-center justify-center rounded-full',
     status === 'running' && 'bg-primary/10 text-primary',
-    status === 'completed' &&
-      'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+    status === 'completed' && 'bg-success/10 text-success-soft',
     status === 'failed' && 'bg-destructive/10 text-destructive',
     status === 'cancelled' && 'bg-muted text-muted-foreground',
   )

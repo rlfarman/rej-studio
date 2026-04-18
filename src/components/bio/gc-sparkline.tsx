@@ -58,7 +58,7 @@ export function GcSparkline({ sequence }: Props) {
           y={bandTop}
           width={1000}
           height={bandBottom - bandTop}
-          className="fill-emerald-500/10"
+          className="fill-success/10"
         />
         <path
           d={path}

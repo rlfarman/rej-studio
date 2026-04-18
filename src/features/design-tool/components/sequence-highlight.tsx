@@ -13,13 +13,13 @@ import {
 } from '@/lib/bio/sequence-utils'
 
 const highlightStyles: Record<HighlightType, string> = {
-  'start-codon': 'bg-emerald-400/30 dark:bg-emerald-500/30',
-  'missing-start': 'bg-red-400/30 dark:bg-red-500/30',
-  'stop-codon': 'bg-emerald-400/30 dark:bg-emerald-500/30',
-  'missing-stop': 'bg-red-400/30 dark:bg-red-500/30',
-  'invalid-char': 'bg-red-500/40 dark:bg-red-500/50',
-  'internal-stop': 'bg-red-400/40 dark:bg-red-500/40',
-  remainder: 'bg-yellow-300/30 dark:bg-yellow-500/30',
+  'start-codon': 'bg-success/30',
+  'missing-start': 'bg-danger/30',
+  'stop-codon': 'bg-success/30',
+  'missing-stop': 'bg-danger/30',
+  'invalid-char': 'bg-danger/45',
+  'internal-stop': 'bg-danger/40',
+  remainder: 'bg-warning/30',
   normal: '',
 }
 

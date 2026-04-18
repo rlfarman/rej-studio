@@ -350,7 +350,7 @@ export function CodingSequenceInput() {
             </p>
           )}
           {isProtein && !isSpecies(species) && length > 0 && (
-            <p className="text-muted-foreground text-sm text-amber-600 dark:text-amber-400">
+            <p className="text-warning-soft text-sm">
               {copy.selectSpeciesHint}
             </p>
           )}

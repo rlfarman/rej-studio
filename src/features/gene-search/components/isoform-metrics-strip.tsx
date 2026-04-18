@@ -31,10 +31,10 @@ export function IsoformMetricsStrip({
     // Mirrors the thresholds in gcCheck (diag-badge.tsx:80-94)
     const gcClass =
       gc >= 35 && gc <= 60
-        ? 'text-emerald-600 dark:text-emerald-400'
+        ? 'text-success-soft'
         : gc >= 25 && gc <= 70
-          ? 'text-amber-600 dark:text-amber-400'
-          : 'text-red-600 dark:text-red-400'
+          ? 'text-warning-soft'
+          : 'text-danger-soft'
 
     return {
       bp,

@@ -46,11 +46,7 @@ export function DiagBadge({ status, label, tooltip }: DiagBadgeProps) {
           : CircleMinus
 
   const iconColor =
-    status === 'good'
-      ? 'text-green-500'
-      : status === 'warn'
-        ? 'text-yellow-500'
-        : ''
+    status === 'good' ? 'text-success' : status === 'warn' ? 'text-warning' : ''
 
   return (
     <Tooltip>

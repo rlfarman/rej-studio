@@ -51,9 +51,7 @@ export function FavoriteGeneButton({ gene }: FavoriteButtonProps) {
         >
           <Star
             className={`size-5 transition-colors duration-200 ${
-              isFavorite
-                ? 'fill-yellow-400 text-yellow-400'
-                : 'text-muted-foreground'
+              isFavorite ? 'fill-warning text-warning' : 'text-muted-foreground'
             }`}
           />
         </m.div>

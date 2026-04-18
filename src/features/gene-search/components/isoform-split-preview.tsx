@@ -16,9 +16,9 @@ interface IsoformSplitPreviewProps {
 }
 
 const BALANCE_CLASS = {
-  balanced: 'text-emerald-600 dark:text-emerald-400',
-  moderate: 'text-amber-600 dark:text-amber-400',
-  imbalanced: 'text-red-600 dark:text-red-400',
+  balanced: 'text-success-soft',
+  moderate: 'text-warning-soft',
+  imbalanced: 'text-danger-soft',
 } as const
 
 const BALANCE_LABEL = {
@@ -103,24 +103,14 @@ export function IsoformSplitPreview({
       <div className="text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[10px] tabular-nums">
         <span>
           5′ AAV: {fiveAavTotal.toLocaleString()} bp{' '}
-          <span
-            className={
-              fiveFits
-                ? 'text-emerald-600 dark:text-emerald-400'
-                : 'text-red-600 dark:text-red-400'
-            }
-          >
+          <span className={fiveFits ? 'text-success-soft' : 'text-danger-soft'}>
             ({fiveFits ? 'fits' : 'over limit'})
           </span>
         </span>
         <span>
           3′ AAV: {threeAavTotal.toLocaleString()} bp{' '}
           <span
-            className={
-              threeFits
-                ? 'text-emerald-600 dark:text-emerald-400'
-                : 'text-red-600 dark:text-red-400'
-            }
+            className={threeFits ? 'text-success-soft' : 'text-danger-soft'}
           >
             ({threeFits ? 'fits' : 'over limit'})
           </span>
@@ -146,7 +136,7 @@ export function IsoformSplitPreview({
               #{i + 2} {c.motif}@{c.position.toLocaleString()}
               {!c.bothFit && (
                 <span
-                  className="ml-1 text-red-600 dark:text-red-400"
+                  className="text-danger-soft ml-1"
                   title="One fragment + AAV overhead exceeds ~4,700 bp"
                 >
                   ⚠

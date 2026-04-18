@@ -75,7 +75,7 @@ function highlightMatches(text: string, query: string) {
     i % 2 === 1 ? (
       <mark
         key={i}
-        className="rounded-[2px] bg-amber-200/70 px-0.5 text-inherit dark:bg-amber-400/40 dark:text-amber-50"
+        className="bg-warning/30 dark:bg-warning/25 dark:text-foreground rounded-[2px] px-0.5 text-inherit"
       >
         {p}
       </mark>
@@ -103,8 +103,8 @@ function EntryRow({
       data-objective={entry.objective}
       className={cn(
         'flex items-start gap-2 px-2.5 py-1.5 transition-opacity',
-        !entry.passes && 'bg-red-500/[0.04] dark:bg-red-500/[0.06]',
-        entry.passes && diff.flip === 'up' && 'bg-emerald-500/[0.05]',
+        !entry.passes && 'bg-danger/[0.04] dark:bg-danger/[0.06]',
+        entry.passes && diff.flip === 'up' && 'bg-success/[0.05]',
         isDimmed && 'opacity-30',
       )}
     >
@@ -113,8 +113,8 @@ function EntryRow({
         className={cn(
           'mt-[1px] flex size-4 shrink-0 items-center justify-center rounded-full text-[10px] font-bold',
           entry.passes
-            ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400'
-            : 'bg-red-500/15 text-red-700 dark:text-red-400',
+            ? 'bg-success/15 text-success-soft'
+            : 'bg-danger/15 text-danger-soft',
         )}
         title={entry.passes ? 'Passed' : 'Failed'}
       >
@@ -126,9 +126,7 @@ function EntryRow({
         <span
           className={cn(
             'mt-[1px] flex size-4 shrink-0 items-center justify-center',
-            diff.flip === 'up'
-              ? 'text-emerald-600 dark:text-emerald-400'
-              : 'text-red-600 dark:text-red-400',
+            diff.flip === 'up' ? 'text-success-soft' : 'text-danger-soft',
           )}
           title={
             diff.flip === 'up'
@@ -182,9 +180,9 @@ function EntryRow({
           className={cn(
             'font-mono text-[10px] tabular-nums',
             entry.score < 0
-              ? 'text-red-700 dark:text-red-400'
+              ? 'text-danger-soft'
               : entry.score > 0
-                ? 'text-emerald-700 dark:text-emerald-400'
+                ? 'text-success-soft'
                 : 'text-muted-foreground',
           )}
         >
@@ -198,8 +196,8 @@ function EntryRow({
               className={cn(
                 'rounded-sm px-1 py-0 font-mono text-[9px] font-semibold tabular-nums',
                 diff.scoreDelta > 0
-                  ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400'
-                  : 'bg-red-500/15 text-red-700 dark:text-red-400',
+                  ? 'bg-success/15 text-success-soft'
+                  : 'bg-danger/15 text-danger-soft',
               )}
               title={`Score change vs. before: ${diff.scoreDelta > 0 ? '+' : ''}${diff.scoreDelta.toFixed(2)}`}
             >
@@ -371,9 +369,9 @@ function ComparisonPanel({
                 className={cn(
                   'rounded-sm px-1.5 py-0.5 text-[10px] font-semibold tabular-nums',
                   scoreDelta > 0.001
-                    ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400'
+                    ? 'bg-success/15 text-success-soft'
                     : scoreDelta < -0.001
-                      ? 'bg-red-500/15 text-red-700 dark:text-red-400'
+                      ? 'bg-danger/15 text-danger-soft'
                       : 'text-muted-foreground',
                 )}
               >
@@ -645,14 +643,10 @@ function RawReportView({ text }: { text: string }) {
                 )}
               >
                 {status === 'pass' && (
-                  <span className="text-emerald-700 dark:text-emerald-400">
-                    {cleaned}
-                  </span>
+                  <span className="text-success-soft">{cleaned}</span>
                 )}
                 {status === 'fail' && (
-                  <span className="text-red-700 dark:text-red-400">
-                    {cleaned}
-                  </span>
+                  <span className="text-danger-soft">{cleaned}</span>
                 )}
                 {status === null && <span>{cleaned}</span>}
               </div>
@@ -772,9 +766,9 @@ export function ObjectivesSummary({
                 <span
                   className={cn(
                     'size-1.5 shrink-0 rounded-full',
-                    item.status === 'good' && 'bg-emerald-500',
-                    item.status === 'improved' && 'bg-emerald-500',
-                    item.status === 'worsened' && 'bg-red-500',
+                    item.status === 'good' && 'bg-success',
+                    item.status === 'improved' && 'bg-success',
+                    item.status === 'worsened' && 'bg-danger',
                     item.status === 'neutral' && 'bg-muted-foreground',
                   )}
                 />

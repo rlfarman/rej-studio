@@ -81,8 +81,8 @@ function ComparativeCell({
             <span
               className={cn(
                 'truncate font-medium',
-                improved && 'text-emerald-600 dark:text-emerald-400',
-                worsened && 'text-red-600 dark:text-red-400',
+                improved && 'text-success-soft',
+                worsened && 'text-danger-soft',
               )}
             >
               {fmt(after)}
