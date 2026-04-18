@@ -35,7 +35,7 @@ export default function HomePage() {
             index={0}
             className="text-muted-foreground mb-6 flex items-center justify-center"
           >
-            <Dna className="size-7" />
+            <Dna className="size-7 [animation:gentle-breath_4s_ease-in-out_infinite] [animation-delay:800ms] motion-reduce:animate-none" />
           </HeroItem>
           <HeroItem index={1}>
             <h1 className="text-primary text-3xl font-semibold tracking-tight text-balance sm:text-4xl">

@@ -319,6 +319,50 @@ html {
   }
 }
 
+/* Slow breath — a barely-there 4s pulse for idle focal elements (landing
+   hero icon). Amplitude is intentionally tiny so it reads as "alive" in
+   peripheral vision without asking for attention. */
+@keyframes gentle-breath {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.85;
+  }
+  50% {
+    transform: scale(1.06);
+    opacity: 1;
+  }
+}
+
+/* Completion bloom — single expanding ring for success moments (job done,
+   etc.). Fires once; pairs with a subtle scale bump on the host element. */
+@keyframes completion-bloom {
+  0% {
+    opacity: 0.55;
+    transform: scale(0.6);
+  }
+  70% {
+    opacity: 0;
+    transform: scale(2.2);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(2.2);
+  }
+}
+
+@keyframes completion-pop {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
 /* DnaLoader — rungs light up left-to-right in sequence. */
 @keyframes dna-rung-glow {
   0%,
