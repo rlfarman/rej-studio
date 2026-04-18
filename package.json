@@ -126,7 +126,8 @@
     "overrides": {
       "@types/react": "$@types/react",
       "@types/react-dom": "$@types/react-dom",
-      "typescript-eslint>typescript": "$typescript"
+      "typescript-eslint>typescript": "$typescript",
+      "protobufjs": "^7.5.5"
     }
   }
 }
