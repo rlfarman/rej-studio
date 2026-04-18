@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useSyncExternalStore } from 'react'
 import { GeneSearch } from '@/features/gene-search/components/gene-search'
 import { searchGenes } from '@/features/gene-search/api/genes'
 import { usePathname } from 'next/navigation'
@@ -13,37 +13,106 @@ import { commonCopy } from '@/copy/common'
 import { cn } from '@/lib/utils'
 
 const HIDE_AFTER = 80
-const DELTA_THRESHOLD = 6
+const INTENT_THRESHOLD = 4
+
+type ScrollState = { scrolled: boolean; isHidden: boolean }
+
+const emptyState: ScrollState = { scrolled: false, isHidden: false }
+let scrollState: ScrollState = emptyState
+const listeners = new Set<() => void>()
+
+function notify() {
+  for (const listener of listeners) listener()
+}
+
+function currentY(): number {
+  const mainEl = document.getElementById('main-content')
+  return Math.max(
+    mainEl?.scrollTop ?? 0,
+    window.scrollY,
+    document.scrollingElement?.scrollTop ?? 0,
+  )
+}
+
+function update(nextScrolled: boolean, nextHidden: boolean) {
+  if (
+    nextScrolled !== scrollState.scrolled ||
+    nextHidden !== scrollState.isHidden
+  ) {
+    scrollState = { scrolled: nextScrolled, isHidden: nextHidden }
+    notify()
+  }
+}
+
+function applyIntent(directionDelta: number) {
+  const y = currentY()
+  const mainEl = document.getElementById('main-content')
+  const clientHeight = mainEl?.clientHeight ?? window.innerHeight
+  const scrollHeight =
+    mainEl?.scrollHeight ?? document.documentElement.scrollHeight
+  const atTop = y <= 8
+  const atBottom = y + clientHeight >= scrollHeight - 8
+  const nextScrolled = y > 4
+  let nextHidden = scrollState.isHidden
+  if (atTop || atBottom) nextHidden = false
+  else if (directionDelta > INTENT_THRESHOLD && y > HIDE_AFTER)
+    nextHidden = true
+  else if (directionDelta < -INTENT_THRESHOLD) nextHidden = false
+  update(nextScrolled, nextHidden)
+}
+
+let subscribed = false
+let lastTouchY = 0
+function ensureSubscription() {
+  if (subscribed || typeof window === 'undefined') return
+  subscribed = true
+
+  // Scroll events (when they fire) — covers keyboard, programmatic, some touch.
+  const onScroll = () => applyIntent(0)
+  document.addEventListener('scroll', onScroll, {
+    passive: true,
+    capture: true,
+  })
+  window.addEventListener('scroll', onScroll, { passive: true })
+
+  // Wheel events — always fire on mouse/trackpad intent even if no element scrolls.
+  window.addEventListener(
+    'wheel',
+    (event: WheelEvent) => applyIntent(event.deltaY),
+    { passive: true },
+  )
+
+  // Touch events — always fire on touch intent.
+  window.addEventListener(
+    'touchstart',
+    (event: TouchEvent) => {
+      lastTouchY = event.touches[0]?.clientY ?? 0
+    },
+    { passive: true },
+  )
+  window.addEventListener(
+    'touchmove',
+    (event: TouchEvent) => {
+      const y = event.touches[0]?.clientY ?? 0
+      const delta = lastTouchY - y // swipe up (scroll down) = positive delta
+      lastTouchY = y
+      applyIntent(delta)
+    },
+    { passive: true },
+  )
+}
+
+function subscribe(listener: () => void) {
+  ensureSubscription()
+  listeners.add(listener)
+  return () => listeners.delete(listener)
+}
+
+const getSnapshot = () => scrollState
+const getServerSnapshot = () => emptyState
 
 function useMainScroll() {
-  const [scrolled, setScrolled] = useState(false)
-  const [isHidden, setHidden] = useState(false)
-
-  useEffect(() => {
-    const el = document.getElementById('main-content')
-    if (!el) return
-    let lastY = el.scrollTop
-    const onScroll = () => {
-      const y = el.scrollTop
-      const delta = y - lastY
-      const atTop = y <= 8
-      const atBottom = y + el.clientHeight >= el.scrollHeight - 8
-      setScrolled(y > 4)
-      if (atTop || atBottom) {
-        setHidden(false)
-      } else if (delta > DELTA_THRESHOLD && y > HIDE_AFTER) {
-        setHidden(true)
-      } else if (delta < -DELTA_THRESHOLD) {
-        setHidden(false)
-      }
-      lastY = y
-    }
-    el.addEventListener('scroll', onScroll, { passive: true })
-    onScroll()
-    return () => el.removeEventListener('scroll', onScroll)
-  }, [])
-
-  return { scrolled, isHidden }
+  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
 }
 
 export function Header() {
