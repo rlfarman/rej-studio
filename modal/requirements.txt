@@ -3,3 +3,4 @@ dnachisel
 proglog
 tqdm
 fastapi[standard]
+python-multipart>=0.0.26

@@ -242,9 +242,7 @@ function ComparisonPanel({
   return (
     <div className="bg-muted/40 flex flex-col overflow-hidden rounded-md border">
       <div className="bg-muted/60 flex items-center justify-between border-b px-2.5 py-1.5">
-        <span className="text-muted-foreground text-[10px] font-semibold tracking-wider uppercase">
-          {label}
-        </span>
+        <span className="type-overline">{label}</span>
         <CopyButton
           text={rawText}
           copiedLabel="Copied"
@@ -662,15 +660,11 @@ function RawTextFallback({ before, after }: { before: string; after: string }) {
   return (
     <div className="grid gap-3 sm:grid-cols-2">
       <div className="space-y-1">
-        <span className="text-muted-foreground text-[10px] font-semibold tracking-wider uppercase">
-          Before
-        </span>
+        <span className="type-overline">Before</span>
         <RawReportView text={before} />
       </div>
       <div className="space-y-1">
-        <span className="text-muted-foreground text-[10px] font-semibold tracking-wider uppercase">
-          After
-        </span>
+        <span className="type-overline">After</span>
         <RawReportView text={after} />
       </div>
     </div>

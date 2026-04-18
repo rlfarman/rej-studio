@@ -1,6 +1,6 @@
 'use client'
 import { useSyncExternalStore } from 'react'
-import { GeneSearch } from '@/features/gene-search/components/gene-search'
+import { GeneSearchShell } from '@/app/_components/gene-search-shell'
 import { searchGenes } from '@/features/gene-search/api/genes'
 import { usePathname } from 'next/navigation'
 import {
@@ -143,7 +143,7 @@ export function Header() {
       </div>
       <div className="flex flex-1 justify-center">
         {!isHomePage && (
-          <GeneSearch
+          <GeneSearchShell
             searchGenes={searchGenes}
             defaultQuery={geneSymbol}
             isDialog
