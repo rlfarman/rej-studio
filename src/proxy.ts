@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { isAllowedOrigin } from '@/lib/allowed-origins'
+import { SESSION_COOKIE_NAME, verifySession } from '@/lib/auth/session'
 
 export const config = {
   matcher: [
@@ -15,53 +16,6 @@ export const config = {
   ],
 }
 
-async function timingSafeEqual(a: string, b: string): Promise<boolean> {
-  const encoder = new TextEncoder()
-  const aBuf = encoder.encode(a)
-  const bBuf = encoder.encode(b)
-  const key = await crypto.subtle.generateKey(
-    { name: 'HMAC', hash: 'SHA-256' },
-    false,
-    ['sign'],
-  )
-  const aMac = await crypto.subtle.sign('HMAC', key, aBuf)
-  const bMac = await crypto.subtle.sign('HMAC', key, bBuf)
-  const aArr = new Uint8Array(aMac)
-  const bArr = new Uint8Array(bMac)
-  let result = aArr.length === bArr.length ? 1 : 0
-  for (let i = 0; i < aArr.length; i++) {
-    result &= aArr[i] === bArr[i] ? 1 : 0
-  }
-  return result === 1
-}
-
-// --- Rate limiter for auth attempts -----------------------------------------
-// Inline sliding-window limiter (proxy runs in Edge runtime, so we can't
-// import from @/lib/rate-limit). 5 failed auth attempts per minute per IP.
-const AUTH_WINDOW_MS = 60_000
-const AUTH_MAX = 5
-const authAttempts = new Map<string, number[]>()
-let authLastCleanup = Date.now()
-
-function checkAuthRate(ip: string): boolean {
-  const now = Date.now()
-  // Periodic cleanup
-  if (now - authLastCleanup > AUTH_WINDOW_MS) {
-    authLastCleanup = now
-    const cutoff = now - AUTH_WINDOW_MS
-    for (const [key, timestamps] of authAttempts) {
-      const filtered = timestamps.filter((t) => t > cutoff)
-      if (filtered.length === 0) authAttempts.delete(key)
-      else authAttempts.set(key, filtered)
-    }
-  }
-  const cutoff = now - AUTH_WINDOW_MS
-  const timestamps = (authAttempts.get(ip) ?? []).filter((t) => t > cutoff)
-  timestamps.push(now)
-  authAttempts.set(ip, timestamps)
-  return timestamps.length <= AUTH_MAX
-}
-
 // --- Request body size limit ------------------------------------------------
 // Cap mutating request bodies at 256 KB. The largest legitimate payload is a
 // 50,000-char CDS (~50 KB) plus JSON overhead. This blocks oversized uploads
@@ -73,6 +27,17 @@ const MAX_BODY_BYTES = 256 * 1024
 // from our own domains. This is defense-in-depth on top of Next.js's built-in
 // Origin check (which only validates server actions, not API routes).
 // Origin allowlist is shared with API-route CORS in @/lib/allowed-origins.
+
+// --- API routes that don't require a session -------------------------------
+// HTML routes are always served so crawlers can read metadata; the root
+// layout gates the body on session. API routes return 401 without a session
+// except for the ones below.
+const PUBLIC_API_PREFIXES = [
+  '/api/login',
+  '/api/logout',
+  '/api/csp-report',
+  '/api/og',
+]
 
 function buildCsp(): string {
   return [
@@ -92,6 +57,15 @@ function buildCsp(): string {
 
 // Reporting-Endpoints header for the Reporting API v1 (report-to directive).
 const REPORTING_ENDPOINTS = 'csp-endpoint="/api/csp-report"'
+
+function isAuthConfigured(): boolean {
+  return Boolean(process.env.BASIC_AUTH_PASSWORD)
+}
+
+function shouldBypassAuth(): boolean {
+  const isDev = process.env.NODE_ENV === 'development'
+  return isDev && process.env.BYPASS_AUTH === 'true'
+}
 
 export async function proxy(req: NextRequest) {
   // --- CSRF check (mutating requests) ---
@@ -117,45 +91,30 @@ export async function proxy(req: NextRequest) {
   const isDev = process.env.NODE_ENV === 'development'
   const requestHeaders = new Headers(req.headers)
 
+  // Expose pathname to server components (read via next/headers) so the
+  // root layout can build a return_to link when rendering the login gate.
+  requestHeaders.set('x-pathname', req.nextUrl.pathname)
+
   const csp = isDev ? undefined : buildCsp()
 
-  // --- Basic auth (all routes) ---
-  if (!(isDev && process.env.BYPASS_AUTH === 'true')) {
-    const basicAuth = req.headers.get('authorization')
-    const expectedUser = process.env.BASIC_AUTH_USER
-    const expectedPassword = process.env.BASIC_AUTH_PASSWORD
-
-    let authenticated = false
-    if (basicAuth && expectedUser && expectedPassword) {
-      try {
-        const authValue = basicAuth.split(' ')[1]
-        const [user, pwd] = atob(authValue).split(':')
-        const userMatch = await timingSafeEqual(user, expectedUser)
-        const pwdMatch = await timingSafeEqual(pwd, expectedPassword)
-        authenticated = userMatch && pwdMatch
-      } catch {
-        // Malformed Base64
-      }
-    }
-
-    if (!authenticated && expectedUser && expectedPassword) {
-      // Rate limit failed auth attempts to prevent brute-force.
-      const ip =
-        req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
-      if (!checkAuthRate(ip)) {
-        return new NextResponse('Too Many Requests', { status: 429 })
-      }
-
-      const url = req.nextUrl.clone()
-      url.pathname = '/api/auth'
-      const response = NextResponse.rewrite(url, {
-        request: { headers: requestHeaders },
-      })
-      if (csp) {
-        response.headers.set('Content-Security-Policy', csp)
-        response.headers.set('Reporting-Endpoints', REPORTING_ENDPOINTS)
-      }
-      return response
+  // --- API session gate ---
+  // Only applies when auth is configured. HTML routes bypass this and gate
+  // in the root layout so crawlers can still read per-page metadata.
+  const pathname = req.nextUrl.pathname
+  if (
+    isAuthConfigured() &&
+    !shouldBypassAuth() &&
+    pathname.startsWith('/api/') &&
+    !PUBLIC_API_PREFIXES.some((p) => pathname.startsWith(p))
+  ) {
+    const session = await verifySession(
+      req.cookies.get(SESSION_COOKIE_NAME)?.value,
+    )
+    if (!session) {
+      return NextResponse.json(
+        { error: 'Authentication required.' },
+        { status: 401 },
+      )
     }
   }
 

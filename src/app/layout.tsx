@@ -36,6 +36,7 @@ import { AnalyticsProperties } from '@/components/analytics-properties'
 import { WebVitals } from '@/components/web-vitals'
 import { ConsoleGreeting } from '@/components/console-greeting'
 import { Suspense } from 'react'
+import { AuthGate } from '@/features/auth/components/auth-gate'
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://rejstudio.com'
 
@@ -91,7 +92,9 @@ export default function RootLayout({
             >
               Skip to content
             </a>
-            {children}
+            <Suspense fallback={null}>
+              <AuthGate>{children}</AuthGate>
+            </Suspense>
             <Toaster />
             <Suspense fallback={null}>
               <AnalyticsPageview />

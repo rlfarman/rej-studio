@@ -38,9 +38,13 @@ const serverSchema = z
     // Deploy target — drives target-specific next.config behavior.
     DEPLOY_TARGET: z.enum(['vercel', 'cloudflare']).optional(),
 
-    // Landing-page basic auth (optional — gate only engages when both set).
+    // Shared-password auth for the site. Gate only engages when
+    // BASIC_AUTH_PASSWORD is set; SESSION_SECRET is then required so we can
+    // sign the session cookie. BASIC_AUTH_USER is accepted for back-compat
+    // with the prior basic-auth setup but no longer read.
     BASIC_AUTH_USER: z.string().optional(),
     BASIC_AUTH_PASSWORD: z.string().optional(),
+    SESSION_SECRET: z.string().min(32).optional(),
 
     // Vercel Blob (optional — only needed when file uploads are used).
     BLOB_READ_WRITE_TOKEN: z.string().optional(),
@@ -95,6 +99,15 @@ const serverSchema = z
         path: ['MODAL_API_URL'],
         code: z.ZodIssueCode.custom,
         message: 'MODAL_API_URL is required when COMPUTE_BACKEND=modal.',
+      })
+    }
+    // SESSION_SECRET is required whenever the shared-password gate is enabled.
+    if (data.BASIC_AUTH_PASSWORD && !data.SESSION_SECRET) {
+      ctx.addIssue({
+        path: ['SESSION_SECRET'],
+        code: z.ZodIssueCode.custom,
+        message:
+          'SESSION_SECRET (32+ chars) is required when BASIC_AUTH_PASSWORD is set.',
       })
     }
   })
