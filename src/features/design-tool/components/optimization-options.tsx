@@ -8,9 +8,7 @@ export function CodonOptimizationOptions() {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-          {copy.objectivesHeading}
-        </p>
+        <p className="type-overline">{copy.objectivesHeading}</p>
         <div className="flex flex-col space-y-2">
           <ToggleCard
             name="removeCrypticSpliceSites"
@@ -34,9 +32,7 @@ export function CodonOptimizationOptions() {
       </div>
 
       <div className="space-y-2">
-        <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-          {copy.constraintsHeading}
-        </p>
+        <p className="type-overline">{copy.constraintsHeading}</p>
         <ToggleCard
           name="enforceGcContent"
           label={copy.enforceGc.label}

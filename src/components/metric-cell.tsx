@@ -27,11 +27,7 @@ type MetricCellComparativeProps = MetricCellCommonProps & {
 type MetricCellProps = MetricCellSimpleProps | MetricCellComparativeProps
 
 function Label({ children }: { children: ReactNode }) {
-  return (
-    <div className="text-muted-foreground truncate text-[10px] font-medium tracking-wider uppercase">
-      {children}
-    </div>
-  )
+  return <div className="type-overline truncate">{children}</div>
 }
 
 function defaultFormat(n: number) {
@@ -81,8 +77,8 @@ function ComparativeCell({
             <span
               className={cn(
                 'truncate font-medium',
-                improved && 'text-emerald-600 dark:text-emerald-400',
-                worsened && 'text-red-600 dark:text-red-400',
+                improved && 'text-success-soft',
+                worsened && 'text-danger-soft',
               )}
             >
               {fmt(after)}

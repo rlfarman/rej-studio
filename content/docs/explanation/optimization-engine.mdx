@@ -7,12 +7,21 @@ description: What happens between clicking Submit and getting a result — DNACh
 
 When you submit a job, REJ Studio runs through these stages:
 
-1. **Split.** The CDS is cut at the selected WGGW motif into 5' and 3'
-   fragments.
-2. **Optimize.** Each fragment is passed to DNAChisel independently
-   with the constraints and objectives you chose.
-3. **Reassemble.** The optimized fragments and a per-constraint report
-   are returned to the browser.
+1. **Optimize.** The full CDS is passed to DNAChisel with your chosen
+   constraints and objectives. The solver searches for a synonymous
+   rewrite that satisfies hard constraints and minimizes the weighted
+   sum of soft objectives. Translation is enforced — every codon swap
+   is synonymous.
+2. **Anchor the split.** The optimized CDS is scanned for a
+   WGGW-compatible dipeptide near your chosen split position; if one
+   is found within the distance threshold, the codons there are
+   rewritten (translation still preserved) to install a WGGW motif at
+   the junction. If stimulatory introns are enabled, the same
+   procedure places a `[STIMINTRON]` placeholder ~150 bp upstream or
+   downstream of the split.
+3. **Split and return.** The sequence is cleaved at the junction into
+   5′ and 3′ fragments and a per-objective report is returned to the
+   browser.
 
 The backend is a Python/FastAPI service running DNAChisel. In
 development it runs locally; in production it runs on Modal.
@@ -56,14 +65,18 @@ compromises landed.
 
 **Can:**
 - Swap synonymous codons (same protein, different DNA).
-- Remove or weaken sequence motifs (cryptic splice sites, repeated
-  k-mers, CpG dinucleotides).
-- Enforce global properties over sliding windows (GC content).
-- Insert pre-defined stimulatory introns at designed positions.
+- Penalize and generally avoid sequence motifs (cryptic splice
+  donors/acceptors, repeated 10-mers, CpG dinucleotides).
+- Enforce global properties over sliding windows (35–60% GC content).
+- Mark positions where stimulatory introns can be placed during
+  downstream synthesis.
 
 **Cannot:**
-- Change the protein. Every codon swap is synonymous.
-- Predict expression, stability, folding, or immunogenicity.
+- Change the encoded protein. Every codon swap is synonymous.
+- Insert an actual intron sequence — it emits a `[STIMINTRON]`
+  placeholder that you substitute at synthesis time.
+- Predict translation efficiency, mRNA stability, protein folding,
+  immunogenicity, or REJ rejoining efficiency.
 - Guarantee that the biological outcome matches the sequence design —
   that requires experimental validation.
 - Store or remember previous runs. Each submission is independent.

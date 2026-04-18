@@ -1,5 +1,5 @@
 import { searchGenes } from '@/features/gene-search/api/genes'
-import { GeneSearch } from '@/features/gene-search/components/gene-search'
+import { GeneSearchShell } from '@/app/_components/gene-search-shell'
 import {
   GeneSearchResults,
   GeneSearchResultsLoading,
@@ -64,7 +64,7 @@ export default async function GeneSearchPage({
     <HydrationBoundary state={dehydrate(queryClient)}>
       <div className="mx-auto flex max-w-3xl flex-col gap-8 px-4 py-8 md:py-12">
         <h1 className="sr-only">Search genes</h1>
-        <GeneSearch searchGenes={searchGenes} defaultQuery={query} />
+        <GeneSearchShell searchGenes={searchGenes} defaultQuery={query} />
         {trimmedQuery.length > 0 && (
           <Suspense
             key={`${query}-${species}`}

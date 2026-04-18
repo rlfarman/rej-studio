@@ -207,7 +207,7 @@ export default function IsoformTable({
                     type="button"
                     onClick={toggleExpandAll}
                     aria-expanded={allExpanded}
-                    className="hover:text-foreground text-muted-foreground flex h-full w-full items-center justify-center transition-colors"
+                    className="hover:text-foreground focus-visible:ring-ring text-muted-foreground flex h-full w-full items-center justify-center transition-colors focus-visible:ring-2 focus-visible:outline-none"
                     aria-label={
                       allExpanded
                         ? 'Collapse all isoforms'
@@ -354,10 +354,10 @@ function IsoformRow({
 
   const gcClass =
     gcPercent >= 35 && gcPercent <= 60
-      ? 'text-emerald-600 dark:text-emerald-400'
+      ? 'text-success-soft'
       : gcPercent >= 25 && gcPercent <= 70
-        ? 'text-amber-600 dark:text-amber-400'
-        : 'text-red-600 dark:text-red-400'
+        ? 'text-warning-soft'
+        : 'text-danger-soft'
 
   useEffect(() => {
     if (!isHighlighted) return
@@ -662,7 +662,8 @@ function SortableHead({
   return (
     <TableHead className={className}>
       <button
-        className="hover:text-foreground inline-flex items-center gap-1 transition-colors"
+        type="button"
+        className="hover:text-foreground focus-visible:ring-ring inline-flex items-center gap-1 rounded-sm transition-colors focus-visible:ring-2 focus-visible:outline-none"
         onClick={() => onSort(sortKey)}
       >
         {label}

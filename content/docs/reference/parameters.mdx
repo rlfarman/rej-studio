@@ -8,17 +8,19 @@ description: Every form field, constraint, and weight in the design tool.
 ### Species
 
 Sets the codon usage table the optimizer adapts to. Pick the organism
-you'll express the sequence in — human and mouse have different usage
-preferences and the wrong choice will push codon optimization in the
-wrong direction.
+you'll express the sequence in — _H. sapiens_ and _M. musculus_ have
+different preferred-synonym frequencies, and the wrong choice will pull
+codon optimization toward the wrong tRNA pool.
 
-### Splice junction
+### Split point
 
-The position where REJ Studio splits your CDS into 5' and 3'
+The position where REJ Studio divides your CDS into 5′ and 3′
 fragments. The slider defaults to the
 [WGGW motif](/docs/reference/glossary#wggw-motif) closest to the
-midpoint — a balanced split with a valid RNA End-Joining substrate at
-the joint. Drag it to pick a different motif if you have a reason to.
+midpoint — a balanced split that places a WGGW substrate at the joint.
+Drag it to pick a different motif if you have a reason to. Note:
+"split point" refers to the REJ cleavage position and is distinct from
+a spliceosomal splice junction.
 
 ## Soft objectives
 
@@ -28,61 +30,73 @@ the others. See [weights](#parameter-weights) below.
 
 ### Remove cryptic splice sites [#remove-cryptic-splice-sites]
 
-Scans each fragment for cryptic 5' and 3' splice site motifs and
-rewrites them to break the motif without changing the protein.
-Recommended for any design intended to end up in a transcribed
-context — unintended splicing can silently delete internal exons.
+Penalizes cryptic 5′ donor and 3′ acceptor motifs in each fragment and
+drives the solver toward synonymous rewrites that break them.
+Recommended for any design that will be transcribed in a splicing-
+competent cell — unintended splicing can silently excise stretches of
+the CDS and produce truncated or frame-shifted proteins. Because this
+is a soft objective (`AvoidPattern` in DNAChisel), strong motifs may
+persist when they conflict with higher-priority constraints.
 
 ### Minimize CpG sites [#minimize-cpgs]
 
 Reduces the number of
-[CpG dinucleotides](/docs/reference/glossary#cpg-dinucleotide). CpGs
-are substrates for methylation and can trigger innate immune sensing.
-Lowering them is standard practice for therapeutic RNA and synthetic
-constructs.
+[CpG dinucleotides](/docs/reference/glossary#cpg-dinucleotide).
+Unmethylated CpGs in delivered nucleic acids are a major driver of
+TLR9-mediated innate immune sensing; for constructs that integrate,
+CpG-rich promoters are also preferential methylation substrates, which
+can silence transcription. Lowering CpG count is standard practice for
+therapeutic RNA and many synthetic constructs.
 
 ### Reduce k-mer complexity [#kmer-complexity]
 
-Penalizes repeated 10-mers across the sequence.
-[High-complexity sequences](/docs/reference/glossary#k-mer-complexity)
-synthesize more reliably and behave better during manufacturing and
-sequencing.
+Pushes the solver toward unique 10-base _k_-mers across each fragment
+(DNAChisel's `UniquifyAllKmers`).
+[Repetitive sequences](/docs/reference/glossary#k-mer-complexity)
+synthesize less reliably and are more prone to homologous
+recombination during assembly; enforcing uniqueness at this window
+length typically reduces both failure modes.
 
 ## Hard constraints
 
 Hard constraints must be satisfied. If the solver can't meet one, the
 job reports it as violated.
 
-### Enforce 35-60% GC content [#gc-content]
+### Enforce 35–60% GC content [#gc-content]
 
-Keeps GC content inside the mammalian-friendly range over a sliding
-window. The GC sparkline visualizes how content varies across the
-sequence — the green band marks the 40-60% target:
+Keeps GC content inside the 35–60% window typical of stable mammalian
+CDSs, enforced over a sliding window (DNAChisel's `EnforceGCContent`,
+`mini=0.35`, `maxi=0.60`). The GC sparkline visualizes how content
+varies across the sequence:
 
 <GcSparklineShowcase />
 
 If the solver can't hit the window given your other constraints,
-you'll see it called out in the report. Leave this on unless you
-have a specific reason to run without a GC constraint.
+you'll see it called out in the report. Leave this on unless you have
+a specific reason to run without a GC constraint.
 
 ## Stimulatory introns
 
-Optional. REJ Studio can insert a short optimized intron into either
-fragment to boost expression. The protein is unchanged but each intron
-adds length.
+Optional. REJ Studio marks a `[STIMINTRON]` placeholder in either
+fragment at a WGGW-compatible position ~150 bp from the split. The
+tool itself does not embed an intron sequence — you substitute your
+chosen intron at the placeholder during synthesis. Intron-mediated
+enhancement (coupling to splicing, export, and translation) typically
+raises transcript and protein levels, but the magnitude is
+construct- and context-dependent.
 
-### 5' stimulatory intron [#stim-5]
+### 5′ stimulatory intron [#stim-5]
 
-Inserts an intron into the 5' fragment. Useful when the 5' half is
-the limiting piece for expression.
+Marks a placeholder upstream of the split, in the 5′ fragment. Useful
+when the 5′ half is the limiting piece for expression.
 
-### 3' stimulatory intron [#stim-3]
+### 3′ stimulatory intron [#stim-3]
 
-Inserts an intron into the 3' fragment. Useful when the 3' half is
-the limiting piece.
+Marks a placeholder downstream of the split, in the 3′ fragment.
+Useful when the 3′ half is the limiting piece.
 
-Enable one, both, or neither based on downstream context. They stack
-cleanly with the rest of the optimization.
+Enable one, both, or neither based on downstream context. Placeholders
+stack cleanly with the rest of the optimization.
 
 ## Parameter weights [#parameter-weights]
 

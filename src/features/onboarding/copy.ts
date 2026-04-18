@@ -17,7 +17,7 @@ export const onboardingCopy = {
       optimizeSequences: {
         title: 'Optimize sequences',
         description:
-          'Design split-intein sequences with codon optimization and more',
+          'Design split RNA End-Joining sequences with codon optimization and more',
       },
     },
   },

@@ -10,7 +10,6 @@ import {
 } from '@/features/design-tool/hooks/use-job-history'
 import { cancelJob as cancelJobAction } from '@/features/design-tool/api/jobs'
 import { ExpandableSidebarList } from '@/components/expandable-sidebar-list'
-import { TruncatedText } from '@/components/truncated-text'
 import { Loader2, CircleAlert, X } from 'lucide-react'
 import { designToolCopy } from '../copy'
 
@@ -69,52 +68,60 @@ export function RecentJobs({ onSelectJob }: RecentJobsProps) {
       onClear={clearHistory}
       emptyMessage={copy.empty}
       menuAriaLabel={copy.menuAria}
-      renderItem={(entry) => (
-        <SidebarMenuItem>
-          <SidebarMenuButton
-            size="sm"
-            className="[&>svg]:size-3"
-            onClick={() => onSelectJob?.(entry)}
-          >
-            {entry.status === 'running' && (
-              <Loader2 className="flex-shrink-0 animate-spin" />
-            )}
-            {(entry.status === 'failed' || entry.status === 'cancelled') && (
-              <CircleAlert className="text-destructive flex-shrink-0" />
-            )}
-            <TruncatedText
-              tooltip={
-                (entry.status === 'failed' || entry.status === 'cancelled') &&
-                entry.error
-                  ? entry.error.message
-                  : entry.name
-              }
-              className="truncate"
+      renderItem={(entry) => {
+        const isError =
+          entry.status === 'failed' || entry.status === 'cancelled'
+        const subline =
+          entry.status === 'running'
+            ? (entry.stage ??
+              (entry.progress !== undefined
+                ? `${Math.round(entry.progress * 100)}%`
+                : copy.running))
+            : isError && entry.error
+              ? entry.error.message
+              : formatTimeAgo(entry.createdAt)
+        return (
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              size="sm"
+              className="h-auto items-start py-1.5 [&>svg]:size-3"
+              onClick={() => onSelectJob?.(entry)}
             >
-              {entry.name}
-            </TruncatedText>
-            <span className="text-muted-foreground group-hover/menu-button:text-sidebar-accent-foreground ml-auto flex-shrink-0 text-[10px]">
-              {entry.status === 'running'
-                ? (entry.stage ??
-                  (entry.progress !== undefined
-                    ? `${Math.round(entry.progress * 100)}%`
-                    : copy.running))
-                : formatTimeAgo(entry.createdAt)}
-            </span>
-          </SidebarMenuButton>
-          <SidebarMenuAction
-            showOnHover
-            onClick={() => handleRemove(entry)}
-            aria-label={
-              entry.status === 'running'
-                ? copy.cancelAria(entry.name)
-                : copy.removeAria(entry.name)
-            }
-          >
-            <X />
-          </SidebarMenuAction>
-        </SidebarMenuItem>
-      )}
+              {entry.status === 'running' && (
+                <Loader2 className="mt-0.5 flex-shrink-0 animate-spin" />
+              )}
+              {isError && (
+                <CircleAlert className="text-destructive mt-0.5 flex-shrink-0" />
+              )}
+              <div className="flex min-w-0 flex-1 flex-col gap-0.5 leading-tight">
+                <span className="line-clamp-2 pr-5 font-medium">
+                  {entry.name}
+                </span>
+                <span
+                  className={
+                    isError && entry.error
+                      ? 'text-destructive/80 line-clamp-2 pr-5 text-[11px]'
+                      : 'text-muted-foreground group-hover/menu-button:text-sidebar-accent-foreground line-clamp-2 pr-5 text-[11px]'
+                  }
+                >
+                  {subline}
+                </span>
+              </div>
+            </SidebarMenuButton>
+            <SidebarMenuAction
+              showOnHover
+              onClick={() => handleRemove(entry)}
+              aria-label={
+                entry.status === 'running'
+                  ? copy.cancelAria(entry.name)
+                  : copy.removeAria(entry.name)
+              }
+            >
+              <X />
+            </SidebarMenuAction>
+          </SidebarMenuItem>
+        )
+      }}
     />
   )
 }

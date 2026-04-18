@@ -258,19 +258,19 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
       message: 'Fragments are moderately imbalanced.',
     })
   }
-  // Splice-junction proximity to start/stop codon
+  // Split-point proximity to start/stop codon
   const MIN_MARGIN = 150
   if (seqLen > MIN_MARGIN * 2) {
     if (position < MIN_MARGIN) {
       warnings.push({
         level: 'warn',
-        message: `Splice junction is within ${MIN_MARGIN} bp of the start codon — very little 5′ fragment for stable expression.`,
+        message: `Split point is within ${MIN_MARGIN} bp of the start codon — very little 5′ fragment for stable expression.`,
       })
     }
     if (seqLen - position < MIN_MARGIN) {
       warnings.push({
         level: 'warn',
-        message: `Splice junction is within ${MIN_MARGIN} bp of the stop codon — very little 3′ fragment for stable expression.`,
+        message: `Split point is within ${MIN_MARGIN} bp of the stop codon — very little 3′ fragment for stable expression.`,
       })
     }
   }
@@ -284,7 +284,7 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
           ref={trackRef}
           role="slider"
           tabIndex={0}
-          aria-label="Splice junction position"
+          aria-label="Split point position"
           aria-valuemin={1}
           aria-valuemax={seqLen - 1}
           aria-valuenow={position}
@@ -298,13 +298,13 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
               already fit as a monomer. */}
           {showAavZones && (
             <div
-              className="relative h-1.5 w-full overflow-hidden rounded-t-[5px]"
+              className="relative h-1.5 w-full overflow-hidden rounded-t-sm"
               aria-hidden="true"
               title="AAV packaging zones: green fits, yellow tight, red over limit"
             >
               <div className="bg-destructive/25 absolute inset-0" />
               <div
-                className="absolute inset-y-0 bg-yellow-400/40"
+                className="bg-warning/40 absolute inset-y-0"
                 style={{
                   left: `${(tightLeft / seqLen) * 100}%`,
                   right: `${((seqLen - tightRight) / seqLen) * 100}%`,
@@ -312,7 +312,7 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
               />
               {hasSafeZone && (
                 <div
-                  className="absolute inset-y-0 bg-emerald-500/40"
+                  className="bg-success/40 absolute inset-y-0"
                   style={{
                     left: `${(safeLeft / seqLen) * 100}%`,
                     right: `${((seqLen - safeRight) / seqLen) * 100}%`,
@@ -325,7 +325,7 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
           <div
             className={cn(
               'relative flex h-7 w-full overflow-hidden',
-              !showAavZones && 'rounded-t-[5px]',
+              !showAavZones && 'rounded-t-sm',
             )}
           >
             <div
@@ -343,7 +343,7 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
             </div>
             {/* 40/60 balance target band — visual hint for the "balanced" range */}
             <div
-              className="pointer-events-none absolute inset-y-0 border-x border-dashed border-emerald-500/50"
+              className="border-success/50 pointer-events-none absolute inset-y-0 border-x border-dashed"
               style={{ left: '40%', width: '20%' }}
               aria-hidden="true"
               title="Balanced split range (40–60%)"
@@ -362,7 +362,7 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
               y={20 - (60 / 100) * 20}
               width={100}
               height={((60 - 40) / 100) * 20}
-              className="fill-emerald-500/10"
+              className="fill-success/10"
             />
             {/* 50% reference line */}
             <line
@@ -386,7 +386,7 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
             )}
           </svg>
           {/* Bottom lane: WGGW ticks */}
-          <div className="bg-muted/30 relative h-3 w-full rounded-b-[5px]">
+          <div className="bg-muted/30 relative h-3 w-full rounded-b-sm">
             {wggwMotifs.map((m, i) => {
               const mid = m.position + 1
               const x = (mid / seqLen) * 100
@@ -404,18 +404,18 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
                   onPointerDown={(e) => e.stopPropagation()}
                   title={`WGGW ${m.motif} at bp ${m.position}–${m.position + 3} · snap`}
                   aria-label={`Snap to WGGW motif ${m.motif} at position ${m.position}`}
-                  className="group absolute top-0 flex h-full w-3 -translate-x-1/2 cursor-pointer items-stretch justify-center"
+                  className="group focus-visible:ring-ring absolute top-0 flex h-full w-3 -translate-x-1/2 cursor-pointer items-stretch justify-center rounded-sm focus-visible:ring-2 focus-visible:outline-none"
                   style={{ left: `${x}%` }}
                 >
                   <span
                     className={cn(
                       'w-[3px] rounded-sm transition-colors',
-                      'group-hover:bg-emerald-400',
+                      'group-hover:bg-success/90',
                       isCandidate
-                        ? 'bg-amber-500'
+                        ? 'bg-warning'
                         : isNearest
-                          ? 'bg-emerald-500'
-                          : 'bg-emerald-500/60',
+                          ? 'bg-success'
+                          : 'bg-success/60',
                     )}
                   />
                 </button>
@@ -458,8 +458,8 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
                 className={cn(
                   'flex items-center gap-1.5 rounded-sm border px-2 py-1 text-[10px]',
                   w.level === 'error'
-                    ? 'border-red-500/40 bg-red-500/10 text-red-700 dark:text-red-300'
-                    : 'border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300',
+                    ? 'border-danger/40 bg-danger/10 text-danger-soft'
+                    : 'border-warning/40 bg-warning/10 text-warning-soft',
                 )}
               >
                 <span aria-hidden="true">
@@ -494,7 +494,7 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
                 onClick={() => onSnap(c.position)}
                 title={`${c.motif} at bp ${c.position.toLocaleString()} · 5′ ${c.fivePrimeLength.toLocaleString()} bp · 3′ ${c.threePrimeLength.toLocaleString()} bp · ${c.distanceFromCenter.toLocaleString()} bp from center`}
                 className={cn(
-                  'rounded-sm border px-1.5 py-0.5 font-mono tabular-nums transition-colors',
+                  'focus-visible:ring-ring rounded-sm border px-1.5 py-0.5 font-mono tabular-nums transition-colors focus-visible:ring-2 focus-visible:outline-none',
                   isCurrent
                     ? 'border-primary bg-primary/10 text-primary'
                     : 'hover:border-primary/60 hover:text-foreground text-muted-foreground',
@@ -503,7 +503,7 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
                 #{i + 1} {c.motif}@{c.position.toLocaleString()}
                 {!bothFit && (
                   <span
-                    className="ml-1 text-red-600 dark:text-red-400"
+                    className="text-danger-soft ml-1"
                     title="One fragment + AAV overhead exceeds ~4,700 bp"
                   >
                     ⚠
@@ -560,10 +560,10 @@ function FragmentPill({
   const tight = !fits && aavTotal <= AAV_PACKAGING_LIMIT + 300
   const fitLabel = fits ? 'fits' : tight ? 'tight' : 'exceeds'
   const fitColor = fits
-    ? 'text-emerald-600 dark:text-emerald-400'
+    ? 'text-success-soft'
     : tight
-      ? 'text-amber-600 dark:text-amber-400'
-      : 'text-red-600 dark:text-red-400'
+      ? 'text-warning-soft'
+      : 'text-danger-soft'
   return (
     <div
       className="bg-muted/30 flex items-center justify-between gap-2 rounded-sm border px-2 py-1"
@@ -595,21 +595,21 @@ function roleStylesFor(role: CodonRole): {
       }
     case 'start':
       return {
-        container: 'bg-emerald-500/15 ring-emerald-500/40 ring-1',
-        aa: 'text-emerald-700 dark:text-emerald-300 font-semibold',
-        base: 'text-emerald-700 dark:text-emerald-300',
+        container: 'bg-success/15 ring-success/40 ring-1',
+        aa: 'text-success-soft font-semibold',
+        base: 'text-success-soft',
       }
     case 'stop':
       return {
-        container: 'bg-red-500/15 ring-red-500/40 ring-1',
-        aa: 'text-red-700 dark:text-red-300 font-semibold',
-        base: 'text-red-700 dark:text-red-300',
+        container: 'bg-danger/15 ring-danger/40 ring-1',
+        aa: 'text-danger-soft font-semibold',
+        base: 'text-danger-soft',
       }
     case 'internal-stop':
       return {
-        container: 'bg-red-500/20 ring-red-500/50 ring-1',
-        aa: 'text-red-700 dark:text-red-300 font-semibold',
-        base: 'text-red-700 dark:text-red-300',
+        container: 'bg-danger/20 ring-danger/50 ring-1',
+        aa: 'text-danger-soft font-semibold',
+        base: 'text-danger-soft',
       }
     default:
       return {
@@ -760,7 +760,7 @@ function FrameAtSplit({
                 </span>
               )}
               {splitCodon.aa === '*' && (
-                <span className="text-red-600 dark:text-red-400"> = stop</span>
+                <span className="text-danger-soft"> = stop</span>
               )}
             </>
           )}
@@ -773,7 +773,7 @@ function FrameAtSplit({
         ref={stripRef}
         className="bg-muted/40 rounded-sm border p-1.5 font-mono text-[10px] leading-none"
         role="img"
-        aria-label="Codon context around splice junction"
+        aria-label="Codon context around split point"
       >
         <div className="flex w-full items-center gap-[1px]">
           {ctx.codons.map((c) => {
@@ -791,7 +791,7 @@ function FrameAtSplit({
                 onClick={() => onSnap(snapTarget)}
                 title={`${roleLabel ? roleLabel + ' · ' : ''}codon ${c.idx + 1}${c.aa ? ` (${c.codon} = ${c.aa})` : ''} · snap cut to ${snapLabel}`}
                 className={cn(
-                  'hover:bg-primary/10 hover:ring-primary/30 flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-sm px-[3px] py-1 transition-colors hover:ring-1',
+                  'hover:bg-primary/10 hover:ring-primary/30 focus-visible:ring-ring flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-sm px-[3px] py-1 transition-colors hover:ring-1 focus-visible:ring-2 focus-visible:outline-none',
                   roleStyles.container,
                 )}
               >
@@ -813,7 +813,7 @@ function FrameAtSplit({
                         className={cn(
                           roleStyles.base,
                           inWggw &&
-                            'border-b-2 border-emerald-500 text-emerald-700 dark:text-emerald-300',
+                            'border-success text-success-soft border-b-2',
                           isCutBase && 'border-primary border-r-2',
                         )}
                       >
@@ -837,7 +837,7 @@ function KeyboardHelp() {
       <PopoverTrigger
         type="button"
         aria-label="Keyboard shortcuts"
-        className="hover:text-foreground text-muted-foreground rounded-sm p-0.5 transition-colors"
+        className="hover:text-foreground focus-visible:ring-ring text-muted-foreground rounded-sm p-0.5 transition-colors focus-visible:ring-2 focus-visible:outline-none"
       >
         <Keyboard className="size-3" />
       </PopoverTrigger>

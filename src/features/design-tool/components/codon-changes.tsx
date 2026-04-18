@@ -75,14 +75,14 @@ export function CodonChanges({ original, optimized, splitPoint }: Props) {
             className={cn(
               'rounded-full px-2 py-0.5 font-medium tabular-nums',
               allSynonymous
-                ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+                ? 'bg-success/10 text-success-soft'
                 : 'bg-muted text-muted-foreground',
             )}
           >
             {synonymous} synonymous
           </span>
           {nonSynonymous > 0 && (
-            <span className="rounded-full bg-red-500/10 px-2 py-0.5 font-medium text-red-700 tabular-nums dark:text-red-300">
+            <span className="bg-danger/10 text-danger-soft rounded-full px-2 py-0.5 font-medium tabular-nums">
               {nonSynonymous} non-synonymous
             </span>
           )}
@@ -98,7 +98,7 @@ export function CodonChanges({ original, optimized, splitPoint }: Props) {
           Translation conservation
         </div>
         <div
-          className="relative h-2 overflow-hidden rounded-full border bg-emerald-500/70"
+          className="bg-success/70 relative h-2 overflow-hidden rounded-full border"
           role="img"
           aria-label={
             allSynonymous
@@ -112,7 +112,7 @@ export function CodonChanges({ original, optimized, splitPoint }: Props) {
                 <div
                   key={c.index}
                   title={`Codon ${c.index + 1}: ${c.aaFrom ?? '?'} → ${c.aaTo ?? '?'}`}
-                  className="absolute inset-y-0 bg-red-500"
+                  className="bg-danger absolute inset-y-0"
                   style={{
                     left: `${(c.index / total) * 100}%`,
                     width: `${Math.max(0.2, 100 / total)}%`,
@@ -173,8 +173,7 @@ export function CodonChanges({ original, optimized, splitPoint }: Props) {
                       className={cn(
                         'border-t',
                         isSplit && 'bg-primary/5',
-                        !c.synonymous &&
-                          'bg-red-500/5 text-red-700 dark:text-red-300',
+                        !c.synonymous && 'bg-danger/5 text-danger-soft',
                       )}
                     >
                       <td className="text-muted-foreground px-2 py-1 tabular-nums">

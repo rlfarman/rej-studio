@@ -9,24 +9,26 @@ description: Common errors, warnings, and surprises — and what to do about the
 
 You have characters the validator doesn't recognize — usually one of:
 
-- **Lowercase letters** from a viewer. The validator is
-  case-insensitive but only matches the base alphabet — upper-case it
-  and try again.
-- **IUPAC ambiguity codes** (N, R, Y, W, S, etc.). The optimizer
-  needs a concrete sequence. Replace the ambiguous bases or pick a
+- **IUPAC ambiguity codes** (N, R, Y, W, S, etc.). The optimizer needs
+  an unambiguous sequence — each position must be one of A/C/G/T (U is
+  accepted and treated as T). Replace ambiguous bases with a chosen
   specific variant.
-- **Whitespace or line numbers** from a FASTA export. Strip everything
-  that isn't a base.
+- **Whitespace, numbers, or FASTA header lines** from an export. Strip
+  anything that isn't a base — REJ Studio's FASTA importer does this
+  automatically; manual pastes may need cleanup.
+- **Non-standard characters** (gaps `-`, masking `x`/`X`, Unicode
+  spaces). Remove them.
 
 ### "Coding sequence length must be a multiple of 3"
 
-The validator is enforcing a valid reading frame. Common causes:
+The input has to resolve into whole codons in a single reading frame.
+Common causes:
 
 - A **partial CDS** that stops mid-codon.
-- A **full transcript** including the UTRs — REJ Studio wants the CDS
-  only, from start codon through stop codon.
-- A **trimmed stop codon** — REJ Studio keeps the stop. Add it back
-  if you dropped it manually.
+- A **full transcript** including 5′ and 3′ UTRs — REJ Studio wants the
+  CDS only, from the start codon through the stop codon inclusive.
+- A **dropped stop codon** — REJ Studio expects the stop to be present;
+  add it back if you trimmed it manually.
 
 ### "Name must not be empty" / "Name must be 250 characters or less"
 
@@ -52,7 +54,7 @@ Fixes, in order:
 The input is either short (under ~200 bp) or genuinely free of WGGW
 motifs. Try:
 
-- **Widening the acceptable distance** on the splice-junction slider.
+- **Widening the acceptable distance** on the split-point slider.
 - **Picking a different isoform** for the same gene — longer
   transcripts almost always have more candidate motifs.
 
@@ -67,10 +69,11 @@ coding-equivalent rewrite length.
 ### "Codon optimization is suspiciously mild"
 
 If cryptic-splice removal, CpG minimization, or k-mer complexity is
-running with a high weight, it can pin codons in ways that block the
-optimizer from moving them to the species-preferred synonym. Check the
-report — if codon optimization is near 0, one of the other objectives
-is dominating.
+running with a high weight, it can pin codons in ways that prevent the
+optimizer from swapping them to the species-preferred synonym (all
+available synonyms may reintroduce a penalized motif). Check the
+report — if the codon-optimization score barely moves, one of the
+other objectives is dominating the weighted sum.
 
 ### "The 5' and 3' halves are very unbalanced"
 

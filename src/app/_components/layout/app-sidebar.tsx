@@ -18,7 +18,7 @@ import { RecentJobs } from '@/features/design-tool/components/recent-jobs-panel'
 import { JobWatcher } from '@/features/design-tool/components/job-watcher'
 import { SidebarMenu } from '@/app/_components/layout/sidebar-menu'
 import type { JobHistoryEntry } from '@/features/design-tool/hooks/use-job-history'
-import { Home, BookOpen, WandSparkles } from 'lucide-react'
+import { Home, BookOpen, WandSparkles, Activity } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
 
@@ -41,10 +41,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   <Dna className="size-5" />
                 </div>
                 <div className="grid flex-1 text-left leading-tight opacity-0 transition-opacity duration-150 group-data-[state=expanded]:opacity-100 group-data-[state=expanded]:delay-200 [[data-mobile=true]_&]:opacity-100">
-                  <span
-                    className="truncate text-base font-semibold"
-                    style={{ fontFamily: 'var(--font-display)' }}
-                  >
+                  <span className="font-display truncate text-base font-semibold">
                     REJ Studio
                   </span>
                 </div>
@@ -77,6 +74,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <Link href="/design-tool">
                   <WandSparkles />
                   <span>Design Tool</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                isActive={pathname.startsWith('/disease-landscape')}
+                tooltip="Disease Landscape"
+              >
+                <Link href="/disease-landscape">
+                  <Activity />
+                  <span>Disease Landscape</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>

@@ -10,7 +10,10 @@ import { GeneSearchCommand } from './gene-search-command'
 import { useRecentGenes } from '@/features/gene-search/stores/recent-genes-store'
 import { useFavoriteGenes } from '@/features/gene-search/stores/favorite-genes-store'
 import { geneHref, type SpeciesFilter } from '@/lib/bio/species'
-import type { SavedGene } from '@/features/gene-search/types/domain-types'
+import type {
+  SavedGene,
+  JobSearchItem,
+} from '@/features/gene-search/types/domain-types'
 import { trackEvent } from '@/lib/analytics'
 import { geneSearchCopy } from '../copy'
 
@@ -21,6 +24,10 @@ interface GeneSearchProperties {
   ) => Promise<SearchGenesResult>
   defaultQuery?: string
   isDialog?: boolean
+  // Jobs to merge into search results. Supplied by the app-level shell so
+  // `GeneSearch` doesn't need to cross the feature boundary into `design-tool`.
+  jobs?: JobSearchItem[]
+  onSelectJob?: (id: string) => void
 }
 
 function subscribeToPlatformStore() {
@@ -35,10 +42,14 @@ function getPlatformServerSnapshot() {
   return false
 }
 
+const EMPTY_JOBS: JobSearchItem[] = []
+
 export function GeneSearch({
   searchGenes,
   defaultQuery,
   isDialog = false,
+  jobs = EMPTY_JOBS,
+  onSelectJob,
 }: GeneSearchProperties) {
   const router = useRouter()
   const {
@@ -73,6 +84,11 @@ export function GeneSearch({
     })
     router.push(geneHref(gene.symbol, gene.species, gene.matchedIsoformId))
     setQuery(gene.symbol)
+  }
+
+  const handleSelectJob = (entry: JobSearchItem) => {
+    setIsOpen(false)
+    onSelectJob?.(entry.id)
   }
 
   useEffect(() => {
@@ -119,6 +135,8 @@ export function GeneSearch({
             retry={retry}
             recentGenes={recentGenes}
             favoriteGenes={favoriteGenes}
+            jobs={jobs}
+            handleSelectJob={handleSelectJob}
           />
         </CommandDialog>
       </div>
@@ -138,6 +156,8 @@ export function GeneSearch({
       retry={retry}
       recentGenes={recentGenes}
       favoriteGenes={favoriteGenes}
+      jobs={jobs}
+      handleSelectJob={handleSelectJob}
     />
   )
 }

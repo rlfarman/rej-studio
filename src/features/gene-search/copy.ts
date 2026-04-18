@@ -12,6 +12,8 @@ export const geneSearchCopy = {
     promptEmpty: 'Search by gene symbol, name, or disease.',
     favorites: 'Favorites',
     recentGenes: 'Recent genes',
+    recentJobs: 'Recent jobs',
+    genes: 'Genes',
     customize: 'Customize',
     customizeAria: (id: string) => `Customize ${id}`,
     speciesOptions: {

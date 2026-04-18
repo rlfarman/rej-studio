@@ -20,9 +20,9 @@ const SUITABILITY_ORDER: Suitability[] = [
 ]
 
 const SUITABILITY_COLOR: Record<Suitability, string> = {
-  'single-aav': 'bg-emerald-500/70',
-  'dual-aav': 'bg-amber-500/70',
-  'triple-aav': 'bg-red-500/70',
+  'single-aav': 'bg-success/70',
+  'dual-aav': 'bg-warning/70',
+  'triple-aav': 'bg-danger/70',
 }
 
 const SUITABILITY_LABEL: Record<Suitability, string> = {

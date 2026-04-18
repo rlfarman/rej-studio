@@ -21,7 +21,14 @@ export const OG_BRAND = OG_FG
 const SERIF_BOLD_URL =
   'https://cdn.jsdelivr.net/gh/adobe-fonts/source-serif@release/TTF/SourceSerif4-Bold.ttf'
 
+// Source Sans 3 Semibold — matches --font-sans so OG wordmarks and URLs
+// share the body face used across the app, instead of a generic monospace
+// fallback that varies per OS.
+const SANS_SEMIBOLD_URL =
+  'https://cdn.jsdelivr.net/gh/adobe-fonts/source-sans@release/TTF/SourceSans3-Semibold.ttf'
+
 let cachedDisplayFont: ArrayBuffer | null = null
+let cachedSansFont: ArrayBuffer | null = null
 
 export async function loadDisplayFont(): Promise<ArrayBuffer> {
   if (cachedDisplayFont) return cachedDisplayFont
@@ -31,4 +38,14 @@ export async function loadDisplayFont(): Promise<ArrayBuffer> {
   }
   cachedDisplayFont = await res.arrayBuffer()
   return cachedDisplayFont
+}
+
+export async function loadSansFont(): Promise<ArrayBuffer> {
+  if (cachedSansFont) return cachedSansFont
+  const res = await fetch(SANS_SEMIBOLD_URL)
+  if (!res.ok) {
+    throw new Error(`Failed to load OG sans font: ${res.status}`)
+  }
+  cachedSansFont = await res.arrayBuffer()
+  return cachedSansFont
 }

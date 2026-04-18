@@ -16,8 +16,12 @@ import { GeneBreadcrumbJsonLd } from '@/features/gene-search/components/gene-bre
 import { SpeciesSync } from '@/features/gene-search/components/species-sync'
 import { TrackOnMount } from '@/components/track-on-mount'
 import { GeneDetailTour } from '@/features/onboarding/components/gene-detail-tour'
+import { findBySymbol } from '@/features/disease-landscape/api/landscape'
+import { GenePhenotypes } from '@/features/disease-landscape/components/gene-phenotypes'
+import type { LandscapeRow } from '@/features/disease-landscape/types'
 import { ExternalLink } from 'lucide-react'
 import { SpeciesIcon } from '@/components/bio/species-icon'
+import { PageTitle } from '@/components/page-title'
 import { Metadata } from 'next'
 import { cache } from 'react'
 import {
@@ -79,9 +83,11 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 async function IsoformSection({
   gene,
   highlightedIsoformId,
+  landscapeRow,
 }: {
   gene: { id: string; symbol: string; name: string }
   highlightedIsoformId?: string
+  landscapeRow?: LandscapeRow
 }) {
   const isoforms = await getIsoformsByGene(gene.id)
 
@@ -115,12 +121,13 @@ async function IsoformSection({
         isoforms={mapIsoforms}
         initialIsoformId={highlightedIsoformId}
       >
+        <IsoformSummary isoforms={isoforms} />
         <IsoformTable
           isoforms={isoforms}
           highlightedIsoformId={highlightedIsoformId}
         />
+        {landscapeRow && <GenePhenotypes row={landscapeRow} />}
         <section className="flex flex-col gap-6">
-          <IsoformSummary isoforms={isoforms} />
           <IsoformLengthChart isoforms={isoforms} />
           <IsoformIdentityMatrix isoforms={isoforms} />
         </section>
@@ -137,6 +144,10 @@ export default async function GeneSymbolPage(props: Props) {
   }
 
   const { isoform: highlightedIsoformId } = await props.searchParams
+  // Landscape is human-only; key by symbol since /genes/<sym> may resolve to
+  // mouse by default and mouse Ensembl IDs (ENSMUSG...) never match human data.
+  const landscapeRow =
+    gene.species === 'human' ? findBySymbol(gene.symbol) : undefined
 
   return (
     <>
@@ -146,9 +157,7 @@ export default async function GeneSymbolPage(props: Props) {
       <div className="flex flex-col gap-5 pt-6 md:pt-10">
         <header className="flex flex-col gap-1">
           <div className="flex items-center gap-3">
-            <h1 className="font-mono text-3xl leading-none font-bold tracking-tight md:text-4xl">
-              {gene.symbol}
-            </h1>
+            <PageTitle>{gene.symbol}</PageTitle>
             <span data-tour="gene-favorite">
               <FavoriteGeneButton gene={gene} />
             </span>
@@ -185,6 +194,7 @@ export default async function GeneSymbolPage(props: Props) {
             <IsoformSection
               gene={gene}
               highlightedIsoformId={highlightedIsoformId}
+              landscapeRow={landscapeRow}
             />
           </ViewTransition>
         </Suspense>

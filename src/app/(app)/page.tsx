@@ -1,9 +1,10 @@
 import Link from 'next/link'
-import { GeneSearch } from '@/features/gene-search/components/gene-search'
+import { GeneSearchShell } from '@/app/_components/gene-search-shell'
 import { searchGenes } from '@/features/gene-search/api/genes'
 import { Dna } from 'lucide-react'
 import { Hero, HeroItem } from '@/app/_components/hero'
 import { HomeTour } from '@/features/onboarding/components/home-tour'
+import { PageTitle } from '@/components/page-title'
 import type { Metadata } from 'next'
 import { appCopy } from '@/copy/app'
 
@@ -35,12 +36,12 @@ export default function HomePage() {
             index={0}
             className="text-muted-foreground mb-6 flex items-center justify-center"
           >
-            <Dna className="size-7" />
+            <Dna className="size-7 [animation:gentle-breath_4s_ease-in-out_infinite] [animation-delay:800ms] motion-reduce:animate-none" />
           </HeroItem>
           <HeroItem index={1}>
-            <h1 className="text-primary text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
+            <PageTitle className="text-primary">
               {appCopy.home.searchPrompt}
-            </h1>
+            </PageTitle>
           </HeroItem>
           <HeroItem index={2} className="mt-3">
             <p
@@ -66,7 +67,7 @@ export default function HomePage() {
           className="mx-auto mt-10 w-full max-w-2xl"
           data-tour="home-search"
         >
-          <GeneSearch searchGenes={searchGenes} />
+          <GeneSearchShell searchGenes={searchGenes} />
         </HeroItem>
       </Hero>
       <HomeTour />

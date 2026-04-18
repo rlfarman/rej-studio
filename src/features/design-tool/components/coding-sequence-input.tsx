@@ -59,7 +59,7 @@ function SequenceTypeToggle({
             className={cn(
               'inline-flex items-center gap-1.5 rounded-md px-3 py-1 text-sm font-medium transition-colors',
               isActive
-                ? 'bg-background text-foreground shadow-sm'
+                ? 'bg-primary text-primary-foreground shadow-sm'
                 : 'text-muted-foreground hover:text-foreground',
             )}
           >
@@ -350,7 +350,7 @@ export function CodingSequenceInput() {
             </p>
           )}
           {isProtein && !isSpecies(species) && length > 0 && (
-            <p className="text-muted-foreground text-sm text-amber-600 dark:text-amber-400">
+            <p className="text-warning-soft text-sm">
               {copy.selectSpeciesHint}
             </p>
           )}
