@@ -59,7 +59,7 @@ function SequenceTypeToggle({
             className={cn(
               'inline-flex items-center gap-1.5 rounded-md px-3 py-1 text-sm font-medium transition-colors',
               isActive
-                ? 'bg-background text-foreground shadow-sm'
+                ? 'bg-primary text-primary-foreground shadow-sm'
                 : 'text-muted-foreground hover:text-foreground',
             )}
           >
