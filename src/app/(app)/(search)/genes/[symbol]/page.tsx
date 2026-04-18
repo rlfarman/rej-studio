@@ -15,6 +15,8 @@ import { GeneBreadcrumbJsonLd } from '@/features/gene-search/components/gene-bre
 import { SpeciesSync } from '@/features/gene-search/components/species-sync'
 import { TrackOnMount } from '@/components/track-on-mount'
 import { GeneDetailTour } from '@/features/onboarding/components/gene-detail-tour'
+import { findByEnsemblId } from '@/features/disease-landscape/api/landscape'
+import { GenePhenotypes } from '@/features/disease-landscape/components/gene-phenotypes'
 import { ExternalLink } from 'lucide-react'
 import { SpeciesIcon } from '@/components/bio/species-icon'
 import { Metadata } from 'next'
@@ -124,6 +126,7 @@ export default async function GeneSymbolPage(props: Props) {
   }
 
   const { isoform: highlightedIsoformId } = await props.searchParams
+  const landscapeRow = findByEnsemblId(gene.id)
 
   return (
     <>
@@ -167,6 +170,7 @@ export default async function GeneSymbolPage(props: Props) {
             )}
           </div>
         </header>
+        {landscapeRow && <GenePhenotypes row={landscapeRow} />}
         <Suspense fallback={<IsoformTableLoading />}>
           <ViewTransition enter="suspense-reveal" default="none">
             <IsoformSection
