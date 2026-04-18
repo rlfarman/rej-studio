@@ -11,6 +11,7 @@
     "next-dev": "next dev",
     "dev": "concurrently \"pnpm next-dev\" \"pnpm fastapi-dev\"",
     "db:build": "python3 scripts/build-db.py",
+    "data:landscape": "python3 scripts/build-disease-landscape.py",
     "db:push": "drizzle-kit push",
     "db:upload": "tsx --env-file=.env scripts/load-db.ts",
     "db:studio": "drizzle-kit studio",
