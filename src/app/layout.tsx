@@ -36,6 +36,9 @@ import { AnalyticsProperties } from '@/components/analytics-properties'
 import { WebVitals } from '@/components/web-vitals'
 import { ConsoleGreeting } from '@/components/console-greeting'
 import { Suspense } from 'react'
+import { cookies, headers } from 'next/headers'
+import { SESSION_COOKIE_NAME, verifySession } from '@/lib/auth/session'
+import { LoginForm } from '@/features/auth/components/login-form'
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://rejstudio.com'
 
@@ -65,11 +68,39 @@ export const metadata = {
   },
 }
 
-export default function RootLayout({
+// Auth is engaged when BASIC_AUTH_PASSWORD is set. In dev, setting
+// BYPASS_AUTH=true skips the gate entirely.
+function authGateActive(): boolean {
+  if (!process.env.BASIC_AUTH_PASSWORD) return false
+  if (
+    process.env.NODE_ENV === 'development' &&
+    process.env.BYPASS_AUTH === 'true'
+  ) {
+    return false
+  }
+  return true
+}
+
+async function isAuthenticated(): Promise<boolean> {
+  const token = (await cookies()).get(SESSION_COOKIE_NAME)?.value
+  const session = await verifySession(token)
+  return session !== null
+}
+
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const gateActive = authGateActive()
+  const authed = gateActive ? await isAuthenticated() : true
+  const hdrs = gateActive && !authed ? await headers() : null
+  const pathname = hdrs?.get('x-pathname') ?? undefined
+  const returnTo =
+    pathname && pathname !== '/login' && !pathname.startsWith('/api/')
+      ? pathname
+      : undefined
+
   return (
     <html
       lang="en"
@@ -85,13 +116,19 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <QueryProvider>
-            <a
-              href="#main-content"
-              className="focus:bg-background focus:text-foreground focus:ring-ring sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:rounded-md focus:px-4 focus:py-2 focus:shadow-md focus:ring-2"
-            >
-              Skip to content
-            </a>
-            {children}
+            {authed ? (
+              <>
+                <a
+                  href="#main-content"
+                  className="focus:bg-background focus:text-foreground focus:ring-ring sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:rounded-md focus:px-4 focus:py-2 focus:shadow-md focus:ring-2"
+                >
+                  Skip to content
+                </a>
+                {children}
+              </>
+            ) : (
+              <LoginForm returnTo={returnTo} />
+            )}
             <Toaster />
             <Suspense fallback={null}>
               <AnalyticsPageview />

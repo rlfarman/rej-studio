@@ -277,9 +277,15 @@ export default function ArchitecturePage() {
                 variant="muted"
               />
               <ServiceBox
-                name="/api/auth"
+                name="/api/login"
                 tech="POST"
-                details={['Basic auth', 'JSON response']}
+                details={['Shared password', 'Signed session cookie']}
+                variant="muted"
+              />
+              <ServiceBox
+                name="/api/logout"
+                tech="POST"
+                details={['Clears session cookie']}
                 variant="muted"
               />
             </div>
