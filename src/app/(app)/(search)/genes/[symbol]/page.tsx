@@ -17,6 +17,7 @@ import { TrackOnMount } from '@/components/track-on-mount'
 import { GeneDetailTour } from '@/features/onboarding/components/gene-detail-tour'
 import { findBySymbol } from '@/features/disease-landscape/api/landscape'
 import { GenePhenotypes } from '@/features/disease-landscape/components/gene-phenotypes'
+import type { LandscapeRow } from '@/features/disease-landscape/types'
 import { ExternalLink } from 'lucide-react'
 import { SpeciesIcon } from '@/components/bio/species-icon'
 import { Metadata } from 'next'
@@ -80,9 +81,11 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 async function IsoformSection({
   gene,
   highlightedIsoformId,
+  landscapeRow,
 }: {
   gene: { id: string; symbol: string; name: string }
   highlightedIsoformId?: string
+  landscapeRow?: LandscapeRow
 }) {
   const isoforms = await getIsoformsByGene(gene.id)
 
@@ -105,12 +108,13 @@ async function IsoformSection({
           isoform_count: isoforms.length,
         }}
       />
+      <IsoformSummary isoforms={isoforms} />
       <IsoformTable
         isoforms={isoforms}
         highlightedIsoformId={highlightedIsoformId}
       />
+      {landscapeRow && <GenePhenotypes row={landscapeRow} />}
       <section className="flex flex-col gap-6">
-        <IsoformSummary isoforms={isoforms} />
         <IsoformLengthChart isoforms={isoforms} />
         <IsoformIdentityMatrix isoforms={isoforms} />
       </section>
@@ -173,12 +177,12 @@ export default async function GeneSymbolPage(props: Props) {
             )}
           </div>
         </header>
-        {landscapeRow && <GenePhenotypes row={landscapeRow} />}
         <Suspense fallback={<IsoformTableLoading />}>
           <ViewTransition enter="suspense-reveal" default="none">
             <IsoformSection
               gene={gene}
               highlightedIsoformId={highlightedIsoformId}
+              landscapeRow={landscapeRow}
             />
           </ViewTransition>
         </Suspense>
