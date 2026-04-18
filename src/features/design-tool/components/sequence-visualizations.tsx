@@ -78,7 +78,7 @@ function GcContentTrack({ original, optimized, splitPoint }: Props) {
             Optimized
           </span>
           <span className="text-muted-foreground flex items-center gap-1">
-            <span className="size-2 rounded-sm bg-emerald-500/15 ring-1 ring-emerald-500/30" />
+            <span className="bg-success/15 ring-success/30 size-2 rounded-sm ring-1" />
             Target {TARGET_GC_MIN}–{TARGET_GC_MAX}%
           </span>
         </div>
@@ -97,7 +97,7 @@ function GcContentTrack({ original, optimized, splitPoint }: Props) {
             y={bandTop}
             width={width}
             height={bandBottom - bandTop}
-            className="fill-emerald-500/10"
+            className="fill-success/10"
           />
           {/* 50% baseline */}
           <line

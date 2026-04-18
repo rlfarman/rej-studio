@@ -97,19 +97,19 @@ export function RestrictionSiteMap({ original, optimized }: Props) {
           <span
             className={cn(
               net > 0
-                ? 'text-amber-600 dark:text-amber-400'
+                ? 'text-warning-soft'
                 : net < 0
-                  ? 'text-emerald-600 dark:text-emerald-400'
+                  ? 'text-success-soft'
                   : '',
             )}
           >
             {net > 0 ? `+${net}` : net}
           </span>
           <span className="flex items-center gap-1">
-            <span className="size-2 rounded-sm bg-emerald-500/70" /> added
+            <span className="bg-success/70 size-2 rounded-sm" /> added
           </span>
           <span className="flex items-center gap-1">
-            <span className="size-2 rounded-sm bg-red-500/70" /> removed
+            <span className="bg-danger/70 size-2 rounded-sm" /> removed
           </span>
           <span className="flex items-center gap-1">
             <span className="bg-muted-foreground/50 size-2 rounded-sm" /> kept
@@ -183,13 +183,11 @@ function EnzymeTrack({
       </div>
       <span className="text-muted-foreground w-16 shrink-0 text-right font-mono tabular-nums">
         {row.added > 0 && (
-          <span className="text-emerald-600 dark:text-emerald-400">
-            +{row.added}
-          </span>
+          <span className="text-success-soft">+{row.added}</span>
         )}
         {row.added > 0 && row.removed > 0 && ' '}
         {row.removed > 0 && (
-          <span className="text-red-600 dark:text-red-400">−{row.removed}</span>
+          <span className="text-danger-soft">−{row.removed}</span>
         )}
         {row.added === 0 && row.removed === 0 && (
           <span className="text-muted-foreground">={row.before.length}</span>
@@ -229,8 +227,8 @@ function Lane({
             key={`${h.hit.position}-${i}`}
             className={cn(
               'absolute top-0 bottom-0 w-[2px] -translate-x-1/2 rounded-[1px]',
-              h.change === 'added' && 'bg-emerald-500',
-              h.change === 'removed' && 'bg-red-500',
+              h.change === 'added' && 'bg-success',
+              h.change === 'removed' && 'bg-danger',
               h.change === 'kept' && 'bg-muted-foreground/70',
             )}
             style={{ left: `${left}%` }}
