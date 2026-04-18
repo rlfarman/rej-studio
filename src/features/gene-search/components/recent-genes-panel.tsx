@@ -8,7 +8,6 @@ import { useRecentGenes } from '@/features/gene-search/stores/recent-genes-store
 import Link from 'next/link'
 import { geneHref } from '@/lib/bio/species'
 import { ExpandableSidebarList } from '@/components/expandable-sidebar-list'
-import { TruncatedText } from '@/components/truncated-text'
 import { SpeciesIcon } from '@/components/bio/species-icon'
 import { X } from 'lucide-react'
 import { geneSearchCopy } from '../copy'
@@ -27,24 +26,27 @@ export function RecentGenes() {
       emptyMessage={copy.empty}
       renderItem={(gene) => (
         <SidebarMenuItem>
-          <SidebarMenuButton asChild size="sm" className="[&>svg]:size-3">
+          <SidebarMenuButton
+            asChild
+            size="sm"
+            className="h-auto items-start py-1.5 [&>svg]:size-3"
+          >
             <Link
               href={geneHref(gene.symbol, gene.species)}
-              className="flex items-center gap-2"
+              className="flex items-start gap-2"
             >
               {gene.species && (
                 <SpeciesIcon
                   species={gene.species}
-                  className="text-muted-foreground group-hover/menu-button:text-sidebar-accent-foreground flex-shrink-0"
+                  className="text-muted-foreground group-hover/menu-button:text-sidebar-accent-foreground mt-0.5 flex-shrink-0"
                 />
               )}
-              <span className="font-mono font-medium">{gene.symbol}</span>
-              <TruncatedText
-                tooltip={gene.name}
-                className="text-muted-foreground group-hover/menu-button:text-sidebar-accent-foreground truncate pr-5"
-              >
-                {gene.name}
-              </TruncatedText>
+              <div className="flex min-w-0 flex-1 flex-col gap-0.5 leading-tight">
+                <span className="font-mono font-medium">{gene.symbol}</span>
+                <span className="text-muted-foreground group-hover/menu-button:text-sidebar-accent-foreground line-clamp-2 pr-5 text-[11px]">
+                  {gene.name}
+                </span>
+              </div>
             </Link>
           </SidebarMenuButton>
           <SidebarMenuAction
