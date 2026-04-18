@@ -40,24 +40,16 @@ function update(nextScrolled: boolean, nextHidden: boolean) {
     nextHidden !== scrollState.isHidden
   ) {
     scrollState = { scrolled: nextScrolled, isHidden: nextHidden }
-    if (typeof window !== 'undefined') {
-      console.log('[Header] state', scrollState, 'y=', currentY())
-    }
     notify()
   }
 }
 
 function applyIntent(directionDelta: number) {
   const y = currentY()
-  const mainEl = document.getElementById('main-content')
-  const clientHeight = mainEl?.clientHeight ?? window.innerHeight
-  const scrollHeight =
-    mainEl?.scrollHeight ?? document.documentElement.scrollHeight
   const atTop = y <= 8
-  const atBottom = y + clientHeight >= scrollHeight - 8
   const nextScrolled = y > 4
   let nextHidden = scrollState.isHidden
-  if (atTop || atBottom) nextHidden = false
+  if (atTop) nextHidden = false
   else if (directionDelta > INTENT_THRESHOLD && y > HIDE_AFTER)
     nextHidden = true
   else if (directionDelta < -INTENT_THRESHOLD) nextHidden = false
@@ -132,8 +124,6 @@ export function Header() {
   return (
     <header
       aria-hidden={isHidden || undefined}
-      data-scrolled={scrolled}
-      data-hidden={isHidden}
       className={cn(
         'sticky top-0 z-10 flex items-center px-3 md:px-6',
         'border-b transition-[height,margin-top,opacity,background-color,border-color] duration-200 ease-out motion-reduce:transition-none',
