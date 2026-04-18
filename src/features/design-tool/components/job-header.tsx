@@ -200,9 +200,9 @@ export function JobHeader({
             <StatusDot status={status} />
             <div className="min-w-0 space-y-0.5">
               <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                <h2 className="truncate text-sm font-semibold">
+                <div className="truncate text-sm font-semibold">
                   {name || copy.untitled}
-                </h2>
+                </div>
                 <span className="text-muted-foreground text-xs tabular-nums">
                   · {sequenceLength.toLocaleString()} bp
                 </span>

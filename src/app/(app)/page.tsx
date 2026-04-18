@@ -4,6 +4,7 @@ import { searchGenes } from '@/features/gene-search/api/genes'
 import { Dna } from 'lucide-react'
 import { Hero, HeroItem } from '@/app/_components/hero'
 import { HomeTour } from '@/features/onboarding/components/home-tour'
+import { PageTitle } from '@/components/page-title'
 import type { Metadata } from 'next'
 import { appCopy } from '@/copy/app'
 
@@ -38,9 +39,9 @@ export default function HomePage() {
             <Dna className="size-7" />
           </HeroItem>
           <HeroItem index={1}>
-            <h1 className="text-primary text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
+            <PageTitle className="text-primary">
               {appCopy.home.searchPrompt}
-            </h1>
+            </PageTitle>
           </HeroItem>
           <HeroItem index={2} className="mt-3">
             <p

@@ -1,6 +1,7 @@
 import { Metadata } from 'next'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { PageTitle } from '@/components/page-title'
 import { Separator } from '@/components/ui/separator'
 
 export const metadata: Metadata = {
@@ -104,9 +105,7 @@ export default function ArchitecturePage() {
   return (
     <div className="mx-auto max-w-5xl space-y-6 p-6">
       <div>
-        <h1 className="font-mono text-2xl font-bold tracking-tight">
-          REJ Studio — Architecture
-        </h1>
+        <PageTitle>REJ Studio — Architecture</PageTitle>
         <p className="text-muted-foreground mt-1 text-sm">
           System overview of data flow, infrastructure, and deployment topology.
         </p>
@@ -150,7 +149,7 @@ export default function ArchitecturePage() {
           </div>
           <div className="text-muted-foreground mt-3 flex flex-wrap gap-2 text-[10px]">
             <Badge variant="secondary" className="text-[10px]">
-              Geist Sans/Mono
+              Source Sans/Serif/Mono
             </Badge>
             <Badge variant="secondary" className="text-[10px]">
               Tailwind v4
@@ -222,9 +221,7 @@ export default function ArchitecturePage() {
         <CardContent className="space-y-4">
           {/* Features */}
           <div>
-            <div className="text-muted-foreground mb-2 text-xs font-semibold tracking-wider uppercase">
-              Features
-            </div>
+            <div className="type-overline mb-2">Features</div>
             <div className="grid grid-cols-2 gap-3">
               <ServiceBox
                 name="gene-search"
@@ -255,9 +252,7 @@ export default function ArchitecturePage() {
 
           {/* API Routes */}
           <div>
-            <div className="text-muted-foreground mb-2 text-xs font-semibold tracking-wider uppercase">
-              API Routes
-            </div>
+            <div className="type-overline mb-2">API Routes</div>
             <div className="grid grid-cols-4 gap-3">
               <ServiceBox
                 name="/api/health"
@@ -294,9 +289,7 @@ export default function ArchitecturePage() {
 
           {/* Infrastructure */}
           <div>
-            <div className="text-muted-foreground mb-2 text-xs font-semibold tracking-wider uppercase">
-              Shared Infrastructure
-            </div>
+            <div className="type-overline mb-2">Shared Infrastructure</div>
             <div className="grid grid-cols-3 gap-3">
               <ServiceBox
                 name="Rate Limiting"
@@ -521,9 +514,7 @@ export default function ArchitecturePage() {
           <Separator className="my-3" />
 
           <div>
-            <div className="text-muted-foreground mb-2 text-xs font-semibold tracking-wider uppercase">
-              Observability Stack
-            </div>
+            <div className="type-overline mb-2">Observability Stack</div>
             <div className="flex flex-wrap gap-2">
               <Badge className="bg-chart-5/10 text-chart-5 border-chart-5/20 border text-[10px]">
                 Sentry — errors
@@ -595,7 +586,7 @@ export default function ArchitecturePage() {
 
       <p className="text-muted-foreground pb-8 text-center text-xs">
         Generated from the codebase design system — shadcn/ui, Tailwind v4,
-        Geist fonts.
+        Source typeface family (Sans, Serif, Mono).
       </p>
     </div>
   )

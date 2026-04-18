@@ -195,9 +195,9 @@ export function GeneSplitterForm({
               style={{ '--stagger': 0 } as React.CSSProperties}
             >
               <CardHeader>
-                <h1 className="text-2xl leading-none font-bold tracking-tight">
-                  {copy.title}
-                </h1>
+                <CardTitle asChild>
+                  <h1>{copy.title}</h1>
+                </CardTitle>
                 <CardDescription>{copy.description}</CardDescription>
               </CardHeader>
               <CardContent className="flex flex-col gap-8">
