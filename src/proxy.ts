@@ -9,8 +9,9 @@ export const config = {
      * - _next/image (image optimization)
      * - favicon.ico, sitemap.xml, robots.txt (metadata files)
      * - monitoring (Sentry tunnel)
+     * - api/og (opengraph images — must be crawlable without auth)
      */
-    '/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|monitoring).*)',
+    '/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|monitoring|api/og).*)',
   ],
 }
 
