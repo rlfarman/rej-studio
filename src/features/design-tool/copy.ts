@@ -121,7 +121,7 @@ export const designToolCopy = {
     removeSplice: {
       label: 'Cryptic splice site removal',
       description:
-        'How aggressively to eliminate splice-like motifs. Higher values remove more sites but constrain codon choice.',
+        'How hard to push against splice-like motifs. Higher values clear more sites but leave the solver fewer codon choices.',
       enableLinkText: 'Enable cryptic splice site removal',
       enableSuffix: 'above to set this weight.',
     },
@@ -135,7 +135,7 @@ export const designToolCopy = {
     reduceKmer: {
       label: 'k-mer complexity reduction',
       description:
-        'How strongly to diversify 10-mer repeats. Helps synthesis and reduces recombination risk.',
+        'How hard to push toward unique 10-mers. Helps synthesis and reduces recombination risk during assembly.',
       enableLinkText: 'Enable k-mer complexity reduction',
       enableSuffix: 'above to set this weight.',
     },
