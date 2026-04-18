@@ -106,6 +106,7 @@ async function IsoformSection({
       <IsoformTable
         isoforms={isoforms}
         highlightedIsoformId={highlightedIsoformId}
+        geneSymbol={gene.symbol}
       />
       <section className="flex flex-col gap-6">
         <IsoformSummary isoforms={isoforms} />

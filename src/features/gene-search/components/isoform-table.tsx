@@ -30,6 +30,7 @@ import {
   Copy,
   Download,
   FileText,
+  Map as MapIcon,
   MoreHorizontal,
   PackageOpen,
 } from 'lucide-react'
@@ -59,6 +60,7 @@ import type { IsoformListItem } from '@/features/gene-search/types/domain-types'
 interface IsoformListProps {
   isoforms: IsoformListItem[]
   highlightedIsoformId?: string
+  geneSymbol?: string
 }
 
 type SortKey =
@@ -88,6 +90,7 @@ const SUITABILITY_RANK = {
 export default function IsoformTable({
   isoforms,
   highlightedIsoformId,
+  geneSymbol,
 }: IsoformListProps) {
   const { species } = useSpeciesContext()
   const { copy, isCopied } = useCopyToClipboard({ showToast: false })
@@ -306,6 +309,7 @@ export default function IsoformTable({
                 isCopied={isCopied}
                 copy={copy}
                 onToggleExpanded={toggleExpanded}
+                geneSymbol={geneSymbol}
               />
             )
           })}
@@ -326,6 +330,7 @@ function IsoformRow({
   isCopied,
   copy,
   onToggleExpanded,
+  geneSymbol,
 }: {
   isoform: IsoformListItem
   isExpanded: boolean
@@ -337,6 +342,7 @@ function IsoformRow({
   isCopied: (id: string) => boolean
   copy: (text: string, id: string) => void
   onToggleExpanded: (id: string) => void
+  geneSymbol?: string
 }) {
   const [ringVisible, setRingVisible] = useState(!!isHighlighted)
 
@@ -440,6 +446,26 @@ function IsoformRow({
               </TooltipTrigger>
               <TooltipContent>Download precomputed</TooltipContent>
             </Tooltip>
+            {geneSymbol && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="size-8"
+                    asChild
+                  >
+                    <Link
+                      href={`/genes/${geneSymbol}/isoforms/${isoform.id}/map`}
+                      aria-label={`Open gene map for ${isoform.id}`}
+                    >
+                      <MapIcon className="size-4" />
+                    </Link>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Explore map</TooltipContent>
+              </Tooltip>
+            )}
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="ghost" size="icon" className="size-8" asChild>
