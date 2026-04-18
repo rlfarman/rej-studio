@@ -15,7 +15,7 @@ import { GeneBreadcrumbJsonLd } from '@/features/gene-search/components/gene-bre
 import { SpeciesSync } from '@/features/gene-search/components/species-sync'
 import { TrackOnMount } from '@/components/track-on-mount'
 import { GeneDetailTour } from '@/features/onboarding/components/gene-detail-tour'
-import { findByEnsemblId } from '@/features/disease-landscape/api/landscape'
+import { findBySymbol } from '@/features/disease-landscape/api/landscape'
 import { GenePhenotypes } from '@/features/disease-landscape/components/gene-phenotypes'
 import { ExternalLink } from 'lucide-react'
 import { SpeciesIcon } from '@/components/bio/species-icon'
@@ -126,7 +126,10 @@ export default async function GeneSymbolPage(props: Props) {
   }
 
   const { isoform: highlightedIsoformId } = await props.searchParams
-  const landscapeRow = findByEnsemblId(gene.id)
+  // Landscape is human-only; key by symbol since /genes/<sym> may resolve to
+  // mouse by default and mouse Ensembl IDs (ENSMUSG...) never match human data.
+  const landscapeRow =
+    gene.species === 'human' ? findBySymbol(gene.symbol) : undefined
 
   return (
     <>

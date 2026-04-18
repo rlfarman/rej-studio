@@ -49,7 +49,7 @@ export function LandscapeTable({ rows }: Props) {
               <TableRow key={row.symbol} className="hover:bg-muted/30">
                 <TableCell className="py-2.5">
                   <Link
-                    href={`/genes/${encodeURIComponent(row.symbol)}`}
+                    href={`/genes/${encodeURIComponent(row.symbol)}?species=human`}
                     className="text-primary font-mono font-semibold hover:underline"
                     aria-label={diseaseLandscapeCopy.table.viewGeneAria(
                       row.symbol,
