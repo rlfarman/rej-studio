@@ -107,12 +107,38 @@ export default function IsoformTable({
     [species, isoforms],
   )
 
+  // Pre-compute per-isoform metrics once per filtered set. Previously, sorting
+  // by GC/CpG/WGGW/suitability ran O(n log n) calls to the sequence scanners
+  // on every sort; now each metric is computed exactly once per isoform.
+  const metrics = useMemo(() => {
+    const map = new Map<
+      string,
+      {
+        gcPercent: number
+        cpgCount: number
+        wggwCount: number
+        suitability: ReturnType<typeof assessDesignSuitability>
+        suitConfig: ReturnType<typeof getSuitabilityConfig>
+      }
+    >()
+    for (const isoform of filteredIsoforms) {
+      const upperSeq = isoform.codingSequence.toUpperCase()
+      const suitability = assessDesignSuitability(isoform.codingSequence)
+      map.set(isoform.id, {
+        gcPercent: computeGcPercent(upperSeq),
+        cpgCount: countCpG(upperSeq),
+        wggwCount: rankWggwByBalance(upperSeq).length,
+        suitability,
+        suitConfig: getSuitabilityConfig(suitability),
+      })
+    }
+    return map
+  }, [filteredIsoforms])
+
   const sortedIsoforms = useMemo(() => {
     const sorted = [...filteredIsoforms]
     sorted.sort((a, b) => {
       let cmp = 0
-      const seqA = a.codingSequence.toUpperCase()
-      const seqB = b.codingSequence.toUpperCase()
       switch (sortKey) {
         case 'enst':
           cmp = a.id.localeCompare(b.id)
@@ -124,24 +150,24 @@ export default function IsoformTable({
           cmp = a.proteinSequenceLength - b.proteinSequenceLength
           break
         case 'gcPercent':
-          cmp = computeGcPercent(seqA) - computeGcPercent(seqB)
+          cmp = metrics.get(a.id)!.gcPercent - metrics.get(b.id)!.gcPercent
           break
         case 'cpg':
-          cmp = countCpG(seqA) - countCpG(seqB)
+          cmp = metrics.get(a.id)!.cpgCount - metrics.get(b.id)!.cpgCount
           break
         case 'wggw':
-          cmp = rankWggwByBalance(seqA).length - rankWggwByBalance(seqB).length
+          cmp = metrics.get(a.id)!.wggwCount - metrics.get(b.id)!.wggwCount
           break
         case 'suitability':
           cmp =
-            SUITABILITY_RANK[assessDesignSuitability(a.codingSequence)] -
-            SUITABILITY_RANK[assessDesignSuitability(b.codingSequence)]
+            SUITABILITY_RANK[metrics.get(a.id)!.suitability] -
+            SUITABILITY_RANK[metrics.get(b.id)!.suitability]
           break
       }
       return sortDirection === 'asc' ? cmp : -cmp
     })
     return sorted
-  }, [filteredIsoforms, sortKey, sortDirection])
+  }, [filteredIsoforms, metrics, sortKey, sortDirection])
 
   const toggleSort = useCallback(
     (key: SortKey) => {
@@ -288,8 +314,7 @@ export default function IsoformTable({
         <TableBody>
           {sortedIsoforms.map((isoform) => {
             const isExpanded = expandedIds.has(isoform.id)
-            const suitability = assessDesignSuitability(isoform.codingSequence)
-            const suitConfig = getSuitabilityConfig(suitability)
+            const m = metrics.get(isoform.id)!
             const cdsId = `cds-${isoform.id}`
             const fastaId = `fasta-${isoform.id}`
 
@@ -299,8 +324,11 @@ export default function IsoformTable({
                 isoform={isoform}
                 isExpanded={isExpanded}
                 isHighlighted={isoform.id === highlightedIsoformId}
-                suitability={suitability}
-                suitConfig={suitConfig}
+                gcPercent={m.gcPercent}
+                cpgCount={m.cpgCount}
+                wggwCount={m.wggwCount}
+                suitability={m.suitability}
+                suitConfig={m.suitConfig}
                 cdsId={cdsId}
                 fastaId={fastaId}
                 isCopied={isCopied}
@@ -319,6 +347,9 @@ function IsoformRow({
   isoform,
   isExpanded,
   isHighlighted,
+  gcPercent,
+  cpgCount,
+  wggwCount,
   suitability,
   suitConfig,
   cdsId,
@@ -330,6 +361,9 @@ function IsoformRow({
   isoform: IsoformListItem
   isExpanded: boolean
   isHighlighted?: boolean
+  gcPercent: number
+  cpgCount: number
+  wggwCount: number
   suitability: ReturnType<typeof assessDesignSuitability>
   suitConfig: ReturnType<typeof getSuitabilityConfig>
   cdsId: string
@@ -339,11 +373,6 @@ function IsoformRow({
   onToggleExpanded: (id: string) => void
 }) {
   const [ringVisible, setRingVisible] = useState(!!isHighlighted)
-
-  const seq = isoform.codingSequence.toUpperCase()
-  const gcPercent = useMemo(() => computeGcPercent(seq), [seq])
-  const cpgCount = useMemo(() => countCpG(seq), [seq])
-  const wggwCount = useMemo(() => rankWggwByBalance(seq).length, [seq])
 
   const gcClass =
     gcPercent >= 35 && gcPercent <= 60
@@ -524,7 +553,14 @@ function IsoformRow({
           >
             <div className="overflow-hidden">
               <div className="bg-muted/30 px-6 py-4">
-                <ExpandedDetails isoform={isoform} />
+                <ExpandedDetails
+                  isoform={isoform}
+                  gcPercent={gcPercent}
+                  cpgCount={cpgCount}
+                  wggwCount={wggwCount}
+                  suitability={suitability}
+                  suitConfig={suitConfig}
+                />
               </div>
             </div>
           </div>
@@ -534,13 +570,22 @@ function IsoformRow({
   )
 }
 
-function ExpandedDetails({ isoform }: { isoform: IsoformListItem }) {
+function ExpandedDetails({
+  isoform,
+  gcPercent,
+  cpgCount,
+  wggwCount,
+  suitability,
+  suitConfig,
+}: {
+  isoform: IsoformListItem
+  gcPercent: number
+  cpgCount: number
+  wggwCount: number
+  suitability: ReturnType<typeof assessDesignSuitability>
+  suitConfig: ReturnType<typeof getSuitabilityConfig>
+}) {
   const needsSplit = isoform.codingSequenceLength > 4700
-  const gcPercent = computeGcPercent(isoform.codingSequence)
-  const cpgCount = countCpG(isoform.codingSequence)
-  const wggwCount = rankWggwByBalance(isoform.codingSequence).length
-  const suitability = assessDesignSuitability(isoform.codingSequence)
-  const suitConfig = getSuitabilityConfig(suitability)
 
   return (
     <div className="space-y-4">

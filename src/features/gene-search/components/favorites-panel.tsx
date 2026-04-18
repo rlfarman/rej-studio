@@ -30,7 +30,7 @@ export function FavoriteGenes() {
             size="sm"
             className="h-auto items-start py-1.5 [&>svg]:size-3"
           >
-            <Link href={geneHref(gene.symbol, gene.species)}>
+            <Link href={geneHref(gene.symbol, gene.species)} prefetch>
               {gene.species && (
                 <SpeciesIcon
                   species={gene.species}

@@ -1,16 +1,20 @@
 import { getDb } from '@/drizzle/db'
 import { genes, isoforms } from '@/drizzle/schema'
 import { eq } from 'drizzle-orm'
-import { cacheLife } from 'next/cache'
+import { cacheLife, cacheTag } from 'next/cache'
 
 /**
  * Cached isoform queries. Gene/isoform data is read-only (only changes on
- * re-seed), so a 5-minute cache avoids redundant Neon round-trips.
+ * re-seed), so we cache for an hour and tag entries with 'genes' so a
+ * reseed can invalidate everything via `revalidateTag('genes')`.
  */
+
+const GENES_CACHE_TAG = 'genes'
 
 export async function fetchIsoformsByGene(geneId: string) {
   'use cache'
-  cacheLife({ revalidate: 300 })
+  cacheTag(GENES_CACHE_TAG)
+  cacheLife({ revalidate: 3600 })
 
   const db = await getDb()
   return db
@@ -29,7 +33,8 @@ export async function fetchIsoformsByGene(geneId: string) {
 
 export async function fetchIsoformAndGeneByIsoformId(isoformId: string) {
   'use cache'
-  cacheLife({ revalidate: 300 })
+  cacheTag(GENES_CACHE_TAG)
+  cacheLife({ revalidate: 3600 })
 
   const db = await getDb()
   const [result] = await db

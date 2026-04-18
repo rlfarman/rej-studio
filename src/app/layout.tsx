@@ -38,6 +38,13 @@ import { ConsoleGreeting } from '@/components/console-greeting'
 import { Suspense } from 'react'
 import { AuthGate } from '@/features/auth/components/auth-gate'
 
+// Inline hydration script — reads the user's sidebar preferences from
+// localStorage and applies them to <html> before React renders. Keeps the
+// (app) layout fully static (no cookies() → no per-request dynamic SSR)
+// while preserving sidebar state without a flash. Same pattern next-themes
+// uses for dark mode.
+const SIDEBAR_PRELOAD_SCRIPT = `(function(){try{var d=document.documentElement;var s=localStorage.getItem('rej-sidebar-state');if(s==='true'||s==='false')d.dataset.sidebarPreloadOpen=s;var w=localStorage.getItem('rej-sidebar-width');if(w&&/^\\d+$/.test(w)){var n=parseInt(w,10);if(n>=200&&n<=480){d.dataset.sidebarPreloadWidth=String(n);d.style.setProperty('--sidebar-width',n+'px');}}}catch(e){}})();`
+
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://rejstudio.com'
 
 export const metadata = {
@@ -77,7 +84,23 @@ export default function RootLayout({
       className={`${fontSans.variable} ${fontMono.variable} ${fontDisplay.variable}`}
       suppressHydrationWarning
     >
-      <head />
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: SIDEBAR_PRELOAD_SCRIPT }} />
+        {process.env.NEXT_PUBLIC_GTM_ID && (
+          <>
+            <link
+              rel="preconnect"
+              href="https://www.googletagmanager.com"
+              crossOrigin="anonymous"
+            />
+            <link
+              rel="preconnect"
+              href="https://www.google-analytics.com"
+              crossOrigin="anonymous"
+            />
+          </>
+        )}
+      </head>
       <body>
         <ThemeProvider
           attribute="class"
