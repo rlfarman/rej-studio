@@ -1,8 +1,14 @@
 name: Conventions
 
+# Disabled: these three jobs are advisory (continue-on-error + failOnErrors:
+# false + exit 0) but GitHub still surfaces each one as a failed check in the
+# PR UI when the underlying action errors out — noisy with no actionable
+# signal for the author. Conventional commit/branch enforcement already runs
+# locally via husky + commitlint hooks, so nothing real is lost by turning
+# this workflow off. Keep the file so we can re-enable by restoring the
+# `pull_request` trigger if the upstream actions stabilize.
 on:
-  pull_request:
-    types: [opened, edited, reopened, synchronize]
+  workflow_dispatch:
 
 permissions:
   contents: read
