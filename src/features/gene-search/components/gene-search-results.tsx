@@ -53,7 +53,7 @@ export async function GeneSearchResults({
 
   return (
     <div className="flex flex-col gap-2">
-      <p className="text-muted-foreground px-1 text-xs font-medium tracking-wide uppercase">
+      <p className="type-overline px-1">
         {results.length} {results.length === 1 ? 'result' : 'results'}
       </p>
       <ul className="divide-border divide-y">

@@ -10,6 +10,7 @@ import {
   OG_MUTED,
   OG_PRIMARY,
   loadDisplayFont,
+  loadSansFont,
 } from '@/lib/og-theme'
 
 export const size = { width: 1200, height: 630 }
@@ -24,7 +25,10 @@ export async function GET(
     symbol,
     parseSpeciesParam(searchParams.get('species') ?? undefined),
   )
-  const displayFont = await loadDisplayFont()
+  const [displayFont, sansFont] = await Promise.all([
+    loadDisplayFont(),
+    loadSansFont(),
+  ])
 
   if (!gene) {
     return new ImageResponse(
@@ -38,12 +42,23 @@ export async function GET(
           backgroundColor: OG_BG,
           color: OG_FG,
           fontSize: 48,
-          fontFamily: 'monospace',
+          fontFamily: '"Source Sans 3", system-ui, sans-serif',
+          fontWeight: 600,
         }}
       >
         {symbol} — Gene not found
       </div>,
-      size,
+      {
+        ...size,
+        fonts: [
+          {
+            name: 'Source Sans 3',
+            data: sansFont,
+            weight: 600,
+            style: 'normal',
+          },
+        ],
+      },
     )
   }
 
@@ -62,7 +77,7 @@ export async function GET(
         height: '100%',
         backgroundColor: OG_BG,
         color: OG_FG,
-        fontFamily: 'system-ui, sans-serif',
+        fontFamily: '"Source Sans 3", system-ui, sans-serif',
         backgroundImage: `radial-gradient(circle at 85% 10%, ${OG_ACCENT}99 0%, transparent 55%), radial-gradient(circle at 10% 95%, ${OG_PRIMARY}26 0%, transparent 60%)`,
       }}
     >
@@ -76,7 +91,8 @@ export async function GET(
         <span
           style={{
             fontSize: 22,
-            fontFamily: 'monospace',
+            fontFamily: '"Source Sans 3", system-ui, sans-serif',
+            fontWeight: 600,
             letterSpacing: '0.12em',
             color: OG_MUTED,
             textTransform: 'uppercase',
@@ -116,7 +132,7 @@ export async function GET(
             style={{
               fontSize: 84,
               fontWeight: 700,
-              fontFamily: 'monospace',
+              fontFamily: '"Source Serif 4", serif',
               letterSpacing: '-0.02em',
               color: OG_FG,
             }}
@@ -168,7 +184,8 @@ export async function GET(
         <span
           style={{
             fontSize: 22,
-            fontFamily: 'monospace',
+            fontFamily: '"Source Sans 3", system-ui, sans-serif',
+            fontWeight: 600,
             color: OG_MUTED,
           }}
         >
@@ -193,6 +210,12 @@ export async function GET(
           name: 'Source Serif 4',
           data: displayFont,
           weight: 700,
+          style: 'normal',
+        },
+        {
+          name: 'Source Sans 3',
+          data: sansFont,
+          weight: 600,
           style: 'normal',
         },
       ],

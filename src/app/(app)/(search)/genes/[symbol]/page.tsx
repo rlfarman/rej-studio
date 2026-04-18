@@ -17,6 +17,7 @@ import { TrackOnMount } from '@/components/track-on-mount'
 import { GeneDetailTour } from '@/features/onboarding/components/gene-detail-tour'
 import { ExternalLink } from 'lucide-react'
 import { SpeciesIcon } from '@/components/bio/species-icon'
+import { PageTitle } from '@/components/page-title'
 import { Metadata } from 'next'
 import { cache } from 'react'
 import {
@@ -133,9 +134,7 @@ export default async function GeneSymbolPage(props: Props) {
       <div className="flex flex-col gap-5 pt-6 md:pt-10">
         <header className="flex flex-col gap-1">
           <div className="flex items-center gap-3">
-            <h1 className="font-mono text-3xl leading-none font-bold tracking-tight md:text-4xl">
-              {gene.symbol}
-            </h1>
+            <PageTitle>{gene.symbol}</PageTitle>
             <span data-tour="gene-favorite">
               <FavoriteGeneButton gene={gene} />
             </span>

@@ -7,6 +7,7 @@ import {
   OG_MUTED,
   OG_PRIMARY,
   loadDisplayFont,
+  loadSansFont,
 } from '@/lib/og-theme'
 
 export const size = { width: 1200, height: 630 }
@@ -19,7 +20,10 @@ export async function GET(request: Request) {
   const section = searchParams.get('section')
   const url = searchParams.get('url') ?? 'rejstudio.com'
 
-  const displayFont = await loadDisplayFont()
+  const [displayFont, sansFont] = await Promise.all([
+    loadDisplayFont(),
+    loadSansFont(),
+  ])
 
   return new ImageResponse(
     <div
@@ -32,7 +36,7 @@ export async function GET(request: Request) {
         height: '100%',
         backgroundColor: OG_BG,
         color: OG_FG,
-        fontFamily: 'system-ui, sans-serif',
+        fontFamily: '"Source Sans 3", system-ui, sans-serif',
         backgroundImage: `radial-gradient(circle at 85% 10%, ${OG_ACCENT}99 0%, transparent 55%), radial-gradient(circle at 10% 95%, ${OG_PRIMARY}26 0%, transparent 60%)`,
       }}
     >
@@ -46,7 +50,8 @@ export async function GET(request: Request) {
         <span
           style={{
             fontSize: 22,
-            fontFamily: 'monospace',
+            fontFamily: '"Source Sans 3", system-ui, sans-serif',
+            fontWeight: 600,
             letterSpacing: '0.12em',
             color: OG_MUTED,
             textTransform: 'uppercase',
@@ -118,7 +123,8 @@ export async function GET(request: Request) {
         <span
           style={{
             fontSize: 22,
-            fontFamily: 'monospace',
+            fontFamily: '"Source Sans 3", system-ui, sans-serif',
+            fontWeight: 600,
             color: OG_MUTED,
           }}
         >
@@ -143,6 +149,12 @@ export async function GET(request: Request) {
           name: 'Source Serif 4',
           data: displayFont,
           weight: 700,
+          style: 'normal',
+        },
+        {
+          name: 'Source Sans 3',
+          data: sansFont,
+          weight: 600,
           style: 'normal',
         },
       ],

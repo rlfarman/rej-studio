@@ -5,15 +5,19 @@ import {
   Source_Serif_4,
 } from 'next/font/google'
 
+// `next/font` auto-generates a metric-matched fallback (size-adjust /
+// ascent-override) for each of these when adjustFontFallback is left at the
+// default of true — that's what kills layout shift on first paint.
 const fontSans = Source_Sans_3({
   subsets: ['latin'],
-  variable: '--font-geist-sans',
+  variable: '--font-source-sans',
   display: 'swap',
+  adjustFontFallback: true,
 })
 
 const fontMono = Source_Code_Pro({
   subsets: ['latin'],
-  variable: '--font-geist-mono',
+  variable: '--font-source-mono',
   display: 'swap',
 })
 
@@ -21,6 +25,7 @@ const fontDisplay = Source_Serif_4({
   subsets: ['latin'],
   variable: '--font-source-serif',
   display: 'swap',
+  adjustFontFallback: true,
 })
 import { ThemeProvider } from '@/app/_components/layout/theme-provider'
 import { Toaster } from '@/components/ui/sonner'
