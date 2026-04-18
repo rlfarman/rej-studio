@@ -40,6 +40,9 @@ function update(nextScrolled: boolean, nextHidden: boolean) {
     nextHidden !== scrollState.isHidden
   ) {
     scrollState = { scrolled: nextScrolled, isHidden: nextHidden }
+    if (typeof window !== 'undefined') {
+      console.log('[Header] state', scrollState, 'y=', currentY())
+    }
     notify()
   }
 }
@@ -129,14 +132,15 @@ export function Header() {
   return (
     <header
       aria-hidden={isHidden || undefined}
+      data-scrolled={scrolled}
+      data-hidden={isHidden}
       className={cn(
         'sticky top-0 z-10 flex items-center px-3 will-change-transform md:px-6',
         'border-b transition-[height,transform,opacity,background-color,border-color] duration-200 ease-out motion-reduce:transition-none',
         scrolled
           ? 'bg-background/80 border-border/60 h-12 backdrop-blur'
           : 'bg-background h-15 border-transparent',
-        isHidden &&
-          'pointer-events-none -translate-y-full opacity-0 md:pointer-events-auto md:translate-y-0 md:opacity-100',
+        isHidden && 'pointer-events-none -translate-y-full opacity-0',
       )}
     >
       <div className="z-10 flex items-center">
