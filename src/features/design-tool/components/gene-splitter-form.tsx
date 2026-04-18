@@ -36,7 +36,8 @@ import {
 } from './weight-inputs'
 import { SubmitButton } from './submit-button'
 import { ResultsPanel } from './results-panel'
-import { JobHeader, RunningPlaceholder } from './job-header'
+import { JobHeader } from './job-header'
+import { RunCard } from './run-card'
 import { toast } from 'sonner'
 import { designToolCopy } from '../copy'
 
@@ -115,6 +116,12 @@ export function GeneSplitterForm({
   // React to status changes: display result and scroll on completion, toast
   // on failure. Storage is handled centrally (useJob on submit, JobWatcher
   // on poll settle), so the form just presents.
+  //
+  // We deliberately do NOT wrap this setResult in startViewTransition. This
+  // effect runs in StrictMode dev twice, and a second View Transition started
+  // while one is in-flight aborts the first and leaves the browser stuck. The
+  // submit-side transition (in onSubmit) covers the form → run morph; the
+  // run → results crossfade happens via CSS `animate-fade-up` instead.
   React.useEffect(() => {
     if (job.status === 'completed' && job.result) {
       setResult(job.result)
@@ -128,10 +135,13 @@ export function GeneSplitterForm({
 
   const onSubmit = async (values: FormValues) => {
     setResult(null)
-    // Mark as reset so the about-to-be-persisted formValues don't trigger
-    // the hydration effect above and overwrite the live form.
     didResetRef.current = true
     setIsEditing(false)
+    // The view-transition wrap lives inside useJob.submitJob — it fires
+    // around the actual DOM-affecting state change (upsertEntry +
+    // setIsStreamingSubmit) which is what swaps the form for the RunCard.
+    // Wrapping this call too would start a transition while no DOM change
+    // is pending, leaving the browser stuck on an empty snapshot.
     await job.submitJob(values)
   }
 
@@ -168,7 +178,10 @@ export function GeneSplitterForm({
         onSubmit={methods.handleSubmit(onSubmit)}
         className="flex flex-col gap-6"
       >
-        {!showForm && headerStatus && (
+        {!showForm && headerStatus && !(isRunning && !result) && (
+          // RunCard owns the visual during an active run; JobHeader reclaims
+          // it once the job terminates so the user has Edit/Run-again entry
+          // points above the results or the error.
           <JobHeader
             name={methods.getValues('name')}
             sequenceLength={methods.getValues('codingSequence').length}
@@ -184,7 +197,13 @@ export function GeneSplitterForm({
         )}
 
         {!showForm && isRunning && !result && (
-          <RunningPlaceholder stage={job.stage} progress={job.progress} />
+          <RunCard
+            name={methods.getValues('name')}
+            sequenceLength={methods.getValues('codingSequence').length}
+            frac={job.progress}
+            stage={job.stage}
+            onCancel={isRunning && job.cancelJob ? job.cancelJob : undefined}
+          />
         )}
 
         {showForm && (

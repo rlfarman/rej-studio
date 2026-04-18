@@ -1,6 +1,10 @@
+import asyncio
 import io
+import json
 import os
+import queue
 import re
+import threading
 import zipfile
 
 from fastapi import FastAPI, HTTPException
@@ -167,3 +171,91 @@ def process_gene_json(request: ProcessRequest):
         raise HTTPException(status_code=500, detail=f"Error processing gene: {str(e)}") from e
 
     return result
+
+
+# Sentinel the worker thread pushes onto the queue when it has no more events
+# to emit, so the SSE generator knows to stop consuming. A bare object is used
+# because None could be a legitimate payload someday.
+_STREAM_DONE = object()
+
+
+def _sse_format(event: str, payload: dict) -> str:
+    """Encode a dict as one SSE frame: `event:` line + `data:` line + blank."""
+    return f"event: {event}\ndata: {json.dumps(payload, default=str)}\n\n"
+
+
+@app.post("/api/py/process-stream")
+async def process_gene_stream(request: ProcessRequest):
+    """Streaming variant of /process-json. Emits Server-Sent Events as the
+    optimization progresses, then a final `done` event carrying the full
+    ProcessResult payload. Shape:
+
+        event: init     data: {name, length}
+        event: progress data: {frac, stage}
+        ... (many progress events) ...
+        event: done     data: <ProcessResult>
+        -- or --
+        event: error    data: {message}
+
+    The worker runs `process_single_request_json` on a thread and hands events
+    through a thread-safe queue. The generator polls the queue via
+    run_in_executor so it doesn't block the event loop.
+    """
+    loop = asyncio.get_running_loop()
+    events: queue.Queue = queue.Queue()
+    cds_length = len(request.CDS)
+    req_name = request.name
+    req_cds = request.CDS
+    req_options = request.options.model_dump()
+
+    def on_progress(frac: float, stage: str) -> None:
+        # Called from the worker thread. Thread-safe because Queue.put is.
+        events.put(("progress", {"frac": float(frac), "stage": str(stage)}))
+
+    def worker() -> None:
+        try:
+            result = process_single_request_json(
+                CDS=req_cds,
+                name=req_name,
+                OPTIONS=req_options,
+                on_progress=on_progress,
+            )
+            events.put(("done", result))
+        except Exception as e:
+            events.put(("error", {"message": str(e) or "Optimization failed"}))
+        finally:
+            events.put(_STREAM_DONE)
+
+    threading.Thread(target=worker, name="process-stream-worker", daemon=True).start()
+
+    async def generator():
+        # Announce up-front so the client can size the ribbon before any
+        # progress events arrive.
+        yield _sse_format("init", {"name": req_name, "length": cds_length})
+        while True:
+            item = await loop.run_in_executor(None, events.get)
+            if item is _STREAM_DONE:
+                return
+            event, payload = item
+            yield _sse_format(event, payload)
+            # Terminal events; worker will still push DONE right after.
+            if event in ("done", "error"):
+                # Drain the sentinel so run_in_executor returns promptly.
+                try:
+                    tail = events.get_nowait()
+                    if tail is not _STREAM_DONE:
+                        events.put(tail)
+                except queue.Empty:
+                    pass
+                return
+
+    return StreamingResponse(
+        generator(),
+        media_type="text/event-stream",
+        headers={
+            # Let proxies know not to buffer SSE frames.
+            "Cache-Control": "no-cache, no-transform",
+            "X-Accel-Buffering": "no",
+            "Connection": "keep-alive",
+        },
+    )

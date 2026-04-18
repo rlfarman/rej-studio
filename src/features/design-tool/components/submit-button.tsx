@@ -64,6 +64,10 @@ export function SubmitButton({
   return (
     <Button
       type="submit"
+      // view-transition-name is picked up when the button unmounts and the
+      // RunCard mounts, so the browser morphs one surface into the other.
+      // Matched in RunCard + ResultsPanel.
+      style={{ viewTransitionName: 'rej-job-surface' } as React.CSSProperties}
       className="inline bg-[oklch(0.82_0.2_125)] text-[oklch(0.2_0.06_140)] hover:bg-[oklch(0.77_0.2_125)]"
       disabled={isProcessing}
       aria-busy={isProcessing}

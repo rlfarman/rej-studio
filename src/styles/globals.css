@@ -354,3 +354,32 @@ html {
     opacity: 1;
   }
 }
+
+/* View Transitions — morph the submit button → run card → results card via
+   a shared view-transition-name (`rej-job-surface`). Default browser timing
+   is a 250ms crossfade; we slow it, ease it, and let the old/new snapshots
+   blend rather than stack so the transition reads as continuous rather than
+   flash-cut. The named target does NOT receive the root fade, so the rest
+   of the page stays put while the surface morphs. */
+@media not (prefers-reduced-motion: reduce) {
+  ::view-transition-old(rej-job-surface),
+  ::view-transition-new(rej-job-surface) {
+    animation-duration: 420ms;
+    animation-timing-function: cubic-bezier(0.32, 0.72, 0.28, 1);
+    /* Blend the outgoing and incoming snapshots so size/position changes
+       read as a morph rather than an overlap. */
+    mix-blend-mode: normal;
+  }
+  ::view-transition-old(rej-job-surface-ribbon),
+  ::view-transition-new(rej-job-surface-ribbon) {
+    animation-duration: 420ms;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}

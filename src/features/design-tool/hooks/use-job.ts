@@ -1,9 +1,12 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import {
   submitJob as submitJobAction,
   cancelJob as cancelJobAction,
 } from '@/features/design-tool/api/jobs'
+import { submitJobStream } from '@/features/design-tool/api/jobs-stream'
+import { startViewTransition } from '@/lib/view-transition'
+import { flushSync } from 'react-dom'
 import { buildJobParams } from '@/features/design-tool/utils/form-handler'
 import {
   useJobHistory,
@@ -57,9 +60,16 @@ export function useJob({
   // Selector-scoped reads so this hook only re-renders when the specific
   // entry it cares about changes.
   const upsertEntry = useJobHistory((s) => s.upsertEntry)
+  const removeEntry = useJobHistory((s) => s.removeEntry)
   const entry = useJobHistory(
     (s) => s.entries.find((e) => e.id === jobId) ?? null,
   )
+  // Track in-flight stream so a submit-during-submit doesn't double-start.
+  // Also lets a future cancel abort the fetch if we wire that up.
+  const streamAbortRef = useRef<AbortController | null>(null)
+  // True while a streaming submit is running — distinct from the
+  // server-action mutation's `isPending`, so derived `status` can surface it.
+  const [isStreamingSubmit, setIsStreamingSubmit] = useState(false)
 
   const setJobId = useCallback((next: string | null) => {
     setJobIdState(next)
@@ -152,11 +162,99 @@ export function useJob({
     error = entry.error
   }
 
+  // Try the streaming endpoint first (local FastAPI only; 404s on Modal/prod).
+  // Falls back to the server-action path if the stream can't connect or never
+  // produces a terminal event.
   const submitJob = useCallback(
     async (values: FormValues) => {
-      await submitMutation.mutateAsync(values)
+      // If a stream is already open, swap it out — user re-submitted.
+      streamAbortRef.current?.abort()
+
+      const params = buildJobParams(values)
+      const streamId =
+        typeof crypto !== 'undefined' && 'randomUUID' in crypto
+          ? crypto.randomUUID()
+          : String(Date.now()) + '-' + Math.random().toString(36).slice(2)
+
+      // Wrap the state change that actually mounts the RunCard in a View
+      // Transition so the submit button morphs into the run surface.
+      // flushSync forces the state update to paint before the transition
+      // captures the "new" snapshot. Without it React might batch the
+      // update past the transition window.
+      trackEvent({ event: 'job_submit', job_id: streamId })
+      await startViewTransition(() => {
+        flushSync(() => {
+          setJobId(streamId)
+          upsertEntry({ id: streamId, status: 'running', formValues: values })
+          setIsStreamingSubmit(true)
+        })
+      })
+
+      const controller = new AbortController()
+      streamAbortRef.current = controller
+
+      try {
+        const attempt = await submitJobStream(
+          params,
+          (ev) => {
+            if (ev.type === 'progress') {
+              upsertEntry({
+                id: streamId,
+                status: 'running',
+                progress: ev.frac,
+                stage: ev.stage,
+              })
+            }
+          },
+          controller.signal,
+        )
+
+        if (attempt.ok && attempt.result) {
+          upsertEntry({
+            id: streamId,
+            status: 'completed',
+            result: attempt.result,
+            formValues: values,
+          })
+          trackEvent({
+            event: 'job_complete',
+            job_id: streamId,
+            sequence_length: attempt.result.optimized_sequence?.length ?? 0,
+            processing_time_seconds:
+              attempt.result.processing_time_seconds ?? 0,
+          })
+          return
+        }
+
+        if (attempt.terminal === 'error' && attempt.error) {
+          upsertEntry({
+            id: streamId,
+            status: 'failed',
+            error: {
+              code: 'backend',
+              message: attempt.error,
+              retriable: false,
+            },
+          })
+          trackEvent({
+            event: 'job_failed',
+            job_id: streamId,
+            error_code: 'backend',
+          })
+          return
+        }
+
+        // Stream unavailable (prod/Modal) or died mid-flight with no terminal
+        // event. Drop the streaming stub and fall back to the server action,
+        // which has its own retry/rate-limiting logic.
+        removeEntry(streamId)
+        await submitMutation.mutateAsync(values)
+      } finally {
+        streamAbortRef.current = null
+        setIsStreamingSubmit(false)
+      }
     },
-    [submitMutation],
+    [submitMutation, upsertEntry, removeEntry, setJobId],
   )
 
   return {
@@ -169,6 +267,7 @@ export function useJob({
     formValues: entry?.formValues ?? null,
     progress: entry?.progress,
     stage: entry?.stage,
-    isLoading: status === 'submitting' || status === 'running',
+    isLoading:
+      isStreamingSubmit || status === 'submitting' || status === 'running',
   }
 }

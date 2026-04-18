@@ -373,7 +373,9 @@ function WggwTable({
             <TableHead>{resultsCopy.wggwTable.headers.position}</TableHead>
             <TableHead>{resultsCopy.wggwTable.headers.motif}</TableHead>
             <TableHead>{resultsCopy.wggwTable.headers.distance}</TableHead>
-            <TableHead>{resultsCopy.wggwTable.headers.originalCodons}</TableHead>
+            <TableHead>
+              {resultsCopy.wggwTable.headers.originalCodons}
+            </TableHead>
             <TableHead>{resultsCopy.wggwTable.headers.newCodons}</TableHead>
           </TableRow>
         </TableHeader>
@@ -462,7 +464,14 @@ function ResultsPanelImpl({ result, optionsUsed, species }: ResultsPanelProps) {
   )
 
   return (
-    <m.div variants={fadeUp} initial="hidden" animate="visible">
+    <m.div
+      variants={fadeUp}
+      initial="hidden"
+      animate="visible"
+      // Shared view-transition-name with SubmitButton + RunCard so the
+      // surface morphs continuously from click → run → result.
+      style={{ viewTransitionName: 'rej-job-surface' } as React.CSSProperties}
+    >
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between gap-3">
@@ -502,7 +511,10 @@ function ResultsPanelImpl({ result, optionsUsed, species }: ResultsPanelProps) {
           <SequenceViewer result={result} />
 
           <div className="-mx-1">
-            <ExpandableRow title={resultsCopy.sections.visualizations} icon={Activity}>
+            <ExpandableRow
+              title={resultsCopy.sections.visualizations}
+              icon={Activity}
+            >
               <SequenceVisualizations
                 original={result.original_sequence}
                 optimized={result.optimized_sequence}
