@@ -1,6 +1,7 @@
 'use client'
 
 import * as React from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   Loader2,
   Check,
@@ -139,8 +140,20 @@ interface JobHeaderProps {
 const SPECIES_LABEL: Record<DesignToolSpecies, string> = copy.speciesLabel
 
 function StatusDot({ status }: { status: JobHeaderStatus }) {
+  // Fire a one-shot bloom only on the running → completed transition, not
+  // when the component mounts onto an already-completed job (e.g. loading
+  // a past job from history). Keyed so the animation restarts cleanly.
+  const prevStatus = useRef<JobHeaderStatus>(status)
+  const [celebrateKey, setCelebrateKey] = useState(0)
+  useEffect(() => {
+    if (prevStatus.current === 'running' && status === 'completed') {
+      setCelebrateKey((k) => k + 1) // eslint-disable-line react-hooks/set-state-in-effect
+    }
+    prevStatus.current = status
+  }, [status])
+
   const classes = cn(
-    'flex size-7 shrink-0 items-center justify-center rounded-full',
+    'relative flex size-7 shrink-0 items-center justify-center rounded-full',
     status === 'running' && 'bg-primary/10 text-primary',
     status === 'completed' &&
       'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
@@ -156,7 +169,20 @@ function StatusDot({ status }: { status: JobHeaderStatus }) {
           ? CircleAlert
           : CircleSlash
   return (
-    <span className={classes}>
+    <span
+      className={cn(
+        classes,
+        celebrateKey > 0 &&
+          '[animation:completion-pop_420ms_cubic-bezier(0.16,1,0.3,1)_1] motion-reduce:!animate-none',
+      )}
+      key={celebrateKey}
+    >
+      {celebrateKey > 0 && (
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-0 [animation:completion-bloom_600ms_cubic-bezier(0.16,1,0.3,1)_1] rounded-full bg-emerald-500/40 motion-reduce:hidden dark:bg-emerald-400/40"
+        />
+      )}
       <Icon className={cn('size-4', status === 'running' && 'animate-spin')} />
     </span>
   )
