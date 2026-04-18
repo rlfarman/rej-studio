@@ -24,7 +24,7 @@ export function Footer() {
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
             title="Copy citation to clipboard"
-            className="text-muted-foreground hover:text-foreground w-full text-center text-xs leading-snug text-balance transition-colors hover:underline"
+            className="text-muted-foreground hover:text-foreground decoration-muted-foreground/40 hover:decoration-foreground/80 w-full text-center text-xs leading-snug text-balance underline underline-offset-4 transition-colors"
           >
             Bachmann et al. (2026) — RNA-fragment end joining
             <span className="hidden sm:inline"> (REJ)</span>

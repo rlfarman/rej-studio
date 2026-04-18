@@ -32,13 +32,13 @@ async function AppShell({ children }: { children: React.ReactNode }) {
         <Header />
         <main
           id="main-content"
-          className="relative h-full w-full flex-1 overflow-auto"
+          className="relative flex h-full w-full flex-1 flex-col overflow-auto"
         >
-          {children}
+          <div className="flex-1">{children}</div>
+          <Footer />
         </main>
         <WelcomeDialog />
         <HelpButton />
-        <Footer />
       </SidebarInset>
     </SidebarProvider>
   )
