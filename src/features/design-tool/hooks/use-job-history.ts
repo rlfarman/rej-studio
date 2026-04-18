@@ -4,6 +4,7 @@ import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import type { ProcessResult } from '@/features/design-tool/types/process-result'
 import type { FormValues } from '@/features/design-tool/types/form-schema'
+import type { RunMetrics } from '@/features/design-tool/types/run-metrics'
 
 const STORAGE_KEY = 'rej-studio:job-history'
 const MAX_ENTRIES = 50
@@ -56,6 +57,10 @@ export interface JobHistoryEntry {
   progress?: number
   // Human-readable stage label (e.g. "optimizing", "packaging").
   stage?: string
+  // Live run metrics (GC, CpG, score, objective list) streamed during a
+  // running job. Not persisted to disk — only carried in-memory while the
+  // run is active so the run card can render.
+  metrics?: RunMetrics
   // True when this entry was added by the seed-data demo action. Scopes the
   // "Clear seed data" action and excludes the entry from exports. Not set
   // on real jobs.
@@ -73,6 +78,7 @@ interface UpsertInput {
   formValues?: FormValues
   progress?: number
   stage?: string
+  metrics?: RunMetrics
 }
 
 interface JobHistoryState {
@@ -100,6 +106,7 @@ export const useJobHistory = create<JobHistoryState>()(
         formValues,
         progress,
         stage,
+        metrics,
       }) => {
         set((state) => {
           const existing = state.entries.find((e) => e.id === id)
@@ -117,6 +124,13 @@ export const useJobHistory = create<JobHistoryState>()(
             0
           // Terminal states clear progress; running states preserve it.
           const isTerminal = status !== 'running'
+          // Metrics merge field-by-field so a poll that only carries `score`
+          // (e.g. on finalize) doesn't blank the GC/CpG/objective list.
+          const mergedMetrics = isTerminal
+            ? undefined
+            : metrics
+              ? { ...(existing?.metrics ?? {}), ...metrics }
+              : existing?.metrics
           const entry: JobHistoryEntry = {
             id,
             name,
@@ -128,6 +142,7 @@ export const useJobHistory = create<JobHistoryState>()(
             formValues: nextFormValues,
             progress: isTerminal ? undefined : (progress ?? existing?.progress),
             stage: isTerminal ? undefined : (stage ?? existing?.stage),
+            metrics: mergedMetrics,
           }
           return {
             entries: [entry, ...state.entries.filter((e) => e.id !== id)].slice(

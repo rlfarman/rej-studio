@@ -49,16 +49,26 @@ class _MonotonicProgress:
         self._last_frac = 0.0
         self._last_emit_at = 0.0
 
-    def emit(self, frac, stage):
+    def emit(self, frac, stage, metrics=None):
         if self._on_progress is None:
             return
         with self._lock:
-            if frac <= self._last_frac:
+            # Progress must advance, but metrics-only updates (same frac,
+            # new stage/iteration data) are allowed to pass through.
+            if frac < self._last_frac:
+                return
+            if frac == self._last_frac and metrics is None:
                 return
             self._last_frac = frac
             self._last_emit_at = time.monotonic()
-        with contextlib.suppress(Exception):
-            self._on_progress(frac, stage)
+        # Callers may accept 2 or 3 positional args; try the rich form first
+        # and degrade to the legacy form without tripping the suppress block.
+        cb = self._on_progress
+        try:
+            cb(frac, stage, metrics)
+        except TypeError:
+            with contextlib.suppress(Exception):
+                cb(frac, stage)
 
     @property
     def last_frac(self):
@@ -73,6 +83,58 @@ class _MonotonicProgress:
             return time.monotonic() - self._last_emit_at
 
 
+class _ProblemRef:
+    """Mutable handle so the bridge logger can reference the problem without
+    knowing it at construction time (bridge is wired into the problem's
+    logger slot before the problem exists as a completed object)."""
+
+    __slots__ = ("problem",)
+
+    def __init__(self):
+        self.problem = None
+
+
+def _compute_live_metrics(problem_ref, obj_index, obj_total, mut_index):
+    """Build the metrics dict the frontend consumes. Every field is cheap to
+    compute — a couple of string scans and attribute reads — so this can be
+    called on every bridge emit without measurable overhead.
+
+    Returns None if the problem hasn't been wired up yet (pre-resolve).
+    """
+    if problem_ref is None or problem_ref.problem is None:
+        return None
+    try:
+        problem = problem_ref.problem
+        seq = str(getattr(problem, "sequence", "") or "")
+        if not seq:
+            return None
+        seq_len = len(seq)
+        gc = (seq.count("G") + seq.count("C")) * 100.0 / seq_len if seq_len else 0.0
+        cpg = seq.count("CG")
+        metrics = {
+            "iteration": obj_index * 10_000 + mut_index,
+            "gc_percent": round(gc, 2),
+            "cpg_count": cpg,
+            "objectives_total": max(0, obj_total),
+            "objectives_passing": min(max(0, obj_index), max(0, obj_total)),
+        }
+        objectives = getattr(problem, "objectives", None) or []
+        # Suggestive region: the spec currently being worked on. dnachisel
+        # doesn't publish per-tick mutation coordinates, so this is a hint
+        # over the currently-optimizing window, not ground truth.
+        if 0 <= obj_index < len(objectives):
+            spec = objectives[obj_index]
+            loc = getattr(spec, "location", None)
+            if loc is not None:
+                start = getattr(loc, "start", None)
+                end = getattr(loc, "end", None)
+                if isinstance(start, int) and isinstance(end, int) and end > start:
+                    metrics["mutation_hint"] = {"start": start, "end": end}
+        return metrics
+    except Exception:
+        return None
+
+
 class _ProgressBridgeLogger(_ProgressBarLoggerBase):
     """Translate dnachisel's proglog bar updates into on_progress() calls.
 
@@ -85,11 +147,12 @@ class _ProgressBridgeLogger(_ProgressBarLoggerBase):
     like 'Optimizing sequence (obj 2/5)'.
     """
 
-    def __init__(self, gate, frac_range, stage):
+    def __init__(self, gate, frac_range, stage, problem_ref=None):
         super().__init__()
         self._gate = gate
         self._frac_lo, self._frac_hi = frac_range
         self._base_stage = stage
+        self._problem_ref = problem_ref
         # Per-bar (index, total) so we can compute combined progress.
         self._obj_index = 0
         self._obj_total = 0
@@ -133,7 +196,10 @@ class _ProgressBridgeLogger(_ProgressBarLoggerBase):
         stage = self._base_stage
         if self._obj_total > 0:
             stage = f"{self._base_stage} ({min(self._obj_index + 1, self._obj_total)}/{self._obj_total})"
-        self._gate.emit(frac, stage)
+        metrics = _compute_live_metrics(
+            self._problem_ref, self._obj_index, self._obj_total, self._mut_index
+        )
+        self._gate.emit(frac, stage, metrics=metrics)
 
 
 @contextlib.contextmanager
@@ -439,9 +505,14 @@ def runOptimization(CDS, OPTIONS, on_progress=None):
     # Shared monotonic gate: every progress write goes through here, so
     # the UI only ever sees frac advance, never regress.
     progress_gate = _MonotonicProgress(on_progress)
+    # The bridge logger wants a live reference to `problem` so it can scan
+    # the current sequence for GC/CpG on every tick. The problem object
+    # doesn't exist yet, so we pass a mutable handle and fill it in after
+    # construction.
+    problem_ref = _ProblemRef()
 
-    def _emit(frac, stage):
-        progress_gate.emit(frac, stage)
+    def _emit(frac, stage, metrics=None):
+        progress_gate.emit(frac, stage, metrics=metrics)
 
     CDS = CDS.upper()
     AAseq = biotools.translate(CDS)
@@ -528,6 +599,7 @@ def runOptimization(CDS, OPTIONS, on_progress=None):
             gate=progress_gate,
             frac_range=(0.45, 0.88),
             stage="Optimizing sequence",
+            problem_ref=problem_ref,
         )
         if on_progress is not None
         else "bar"
@@ -537,6 +609,7 @@ def runOptimization(CDS, OPTIONS, on_progress=None):
             gate=progress_gate,
             frac_range=(0.15, 0.40),
             stage="Resolving constraints",
+            problem_ref=problem_ref,
         )
         if on_progress is not None
         else "bar"
@@ -549,12 +622,41 @@ def runOptimization(CDS, OPTIONS, on_progress=None):
         objectives=objectives,
         logger=resolve_logger,  # type: ignore[arg-type]
     )
-    _emit(0.15, "Resolving constraints")
+    problem_ref.problem = problem
+    # Build the chip list once at resolve — names map to dnachisel spec
+    # reprs and stay stable for the run. The frontend fills them as the
+    # optimize loop advances through objectives_passing.
+    objective_names = []
+    for spec in getattr(problem, "objectives", None) or []:
+        try:
+            objective_names.append(str(spec))
+        except Exception:
+            objective_names.append("objective")
+    _emit(
+        0.15,
+        "Resolving constraints",
+        metrics={
+            "objectives_total": len(objective_names),
+            "objectives_passing": 0,
+            "objectives": [{"name": n, "done": False} for n in objective_names],
+        },
+    )
     problem.resolve_constraints()
 
     objectives_before = problem.objectives_text_summary()
     OPTIONS["objectives_report_before"] = build_objectives_report(problem)
-    _emit(0.45, "Optimizing sequence")
+    # Snapshot the initial score so the dial has a starting value before
+    # optimize() begins refining it.
+    initial_score = OPTIONS["objectives_report_before"].get("total_score")
+    _emit(
+        0.45,
+        "Optimizing sequence",
+        metrics={
+            "score": initial_score,
+            "objectives_total": len(objective_names),
+            "objectives_passing": 0,
+        },
+    )
     # Swap in the optimize-phase logger. Some dnachisel versions look it up
     # as problem.logger; this reassignment is safe either way.
     problem.logger = optimize_logger  # type: ignore[assignment]
@@ -571,7 +673,16 @@ def runOptimization(CDS, OPTIONS, on_progress=None):
         problem.optimize()
     objectives_after = problem.objectives_text_summary()
     OPTIONS["objectives_report_after"] = build_objectives_report(problem)
-    _emit(0.92, "Finalizing")
+    final_score = OPTIONS["objectives_report_after"].get("total_score")
+    _emit(
+        0.92,
+        "Finalizing",
+        metrics={
+            "score": final_score,
+            "objectives_total": len(objective_names),
+            "objectives_passing": len(objective_names),
+        },
+    )
 
     return problem.sequence, objectives_before, objectives_after
 

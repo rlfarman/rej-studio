@@ -287,6 +287,38 @@ html {
   animation: fade-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
+/* Design-tool active surface morph — submit card → run card → results card.
+   The same `view-transition-name` is applied to all three at different times,
+   so the browser tweens the position/size and crossfades content. The
+   easing/duration is tuned for a calm, single-beat morph (no double-pulse). */
+::view-transition-old(designtool-active-surface),
+::view-transition-new(designtool-active-surface) {
+  animation-duration: 420ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+::view-transition-old(designtool-active-surface) {
+  animation-name: vt-surface-out;
+}
+::view-transition-new(designtool-active-surface) {
+  animation-name: vt-surface-in;
+}
+@keyframes vt-surface-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes vt-surface-in {
+  from {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(designtool-active-surface),
+  ::view-transition-new(designtool-active-surface) {
+    animation: none;
+  }
+}
+
 @keyframes vt-fade-out {
   to {
     opacity: 0;

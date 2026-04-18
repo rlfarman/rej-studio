@@ -12,6 +12,7 @@ import { createUpstashRateLimiter, redis } from '@/lib/upstash'
 import { env } from '@/lib/env'
 import { withRetry, isTransientError } from '@/lib/retry'
 import { createLogger } from '@/lib/logger'
+import { parseRunMetrics, type RunMetrics } from '../types/run-metrics'
 
 const log = createLogger('jobs')
 
@@ -51,6 +52,7 @@ interface JobStatusResult {
   error?: JobErrorPayload
   progress?: number
   stage?: string
+  metrics?: RunMetrics
 }
 
 // --- Rate limiter ---
@@ -388,7 +390,14 @@ export async function getJobStatus(jobId: string): Promise<JobStatusResult> {
       const text = await response.text()
       throw new Error(`Modal API error: ${text}`)
     }
-    const result: JobStatusResult = await response.json()
+    const raw: JobStatusResult & { metrics?: unknown } = await response.json()
+    // Coerce snake_case backend metrics into camelCase frontend shape.
+    // parseRunMetrics drops anything that doesn't match the expected types,
+    // so a malformed entry from an older worker version can't break the UI.
+    const result: JobStatusResult = {
+      ...raw,
+      metrics: parseRunMetrics(raw.metrics),
+    }
     // Log terminal states for funnel analytics (submit → complete/fail).
     // Intermediate "running" polls are not logged to avoid noise.
     if (result.status === 'completed' || result.status === 'failed') {

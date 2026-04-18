@@ -12,6 +12,7 @@ import {
 } from '@/features/design-tool/hooks/use-job-history'
 import type { ProcessResult } from '@/features/design-tool/types/process-result'
 import type { FormValues } from '@/features/design-tool/types/form-schema'
+import type { RunMetrics } from '@/features/design-tool/types/run-metrics'
 import { trackEvent } from '@/lib/analytics'
 
 type JobStatus = 'idle' | 'submitting' | EntryStatus
@@ -32,6 +33,7 @@ interface UseJobReturn {
   formValues: FormValues | null
   progress: number | undefined
   stage: string | undefined
+  metrics: RunMetrics | undefined
   isLoading: boolean
 }
 
@@ -169,6 +171,7 @@ export function useJob({
     formValues: entry?.formValues ?? null,
     progress: entry?.progress,
     stage: entry?.stage,
+    metrics: entry?.metrics,
     isLoading: status === 'submitting' || status === 'running',
   }
 }

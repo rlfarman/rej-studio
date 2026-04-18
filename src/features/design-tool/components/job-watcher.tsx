@@ -144,14 +144,19 @@ function JobPoller({ jobId }: JobPollerProps) {
         processing_time_seconds: result?.processing_time_seconds ?? 0,
       })
     } else if (data.status === 'running') {
-      // Surface progress/stage as they arrive, so the sidebar and inline
-      // spinner can show something better than a blank indefinite loader.
-      if (data.progress !== undefined || data.stage !== undefined) {
+      // Surface progress/stage/metrics as they arrive, so the sidebar and
+      // run card can show something better than a blank indefinite loader.
+      if (
+        data.progress !== undefined ||
+        data.stage !== undefined ||
+        data.metrics !== undefined
+      ) {
         upsertEntry({
           id: jobId,
           status: 'running',
           progress: data.progress,
           stage: data.stage,
+          metrics: data.metrics,
         })
       }
     } else if (data.status === 'failed') {

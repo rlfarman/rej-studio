@@ -134,8 +134,12 @@ def run_job(params: dict) -> dict:
     # Dict unthrottled; we only push on a meaningful delta or once every
     # couple of seconds. Keep the payload to JSON primitives.
     last_written = {"at": 0.0, "frac": -1.0, "stage": ""}
+    # Sticky metrics: each tick may carry partial fields (e.g. only score on
+    # finalize). Merge into a running snapshot so the frontend never sees a
+    # field disappear once the backend has surfaced it.
+    metrics_snapshot: dict[str, Any] = {}
 
-    def on_progress(frac: float, stage: str):
+    def on_progress(frac: float, stage: str, metrics: dict[str, Any] | None = None):
         now = time.monotonic()
 
         # Log every stage transition (unthrottled — stages are coarse-grained).
@@ -153,12 +157,17 @@ def run_job(params: dict) -> dict:
         if not call_id:
             return
 
+        if metrics:
+            metrics_snapshot.update(metrics)
+
         stage_changed = stage != last_written["stage"]
-        # Write on: stage change, OR >=2% frac delta, OR >=1s since last write.
-        # This keeps dnachisel's hot inner loop from hammering the Dict while
-        # still feeding the 2s-poll frontend fresh numbers between checkpoints.
+        # Write on: stage change, OR >=2% frac delta, OR metrics delivered, OR
+        # >=1s since last write. dnachisel's hot inner loop is throttled, but
+        # any tick carrying new metrics should land so the run card stays
+        # alive between coarse stage boundaries.
         if (
             not stage_changed
+            and not metrics
             and frac - last_written["frac"] < 0.02
             and now - last_written["at"] < 1.0
         ):
@@ -166,11 +175,14 @@ def run_job(params: dict) -> dict:
         last_written["at"] = now
         last_written["frac"] = frac
         last_written["stage"] = stage
-        progress_dict[call_id] = {
+        payload: dict[str, Any] = {
             "progress": float(frac),
             "stage": str(stage),
             "updated_at": time.time(),
         }
+        if metrics_snapshot:
+            payload["metrics"] = dict(metrics_snapshot)
+        progress_dict[call_id] = payload
 
     try:
         result = process_single_request_json(
@@ -304,6 +316,10 @@ class JobStatus(BaseModel):
     # populated while status == "running".
     progress: float | None = None
     stage: str | None = None
+    # Live metrics surfaced to the frontend run card (GC%, CpG count, score,
+    # objective list/index, mutation hint). Shape is opaque here — the
+    # frontend zod-validates it. Only populated while status == "running".
+    metrics: dict[str, Any] | None = None
 
 
 @web_app.post("/jobs", response_model=JobResponse)
@@ -330,13 +346,15 @@ async def get_job(call_id: str):
         # Filter stale entries (worker died, Dict never cleaned up).
         progress = None
         stage = None
+        metrics = None
         snap = progress_dict.get(call_id)
         if snap is not None:
             updated_at = snap.get("updated_at", 0)
             if time.time() - updated_at < PROGRESS_TTL_SECONDS:
                 progress = snap.get("progress")
                 stage = snap.get("stage")
-        return JobStatus(status="running", progress=progress, stage=stage)
+                metrics = snap.get("metrics")
+        return JobStatus(status="running", progress=progress, stage=stage, metrics=metrics)
     except modal.exception.FunctionCallCancelledError:
         progress_dict.pop(call_id, None)
         return JobStatus(

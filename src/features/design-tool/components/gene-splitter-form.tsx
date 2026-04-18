@@ -36,7 +36,9 @@ import {
 } from './weight-inputs'
 import { SubmitButton } from './submit-button'
 import { ResultsPanel } from './results-panel'
-import { JobHeader, RunningPlaceholder } from './job-header'
+import { JobHeader } from './job-header'
+import { RunCard } from './run-card'
+import { withViewTransition } from '@/lib/view-transition'
 import { toast } from 'sonner'
 import { designToolCopy } from '../copy'
 
@@ -117,7 +119,10 @@ export function GeneSplitterForm({
   // on poll settle), so the form just presents.
   React.useEffect(() => {
     if (job.status === 'completed' && job.result) {
-      setResult(job.result)
+      // Wrap the setResult that swaps run-card → results-card in a view
+      // transition so the shared `designtool-active-surface` element morphs
+      // continuously instead of cutting between cards.
+      withViewTransition(() => setResult(job.result))
     } else if (job.status === 'failed' && job.error && job.jobId) {
       if (!toastedJobsRef.current.has(job.jobId)) {
         toastedJobsRef.current.add(job.jobId)
@@ -127,12 +132,18 @@ export function GeneSplitterForm({
   }, [job.status, job.result, job.error, job.jobId])
 
   const onSubmit = async (values: FormValues) => {
-    setResult(null)
     // Mark as reset so the about-to-be-persisted formValues don't trigger
     // the hydration effect above and overwrite the live form.
     didResetRef.current = true
-    setIsEditing(false)
-    await job.submitJob(values)
+    // First transition (form → run card): both surfaces share the
+    // `designtool-active-surface` view-transition-name. The mutation's
+    // synchronous onMutate sets isPending=true, which flips `isRunning`
+    // before React commits — so the swap is captured by the transition.
+    withViewTransition(() => {
+      setResult(null)
+      setIsEditing(false)
+      void job.submitJob(values)
+    })
   }
 
   const handleRerun = async () => {
@@ -168,7 +179,10 @@ export function GeneSplitterForm({
         onSubmit={methods.handleSubmit(onSubmit)}
         className="flex flex-col gap-6"
       >
-        {!showForm && headerStatus && (
+        {/* The RunCard owns the "running" presentation (name, stage, cancel,
+            ribbon, metrics). For terminal states (completed/failed/cancelled)
+            the JobHeader still renders above the results or error state. */}
+        {!showForm && headerStatus && !isRunning && (
           <JobHeader
             name={methods.getValues('name')}
             sequenceLength={methods.getValues('codingSequence').length}
@@ -179,12 +193,30 @@ export function GeneSplitterForm({
             retriable={job.error?.retriable ?? true}
             onEdit={() => setIsEditing(true)}
             onRerun={handleRerun}
-            onCancel={isRunning ? job.cancelJob : undefined}
+            onCancel={undefined}
           />
         )}
 
         {!showForm && isRunning && !result && (
-          <RunningPlaceholder stage={job.stage} progress={job.progress} />
+          <RunCard
+            name={job.formValues?.name ?? methods.getValues('name')}
+            sequence={
+              job.formValues?.codingSequence ??
+              methods.getValues('codingSequence') ??
+              ''
+            }
+            sequenceLength={
+              (
+                job.formValues?.codingSequence ??
+                methods.getValues('codingSequence') ??
+                ''
+              ).length
+            }
+            stage={job.stage}
+            progress={job.progress}
+            metrics={job.metrics}
+            onCancel={job.cancelJob}
+          />
         )}
 
         {showForm && (
@@ -220,7 +252,14 @@ export function GeneSplitterForm({
             {/* ── Card 2: Strategy + Submit ── */}
             <Card
               className="fade-up-stagger"
-              style={{ '--stagger': 1 } as React.CSSProperties}
+              style={
+                {
+                  '--stagger': 1,
+                  // Shared name with the run card and results card so the
+                  // browser can morph the surface in place across the swap.
+                  viewTransitionName: 'designtool-active-surface',
+                } as React.CSSProperties
+              }
               data-tour="dt-optimization"
             >
               <CardHeader>
@@ -290,7 +329,10 @@ export function GeneSplitterForm({
         )}
 
         {result && (
-          <div className="fade-up">
+          <div
+            className="fade-up"
+            style={{ viewTransitionName: 'designtool-active-surface' }}
+          >
             <ResultsPanel
               result={result}
               optionsUsed={formatOptionsForReport(methods.getValues())}
