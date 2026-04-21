@@ -13,11 +13,9 @@ import { FormValues } from '../types/form-schema'
 import { SequenceDiagnostics } from './sequence-diagnostics'
 import { SequenceHighlight } from './sequence-highlight'
 import { GcSparkline } from '@/components/bio/gc-sparkline'
-import { CodonUsageStrip } from './codon-usage-strip'
 import { cn } from '@/lib/utils'
 import { cleanSequence, parseFasta } from '@/lib/bio/fasta'
 import { toast } from 'sonner'
-import { isSpecies } from '@/lib/bio/species'
 import { pickDefaultSplitPoint } from '../utils/default-split-point'
 
 const MAX_LENGTH = 50_000
@@ -25,7 +23,6 @@ const MAX_LENGTH = 50_000
 export function CodingSequenceInput() {
   const { control, watch, setValue } = useFormContext<FormValues>()
   const value = watch('codingSequence')
-  const species = watch('species')
   const length = value?.length ?? 0
   const fileInputRef = useRef<HTMLInputElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -204,9 +201,6 @@ export function CodingSequenceInput() {
           {value && value.length >= 60 && (
             <div className="space-y-2 pt-1">
               <GcSparkline sequence={value} />
-              {isSpecies(species) && value.length % 3 === 0 && (
-                <CodonUsageStrip sequence={value} species={species} />
-              )}
             </div>
           )}
         </FormItem>

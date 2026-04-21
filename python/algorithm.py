@@ -334,6 +334,87 @@ def insert_wggw_motif(sequence, split_point, min_distance=0, direction=0):
     
     return sequence, None
 
+def apply_explicit_wggw_site(sequence, explicit_site, split_point):
+    """
+    Apply an explicitly selected WGGW-capable codon rewrite.
+
+    Args:
+        sequence: Original CDS sequence
+        explicit_site: Dict describing the selected site/rewrite
+        split_point: Requested split point in 1-based cut coordinates
+
+    Returns:
+        Tuple of (recoded_sequence, site_info, lock_region)
+    """
+    if explicit_site is None:
+        return sequence, None, None
+
+    normalized_sequence = sequence.upper().replace('U', 'T')
+    protein_seq = biotools.translate(normalized_sequence)
+
+    position = int(explicit_site['position'])
+    motif_start = int(explicit_site['motif_start'])
+    hexamer_start = int(explicit_site['hexamer_start'])
+    motif = str(explicit_site['motif']).upper().replace('U', 'T')
+    new_hexamer = str(explicit_site['new_hexamer']).upper().replace('U', 'T')
+    original_codons = tuple(
+        codon.upper().replace('U', 'T') for codon in explicit_site['original_codons']
+    )
+    new_codons = tuple(
+        codon.upper().replace('U', 'T') for codon in explicit_site['new_codons']
+    )
+
+    if len(original_codons) != 2 or len(new_codons) != 2:
+        raise ValueError("Selected WGGW site must provide exactly two original and new codons")
+
+    hexamer_start_idx = hexamer_start - 1
+    if hexamer_start_idx < 0 or hexamer_start_idx + 6 > len(normalized_sequence):
+        raise ValueError("Selected WGGW site lies outside the coding sequence")
+
+    current_hexamer = normalized_sequence[hexamer_start_idx:hexamer_start_idx + 6]
+    current_codons = (current_hexamer[:3], current_hexamer[3:])
+    if current_codons != original_codons:
+        raise ValueError(
+            "Selected WGGW site no longer matches the current coding sequence at the chosen codons"
+        )
+
+    if ''.join(new_codons) != new_hexamer:
+        raise ValueError("Selected WGGW site new codons do not match the provided hexamer")
+
+    if biotools.translate(current_hexamer) != biotools.translate(new_hexamer):
+        raise ValueError("Selected WGGW rewrite changes the encoded amino acids")
+
+    local_match = re.search('[AT]GG[AT]', new_hexamer)
+    if local_match is None:
+        raise ValueError("Selected WGGW rewrite does not actually create a WGGW motif")
+
+    expected_motif_start = hexamer_start + local_match.start()
+    expected_split = hexamer_start + local_match.start() + 2
+    if motif_start != expected_motif_start or position != expected_split:
+        raise ValueError("Selected WGGW coordinates do not match the provided codon rewrite")
+    if motif != local_match.group():
+        raise ValueError("Selected WGGW motif does not match the provided codon rewrite")
+
+    recoded_sequence = (
+        normalized_sequence[:hexamer_start_idx]
+        + new_hexamer
+        + normalized_sequence[hexamer_start_idx + 6:]
+    )
+
+    if biotools.translate(recoded_sequence) != protein_seq:
+        raise ValueError("Selected WGGW rewrite does not preserve the translated protein")
+
+    site_info = {
+        'position': motif_start - 1,  # 0-based motif start, matching existing report shape
+        'motif': motif,
+        'distance_from_split': abs(position - split_point),
+        'original_codons': original_codons,
+        'new_codons': new_codons,
+        'split_position': position,
+    }
+
+    return recoded_sequence, site_info, (hexamer_start_idx, hexamer_start_idx + 6)
+
 def _serialize_evaluation_location(loc):
     """Serialize a DNAChisel Location object to a JSON-safe dict."""
     try:
@@ -420,7 +501,18 @@ def runOptimization(CDS, OPTIONS, on_progress=None):
     progress_gate = _MonotonicProgress(on_progress)
     def _emit(frac, stage):
         progress_gate.emit(frac, stage)
-    CDS = CDS.upper()
+    CDS = CDS.upper().replace('U', 'T')
+    explicit_main_site = OPTIONS.get('selected_wggw_site')
+    explicit_main_info = None
+    explicit_lock_region = None
+    if explicit_main_site:
+        CDS, explicit_main_info, explicit_lock_region = apply_explicit_wggw_site(
+            CDS,
+            explicit_main_site,
+            OPTIONS.get('split_point', len(CDS) // 2),
+        )
+        OPTIONS['explicit_wggw_main'] = explicit_main_info
+
     AAseq = biotools.translate(CDS)
     constraints = []
     objectives = []
@@ -428,6 +520,8 @@ def runOptimization(CDS, OPTIONS, on_progress=None):
     
     # Enforce that the translation remains unchanged
     constraints.append(EnforceTranslation(location=(0, CDSlen, 1), translation=AAseq))
+    if explicit_lock_region is not None:
+        constraints.append(AvoidChanges(location=(explicit_lock_region[0], explicit_lock_region[1], 1)))
     
     # Remove cryptic splice sites objective
     if OPTIONS.get('remove_cryptic_ss', False):
@@ -472,6 +566,7 @@ def runOptimization(CDS, OPTIONS, on_progress=None):
         speciesmap = {'human': 'h_sapiens', 'mouse': 'm_musculus'}
         objectives.append(CodonOptimize(
             species=speciesmap[OPTIONS['codon_optimize']],
+            method="use_best_codon",
             location=(0, CDSlen, 1),
             boost=codon_weight
         ))
@@ -599,8 +694,13 @@ def insertSplitMarkers(optimized_sequence, OPTIONS):
     stim5_point = None
     stim3_point = None
     
+    explicit_main_info = OPTIONS.get('explicit_wggw_main')
+    if explicit_main_info:
+        main_split = explicit_main_info['split_position']
+        wggw_info_all['main'] = explicit_main_info
+        OPTIONS['used_wggw_as_split'] = True
     # Find and install main WGGW motif
-    if OPTIONS.get('ensure_wggw', True):
+    elif OPTIONS.get('ensure_wggw', True):
         sequence_with_wggw, wggw_info = insert_wggw_motif(working_sequence, split_point)
         
         # If a WGGW motif was successfully inserted, update the sequence

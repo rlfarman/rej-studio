@@ -82,6 +82,7 @@ export function GeneSplitterForm({
       codingSequence: defaultCodingSequence ?? '',
       name: defaultName ?? '',
       species: defaultSpecies ?? 'none',
+      selectedWggwSite: null,
       spliceJunctionPosition:
         defaultSpliceJunctionPosition ??
         (defaultCodingSequence

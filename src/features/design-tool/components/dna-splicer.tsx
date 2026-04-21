@@ -2,7 +2,7 @@
 
 import * as React from 'react'
 import { useFormContext } from 'react-hook-form'
-import { FormValues } from '../types/form-schema'
+import { FormValues, type SelectedWggwSite } from '../types/form-schema'
 import { SpliceSliderContext } from './splice-slider-context'
 
 export function DNASplicer() {
@@ -32,8 +32,10 @@ export function DNASplicer() {
       )
       prevPositionRef.current = newPosition
       setValue('spliceJunctionPosition', newPosition)
+      setValue('selectedWggwSite', null)
     } else {
       prevPositionRef.current = watch('spliceJunctionPosition')
+      setValue('selectedWggwSite', null)
     }
     prevSeqLengthRef.current = seqLength
   }, [seqLength, setValue, watch])
@@ -44,7 +46,15 @@ export function DNASplicer() {
     const clamped = Math.max(1, Math.min(pos, seqLength - 1))
     prevPositionRef.current = clamped
     setValue('spliceJunctionPosition', clamped)
+    setValue('selectedWggwSite', null)
   }
+
+  const setSelectedSite = React.useCallback(
+    (site: SelectedWggwSite | null) => {
+      setValue('selectedWggwSite', site)
+    },
+    [setValue],
+  )
 
   const hasSequence = codingSequence.length > 0
 
@@ -63,6 +73,7 @@ export function DNASplicer() {
       sequence={codingSequence}
       position={position}
       onSnap={setPosition}
+      onSelectionChange={setSelectedSite}
     />
   )
 }

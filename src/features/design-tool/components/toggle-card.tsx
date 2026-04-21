@@ -1,15 +1,13 @@
 'use client'
 import { useFormContext, Controller } from 'react-hook-form'
-import type { Path } from 'react-hook-form'
+import type { FieldPathByValue } from 'react-hook-form'
 import { FormItem, FormControl } from '@/components/ui/form'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { FormValues } from '../types/form-schema'
 
-type BoolField = {
-  [K in Path<FormValues>]: FormValues[K] extends boolean ? K : never
-}[Path<FormValues>]
+type BoolField = FieldPathByValue<FormValues, boolean>
 
 interface ToggleCardProperties {
   name: BoolField

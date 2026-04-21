@@ -9,11 +9,13 @@ import {
 } from '@/lib/bio/sequence-utils'
 import { translateCodon } from '@/lib/bio/genetic-code'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
+import type { SelectedWggwSite } from '../types/form-schema'
 
 interface Props {
   sequence: string
   position: number
   onSnap: (position: number) => void
+  onSelectionChange: (site: SelectedWggwSite | null) => void
 }
 
 const MIN_CONTEXT_WINDOW = 6 // minimum codons on each side of the split
@@ -30,7 +32,12 @@ interface WggwSiteCandidate extends RankedInducibleWggwCandidate {
  * user with secondary heuristics. It keeps the global WGGW-capable ticks and
  * the local codon-level frame context.
  */
-export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
+export function SpliceSliderContext({
+  sequence,
+  position,
+  onSnap,
+  onSelectionChange,
+}: Props) {
   const seqLen = sequence.length
   const trackRef = useRef<HTMLDivElement>(null)
 
@@ -71,6 +78,10 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
     selectedSite?.position === rewriteSelection.position
       ? rewriteSelection.index
       : 0
+  const currentRewrite =
+    selectedSite?.rewriteOptions[
+      Math.min(selectedRewriteIndex, selectedSite.rewriteOptions.length - 1)
+    ] ?? null
 
   const [contextWindow, setContextWindow] = useState(MIN_CONTEXT_WINDOW)
   const frameStripRef = useRef<HTMLDivElement>(null)
@@ -99,6 +110,22 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
   const frameContext = useMemo(() => {
     return buildFrameContext(sequence, position, contextWindow)
   }, [sequence, position, contextWindow])
+
+  useEffect(() => {
+    if (!selectedSite || !currentRewrite) {
+      onSelectionChange(null)
+      return
+    }
+    onSelectionChange({
+      position: selectedSite.position,
+      motifStart: selectedSite.motifStart,
+      motif: selectedSite.motif,
+      hexamerStart: selectedSite.hexamerStart,
+      originalCodons: selectedSite.originalCodons,
+      newCodons: currentRewrite.newCodons,
+      newHexamer: currentRewrite.newHexamer,
+    })
+  }, [currentRewrite, onSelectionChange, selectedSite])
 
   if (seqLen < 12) return null
 
@@ -258,6 +285,7 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
           stripRef={frameStripRef}
           wggwSites={wggwSites}
           selectedSite={selectedSite}
+          currentRewrite={currentRewrite}
           selectedRewriteIndex={selectedRewriteIndex}
           nearbySites={nearbySites}
           selectedSiteIndex={selectedSiteIndex}
@@ -426,6 +454,7 @@ function FrameAtSplit({
   stripRef,
   wggwSites,
   selectedSite,
+  currentRewrite,
   selectedRewriteIndex,
   nearbySites,
   selectedSiteIndex,
@@ -437,6 +466,7 @@ function FrameAtSplit({
   stripRef: React.RefObject<HTMLDivElement | null>
   wggwSites: WggwSiteCandidate[]
   selectedSite: WggwSiteCandidate | null
+  currentRewrite: WggwRecodingOption | null
   selectedRewriteIndex: number
   nearbySites: WggwSiteCandidate[]
   selectedSiteIndex: number
@@ -452,11 +482,6 @@ function FrameAtSplit({
       ),
     [visibleBaseEnd, visibleBaseStart, wggwSites],
   )
-
-  const currentRewrite =
-    selectedSite?.rewriteOptions[
-      Math.min(selectedRewriteIndex, selectedSite.rewriteOptions.length - 1)
-    ] ?? null
 
   const selectedBases = useMemo(() => {
     const s = new Set<number>()
@@ -635,7 +660,9 @@ function FrameAtSplit({
                           : 'bg-amber-500/15 text-amber-700 dark:text-amber-300',
                       )}
                     >
-                      {site.alreadyPresent ? 'present' : `${site.baseChanges} bp`}
+                      {site.alreadyPresent
+                        ? 'present'
+                        : `${site.baseChanges} bp`}
                     </span>
                   </div>
                 </button>

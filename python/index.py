@@ -14,6 +14,16 @@ app = FastAPI(docs_url="/api/py/docs", openapi_url="/api/py/openapi.json")
 
 
 # Define input model for the request
+class SelectedWggwSite(BaseModel):
+    position: int
+    motif_start: int
+    motif: str
+    hexamer_start: int
+    original_codons: tuple[str, str]
+    new_codons: tuple[str, str]
+    new_hexamer: str
+
+
 class ProcessOptions(BaseModel):
     codon_optimize: str | None = None
     codon_optimize_weight: float = 1.0
@@ -27,6 +37,7 @@ class ProcessOptions(BaseModel):
     stim_5: bool = True
     stim_3: bool = True
     split_point: int = 500
+    selected_wggw_site: SelectedWggwSite | None = None
     ensure_wggw: bool = True
     wggw_threshold: int = 300
 

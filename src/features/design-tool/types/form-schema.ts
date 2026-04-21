@@ -1,6 +1,8 @@
 import { z } from 'zod'
 
 const STOP_CODONS = new Set(['TAA', 'TAG', 'TGA', 'UAA', 'UAG', 'UGA'])
+const CODON_REGEX = /^[ACGTUacgtu]{3}$/
+const WGGW_REGEX = /^[ATU]GG[ATU]$/i
 
 function findInternalStopCodons(seq: string): number[] {
   const upper = seq.toUpperCase()
@@ -17,6 +19,24 @@ function findInternalStopCodons(seq: string): number[] {
 
 export const validationSchema = z
   .object({
+    selectedWggwSite: z
+      .object({
+        position: z.number().int().min(1),
+        motifStart: z.number().int().min(1),
+        motif: z.string().regex(WGGW_REGEX),
+        hexamerStart: z.number().int().min(1),
+        originalCodons: z.tuple([
+          z.string().regex(CODON_REGEX),
+          z.string().regex(CODON_REGEX),
+        ]),
+        newCodons: z.tuple([
+          z.string().regex(CODON_REGEX),
+          z.string().regex(CODON_REGEX),
+        ]),
+        newHexamer: z.string().regex(/^[ACGTUacgtu]{6}$/),
+      })
+      .nullable()
+      .optional(),
     codingSequence: z
       .string()
       .nonempty('Coding sequence is required.')
@@ -89,6 +109,18 @@ export const validationSchema = z
         message: `Split position must be ≤ ${max} (sequence length − 1).`,
       })
     }
+    if (
+      data.selectedWggwSite &&
+      data.selectedWggwSite.position !== data.spliceJunctionPosition
+    ) {
+      ctx.addIssue({
+        path: ['selectedWggwSite'],
+        code: z.ZodIssueCode.custom,
+        message:
+          'Selected WGGW site must match the current splice junction position.',
+      })
+    }
   })
 
 export type FormValues = z.infer<typeof validationSchema>
+export type SelectedWggwSite = NonNullable<FormValues['selectedWggwSite']>

@@ -1,4 +1,4 @@
-import type { FormValues } from '../types/form-schema'
+import type { FormValues, SelectedWggwSite } from '../types/form-schema'
 
 export function buildJobParams(values: FormValues) {
   return {
@@ -22,8 +22,26 @@ function buildOptions(values: FormValues) {
     stim_5: values['5PrimeStimulatoryIntron'],
     stim_3: values['3PrimeStimulatoryIntron'],
     split_point: values.spliceJunctionPosition,
+    selected_wggw_site: serializeSelectedWggwSite(values.selectedWggwSite),
     ensure_wggw: true,
     wggw_threshold: 300,
+  }
+}
+
+function serializeSelectedWggwSite(site: SelectedWggwSite | null | undefined) {
+  if (!site) return null
+  return {
+    position: site.position,
+    motif_start: site.motifStart,
+    motif: site.motif.toUpperCase().replace(/U/g, 'T'),
+    hexamer_start: site.hexamerStart,
+    original_codons: site.originalCodons.map((codon) =>
+      codon.toUpperCase().replace(/U/g, 'T'),
+    ),
+    new_codons: site.newCodons.map((codon) =>
+      codon.toUpperCase().replace(/U/g, 'T'),
+    ),
+    new_hexamer: site.newHexamer.toUpperCase().replace(/U/g, 'T'),
   }
 }
 
