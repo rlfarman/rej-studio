@@ -109,15 +109,15 @@ export function GeneSearch({
         <Button
           variant="outline"
           onClick={() => setIsOpen(true)}
-          className="text-muted-foreground hover:text-muted-foreground w-full min-w-42 cursor-pointer justify-between md:min-w-72 xl:min-w-108"
+          className="group text-muted-foreground hover:text-accent-foreground w-full min-w-42 cursor-pointer justify-between md:min-w-72 xl:min-w-108"
         >
           <div className="flex items-center gap-2">
             <SearchIcon className="h-5 w-5" />
             <span>{geneSearchCopy.trigger.label}</span>
           </div>
-          <p className="text-muted-foreground hidden text-sm md:block">
+          <p className="text-muted-foreground group-hover:text-accent-foreground hidden text-sm md:block">
             {geneSearchCopy.trigger.kbdHintPrefix}{' '}
-            <kbd className="bg-muted text-muted-foreground pointer-events-none inline-flex h-5 items-center gap-1 rounded border px-1.5 font-mono text-[10px] font-medium opacity-100 select-none">
+            <kbd className="bg-muted text-muted-foreground group-hover:bg-accent-foreground/10 group-hover:text-accent-foreground pointer-events-none inline-flex h-5 items-center gap-1 rounded border px-1.5 font-mono text-[10px] font-medium opacity-100 select-none">
               <span className="text-xs">{isMac ? '⌘' : 'Ctrl+'}</span>K
             </kbd>
           </p>
