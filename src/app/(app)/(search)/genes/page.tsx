@@ -8,11 +8,6 @@ import { isSpeciesFilter } from '@/lib/bio/species'
 import type { SpeciesFilter } from '@/lib/bio/species'
 import { Metadata } from 'next'
 import { Suspense } from 'react'
-import {
-  dehydrate,
-  HydrationBoundary,
-  QueryClient,
-} from '@tanstack/react-query'
 
 export const metadata: Metadata = {
   title: 'Search Genes',
@@ -41,7 +36,9 @@ type GeneSearchParams = Promise<{
 
 // Params read in a Suspense-wrapped child so the landing shell (the search
 // input + empty state) prerenders as static HTML. Every visit without a `?q=`
-// hits the CDN; only querying pays the server round-trip.
+// hits the CDN; only querying pays the server round-trip. No HydrationBoundary
+// / React Query prefetch — the server component streams results directly and
+// the client hook only runs for live search-as-you-type on input focus.
 async function GeneSearchBody({
   searchParams,
 }: {
@@ -55,22 +52,10 @@ async function GeneSearchBody({
     ? speciesParam
     : 'both'
 
-  // Prefetch search results on the server so the React Query cache is warm
-  // when the client-side useGeneSearch hook hydrates. This means navigating
-  // back to the same search query is instant (cache hit, no waterfall).
-  const queryClient = new QueryClient()
-  const trimmedQuery = query.trim()
-  if (trimmedQuery.length > 0) {
-    await queryClient.prefetchQuery({
-      queryKey: ['gene-search', trimmedQuery, species],
-      queryFn: () => searchGenes(trimmedQuery, species),
-    })
-  }
-
   return (
-    <HydrationBoundary state={dehydrate(queryClient)}>
+    <>
       <GeneSearchShell searchGenes={searchGenes} defaultQuery={query} />
-      {trimmedQuery.length > 0 && (
+      {query.trim().length > 0 && (
         <Suspense
           key={`${query}-${species}`}
           fallback={<GeneSearchResultsLoading />}
@@ -78,7 +63,7 @@ async function GeneSearchBody({
           <GeneSearchResults query={query} species={species} />
         </Suspense>
       )}
-    </HydrationBoundary>
+    </>
   )
 }
 
