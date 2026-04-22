@@ -172,15 +172,9 @@
   opacity: 0.6 !important;
 }
 
-/* Prominent ring on the highlighted element. `outline` follows the element's
- * own border-radius plus `outline-offset`, so we don't need to clobber the
- * target's shape like a box-shadow hack would. Offset matches stagePadding
- * so the ring sits at the edge of driver.js's dimmed cutout. */
-.driver-active-element {
-  outline: 2px solid var(--primary) !important;
-  outline-offset: 6px !important;
-  border-radius: inherit;
-}
+/* Ring is drawn by <TourRingOverlay /> as a fixed-positioned sibling on
+ * body. We can't use outline/box-shadow on the active element itself because
+ * many targets live in ancestors with `overflow: hidden` that would clip it. */
 
 /* Respect motion preferences */
 @media (prefers-reduced-motion: reduce) {

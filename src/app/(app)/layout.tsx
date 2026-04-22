@@ -7,6 +7,7 @@ import { MaintenanceBanner } from '@/components/maintenance-banner'
 import { WelcomeDialog } from '@/features/onboarding/components/welcome-dialog'
 import { HelpButton } from '@/features/onboarding/components/help-button'
 import { GuidedTourRunner } from '@/features/onboarding/components/guided-tour-runner'
+import { TourRingOverlay } from '@/features/onboarding/components/tour-ring-overlay'
 
 // Sidebar state persists in localStorage; an inline script in the root
 // layout (src/app/layout.tsx) applies it to <html> before hydration, so
@@ -47,6 +48,7 @@ function AppShell({
         <WelcomeDialog />
         <HelpButton />
         <GuidedTourRunner />
+        <TourRingOverlay />
       </SidebarInset>
     </SidebarProvider>
   )
