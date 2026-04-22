@@ -38,7 +38,7 @@ export function Footer() {
           />
           <Check
             className={cn(
-              'absolute size-3.5 text-emerald-600 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] dark:text-emerald-400',
+              'text-success absolute size-3.5 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]',
               copied ? 'scale-100 opacity-100' : 'scale-75 opacity-0',
             )}
           />
