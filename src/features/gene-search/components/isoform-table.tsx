@@ -300,7 +300,7 @@ export default function IsoformTable({
               onSort={toggleSort}
               className="hidden lg:table-cell"
             />
-            <TableHead className="w-auto sm:w-28">
+            <TableHead className="w-auto">
               <span className="sr-only">Actions</span>
             </TableHead>
           </TableRow>
@@ -441,24 +441,28 @@ function IsoformRow({
               <TooltipTrigger asChild>
                 <Button
                   variant="ghost"
-                  size="icon"
-                  className="hidden size-8 sm:inline-flex"
+                  size="sm"
+                  className="hidden sm:inline-flex"
                   disabled
-                  aria-label={`Download precomputed for ${isoform.id}`}
+                  aria-label={`Download precomputed ZIP for ${isoform.id}`}
                 >
                   <PackageOpen className="size-4" />
+                  <span className="hidden md:inline">Precomputed</span>
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>Download precomputed</TooltipContent>
+              <TooltipContent>
+                Download precomputed — coming soon
+              </TooltipContent>
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="size-8" asChild>
+                <Button variant="ghost" size="sm" asChild>
                   <Link
                     href={`/design-tool?isoform=${isoform.id}`}
                     aria-label={`Customize ${isoform.id} in design tool`}
                   >
                     <ExternalLink className="size-4" />
+                    <span className="hidden md:inline">Customize</span>
                   </Link>
                 </Button>
               </TooltipTrigger>

@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useFormContext } from 'react-hook-form'
 import { Button } from '@/components/ui/button'
 import { Loader2, Check, Play } from 'lucide-react'
@@ -8,50 +8,26 @@ import { AnimatePresence, m } from 'motion/react'
 import { quickFade, softSpring } from '@/lib/motion'
 import { designToolCopy } from '../copy'
 
-const PROCESSING_STAGES = [
-  designToolCopy.submit.stageCodons,
-  designToolCopy.submit.stageSplit,
-  designToolCopy.submit.stageWggw,
-  designToolCopy.submit.stageGenerate,
-]
-
-function useProcessingStage(isSubmitting: boolean) {
-  const [stage, setStage] = useState(0)
-  const intervalRef = useRef<ReturnType<typeof setInterval>>(null)
-
-  useEffect(() => {
-    if (isSubmitting) {
-      setStage(0) // eslint-disable-line react-hooks/set-state-in-effect
-      // Advance through stages on a timer
-      intervalRef.current = setInterval(() => {
-        setStage((s) => Math.min(s + 1, PROCESSING_STAGES.length - 1))
-      }, 3000)
-    } else {
-      if (intervalRef.current) clearInterval(intervalRef.current)
-      setStage(0)
-    }
-
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current)
-    }
-  }, [isSubmitting])
-
-  return PROCESSING_STAGES[stage]
-}
-
 interface SubmitButtonProps {
   isJobRunning?: boolean
   isJobComplete?: boolean
+  stage?: string
 }
 
 export function SubmitButton({
   isJobRunning = false,
   isJobComplete = false,
+  stage,
 }: SubmitButtonProps) {
   const { formState } = useFormContext<FormValues>()
   const [showSuccess, setShowSuccess] = useState(false)
   const isProcessing = formState.isSubmitting || isJobRunning
-  const stageText = useProcessingStage(isProcessing)
+  // Prefer the real backend stage when the job is running. During the brief
+  // pre-submit window (form still validating / action in flight, no job
+  // entry yet) we don't have one — show a generic label instead of the
+  // previous fake timer-based cycle, which contradicted the real stage
+  // shown in the running card below.
+  const stageText = stage ?? designToolCopy.submit.processing
 
   useEffect(() => {
     if (isJobComplete) {

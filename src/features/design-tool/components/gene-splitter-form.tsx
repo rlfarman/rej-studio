@@ -260,6 +260,7 @@ export function GeneSplitterForm({
                 <SubmitButton
                   isJobRunning={job.isLoading}
                   isJobComplete={job.status === 'completed'}
+                  stage={job.stage}
                 />
               </CardFooter>
             </Card>

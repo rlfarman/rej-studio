@@ -13,8 +13,6 @@ import { Upload, Dna, FlaskConical } from 'lucide-react'
 import { FormValues, type SequenceType } from '../types/form-schema'
 import { SequenceDiagnostics } from './sequence-diagnostics'
 import { SequenceHighlight } from './sequence-highlight'
-import { GcSparkline } from '@/components/bio/gc-sparkline'
-import { CodonUsageStrip } from './codon-usage-strip'
 import { cn } from '@/lib/utils'
 import { cleanSequence, parseFasta } from '@/lib/bio/fasta'
 import { detectSequenceType } from '@/lib/bio/sequence-utils'
@@ -404,19 +402,6 @@ export function CodingSequenceInput() {
             </p>
           )}
           {!isProtein && <SequenceDiagnostics />}
-          {!isProtein && dnaValue && dnaValue.length >= 60 && (
-            <div className="space-y-2 pt-1">
-              <GcSparkline sequence={dnaValue} />
-              {isSpecies(species) && dnaValue.length % 3 === 0 && (
-                <CodonUsageStrip sequence={dnaValue} species={species} />
-              )}
-            </div>
-          )}
-          {isProtein && dnaValue && dnaValue.length >= 60 && (
-            <div className="space-y-2 pt-1">
-              <GcSparkline sequence={dnaValue} />
-            </div>
-          )}
         </FormItem>
       )}
     />

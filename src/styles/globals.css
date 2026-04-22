@@ -508,6 +508,17 @@ body {
   }
 }
 
+/* Login background helix — same seamless trick but for pathLength=100,
+   strokeDasharray="38 12" → tile = 50. Offset must equal exactly one tile. */
+@keyframes helix-bg-flow {
+  from {
+    stroke-dashoffset: 0;
+  }
+  to {
+    stroke-dashoffset: -50;
+  }
+}
+
 /* DnaLoader — soft stroke-width/opacity breathe on each strand, paired
    with flow for a living, slightly unsettled feel. */
 @keyframes dna-strand-breathe {
@@ -519,5 +530,65 @@ body {
   50% {
     stroke-width: 1.75;
     opacity: 1;
+  }
+}
+
+/* Login page — drawn underline that sweeps left-to-right on focus. */
+.login-input-wrapper {
+  position: relative;
+}
+
+.login-input-wrapper::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  height: 2px;
+  width: 100%;
+  border-radius: 0 0 2px 2px;
+  background: var(--primary);
+  transform-origin: left center;
+  scale: 0 1;
+  transition: scale 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+
+.login-input-wrapper:focus-within::after {
+  scale: 1 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-input-wrapper::after {
+    transition: none;
+  }
+}
+
+/* Login button — shimmer sweep when submitting. */
+@keyframes button-scan {
+  from {
+    transform: translateX(-150%);
+  }
+  to {
+    transform: translateX(250%);
+  }
+}
+
+.login-btn-scan::after {
+  content: '';
+  position: absolute;
+  inset-block: 0;
+  width: 40%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    oklch(1 0 0 / 0.18),
+    transparent
+  );
+  animation: button-scan 0.9s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-btn-scan::after {
+    animation: none;
   }
 }
