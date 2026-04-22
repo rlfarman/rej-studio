@@ -81,7 +81,7 @@ export function SidebarMenu() {
         onChange={handleImport}
       />
       <SidebarMenuPrimitive>
-        <SidebarMenuItem>
+        <SidebarMenuItem data-tour="nav-settings">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <SidebarMenuButton tooltip={menuCopy.settings}>

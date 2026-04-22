@@ -11,10 +11,8 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { useOnboarding } from '../stores/onboarding-store'
-import { usePathname } from 'next/navigation'
 import { Dna, Search, FlaskConical, Download } from 'lucide-react'
 import { popSpring } from '@/lib/motion'
-import type { TourId } from '../tours'
 import { onboardingCopy } from '../copy'
 
 const copy = onboardingCopy.welcomeDialog
@@ -37,13 +35,6 @@ const FEATURES = [
   },
 ] as const
 
-function tourForPath(pathname: string): TourId | null {
-  if (pathname === '/') return 'home'
-  if (pathname.startsWith('/design-tool')) return 'design-tool'
-  if (pathname.startsWith('/genes/')) return 'gene-detail'
-  return null
-}
-
 export function WelcomeDialog() {
   const {
     welcomeDialogOpen: open,
@@ -51,15 +42,14 @@ export function WelcomeDialog() {
     markWelcomeSeen,
     startTour,
   } = useOnboarding()
-  const pathname = usePathname()
 
   function handleStart() {
     markWelcomeSeen()
     closeWelcome()
-    const tourId = tourForPath(pathname)
-    if (tourId) {
-      setTimeout(() => startTour(tourId), 300)
-    }
+    // Wait for the close animation so the overlay doesn't stack with the
+    // tour overlay. startTour resets the step index to 0 and the runner
+    // takes over from there, navigating as needed.
+    setTimeout(() => startTour('guided'), 300)
   }
 
   function handleSkip() {
