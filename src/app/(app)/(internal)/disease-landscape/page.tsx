@@ -4,6 +4,7 @@ import {
   getLandscape,
   filterLandscape,
   bucketCounts,
+  fetchMaxCdsLengthByGeneId,
 } from '@/features/disease-landscape/api/landscape'
 import { LandscapeFilters } from '@/features/disease-landscape/components/landscape-filters'
 import { LandscapeTable } from '@/features/disease-landscape/components/landscape-table'
@@ -40,6 +41,7 @@ export default async function DiseaseLandscapePage({ searchParams }: Props) {
     query: q,
     inheritance: normalizeInheritance(i),
   })
+  const maxCdsByGeneId = await fetchMaxCdsLengthByGeneId()
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-6 p-6">
@@ -71,7 +73,7 @@ export default async function DiseaseLandscapePage({ searchParams }: Props) {
         {diseaseLandscapeCopy.table.resultsSummary(filtered.length, all.length)}
       </div>
 
-      <LandscapeTable rows={filtered} />
+      <LandscapeTable rows={filtered} maxCdsByGeneId={maxCdsByGeneId} />
     </div>
   )
 }

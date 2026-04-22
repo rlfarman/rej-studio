@@ -20,7 +20,10 @@ export const diseaseLandscapeCopy = {
       inheritance: 'Inheritance',
       phenotypes: 'Phenotypes',
       phenotypeCount: 'Phenotypes',
+      largestCds: 'Largest CDS',
     },
+    largestCdsUnit: 'bp',
+    largestCdsUnknown: '—',
     empty: 'No genes match the current filters.',
     resultsSummary: (shown: number, total: number) =>
       shown === total ? `${total} genes` : `${shown} of ${total} genes`,

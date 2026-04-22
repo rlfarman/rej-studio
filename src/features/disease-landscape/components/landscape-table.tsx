@@ -14,9 +14,12 @@ import { rowBuckets } from '../api/landscape'
 
 type Props = {
   rows: LandscapeRow[]
+  maxCdsByGeneId: Map<string, number>
 }
 
-export function LandscapeTable({ rows }: Props) {
+const cdsFormatter = new Intl.NumberFormat('en-US')
+
+export function LandscapeTable({ rows, maxCdsByGeneId }: Props) {
   if (rows.length === 0) {
     return (
       <div className="text-muted-foreground rounded-md border p-6 text-center text-sm">
@@ -40,11 +43,17 @@ export function LandscapeTable({ rows }: Props) {
             <TableHead className="w-[110px] text-right">
               {diseaseLandscapeCopy.table.columns.phenotypeCount}
             </TableHead>
+            <TableHead className="w-[130px] text-right">
+              {diseaseLandscapeCopy.table.columns.largestCds}
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {rows.map((row) => {
             const buckets = Array.from(rowBuckets(row))
+            const maxCds = row.ensemblGeneId
+              ? maxCdsByGeneId.get(row.ensemblGeneId)
+              : undefined
             return (
               <TableRow key={row.symbol} className="hover:bg-muted/30">
                 <TableCell className="py-2.5">
@@ -76,6 +85,18 @@ export function LandscapeTable({ rows }: Props) {
                 </TableCell>
                 <TableCell className="text-muted-foreground py-2.5 text-right font-mono text-xs">
                   {row.phenotypes.length}
+                </TableCell>
+                <TableCell className="text-muted-foreground py-2.5 text-right font-mono text-xs">
+                  {maxCds != null ? (
+                    <>
+                      {cdsFormatter.format(maxCds)}
+                      <span className="text-muted-foreground/70 ml-1">
+                        {diseaseLandscapeCopy.table.largestCdsUnit}
+                      </span>
+                    </>
+                  ) : (
+                    diseaseLandscapeCopy.table.largestCdsUnknown
+                  )}
                 </TableCell>
               </TableRow>
             )
