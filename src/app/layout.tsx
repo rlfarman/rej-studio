@@ -1,38 +1,106 @@
 import '@/styles/globals.css'
-import { Header } from '@/app/_components/layout/header'
-import { GeistSans } from 'geist/font/sans'
-import { GeistMono } from 'geist/font/mono'
-import { Footer } from '@/app/_components/layout/footer'
+import {
+  Source_Code_Pro,
+  Source_Sans_3,
+  Source_Serif_4,
+} from 'next/font/google'
+
+// `next/font` auto-generates a metric-matched fallback (size-adjust /
+// ascent-override) for each of these when adjustFontFallback is left at the
+// default of true — that's what kills layout shift on first paint.
+const fontSans = Source_Sans_3({
+  subsets: ['latin'],
+  variable: '--font-source-sans',
+  display: 'swap',
+  adjustFontFallback: true,
+})
+
+const fontMono = Source_Code_Pro({
+  subsets: ['latin'],
+  variable: '--font-source-mono',
+  display: 'swap',
+})
+
+const fontDisplay = Source_Serif_4({
+  subsets: ['latin'],
+  variable: '--font-source-serif',
+  display: 'swap',
+  adjustFontFallback: true,
+})
 import { ThemeProvider } from '@/app/_components/layout/theme-provider'
-import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
-import { AppSidebar } from '@/app/_components/layout/app-sidebar'
 import { Toaster } from '@/components/ui/sonner'
 import { QueryProvider } from '@/app/_components/providers/query-provider'
-import { MaintenanceBanner } from '@/components/maintenance-banner'
-import { cookies } from 'next/headers'
-import { GoogleAnalytics } from '@/components/google-analytics'
+import { GoogleTagManager } from '@/components/google-tag-manager'
+import { AnalyticsPageview } from '@/components/analytics-pageview'
+import { AnalyticsProperties } from '@/components/analytics-properties'
+import { WebVitals } from '@/components/web-vitals'
+import { ConsoleGreeting } from '@/components/console-greeting'
+import { Suspense } from 'react'
+import { AuthGate } from '@/features/auth/components/auth-gate'
+
+// Inline hydration script — reads the user's sidebar preferences from
+// localStorage and applies them to <html> before React renders. Keeps the
+// (app) layout fully static (no cookies() → no per-request dynamic SSR)
+// while preserving sidebar state without a flash. Same pattern next-themes
+// uses for dark mode.
+const SIDEBAR_PRELOAD_SCRIPT = `(function(){try{var d=document.documentElement;var s=localStorage.getItem('rej-sidebar-state');if(s==='true'||s==='false')d.dataset.sidebarPreloadOpen=s;var w=localStorage.getItem('rej-sidebar-width');if(w&&/^\\d+$/.test(w)){var n=parseInt(w,10);if(n>=200&&n<=480){d.dataset.sidebarPreloadWidth=String(n);d.style.setProperty('--sidebar-width',n+'px');}}}catch(e){}})();`
+
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://rejstudio.com'
 
 export const metadata = {
-  title: 'REJ Studio',
-  description: 'RNA End-joining made easy',
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: 'REJ Studio',
+    template: '%s | REJ Studio',
+  },
+  description:
+    'Search genes, browse isoforms, and design optimized RNA End-Joining sequences — all in one tool.',
+  alternates: {
+    canonical: '/',
+  },
+  openGraph: {
+    type: 'website',
+    siteName: 'REJ Studio',
+    locale: 'en_US',
+  },
+  twitter: {
+    card: 'summary_large_image',
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'REJ Studio',
+  },
 }
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const cookieStore = await cookies()
-  const defaultOpen = cookieStore.get('sidebar_state')?.value === 'true'
-  const maintenanceMessage = process.env.MAINTENANCE_MESSAGE?.trim()
-
   return (
     <html
       lang="en"
-      className={`${GeistSans.variable} ${GeistMono.variable}`}
+      className={`${fontSans.variable} ${fontMono.variable} ${fontDisplay.variable}`}
       suppressHydrationWarning
     >
-      <head />
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: SIDEBAR_PRELOAD_SCRIPT }} />
+        {process.env.NEXT_PUBLIC_GTM_ID && (
+          <>
+            <link
+              rel="preconnect"
+              href="https://www.googletagmanager.com"
+              crossOrigin="anonymous"
+            />
+            <link
+              rel="preconnect"
+              href="https://www.google-analytics.com"
+              crossOrigin="anonymous"
+            />
+          </>
+        )}
+      </head>
       <body>
         <ThemeProvider
           attribute="class"
@@ -47,32 +115,19 @@ export default async function RootLayout({
             >
               Skip to content
             </a>
-            <SidebarProvider
-              defaultOpen={defaultOpen}
-              className="relative flex h-full w-full flex-row overflow-hidden"
-            >
-              <AppSidebar />
-              <SidebarInset className="relative flex h-full min-h-screen max-w-full flex-1 flex-col overflow-hidden">
-                {maintenanceMessage && (
-                  <MaintenanceBanner
-                    message={maintenanceMessage}
-                    signature={maintenanceMessage}
-                  />
-                )}
-                <Header />
-                <main
-                  id="main-content"
-                  className="relative h-full w-full flex-1 overflow-auto"
-                >
-                  {children}
-                </main>
-                <Footer />
-              </SidebarInset>
-            </SidebarProvider>
+            <Suspense fallback={null}>
+              <AuthGate>{children}</AuthGate>
+            </Suspense>
             <Toaster />
+            <Suspense fallback={null}>
+              <AnalyticsPageview />
+            </Suspense>
+            <AnalyticsProperties />
           </QueryProvider>
         </ThemeProvider>
-        <GoogleAnalytics />
+        <WebVitals />
+        <ConsoleGreeting />
+        <GoogleTagManager />
       </body>
     </html>
   )

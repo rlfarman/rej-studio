@@ -12,7 +12,7 @@ const MAX_ENTRIES = 50
 // backend for seeded running jobs (they have no backend counterpart), by
 // data-transfer to exclude seeded rows from user exports, and by the
 // "Clear seed data" action to identify which entries to drop.
-export const SEED_ID_PREFIX = 'seed-'
+const SEED_ID_PREFIX = 'seed-'
 
 export function isSeedId(id: string): boolean {
   return id.startsWith(SEED_ID_PREFIX)

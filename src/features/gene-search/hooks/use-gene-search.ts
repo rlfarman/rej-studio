@@ -1,15 +1,21 @@
-import { useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useDebounce } from 'use-debounce'
-import { useQuery } from '@tanstack/react-query'
-import type { GeneSearchResult } from '@/features/gene-search/api/genes'
+import {
+  keepPreviousData,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query'
+import type { GeneSearchResult } from '@/features/gene-search/api/gene-queries'
+import type { SearchGenesResult } from '@/features/gene-search/api/genes'
 import type { SpeciesFilter } from '@/lib/bio/species'
 import { useSpeciesContext } from '@/stores/species-store'
+import { trackEvent } from '@/lib/analytics'
 
 interface UseGeneSearchProps {
   searchGenes: (
     content: string,
     species?: SpeciesFilter,
-  ) => Promise<GeneSearchResult[]>
+  ) => Promise<SearchGenesResult>
   defaultQuery?: string
 }
 
@@ -19,6 +25,7 @@ export function useGeneSearch({
   searchGenes,
   defaultQuery,
 }: UseGeneSearchProps) {
+  const queryClient = useQueryClient()
   const [query, setQuery] = useState(defaultQuery ?? '')
   const [debouncedQuery] = useDebounce(query, 250)
   const { species } = useSpeciesContext()
@@ -31,14 +38,44 @@ export function useGeneSearch({
     queryFn: () => searchGenes(trimmed, species),
     enabled,
     staleTime: 30_000,
+    // Keep the previous query's results mounted while a new query loads, so
+    // the list doesn't blank out between keystrokes. Pairs with a delayed
+    // inline loader in the input to avoid flash-of-loading on fast queries.
+    placeholderData: keepPreviousData,
   })
+
+  // Track completed searches (fires once per unique query+species+results).
+  const lastTrackedQuery = useRef('')
+  useEffect(() => {
+    if (!data || !trimmed || trimmed === lastTrackedQuery.current) return
+    lastTrackedQuery.current = trimmed
+    trackEvent({
+      event: 'gene_search',
+      query: trimmed,
+      species,
+      result_count: data.results.length,
+    })
+  }, [data, trimmed, species])
+
+  // Distinguish between: network error (isError), server-side DB error
+  // (data.error), and genuine empty results (data.results.length === 0).
+  const error = isError
+    ? 'Search failed. Please try again.'
+    : (data?.error ?? null)
+
+  const retry = useCallback(() => {
+    queryClient.invalidateQueries({
+      queryKey: ['gene-search', trimmed, species],
+    })
+  }, [queryClient, trimmed, species])
 
   return {
     query,
     setQuery,
     hasSearched: enabled && data !== undefined,
-    searchResults: data ?? EMPTY_RESULTS,
+    searchResults: data?.results ?? EMPTY_RESULTS,
     isLoading: enabled && isFetching,
-    error: isError ? 'Search failed. Please try again.' : null,
+    error,
+    retry,
   }
 }

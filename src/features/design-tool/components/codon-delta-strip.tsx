@@ -77,9 +77,9 @@ export function CodonDeltaStrip({ original, optimized, species }: Props) {
           <span
             className={
               meanShift > 0
-                ? 'ml-1 text-emerald-600 dark:text-emerald-400'
+                ? 'text-success-soft ml-1'
                 : meanShift < 0
-                  ? 'ml-1 text-red-600 dark:text-red-400'
+                  ? 'text-danger-soft ml-1'
                   : 'ml-1'
             }
           >

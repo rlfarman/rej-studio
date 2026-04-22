@@ -1,0 +1,87 @@
+---
+title: What is RNA End-Joining?
+description: The technique REJ Studio is built around, and why sequence design matters for it.
+---
+
+REJ Studio is a design tool for a specific technique — **RNA
+End-Joining** (REJ) — and most of the parameters in the app only make
+sense once you know what that technique is trying to do. This page
+gives you the background. If you already know all this, skip to the
+[tutorial](/docs/tutorials/getting-started).
+
+## The technique in one paragraph
+
+RNA End-Joining is a method for producing a full-length protein from
+**two separate transcripts** that are joined inside the cell, rather
+than from one full-length mRNA. You design a coding sequence, divide
+it into a 5′ half and a 3′ half at a WGGW motif, deliver each half as
+its own transcript, and rely on the REJ reaction to rejoin them. The
+encoded protein is identical to the original; only the delivery is
+split.
+
+## Why split a coding sequence at all?
+
+A few reasons people care about this:
+
+- **Payload size.** Delivery vectors cap how much nucleic acid can fit
+  in a single particle. AAV, for example, packages about 4.7 kb of
+  single-stranded DNA (ITRs, promoter, CDS, poly-A and all). Splitting
+  a large CDS across two particles gets you past that ceiling without
+  redesigning the protein.
+- **Modularity.** Each half can be optimized, expressed, or replaced
+  independently — useful during development, and especially useful
+  when you want to swap one half for a variant.
+- **Safety.** A split design is only productive when both halves are
+  delivered to the same cell, which is useful for constructs where
+  uncontrolled single-fragment expression is a concern.
+
+None of these concerns matter if the protein doesn't come out intact.
+The whole point of sequence design for REJ is to make sure the split
+happens where the two halves can actually rejoin, and that each half
+behaves as a well-formed transcript on its own.
+
+## What makes a REJ-ready sequence different from a normal CDS?
+
+Two requirements:
+
+1. **The join has to sit at a WGGW motif.** `WGGW` (where `W` = A or T,
+   i.e. `[AT]GG[AT]`) is the four-base motif the REJ reaction targets
+   at the junction. The split point needs to fall within a WGGW,
+   ideally near the middle of the CDS so the two halves are balanced.
+   See [the glossary](/docs/reference/glossary#wggw-motif) for the full
+   definition.
+2. **Each fragment has to behave like a proper transcript on its own.**
+   That means no cryptic splice sites silently excising parts of the
+   CDS, no repeat-heavy regions that destabilize synthesis, controlled
+   GC content, and — optionally — a stimulatory-intron marker where an
+   intron can be placed to enhance expression. These are the knobs in
+   the [design tool](/docs/guides/design-sequence).
+
+Everything REJ Studio does is in service of those two requirements:
+find a good WGGW-anchored split, then clean up each half so it
+expresses reliably.
+
+## Where REJ Studio fits
+
+REJ Studio doesn't run the end-joining experiment. It's the **design
+stage** — the part where you pick a gene, inspect its transcripts, let
+the splitter find a balanced WGGW cut, run the optimizer over each
+fragment, and download the result. You take the downloaded sequences
+into your synthesis + delivery pipeline from there.
+
+Think of it as a constraint-aware codon optimizer that understands the
+REJ-specific requirements (WGGW join, fragment balance, splice
+hygiene), not a general-purpose molecular biology platform.
+
+## What REJ Studio does _not_ do
+
+- **No wet-lab validation.** The optimizer is a constraint solver;
+  biology is not a constraint solver. Every sequence you design here
+  should be tested before you trust it.
+- **No claim about the specific REJ chemistry.** The tool treats WGGW
+  as the join-site requirement and is agnostic about the underlying
+  enzymology — it just ensures the sequence meets the structural
+  requirements.
+- **No prediction of expression, mRNA stability, folding, rejoining
+  efficiency, or immunogenicity.** Those are downstream questions REJ
+  Studio doesn't attempt to answer.

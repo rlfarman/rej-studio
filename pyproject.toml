@@ -1,0 +1,35 @@
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = ["venv", ".venv", "scripts/build-db.py"]
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # pyflakes
+    "I",    # isort
+    "B",    # flake8-bugbear
+    "UP",   # pyupgrade
+    "SIM",  # flake8-simplify
+]
+ignore = [
+    "E501",  # line length — handled by ruff format
+    "B008",  # do not perform function calls in argument defaults (FastAPI Depends)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"modal/app.py" = ["E402"]  # imports inside functions are intentional (Modal image isolation)
+
+[tool.pytest.ini_options]
+testpaths = ["python/tests"]
+pythonpath = ["."]
+addopts = "--cov=python --cov-report=term --cov-report=lcov:coverage/python-lcov.info"
+
+[tool.coverage.run]
+source = ["python"]
+omit = ["python/tests/*"]
+
+[tool.coverage.report]
+show_missing = true
+skip_empty = true

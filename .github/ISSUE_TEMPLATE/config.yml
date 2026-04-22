@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Contributing guide
+    url: https://github.com/rlfarman/rej-studio/blob/main/CONTRIBUTING.md
+    about: Commit conventions, branch naming, and how to open a PR.

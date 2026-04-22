@@ -1,0 +1,38 @@
+name: Lock-File Policy
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+# Catches sneaky transitive-dep swaps: if pnpm-lock.yaml changes without a
+# corresponding package.json change, flag for review. Dependabot-authored
+# PRs are exempt (they legitimately bump lockfiles for security advisories).
+jobs:
+  check:
+    name: Lockfile drift
+    runs-on: ubuntu-latest
+    if: github.actor != 'dependabot[bot]'
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+      - name: Verify lockfile changes pair with manifest changes
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          changed=$(git diff --name-only "$BASE_SHA" "$HEAD_SHA")
+          lockfile_changed=false
+          manifest_changed=false
+          echo "$changed" | grep -qx 'pnpm-lock.yaml' && lockfile_changed=true || true
+          echo "$changed" | grep -qx 'package.json' && manifest_changed=true || true
+          if [ "$lockfile_changed" = "true" ] && [ "$manifest_changed" = "false" ]; then
+            echo "::error::pnpm-lock.yaml changed but package.json did not."
+            echo "::error::This usually means a transitive dep was swapped without updating manifests."
+            echo "::error::If intentional (e.g. bumping a vulnerable transitive), add a note in the PR body."
+            exit 1
+          fi
+          echo "Lockfile/manifest pairing OK."

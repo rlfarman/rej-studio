@@ -1,6 +1,7 @@
 'use client'
 
 import * as React from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   Loader2,
   Check,
@@ -12,8 +13,12 @@ import {
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { DnaLoader } from '@/components/bio/dna-loader'
 import { cn } from '@/lib/utils'
 import type { DesignToolSpecies } from '@/features/design-tool/types/species-options'
+import { designToolCopy } from '../copy'
+
+const copy = designToolCopy.jobHeader
 
 interface RunningPlaceholderProps {
   stage?: string
@@ -34,37 +39,43 @@ export function RunningPlaceholder({
   const displayedPct = useSmoothedProgress(pct)
   return (
     <Card>
-      <CardContent className="flex flex-col items-center justify-center gap-4 py-12">
-        <div className="relative flex size-12 items-center justify-center">
-          <span className="bg-primary/10 absolute inset-0 animate-ping rounded-full" />
-          <Loader2 className="text-primary relative size-6 animate-spin" />
-        </div>
+      <CardContent
+        role="status"
+        aria-live="polite"
+        aria-label={copy.running.title}
+        className="flex flex-col items-center justify-center gap-4 py-12"
+      >
+        <DnaLoader className="h-10 w-[120px]" />
         <div className="space-y-1 text-center">
-          <p className="text-sm font-medium">Optimizing your sequence…</p>
+          <p className="text-sm font-medium">{copy.running.title}</p>
           <p className="text-muted-foreground text-xs">
-            {stage ??
-              'Running DNAChisel on the server. This usually takes a few seconds.'}
+            {stage ?? copy.running.defaultStage}
           </p>
         </div>
-        {displayedPct !== null && (
-          <div className="w-full max-w-xs">
-            <div className="bg-muted relative h-1.5 w-full overflow-hidden rounded-full">
+        <div className="w-full max-w-xs">
+          <div className="bg-muted relative h-1.5 w-full overflow-hidden rounded-full">
+            {displayedPct !== null ? (
               <div
-                className="bg-primary h-full transition-[width] duration-700 ease-out"
-                style={{ width: `${displayedPct}%` }}
+                className="bg-primary absolute inset-y-0 left-0 w-full origin-left transition-transform duration-700 ease-out"
+                style={{ transform: `scaleX(${displayedPct / 100})` }}
               />
-              {/* Shimmer overlay signals continued activity even when the
-                  filled width sits on the same checkpoint for a while. */}
-              <span
+            ) : (
+              <div
                 aria-hidden
-                className="pointer-events-none absolute inset-0 -translate-x-full animate-[shimmer_1.6s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-white/25 to-transparent"
+                className="bg-primary/70 absolute inset-y-0 left-0 w-1/3 animate-[indeterminate_1.4s_ease-in-out_infinite] rounded-full"
               />
-            </div>
+            )}
+            <span
+              aria-hidden
+              className="via-foreground/25 pointer-events-none absolute inset-0 -translate-x-full animate-[shimmer_1.6s_ease-in-out_infinite] bg-gradient-to-r from-transparent to-transparent"
+            />
+          </div>
+          {displayedPct !== null && (
             <p className="text-muted-foreground mt-1.5 text-center text-[10px] tabular-nums">
               {displayedPct}%
             </p>
-          </div>
-        )}
+          )}
+        </div>
       </CardContent>
     </Card>
   )
@@ -91,21 +102,25 @@ function useSmoothedProgress(target: number | null): number | null {
 
     let raf = 0
     let lastTick = performance.now()
+    let stopped = false
     const tick = (now: number) => {
       const dt = (now - lastTick) / 1000
       lastTick = now
       setDisplayed((prev) => {
         const t = targetRef.current
         if (t === null || prev === null) return prev
-        // Creep up to +6 points above the last real checkpoint, but never
+        // Creep up to +10 points above the last real checkpoint, but never
         // reach 100 via creep — real completion is signalled elsewhere.
-        const ceiling = Math.min(99, t + 6)
-        if (prev >= ceiling) return prev
-        // ~1.5 points/second, tapered.
-        const delta = dt * 1.5 * (1 - (prev - t) / 6)
+        const ceiling = Math.min(99, t + 10)
+        if (prev >= ceiling) {
+          stopped = true
+          return prev
+        }
+        // ~3 points/second, tapered.
+        const delta = dt * 3 * (1 - (prev - t) / 10)
         return Math.min(ceiling, prev + delta)
       })
-      raf = requestAnimationFrame(tick)
+      if (!stopped) raf = requestAnimationFrame(tick)
     }
     raf = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(raf)
@@ -129,18 +144,25 @@ interface JobHeaderProps {
   onCancel?: () => void
 }
 
-const SPECIES_LABEL: Record<DesignToolSpecies, string> = {
-  none: '',
-  human: 'Human',
-  mouse: 'Mouse',
-}
+const SPECIES_LABEL: Record<DesignToolSpecies, string> = copy.speciesLabel
 
 function StatusDot({ status }: { status: JobHeaderStatus }) {
+  // Fire a one-shot bloom only on the running → completed transition, not
+  // when the component mounts onto an already-completed job (e.g. loading
+  // a past job from history). Keyed so the animation restarts cleanly.
+  const prevStatus = useRef<JobHeaderStatus>(status)
+  const [celebrateKey, setCelebrateKey] = useState(0)
+  useEffect(() => {
+    if (prevStatus.current === 'running' && status === 'completed') {
+      setCelebrateKey((k) => k + 1) // eslint-disable-line react-hooks/set-state-in-effect
+    }
+    prevStatus.current = status
+  }, [status])
+
   const classes = cn(
-    'flex size-7 shrink-0 items-center justify-center rounded-full',
+    'relative flex size-7 shrink-0 items-center justify-center rounded-full',
     status === 'running' && 'bg-primary/10 text-primary',
-    status === 'completed' &&
-      'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+    status === 'completed' && 'bg-success/10 text-success-soft',
     status === 'failed' && 'bg-destructive/10 text-destructive',
     status === 'cancelled' && 'bg-muted text-muted-foreground',
   )
@@ -153,7 +175,20 @@ function StatusDot({ status }: { status: JobHeaderStatus }) {
           ? CircleAlert
           : CircleSlash
   return (
-    <span className={classes}>
+    <span
+      className={cn(
+        classes,
+        celebrateKey > 0 &&
+          '[animation:completion-pop_420ms_cubic-bezier(0.16,1,0.3,1)_1] motion-reduce:!animate-none',
+      )}
+      key={celebrateKey}
+    >
+      {celebrateKey > 0 && (
+        <span
+          aria-hidden
+          className="bg-success/40 pointer-events-none absolute inset-0 [animation:completion-bloom_600ms_cubic-bezier(0.16,1,0.3,1)_1] rounded-full motion-reduce:hidden"
+        />
+      )}
       <Icon className={cn('size-4', status === 'running' && 'animate-spin')} />
     </span>
   )
@@ -164,13 +199,13 @@ function statusMessage({
   processingTimeSeconds,
   errorMessage,
 }: Pick<JobHeaderProps, 'status' | 'processingTimeSeconds' | 'errorMessage'>) {
-  if (status === 'running') return 'Optimizing codons…'
+  if (status === 'running') return copy.statusRunning
   if (status === 'completed')
     return processingTimeSeconds != null
-      ? `Completed in ${processingTimeSeconds}s`
-      : 'Completed'
-  if (status === 'failed') return errorMessage ?? 'Job failed'
-  return 'Cancelled'
+      ? copy.statusCompletedIn(processingTimeSeconds)
+      : copy.statusCompleted
+  if (status === 'failed') return errorMessage ?? copy.statusFailedDefault
+  return copy.statusCancelled
 }
 
 export function JobHeader({
@@ -197,9 +232,9 @@ export function JobHeader({
             <StatusDot status={status} />
             <div className="min-w-0 space-y-0.5">
               <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                <h2 className="truncate text-sm font-semibold">
-                  {name || 'Untitled run'}
-                </h2>
+                <div className="truncate text-sm font-semibold">
+                  {name || copy.untitled}
+                </div>
                 <span className="text-muted-foreground text-xs tabular-nums">
                   · {sequenceLength.toLocaleString()} bp
                 </span>
@@ -229,26 +264,21 @@ export function JobHeader({
                 size="sm"
                 onClick={onCancel}
               >
-                Cancel
+                {copy.buttonCancel}
               </Button>
             )}
             <Button type="button" variant="outline" size="sm" onClick={onEdit}>
               <Pencil className="size-3.5" />
-              Edit
+              {copy.buttonEdit}
             </Button>
             {canRerun && (
               <Button type="button" size="sm" onClick={onRerun}>
                 {status === 'failed' ? (
-                  <>
-                    <RotateCw className="size-3.5" />
-                    Run again
-                  </>
+                  <RotateCw className="size-3.5" />
                 ) : (
-                  <>
-                    <Play className="size-3.5" />
-                    Re-run
-                  </>
+                  <Play className="size-3.5" />
                 )}
+                {copy.buttonRunAgain}
               </Button>
             )}
           </div>

@@ -1,0 +1,109 @@
+---
+title: Troubleshooting
+description: Common errors, warnings, and surprises — and what to do about them.
+---
+
+## Sequence validation errors
+
+### "Coding sequence must contain only A, C, G, T, or U"
+
+You have characters the validator doesn't recognize — usually one of:
+
+- **IUPAC ambiguity codes** (N, R, Y, W, S, etc.). The optimizer needs
+  an unambiguous sequence — each position must be one of A/C/G/T (U is
+  accepted and treated as T). Replace ambiguous bases with a chosen
+  specific variant.
+- **Whitespace, numbers, or FASTA header lines** from an export. Strip
+  anything that isn't a base — REJ Studio's FASTA importer does this
+  automatically; manual pastes may need cleanup.
+- **Non-standard characters** (gaps `-`, masking `x`/`X`, Unicode
+  spaces). Remove them.
+
+### "Coding sequence length must be a multiple of 3"
+
+The input has to resolve into whole codons in a single reading frame.
+Common causes:
+
+- A **partial CDS** that stops mid-codon.
+- A **full transcript** including 5′ and 3′ UTRs — REJ Studio wants the
+  CDS only, from the start codon through the stop codon inclusive.
+- A **dropped stop codon** — REJ Studio expects the stop to be present;
+  add it back if you trimmed it manually.
+
+### "Name must not be empty" / "Name must be 250 characters or less"
+
+Give the design a short identifier. It's used in the download filename
+so you can tell multiple runs apart.
+
+## Optimization errors
+
+### "GC content constraint violated"
+
+The GC range is a **hard constraint** (35-60% over a sliding window).
+Fixes, in order:
+
+1. **Disable your lowest-priority objective** — aggressive codon
+   optimization or CpG minimization can fight the GC window.
+2. **Lower the weights** on competing soft objectives to give the
+   solver more room.
+3. **Check your input** — if it's already outside 35-60% GC, some
+   sequences are unrecoverable.
+
+### "Could not find a WGGW motif near the midpoint"
+
+The input is either short (under ~200 bp) or genuinely free of WGGW
+motifs. Try:
+
+- **Widening the acceptable distance** on the split-point slider.
+- **Picking a different isoform** for the same gene — longer
+  transcripts almost always have more candidate motifs.
+
+## Unexpected results
+
+### "Optimized sequence is shorter/longer than expected"
+
+If stimulatory introns are enabled, each fragment picks up extra bases
+from the intron. Disable the 5' and 3' intron toggles to see the pure
+coding-equivalent rewrite length.
+
+### "Codon optimization is suspiciously mild"
+
+If cryptic-splice removal, CpG minimization, or k-mer complexity is
+running with a high weight, it can pin codons in ways that prevent the
+optimizer from swapping them to the species-preferred synonym (all
+available synonyms may reintroduce a penalized motif). Check the
+report — if the codon-optimization score barely moves, one of the
+other objectives is dominating the weighted sum.
+
+### "The 5' and 3' halves are very unbalanced"
+
+The splitter ranks WGGW motifs by proximity to the midpoint, but the
+highest-ranked motif isn't always the midpoint itself. Drag the
+junction slider to a closer motif manually — the slider shows every
+valid WGGW position.
+
+### "My recent job isn't showing in the UI"
+
+Results live in the current browser session only. If you closed the
+tab or navigated away mid-run, the job is gone. Re-submit it.
+Downloads are the only permanent record.
+
+### "The optimizer keeps picking a different result each run"
+
+DNAChisel has some stochastic elements. Runs with identical inputs
+usually return the same sequence, but minor variation is expected when
+the solver has multiple equally-good solutions. Save the FASTA if you
+need exact reproducibility.
+
+## General advice
+
+- **Read the report, not just the badges.** The badges are a glance;
+  the per-objective report tells you what the solver actually did.
+- **Start from defaults, change one thing at a time.** If the result
+  gets worse, you know which knob did it.
+- **When in doubt, widen a constraint.** Loosening is usually the
+  right move when the solver is trapped.
+
+Still stuck? Open an issue on
+[the GitHub repo](https://github.com/rlfarman/rej-studio/issues) with
+the input you submitted and the report you got back.

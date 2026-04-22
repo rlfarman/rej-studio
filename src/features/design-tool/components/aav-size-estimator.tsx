@@ -8,6 +8,9 @@ import {
 } from '@/components/ui/tooltip'
 import { PackageCheck, PackageX, Package } from 'lucide-react'
 import { AAV_OVERHEAD_BP, AAV_PACKAGING_LIMIT } from '@/lib/bio/aav'
+import { designToolCopy } from '../copy'
+
+const copy = designToolCopy.aav
 
 interface AavPreflightProps {
   sequenceLength: number
@@ -57,12 +60,12 @@ export function AavPreflight({ sequenceLength }: AavPreflightProps) {
         >
           <StatusIcon status={singleStatus === 'fits' ? 'fits' : dualStatus} />
           {singleStatus === 'fits'
-            ? 'Single AAV'
+            ? copy.preflight.single
             : dualStatus === 'fits'
-              ? 'Dual vector'
+              ? copy.preflight.dual
               : dualStatus === 'tight'
-                ? 'Dual vector (tight)'
-                : 'Exceeds AAV'}
+                ? copy.preflight.dualTight
+                : copy.preflight.exceeds}
         </Badge>
       </TooltipTrigger>
       <TooltipContent className="max-w-64 text-xs">
@@ -90,11 +93,11 @@ export function AavResults({ seq5Length, seq3Length }: AavResultsProps) {
 
   return (
     <div className="space-y-3">
-      <span className="text-sm font-medium">AAV Packaging Estimate</span>
+      <span className="text-sm font-medium">{copy.results.heading}</span>
       <div className="grid grid-cols-2 gap-2">
         <div className="bg-muted/50 flex flex-col rounded-lg border p-3">
           <span className="text-muted-foreground text-xs font-medium">
-            5&apos; Vector
+            {copy.results.fiveVector}
           </span>
           <div className="mt-1 flex items-center gap-1.5">
             <span className="text-sm font-medium tabular-nums">
@@ -112,10 +115,10 @@ export function AavResults({ seq5Length, seq3Length }: AavResultsProps) {
             >
               <StatusIcon status={fiveStatus} />
               {fiveStatus === 'fits'
-                ? 'Fits'
+                ? copy.results.fits
                 : fiveStatus === 'tight'
-                  ? 'Tight'
-                  : 'Over limit'}
+                  ? copy.results.tight
+                  : copy.results.overLimit}
             </Badge>
           </div>
           <span className="text-muted-foreground mt-1 text-[10px]">
@@ -125,7 +128,7 @@ export function AavResults({ seq5Length, seq3Length }: AavResultsProps) {
         </div>
         <div className="bg-muted/50 flex flex-col rounded-lg border p-3">
           <span className="text-muted-foreground text-xs font-medium">
-            3&apos; Vector
+            {copy.results.threeVector}
           </span>
           <div className="mt-1 flex items-center gap-1.5">
             <span className="text-sm font-medium tabular-nums">
@@ -143,10 +146,10 @@ export function AavResults({ seq5Length, seq3Length }: AavResultsProps) {
             >
               <StatusIcon status={threeStatus} />
               {threeStatus === 'fits'
-                ? 'Fits'
+                ? copy.results.fits
                 : threeStatus === 'tight'
-                  ? 'Tight'
-                  : 'Over limit'}
+                  ? copy.results.tight
+                  : copy.results.overLimit}
             </Badge>
           </div>
           <span className="text-muted-foreground mt-1 text-[10px]">

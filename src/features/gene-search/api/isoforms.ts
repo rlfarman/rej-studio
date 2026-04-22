@@ -1,43 +1,28 @@
 'use server'
 
-import { db } from '@/drizzle/db'
-import { genes, isoforms } from '@/drizzle/schema'
-import { eq } from 'drizzle-orm'
+import { cache } from 'react'
+import {
+  fetchIsoformsByGene,
+  fetchIsoformAndGeneByIsoformId,
+} from '@/features/gene-search/api/isoform-queries'
+import { z } from 'zod'
+
+// Ensembl gene/transcript IDs are bounded strings. Validate length + type
+// at the server-action boundary even though call-sites pass typed values.
+const geneIdSchema = z.string().min(1).max(100)
+const isoformIdSchema = z.string().min(1).max(100)
+
+// Wrap with React cache() to deduplicate identical calls within a single
+// server request (e.g. if a layout and page both need the same isoforms).
+const cachedFetchIsoformsByGene = cache(fetchIsoformsByGene)
+const cachedFetchIsoformAndGene = cache(fetchIsoformAndGeneByIsoformId)
 
 export async function getIsoformsByGene(geneId: string) {
-  return db
-    .select({
-      id: isoforms.id,
-      codingSequenceLength: isoforms.codingSequenceLength,
-      proteinSequenceLength: isoforms.proteinSequenceLength,
-      codingSequence: isoforms.codingSequence,
-      proteinSequence: isoforms.proteinSequence,
-      species: isoforms.species,
-    })
-    .from(isoforms)
-    .where(eq(isoforms.geneId, geneId))
-    .orderBy(isoforms.id)
+  const validatedGeneId = geneIdSchema.parse(geneId)
+  return cachedFetchIsoformsByGene(validatedGeneId)
 }
 
 export async function getIsoformAndGeneByIsoformId(isoformId: string) {
-  const [result] = await db
-    .select({
-      isoform: {
-        id: isoforms.id,
-        species: isoforms.species,
-        geneId: isoforms.geneId,
-        codingSequence: isoforms.codingSequence,
-      },
-      gene: {
-        id: genes.id,
-        name: genes.name,
-        symbol: genes.symbol,
-      },
-    })
-    .from(isoforms)
-    .innerJoin(genes, eq(isoforms.geneId, genes.id))
-    .where(eq(isoforms.id, isoformId))
-    .limit(1)
-
-  return result
+  const validatedIsoformId = isoformIdSchema.parse(isoformId)
+  return cachedFetchIsoformAndGene(validatedIsoformId)
 }

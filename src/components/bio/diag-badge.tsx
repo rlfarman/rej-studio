@@ -17,9 +17,9 @@ import { toCodons, translateCodon } from '@/lib/bio/genetic-code'
 
 // ── Types ──
 
-export type DiagStatus = 'good' | 'warn' | 'error' | 'neutral'
+type DiagStatus = 'good' | 'warn' | 'error' | 'neutral'
 
-export interface DiagCheck {
+interface DiagCheck {
   status: DiagStatus
   label: string
   tooltip: string
@@ -46,11 +46,7 @@ export function DiagBadge({ status, label, tooltip }: DiagBadgeProps) {
           : CircleMinus
 
   const iconColor =
-    status === 'good'
-      ? 'text-green-500'
-      : status === 'warn'
-        ? 'text-yellow-500'
-        : ''
+    status === 'good' ? 'text-success' : status === 'warn' ? 'text-warning' : ''
 
   return (
     <Tooltip>
@@ -203,13 +199,13 @@ export function shortCdsCheck(seq: string): DiagCheck | null {
   }
 }
 
-export function aavFitCheck(bpLength: number): DiagCheck {
+function aavFitCheck(bpLength: number): DiagCheck {
   const fits = bpLength <= 4700
   return {
     status: fits ? 'good' : 'warn',
-    label: fits ? 'Fits AAV' : 'Exceeds AAV',
+    label: fits ? 'Fits AAV' : 'Over AAV limit',
     tooltip: fits
-      ? 'CDS fits within single AAV packaging limit (~4,700 bp)'
-      : 'CDS exceeds single AAV packaging limit (~4,700 bp) — will require dual-AAV splitting',
+      ? 'CDS fits within a single AAV cargo limit (~4.7 kb including ITRs, promoter, poly-A and any regulatory elements)'
+      : 'CDS exceeds the ~4.7 kb AAV cargo limit — will require dual-AAV splitting',
   }
 }

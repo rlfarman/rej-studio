@@ -11,7 +11,7 @@
 
 import { readFileSync, existsSync } from 'fs'
 import { sql } from 'drizzle-orm'
-import { db } from '../src/drizzle/db'
+import { getDb } from '../src/drizzle/db'
 import { genes, isoforms } from '../src/drizzle/schema'
 
 const GENES_JSONL = 'data/genes.jsonl'
@@ -50,6 +50,7 @@ async function insertInBatches<T>(
 
 async function main() {
   const start = Date.now()
+  const db = await getDb()
 
   console.log('Reading JSONL...')
   const geneRows = readJsonl<GeneRow>(GENES_JSONL)

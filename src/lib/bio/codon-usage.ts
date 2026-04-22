@@ -152,7 +152,7 @@ const TABLES: Record<Species, CodonFreq> = {
   mouse: MOUSE,
 }
 
-export function getCodonUsage(species: Species): CodonFreq {
+function getCodonUsage(species: Species): CodonFreq {
   return TABLES[species]
 }
 

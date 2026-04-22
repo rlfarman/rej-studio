@@ -7,6 +7,7 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
@@ -27,16 +28,13 @@ import { CustomizationOptions } from './customization-options'
 import { SpeciesOptions } from './species-options'
 import { CodonOptimizationOptions } from './optimization-options'
 import { StimulatoryIntronOptions } from './stimulatory-intron-options'
-import {
-  CodonOptimizeWeight,
-  RemoveCrypticSpliceSitesWeight,
-  MinimizeCpGsWeight,
-  ReduceKmerComplexityWeight,
-} from './weight-inputs'
 import { SubmitButton } from './submit-button'
 import { ResultsPanel } from './results-panel'
 import { JobHeader, RunningPlaceholder } from './job-header'
 import { toast } from 'sonner'
+import { designToolCopy } from '../copy'
+
+const copy = designToolCopy.form
 
 interface GeneSplitterFormProperties {
   defaultCodingSequence?: string
@@ -55,7 +53,6 @@ export function GeneSplitterForm({
 }: GeneSplitterFormProperties) {
   const [result, setResult] = useState<ProcessResult | null>(null)
   const [isEditing, setIsEditing] = useState(false)
-  const resultsRef = useRef<HTMLDivElement>(null)
   // Guards the one-shot form restore. Set true after we hydrate from a
   // resumed URL job, or eagerly on submit so the new job's own persisted
   // formValues don't ricochet back and overwrite the live form.
@@ -69,6 +66,7 @@ export function GeneSplitterForm({
     resolver: zodResolver(validationSchema),
     mode: 'onBlur',
     defaultValues: {
+      sequenceType: 'dna' as const,
       removeCrypticSpliceSites: true,
       '5PrimeStimulatoryIntron': true,
       '3PrimeStimulatoryIntron': true,
@@ -80,6 +78,7 @@ export function GeneSplitterForm({
       reduceKmerComplexityWeight: 1,
       enforceGcContent: true,
       codingSequence: defaultCodingSequence ?? '',
+      proteinSequence: '',
       name: defaultName ?? '',
       species: defaultSpecies ?? 'none',
       selectedWggwSite: null,
@@ -103,9 +102,7 @@ export function GeneSplitterForm({
     if (parsed.success) {
       methods.reset(parsed.data)
     } else {
-      toast.warning(
-        'Saved inputs from this job were incompatible with the current form — defaults were used instead.',
-      )
+      toast.warning(copy.savedInputsIncompatible)
     }
     didResetRef.current = true
   }, [job.formValues, methods])
@@ -116,12 +113,6 @@ export function GeneSplitterForm({
   React.useEffect(() => {
     if (job.status === 'completed' && job.result) {
       setResult(job.result)
-      setTimeout(() => {
-        resultsRef.current?.scrollIntoView({
-          behavior: 'smooth',
-          block: 'start',
-        })
-      }, 100)
     } else if (job.status === 'failed' && job.error && job.jobId) {
       if (!toastedJobsRef.current.has(job.jobId)) {
         toastedJobsRef.current.add(job.jobId)
@@ -143,7 +134,7 @@ export function GeneSplitterForm({
     const valid = await methods.trigger()
     if (!valid) {
       setIsEditing(true)
-      toast.error('Fix the form errors before re-running.')
+      toast.error(copy.fixErrorsBeforeRerun)
       return
     }
     await methods
@@ -167,8 +158,11 @@ export function GeneSplitterForm({
   return (
     <Form {...methods}>
       {}
-      {/* eslint-disable-next-line react-hooks/refs -- onSubmit only writes didResetRef in the submit event handler, never during render */}
-      <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-6">
+      {/* eslint-disable react-hooks/refs -- onSubmit only writes didResetRef in the submit event handler, never during render */}
+      <form
+        onSubmit={methods.handleSubmit(onSubmit)}
+        className="flex flex-col gap-6"
+      >
         {!showForm && headerStatus && (
           <JobHeader
             name={methods.getValues('name')}
@@ -191,45 +185,55 @@ export function GeneSplitterForm({
         {showForm && (
           <>
             {/* ── Card 1: Input ── */}
-            <Card>
+            <Card
+              className="fade-up-stagger"
+              style={{ '--stagger': 0 } as React.CSSProperties}
+            >
               <CardHeader>
-                <h1 className="text-2xl leading-none font-bold tracking-tight">
-                  REJ Studio Design Tool
-                </h1>
-                <CardDescription>
-                  Design a custom RNA sequence for end-joining experiments
-                </CardDescription>
+                <CardTitle asChild>
+                  <h1>{copy.title}</h1>
+                </CardTitle>
+                <CardDescription>{copy.description}</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <CustomizationOptions />
+              <CardContent className="flex flex-col gap-8">
+                <div data-tour="dt-sequence">
+                  <CustomizationOptions />
+                </div>
                 <SpeciesOptions />
-                <div className="space-y-2">
-                  <p className="text-sm font-medium">Splice junction</p>
+                <div className="flex flex-col gap-2" data-tour="dt-splicer">
+                  <p className="text-sm font-medium">
+                    {copy.spliceJunctionLabel}
+                  </p>
                   <p className="text-muted-foreground text-sm">
-                    Set where the sequence splits into 5&apos; and 3&apos;
-                    fragments.
+                    {copy.spliceJunctionHint}
                   </p>
                   <DNASplicer />
                 </div>
               </CardContent>
             </Card>
 
-            {/* ── Card 2: Strategy ── */}
-            <Card>
+            {/* ── Card 2: Strategy + Submit ── */}
+            <Card
+              className="fade-up-stagger"
+              style={{ '--stagger': 1 } as React.CSSProperties}
+              data-tour="dt-optimization"
+            >
               <CardHeader>
-                <CardTitle>Optimization</CardTitle>
+                <CardTitle asChild>
+                  <h2>{copy.optimizationHeading}</h2>
+                </CardTitle>
                 <CardDescription>
-                  Fine-tune individual parameters.
+                  {copy.optimizationDescription}
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent>
                 <Accordion type="multiple">
                   <AccordionItem value="codon-optimization">
                     <AccordionTrigger>
                       <div>
-                        <p>Codon optimization</p>
+                        <p>{copy.accordion.codonOptimization}</p>
                         <p className="text-muted-foreground text-sm">
-                          Control which sequence features are optimized.
+                          {copy.accordion.codonOptimizationHint}
                         </p>
                       </div>
                     </AccordionTrigger>
@@ -240,9 +244,9 @@ export function GeneSplitterForm({
                   <AccordionItem value="fragment-options">
                     <AccordionTrigger>
                       <div>
-                        <p>Stimulatory introns</p>
+                        <p>{copy.accordion.stimulatoryIntrons}</p>
                         <p className="text-muted-foreground text-sm">
-                          Add introns to boost fragment expression.
+                          {copy.accordion.stimulatoryIntronsHint}
                         </p>
                       </div>
                     </AccordionTrigger>
@@ -250,50 +254,20 @@ export function GeneSplitterForm({
                       <StimulatoryIntronOptions />
                     </AccordionContent>
                   </AccordionItem>
-                  <AccordionItem value="weights">
-                    <AccordionTrigger>
-                      <div>
-                        <p>Parameter weights</p>
-                        <p className="text-muted-foreground text-sm">
-                          Control how much each objective influences the result.
-                        </p>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="pt-4 pb-8">
-                      <div className="flex flex-col space-y-4">
-                        <CodonOptimizeWeight />
-                        <RemoveCrypticSpliceSitesWeight />
-                        <MinimizeCpGsWeight />
-                        <ReduceKmerComplexityWeight />
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
                 </Accordion>
               </CardContent>
-            </Card>
-
-            {/* ── Card 3: Review / Submit ── */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Review &amp; Run</CardTitle>
-                <CardDescription>
-                  Run the optimizer to generate your split sequences.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex justify-end">
-                  <SubmitButton
-                    isJobRunning={job.isLoading}
-                    isJobComplete={job.status === 'completed'}
-                  />
-                </div>
-              </CardContent>
+              <CardFooter className="justify-end" data-tour="dt-submit">
+                <SubmitButton
+                  isJobRunning={job.isLoading}
+                  isJobComplete={job.status === 'completed'}
+                />
+              </CardFooter>
             </Card>
           </>
         )}
 
         {result && (
-          <div ref={resultsRef}>
+          <div className="fade-up">
             <ResultsPanel
               result={result}
               optionsUsed={formatOptionsForReport(methods.getValues())}
@@ -302,6 +276,7 @@ export function GeneSplitterForm({
           </div>
         )}
       </form>
+      {/* eslint-enable react-hooks/refs */}
     </Form>
   )
 }

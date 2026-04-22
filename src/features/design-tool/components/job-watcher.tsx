@@ -10,8 +10,13 @@ import {
 import type { ProcessResult } from '@/features/design-tool/types/process-result'
 import type { JobError } from '@/features/design-tool/hooks/use-job-history'
 import { createLogger } from '@/lib/logger'
+import { trackEvent } from '@/lib/analytics'
 
 const POLL_INTERVAL = 2000
+// Early polls are faster so we catch the quick 0.05/0.10/0.15 stage
+// transitions before the backend races past them to optimize (~0.45).
+const FAST_POLL_INTERVAL = 500
+const FAST_POLL_COUNT = 3
 // Stop polling after this long — protects against a backend job that never
 // resolves (stuck worker, lost call_id). The stale-running TTL in the
 // history store (24h) is a safety net on top of this.
@@ -84,8 +89,11 @@ function JobPoller({ jobId }: JobPollerProps) {
     enabled: !isPastDeadline,
     refetchInterval: (query) => {
       const d = query.state.data
-      if (!d) return POLL_INTERVAL
-      return d.status === 'running' ? POLL_INTERVAL : false
+      if (!d) return FAST_POLL_INTERVAL
+      if (d.status !== 'running') return false
+      return query.state.dataUpdateCount < FAST_POLL_COUNT
+        ? FAST_POLL_INTERVAL
+        : POLL_INTERVAL
     },
     // Pause polling when the tab is backgrounded — TanStack Query's focus
     // manager already does this, but being explicit makes the intent clear
@@ -128,15 +136,19 @@ function JobPoller({ jobId }: JobPollerProps) {
         retriable: true,
       }
       upsertEntry({ id: jobId, status: 'failed', error: jobError })
+      trackEvent({ event: 'job_failed', job_id: jobId, error_code: 'network' })
       return
     }
     if (!data) return
     if (data.status === 'completed') {
       log.info('job completed', { jobId })
-      upsertEntry({
-        id: jobId,
-        status: 'completed',
-        result: data.result as unknown as ProcessResult,
+      const result = data.result as unknown as ProcessResult
+      upsertEntry({ id: jobId, status: 'completed', result })
+      trackEvent({
+        event: 'job_complete',
+        job_id: jobId,
+        sequence_length: result?.optimized_sequence?.length ?? 0,
+        processing_time_seconds: result?.processing_time_seconds ?? 0,
       })
     } else if (data.status === 'running') {
       // Surface progress/stage as they arrive, so the sidebar and inline
@@ -151,6 +163,7 @@ function JobPoller({ jobId }: JobPollerProps) {
       }
     } else if (data.status === 'failed') {
       log.warn('job failed', { jobId, error: data.error })
+      const errorCode = (data.error?.code as string) ?? 'backend'
       upsertEntry({
         id: jobId,
         status: 'failed',
@@ -162,6 +175,7 @@ function JobPoller({ jobId }: JobPollerProps) {
               retriable: false,
             },
       })
+      trackEvent({ event: 'job_failed', job_id: jobId, error_code: errorCode })
     } else if (data.status === 'cancelled') {
       log.info('job cancelled', { jobId })
       upsertEntry({
