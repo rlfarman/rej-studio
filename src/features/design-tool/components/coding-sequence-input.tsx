@@ -17,6 +17,7 @@ import { GcSparkline } from '@/components/bio/gc-sparkline'
 import { CodonUsageStrip } from './codon-usage-strip'
 import { cn } from '@/lib/utils'
 import { cleanSequence, parseFasta } from '@/lib/bio/fasta'
+import { detectSequenceType } from '@/lib/bio/sequence-utils'
 import { toast } from 'sonner'
 import { isSpecies, type Species } from '@/lib/bio/species'
 import { pickDefaultSplitPoint } from '../utils/default-split-point'
@@ -116,7 +117,11 @@ export function CodingSequenceInput() {
 
   const applyCleanedSequence = useCallback(
     (text: string, source: string) => {
-      const mode = isProtein ? 'protein' : 'dna'
+      // Auto-detect DNA vs protein from the raw input so paste/upload
+      // switch mode when the user drops in the other kind of sequence.
+      const detected = detectSequenceType(text)
+      const detectedIsProtein = detected === 'protein'
+
       // If the input contains multiple FASTA entries, use only the first
       let textToClean = text
       let ignoredSequences = 0
@@ -135,28 +140,44 @@ export function CodingSequenceInput() {
 
       const { cleaned, removedChars, removedHeaders } = cleanSequence(
         textToClean,
-        mode,
+        detected,
       )
 
       if (cleaned.length === 0) {
         toast.error(
-          isProtein ? copy.noValidAminoAcids : copy.noValidNucleotides,
+          detectedIsProtein ? copy.noValidAminoAcids : copy.noValidNucleotides,
         )
         return
       }
 
-      const field = isProtein ? 'proteinSequence' : 'codingSequence'
+      const modeSwitched = detected !== sequenceType
+      if (modeSwitched) {
+        setValue('sequenceType', detected)
+        clearErrors(['codingSequence', 'proteinSequence', 'species'])
+        if (detectedIsProtein && species === 'none') {
+          setValue('species', 'human', { shouldValidate: false })
+        }
+      }
+
+      const field = detectedIsProtein ? 'proteinSequence' : 'codingSequence'
       setValue(field as keyof FormValues, cleaned, { shouldValidate: true })
 
-      if (!isProtein) {
+      if (!detectedIsProtein) {
         setValue('spliceJunctionPosition', pickDefaultSplitPoint(cleaned), {
           shouldValidate: true,
         })
+        // Clear the protein field so switching back doesn't show stale input
+        if (modeSwitched) {
+          setValue('proteinSequence', '', { shouldValidate: false })
+        }
       } else {
         applyReverseTranslation(cleaned)
+        if (modeSwitched) {
+          // DNA field will be repopulated by reverse-translation when species is set
+        }
       }
 
-      const charType = isProtein
+      const charType = detectedIsProtein
         ? copy.charTypeNonAminoAcid
         : copy.charTypeNonNucleotide
       const parts: string[] = []
@@ -170,23 +191,27 @@ export function CodingSequenceInput() {
         toast.info(copy.cleanedSummary(source, parts.join(', ')))
       }
     },
-    [setValue, isProtein, applyReverseTranslation],
+    [setValue, clearErrors, sequenceType, species, applyReverseTranslation],
   )
 
   const handlePaste = useCallback(
     (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
       const text = e.clipboardData.getData('text')
       const hasHeaders = text.includes('>')
-      const validChars = isProtein
-        ? /[ACDEFGHIKLMNPQRSTVWYacdefghiklmnpqrstvwy*\s\r\n]/g
-        : /[ACGTUacgtu\s\r\n]/g
-      const nonValid = text.replace(validChars, '')
-      if (hasHeaders || nonValid.length > 3) {
+      // Intercept anything that looks like a sequence paste so we can
+      // auto-detect DNA vs protein and clean in one step.
+      const letters = text.replace(/\s/g, '')
+      const seqChars =
+        letters.match(/[ACDEFGHIKLMNPQRSTUVWYacdefghiklmnpqrstuvwy*]/g)
+          ?.length ?? 0
+      const looksLikeSequence =
+        letters.length >= 6 && seqChars / letters.length > 0.8
+      if (hasHeaders || looksLikeSequence) {
         e.preventDefault()
         applyCleanedSequence(text, copy.pasteSource)
       }
     },
-    [applyCleanedSequence, isProtein],
+    [applyCleanedSequence],
   )
 
   const handleFileUpload = useCallback(
@@ -221,6 +246,10 @@ export function CodingSequenceInput() {
       clearErrors(['codingSequence', 'proteinSequence', 'species'])
 
       if (newType === 'protein') {
+        // Reverse-translation needs a codon table; default to human if none set.
+        if (species === 'none') {
+          setValue('species', 'human', { shouldValidate: false })
+        }
         // DNA → Protein: translate existing DNA (trailing stop stripped)
         const dna = (dnaValue ?? '').toUpperCase().replace(/U/g, 'T')
         if (dna.length >= 3) {
@@ -241,6 +270,7 @@ export function CodingSequenceInput() {
       clearErrors,
       dnaValue,
       proteinValue,
+      species,
       applyReverseTranslation,
     ],
   )

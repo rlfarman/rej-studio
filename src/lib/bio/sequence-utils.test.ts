@@ -5,6 +5,7 @@ import {
   changeDensity,
   computeGcPercent,
   countCpG,
+  detectSequenceType,
   findInvalidChars,
   findWggwMotifs,
   getStopCodonStatus,
@@ -13,6 +14,30 @@ import {
   segmentSequence,
   slidingGcContent,
 } from './sequence-utils'
+
+describe('detectSequenceType', () => {
+  it('classifies plain DNA as dna', () => {
+    expect(detectSequenceType('ATGCGTACGTACGT')).toBe('dna')
+  })
+  it('classifies RNA as dna (U is ambiguous)', () => {
+    expect(detectSequenceType('AUGCGUACGU')).toBe('dna')
+  })
+  it('classifies protein with protein-only letters as protein', () => {
+    expect(detectSequenceType('MASFKPGQQWVEIYHLNKD')).toBe('protein')
+  })
+  it('classifies short ACGT-only peptide as dna (ambiguous, default)', () => {
+    expect(detectSequenceType('ACGT')).toBe('dna')
+  })
+  it('strips FASTA headers before classifying', () => {
+    expect(detectSequenceType('>sp|P12345|PROT\nMASFKPGQQWVE')).toBe('protein')
+  })
+  it('returns dna for empty input', () => {
+    expect(detectSequenceType('')).toBe('dna')
+  })
+  it('ignores whitespace and newlines', () => {
+    expect(detectSequenceType('MASF\nKPGQ\tQWVE')).toBe('protein')
+  })
+})
 
 // ---------------------------------------------------------------------------
 // computeGcPercent

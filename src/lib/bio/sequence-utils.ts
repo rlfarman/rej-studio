@@ -1,5 +1,24 @@
 /** Pure functions for client-side sequence analysis. */
 
+/**
+ * Guess whether a pasted/uploaded sequence is DNA or protein.
+ *
+ * DNA alphabet (ACGTUN) overlaps with protein (A, C, G, T are also amino
+ * acids), so the only reliable signal is protein-exclusive letters
+ * (D, E, F, H, I, K, L, M, P, Q, R, S, V, W, Y). If any appear above a small
+ * threshold we classify as protein; otherwise DNA.
+ */
+export function detectSequenceType(text: string): 'dna' | 'protein' {
+  const seq = text
+    .replace(/^>.*$/gm, '')
+    .replace(/[\s\r\n]/g, '')
+    .toUpperCase()
+  if (seq.length === 0) return 'dna'
+  const proteinOnly = seq.match(/[DEFHIKLMPQRSVWY]/g)?.length ?? 0
+  // 1% guards against occasional stray letters in otherwise-valid DNA
+  return proteinOnly / seq.length > 0.01 ? 'protein' : 'dna'
+}
+
 export function computeGcPercent(seq: string): number {
   if (seq.length === 0) return 0
   const gc = [...seq].filter((c) => c === 'G' || c === 'C').length
