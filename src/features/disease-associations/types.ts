@@ -12,7 +12,7 @@ export type Phenotype = {
   status: PhenotypeStatus
 }
 
-export type LandscapeRow = {
+export type AssociationRow = {
   symbol: string
   name: string
   ensemblGeneId: string | null
@@ -20,8 +20,8 @@ export type LandscapeRow = {
   phenotypes: Phenotype[]
 }
 
-export type LandscapeData = {
-  rows: LandscapeRow[]
+export type AssociationData = {
+  rows: AssociationRow[]
 }
 
 export const INHERITANCE_BUCKETS = [
