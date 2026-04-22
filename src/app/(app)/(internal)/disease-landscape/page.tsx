@@ -4,7 +4,10 @@ import {
   getLandscape,
   filterLandscape,
   bucketCounts,
-  fetchMaxCdsLengthByGeneId,
+  sortLandscape,
+  SORT_KEYS,
+  type SortDir,
+  type SortKey,
 } from '@/features/disease-landscape/api/landscape'
 import { LandscapeFilters } from '@/features/disease-landscape/components/landscape-filters'
 import { LandscapeTable } from '@/features/disease-landscape/components/landscape-table'
@@ -20,8 +23,15 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 }
 
+type SearchParams = {
+  q?: string
+  i?: string | string[]
+  sort?: string
+  dir?: string
+}
+
 type Props = {
-  searchParams: Promise<{ q?: string; i?: string | string[] }>
+  searchParams: Promise<SearchParams>
 }
 
 function normalizeInheritance(
@@ -33,15 +43,29 @@ function normalizeInheritance(
   return list.filter((v): v is InheritanceBucket => valid.has(v))
 }
 
+function normalizeSort(raw: string | undefined): SortKey {
+  return (SORT_KEYS as readonly string[]).includes(raw ?? '')
+    ? (raw as SortKey)
+    : 'symbol'
+}
+
+function normalizeDir(raw: string | undefined, key: SortKey): SortDir {
+  if (raw === 'asc' || raw === 'desc') return raw
+  return key === 'symbol' ? 'asc' : 'desc'
+}
+
 export default async function DiseaseLandscapePage({ searchParams }: Props) {
-  const { q, i } = await searchParams
+  const params = await searchParams
+  const { q, i, sort, dir } = params
   const all = getLandscape()
   const counts = bucketCounts(all)
   const filtered = filterLandscape(all, {
     query: q,
     inheritance: normalizeInheritance(i),
   })
-  const maxCdsByGeneId = await fetchMaxCdsLengthByGeneId()
+  const sortKey = normalizeSort(sort)
+  const sortDir = normalizeDir(dir, sortKey)
+  const sorted = sortLandscape(filtered, sortKey, sortDir)
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-6 p-6">
@@ -70,10 +94,15 @@ export default async function DiseaseLandscapePage({ searchParams }: Props) {
       </Suspense>
 
       <div className="text-muted-foreground text-xs" aria-live="polite">
-        {diseaseLandscapeCopy.table.resultsSummary(filtered.length, all.length)}
+        {diseaseLandscapeCopy.table.resultsSummary(sorted.length, all.length)}
       </div>
 
-      <LandscapeTable rows={filtered} maxCdsByGeneId={maxCdsByGeneId} />
+      <LandscapeTable
+        rows={sorted}
+        sortKey={sortKey}
+        sortDir={sortDir}
+        searchParams={params}
+      />
     </div>
   )
 }

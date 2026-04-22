@@ -1,8 +1,4 @@
 import { cache } from 'react'
-import { sql } from 'drizzle-orm'
-import { cacheLife, cacheTag } from 'next/cache'
-import { getDb } from '@/drizzle/db'
-import { isoforms } from '@/drizzle/schema'
 import landscape from '../data/landscape.json'
 import type { LandscapeData, LandscapeRow, InheritanceBucket } from '../types'
 import { INHERITANCE_BUCKETS } from '../types'
@@ -80,37 +76,31 @@ export function filterLandscape(
   })
 }
 
-/**
- * Returns a map of Ensembl gene ID → largest CDS length across all human
- * isoforms. Used to annotate the disease landscape with per-gene transcript
- * size. Cached with the shared 'genes' tag so a reseed invalidates it.
- */
-export async function fetchMaxCdsLengthByGeneId(): Promise<
-  Map<string, number>
-> {
-  'use cache'
-  cacheTag('genes')
-  cacheLife({ revalidate: 3600 })
+export const SORT_KEYS = ['symbol', 'phenotypes', 'cds'] as const
+export type SortKey = (typeof SORT_KEYS)[number]
+export type SortDir = 'asc' | 'desc'
 
-  try {
-    const db = await getDb()
-    const rows = await db
-      .select({
-        geneId: isoforms.geneId,
-        maxCds: sql<number>`max(${isoforms.codingSequenceLength})`,
-      })
-      .from(isoforms)
-      .where(sql`${isoforms.species} = 'human'`)
-      .groupBy(isoforms.geneId)
-
-    return new Map(rows.map((r) => [r.geneId, Number(r.maxCds)]))
-  } catch (err) {
-    // The landscape page is a curated reference and should degrade rather
-    // than error out if the gene DB is unavailable (e.g. local dev without
-    // a seeded PGlite). The column simply renders as "—".
-    console.error('[disease-landscape] max CDS lookup failed:', err)
-    return new Map()
-  }
+export function sortLandscape(
+  rows: LandscapeRow[],
+  key: SortKey,
+  dir: SortDir,
+): LandscapeRow[] {
+  // Rows with unknown largestCds always sort to the bottom regardless of dir,
+  // so an empty value never jumps to the top of a "largest first" sort.
+  const sign = dir === 'asc' ? 1 : -1
+  const copy = [...rows]
+  copy.sort((a, b) => {
+    if (key === 'symbol') return sign * a.symbol.localeCompare(b.symbol)
+    if (key === 'phenotypes')
+      return sign * (a.phenotypes.length - b.phenotypes.length)
+    const av = a.largestCds
+    const bv = b.largestCds
+    if (av == null && bv == null) return a.symbol.localeCompare(b.symbol)
+    if (av == null) return 1
+    if (bv == null) return -1
+    return sign * (av - bv)
+  })
+  return copy
 }
 
 export function bucketCounts(
