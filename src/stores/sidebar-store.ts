@@ -43,10 +43,37 @@ function clampWidth(w: number) {
   return Math.round(Math.min(SIDEBAR_WIDTH_MAX, Math.max(SIDEBAR_WIDTH_MIN, w)))
 }
 
+// Read preload attributes synchronously at module load so the store's initial
+// state already matches the user's persisted preference on the very first
+// client render — no flash-of-default-sidebar. The preload script in
+// src/app/layout.tsx sets these on <html> before React hydrates.
+//
+// The SSR render uses the fallback values below (document is undefined there),
+// so the client's first render can diverge from the server HTML for users
+// with a non-default preference. Callers that depend on this data (the
+// sidebar wrapper's CSS var, the Sidebar's data-state attr) must opt into
+// suppressHydrationWarning on that element — same pattern as next-themes.
+function readPreload(): { open: boolean; width: number } {
+  if (typeof document === 'undefined') {
+    return { open: true, width: SIDEBAR_WIDTH_DEFAULT }
+  }
+  const { sidebarPreloadOpen, sidebarPreloadWidth } =
+    document.documentElement.dataset
+  const widthNum = sidebarPreloadWidth ? Number(sidebarPreloadWidth) : NaN
+  return {
+    open: sidebarPreloadOpen === 'false' ? false : true,
+    width: Number.isFinite(widthNum)
+      ? clampWidth(widthNum)
+      : SIDEBAR_WIDTH_DEFAULT,
+  }
+}
+
+const preload = readPreload()
+
 export const useSidebarStore = create<SidebarStore>((set, get) => ({
-  open: true,
+  open: preload.open,
   openMobile: false,
-  width: SIDEBAR_WIDTH_DEFAULT,
+  width: preload.width,
   setOpen: (open) => {
     set({ open })
     writeStorage(SIDEBAR_STORAGE_STATE, String(open))
@@ -66,29 +93,6 @@ export const useSidebarStore = create<SidebarStore>((set, get) => ({
     }
   },
 }))
-
-/**
- * Reads the preload data attributes set by the layout.tsx inline script and
- * syncs them into the store. Call once from SidebarProvider on mount — it
- * uses setState directly (not setOpen) so it doesn't round-trip back to
- * localStorage during hydration.
- */
-export function hydrateSidebarFromDOM() {
-  if (typeof document === 'undefined') return
-  const dataset = document.documentElement.dataset
-  const preloadOpen = dataset.sidebarPreloadOpen
-  const preloadWidth = dataset.sidebarPreloadWidth
-  const widthNum = preloadWidth ? Number(preloadWidth) : NaN
-
-  const patch: Partial<SidebarStore> = {}
-  if (preloadOpen === 'true') patch.open = true
-  else if (preloadOpen === 'false') patch.open = false
-  if (Number.isFinite(widthNum)) patch.width = clampWidth(widthNum)
-
-  if (Object.keys(patch).length > 0) {
-    useSidebarStore.setState(patch)
-  }
-}
 
 export const selectSidebarState = (s: SidebarStore) =>
   s.open ? ('expanded' as const) : ('collapsed' as const)

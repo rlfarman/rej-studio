@@ -36,16 +36,12 @@ import {
 // and width-drag doesn't cascade re-renders through every menu item.
 import {
   useSidebarStore,
-  hydrateSidebarFromDOM,
   selectSidebarState,
   SIDEBAR_WIDTH_DEFAULT,
 } from '@/stores/sidebar-store'
 const SIDEBAR_WIDTH_MOBILE = '18rem'
 const SIDEBAR_WIDTH_ICON = '3rem'
 const SIDEBAR_KEYBOARD_SHORTCUT = 'b'
-
-const useIsomorphicLayoutEffect =
-  typeof window !== 'undefined' ? React.useLayoutEffect : React.useEffect
 
 function useToggleSidebar() {
   const isMobile = useIsMobile()
@@ -61,13 +57,6 @@ function SidebarProvider({
 }: React.ComponentProps<'div'>) {
   const width = useSidebarStore((s) => s.width)
   const toggleSidebar = useToggleSidebar()
-
-  // Apply preloaded state from <html> dataset. Runs after hydration but
-  // before paint, so users who customized their sidebar don't see the
-  // fallback state briefly on reload.
-  useIsomorphicLayoutEffect(() => {
-    hydrateSidebarFromDOM()
-  }, [])
 
   // Keyboard shortcut: Cmd/Ctrl+B toggles the sidebar.
   React.useEffect(() => {
@@ -89,6 +78,13 @@ function SidebarProvider({
     <TooltipProvider delayDuration={0}>
       <div
         data-slot="sidebar-wrapper"
+        // Width comes from the store, which on the client reads the preload
+        // dataset synchronously at module init — so the first paint already
+        // matches the user's persisted width. The server renders the default
+        // (it has no way to know the preference), so we suppress the hydration
+        // warning on this mismatch; the preload <script> in layout.tsx sets
+        // --sidebar-width on <html> too, keeping pre-JS paint consistent.
+        suppressHydrationWarning
         style={
           {
             '--sidebar-width': `${width}px`,
@@ -168,6 +164,11 @@ function Sidebar({
   return (
     <div
       className="text-sidebar-foreground group peer hidden md:block"
+      // data-state/data-collapsible come from the store's preload-synced open
+      // value; the server render can't know the user's preference, so we
+      // suppress the hydration warning on this element to keep the first
+      // client paint in sync with the preload dataset on <html>.
+      suppressHydrationWarning
       data-state={state}
       data-collapsible={state === 'collapsed' ? collapsible : ''}
       data-variant={variant}
