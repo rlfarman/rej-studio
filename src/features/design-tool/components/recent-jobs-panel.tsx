@@ -63,6 +63,7 @@ export function RecentJobs({ onSelectJob }: RecentJobsProps) {
   return (
     <ExpandableSidebarList
       label={copy.label}
+      persistKey="sidebar:recent-jobs:open"
       items={entries}
       getItemKey={(entry) => entry.id}
       onClear={clearHistory}
