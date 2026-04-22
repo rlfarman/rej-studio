@@ -80,8 +80,8 @@ export const DiagStrip: Story = {
       />
       <DiagBadge
         status="warn"
-        label="Over AAV limit"
-        tooltip="CDS exceeds the ~4.7 kb AAV cargo limit"
+        label="Over single-AAV limit"
+        tooltip="CDS exceeds the 4,000 bp single-AAV CDS limit — requires dual or triple AAV"
       />
     </div>
   ),

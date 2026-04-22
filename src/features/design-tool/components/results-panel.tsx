@@ -55,6 +55,7 @@ import { JunctionContext } from './junction-context'
 import { RestrictionSiteMap } from './restriction-site-map'
 import { CodonDeltaStrip } from './codon-delta-strip'
 import { AavResults } from './aav-size-estimator'
+import { AAV_SINGLE_CDS_MAX } from '@/lib/bio/aav'
 import { SplitBar } from '@/components/bio/split-bar'
 import { ObjectivesSummary } from './objectives-output'
 import { formatFasta } from '@/lib/bio/fasta'
@@ -373,7 +374,9 @@ function WggwTable({
             <TableHead>{resultsCopy.wggwTable.headers.position}</TableHead>
             <TableHead>{resultsCopy.wggwTable.headers.motif}</TableHead>
             <TableHead>{resultsCopy.wggwTable.headers.distance}</TableHead>
-            <TableHead>{resultsCopy.wggwTable.headers.originalCodons}</TableHead>
+            <TableHead>
+              {resultsCopy.wggwTable.headers.originalCodons}
+            </TableHead>
             <TableHead>{resultsCopy.wggwTable.headers.newCodons}</TableHead>
           </TableRow>
         </TableHeader>
@@ -405,15 +408,9 @@ function WggwTable({
 }
 
 /** One-line summary of AAV fit for the expandable header. */
-const AAV_OVERHEAD_BP = 1540
-const AAV_PACKAGING_LIMIT = 4700
 function aavSummary(seq5: number, seq3: number) {
-  const label = (total: number) => {
-    if (total <= AAV_PACKAGING_LIMIT) return 'fits'
-    if (total <= AAV_PACKAGING_LIMIT + 300) return 'tight'
-    return 'over'
-  }
-  return `5' ${label(seq5 + AAV_OVERHEAD_BP)} · 3' ${label(seq3 + AAV_OVERHEAD_BP)}`
+  const label = (len: number) => (len < AAV_SINGLE_CDS_MAX ? 'fits' : 'over')
+  return `5' ${label(seq5)} · 3' ${label(seq3)}`
 }
 
 function ResultsPanelImpl({ result, optionsUsed, species }: ResultsPanelProps) {
@@ -502,7 +499,10 @@ function ResultsPanelImpl({ result, optionsUsed, species }: ResultsPanelProps) {
           <SequenceViewer result={result} />
 
           <div className="-mx-1">
-            <ExpandableRow title={resultsCopy.sections.visualizations} icon={Activity}>
+            <ExpandableRow
+              title={resultsCopy.sections.visualizations}
+              icon={Activity}
+            >
               <SequenceVisualizations
                 original={result.original_sequence}
                 optimized={result.optimized_sequence}

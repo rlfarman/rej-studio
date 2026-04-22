@@ -264,15 +264,13 @@ export const designToolCopy = {
     preflight: {
       single: 'Single AAV',
       dual: 'Dual vector',
-      dualTight: 'Dual vector (tight)',
-      exceeds: 'Over AAV limit',
+      triple: 'Triple vector',
     },
     results: {
       heading: 'AAV packaging estimate',
       fiveVector: '5′ vector',
       threeVector: '3′ vector',
       fits: 'Fits',
-      tight: 'Tight',
       overLimit: 'Over limit',
     },
   },

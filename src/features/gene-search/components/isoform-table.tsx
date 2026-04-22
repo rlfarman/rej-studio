@@ -54,6 +54,7 @@ import {
 } from '@/lib/bio/sequence-utils'
 import { IsoformValidationBadges } from './isoform-validation-badges'
 import { IsoformSplitPreview } from './isoform-split-preview'
+import { AAV_SINGLE_CDS_MAX } from '@/lib/bio/aav'
 import type { IsoformListItem } from '@/features/gene-search/types/domain-types'
 
 interface IsoformListProps {
@@ -585,7 +586,7 @@ function ExpandedDetails({
   suitability: ReturnType<typeof assessDesignSuitability>
   suitConfig: ReturnType<typeof getSuitabilityConfig>
 }) {
-  const needsSplit = isoform.codingSequenceLength > 4700
+  const needsSplit = isoform.codingSequenceLength >= AAV_SINGLE_CDS_MAX
 
   return (
     <div className="space-y-4">

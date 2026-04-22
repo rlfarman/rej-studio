@@ -16,7 +16,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { Keyboard } from 'lucide-react'
-import { AAV_OVERHEAD_BP, AAV_PACKAGING_LIMIT } from '@/lib/bio/aav'
+import { AAV_SINGLE_CDS_MAX } from '@/lib/bio/aav'
 
 interface Props {
   sequence: string
@@ -38,7 +38,7 @@ const PX_PER_CODON = 28 // approximate minimum width for a 3-base codon box
  * - WGGW ticks aligned to the slider, snappable on click
  * - Balanced WGGW candidates — every motif in the sequence ranked by
  *   distance from a 50/50 split (single criterion: fragment balance)
- * - Per-fragment length, GC%, and AAV fit (hard ~4.7kb packaging limit)
+ * - Per-fragment length, GC%, and AAV fit (CDS < 4,000 bp per vector)
  * - Codon-level frame-at-split readout with ±6 codons of context
  */
 export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
@@ -89,12 +89,10 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
       five: {
         length: fiveSeq.length,
         gc: computeGcPercent(fiveSeq.toUpperCase()),
-        aavTotal: fiveSeq.length + AAV_OVERHEAD_BP,
       },
       three: {
         length: threeSeq.length,
         gc: computeGcPercent(threeSeq.toUpperCase()),
-        aavTotal: threeSeq.length + AAV_OVERHEAD_BP,
       },
     }
   }, [sequence, position, seqLen])
@@ -204,30 +202,22 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
   const threePrimeLength = fragmentStats?.three.length ?? 0
   const fivePct = (fivePrimeLength / seqLen) * 100
 
-  // AAV capacity zones: which slider positions yield fragments that fit the
-  // ~4.7 kb packaging limit once ITR/promoter overhead is added. Surfaced
-  // proactively as a thin stripe above the fragment bar so users can see
-  // safe regions at a glance before committing to a cut.
-  const maxPayload = AAV_PACKAGING_LIMIT - AAV_OVERHEAD_BP
-  const tightPayload = AAV_PACKAGING_LIMIT + 300 - AAV_OVERHEAD_BP
-  const safeLeft = Math.max(1, seqLen - maxPayload)
-  const safeRight = Math.min(seqLen - 1, maxPayload)
-  const tightLeft = Math.max(1, seqLen - tightPayload)
-  const tightRight = Math.min(seqLen - 1, tightPayload)
+  // AAV capacity zones: which slider positions yield fragments that each fit
+  // under the AAV_SINGLE_CDS_MAX CDS-length cutoff. Surfaced proactively as a
+  // thin stripe above the fragment bar so users can see safe regions at a
+  // glance before committing to a cut.
+  const safeLeft = Math.max(1, seqLen - AAV_SINGLE_CDS_MAX)
+  const safeRight = Math.min(seqLen - 1, AAV_SINGLE_CDS_MAX)
   const hasSafeZone = safeLeft <= safeRight
-  const showAavZones = seqLen > maxPayload
+  const showAavZones = seqLen >= AAV_SINGLE_CDS_MAX
 
-  // Split-level warnings surfaced inside the slider itself. Thresholds mirror
-  // the AAV zone stripe above the fragment bar and FragmentPill's tight/exceeds
-  // labels: ≤limit = fits (green), ≤limit+300 = tight (yellow, warn), over = red (error).
+  // Split-level warnings surfaced inside the slider itself. A fragment fits a
+  // single AAV when its CDS length is under AAV_SINGLE_CDS_MAX.
   const balance = assessFragmentBalance(position, seqLen)
-  const TIGHT_LIMIT = AAV_PACKAGING_LIMIT + 300
-  const fiveTotal = fragmentStats?.five.aavTotal ?? 0
-  const threeTotal = fragmentStats?.three.aavTotal ?? 0
-  const fiveExceeds = fiveTotal > TIGHT_LIMIT
-  const threeExceeds = threeTotal > TIGHT_LIMIT
-  const fiveTight = !fiveExceeds && fiveTotal > AAV_PACKAGING_LIMIT
-  const threeTight = !threeExceeds && threeTotal > AAV_PACKAGING_LIMIT
+  const fiveLen = fragmentStats?.five.length ?? 0
+  const threeLen = fragmentStats?.three.length ?? 0
+  const fiveExceeds = fiveLen >= AAV_SINGLE_CDS_MAX
+  const threeExceeds = threeLen >= AAV_SINGLE_CDS_MAX
   const warnings: { level: 'warn' | 'error'; message: string }[] = []
   if (fiveExceeds || threeExceeds) {
     const which = [fiveExceeds && '5′', threeExceeds && '3′']
@@ -235,15 +225,7 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
       .join(' & ')
     warnings.push({
       level: 'error',
-      message: `${which} fragment + AAV overhead exceeds ~${AAV_PACKAGING_LIMIT.toLocaleString()} bp packaging limit.`,
-    })
-  } else if (fiveTight || threeTight) {
-    const which = [fiveTight && '5′', threeTight && '3′']
-      .filter(Boolean)
-      .join(' & ')
-    warnings.push({
-      level: 'warn',
-      message: `${which} fragment + AAV overhead is tight (within 300 bp of the ~${AAV_PACKAGING_LIMIT.toLocaleString()} bp packaging limit).`,
+      message: `${which} fragment exceeds the ${AAV_SINGLE_CDS_MAX.toLocaleString()} bp single-AAV CDS limit.`,
     })
   }
   if (balance === 'imbalanced') {
@@ -293,23 +275,16 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
           onKeyDown={handleTrackKeyDown}
           className="focus-visible:ring-ring relative cursor-ew-resize touch-none rounded-md border select-none focus:outline-none focus-visible:ring-2"
         >
-          {/* AAV capacity zones: green = both fragments fit, yellow = tight,
-              red = over ~4.7 kb packaging limit. Hidden for sequences that
-              already fit as a monomer. */}
+          {/* AAV capacity zones: green = both fragments under the
+              AAV_SINGLE_CDS_MAX CDS cutoff, red = at least one fragment over.
+              Hidden for sequences that already fit as a monomer. */}
           {showAavZones && (
             <div
               className="relative h-1.5 w-full overflow-hidden rounded-t-sm"
               aria-hidden="true"
-              title="AAV packaging zones: green fits, yellow tight, red over limit"
+              title="AAV packaging zones: green = both fragments fit a single AAV, red = at least one fragment exceeds the CDS limit"
             >
               <div className="bg-destructive/25 absolute inset-0" />
-              <div
-                className="bg-warning/40 absolute inset-y-0"
-                style={{
-                  left: `${(tightLeft / seqLen) * 100}%`,
-                  right: `${((seqLen - tightRight) / seqLen) * 100}%`,
-                }}
-              />
               {hasSafeZone && (
                 <div
                   className="bg-success/40 absolute inset-y-0"
@@ -483,10 +458,9 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
           </span>
           {balancedWggw.map((c, i) => {
             const isCurrent = Math.abs(c.position - position) <= 1
-            const fiveAav = c.fivePrimeLength + AAV_OVERHEAD_BP
-            const threeAav = c.threePrimeLength + AAV_OVERHEAD_BP
             const bothFit =
-              fiveAav <= AAV_PACKAGING_LIMIT && threeAav <= AAV_PACKAGING_LIMIT
+              c.fivePrimeLength < AAV_SINGLE_CDS_MAX &&
+              c.threePrimeLength < AAV_SINGLE_CDS_MAX
             return (
               <button
                 type="button"
@@ -504,7 +478,7 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
                 {!bothFit && (
                   <span
                     className="text-danger-soft ml-1"
-                    title="One fragment + AAV overhead exceeds ~4,700 bp"
+                    title={`One fragment exceeds the ${AAV_SINGLE_CDS_MAX.toLocaleString()} bp single-AAV CDS limit`}
                   >
                     ⚠
                   </span>
@@ -522,13 +496,11 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
             label="5′"
             length={fragmentStats.five.length}
             gc={fragmentStats.five.gc}
-            aavTotal={fragmentStats.five.aavTotal}
           />
           <FragmentPill
             label="3′"
             length={fragmentStats.three.length}
             gc={fragmentStats.three.gc}
-            aavTotal={fragmentStats.three.aavTotal}
           />
         </div>
       )}
@@ -549,25 +521,18 @@ function FragmentPill({
   label,
   length,
   gc,
-  aavTotal,
 }: {
   label: string
   length: number
   gc: number
-  aavTotal: number
 }) {
-  const fits = aavTotal <= AAV_PACKAGING_LIMIT
-  const tight = !fits && aavTotal <= AAV_PACKAGING_LIMIT + 300
-  const fitLabel = fits ? 'fits' : tight ? 'tight' : 'exceeds'
-  const fitColor = fits
-    ? 'text-success-soft'
-    : tight
-      ? 'text-warning-soft'
-      : 'text-danger-soft'
+  const fits = length < AAV_SINGLE_CDS_MAX
+  const fitLabel = fits ? 'fits' : 'exceeds'
+  const fitColor = fits ? 'text-success-soft' : 'text-danger-soft'
   return (
     <div
       className="bg-muted/30 flex items-center justify-between gap-2 rounded-sm border px-2 py-1"
-      title={`${label} fragment: ${length.toLocaleString()} bp + ${AAV_OVERHEAD_BP.toLocaleString()} bp overhead = ${aavTotal.toLocaleString()} bp (AAV limit ${AAV_PACKAGING_LIMIT.toLocaleString()} bp)`}
+      title={`${label} fragment: ${length.toLocaleString()} bp CDS (single-AAV limit ${AAV_SINGLE_CDS_MAX.toLocaleString()} bp)`}
     >
       <span className="text-muted-foreground font-medium">{label}</span>
       <div className="flex items-center gap-2 font-mono tabular-nums">

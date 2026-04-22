@@ -7,7 +7,7 @@ import {
   rankWggwByBalance,
   assessFragmentBalance,
 } from '@/lib/bio/sequence-utils'
-import { AAV_OVERHEAD_BP, AAV_PACKAGING_LIMIT } from '@/lib/bio/aav'
+import { AAV_SINGLE_CDS_MAX } from '@/lib/bio/aav'
 import { SplitBar } from '@/components/bio/split-bar'
 
 interface IsoformSplitPreviewProps {
@@ -36,10 +36,8 @@ export function IsoformSplitPreview({
     if (ranked.length === 0) return null
     const best = ranked[0]
     const balance = assessFragmentBalance(best.position, codingSequenceLength)
-    const fiveAavTotal = best.fivePrimeLength + AAV_OVERHEAD_BP
-    const threeAavTotal = best.threePrimeLength + AAV_OVERHEAD_BP
-    const fiveFits = fiveAavTotal <= AAV_PACKAGING_LIMIT
-    const threeFits = threeAavTotal <= AAV_PACKAGING_LIMIT
+    const fiveFits = best.fivePrimeLength < AAV_SINGLE_CDS_MAX
+    const threeFits = best.threePrimeLength < AAV_SINGLE_CDS_MAX
     // Surface 2 alternatives only when the best candidate is suboptimal —
     // either not balanced, or one of its fragments won't fit in an AAV.
     // When #1 is balanced and both-fits, the alternatives are just noise.
@@ -48,15 +46,13 @@ export function IsoformSplitPreview({
       ? ranked.slice(1, 3).map((c) => ({
           ...c,
           bothFit:
-            c.fivePrimeLength + AAV_OVERHEAD_BP <= AAV_PACKAGING_LIMIT &&
-            c.threePrimeLength + AAV_OVERHEAD_BP <= AAV_PACKAGING_LIMIT,
+            c.fivePrimeLength < AAV_SINGLE_CDS_MAX &&
+            c.threePrimeLength < AAV_SINGLE_CDS_MAX,
         }))
       : []
     return {
       best,
       balance,
-      fiveAavTotal,
-      threeAavTotal,
       fiveFits,
       threeFits,
       alternatives,
@@ -72,15 +68,7 @@ export function IsoformSplitPreview({
     )
   }
 
-  const {
-    best,
-    balance,
-    fiveAavTotal,
-    threeAavTotal,
-    fiveFits,
-    threeFits,
-    alternatives,
-  } = preview
+  const { best, balance, fiveFits, threeFits, alternatives } = preview
 
   return (
     <div className="space-y-1.5">
@@ -102,13 +90,13 @@ export function IsoformSplitPreview({
 
       <div className="text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[10px] tabular-nums">
         <span>
-          5′ AAV: {fiveAavTotal.toLocaleString()} bp{' '}
+          5′ CDS: {best.fivePrimeLength.toLocaleString()} bp{' '}
           <span className={fiveFits ? 'text-success-soft' : 'text-danger-soft'}>
             ({fiveFits ? 'fits' : 'over limit'})
           </span>
         </span>
         <span>
-          3′ AAV: {threeAavTotal.toLocaleString()} bp{' '}
+          3′ CDS: {best.threePrimeLength.toLocaleString()} bp{' '}
           <span
             className={threeFits ? 'text-success-soft' : 'text-danger-soft'}
           >
@@ -116,8 +104,7 @@ export function IsoformSplitPreview({
           </span>
         </span>
         <span className="opacity-70">
-          (includes {AAV_OVERHEAD_BP.toLocaleString()} bp ITR/promoter/polyA
-          overhead)
+          (single-AAV limit {AAV_SINGLE_CDS_MAX.toLocaleString()} bp CDS)
         </span>
       </div>
 
@@ -137,7 +124,7 @@ export function IsoformSplitPreview({
               {!c.bothFit && (
                 <span
                   className="text-danger-soft ml-1"
-                  title="One fragment + AAV overhead exceeds ~4,700 bp"
+                  title={`One fragment exceeds the ${AAV_SINGLE_CDS_MAX.toLocaleString()} bp single-AAV CDS limit`}
                 >
                   ⚠
                 </span>

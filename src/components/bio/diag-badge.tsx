@@ -198,14 +198,3 @@ export function shortCdsCheck(seq: string): DiagCheck | null {
     tooltip: `CDS is only ${len} bp. Sequences under 300 bp may not benefit from dual-AAV REJ splitting.`,
   }
 }
-
-function aavFitCheck(bpLength: number): DiagCheck {
-  const fits = bpLength <= 4700
-  return {
-    status: fits ? 'good' : 'warn',
-    label: fits ? 'Fits AAV' : 'Over AAV limit',
-    tooltip: fits
-      ? 'CDS fits within a single AAV cargo limit (~4.7 kb including ITRs, promoter, poly-A and any regulatory elements)'
-      : 'CDS exceeds the ~4.7 kb AAV cargo limit — will require dual-AAV splitting',
-  }
-}
