@@ -45,6 +45,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
 import type { ProcessResult } from '@/features/design-tool/types/process-result'
 import { toast } from 'sonner'
@@ -162,7 +167,6 @@ function MetricsStrip({ result }: { result: ProcessResult }) {
     }
   }, [result])
 
-  const totalObjectives = stats.after.passedCount + stats.after.failedCount
   const showDonors =
     stats.keyBefore.spliceDonors > 0 || stats.keyAfter.spliceDonors > 0
   const showAcceptors =
@@ -170,17 +174,11 @@ function MetricsStrip({ result }: { result: ProcessResult }) {
   const showCai = stats.keyAfter.caiScore !== null
 
   return (
-    <div className="bg-border grid grid-cols-1 gap-px overflow-hidden rounded-lg border sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+    <div className="bg-border grid grid-cols-1 gap-px overflow-hidden rounded-lg border sm:grid-cols-2 md:grid-cols-4">
       <MetricCell
         label="Score"
         before={stats.before.totalScore}
         after={stats.after.totalScore}
-      />
-      <MetricCell
-        label="Objectives"
-        before={null}
-        after={totalObjectives > 0 ? stats.after.passedCount : null}
-        formatter={(n) => `${n} / ${totalObjectives}`}
       />
       <MetricCell
         label="GC"
@@ -228,6 +226,37 @@ function MetricsStrip({ result }: { result: ProcessResult }) {
   )
 }
 
+const INTRON_MARKER_RE = /(\[REJ5\]|\[REJ3\])/g
+
+function renderSequenceWithIntrons(sequence: string) {
+  const parts = sequence.split(INTRON_MARKER_RE)
+  return parts.map((part, i) => {
+    if (part === '[REJ5]' || part === '[REJ3]') {
+      const isFive = part === '[REJ5]'
+      const tip = isFive
+        ? resultsCopy.intronTooltip.fivePrime
+        : resultsCopy.intronTooltip.threePrime
+      return (
+        <Tooltip key={i}>
+          <TooltipTrigger asChild>
+            <span
+              className={
+                isFive
+                  ? 'cursor-help rounded bg-sky-500/20 px-1 font-semibold text-sky-700 dark:text-sky-300'
+                  : 'cursor-help rounded bg-violet-500/20 px-1 font-semibold text-violet-700 dark:text-violet-300'
+              }
+            >
+              {part}
+            </span>
+          </TooltipTrigger>
+          <TooltipContent className="max-w-xs">{tip}</TooltipContent>
+        </Tooltip>
+      )
+    }
+    return <span key={i}>{part}</span>
+  })
+}
+
 function SequenceCard({
   label,
   sequence,
@@ -239,13 +268,14 @@ function SequenceCard({
 }) {
   const { copy, isCopied } = useCopyToClipboard({ showToast: false })
   const justCopied = isCopied('fasta') || isCopied('seq')
+  const displayLength = sequence.replace(INTRON_MARKER_RE, '').length
   return (
     <div className="bg-muted/30 space-y-2 rounded-lg border p-3">
       <div className="flex flex-wrap items-center justify-between gap-1.5">
         <div className="flex items-center gap-1.5">
           <span className="text-xs font-medium">{label}</span>
           <Badge variant="secondary" className="text-[10px]">
-            {sequence.length.toLocaleString()} bp
+            {displayLength.toLocaleString()} bp
           </Badge>
         </div>
         <DropdownMenu>
@@ -295,7 +325,7 @@ function SequenceCard({
         </DropdownMenu>
       </div>
       <pre className="bg-muted max-h-40 overflow-auto rounded-md p-2.5 font-mono text-xs break-all whitespace-pre-wrap">
-        {sequence}
+        {renderSequenceWithIntrons(sequence)}
       </pre>
     </div>
   )
@@ -303,7 +333,7 @@ function SequenceCard({
 
 function SequenceViewer({ result }: { result: ProcessResult }) {
   return (
-    <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
+    <div className="space-y-3">
       <SequenceCard
         label={resultsCopy.sequenceCard.fiveLabel}
         sequence={result.seq5}
@@ -373,7 +403,9 @@ function WggwTable({
             <TableHead>{resultsCopy.wggwTable.headers.position}</TableHead>
             <TableHead>{resultsCopy.wggwTable.headers.motif}</TableHead>
             <TableHead>{resultsCopy.wggwTable.headers.distance}</TableHead>
-            <TableHead>{resultsCopy.wggwTable.headers.originalCodons}</TableHead>
+            <TableHead>
+              {resultsCopy.wggwTable.headers.originalCodons}
+            </TableHead>
             <TableHead>{resultsCopy.wggwTable.headers.newCodons}</TableHead>
           </TableRow>
         </TableHeader>
@@ -480,9 +512,8 @@ function ResultsPanelImpl({ result, optionsUsed, species }: ResultsPanelProps) {
             </div>
             <Button
               type="button"
-              variant="outline"
-              size="sm"
-              className="gap-1.5"
+              size="default"
+              className="bg-accent text-accent-foreground hover:bg-accent/80 gap-1.5 shadow-sm"
               onClick={handleDownloadZip}
             >
               <Download className="size-4" />
@@ -502,7 +533,10 @@ function ResultsPanelImpl({ result, optionsUsed, species }: ResultsPanelProps) {
           <SequenceViewer result={result} />
 
           <div className="-mx-1">
-            <ExpandableRow title={resultsCopy.sections.visualizations} icon={Activity}>
+            <ExpandableRow
+              title={resultsCopy.sections.visualizations}
+              icon={Activity}
+            >
               <SequenceVisualizations
                 original={result.original_sequence}
                 optimized={result.optimized_sequence}
