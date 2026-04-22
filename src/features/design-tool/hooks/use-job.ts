@@ -104,7 +104,7 @@ export function useJob({
           status: 'running',
           formValues: values,
           progress: 0.03,
-          stage: 'Queued',
+          stage: 'Starting',
         })
       }
       setJobId(newJobId)

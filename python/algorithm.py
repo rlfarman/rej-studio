@@ -48,8 +48,13 @@ class _MonotonicProgress:
         self._lock = threading.Lock()
         self._last_frac = 0.0
         self._last_emit_at = 0.0
+        self._last_stage = ""
 
     def emit(self, frac, stage):
+        """Emit a new progress checkpoint. Pass stage=None to keep the last
+        stage label — used by the heartbeat so it doesn't overwrite the
+        bridge's "(N/M)" suffix with a bare stage and cause UI flicker.
+        """
         if self._on_progress is None:
             return
         with self._lock:
@@ -57,6 +62,10 @@ class _MonotonicProgress:
                 return
             self._last_frac = frac
             self._last_emit_at = time.monotonic()
+            if stage is None:
+                stage = self._last_stage
+            else:
+                self._last_stage = stage
         with contextlib.suppress(Exception):
             self._on_progress(frac, stage)
 
@@ -137,7 +146,7 @@ class _ProgressBridgeLogger(_ProgressBarLoggerBase):
 
 
 @contextlib.contextmanager
-def _progress_heartbeat(gate, frac_range, stage, expected_seconds, idle_after=0.5):
+def _progress_heartbeat(gate, frac_range, expected_seconds, idle_after=0.5):
     """Watchdog thread that creeps progress forward on wall-clock, but only
     when the real proglog bridge has gone quiet for `idle_after` seconds.
 
@@ -177,7 +186,9 @@ def _progress_heartbeat(gate, frac_range, stage, expected_seconds, idle_after=0.
                 frac = max(frac_primary, frac_secondary)
                 if frac > cap:
                     frac = cap
-                gate.emit(frac, stage)
+                # stage=None → gate reuses the bridge's last stage label
+                # (with its "(N/M)" suffix) so the subtitle doesn't flicker.
+                gate.emit(frac, None)
             stop_event.wait(1.5)
 
     t = threading.Thread(target=run, name="progress-heartbeat", daemon=True)
@@ -565,7 +576,6 @@ def runOptimization(CDS, OPTIONS, on_progress=None):
     with _progress_heartbeat(
         gate=progress_gate,
         frac_range=(0.45, 0.87),
-        stage="Optimizing sequence",
         expected_seconds=10.0,
     ):
         problem.optimize()

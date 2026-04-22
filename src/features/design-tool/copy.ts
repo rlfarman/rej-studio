@@ -189,9 +189,8 @@ export const designToolCopy = {
     buttonEdit: 'Edit',
     buttonRunAgain: 'Run again',
     running: {
-      title: 'Optimizing your sequence…',
-      defaultStage:
-        'Running DNAChisel on the server. This usually takes a few seconds.',
+      title: 'Designing your sequence…',
+      defaultStage: 'This usually takes a few seconds.',
     },
     speciesLabel: {
       none: '',
