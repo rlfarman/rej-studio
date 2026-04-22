@@ -4,7 +4,11 @@
     {
       "name": "next-dev",
       "runtimeExecutable": "/bin/zsh",
-      "runtimeArgs": ["-l", "-c", "exec pnpm run next-dev"],
+      "runtimeArgs": [
+        "-l",
+        "-c",
+        "export SESSION_SECRET=\"${SESSION_SECRET:-dev-session-secret-padding-to-hit-thirty-two-chars}\"; exec pnpm run next-dev"
+      ],
       "port": 3000,
       "autoPort": true
     },
@@ -14,6 +18,13 @@
       "runtimeArgs": ["-l", "-c", "exec pnpm run fastapi-dev"],
       "port": 8000,
       "autoPort": true
+    },
+    {
+      "name": "storybook",
+      "runtimeExecutable": "/bin/zsh",
+      "runtimeArgs": ["-l", "-c", "exec pnpm run storybook --ci --port 6006"],
+      "port": 6006,
+      "autoPort": false
     }
   ]
 }
