@@ -28,12 +28,6 @@ import { CustomizationOptions } from './customization-options'
 import { SpeciesOptions } from './species-options'
 import { CodonOptimizationOptions } from './optimization-options'
 import { StimulatoryIntronOptions } from './stimulatory-intron-options'
-import {
-  CodonOptimizeWeight,
-  RemoveCrypticSpliceSitesWeight,
-  MinimizeCpGsWeight,
-  ReduceKmerComplexityWeight,
-} from './weight-inputs'
 import { SubmitButton } from './submit-button'
 import { ResultsPanel } from './results-panel'
 import { JobHeader, RunningPlaceholder } from './job-header'
@@ -257,24 +251,6 @@ export function GeneSplitterForm({
                     </AccordionTrigger>
                     <AccordionContent className="pt-4 pb-8">
                       <StimulatoryIntronOptions />
-                    </AccordionContent>
-                  </AccordionItem>
-                  <AccordionItem value="weights">
-                    <AccordionTrigger>
-                      <div>
-                        <p>{copy.accordion.parameterWeights}</p>
-                        <p className="text-muted-foreground text-sm">
-                          {copy.accordion.parameterWeightsHint}
-                        </p>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="pt-4 pb-8">
-                      <div className="flex flex-col gap-4">
-                        <CodonOptimizeWeight />
-                        <RemoveCrypticSpliceSitesWeight />
-                        <MinimizeCpGsWeight />
-                        <ReduceKmerComplexityWeight />
-                      </div>
                     </AccordionContent>
                   </AccordionItem>
                 </Accordion>

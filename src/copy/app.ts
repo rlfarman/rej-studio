@@ -30,7 +30,7 @@ export const appCopy = {
     ogDescription:
       'Search genes, browse isoforms, and design optimized RNA End-Joining sequences.',
     searchPrompt: 'What gene are you optimizing?',
-    orPrefix: 'Search by symbol, name, or disease — or',
-    designLink: 'design your own',
+    orPrefix: 'Search by symbol, name, or disease.',
+    designLink: 'Design your own sequence',
   },
 } as const

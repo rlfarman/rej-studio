@@ -21,6 +21,7 @@ import { toast } from 'sonner'
 import { isSpecies, type Species } from '@/lib/bio/species'
 import { pickDefaultSplitPoint } from '../utils/default-split-point'
 import { reverseTranslate } from '@/lib/bio/reverse-translate'
+import { translate } from '@/lib/bio/genetic-code'
 import { designToolCopy } from '../copy'
 
 const copy = designToolCopy.sequenceInput
@@ -216,14 +217,32 @@ export function CodingSequenceInput() {
   const handleSequenceTypeChange = useCallback(
     (newType: SequenceType) => {
       if (newType === sequenceType) return
-      // Clear both sequence fields when switching modes
       setValue('sequenceType', newType)
-      setValue('codingSequence', '', { shouldValidate: false })
-      setValue('proteinSequence', '', { shouldValidate: false })
-      setValue('spliceJunctionPosition', 1, { shouldValidate: false })
       clearErrors(['codingSequence', 'proteinSequence', 'species'])
+
+      if (newType === 'protein') {
+        // DNA → Protein: translate existing DNA (trailing stop stripped)
+        const dna = (dnaValue ?? '').toUpperCase().replace(/U/g, 'T')
+        if (dna.length >= 3) {
+          const protein = translate(dna).replace(/\*+$/, '')
+          setValue('proteinSequence', protein, { shouldValidate: false })
+        }
+      } else {
+        // Protein → DNA: reverse-translate (needs species)
+        const protein = (proteinValue ?? '').toUpperCase().replace(/\s/g, '')
+        if (protein.length > 0) {
+          applyReverseTranslation(protein)
+        }
+      }
     },
-    [sequenceType, setValue, clearErrors],
+    [
+      sequenceType,
+      setValue,
+      clearErrors,
+      dnaValue,
+      proteinValue,
+      applyReverseTranslation,
+    ],
   )
 
   const activeField = isProtein ? 'proteinSequence' : 'codingSequence'
