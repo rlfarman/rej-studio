@@ -65,7 +65,7 @@ export function LoginBackground() {
           y2={y2}
           strokeWidth={1}
           strokeLinecap="round"
-          className="stroke-primary/25 [animation:dna-rung-glow_2.8s_ease-in-out_infinite] motion-reduce:animate-none"
+          className="stroke-primary/25 [animation:dna-rung-glow_2.8s_ease-in-out_infinite] [animation-fill-mode:backwards] motion-reduce:animate-none"
           style={{ animationDelay: `${(i % 14) * 120}ms` }}
         />
       ))}
