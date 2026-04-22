@@ -132,6 +132,14 @@ body {
   --aav-dual-soft: oklch(0.5 0.11 195);
   --aav-triple: oklch(0.62 0.15 155); /* green — the app's target case */
   --aav-triple-soft: oklch(0.48 0.12 150);
+
+  /* Signature surface tokens — a hairline highlight + faint shade give
+     buttons and cards a "machined" dimensionality without relying on
+     drop shadows or glassmorphism. Tuned per theme below. */
+  --key-highlight: color-mix(in oklch, white 22%, transparent);
+  --key-shade: color-mix(in oklch, black 6%, transparent);
+  --surface-top: color-mix(in oklch, var(--card) 99%, white 1%);
+  --surface-bot: var(--card);
 }
 
 /*
@@ -190,6 +198,11 @@ body {
   --aav-dual-soft: oklch(0.82 0.11 195);
   --aav-triple: oklch(0.78 0.16 150);
   --aav-triple-soft: oklch(0.84 0.13 150);
+
+  --key-highlight: color-mix(in oklch, white 14%, transparent);
+  --key-shade: color-mix(in oklch, black 35%, transparent);
+  --surface-top: color-mix(in oklch, var(--card) 94%, white 6%);
+  --surface-bot: var(--card);
 }
 
 /*
