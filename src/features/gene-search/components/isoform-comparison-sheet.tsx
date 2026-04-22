@@ -37,12 +37,6 @@ interface IsoformComparisonSheetProps {
   children: React.ReactNode
 }
 
-const SUITABILITY_VARIANT_MAP = {
-  'single-aav': 'default',
-  'dual-aav': 'secondary',
-  'triple-aav': 'destructive',
-} as const
-
 export function IsoformComparisonSheet({
   isoforms,
   children,
@@ -147,10 +141,7 @@ export function IsoformComparisonSheet({
                     key={a.id}
                     className={diffClass(analyses.map((x) => x.suitability))}
                   >
-                    <Badge
-                      variant={SUITABILITY_VARIANT_MAP[a.suitability]}
-                      className="text-xs"
-                    >
+                    <Badge className={`text-xs ${a.suitConfig.badgeClass}`}>
                       {a.suitConfig.label}
                     </Badge>
                   </TableCell>

@@ -179,7 +179,7 @@ function StatusDot({ status }: { status: JobHeaderStatus }) {
       {celebrateKey > 0 && (
         <span
           aria-hidden
-          className="pointer-events-none absolute inset-0 [animation:completion-bloom_600ms_cubic-bezier(0.16,1,0.3,1)_1] rounded-full bg-emerald-500/40 motion-reduce:hidden dark:bg-emerald-400/40"
+          className="bg-success/40 pointer-events-none absolute inset-0 [animation:completion-bloom_600ms_cubic-bezier(0.16,1,0.3,1)_1] rounded-full motion-reduce:hidden"
         />
       )}
       <Icon className={cn('size-4', status === 'running' && 'animate-spin')} />

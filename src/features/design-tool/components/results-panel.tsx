@@ -242,8 +242,8 @@ function renderSequenceWithIntrons(sequence: string) {
             <span
               className={
                 isFive
-                  ? 'cursor-help rounded bg-sky-500/20 px-1 font-semibold text-sky-700 dark:text-sky-300'
-                  : 'cursor-help rounded bg-violet-500/20 px-1 font-semibold text-violet-700 dark:text-violet-300'
+                  ? 'text-info-soft bg-info/15 dark:text-info cursor-help rounded px-1 font-semibold'
+                  : 'bg-primary/15 text-primary dark:text-primary-foreground dark:bg-primary/40 cursor-help rounded px-1 font-semibold'
               }
             >
               {part}
