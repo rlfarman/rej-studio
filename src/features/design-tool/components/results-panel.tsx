@@ -513,7 +513,7 @@ function ResultsPanelImpl({ result, optionsUsed, species }: ResultsPanelProps) {
             <Button
               type="button"
               size="default"
-              className="gap-1.5 bg-emerald-600 text-white shadow-sm hover:bg-emerald-700 focus-visible:ring-emerald-500 dark:bg-emerald-600 dark:hover:bg-emerald-500"
+              className="bg-accent text-accent-foreground hover:bg-accent/80 gap-1.5 shadow-sm"
               onClick={handleDownloadZip}
             >
               <Download className="size-4" />
