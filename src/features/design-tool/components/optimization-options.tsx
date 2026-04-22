@@ -23,21 +23,21 @@ export function CodonOptimizationOptions() {
             name="removeCrypticSpliceSites"
             label={copy.removeCrypticSpliceSites.label}
             description={copy.removeCrypticSpliceSites.description}
-            helpHref="/docs/design-tool#remove-cryptic-splice-sites"
+            // helpHref="/docs/design-tool#remove-cryptic-splice-sites"
             activeChildren={<RemoveCrypticSpliceSitesWeight />}
           />
           <ToggleCard
             name="minimizeCpgs"
             label={copy.minimizeCpGs.label}
             description={copy.minimizeCpGs.description}
-            helpHref="/docs/design-tool#minimize-cpgs"
+            // helpHref="/docs/design-tool#minimize-cpgs"
             activeChildren={<MinimizeCpGsWeight />}
           />
           <ToggleCard
             name="reduceKmerComplexity"
             label={copy.reduceKmer.label}
             description={copy.reduceKmer.description}
-            helpHref="/docs/design-tool#kmer-complexity"
+            // helpHref="/docs/design-tool#kmer-complexity"
             activeChildren={<ReduceKmerComplexityWeight />}
           />
         </div>
@@ -50,7 +50,7 @@ export function CodonOptimizationOptions() {
           label={copy.enforceGc.label}
           description={copy.enforceGc.description}
           badge={copy.enforceGc.badge}
-          helpHref="/docs/design-tool#gc-content"
+          // helpHref="/docs/design-tool#gc-content"
         />
       </div>
     </div>
