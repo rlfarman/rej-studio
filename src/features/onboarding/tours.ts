@@ -102,16 +102,6 @@ export const guidedTour: GuidedStep[] = [
   },
   {
     route: '/',
-    element: '[data-tour="nav-docs"]',
-    popover: {
-      title: copy.guided.docs.title,
-      description: copy.guided.docs.description,
-      side: 'right',
-      align: 'center',
-    },
-  },
-  {
-    route: '/',
     element: '[data-tour="nav-settings"]',
     popover: {
       title: copy.guided.settings.title,

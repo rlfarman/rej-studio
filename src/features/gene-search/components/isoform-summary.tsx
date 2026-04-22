@@ -19,10 +19,16 @@ const SUITABILITY_ORDER: Suitability[] = [
   'triple-aav',
 ]
 
-const SUITABILITY_COLOR: Record<Suitability, string> = {
-  'single-aav': 'bg-success/70',
-  'dual-aav': 'bg-warning/70',
-  'triple-aav': 'bg-danger/70',
+const SUITABILITY_DOT: Record<Suitability, string> = {
+  'single-aav': 'bg-success-soft',
+  'dual-aav': 'bg-warning-soft',
+  'triple-aav': 'bg-danger-soft',
+}
+
+const SUITABILITY_TEXT: Record<Suitability, string> = {
+  'single-aav': 'text-success-soft',
+  'dual-aav': 'text-warning-soft',
+  'triple-aav': 'text-danger-soft',
 }
 
 const SUITABILITY_LABEL: Record<Suitability, string> = {
@@ -71,36 +77,25 @@ export function IsoformSummary({ isoforms }: IsoformSummaryProps) {
         label="CDS range"
         value={`${stats.shortest.toLocaleString()} – ${stats.longest.toLocaleString()} bp`}
       />
-      <div className="flex min-w-[12rem] flex-1 items-center gap-2">
-        <span className="text-muted-foreground text-xs">AAV fit</span>
-        <div
-          className="flex h-4 flex-1 overflow-hidden rounded-sm border"
-          role="img"
-          aria-label="AAV suitability distribution"
-        >
-          {SUITABILITY_ORDER.map((s) => {
-            if (counts[s] === 0) return null
-            const pct = (counts[s] / filtered.length) * 100
-            return (
-              <div
-                key={s}
-                className={cn(
-                  'flex items-center justify-center text-[9px] font-medium text-white',
-                  SUITABILITY_COLOR[s],
-                )}
-                style={{ width: `${pct}%` }}
-                title={`${SUITABILITY_LABEL[s]} AAV · ${counts[s]} isoform${counts[s] > 1 ? 's' : ''}`}
-              >
-                {pct > 12 ? counts[s] : ''}
-              </div>
-            )
-          })}
-        </div>
-        <span className="text-muted-foreground flex items-center gap-2 text-[10px] tabular-nums">
+      <div
+        className="flex items-center gap-1.5"
+        role="img"
+        aria-label="AAV suitability distribution"
+      >
+        <span className="text-muted-foreground">AAV fit</span>
+        <span className="flex items-center gap-2 tabular-nums">
           {SUITABILITY_ORDER.filter((s) => counts[s] > 0).map((s) => (
-            <span key={s} className="flex items-center gap-1">
-              <span className={cn('size-2 rounded-sm', SUITABILITY_COLOR[s])} />
-              {counts[s]}
+            <span
+              key={s}
+              className="flex items-center gap-1"
+              title={`${SUITABILITY_LABEL[s]} AAV · ${counts[s]} isoform${counts[s] > 1 ? 's' : ''}`}
+            >
+              <span
+                className={cn('size-1.5 rounded-full', SUITABILITY_DOT[s])}
+              />
+              <span className={cn('font-medium', SUITABILITY_TEXT[s])}>
+                {counts[s]}
+              </span>
             </span>
           ))}
         </span>

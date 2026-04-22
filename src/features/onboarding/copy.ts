@@ -84,11 +84,6 @@ export const onboardingCopy = {
         description:
           'Browse genes grouped by disease to find a target when you don’t have one in mind.',
       },
-      docs: {
-        title: 'Read the manual',
-        description:
-          'The docs cover algorithm details, output formats, and integration notes whenever you need a deeper dive.',
-      },
       settings: {
         title: 'Settings & preferences',
         description:

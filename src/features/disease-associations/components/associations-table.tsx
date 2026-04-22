@@ -8,37 +8,37 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import type { LandscapeRow } from '../types'
-import { diseaseLandscapeCopy } from '../copy'
-import { rowBuckets } from '../api/landscape'
+import type { AssociationRow } from '../types'
+import { diseaseAssociationsCopy } from '../copy'
+import { rowBuckets } from '../api/associations'
 
 type Props = {
-  rows: LandscapeRow[]
+  rows: AssociationRow[]
 }
 
-export function LandscapeTable({ rows }: Props) {
+export function AssociationsTable({ rows }: Props) {
   if (rows.length === 0) {
     return (
       <div className="text-muted-foreground rounded-md border p-6 text-center text-sm">
-        {diseaseLandscapeCopy.table.empty}
+        {diseaseAssociationsCopy.table.empty}
       </div>
     )
   }
 
   return (
     <div className="overflow-hidden rounded-md border">
-      <Table aria-label={diseaseLandscapeCopy.table.ariaLabel}>
+      <Table aria-label={diseaseAssociationsCopy.table.ariaLabel}>
         <TableHeader>
           <TableRow className="bg-muted/40">
             <TableHead className="w-[120px]">
-              {diseaseLandscapeCopy.table.columns.symbol}
+              {diseaseAssociationsCopy.table.columns.symbol}
             </TableHead>
-            <TableHead>{diseaseLandscapeCopy.table.columns.name}</TableHead>
+            <TableHead>{diseaseAssociationsCopy.table.columns.name}</TableHead>
             <TableHead className="w-[280px]">
-              {diseaseLandscapeCopy.table.columns.inheritance}
+              {diseaseAssociationsCopy.table.columns.inheritance}
             </TableHead>
             <TableHead className="w-[110px] text-right">
-              {diseaseLandscapeCopy.table.columns.phenotypeCount}
+              {diseaseAssociationsCopy.table.columns.phenotypeCount}
             </TableHead>
           </TableRow>
         </TableHeader>
@@ -51,7 +51,7 @@ export function LandscapeTable({ rows }: Props) {
                   <Link
                     href={`/genes/${encodeURIComponent(row.symbol)}?species=human`}
                     className="text-primary font-mono font-semibold hover:underline"
-                    aria-label={diseaseLandscapeCopy.table.viewGeneAria(
+                    aria-label={diseaseAssociationsCopy.table.viewGeneAria(
                       row.symbol,
                     )}
                   >

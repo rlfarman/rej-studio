@@ -18,7 +18,7 @@ import { RecentJobs } from '@/features/design-tool/components/recent-jobs-panel'
 import { JobWatcher } from '@/features/design-tool/components/job-watcher'
 import { SidebarMenu } from '@/app/_components/layout/sidebar-menu'
 import type { JobHistoryEntry } from '@/features/design-tool/hooks/use-job-history'
-import { Home, BookOpen, WandSparkles, Activity } from 'lucide-react'
+import { Home, WandSparkles, Activity } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
 
@@ -80,24 +80,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <SidebarMenuItem data-tour="nav-disease">
               <SidebarMenuButton
                 asChild
-                isActive={pathname.startsWith('/disease-landscape')}
-                tooltip="Disease Landscape"
+                isActive={pathname.startsWith('/disease-associations')}
+                tooltip="Disease Associations"
               >
-                <Link href="/disease-landscape">
+                <Link href="/disease-associations">
                   <Activity />
-                  <span>Disease Landscape</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem data-tour="nav-docs">
-              <SidebarMenuButton
-                asChild
-                isActive={pathname.startsWith('/docs')}
-                tooltip="Documentation"
-              >
-                <Link href="/docs">
-                  <BookOpen />
-                  <span>Documentation</span>
+                  <span>Disease Associations</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
