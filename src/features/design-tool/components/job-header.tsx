@@ -52,23 +52,30 @@ export function RunningPlaceholder({
             {stage ?? copy.running.defaultStage}
           </p>
         </div>
-        {displayedPct !== null && (
-          <div className="w-full max-w-xs">
-            <div className="bg-muted relative h-1.5 w-full overflow-hidden rounded-full">
+        <div className="w-full max-w-xs">
+          <div className="bg-muted relative h-1.5 w-full overflow-hidden rounded-full">
+            {displayedPct !== null ? (
               <div
                 className="bg-primary absolute inset-y-0 left-0 w-full origin-left transition-transform duration-700 ease-out"
                 style={{ transform: `scaleX(${displayedPct / 100})` }}
               />
-              <span
+            ) : (
+              <div
                 aria-hidden
-                className="via-foreground/25 pointer-events-none absolute inset-0 -translate-x-full animate-[shimmer_1.6s_ease-in-out_infinite] bg-gradient-to-r from-transparent to-transparent"
+                className="bg-primary/70 absolute inset-y-0 left-0 w-1/3 animate-[indeterminate_1.4s_ease-in-out_infinite] rounded-full"
               />
-            </div>
+            )}
+            <span
+              aria-hidden
+              className="via-foreground/25 pointer-events-none absolute inset-0 -translate-x-full animate-[shimmer_1.6s_ease-in-out_infinite] bg-gradient-to-r from-transparent to-transparent"
+            />
+          </div>
+          {displayedPct !== null && (
             <p className="text-muted-foreground mt-1.5 text-center text-[10px] tabular-nums">
               {displayedPct}%
             </p>
-          </div>
-        )}
+          )}
+        </div>
       </CardContent>
     </Card>
   )
@@ -102,15 +109,15 @@ function useSmoothedProgress(target: number | null): number | null {
       setDisplayed((prev) => {
         const t = targetRef.current
         if (t === null || prev === null) return prev
-        // Creep up to +6 points above the last real checkpoint, but never
+        // Creep up to +10 points above the last real checkpoint, but never
         // reach 100 via creep — real completion is signalled elsewhere.
-        const ceiling = Math.min(99, t + 6)
+        const ceiling = Math.min(99, t + 10)
         if (prev >= ceiling) {
           stopped = true
           return prev
         }
-        // ~1.5 points/second, tapered.
-        const delta = dt * 1.5 * (1 - (prev - t) / 6)
+        // ~3 points/second, tapered.
+        const delta = dt * 3 * (1 - (prev - t) / 10)
         return Math.min(ceiling, prev + delta)
       })
       if (!stopped) raf = requestAnimationFrame(tick)

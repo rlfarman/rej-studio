@@ -380,6 +380,17 @@ body {
   }
 }
 
+/* Indeterminate progress — sweeps a segment across the bar when we have
+   no numeric progress yet. Covers the gap before the first poll lands. */
+@keyframes indeterminate {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(400%);
+  }
+}
+
 /* Skeleton shimmer — smoother than animate-pulse, sweeps a highlight across. */
 @keyframes skeleton-shimmer {
   0% {
