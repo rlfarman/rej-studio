@@ -30,9 +30,8 @@ import {
   SidebarMenu as SidebarMenuPrimitive,
   SidebarMenuItem,
   SidebarMenuButton,
+  useSidebar,
 } from '@/components/ui/sidebar'
-import { useSidebarStore } from '@/stores/sidebar-store'
-import { useIsMobile } from '@/hooks/use-mobile'
 import { useOnboarding } from '@/features/onboarding/stores/onboarding-store'
 import { commonCopy } from '@/copy/common'
 import { errorsCopy } from '@/copy/errors'
@@ -50,8 +49,7 @@ export function SidebarMenu() {
   const [mounted, setMounted] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const resetAllTours = useOnboarding((s) => s.resetAllTours)
-  const isMobile = useIsMobile()
-  const setOpenMobile = useSidebarStore((s) => s.setOpenMobile)
+  const { isMobile, setOpenMobile } = useSidebar()
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- detecting client-side mount

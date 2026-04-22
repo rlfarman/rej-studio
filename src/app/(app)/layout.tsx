@@ -1,7 +1,13 @@
 import { Suspense } from 'react'
+import { cookies } from 'next/headers'
 import { Header } from '@/app/_components/layout/header'
 import { Footer } from '@/app/_components/layout/footer'
-import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
+import {
+  SidebarInset,
+  SidebarProvider,
+  SIDEBAR_COOKIE_OPEN,
+  SIDEBAR_COOKIE_WIDTH,
+} from '@/components/ui/sidebar'
 import { AppSidebar } from '@/app/_components/layout/app-sidebar'
 import { MaintenanceBanner } from '@/components/maintenance-banner'
 import { WelcomeDialog } from '@/features/onboarding/components/welcome-dialog'
@@ -9,26 +15,40 @@ import { HelpButton } from '@/features/onboarding/components/help-button'
 import { GuidedTourRunner } from '@/features/onboarding/components/guided-tour-runner'
 import { TourRingOverlay } from '@/features/onboarding/components/tour-ring-overlay'
 
-// Sidebar state persists in localStorage; an inline script in the root
-// layout (src/app/layout.tsx) applies it to <html> before hydration, so
-// the layout no longer needs `cookies()` to SSR the correct initial state.
+const SIDEBAR_WIDTH_DEFAULT = 256
+const SIDEBAR_WIDTH_MIN = 200
+const SIDEBAR_WIDTH_MAX = 480
+
+// Sidebar preferences live in cookies so the server can render with the
+// correct open/width on first paint — no flash, no hydration mismatch, no
+// preload script. This is the shadcn sidebar pattern.
 //
-// The shell still streams under one Suspense boundary because `AppSidebar`,
-// `Header`, and `WelcomeDialog` all call `usePathname()`, and under Next 16
-// `cacheComponents` any request-time data (including dynamic route params
-// reached by child pages) must live below a Suspense boundary. Matching
-// the pre-refactor structure keeps it predictable — Next prerenders the
-// static HTML frame (html/body/theme/query providers) and streams the
-// interactive shell at request time.
-function AppShell({
+// The shell streams under a Suspense boundary because `AppSidebar`,
+// `Header`, and `WelcomeDialog` all call `usePathname()`. Under Next 16
+// `cacheComponents`, request-time data must live below a Suspense boundary.
+async function AppShell({
   children,
   maintenanceMessage,
 }: {
   children: React.ReactNode
   maintenanceMessage: string | undefined
 }) {
+  const cookieStore = await cookies()
+  const defaultOpen = cookieStore.get(SIDEBAR_COOKIE_OPEN)?.value !== 'false'
+  const widthCookie = cookieStore.get(SIDEBAR_COOKIE_WIDTH)?.value
+  const widthNum = widthCookie ? Number(widthCookie) : NaN
+  const defaultWidth = Number.isFinite(widthNum)
+    ? Math.round(
+        Math.min(SIDEBAR_WIDTH_MAX, Math.max(SIDEBAR_WIDTH_MIN, widthNum)),
+      )
+    : SIDEBAR_WIDTH_DEFAULT
+
   return (
-    <SidebarProvider className="relative h-svh min-h-0 w-full flex-row overflow-hidden">
+    <SidebarProvider
+      defaultOpen={defaultOpen}
+      defaultWidth={defaultWidth}
+      className="relative h-svh min-h-0 w-full flex-row overflow-hidden"
+    >
       <AppSidebar />
       <SidebarInset className="relative flex h-svh min-h-0 max-w-full flex-1 flex-col overflow-hidden">
         {maintenanceMessage && (

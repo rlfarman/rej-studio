@@ -1,7 +1,6 @@
 'use client'
 
-import { useToggleSidebar } from '@/components/ui/sidebar'
-import { useSidebarStore, selectSidebarState } from '@/stores/sidebar-store'
+import { useSidebar } from '@/components/ui/sidebar'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -11,8 +10,7 @@ import {
 } from '@/components/ui/tooltip'
 
 export function SidebarToggle() {
-  const toggleSidebar = useToggleSidebar()
-  const state = useSidebarStore(selectSidebarState)
+  const { toggleSidebar, state } = useSidebar()
   const isCollapsed = state === 'collapsed'
   const label = isCollapsed ? 'Open sidebar' : 'Close sidebar'
 
