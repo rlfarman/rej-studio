@@ -98,13 +98,7 @@ export function RecentJobs({ onSelectJob }: RecentJobsProps) {
                 <span className="line-clamp-2 pr-5 font-medium">
                   {entry.name}
                 </span>
-                <span
-                  className={
-                    isError && entry.error
-                      ? 'text-destructive/80 line-clamp-2 pr-5 text-[11px]'
-                      : 'text-muted-foreground group-hover/menu-button:text-sidebar-accent-foreground line-clamp-2 pr-5 text-[11px]'
-                  }
-                >
+                <span className="text-muted-foreground group-hover/menu-button:text-sidebar-accent-foreground line-clamp-2 pr-5 text-[11px]">
                   {subline}
                 </span>
               </div>
