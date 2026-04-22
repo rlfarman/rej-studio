@@ -1,3 +1,12 @@
+/** Human-friendly seconds formatter. Keep one decimal for short runs where
+ *  precision is informative; round to int for longer ones where ".34s" is
+ *  just noise. Handles sub-second runs with "<1s" to avoid "0s". */
+function formatProcessingTime(seconds: number): string {
+  if (seconds < 1) return '<1s'
+  if (seconds < 10) return `${seconds.toFixed(1)}s`
+  return `${Math.round(seconds)}s`
+}
+
 export const designToolCopy = {
   validation: {
     dna: {
@@ -72,10 +81,9 @@ export const designToolCopy = {
       'Reverse-translating protein input requires a codon table — pick Human or Mouse.',
   },
   submit: {
-    stageCodons: 'Optimizing codons…',
-    stageSplit: 'Finding split points…',
-    stageWggw: 'Inserting WGGW motifs…',
-    stageGenerate: 'Generating sequences…',
+    // Generic fallback shown on the submit button while the job is in flight
+    // but no backend stage has arrived yet (pre-submit / first 500ms).
+    processing: 'Running…',
     success: 'Optimization complete',
     idle: 'Run optimizer',
   },
@@ -180,18 +188,18 @@ export const designToolCopy = {
   },
   jobHeader: {
     untitled: 'Untitled run',
-    statusRunning: 'Optimizing sequence…',
+    statusRunning: 'In progress…',
     statusCompleted: 'Completed',
-    statusCompletedIn: (seconds: number) => `Completed in ${seconds}s`,
-    statusFailedDefault: 'Job failed',
+    statusCompletedIn: (seconds: number) =>
+      `Completed in ${formatProcessingTime(seconds)}`,
+    statusFailedDefault: 'Something went wrong — try running again.',
     statusCancelled: 'Cancelled',
     buttonCancel: 'Cancel',
     buttonEdit: 'Edit',
     buttonRunAgain: 'Run again',
     running: {
-      title: 'Optimizing your sequence…',
-      defaultStage:
-        'Running DNAChisel on the server. This usually takes a few seconds.',
+      title: 'Designing your sequence…',
+      defaultStage: 'This usually takes a few seconds.',
     },
     speciesLabel: {
       none: '',
@@ -214,7 +222,8 @@ export const designToolCopy = {
   },
   results: {
     heading: 'Results',
-    completedIn: (seconds: number) => `Completed in ${seconds}s`,
+    completedIn: (seconds: number) =>
+      `Completed in ${formatProcessingTime(seconds)}`,
     wggwSplitBadge: 'WGGW split',
     downloadZip: 'Download Results',
     intronTooltip: {
