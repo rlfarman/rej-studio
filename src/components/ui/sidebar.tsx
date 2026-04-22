@@ -30,138 +30,46 @@ import {
 // dynamic rendering on every initial load. A small inline script in the
 // layout reads these keys and sets data attributes on <html> before React
 // hydrates, so initial render matches the user's preference without a flash.
-const SIDEBAR_STORAGE_STATE = 'rej-sidebar-state'
-const SIDEBAR_STORAGE_WIDTH = 'rej-sidebar-width'
-const SIDEBAR_PRELOAD_STATE_ATTR = 'sidebarPreloadOpen'
-const SIDEBAR_PRELOAD_WIDTH_ATTR = 'sidebarPreloadWidth'
-const SIDEBAR_WIDTH_DEFAULT = 256
-const SIDEBAR_WIDTH_MIN = 200
-const SIDEBAR_WIDTH_MAX = 480
+//
+// Sidebar state now lives in a Zustand store (src/stores/sidebar-store.ts)
+// rather than React context so consumers subscribe to the slices they need
+// and width-drag doesn't cascade re-renders through every menu item.
+import {
+  useSidebarStore,
+  hydrateSidebarFromDOM,
+  selectSidebarState,
+  SIDEBAR_WIDTH_DEFAULT,
+} from '@/stores/sidebar-store'
 const SIDEBAR_WIDTH_MOBILE = '18rem'
 const SIDEBAR_WIDTH_ICON = '3rem'
 const SIDEBAR_KEYBOARD_SHORTCUT = 'b'
 
-// React 19 no longer patches up hydration mismatches, so the useState
-// initializer must return the same value on server and client. We read the
-// preload attributes in a layout effect instead — it fires after hydration
-// but before paint, so the preloaded state is applied without a visible flash.
-function readPreloadedOpen(): boolean | null {
-  const preload = document.documentElement.dataset[SIDEBAR_PRELOAD_STATE_ATTR]
-  if (preload === 'true') return true
-  if (preload === 'false') return false
-  return null
-}
-
-function readPreloadedWidth(): number | null {
-  const preload = document.documentElement.dataset[SIDEBAR_PRELOAD_WIDTH_ATTR]
-  const n = preload ? Number(preload) : NaN
-  if (!Number.isFinite(n)) return null
-  return Math.round(Math.min(SIDEBAR_WIDTH_MAX, Math.max(SIDEBAR_WIDTH_MIN, n)))
-}
-
-function writeStorage(key: string, value: string) {
-  try {
-    window.localStorage.setItem(key, value)
-  } catch {
-    // localStorage may be unavailable (private mode, quota) — preference
-    // just doesn't persist across reloads, which is acceptable.
-  }
-}
-
 const useIsomorphicLayoutEffect =
   typeof window !== 'undefined' ? React.useLayoutEffect : React.useEffect
 
-type SidebarContext = {
-  state: 'expanded' | 'collapsed'
-  open: boolean
-  setOpen: (open: boolean) => void
-  openMobile: boolean
-  setOpenMobile: (open: boolean) => void
-  isMobile: boolean
-  toggleSidebar: () => void
-  width: number
-  setWidth: (width: number) => void
-}
-
-const SidebarContext = React.createContext<SidebarContext | null>(null)
-
-function useSidebar() {
-  const context = React.useContext(SidebarContext)
-  if (!context) {
-    throw new Error('useSidebar must be used within a SidebarProvider.')
-  }
-
-  return context
+function useToggleSidebar() {
+  const isMobile = useIsMobile()
+  const toggle = useSidebarStore((s) => s.toggle)
+  return React.useCallback(() => toggle(isMobile), [toggle, isMobile])
 }
 
 function SidebarProvider({
-  defaultOpen = true,
-  defaultWidth = SIDEBAR_WIDTH_DEFAULT,
-  open: openProp,
-  onOpenChange: setOpenProp,
   className,
   style,
   children,
   ...props
-}: React.ComponentProps<'div'> & {
-  defaultOpen?: boolean
-  defaultWidth?: number
-  open?: boolean
-  onOpenChange?: (open: boolean) => void
-}) {
-  const isMobile = useIsMobile()
-  const [openMobile, setOpenMobile] = React.useState(false)
-
-  // State starts at the fallback so SSR and initial client render match; a
-  // layout effect below reads the preload data attributes and syncs state to
-  // the user's persisted preference before the browser paints.
-  const [_open, _setOpen] = React.useState(defaultOpen)
-  const open = openProp ?? _open
-  const setOpen = React.useCallback(
-    (value: boolean | ((value: boolean) => boolean)) => {
-      const openState = typeof value === 'function' ? value(open) : value
-      if (setOpenProp) {
-        setOpenProp(openState)
-      } else {
-        _setOpen(openState)
-      }
-
-      writeStorage(SIDEBAR_STORAGE_STATE, String(openState))
-    },
-    [setOpenProp, open],
-  )
-
-  // Sidebar width state for drag-to-resize.
-  const [width, _setWidth] = React.useState(defaultWidth)
-  const setWidth = React.useCallback((w: number) => {
-    const clamped = Math.round(
-      Math.min(SIDEBAR_WIDTH_MAX, Math.max(SIDEBAR_WIDTH_MIN, w)),
-    )
-    _setWidth(clamped)
-  }, [])
+}: React.ComponentProps<'div'>) {
+  const width = useSidebarStore((s) => s.width)
+  const toggleSidebar = useToggleSidebar()
 
   // Apply preloaded state from <html> dataset. Runs after hydration but
   // before paint, so users who customized their sidebar don't see the
   // fallback state briefly on reload.
   useIsomorphicLayoutEffect(() => {
-    const preloadedOpen = readPreloadedOpen()
-    if (preloadedOpen !== null && preloadedOpen !== _open) {
-      _setOpen(preloadedOpen)
-    }
-    const preloadedWidth = readPreloadedWidth()
-    if (preloadedWidth !== null && preloadedWidth !== width) {
-      _setWidth(preloadedWidth)
-    }
-    // Run only on mount — we're hydrating from a snapshot set before React
-    // rendered, not subscribing to changes.
+    hydrateSidebarFromDOM()
   }, [])
 
-  // Helper to toggle the sidebar.
-  const toggleSidebar = React.useCallback(() => {
-    return isMobile ? setOpenMobile((open) => !open) : setOpen((open) => !open)
-  }, [isMobile, setOpen, setOpenMobile])
-
-  // Adds a keyboard shortcut to toggle the sidebar.
+  // Keyboard shortcut: Cmd/Ctrl+B toggles the sidebar.
   React.useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (
@@ -177,57 +85,26 @@ function SidebarProvider({
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [toggleSidebar])
 
-  // We add a state so that we can do data-state="expanded" or "collapsed".
-  // This makes it easier to style the sidebar with Tailwind classes.
-  const state = open ? 'expanded' : 'collapsed'
-
-  const contextValue = React.useMemo<SidebarContext>(
-    () => ({
-      state,
-      open,
-      setOpen,
-      isMobile,
-      openMobile,
-      setOpenMobile,
-      toggleSidebar,
-      width,
-      setWidth,
-    }),
-    [
-      state,
-      open,
-      setOpen,
-      isMobile,
-      openMobile,
-      setOpenMobile,
-      toggleSidebar,
-      width,
-      setWidth,
-    ],
-  )
-
   return (
-    <SidebarContext.Provider value={contextValue}>
-      <TooltipProvider delayDuration={0}>
-        <div
-          data-slot="sidebar-wrapper"
-          style={
-            {
-              '--sidebar-width': `${width}px`,
-              '--sidebar-width-icon': SIDEBAR_WIDTH_ICON,
-              ...style,
-            } as React.CSSProperties
-          }
-          className={cn(
-            'group/sidebar-wrapper has-data-[variant=inset]:bg-sidebar flex min-h-svh w-full',
-            className,
-          )}
-          {...props}
-        >
-          {children}
-        </div>
-      </TooltipProvider>
-    </SidebarContext.Provider>
+    <TooltipProvider delayDuration={0}>
+      <div
+        data-slot="sidebar-wrapper"
+        style={
+          {
+            '--sidebar-width': `${width}px`,
+            '--sidebar-width-icon': SIDEBAR_WIDTH_ICON,
+            ...style,
+          } as React.CSSProperties
+        }
+        className={cn(
+          'group/sidebar-wrapper has-data-[variant=inset]:bg-sidebar flex min-h-svh w-full',
+          className,
+        )}
+        {...props}
+      >
+        {children}
+      </div>
+    </TooltipProvider>
   )
 }
 
@@ -243,7 +120,10 @@ function Sidebar({
   variant?: 'sidebar' | 'floating' | 'inset'
   collapsible?: 'offcanvas' | 'icon' | 'none'
 }) {
-  const { isMobile, state, openMobile, setOpenMobile } = useSidebar()
+  const isMobile = useIsMobile()
+  const state = useSidebarStore(selectSidebarState)
+  const openMobile = useSidebarStore((s) => s.openMobile)
+  const setOpenMobile = useSidebarStore((s) => s.setOpenMobile)
 
   if (collapsible === 'none') {
     return (
@@ -335,7 +215,7 @@ function SidebarTrigger({
   onClick,
   ...props
 }: React.ComponentProps<typeof Button>) {
-  const { toggleSidebar } = useSidebar()
+  const toggleSidebar = useToggleSidebar()
 
   return (
     <Button
@@ -357,7 +237,9 @@ function SidebarTrigger({
 }
 
 function SidebarRail({ className, ...props }: React.ComponentProps<'button'>) {
-  const { toggleSidebar, setWidth, width, open } = useSidebar()
+  const toggleSidebar = useToggleSidebar()
+  const setWidth = useSidebarStore((s) => s.setWidth)
+  const commitWidth = useSidebarStore((s) => s.commitWidth)
   const isDragging = React.useRef(false)
   const startX = React.useRef(0)
   const startWidth = React.useRef(0)
@@ -365,6 +247,7 @@ function SidebarRail({ className, ...props }: React.ComponentProps<'button'>) {
 
   const handlePointerDown = React.useCallback(
     (e: React.PointerEvent) => {
+      const { open, width } = useSidebarStore.getState()
       if (!open) {
         toggleSidebar()
         return
@@ -397,29 +280,20 @@ function SidebarRail({ className, ...props }: React.ComponentProps<'button'>) {
           return
         }
 
-        const clamped = Math.round(
-          Math.min(
-            SIDEBAR_WIDTH_MAX,
-            Math.max(
-              SIDEBAR_WIDTH_MIN,
-              startWidth.current + totalDelta.current,
-            ),
-          ),
-        )
-        writeStorage(SIDEBAR_STORAGE_WIDTH, String(clamped))
+        commitWidth()
         isDragging.current = false
       }
 
       window.addEventListener('pointermove', handlePointerMove)
       window.addEventListener('pointerup', handlePointerUp)
     },
-    [open, width, setWidth, toggleSidebar],
+    [setWidth, commitWidth, toggleSidebar],
   )
 
   const handleDoubleClick = React.useCallback(() => {
     setWidth(SIDEBAR_WIDTH_DEFAULT)
-    writeStorage(SIDEBAR_STORAGE_WIDTH, String(SIDEBAR_WIDTH_DEFAULT))
-  }, [setWidth])
+    commitWidth()
+  }, [setWidth, commitWidth])
 
   return (
     <button
@@ -649,7 +523,8 @@ function SidebarMenuButton({
   tooltip?: string | React.ComponentProps<typeof TooltipContent>
 } & VariantProps<typeof sidebarMenuButtonVariants>) {
   const Comp = asChild ? Slot : 'button'
-  const { isMobile, state } = useSidebar()
+  const isMobile = useIsMobile()
+  const state = useSidebarStore(selectSidebarState)
 
   const button = (
     <Comp
@@ -867,5 +742,5 @@ export {
   SidebarRail,
   SidebarSeparator,
   SidebarTrigger,
-  useSidebar,
+  useToggleSidebar,
 }

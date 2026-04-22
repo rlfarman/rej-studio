@@ -8,7 +8,8 @@ import {
   TooltipTrigger,
   TooltipContent,
 } from '@/components/ui/tooltip'
-import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar'
+import { SidebarTrigger } from '@/components/ui/sidebar'
+import { useSidebarStore, selectSidebarState } from '@/stores/sidebar-store'
 import { commonCopy } from '@/copy/common'
 import { cn } from '@/lib/utils'
 
@@ -113,7 +114,7 @@ function useMainScroll() {
 export function Header() {
   const pathname = usePathname()
   const isHomePage = pathname === '/'
-  const { state } = useSidebar()
+  const state = useSidebarStore(selectSidebarState)
   const sidebarLabel =
     state === 'expanded' ? commonCopy.sidebar.close : commonCopy.sidebar.open
   const { scrolled, isHidden } = useMainScroll()
