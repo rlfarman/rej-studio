@@ -41,7 +41,7 @@ export function ToggleCard({
       render={({ field }) => {
         const checked = field.value as boolean
         return (
-          <FormItem className="space-y-0">
+          <FormItem className="gap-0">
             <div
               className={cn(
                 'flex flex-row items-start gap-1 border p-3 transition-colors',

@@ -15,6 +15,9 @@ export function CodonOptimizationOptions() {
     <div className="space-y-4">
       <div className="space-y-2">
         <p className="type-overline">{copy.objectivesHeading}</p>
+        <div className="pb-2">
+          <CodonOptimizeWeight />
+        </div>
         <div className="flex flex-col space-y-2">
           <ToggleCard
             name="removeCrypticSpliceSites"
@@ -37,9 +40,6 @@ export function CodonOptimizationOptions() {
             helpHref="/docs/design-tool#kmer-complexity"
             activeChildren={<ReduceKmerComplexityWeight />}
           />
-        </div>
-        <div className="pt-2">
-          <CodonOptimizeWeight />
         </div>
       </div>
 
