@@ -137,7 +137,7 @@ class _ProgressBridgeLogger(_ProgressBarLoggerBase):
 
 
 @contextlib.contextmanager
-def _progress_heartbeat(gate, frac_range, stage, expected_seconds, idle_after=2.0):
+def _progress_heartbeat(gate, frac_range, stage, expected_seconds, idle_after=0.5):
     """Watchdog thread that creeps progress forward on wall-clock, but only
     when the real proglog bridge has gone quiet for `idle_after` seconds.
 

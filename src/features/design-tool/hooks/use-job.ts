@@ -97,10 +97,14 @@ export function useJob({
         })
       } else {
         // Modal backend: pending. The global watcher will poll and upgrade.
+        // Seed a small initial progress so the bar appears immediately —
+        // otherwise we wait ~2s for the first poll before anything shows.
         upsertEntry({
           id: newJobId,
           status: 'running',
           formValues: values,
+          progress: 0.03,
+          stage: 'Queued',
         })
       }
       setJobId(newJobId)

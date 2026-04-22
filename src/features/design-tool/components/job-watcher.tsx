@@ -13,6 +13,10 @@ import { createLogger } from '@/lib/logger'
 import { trackEvent } from '@/lib/analytics'
 
 const POLL_INTERVAL = 2000
+// Early polls are faster so we catch the quick 0.05/0.10/0.15 stage
+// transitions before the backend races past them to optimize (~0.45).
+const FAST_POLL_INTERVAL = 500
+const FAST_POLL_COUNT = 3
 // Stop polling after this long — protects against a backend job that never
 // resolves (stuck worker, lost call_id). The stale-running TTL in the
 // history store (24h) is a safety net on top of this.
@@ -85,8 +89,11 @@ function JobPoller({ jobId }: JobPollerProps) {
     enabled: !isPastDeadline,
     refetchInterval: (query) => {
       const d = query.state.data
-      if (!d) return POLL_INTERVAL
-      return d.status === 'running' ? POLL_INTERVAL : false
+      if (!d) return FAST_POLL_INTERVAL
+      if (d.status !== 'running') return false
+      return query.state.dataUpdateCount < FAST_POLL_COUNT
+        ? FAST_POLL_INTERVAL
+        : POLL_INTERVAL
     },
     // Pause polling when the tab is backgrounded — TanStack Query's focus
     // manager already does this, but being explicit makes the intent clear
