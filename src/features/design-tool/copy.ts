@@ -68,6 +68,8 @@ export const designToolCopy = {
   },
   speciesOptions: {
     label: 'Optimize codon usage for species',
+    noneDisabledHint:
+      'Reverse-translating protein input requires a codon table — pick Human or Mouse.',
   },
   submit: {
     stageCodons: 'Optimizing codons…',

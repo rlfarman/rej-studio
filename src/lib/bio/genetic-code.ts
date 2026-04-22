@@ -109,7 +109,7 @@ export function toCodons(seq: string): string[] {
 }
 
 /** Translate a full sequence to single-letter amino acids. */
-function translate(seq: string): string {
+export function translate(seq: string): string {
   const codons = toCodons(seq)
   let out = ''
   for (const c of codons) {
