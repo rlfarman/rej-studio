@@ -43,8 +43,13 @@ export default function HomePage() {
               {appCopy.home.searchPrompt}
             </PageTitle>
           </HeroItem>
+          <HeroItem index={2} className="mt-6">
+            <p className="text-muted-foreground text-base">
+              {appCopy.home.orPrefix}
+            </p>
+          </HeroItem>
           <HeroItem
-            index={2}
+            index={3}
             className="mt-6 flex justify-center"
             data-tour="home-design-link"
           >
@@ -58,11 +63,6 @@ export default function HomePage() {
               <WandSparkles className="size-4 transition-transform duration-200 group-hover:rotate-[-8deg]" />
               {appCopy.home.designLink}
             </Link>
-          </HeroItem>
-          <HeroItem index={3} className="mt-6">
-            <p className="text-muted-foreground text-base">
-              {appCopy.home.orPrefix}
-            </p>
           </HeroItem>
         </div>
         <HeroItem
