@@ -29,6 +29,16 @@ export function LoginForm({ returnTo, hasError = false }: LoginFormProps) {
           </div>
         </div>
 
+        {/* Accent radial glow — bottom-left bloom */}
+        <div
+          className="pointer-events-none absolute bottom-0 left-0 h-96 w-96 rounded-full blur-3xl"
+          style={{
+            background:
+              'radial-gradient(ellipse at bottom left, oklch(0.82 0.2 125 / 0.18) 0%, transparent 70%)',
+          }}
+          aria-hidden
+        />
+
         {/* Gradient fade at bottom edge for blending on mobile */}
         <div
           className="from-primary pointer-events-none absolute right-0 bottom-0 left-0 h-16 bg-gradient-to-t to-transparent lg:hidden"
@@ -38,10 +48,7 @@ export function LoginForm({ returnTo, hasError = false }: LoginFormProps) {
         <div className="relative z-10 flex flex-1 flex-col justify-between p-8 lg:p-12">
           {/* Wordmark */}
           <div className="flex items-center gap-2.5">
-            <Dna
-              className="text-primary-foreground/80 size-5"
-              strokeWidth={1.5}
-            />
+            <Dna className="text-accent size-5" strokeWidth={1.5} />
             <span className="text-primary-foreground/90 font-sans text-sm font-semibold tracking-wide">
               REJ Studio
             </span>
@@ -54,7 +61,13 @@ export function LoginForm({ returnTo, hasError = false }: LoginFormProps) {
               <br />
               Sequence
               <br />
-              Design
+              <span className="relative inline-block">
+                Design
+                <span
+                  className="bg-accent absolute -bottom-1 left-0 h-[3px] w-full rounded-full opacity-80"
+                  aria-hidden
+                />
+              </span>
             </h1>
             <p className="text-primary-foreground/60 mt-5 max-w-xs text-base leading-relaxed">
               RNA End-Joining optimization for research and clinical
@@ -70,12 +83,12 @@ export function LoginForm({ returnTo, hasError = false }: LoginFormProps) {
 
       {/* Form panel */}
       <div className="flex flex-1 items-center justify-center px-6 py-14 lg:px-16 lg:py-20">
-        <div className="fade-up w-full max-w-sm">
-          <div className="mb-10">
-            <h2
-              className="font-display text-foreground text-3xl font-semibold tracking-tight"
-              style={{ ['--stagger' as string]: 0 }}
-            >
+        <div className="w-full max-w-sm">
+          <div
+            className="fade-up-stagger mb-10"
+            style={{ ['--stagger' as string]: 0 }}
+          >
+            <h2 className="font-display text-foreground text-3xl font-semibold tracking-tight">
               {authCopy.login.title}
             </h2>
             <p className="text-muted-foreground mt-2.5 text-sm leading-relaxed">
@@ -86,7 +99,8 @@ export function LoginForm({ returnTo, hasError = false }: LoginFormProps) {
           <form
             action="/api/login"
             method="post"
-            className="flex flex-col gap-5"
+            className="fade-up-stagger flex flex-col gap-5"
+            style={{ ['--stagger' as string]: 1 }}
           >
             {returnTo ? (
               <input type="hidden" name="return_to" value={returnTo} />
