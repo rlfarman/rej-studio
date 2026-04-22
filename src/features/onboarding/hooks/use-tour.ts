@@ -19,8 +19,12 @@ export function useTour({ tour }: UseTourOptions) {
     endTourRef.current = endTour
   }, [endTour])
 
-  // Create driver instance once per tour definition
+  // Only instantiate when this tour is active — creating the driver eagerly
+  // collides with other concurrent driver.js instances (global body class,
+  // overlay, CSS) such as the cross-route GuidedTourRunner.
   useEffect(() => {
+    if (activeTourId !== tour.id) return
+
     const d = driver({
       showProgress: true,
       progressText: '{{current}} of {{total}}',
@@ -45,25 +49,13 @@ export function useTour({ tour }: UseTourOptions) {
     })
 
     driverRef.current = d
+    d.drive()
+
     return () => {
       cleaningUpRef.current = true
       d.destroy()
       cleaningUpRef.current = false
       driverRef.current = null
     }
-  }, [tour.steps])
-
-  // Start/stop the driver when activeTourId changes
-  useEffect(() => {
-    const d = driverRef.current
-    if (!d) return
-
-    if (activeTourId === tour.id) {
-      d.drive()
-    } else if (d.isActive()) {
-      cleaningUpRef.current = true
-      d.destroy()
-      cleaningUpRef.current = false
-    }
-  }, [activeTourId, tour.id])
+  }, [activeTourId, tour.id, tour.steps])
 }
