@@ -35,10 +35,17 @@ export const metadata: Metadata = {
   },
 }
 
-export default async function GeneSearchPage({
+type GeneSearchParams = Promise<{
+  [key: string]: string | string[] | undefined
+}>
+
+// Params read in a Suspense-wrapped child so the landing shell (the search
+// input + empty state) prerenders as static HTML. Every visit without a `?q=`
+// hits the CDN; only querying pays the server round-trip.
+async function GeneSearchBody({
   searchParams,
 }: {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+  searchParams: GeneSearchParams
 }) {
   const params = await searchParams
   const query = typeof params.q === 'string' ? params.q : ''
@@ -62,18 +69,30 @@ export default async function GeneSearchPage({
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <div className="mx-auto flex max-w-3xl flex-col gap-8 px-4 py-8 md:py-12">
-        <h1 className="sr-only">Search genes</h1>
-        <GeneSearchShell searchGenes={searchGenes} defaultQuery={query} />
-        {trimmedQuery.length > 0 && (
-          <Suspense
-            key={`${query}-${species}`}
-            fallback={<GeneSearchResultsLoading />}
-          >
-            <GeneSearchResults query={query} species={species} />
-          </Suspense>
-        )}
-      </div>
+      <GeneSearchShell searchGenes={searchGenes} defaultQuery={query} />
+      {trimmedQuery.length > 0 && (
+        <Suspense
+          key={`${query}-${species}`}
+          fallback={<GeneSearchResultsLoading />}
+        >
+          <GeneSearchResults query={query} species={species} />
+        </Suspense>
+      )}
     </HydrationBoundary>
+  )
+}
+
+export default function GeneSearchPage({
+  searchParams,
+}: {
+  searchParams: GeneSearchParams
+}) {
+  return (
+    <div className="mx-auto flex max-w-3xl flex-col gap-8 px-4 py-8 md:py-12">
+      <h1 className="sr-only">Search genes</h1>
+      <Suspense fallback={<GeneSearchShell searchGenes={searchGenes} />}>
+        <GeneSearchBody searchParams={searchParams} />
+      </Suspense>
+    </div>
   )
 }

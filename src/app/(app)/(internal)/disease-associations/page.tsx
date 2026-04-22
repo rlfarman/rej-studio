@@ -58,7 +58,10 @@ function normalizeDir(raw: string | undefined, key: SortKey): SortDir {
   return key === 'symbol' ? 'asc' : 'desc'
 }
 
-export default async function DiseaseAssociationsPage({ searchParams }: Props) {
+// Params read in a Suspense-wrapped child so the page header prerenders.
+// Phase B will move filter/sort to the client entirely; this is the intermediate
+// shape that already lets the header stream independently.
+async function DiseaseAssociationsBody({ searchParams }: Props) {
   const params = await searchParams
   const { q, i, sort, dir, page } = params
   const all = getAssociations()
@@ -80,30 +83,8 @@ export default async function DiseaseAssociationsPage({ searchParams }: Props) {
   const pageRows = sorted.slice(pageStart, pageStart + PAGE_SIZE)
 
   return (
-    <div className="mx-auto flex max-w-6xl flex-col gap-6 p-6">
-      <header className="flex flex-col gap-2">
-        <h1 className="font-mono text-2xl font-bold tracking-tight md:text-3xl">
-          {diseaseAssociationsCopy.page.title}
-        </h1>
-        <p className="text-muted-foreground max-w-3xl text-sm">
-          {diseaseAssociationsCopy.page.subtitle}
-        </p>
-        <p className="text-muted-foreground text-xs">
-          {diseaseAssociationsCopy.page.sourceLabel}:{' '}
-          <a
-            href="https://omim.org"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-foreground underline underline-offset-2"
-          >
-            {diseaseAssociationsCopy.page.source}
-          </a>
-        </p>
-      </header>
-
-      <Suspense>
-        <AssociationsFilters bucketCounts={counts} />
-      </Suspense>
+    <>
+      <AssociationsFilters bucketCounts={counts} />
 
       <div className="text-muted-foreground text-xs" aria-live="polite">
         {diseaseAssociationsCopy.table.resultsSummary(
@@ -127,6 +108,36 @@ export default async function DiseaseAssociationsPage({ searchParams }: Props) {
         total={sorted.length}
         searchParams={params}
       />
+    </>
+  )
+}
+
+export default function DiseaseAssociationsPage({ searchParams }: Props) {
+  return (
+    <div className="mx-auto flex max-w-6xl flex-col gap-6 p-6">
+      <header className="flex flex-col gap-2">
+        <h1 className="font-mono text-2xl font-bold tracking-tight md:text-3xl">
+          {diseaseAssociationsCopy.page.title}
+        </h1>
+        <p className="text-muted-foreground max-w-3xl text-sm">
+          {diseaseAssociationsCopy.page.subtitle}
+        </p>
+        <p className="text-muted-foreground text-xs">
+          {diseaseAssociationsCopy.page.sourceLabel}:{' '}
+          <a
+            href="https://omim.org"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-foreground underline underline-offset-2"
+          >
+            {diseaseAssociationsCopy.page.source}
+          </a>
+        </p>
+      </header>
+
+      <Suspense>
+        <DiseaseAssociationsBody searchParams={searchParams} />
+      </Suspense>
     </div>
   )
 }

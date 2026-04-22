@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { getIsoformAndGeneByIsoformId } from '@/features/gene-search/api/isoforms'
 import { GeneSplitterForm } from '@/features/design-tool/components/gene-splitter-form'
 import type { DesignToolSpecies } from '@/features/design-tool/types/species-options'
@@ -26,10 +27,16 @@ export const metadata: Metadata = {
   },
 }
 
-async function DesignToolPage({
+type DesignToolSearchParams = Promise<{
+  [key: string]: string | string[] | undefined
+}>
+
+// Params read in a Suspense-wrapped child so the empty-form shell prerenders.
+// Most visits have no isoform/job params; those hit the static shell directly.
+async function DesignToolWithParams({
   searchParams,
 }: {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+  searchParams: DesignToolSearchParams
 }) {
   const params = await searchParams
   const isoformId = Array.isArray(params.isoform)
@@ -42,9 +49,7 @@ async function DesignToolPage({
     return <GeneSplitterForm key={jobId ?? 'new'} defaultJobId={jobId} />
   }
 
-  const result = isoformId
-    ? await getIsoformAndGeneByIsoformId(isoformId)
-    : undefined
+  const result = await getIsoformAndGeneByIsoformId(isoformId)
 
   if (!result) {
     return <GeneSplitterForm key={jobId ?? 'new'} defaultJobId={jobId} />
@@ -69,4 +74,14 @@ async function DesignToolPage({
   )
 }
 
-export default DesignToolPage
+export default function DesignToolPage({
+  searchParams,
+}: {
+  searchParams: DesignToolSearchParams
+}) {
+  return (
+    <Suspense fallback={<GeneSplitterForm key="shell" />}>
+      <DesignToolWithParams searchParams={searchParams} />
+    </Suspense>
+  )
+}
