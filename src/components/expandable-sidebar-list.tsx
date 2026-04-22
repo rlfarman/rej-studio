@@ -81,7 +81,7 @@ export function ExpandableSidebarList<T>({
   return (
     <SidebarGroup>
       <div className="bg-sidebar sticky top-0 z-10 flex items-center justify-between gap-1">
-        <SidebarGroupLabel asChild>
+        <SidebarGroupLabel asChild className="min-w-0 flex-1 shrink">
           <button
             type="button"
             onClick={toggleOpen}
