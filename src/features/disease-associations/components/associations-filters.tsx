@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { INHERITANCE_BUCKETS, type InheritanceBucket } from '../types'
-import { diseaseLandscapeCopy } from '../copy'
+import { diseaseAssociationsCopy } from '../copy'
 
 const SEARCH_PARAM = 'q'
 const INHERIT_PARAM = 'i'
@@ -17,7 +17,7 @@ type Props = {
   bucketCounts: Record<InheritanceBucket, number>
 }
 
-export function LandscapeFilters({ bucketCounts }: Props) {
+export function AssociationsFilters({ bucketCounts }: Props) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [, startTransition] = useTransition()
@@ -75,8 +75,8 @@ export function LandscapeFilters({ bucketCounts }: Props) {
           inputMode="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder={diseaseLandscapeCopy.filters.searchPlaceholder}
-          aria-label={diseaseLandscapeCopy.filters.searchAria}
+          placeholder={diseaseAssociationsCopy.filters.searchPlaceholder}
+          aria-label={diseaseAssociationsCopy.filters.searchAria}
           className="max-w-lg"
         />
         {hasFilters && (
@@ -88,14 +88,14 @@ export function LandscapeFilters({ bucketCounts }: Props) {
             className="text-muted-foreground"
           >
             <X className="size-3.5" aria-hidden />
-            {diseaseLandscapeCopy.filters.clearAll}
+            {diseaseAssociationsCopy.filters.clearAll}
           </Button>
         )}
       </div>
 
       <div className="flex flex-wrap items-center gap-1.5">
         <span className="text-muted-foreground mr-1 text-xs font-semibold tracking-wider uppercase">
-          {diseaseLandscapeCopy.filters.inheritanceLabel}
+          {diseaseAssociationsCopy.filters.inheritanceLabel}
         </span>
         {INHERITANCE_BUCKETS.map((bucket) => {
           const active = activeBuckets.has(bucket)

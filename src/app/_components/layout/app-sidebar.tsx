@@ -80,12 +80,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <SidebarMenuItem>
               <SidebarMenuButton
                 asChild
-                isActive={pathname.startsWith('/disease-landscape')}
-                tooltip="Disease Landscape"
+                isActive={pathname.startsWith('/disease-associations')}
+                tooltip="Disease Associations"
               >
-                <Link href="/disease-landscape">
+                <Link href="/disease-associations">
                   <Activity />
-                  <span>Disease Landscape</span>
+                  <span>Disease Associations</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>

@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Build the disease-landscape JSON from the OMIM curated CSV.
+"""Build the disease-associations JSON from the OMIM curated CSV.
 
 Reads drizzle/disease_associated_genes.csv and emits a pruned, parsed JSON
-file consumed server-side by src/features/disease-landscape/. Only the four
+file consumed server-side by src/features/disease-associations/. Only the four
 scientifically interesting columns are retained (symbol, name, inheritance,
 phenotypes) plus ensembl_gene_id for deep-linking into /genes/[symbol].
 
-Run: python3 scripts/build-disease-landscape.py
+Run: python3 scripts/build-disease-associations.py
 """
 
 from __future__ import annotations
@@ -20,7 +20,7 @@ import sys
 HERE = os.path.dirname(__file__)
 CSV_PATH = os.path.join(HERE, "..", "drizzle", "disease_associated_genes.csv")
 OUT_PATH = os.path.join(
-    HERE, "..", "src", "features", "disease-landscape", "data", "landscape.json"
+    HERE, "..", "src", "features", "disease-associations", "data", "associations.json"
 )
 
 # Each OMIM phenotype record ends with: `NNNNNN (N), Inheritance` — or, for
