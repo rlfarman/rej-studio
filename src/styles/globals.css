@@ -110,15 +110,28 @@ body {
   --sidebar-accent-foreground: oklch(0.28 0.1 140);
   --sidebar-border: oklch(0.88 0.01 265);
   --sidebar-ring: oklch(0.42 0.15 265);
-  --success: oklch(0.696 0.17 162);
+  --success: oklch(0.696 0.17 145);
   --success-foreground: oklch(0.985 0.005 265);
-  --success-soft: oklch(0.508 0.118 166);
-  --warning: oklch(0.769 0.188 70);
-  --warning-foreground: oklch(0.25 0.08 60);
-  --warning-soft: oklch(0.52 0.14 58);
+  --success-soft: oklch(0.508 0.118 148);
+  --warning: oklch(0.78 0.158 58);
+  --warning-foreground: oklch(0.25 0.08 58);
+  --warning-soft: oklch(0.55 0.14 55);
   --danger: oklch(0.637 0.237 25);
   --danger-foreground: oklch(0.985 0.005 265);
   --danger-soft: oklch(0.505 0.213 28);
+  --info: oklch(0.6 0.14 230);
+  --info-foreground: oklch(0.985 0.005 265);
+  --info-soft: oklch(0.48 0.12 232);
+
+  /* AAV packaging — categorical, not a quality ramp.
+     Uses distinct hues from the chart palette so single/dual/triple read as
+     three options, not three grades of "bad". */
+  --aav-single: oklch(0.58 0.13 230); /* blue */
+  --aav-single-soft: oklch(0.45 0.1 230);
+  --aav-dual: oklch(0.65 0.14 195); /* teal */
+  --aav-dual-soft: oklch(0.5 0.11 195);
+  --aav-triple: oklch(0.62 0.15 155); /* green — the app's target case */
+  --aav-triple-soft: oklch(0.48 0.12 150);
 }
 
 /*
@@ -158,15 +171,25 @@ body {
   --sidebar-accent-foreground: oklch(0.2 0.06 140);
   --sidebar-border: oklch(0.36 0.015 265);
   --sidebar-ring: oklch(0.72 0.17 265);
-  --success: oklch(0.765 0.177 163);
-  --success-foreground: oklch(0.15 0.04 162);
-  --success-soft: oklch(0.82 0.14 163);
-  --warning: oklch(0.828 0.189 84);
-  --warning-foreground: oklch(0.2 0.06 70);
-  --warning-soft: oklch(0.88 0.14 84);
+  --success: oklch(0.78 0.16 145);
+  --success-foreground: oklch(0.15 0.04 145);
+  --success-soft: oklch(0.84 0.13 148);
+  --warning: oklch(0.83 0.16 62);
+  --warning-foreground: oklch(0.2 0.06 58);
+  --warning-soft: oklch(0.88 0.13 58);
   --danger: oklch(0.704 0.191 22);
   --danger-foreground: oklch(0.15 0.04 25);
   --danger-soft: oklch(0.78 0.14 22);
+  --info: oklch(0.72 0.14 232);
+  --info-foreground: oklch(0.15 0.04 230);
+  --info-soft: oklch(0.8 0.11 232);
+
+  --aav-single: oklch(0.72 0.15 232);
+  --aav-single-soft: oklch(0.8 0.12 232);
+  --aav-dual: oklch(0.75 0.14 195);
+  --aav-dual-soft: oklch(0.82 0.11 195);
+  --aav-triple: oklch(0.78 0.16 150);
+  --aav-triple-soft: oklch(0.84 0.13 150);
 }
 
 /*
@@ -220,6 +243,15 @@ body {
   --color-danger: var(--danger);
   --color-danger-foreground: var(--danger-foreground);
   --color-danger-soft: var(--danger-soft);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-info-soft: var(--info-soft);
+  --color-aav-single: var(--aav-single);
+  --color-aav-single-soft: var(--aav-single-soft);
+  --color-aav-dual: var(--aav-dual);
+  --color-aav-dual-soft: var(--aav-dual-soft);
+  --color-aav-triple: var(--aav-triple);
+  --color-aav-triple-soft: var(--aav-triple-soft);
 }
 
 /*
@@ -377,6 +409,17 @@ body {
   }
   100% {
     transform: translateX(100%);
+  }
+}
+
+/* Indeterminate progress — sweeps a segment across the bar when we have
+   no numeric progress yet. Covers the gap before the first poll lands. */
+@keyframes indeterminate {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(400%);
   }
 }
 

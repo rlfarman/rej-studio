@@ -101,6 +101,23 @@ describe('useJob', () => {
     })
   })
 
+  it('seeds initial progress on modal submit so the bar appears immediately', async () => {
+    mockSubmit.mockResolvedValue({ jobId: 'modal-seed-1' })
+
+    const { result } = renderHook(() => useJob(), { wrapper: createWrapper() })
+    await act(async () => {
+      await result.current.submitJob(FORM_VALUES)
+    })
+
+    await waitFor(() => {
+      const entry = useJobHistory.getState().getEntry('modal-seed-1')
+      expect(entry?.status).toBe('running')
+      expect(entry?.progress).toBeGreaterThan(0)
+      expect(entry?.progress).toBeLessThan(0.1)
+      expect(entry?.stage).toBeTruthy()
+    })
+  })
+
   it('seeds history entry for initialJobId when missing', () => {
     renderHook(() => useJob({ initialJobId: 'seed-job-999' }), {
       wrapper: createWrapper(),

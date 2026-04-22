@@ -20,11 +20,17 @@ export const diseaseAssociationsCopy = {
       inheritance: 'Inheritance',
       phenotypes: 'Phenotypes',
       phenotypeCount: 'Phenotypes',
+      largestCds: 'Largest CDS',
     },
+    largestCdsUnit: 'bp',
+    largestCdsUnknown: '—',
     empty: 'No genes match the current filters.',
     resultsSummary: (shown: number, total: number) =>
       shown === total ? `${total} genes` : `${shown} of ${total} genes`,
     viewGeneAria: (symbol: string) => `View ${symbol} isoforms`,
+    pageSummary: (start: number, end: number, total: number) =>
+      `${start}–${end} of ${total}`,
+    paginationAria: 'Pagination',
   },
   phenotype: {
     statusLabel: {

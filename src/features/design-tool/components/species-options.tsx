@@ -36,6 +36,7 @@ export function SpeciesOptions() {
             >
               {DESIGN_TOOL_SPECIES_OPTIONS.map(({ label, value }) => {
                 const isActive = field.value === value
+                const isDisabled = isProtein && value === 'none'
 
                 return (
                   <button
@@ -43,12 +44,21 @@ export function SpeciesOptions() {
                     type="button"
                     role="radio"
                     aria-checked={isActive}
+                    aria-disabled={isDisabled}
+                    disabled={isDisabled}
+                    title={
+                      isDisabled
+                        ? designToolCopy.speciesOptions.noneDisabledHint
+                        : undefined
+                    }
                     onClick={() => field.onChange(value)}
                     className={cn(
                       'flex items-center gap-2 rounded-lg border px-3 py-2 text-left transition-colors',
                       isActive
                         ? 'border-primary bg-primary/5 ring-primary/20 ring-1'
                         : 'hover:bg-muted/50',
+                      isDisabled &&
+                        'cursor-not-allowed opacity-50 hover:bg-transparent',
                     )}
                   >
                     {value === 'none' ? (

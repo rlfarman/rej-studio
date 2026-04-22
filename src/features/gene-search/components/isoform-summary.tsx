@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils'
 import { useSpeciesContext } from '@/stores/species-store'
 import {
   assessDesignSuitability,
+  getSuitabilityConfig,
   type Suitability,
 } from '@/lib/bio/design-suitability'
 import type { IsoformListItem } from '@/features/gene-search/types/domain-types'
@@ -18,24 +19,6 @@ const SUITABILITY_ORDER: Suitability[] = [
   'dual-aav',
   'triple-aav',
 ]
-
-const SUITABILITY_DOT: Record<Suitability, string> = {
-  'single-aav': 'bg-success-soft',
-  'dual-aav': 'bg-warning-soft',
-  'triple-aav': 'bg-danger-soft',
-}
-
-const SUITABILITY_TEXT: Record<Suitability, string> = {
-  'single-aav': 'text-success-soft',
-  'dual-aav': 'text-warning-soft',
-  'triple-aav': 'text-danger-soft',
-}
-
-const SUITABILITY_LABEL: Record<Suitability, string> = {
-  'single-aav': 'Single',
-  'dual-aav': 'Dual',
-  'triple-aav': 'Triple',
-}
 
 export function IsoformSummary({ isoforms }: IsoformSummaryProps) {
   const { species } = useSpeciesContext()
@@ -84,20 +67,21 @@ export function IsoformSummary({ isoforms }: IsoformSummaryProps) {
       >
         <span className="text-muted-foreground">AAV fit</span>
         <span className="flex items-center gap-2 tabular-nums">
-          {SUITABILITY_ORDER.filter((s) => counts[s] > 0).map((s) => (
-            <span
-              key={s}
-              className="flex items-center gap-1"
-              title={`${SUITABILITY_LABEL[s]} AAV · ${counts[s]} isoform${counts[s] > 1 ? 's' : ''}`}
-            >
+          {SUITABILITY_ORDER.filter((s) => counts[s] > 0).map((s) => {
+            const cfg = getSuitabilityConfig(s)
+            return (
               <span
-                className={cn('size-1.5 rounded-full', SUITABILITY_DOT[s])}
-              />
-              <span className={cn('font-medium', SUITABILITY_TEXT[s])}>
-                {counts[s]}
+                key={s}
+                className="flex items-center gap-1"
+                title={`${cfg.label} · ${counts[s]} isoform${counts[s] > 1 ? 's' : ''}`}
+              >
+                <span className={cn('size-1.5 rounded-full', cfg.dotClass)} />
+                <span className={cn('font-medium', cfg.textClass)}>
+                  {counts[s]}
+                </span>
               </span>
-            </span>
-          ))}
+            )
+          })}
         </span>
       </div>
     </div>

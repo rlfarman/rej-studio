@@ -6,6 +6,12 @@ file consumed server-side by src/features/disease-associations/. Only the four
 scientifically interesting columns are retained (symbol, name, inheritance,
 phenotypes) plus ensembl_gene_id for deep-linking into /genes/[symbol].
 
+If data/isoforms.jsonl exists (produced by `pnpm db:build`), each row is also
+annotated with `largestCds` — the max coding_sequence_length across the
+gene's human isoforms — so the associations table renders statically without a
+runtime DB query. Missing: run `pnpm tsx scripts/enrich-disease-associations.ts`
+to pull the values straight from the live DB instead.
+
 Run: python3 scripts/build-disease-associations.py
 """
 
@@ -19,6 +25,7 @@ import sys
 
 HERE = os.path.dirname(__file__)
 CSV_PATH = os.path.join(HERE, "..", "drizzle", "disease_associated_genes.csv")
+ISOFORMS_JSONL = os.path.join(HERE, "..", "data", "isoforms.jsonl")
 OUT_PATH = os.path.join(
     HERE, "..", "src", "features", "disease-associations", "data", "associations.json"
 )
@@ -90,10 +97,42 @@ def parse_phenotypes(raw: str) -> list[dict]:
     return parsed
 
 
+def load_max_cds_by_gene() -> dict[str, int]:
+    """Build a {gene_id: largest_cds_length} map from data/isoforms.jsonl.
+
+    Returns an empty dict if the JSONL isn't present — callers then leave
+    `largestCds` as null and expect enrich-disease-associations.ts to fill it.
+    """
+    if not os.path.exists(ISOFORMS_JSONL):
+        return {}
+    result: dict[str, int] = {}
+    with open(ISOFORMS_JSONL) as f:
+        for line in f:
+            if not line.strip():
+                continue
+            row = json.loads(line)
+            if row.get("species") != "human":
+                continue
+            gid = row["geneId"]
+            cds = int(row["codingSequenceLength"])
+            if cds > result.get(gid, 0):
+                result[gid] = cds
+    return result
+
+
 def main() -> None:
     if not os.path.exists(CSV_PATH):
         print(f"ERROR: {CSV_PATH} not found")
         sys.exit(1)
+
+    max_cds = load_max_cds_by_gene()
+    if max_cds:
+        print(f"Loaded max CDS for {len(max_cds)} human genes from {ISOFORMS_JSONL}")
+    else:
+        print(
+            f"No {ISOFORMS_JSONL} found — associations rows will have largestCds=null "
+            "(run `pnpm tsx scripts/enrich-disease-associations.ts` to fill from DB)"
+        )
 
     rows: list[dict] = []
     unparsed = 0
@@ -101,13 +140,15 @@ def main() -> None:
         for r in csv.DictReader(f):
             phenos = parse_phenotypes(r["phenotypes_omim"])
             unparsed += sum(1 for p in phenos if p["mim"] is None)
+            ensembl_id = r["ensembl_gene_id_omim"] or None
             rows.append(
                 {
                     "symbol": r["approved_gene_symbol"],
                     "name": r["gene_name_omim"],
-                    "ensemblGeneId": r["ensembl_gene_id_omim"] or None,
+                    "ensemblGeneId": ensembl_id,
                     "inheritance": parse_inheritance(r["inheritance_terms"]),
                     "phenotypes": phenos,
+                    "largestCds": max_cds.get(ensembl_id) if ensembl_id else None,
                 }
             )
 

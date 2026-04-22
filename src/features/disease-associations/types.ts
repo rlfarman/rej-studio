@@ -18,6 +18,12 @@ export type AssociationRow = {
   ensemblGeneId: string | null
   inheritance: string[]
   phenotypes: Phenotype[]
+  /**
+   * Largest `coding_sequence_length` across this gene's human isoforms, or
+   * null if no isoform is present in the seed. Baked into associations.json at
+   * build time by `scripts/enrich-disease-associations.ts`.
+   */
+  largestCds: number | null
 }
 
 export type AssociationData = {

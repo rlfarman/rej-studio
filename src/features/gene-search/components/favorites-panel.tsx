@@ -20,6 +20,7 @@ export function FavoriteGenes() {
   return (
     <ExpandableSidebarList
       label={copy.label}
+      persistKey="sidebar:favorites:open"
       items={favoriteGenes}
       getItemKey={(gene) => gene.id}
       emptyMessage={copy.empty}

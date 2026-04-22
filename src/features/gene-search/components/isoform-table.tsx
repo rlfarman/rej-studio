@@ -71,12 +71,6 @@ type SortKey =
   | 'suitability'
 type SortDirection = 'asc' | 'desc'
 
-const SUITABILITY_VARIANT_MAP = {
-  'single-aav': 'default',
-  'dual-aav': 'secondary',
-  'triple-aav': 'destructive',
-} as const
-
 const COLUMN_COUNT = 9
 
 const SUITABILITY_RANK = {
@@ -374,13 +368,6 @@ function IsoformRow({
 }) {
   const [ringVisible, setRingVisible] = useState(!!isHighlighted)
 
-  const gcClass =
-    gcPercent >= 35 && gcPercent <= 60
-      ? 'text-success-soft'
-      : gcPercent >= 25 && gcPercent <= 70
-        ? 'text-warning-soft'
-        : 'text-danger-soft'
-
   useEffect(() => {
     if (!isHighlighted) return
     // Intentional: triggers the highlight ring animation when isHighlighted changes.
@@ -431,9 +418,7 @@ function IsoformRow({
           {isoform.proteinSequenceLength.toLocaleString()}{' '}
           <span className="text-muted-foreground text-xs">aa</span>
         </TableCell>
-        <TableCell
-          className={cn('hidden font-mono tabular-nums sm:table-cell', gcClass)}
-        >
+        <TableCell className="hidden font-mono tabular-nums sm:table-cell">
           {gcPercent.toFixed(1)}%
         </TableCell>
         <TableCell className="hidden font-mono tabular-nums lg:table-cell">
@@ -443,10 +428,7 @@ function IsoformRow({
           {wggwCount.toLocaleString()}
         </TableCell>
         <TableCell className="hidden lg:table-cell">
-          <Badge
-            variant={SUITABILITY_VARIANT_MAP[suitability]}
-            className="text-xs"
-          >
+          <Badge className={cn('text-xs', suitConfig.badgeClass)}>
             {suitConfig.label}
           </Badge>
         </TableCell>
@@ -615,10 +597,7 @@ function ExpandedDetails({
         <div className="col-span-2">
           <dt className="text-muted-foreground">Suitability</dt>
           <dd>
-            <Badge
-              variant={SUITABILITY_VARIANT_MAP[suitability]}
-              className="text-xs"
-            >
+            <Badge className={cn('text-xs', suitConfig.badgeClass)}>
               {suitConfig.label}
             </Badge>
           </dd>
@@ -640,10 +619,7 @@ function ExpandedDetails({
         <div>
           <dt className="text-muted-foreground">Suitability</dt>
           <dd>
-            <Badge
-              variant={SUITABILITY_VARIANT_MAP[suitability]}
-              className="text-xs"
-            >
+            <Badge className={cn('text-xs', suitConfig.badgeClass)}>
               {suitConfig.label}
             </Badge>
           </dd>

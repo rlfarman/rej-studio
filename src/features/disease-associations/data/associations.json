@@ -13,7 +13,8 @@
           "inheritance": "Autosomal dominant",
           "status": "susceptibility"
         }
-      ]
+      ],
+      "largestCds": 4365
     },
     {
       "symbol": "ABCA1",
@@ -35,7 +36,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 6792
     },
     {
       "symbol": "ABCA12",
@@ -57,7 +59,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 7788
     },
     {
       "symbol": "ABCA2",
@@ -72,7 +75,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 7401
     },
     {
       "symbol": "ABCA3",
@@ -87,7 +91,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5115
     },
     {
       "symbol": "ABCA4",
@@ -137,7 +142,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 6822
     },
     {
       "symbol": "ABCA5",
@@ -152,7 +158,8 @@
           "inheritance": "Autosomal recessive",
           "status": "provisional"
         }
-      ]
+      ],
+      "largestCds": 4929
     },
     {
       "symbol": "ABCA7",
@@ -167,7 +174,8 @@
           "inheritance": "Autosomal dominant",
           "status": "susceptibility"
         }
-      ]
+      ],
+      "largestCds": 6441
     },
     {
       "symbol": "ABCC1",
@@ -182,7 +190,8 @@
           "inheritance": "Autosomal dominant",
           "status": "provisional"
         }
-      ]
+      ],
+      "largestCds": null
     },
     {
       "symbol": "ABCC11",
@@ -211,7 +220,8 @@
           "inheritance": "Autosomal dominant",
           "status": "nondisease"
         }
-      ]
+      ],
+      "largestCds": 4149
     },
     {
       "symbol": "ABCC2",
@@ -226,7 +236,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4638
     },
     {
       "symbol": "ABCC6",
@@ -255,7 +266,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": null
     },
     {
       "symbol": "ABCC8",
@@ -305,7 +317,8 @@
           "inheritance": "Autosomal dominant, Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4812
     },
     {
       "symbol": "ABCC9",
@@ -341,7 +354,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4650
     },
     {
       "symbol": "ACACA",
@@ -356,7 +370,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": null
     },
     {
       "symbol": "ACAN",
@@ -385,7 +400,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 7707
     },
     {
       "symbol": "ADAMTS13",
@@ -400,7 +416,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": null
     },
     {
       "symbol": "ADCY10",
@@ -415,7 +432,8 @@
           "inheritance": "Autosomal dominant",
           "status": "susceptibility"
         }
-      ]
+      ],
+      "largestCds": 4833
     },
     {
       "symbol": "ADGRL1",
@@ -430,7 +448,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": null
     },
     {
       "symbol": "ADGRV1",
@@ -464,7 +483,8 @@
           "inheritance": "Autosomal dominant",
           "status": "provisional"
         }
-      ]
+      ],
+      "largestCds": 7875
     },
     {
       "symbol": "AGL",
@@ -486,7 +506,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4599
     },
     {
       "symbol": "AGRN",
@@ -501,7 +522,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 6138
     },
     {
       "symbol": "AHDC1",
@@ -516,7 +538,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4812
     },
     {
       "symbol": "AK9",
@@ -531,7 +554,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5736
     },
     {
       "symbol": "AKAP9",
@@ -546,7 +570,8 @@
           "inheritance": "Autosomal dominant",
           "status": "provisional"
         }
-      ]
+      ],
+      "largestCds": 11796
     },
     {
       "symbol": "ALK",
@@ -561,7 +586,8 @@
           "inheritance": null,
           "status": "susceptibility"
         }
-      ]
+      ],
+      "largestCds": 4863
     },
     {
       "symbol": "ALMS1",
@@ -576,7 +602,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 11580
     },
     {
       "symbol": "ALPK3",
@@ -591,7 +618,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5118
     },
     {
       "symbol": "ALS2",
@@ -620,7 +648,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5076
     },
     {
       "symbol": "ANAPC1",
@@ -635,7 +664,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5835
     },
     {
       "symbol": "ANK1",
@@ -650,7 +680,8 @@
           "inheritance": "Autosomal dominant, Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5862
     },
     {
       "symbol": "ANK2",
@@ -672,7 +703,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 11988
     },
     {
       "symbol": "ANK3",
@@ -687,7 +719,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5607
     },
     {
       "symbol": "ANKRD11",
@@ -702,7 +735,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 7992
     },
     {
       "symbol": "ANKRD17",
@@ -717,7 +751,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 7812
     },
     {
       "symbol": "ANKRD26",
@@ -732,7 +767,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5133
     },
     {
       "symbol": "APC",
@@ -803,7 +839,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 8532
     },
     {
       "symbol": "APC2",
@@ -825,7 +862,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 6912
     },
     {
       "symbol": "APOB",
@@ -847,7 +885,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": null
     },
     {
       "symbol": "ARFGEF1",
@@ -862,7 +901,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5550
     },
     {
       "symbol": "ARFGEF2",
@@ -877,7 +917,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5358
     },
     {
       "symbol": "ARHGAP31",
@@ -892,7 +933,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4335
     },
     {
       "symbol": "ARHGEF10",
@@ -907,7 +949,8 @@
           "inheritance": "Autosomal dominant",
           "status": "provisional"
         }
-      ]
+      ],
+      "largestCds": null
     },
     {
       "symbol": "ARHGEF18",
@@ -922,7 +965,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4086
     },
     {
       "symbol": "ARID1A",
@@ -937,7 +981,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 6858
     },
     {
       "symbol": "ARID1B",
@@ -952,7 +997,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 7248
     },
     {
       "symbol": "ARID2",
@@ -967,7 +1013,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5508
     },
     {
       "symbol": "ASCC3",
@@ -982,7 +1029,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 6609
     },
     {
       "symbol": "ASH1L",
@@ -997,7 +1045,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 8910
     },
     {
       "symbol": "ASPM",
@@ -1012,7 +1061,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 10656
     },
     {
       "symbol": "ASXL1",
@@ -1034,7 +1084,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4626
     },
     {
       "symbol": "ASXL2",
@@ -1049,7 +1100,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4308
     },
     {
       "symbol": "ASXL3",
@@ -1064,7 +1116,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 6750
     },
     {
       "symbol": "ATM",
@@ -1111,7 +1164,8 @@
           "inheritance": null,
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 9171
     },
     {
       "symbol": "ATP7A",
@@ -1140,7 +1194,8 @@
           "inheritance": "X-linked recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4596
     },
     {
       "symbol": "ATP7B",
@@ -1155,7 +1210,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4398
     },
     {
       "symbol": "ATR",
@@ -1177,7 +1233,8 @@
           "inheritance": "Autosomal dominant",
           "status": "provisional"
         }
-      ]
+      ],
+      "largestCds": 7935
     },
     {
       "symbol": "ATRX",
@@ -1206,7 +1263,8 @@
           "inheritance": "X-linked dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 7479
     },
     {
       "symbol": "BCOR",
@@ -1221,7 +1279,8 @@
           "inheritance": "X-linked dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5268
     },
     {
       "symbol": "BCORL1",
@@ -1236,7 +1295,8 @@
           "inheritance": "X-linked recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5358
     },
     {
       "symbol": "BDP1",
@@ -1251,7 +1311,8 @@
           "inheritance": "Autosomal recessive",
           "status": "provisional"
         }
-      ]
+      ],
+      "largestCds": null
     },
     {
       "symbol": "BICRA",
@@ -1266,7 +1327,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4683
     },
     {
       "symbol": "BLM",
@@ -1281,7 +1343,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4254
     },
     {
       "symbol": "BLTP1",
@@ -1296,7 +1359,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5646
     },
     {
       "symbol": "BPTF",
@@ -1318,7 +1382,8 @@
           "inheritance": "Autosomal dominant",
           "status": "susceptibility"
         }
-      ]
+      ],
+      "largestCds": 9477
     },
     {
       "symbol": "BRCA1",
@@ -1347,7 +1412,8 @@
           "inheritance": null,
           "status": "susceptibility"
         }
-      ]
+      ],
+      "largestCds": 5655
     },
     {
       "symbol": "BRCA2",
@@ -1415,7 +1481,8 @@
           "inheritance": "Somatic mutation, Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 10257
     },
     {
       "symbol": "BRD4",
@@ -1430,7 +1497,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4089
     },
     {
       "symbol": "BRWD1",
@@ -1445,7 +1513,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 6963
     },
     {
       "symbol": "BRWD3",
@@ -1460,7 +1529,8 @@
           "inheritance": "X-linked recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5409
     },
     {
       "symbol": "C10orf71",
@@ -1475,7 +1545,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4308
     },
     {
       "symbol": "C2CD3",
@@ -1490,7 +1561,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 7062
     },
     {
       "symbol": "C3",
@@ -1519,7 +1591,8 @@
           "inheritance": null,
           "status": "susceptibility"
         }
-      ]
+      ],
+      "largestCds": 4992
     },
     {
       "symbol": "C4A",
@@ -1541,7 +1614,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": null
     },
     {
       "symbol": "C4B",
@@ -1556,7 +1630,8 @@
           "inheritance": null,
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": null
     },
     {
       "symbol": "C5",
@@ -1578,7 +1653,8 @@
           "inheritance": "Autosomal dominant",
           "status": "nondisease"
         }
-      ]
+      ],
+      "largestCds": 5049
     },
     {
       "symbol": "CACNA1A",
@@ -1621,7 +1697,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 7539
     },
     {
       "symbol": "CACNA1B",
@@ -1636,7 +1713,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 7020
     },
     {
       "symbol": "CACNA1C",
@@ -1672,7 +1750,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": null
     },
     {
       "symbol": "CACNA1D",
@@ -1694,7 +1773,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 6546
     },
     {
       "symbol": "CACNA1E",
@@ -1709,7 +1789,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 6942
     },
     {
       "symbol": "CACNA1F",
@@ -1738,7 +1819,8 @@
           "inheritance": "X-linked",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5934
     },
     {
       "symbol": "CACNA1G",
@@ -1760,7 +1842,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 7134
     },
     {
       "symbol": "CACNA1H",
@@ -1789,7 +1872,8 @@
           "inheritance": null,
           "status": "susceptibility"
         }
-      ]
+      ],
+      "largestCds": 7062
     },
     {
       "symbol": "CACNA1I",
@@ -1804,7 +1888,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 6672
     },
     {
       "symbol": "CACNA1S",
@@ -1840,7 +1925,8 @@
           "inheritance": "Autosomal dominant",
           "status": "susceptibility"
         }
-      ]
+      ],
+      "largestCds": 5622
     },
     {
       "symbol": "CAD",
@@ -1855,7 +1941,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 6678
     },
     {
       "symbol": "CAMSAP1",
@@ -1870,7 +1957,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4842
     },
     {
       "symbol": "CAMTA1",
@@ -1885,7 +1973,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5022
     },
     {
       "symbol": "CARMIL2",
@@ -1900,7 +1989,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4308
     },
     {
       "symbol": "CATSPERT",
@@ -1915,7 +2005,8 @@
           "inheritance": "Autosomal recessive",
           "status": "provisional"
         }
-      ]
+      ],
+      "largestCds": 5463
     },
     {
       "symbol": "CC2D2A",
@@ -1951,7 +2042,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4899
     },
     {
       "symbol": "CCDC88A",
@@ -1966,7 +2058,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5616
     },
     {
       "symbol": "CCDC88C",
@@ -1988,7 +2081,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 6087
     },
     {
       "symbol": "CDC42BPB",
@@ -2003,7 +2097,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5136
     },
     {
       "symbol": "CDH23",
@@ -2044,7 +2139,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 10065
     },
     {
       "symbol": "CDK13",
@@ -2059,7 +2155,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4539
     },
     {
       "symbol": "CDK5RAP2",
@@ -2074,7 +2171,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5682
     },
     {
       "symbol": "CELSR1",
@@ -2096,7 +2194,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 9060
     },
     {
       "symbol": "CENPE",
@@ -2111,7 +2210,8 @@
           "inheritance": "Autosomal recessive",
           "status": "provisional"
         }
-      ]
+      ],
+      "largestCds": 8106
     },
     {
       "symbol": "CENPF",
@@ -2126,7 +2226,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 9345
     },
     {
       "symbol": "CEP152",
@@ -2148,7 +2249,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5133
     },
     {
       "symbol": "CEP164",
@@ -2163,7 +2265,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4383
     },
     {
       "symbol": "CEP250",
@@ -2178,7 +2281,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 7500
     },
     {
       "symbol": "CEP290",
@@ -2221,7 +2325,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 8301
     },
     {
       "symbol": "CEP295",
@@ -2236,7 +2341,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 7806
     },
     {
       "symbol": "CFAP43",
@@ -2258,7 +2364,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4998
     },
     {
       "symbol": "CFAP44",
@@ -2273,7 +2380,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5565
     },
     {
       "symbol": "CFAP47",
@@ -2288,7 +2396,8 @@
           "inheritance": "X-linked recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 9564
     },
     {
       "symbol": "CFAP54",
@@ -2310,7 +2419,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 9291
     },
     {
       "symbol": "CFAP65",
@@ -2325,7 +2435,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5778
     },
     {
       "symbol": "CFAP74",
@@ -2340,7 +2451,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4920
     },
     {
       "symbol": "CFTR",
@@ -2390,7 +2502,8 @@
           "inheritance": null,
           "status": "susceptibility"
         }
-      ]
+      ],
+      "largestCds": 4443
     },
     {
       "symbol": "CHD1",
@@ -2405,7 +2518,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5397
     },
     {
       "symbol": "CHD2",
@@ -2420,7 +2534,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5487
     },
     {
       "symbol": "CHD3",
@@ -2435,7 +2550,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 6345
     },
     {
       "symbol": "CHD4",
@@ -2450,7 +2566,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5823
     },
     {
       "symbol": "CHD5",
@@ -2465,7 +2582,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5865
     },
     {
       "symbol": "CHD7",
@@ -2487,7 +2605,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 8994
     },
     {
       "symbol": "CHD8",
@@ -2502,7 +2621,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 7746
     },
     {
       "symbol": "CIC",
@@ -2517,7 +2637,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 7554
     },
     {
       "symbol": "CIT",
@@ -2532,7 +2653,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 6210
     },
     {
       "symbol": "CLTC",
@@ -2547,7 +2669,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5049
     },
     {
       "symbol": "CNOT1",
@@ -2569,7 +2692,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 7131
     },
     {
       "symbol": "CNTNAP1",
@@ -2591,7 +2715,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4155
     },
     {
       "symbol": "COL11A1",
@@ -2634,7 +2759,8 @@
           "inheritance": null,
           "status": "susceptibility"
         }
-      ]
+      ],
+      "largestCds": 5457
     },
     {
       "symbol": "COL11A2",
@@ -2677,7 +2803,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": null
     },
     {
       "symbol": "COL12A1",
@@ -2699,7 +2826,8 @@
           "inheritance": "Autosomal recessive",
           "status": "provisional"
         }
-      ]
+      ],
+      "largestCds": 9192
     },
     {
       "symbol": "COL17A1",
@@ -2721,7 +2849,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4494
     },
     {
       "symbol": "COL18A1",
@@ -2743,7 +2872,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": null
     },
     {
       "symbol": "COL1A1",
@@ -2807,7 +2937,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4395
     },
     {
       "symbol": "COL1A2",
@@ -2864,7 +2995,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4101
     },
     {
       "symbol": "COL27A1",
@@ -2879,7 +3011,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5583
     },
     {
       "symbol": "COL2A1",
@@ -2999,7 +3132,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4464
     },
     {
       "symbol": "COL3A1",
@@ -3021,7 +3155,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": null
     },
     {
       "symbol": "COL4A1",
@@ -3064,7 +3199,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5010
     },
     {
       "symbol": "COL4A2",
@@ -3093,7 +3229,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5139
     },
     {
       "symbol": "COL4A3",
@@ -3122,7 +3259,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5013
     },
     {
       "symbol": "COL4A4",
@@ -3144,7 +3282,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5073
     },
     {
       "symbol": "COL4A5",
@@ -3159,7 +3298,8 @@
           "inheritance": "X-linked dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5076
     },
     {
       "symbol": "COL4A6",
@@ -3174,7 +3314,8 @@
           "inheritance": "X-linked recessive",
           "status": "provisional"
         }
-      ]
+      ],
+      "largestCds": 5124
     },
     {
       "symbol": "COL5A1",
@@ -3196,7 +3337,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5517
     },
     {
       "symbol": "COL5A2",
@@ -3211,7 +3353,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4500
     },
     {
       "symbol": "COL6A3",
@@ -3240,7 +3383,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 9534
     },
     {
       "symbol": "COL7A1",
@@ -3311,7 +3455,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 8835
     },
     {
       "symbol": "CPAMD8",
@@ -3326,7 +3471,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5658
     },
     {
       "symbol": "CPAP",
@@ -3348,7 +3494,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4017
     },
     {
       "symbol": "CPLANE1",
@@ -3370,7 +3517,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 9756
     },
     {
       "symbol": "CPS1",
@@ -3385,7 +3533,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4521
     },
     {
       "symbol": "CPSF1",
@@ -3400,7 +3549,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": null
     },
     {
       "symbol": "CR1",
@@ -3422,7 +3572,8 @@
           "inheritance": null,
           "status": "susceptibility"
         }
-      ]
+      ],
+      "largestCds": 7470
     },
     {
       "symbol": "CRB1",
@@ -3451,7 +3602,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4221
     },
     {
       "symbol": "CREBBP",
@@ -3473,7 +3625,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 7329
     },
     {
       "symbol": "CUBN",
@@ -3495,7 +3648,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 10872
     },
     {
       "symbol": "CUL7",
@@ -3510,7 +3664,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5193
     },
     {
       "symbol": "CUX1",
@@ -3525,7 +3680,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4551
     },
     {
       "symbol": "CUX2",
@@ -3540,7 +3696,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4461
     },
     {
       "symbol": "DCC",
@@ -3576,7 +3733,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4344
     },
     {
       "symbol": "DCHS1",
@@ -3598,7 +3756,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 9897
     },
     {
       "symbol": "DEPDC5",
@@ -3620,7 +3779,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4812
     },
     {
       "symbol": "DICER1",
@@ -3656,7 +3816,8 @@
           "inheritance": null,
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5769
     },
     {
       "symbol": "DIP2B",
@@ -3671,7 +3832,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4731
     },
     {
       "symbol": "DISP1",
@@ -3686,7 +3848,8 @@
           "inheritance": "Autosomal dominant, Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4575
     },
     {
       "symbol": "DLC1",
@@ -3701,7 +3864,8 @@
           "inheritance": null,
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": null
     },
     {
       "symbol": "DLG5",
@@ -3716,7 +3880,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": null
     },
     {
       "symbol": "DMD",
@@ -3745,7 +3910,8 @@
           "inheritance": "X-linked recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 11058
     },
     {
       "symbol": "DMXL2",
@@ -3774,7 +3940,8 @@
           "inheritance": "Autosomal recessive",
           "status": "provisional"
         }
-      ]
+      ],
+      "largestCds": 9177
     },
     {
       "symbol": "DNAH1",
@@ -3796,7 +3963,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 2787
     },
     {
       "symbol": "DNAH10",
@@ -3811,7 +3979,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": null
     },
     {
       "symbol": "DNAH11",
@@ -3826,7 +3995,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": null
     },
     {
       "symbol": "DNAH12",
@@ -3841,7 +4011,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 11883
     },
     {
       "symbol": "DNAH17",
@@ -3856,7 +4027,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": null
     },
     {
       "symbol": "DNAH2",
@@ -3871,7 +4043,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 2619
     },
     {
       "symbol": "DNAH5",
@@ -3886,7 +4059,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": null
     },
     {
       "symbol": "DNAH7",
@@ -3901,7 +4075,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 1524
     },
     {
       "symbol": "DNAH8",
@@ -3916,7 +4091,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 651
     },
     {
       "symbol": "DNAH9",
@@ -3931,7 +4107,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 2397
     },
     {
       "symbol": "DNHD1",
@@ -3946,7 +4123,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 1794
     },
     {
       "symbol": "DNMBP",
@@ -3961,7 +4139,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4734
     },
     {
       "symbol": "DNMT1",
@@ -3983,7 +4162,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4977
     },
     {
       "symbol": "DOCK11",
@@ -3998,7 +4178,8 @@
           "inheritance": "X-linked recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 6234
     },
     {
       "symbol": "DOCK2",
@@ -4013,7 +4194,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5493
     },
     {
       "symbol": "DOCK3",
@@ -4028,7 +4210,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 6093
     },
     {
       "symbol": "DOCK6",
@@ -4043,7 +4226,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 6249
     },
     {
       "symbol": "DOCK7",
@@ -4058,7 +4242,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 6423
     },
     {
       "symbol": "DOCK8",
@@ -4073,7 +4258,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 6300
     },
     {
       "symbol": "DOT1L",
@@ -4088,7 +4274,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5217
     },
     {
       "symbol": "DSP",
@@ -4131,7 +4318,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 8616
     },
     {
       "symbol": "DST",
@@ -4167,7 +4355,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 9180
     },
     {
       "symbol": "DUOX2",
@@ -4182,7 +4371,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4647
     },
     {
       "symbol": "DYNC1H1",
@@ -4211,7 +4401,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 11901
     },
     {
       "symbol": "DYNC2H1",
@@ -4226,7 +4417,8 @@
           "inheritance": "Digenic recessive, Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 3768
     },
     {
       "symbol": "DYSF",
@@ -4255,7 +4447,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 6360
     },
     {
       "symbol": "EIF2AK4",
@@ -4270,7 +4463,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4950
     },
     {
       "symbol": "EIF4G1",
@@ -4285,7 +4479,8 @@
           "inheritance": "Autosomal dominant",
           "status": "susceptibility"
         }
-      ]
+      ],
+      "largestCds": 4821
     },
     {
       "symbol": "ELP1",
@@ -4311,7 +4506,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4041
     },
     {
       "symbol": "EP300",
@@ -4340,7 +4536,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 7245
     },
     {
       "symbol": "EPB41L1",
@@ -4355,7 +4552,8 @@
           "inheritance": "Autosomal dominant",
           "status": "provisional"
         }
-      ]
+      ],
+      "largestCds": 4788
     },
     {
       "symbol": "EPG5",
@@ -4377,7 +4575,8 @@
           "inheritance": null,
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 7740
     },
     {
       "symbol": "EPRS1",
@@ -4392,7 +4591,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4539
     },
     {
       "symbol": "ERBB3",
@@ -4421,7 +4621,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4029
     },
     {
       "symbol": "ERCC6",
@@ -4482,7 +4683,8 @@
           "inheritance": "Somatic mutation, Autosomal dominant",
           "status": "susceptibility"
         }
-      ]
+      ],
+      "largestCds": 4482
     },
     {
       "symbol": "ERCC6L2",
@@ -4497,7 +4699,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4653
     },
     {
       "symbol": "ESPN",
@@ -4526,7 +4729,8 @@
           "inheritance": "Autosomal recessive",
           "status": "provisional"
         }
-      ]
+      ],
+      "largestCds": 4089
     },
     {
       "symbol": "EXPH5",
@@ -4541,7 +4745,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5970
     },
     {
       "symbol": "EYS",
@@ -4556,7 +4761,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 9498
     },
     {
       "symbol": "F5",
@@ -4610,7 +4816,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 6690
     },
     {
       "symbol": "F8",
@@ -4632,7 +4839,8 @@
           "inheritance": "X-linked recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 7056
     },
     {
       "symbol": "FANCA",
@@ -4647,7 +4855,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4392
     },
     {
       "symbol": "FANCD2",
@@ -4662,7 +4871,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4416
     },
     {
       "symbol": "FANCI",
@@ -4677,7 +4887,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4119
     },
     {
       "symbol": "FANCM",
@@ -4699,7 +4910,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 6147
     },
     {
       "symbol": "FAT2",
@@ -4714,7 +4926,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": null
     },
     {
       "symbol": "FAT4",
@@ -4736,7 +4949,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 9723
     },
     {
       "symbol": "FBN1",
@@ -4800,7 +5014,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 8616
     },
     {
       "symbol": "FBN2",
@@ -4822,7 +5037,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 8739
     },
     {
       "symbol": "FHOD3",
@@ -4837,7 +5053,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4869
     },
     {
       "symbol": "FLG",
@@ -4859,7 +5076,8 @@
           "inheritance": "Autosomal dominant",
           "status": "susceptibility"
         }
-      ]
+      ],
+      "largestCds": null
     },
     {
       "symbol": "FLG2",
@@ -4874,7 +5092,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 7176
     },
     {
       "symbol": "FLNA",
@@ -4952,7 +5171,8 @@
           "inheritance": "X-linked recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 7944
     },
     {
       "symbol": "FLNB",
@@ -4995,7 +5215,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 7902
     },
     {
       "symbol": "FLNC",
@@ -5045,7 +5266,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 8178
     },
     {
       "symbol": "FLT4",
@@ -5074,7 +5296,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4092
     },
     {
       "symbol": "FMN2",
@@ -5089,7 +5312,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5169
     },
     {
       "symbol": "FN1",
@@ -5111,7 +5335,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 7434
     },
     {
       "symbol": "FOCAD",
@@ -5126,7 +5351,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5406
     },
     {
       "symbol": "FRAS1",
@@ -5141,7 +5367,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 10050
     },
     {
       "symbol": "FREM1",
@@ -5170,7 +5397,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 6540
     },
     {
       "symbol": "FREM2",
@@ -5192,7 +5420,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 9510
     },
     {
       "symbol": "FRMPD4",
@@ -5207,7 +5436,8 @@
           "inheritance": "X-linked",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5343
     },
     {
       "symbol": "FRYL",
@@ -5222,7 +5452,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 9042
     },
     {
       "symbol": "FSIP2",
@@ -5237,7 +5468,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 411
     },
     {
       "symbol": "FYCO1",
@@ -5252,7 +5484,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4437
     },
     {
       "symbol": "GBF1",
@@ -5267,7 +5500,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5679
     },
     {
       "symbol": "GEMIN5",
@@ -5282,7 +5516,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4527
     },
     {
       "symbol": "GIPC3",
@@ -5297,7 +5532,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4050
     },
     {
       "symbol": "GLI2",
@@ -5319,7 +5555,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4761
     },
     {
       "symbol": "GLI3",
@@ -5355,7 +5592,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4743
     },
     {
       "symbol": "GON4L",
@@ -5370,7 +5608,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 6726
     },
     {
       "symbol": "GPR179",
@@ -5385,7 +5624,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": null
     },
     {
       "symbol": "GREB1L",
@@ -5407,7 +5647,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5901
     },
     {
       "symbol": "GRIN2A",
@@ -5422,7 +5663,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4395
     },
     {
       "symbol": "GRIN2B",
@@ -5444,7 +5686,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4455
     },
     {
       "symbol": "GRIN2D",
@@ -5459,7 +5702,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4011
     },
     {
       "symbol": "HCFC1",
@@ -5474,7 +5718,8 @@
           "inheritance": "X-linked recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 6243
     },
     {
       "symbol": "HECTD4",
@@ -5489,7 +5734,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 330
     },
     {
       "symbol": "HECW2",
@@ -5504,7 +5750,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4740
     },
     {
       "symbol": "HERC1",
@@ -5519,7 +5766,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 2073
     },
     {
       "symbol": "HERC2",
@@ -5548,7 +5796,8 @@
           "inheritance": "Autosomal recessive",
           "status": "nondisease"
         }
-      ]
+      ],
+      "largestCds": null
     },
     {
       "symbol": "HFM1",
@@ -5563,7 +5812,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4308
     },
     {
       "symbol": "HIVEP2",
@@ -5578,7 +5828,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 7341
     },
     {
       "symbol": "HMCN1",
@@ -5593,7 +5844,8 @@
           "inheritance": "Autosomal dominant",
           "status": "susceptibility"
         }
-      ]
+      ],
+      "largestCds": 720
     },
     {
       "symbol": "HSPG2",
@@ -5615,7 +5867,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 708
     },
     {
       "symbol": "HTT",
@@ -5637,7 +5890,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 9429
     },
     {
       "symbol": "HUWE1",
@@ -5652,7 +5906,8 @@
           "inheritance": "X-linked",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 426
     },
     {
       "symbol": "HYDIN",
@@ -5667,7 +5922,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 3054
     },
     {
       "symbol": "IFT140",
@@ -5703,7 +5959,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4389
     },
     {
       "symbol": "IFT172",
@@ -5732,7 +5989,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5250
     },
     {
       "symbol": "IGF1R",
@@ -5747,7 +6005,8 @@
           "inheritance": "Autosomal dominant, Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4104
     },
     {
       "symbol": "IGF2R",
@@ -5762,7 +6021,8 @@
           "inheritance": null,
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 7476
     },
     {
       "symbol": "IGSF1",
@@ -5777,7 +6037,8 @@
           "inheritance": "X-linked recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4026
     },
     {
       "symbol": "INSR",
@@ -5813,7 +6074,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4149
     },
     {
       "symbol": "INTS1",
@@ -5828,7 +6090,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 6573
     },
     {
       "symbol": "IQCN",
@@ -5843,7 +6106,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4104
     },
     {
       "symbol": "IQSEC2",
@@ -5858,7 +6122,8 @@
           "inheritance": "X-linked dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4626
     },
     {
       "symbol": "IRS2",
@@ -5873,7 +6138,8 @@
           "inheritance": "Autosomal dominant",
           "status": "susceptibility"
         }
-      ]
+      ],
+      "largestCds": 4017
     },
     {
       "symbol": "ITGB4",
@@ -5895,7 +6161,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5469
     },
     {
       "symbol": "ITPR1",
@@ -5924,7 +6191,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 8277
     },
     {
       "symbol": "ITPR2",
@@ -5939,7 +6207,8 @@
           "inheritance": "Autosomal recessive",
           "status": "provisional"
         }
-      ]
+      ],
+      "largestCds": 8106
     },
     {
       "symbol": "ITPR3",
@@ -5961,7 +6230,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 8016
     },
     {
       "symbol": "KANK1",
@@ -5976,7 +6246,8 @@
           "inheritance": null,
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4128
     },
     {
       "symbol": "KAT6A",
@@ -5991,7 +6262,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 6021
     },
     {
       "symbol": "KAT6B",
@@ -6013,7 +6285,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": null
     },
     {
       "symbol": "KATNIP",
@@ -6028,7 +6301,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4857
     },
     {
       "symbol": "KDM2B",
@@ -6043,7 +6317,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4011
     },
     {
       "symbol": "KDM3B",
@@ -6058,7 +6333,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5286
     },
     {
       "symbol": "KDM5A",
@@ -6073,7 +6349,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5073
     },
     {
       "symbol": "KDM5B",
@@ -6088,7 +6365,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4743
     },
     {
       "symbol": "KDM5C",
@@ -6103,7 +6381,8 @@
           "inheritance": "X-linked recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4683
     },
     {
       "symbol": "KDM6A",
@@ -6118,7 +6397,8 @@
           "inheritance": "X-linked dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4362
     },
     {
       "symbol": "KDM6B",
@@ -6133,7 +6413,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5049
     },
     {
       "symbol": "KDR",
@@ -6155,7 +6436,8 @@
           "inheritance": null,
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4071
     },
     {
       "symbol": "KIAA0586",
@@ -6177,7 +6459,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4935
     },
     {
       "symbol": "KIAA1549",
@@ -6192,7 +6475,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5853
     },
     {
       "symbol": "KIDINS220",
@@ -6214,7 +6498,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5316
     },
     {
       "symbol": "KIF14",
@@ -6236,7 +6521,8 @@
           "inheritance": "Autosomal recessive",
           "status": "provisional"
         }
-      ]
+      ],
+      "largestCds": 4947
     },
     {
       "symbol": "KIF15",
@@ -6251,7 +6537,8 @@
           "inheritance": "Autosomal recessive",
           "status": "provisional"
         }
-      ]
+      ],
+      "largestCds": null
     },
     {
       "symbol": "KIF1A",
@@ -6287,7 +6574,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5400
     },
     {
       "symbol": "KIF1B",
@@ -6309,7 +6597,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5514
     },
     {
       "symbol": "KIF21A",
@@ -6331,7 +6620,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5025
     },
     {
       "symbol": "KIF26A",
@@ -6346,7 +6636,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5745
     },
     {
       "symbol": "KIF7",
@@ -6382,7 +6673,8 @@
           "inheritance": "Autosomal recessive",
           "status": "provisional"
         }
-      ]
+      ],
+      "largestCds": 4155
     },
     {
       "symbol": "KMT2A",
@@ -6397,7 +6689,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 11991
     },
     {
       "symbol": "KMT2B",
@@ -6419,7 +6712,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 8148
     },
     {
       "symbol": "KMT2C",
@@ -6434,7 +6728,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 9636
     },
     {
       "symbol": "KMT2D",
@@ -6456,7 +6751,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 3771
     },
     {
       "symbol": "KMT2E",
@@ -6471,7 +6767,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5577
     },
     {
       "symbol": "KNL1",
@@ -6486,7 +6783,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 7029
     },
     {
       "symbol": "LAMA1",
@@ -6501,7 +6799,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 9228
     },
     {
       "symbol": "LAMA2",
@@ -6523,7 +6822,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 9633
     },
     {
       "symbol": "LAMA3",
@@ -6552,7 +6852,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 10002
     },
     {
       "symbol": "LAMA4",
@@ -6567,7 +6868,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5472
     },
     {
       "symbol": "LAMA5",
@@ -6589,7 +6891,8 @@
           "inheritance": "Autosomal recessive",
           "status": "provisional"
         }
-      ]
+      ],
+      "largestCds": 11088
     },
     {
       "symbol": "LAMB1",
@@ -6611,7 +6914,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5361
     },
     {
       "symbol": "LAMB2",
@@ -6633,7 +6937,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5397
     },
     {
       "symbol": "LAMC3",
@@ -6648,7 +6953,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4728
     },
     {
       "symbol": "LCT",
@@ -6663,7 +6969,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5784
     },
     {
       "symbol": "LOXHD1",
@@ -6678,7 +6985,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 6822
     },
     {
       "symbol": "LPA",
@@ -6700,7 +7008,8 @@
           "inheritance": "Autosomal dominant",
           "status": "susceptibility"
         }
-      ]
+      ],
+      "largestCds": 6123
     },
     {
       "symbol": "LRBA",
@@ -6715,7 +7024,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 8592
     },
     {
       "symbol": "LRP1",
@@ -6737,7 +7047,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 1320
     },
     {
       "symbol": "LRP2",
@@ -6752,7 +7063,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 3678
     },
     {
       "symbol": "LRP4",
@@ -6781,7 +7093,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5718
     },
     {
       "symbol": "LRP5",
@@ -6831,7 +7144,8 @@
           "inheritance": "Autosomal dominant, Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4848
     },
     {
       "symbol": "LRP6",
@@ -6867,7 +7181,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": null
     },
     {
       "symbol": "LRPPRC",
@@ -6882,7 +7197,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4293
     },
     {
       "symbol": "LRRC7",
@@ -6897,7 +7213,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4728
     },
     {
       "symbol": "LRRK1",
@@ -6912,7 +7229,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 6048
     },
     {
       "symbol": "LRRK2",
@@ -6927,7 +7245,8 @@
           "inheritance": "Autosomal dominant",
           "status": "susceptibility"
         }
-      ]
+      ],
+      "largestCds": 7584
     },
     {
       "symbol": "LTBP1",
@@ -6942,7 +7261,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5166
     },
     {
       "symbol": "LTBP2",
@@ -6971,7 +7291,8 @@
           "inheritance": "Autosomal recessive",
           "status": "provisional"
         }
-      ]
+      ],
+      "largestCds": 5466
     },
     {
       "symbol": "LTBP4",
@@ -6986,7 +7307,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4875
     },
     {
       "symbol": "LYST",
@@ -7001,7 +7323,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 11406
     },
     {
       "symbol": "MACF1",
@@ -7016,7 +7339,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 6831
     },
     {
       "symbol": "MADD",
@@ -7038,7 +7362,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4953
     },
     {
       "symbol": "MAGI2",
@@ -7053,7 +7378,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4368
     },
     {
       "symbol": "MAP1B",
@@ -7075,7 +7401,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 7407
     },
     {
       "symbol": "MAP3K1",
@@ -7090,7 +7417,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4539
     },
     {
       "symbol": "MAPK8IP3",
@@ -7105,7 +7433,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4035
     },
     {
       "symbol": "MAPKBP1",
@@ -7120,7 +7449,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4545
     },
     {
       "symbol": "MAST1",
@@ -7135,7 +7465,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4713
     },
     {
       "symbol": "MAST3",
@@ -7150,7 +7481,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4044
     },
     {
       "symbol": "MBD5",
@@ -7165,7 +7497,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5184
     },
     {
       "symbol": "MCM3AP",
@@ -7180,7 +7513,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5943
     },
     {
       "symbol": "MED12",
@@ -7216,7 +7550,8 @@
           "inheritance": "X-linked recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 6543
     },
     {
       "symbol": "MED12L",
@@ -7231,7 +7566,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 6543
     },
     {
       "symbol": "MED13",
@@ -7246,7 +7582,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 6525
     },
     {
       "symbol": "MED13L",
@@ -7261,7 +7598,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 6669
     },
     {
       "symbol": "MED23",
@@ -7276,7 +7614,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4125
     },
     {
       "symbol": "MEGF8",
@@ -7291,7 +7630,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 8538
     },
     {
       "symbol": "MET",
@@ -7334,7 +7674,8 @@
           "inheritance": "Autosomal recessive",
           "status": "provisional"
         }
-      ]
+      ],
+      "largestCds": 4227
     },
     {
       "symbol": "MGA",
@@ -7349,7 +7690,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 9345
     },
     {
       "symbol": "MIA3",
@@ -7364,7 +7706,8 @@
           "inheritance": "Autosomal recessive",
           "status": "provisional"
         }
-      ]
+      ],
+      "largestCds": 5724
     },
     {
       "symbol": "MLH3",
@@ -7393,7 +7736,8 @@
           "inheritance": null,
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4362
     },
     {
       "symbol": "MPDZ",
@@ -7408,7 +7752,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 6255
     },
     {
       "symbol": "MSH6",
@@ -7441,7 +7786,8 @@
           "inheritance": "Somatic mutation, Autosomal dominant",
           "status": "susceptibility"
         }
-      ]
+      ],
+      "largestCds": 4089
     },
     {
       "symbol": "MST1R",
@@ -7456,7 +7802,8 @@
           "inheritance": "Autosomal dominant",
           "status": "susceptibility"
         }
-      ]
+      ],
+      "largestCds": 4203
     },
     {
       "symbol": "MTOR",
@@ -7478,7 +7825,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 7650
     },
     {
       "symbol": "MUC5B",
@@ -7493,7 +7841,8 @@
           "inheritance": "Autosomal dominant",
           "status": "susceptibility"
         }
-      ]
+      ],
+      "largestCds": null
     },
     {
       "symbol": "MYH11",
@@ -7522,7 +7871,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": null
     },
     {
       "symbol": "MYH14",
@@ -7544,7 +7894,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 6111
     },
     {
       "symbol": "MYH2",
@@ -7559,7 +7910,8 @@
           "inheritance": "Autosomal dominant, Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5826
     },
     {
       "symbol": "MYH3",
@@ -7595,7 +7947,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5823
     },
     {
       "symbol": "MYH6",
@@ -7631,7 +7984,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5820
     },
     {
       "symbol": "MYH7",
@@ -7686,7 +8040,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5808
     },
     {
       "symbol": "MYH8",
@@ -7708,7 +8063,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5814
     },
     {
       "symbol": "MYH9",
@@ -7730,7 +8086,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5946
     },
     {
       "symbol": "MYLK",
@@ -7752,7 +8109,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5775
     },
     {
       "symbol": "MYO15A",
@@ -7767,7 +8125,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 10593
     },
     {
       "symbol": "MYO18B",
@@ -7782,7 +8141,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 7707
     },
     {
       "symbol": "MYO3A",
@@ -7804,7 +8164,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4851
     },
     {
       "symbol": "MYO5A",
@@ -7819,7 +8180,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5643
     },
     {
       "symbol": "MYO5B",
@@ -7841,7 +8203,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5547
     },
     {
       "symbol": "MYO7A",
@@ -7870,7 +8233,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 6648
     },
     {
       "symbol": "MYO9A",
@@ -7885,7 +8249,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 7647
     },
     {
       "symbol": "MYOF",
@@ -7900,7 +8265,8 @@
           "inheritance": "Autosomal dominant",
           "status": "provisional"
         }
-      ]
+      ],
+      "largestCds": 6186
     },
     {
       "symbol": "MYPN",
@@ -7936,7 +8302,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4017
     },
     {
       "symbol": "NALCN",
@@ -7958,7 +8325,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5304
     },
     {
       "symbol": "NAV3",
@@ -7973,7 +8341,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 7158
     },
     {
       "symbol": "NBAS",
@@ -7995,7 +8364,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 7116
     },
     {
       "symbol": "NBEA",
@@ -8010,7 +8380,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 8904
     },
     {
       "symbol": "NBEAL2",
@@ -8025,7 +8396,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 8265
     },
     {
       "symbol": "NCAPD2",
@@ -8040,7 +8412,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4206
     },
     {
       "symbol": "NCAPD3",
@@ -8055,7 +8428,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4497
     },
     {
       "symbol": "NEB",
@@ -8077,7 +8451,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 9024
     },
     {
       "symbol": "NEXMIF",
@@ -8092,7 +8467,8 @@
           "inheritance": "X-linked dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4551
     },
     {
       "symbol": "NF1",
@@ -8135,7 +8511,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 8550
     },
     {
       "symbol": "NHS",
@@ -8157,7 +8534,8 @@
           "inheritance": "X-linked dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4956
     },
     {
       "symbol": "NIN",
@@ -8172,7 +8550,8 @@
           "inheritance": "Autosomal recessive",
           "status": "provisional"
         }
-      ]
+      ],
+      "largestCds": 6402
     },
     {
       "symbol": "NIPBL",
@@ -8187,7 +8566,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 8415
     },
     {
       "symbol": "NLRP1",
@@ -8223,7 +8603,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4434
     },
     {
       "symbol": "NOTCH1",
@@ -8245,7 +8626,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 7668
     },
     {
       "symbol": "NOTCH2",
@@ -8267,7 +8649,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 7416
     },
     {
       "symbol": "NOTCH3",
@@ -8310,7 +8693,8 @@
           "inheritance": "Autosomal dominant, Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 6966
     },
     {
       "symbol": "NPC1L1",
@@ -8332,7 +8716,8 @@
           "inheritance": null,
           "status": "nondisease"
         }
-      ]
+      ],
+      "largestCds": 4080
     },
     {
       "symbol": "NPHP4",
@@ -8354,7 +8739,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4281
     },
     {
       "symbol": "NRXN1",
@@ -8376,7 +8762,8 @@
           "inheritance": null,
           "status": "susceptibility"
         }
-      ]
+      ],
+      "largestCds": 4644
     },
     {
       "symbol": "NSD1",
@@ -8391,7 +8778,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 8091
     },
     {
       "symbol": "NSD2",
@@ -8406,7 +8794,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4098
     },
     {
       "symbol": "NUP155",
@@ -8421,7 +8810,8 @@
           "inheritance": "Autosomal recessive",
           "status": "provisional"
         }
-      ]
+      ],
+      "largestCds": 4176
     },
     {
       "symbol": "NUP160",
@@ -8436,7 +8826,8 @@
           "inheritance": "Autosomal recessive",
           "status": "provisional"
         }
-      ]
+      ],
+      "largestCds": 4311
     },
     {
       "symbol": "NUP188",
@@ -8451,7 +8842,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5250
     },
     {
       "symbol": "NUP205",
@@ -8466,7 +8858,8 @@
           "inheritance": "Autosomal recessive",
           "status": "provisional"
         }
-      ]
+      ],
+      "largestCds": 6039
     },
     {
       "symbol": "NUP210L",
@@ -8481,7 +8874,8 @@
           "inheritance": "Autosomal recessive",
           "status": "provisional"
         }
-      ]
+      ],
+      "largestCds": 5667
     },
     {
       "symbol": "NUP214",
@@ -8510,7 +8904,8 @@
           "inheritance": "Autosomal recessive",
           "status": "susceptibility"
         }
-      ]
+      ],
+      "largestCds": 6273
     },
     {
       "symbol": "OBSCN",
@@ -8525,7 +8920,8 @@
           "inheritance": "Autosomal recessive",
           "status": "susceptibility"
         }
-      ]
+      ],
+      "largestCds": 9033
     },
     {
       "symbol": "OBSL1",
@@ -8540,7 +8936,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5691
     },
     {
       "symbol": "OTOF",
@@ -8562,7 +8959,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5994
     },
     {
       "symbol": "OTOG",
@@ -8577,7 +8975,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 8778
     },
     {
       "symbol": "OTOGL",
@@ -8592,7 +8991,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 7062
     },
     {
       "symbol": "PAPPA2",
@@ -8607,7 +9007,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5376
     },
     {
       "symbol": "PBRM1",
@@ -8622,7 +9023,8 @@
           "inheritance": null,
           "status": "provisional"
         }
-      ]
+      ],
+      "largestCds": 5115
     },
     {
       "symbol": "PCDH15",
@@ -8651,7 +9053,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5889
     },
     {
       "symbol": "PCLO",
@@ -8666,7 +9069,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 3654
     },
     {
       "symbol": "PCNT",
@@ -8681,7 +9085,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 10044
     },
     {
       "symbol": "PHIP",
@@ -8696,7 +9101,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5505
     },
     {
       "symbol": "PHLDB1",
@@ -8711,7 +9117,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4134
     },
     {
       "symbol": "PI4KA",
@@ -8740,7 +9147,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 6309
     },
     {
       "symbol": "PIEZO1",
@@ -8769,7 +9177,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 7566
     },
     {
       "symbol": "PIEZO2",
@@ -8805,7 +9214,8 @@
           "inheritance": "Autosomal dominant",
           "status": "provisional"
         }
-      ]
+      ],
+      "largestCds": 8598
     },
     {
       "symbol": "PIK3C2A",
@@ -8820,7 +9230,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5061
     },
     {
       "symbol": "PIKFYVE",
@@ -8835,7 +9246,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 6297
     },
     {
       "symbol": "PKD1",
@@ -8850,7 +9262,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 3369
     },
     {
       "symbol": "PKD1L1",
@@ -8865,7 +9278,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 8586
     },
     {
       "symbol": "PKHD1",
@@ -8880,7 +9294,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 10191
     },
     {
       "symbol": "PKHD1L1",
@@ -8895,7 +9310,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 3516
     },
     {
       "symbol": "PLCE1",
@@ -8910,7 +9326,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 6909
     },
     {
       "symbol": "PLCH1",
@@ -8925,7 +9342,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5082
     },
     {
       "symbol": "PLEC",
@@ -8968,7 +9386,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 10344
     },
     {
       "symbol": "PLEKHG2",
@@ -8983,7 +9402,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4161
     },
     {
       "symbol": "PLIN4",
@@ -8998,7 +9418,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4119
     },
     {
       "symbol": "PLXNA1",
@@ -9013,7 +9434,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5691
     },
     {
       "symbol": "PLXND1",
@@ -9028,7 +9450,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5778
     },
     {
       "symbol": "PNPLA6",
@@ -9064,7 +9487,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4128
     },
     {
       "symbol": "POGZ",
@@ -9079,7 +9503,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4254
     },
     {
       "symbol": "POLA1",
@@ -9101,7 +9526,8 @@
           "inheritance": "X-linked recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4407
     },
     {
       "symbol": "POLE",
@@ -9130,7 +9556,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 6861
     },
     {
       "symbol": "POLR1A",
@@ -9152,7 +9579,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5163
     },
     {
       "symbol": "POLR2A",
@@ -9167,7 +9595,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": null
     },
     {
       "symbol": "POLR3A",
@@ -9189,7 +9618,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4173
     },
     {
       "symbol": "PRG4",
@@ -9204,7 +9634,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4215
     },
     {
       "symbol": "PRKDC",
@@ -9219,7 +9650,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5064
     },
     {
       "symbol": "PRPF8",
@@ -9234,7 +9666,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": null
     },
     {
       "symbol": "PRR12",
@@ -9249,7 +9682,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 6111
     },
     {
       "symbol": "PRX",
@@ -9271,7 +9705,8 @@
           "inheritance": "Autosomal dominant, Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4671
     },
     {
       "symbol": "PTCH1",
@@ -9300,7 +9735,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4344
     },
     {
       "symbol": "PTPN23",
@@ -9315,7 +9751,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4911
     },
     {
       "symbol": "PTPRF",
@@ -9330,7 +9767,8 @@
           "inheritance": "Autosomal recessive",
           "status": "provisional"
         }
-      ]
+      ],
+      "largestCds": 5724
     },
     {
       "symbol": "PTPRJ",
@@ -9352,7 +9790,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4356
     },
     {
       "symbol": "PTPRQ",
@@ -9374,7 +9813,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 6999
     },
     {
       "symbol": "PXDN",
@@ -9389,7 +9829,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4440
     },
     {
       "symbol": "QRICH2",
@@ -9404,7 +9845,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5664
     },
     {
       "symbol": "RAB3GAP2",
@@ -9426,7 +9868,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4257
     },
     {
       "symbol": "RAI1",
@@ -9441,7 +9884,8 @@
           "inheritance": "Isolated cases, Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5721
     },
     {
       "symbol": "RALGAPA1",
@@ -9456,7 +9900,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 7629
     },
     {
       "symbol": "RANBP2",
@@ -9471,7 +9916,8 @@
           "inheritance": "Autosomal dominant",
           "status": "susceptibility"
         }
-      ]
+      ],
+      "largestCds": 9675
     },
     {
       "symbol": "RAPGEF2",
@@ -9486,7 +9932,8 @@
           "inheritance": "Autosomal dominant",
           "status": "provisional"
         }
-      ]
+      ],
+      "largestCds": 5040
     },
     {
       "symbol": "RB1CC1",
@@ -9501,7 +9948,8 @@
           "inheritance": null,
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4785
     },
     {
       "symbol": "RELN",
@@ -9523,7 +9971,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 10410
     },
     {
       "symbol": "RERE",
@@ -9538,7 +9987,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4701
     },
     {
       "symbol": "RFX7",
@@ -9553,7 +10003,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4383
     },
     {
       "symbol": "RIC1",
@@ -9568,7 +10019,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4272
     },
     {
       "symbol": "RIMS2",
@@ -9583,7 +10035,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4824
     },
     {
       "symbol": "RNF213",
@@ -9598,7 +10051,8 @@
           "inheritance": "Autosomal dominant, Autosomal recessive",
           "status": "susceptibility"
         }
-      ]
+      ],
+      "largestCds": 3192
     },
     {
       "symbol": "ROBO1",
@@ -9627,7 +10081,8 @@
           "inheritance": "Autosomal recessive",
           "status": "provisional"
         }
-      ]
+      ],
+      "largestCds": 4956
     },
     {
       "symbol": "ROBO2",
@@ -9642,7 +10097,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4596
     },
     {
       "symbol": "ROBO3",
@@ -9657,7 +10113,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4161
     },
     {
       "symbol": "RP1",
@@ -9672,7 +10129,8 @@
           "inheritance": "Autosomal dominant, Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 6471
     },
     {
       "symbol": "RP1L1",
@@ -9694,7 +10152,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": null
     },
     {
       "symbol": "RTTN",
@@ -9709,7 +10168,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 6681
     },
     {
       "symbol": "RUSC2",
@@ -9724,7 +10184,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4551
     },
     {
       "symbol": "RYR1",
@@ -9760,7 +10221,8 @@
           "inheritance": "Autosomal dominant",
           "status": "susceptibility"
         }
-      ]
+      ],
+      "largestCds": 9180
     },
     {
       "symbol": "RYR2",
@@ -9782,7 +10244,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": null
     },
     {
       "symbol": "RYR3",
@@ -9797,7 +10260,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 1848
     },
     {
       "symbol": "SACK1H",
@@ -9812,7 +10276,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": null
     },
     {
       "symbol": "SACS",
@@ -9827,7 +10292,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 11490
     },
     {
       "symbol": "SAMD9",
@@ -9856,7 +10322,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4770
     },
     {
       "symbol": "SAMD9L",
@@ -9885,7 +10352,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4755
     },
     {
       "symbol": "SBF1",
@@ -9900,7 +10368,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5700
     },
     {
       "symbol": "SBF2",
@@ -9915,7 +10384,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5646
     },
     {
       "symbol": "SCAPER",
@@ -9930,7 +10400,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4203
     },
     {
       "symbol": "SCN10A",
@@ -9945,7 +10416,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5895
     },
     {
       "symbol": "SCN11A",
@@ -9967,7 +10439,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5376
     },
     {
       "symbol": "SCN1A",
@@ -10010,7 +10483,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 6030
     },
     {
       "symbol": "SCN2A",
@@ -10039,7 +10513,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 6018
     },
     {
       "symbol": "SCN3A",
@@ -10061,7 +10536,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 6003
     },
     {
       "symbol": "SCN4A",
@@ -10118,7 +10594,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5511
     },
     {
       "symbol": "SCN5A",
@@ -10189,7 +10666,8 @@
           "inheritance": "Autosomal recessive",
           "status": "susceptibility"
         }
-      ]
+      ],
+      "largestCds": 6051
     },
     {
       "symbol": "SCN8A",
@@ -10225,7 +10703,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5976
     },
     {
       "symbol": "SCN9A",
@@ -10268,7 +10747,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5967
     },
     {
       "symbol": "SETBP1",
@@ -10290,7 +10770,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4791
     },
     {
       "symbol": "SETD1A",
@@ -10312,7 +10793,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5124
     },
     {
       "symbol": "SETD1B",
@@ -10327,7 +10809,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5901
     },
     {
       "symbol": "SETD2",
@@ -10356,7 +10839,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 7695
     },
     {
       "symbol": "SETD5",
@@ -10371,7 +10855,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4425
     },
     {
       "symbol": "SETX",
@@ -10393,7 +10878,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 8034
     },
     {
       "symbol": "SHANK2",
@@ -10408,7 +10894,8 @@
           "inheritance": null,
           "status": "susceptibility"
         }
-      ]
+      ],
+      "largestCds": 5550
     },
     {
       "symbol": "SHANK3",
@@ -10430,7 +10917,8 @@
           "inheritance": "Autosomal dominant",
           "status": "susceptibility"
         }
-      ]
+      ],
+      "largestCds": null
     },
     {
       "symbol": "SHOC1",
@@ -10445,7 +10933,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4527
     },
     {
       "symbol": "SI",
@@ -10460,7 +10949,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5484
     },
     {
       "symbol": "SIK3",
@@ -10475,7 +10965,8 @@
           "inheritance": "Autosomal recessive",
           "status": "provisional"
         }
-      ]
+      ],
+      "largestCds": 4110
     },
     {
       "symbol": "SIPA1L3",
@@ -10490,7 +10981,8 @@
           "inheritance": "Autosomal recessive",
           "status": "provisional"
         }
-      ]
+      ],
+      "largestCds": 5346
     },
     {
       "symbol": "SKIC3",
@@ -10505,7 +10997,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4737
     },
     {
       "symbol": "SLX4",
@@ -10520,7 +11013,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5505
     },
     {
       "symbol": "SMARCA2",
@@ -10542,7 +11036,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4773
     },
     {
       "symbol": "SMARCA4",
@@ -10571,7 +11066,8 @@
           "inheritance": "Autosomal dominant",
           "status": "provisional"
         }
-      ]
+      ],
+      "largestCds": 5040
     },
     {
       "symbol": "SMCHD1",
@@ -10593,7 +11089,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 6018
     },
     {
       "symbol": "SNAPC4",
@@ -10608,7 +11105,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4410
     },
     {
       "symbol": "SNRNP200",
@@ -10623,7 +11121,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 6411
     },
     {
       "symbol": "SON",
@@ -10638,7 +11137,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 7281
     },
     {
       "symbol": "SPAG17",
@@ -10653,7 +11153,8 @@
           "inheritance": "Autosomal recessive",
           "status": "provisional"
         }
-      ]
+      ],
+      "largestCds": 6672
     },
     {
       "symbol": "SPEF2",
@@ -10668,7 +11169,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 6510
     },
     {
       "symbol": "SPEG",
@@ -10683,7 +11185,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 9804
     },
     {
       "symbol": "SPEN",
@@ -10698,7 +11201,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 10995
     },
     {
       "symbol": "SPG11",
@@ -10727,7 +11231,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 7332
     },
     {
       "symbol": "SPTA1",
@@ -10756,7 +11261,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 7260
     },
     {
       "symbol": "SPTAN1",
@@ -10792,7 +11298,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 7521
     },
     {
       "symbol": "SPTB",
@@ -10821,7 +11328,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 6987
     },
     {
       "symbol": "SPTBN1",
@@ -10836,7 +11344,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 7095
     },
     {
       "symbol": "SPTBN2",
@@ -10858,7 +11367,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 7194
     },
     {
       "symbol": "SPTBN4",
@@ -10873,7 +11383,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 7695
     },
     {
       "symbol": "SRCAP",
@@ -10895,7 +11406,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 9693
     },
     {
       "symbol": "SRRM2",
@@ -10910,7 +11422,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 8259
     },
     {
       "symbol": "STAB1",
@@ -10925,7 +11438,8 @@
           "inheritance": "Autosomal recessive",
           "status": "nondisease"
         }
-      ]
+      ],
+      "largestCds": 7713
     },
     {
       "symbol": "STRC",
@@ -10940,7 +11454,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5328
     },
     {
       "symbol": "SVIL",
@@ -10955,7 +11470,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 6645
     },
     {
       "symbol": "SYCP2",
@@ -10970,7 +11486,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4593
     },
     {
       "symbol": "SYNE1",
@@ -10999,7 +11516,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5178
     },
     {
       "symbol": "SYNE2",
@@ -11014,7 +11532,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 3270
     },
     {
       "symbol": "SYNGAP1",
@@ -11029,7 +11548,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": null
     },
     {
       "symbol": "SYNJ1",
@@ -11051,7 +11571,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4839
     },
     {
       "symbol": "SZT2",
@@ -11066,7 +11587,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 10299
     },
     {
       "symbol": "TAF1",
@@ -11088,7 +11610,8 @@
           "inheritance": "X-linked recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5724
     },
     {
       "symbol": "TANC2",
@@ -11103,7 +11626,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 6225
     },
     {
       "symbol": "TCF20",
@@ -11118,7 +11642,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": null
     },
     {
       "symbol": "TCHH",
@@ -11133,7 +11658,8 @@
           "inheritance": "Autosomal recessive",
           "status": "provisional"
         }
-      ]
+      ],
+      "largestCds": 5832
     },
     {
       "symbol": "TCOF1",
@@ -11148,7 +11674,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4470
     },
     {
       "symbol": "TDRD9",
@@ -11163,7 +11690,8 @@
           "inheritance": "Autosomal recessive",
           "status": "provisional"
         }
-      ]
+      ],
+      "largestCds": 4149
     },
     {
       "symbol": "TECPR2",
@@ -11178,7 +11706,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4236
     },
     {
       "symbol": "TECTA",
@@ -11200,7 +11729,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 6468
     },
     {
       "symbol": "TENM3",
@@ -11222,7 +11752,8 @@
           "inheritance": "Autosomal recessive",
           "status": "provisional"
         }
-      ]
+      ],
+      "largestCds": 8100
     },
     {
       "symbol": "TENM4",
@@ -11237,7 +11768,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 8310
     },
     {
       "symbol": "TET2",
@@ -11259,7 +11791,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 6072
     },
     {
       "symbol": "TET3",
@@ -11274,7 +11807,8 @@
           "inheritance": "Autosomal dominant, Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5388
     },
     {
       "symbol": "TEX14",
@@ -11289,7 +11823,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4494
     },
     {
       "symbol": "TEX15",
@@ -11304,7 +11839,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 9531
     },
     {
       "symbol": "TG",
@@ -11326,7 +11862,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 8307
     },
     {
       "symbol": "THOC2",
@@ -11348,7 +11885,8 @@
           "inheritance": "X-linked",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4782
     },
     {
       "symbol": "TIAM1",
@@ -11363,7 +11901,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4776
     },
     {
       "symbol": "TMEM94",
@@ -11378,7 +11917,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4101
     },
     {
       "symbol": "TNC",
@@ -11393,7 +11933,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 6606
     },
     {
       "symbol": "TNIK",
@@ -11408,7 +11949,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4083
     },
     {
       "symbol": "TNR",
@@ -11423,7 +11965,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4077
     },
     {
       "symbol": "TNRC6A",
@@ -11438,7 +11981,8 @@
           "inheritance": "Autosomal dominant",
           "status": "provisional"
         }
-      ]
+      ],
+      "largestCds": 5889
     },
     {
       "symbol": "TNRC6B",
@@ -11453,7 +11997,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5502
     },
     {
       "symbol": "TNXB",
@@ -11475,7 +12020,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": null
     },
     {
       "symbol": "TOGARAM1",
@@ -11490,7 +12036,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5322
     },
     {
       "symbol": "TONSL",
@@ -11505,7 +12052,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4137
     },
     {
       "symbol": "TOP2A",
@@ -11520,7 +12068,8 @@
           "inheritance": null,
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4596
     },
     {
       "symbol": "TOP2B",
@@ -11535,7 +12084,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4881
     },
     {
       "symbol": "TPR",
@@ -11550,7 +12100,8 @@
           "inheritance": "Autosomal recessive",
           "status": "provisional"
         }
-      ]
+      ],
+      "largestCds": 7092
     },
     {
       "symbol": "TRIO",
@@ -11572,7 +12123,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 9294
     },
     {
       "symbol": "TRIOBP",
@@ -11587,7 +12139,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 7098
     },
     {
       "symbol": "TRIP11",
@@ -11609,7 +12162,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5940
     },
     {
       "symbol": "TRIP12",
@@ -11624,7 +12178,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 6207
     },
     {
       "symbol": "TRPM1",
@@ -11639,7 +12194,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": null
     },
     {
       "symbol": "TRPM3",
@@ -11661,7 +12217,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5160
     },
     {
       "symbol": "TRPM6",
@@ -11676,7 +12233,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 6069
     },
     {
       "symbol": "TRPM7",
@@ -11691,7 +12249,8 @@
           "inheritance": "Autosomal dominant",
           "status": "susceptibility"
         }
-      ]
+      ],
+      "largestCds": 5598
     },
     {
       "symbol": "TRRAP",
@@ -11713,7 +12272,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 11622
     },
     {
       "symbol": "TSC2",
@@ -11742,7 +12302,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5424
     },
     {
       "symbol": "TSPOAP1",
@@ -11764,7 +12325,8 @@
           "inheritance": "Autosomal recessive",
           "status": "provisional"
         }
-      ]
+      ],
+      "largestCds": 5574
     },
     {
       "symbol": "TTN",
@@ -11814,7 +12376,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": null
     },
     {
       "symbol": "TUBGCP6",
@@ -11829,7 +12392,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5460
     },
     {
       "symbol": "UBR1",
@@ -11844,7 +12408,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5250
     },
     {
       "symbol": "UBR5",
@@ -11859,7 +12424,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 8400
     },
     {
       "symbol": "UGGT1",
@@ -11874,7 +12440,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4668
     },
     {
       "symbol": "UNC13A",
@@ -11903,7 +12470,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5169
     },
     {
       "symbol": "UNC80",
@@ -11918,7 +12486,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 9975
     },
     {
       "symbol": "USH2A",
@@ -11940,7 +12509,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4641
     },
     {
       "symbol": "USP9X",
@@ -11962,7 +12532,8 @@
           "inheritance": "X-linked dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 7728
     },
     {
       "symbol": "USP9Y",
@@ -11977,7 +12548,8 @@
           "inheritance": "Y-linked",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 7668
     },
     {
       "symbol": "VCAN",
@@ -11992,7 +12564,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 10191
     },
     {
       "symbol": "VPS13A",
@@ -12007,7 +12580,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 9525
     },
     {
       "symbol": "VPS13B",
@@ -12022,7 +12596,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 11994
     },
     {
       "symbol": "VPS13C",
@@ -12037,7 +12612,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 11262
     },
     {
       "symbol": "VPS13D",
@@ -12052,7 +12628,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": null
     },
     {
       "symbol": "VWA8",
@@ -12067,7 +12644,8 @@
           "inheritance": "Autosomal dominant",
           "status": "provisional"
         }
-      ]
+      ],
+      "largestCds": 5718
     },
     {
       "symbol": "VWF",
@@ -12096,7 +12674,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 8442
     },
     {
       "symbol": "WDFY3",
@@ -12111,7 +12690,8 @@
           "inheritance": "Autosomal dominant",
           "status": "provisional"
         }
-      ]
+      ],
+      "largestCds": 10581
     },
     {
       "symbol": "WDR19",
@@ -12154,7 +12734,8 @@
           "inheritance": "Autosomal recessive",
           "status": "provisional"
         }
-      ]
+      ],
+      "largestCds": 4029
     },
     {
       "symbol": "WDR62",
@@ -12169,7 +12750,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4572
     },
     {
       "symbol": "WDR81",
@@ -12191,7 +12773,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": null
     },
     {
       "symbol": "WNK1",
@@ -12213,7 +12796,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 8502
     },
     {
       "symbol": "WNK3",
@@ -12228,7 +12812,8 @@
           "inheritance": "X-linked recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5403
     },
     {
       "symbol": "WRN",
@@ -12243,7 +12828,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4299
     },
     {
       "symbol": "YEATS2",
@@ -12258,7 +12844,8 @@
           "inheritance": "Autosomal dominant",
           "status": "provisional"
         }
-      ]
+      ],
+      "largestCds": 4269
     },
     {
       "symbol": "ZFHX2",
@@ -12273,7 +12860,8 @@
           "inheritance": "Autosomal dominant",
           "status": "provisional"
         }
-      ]
+      ],
+      "largestCds": 7719
     },
     {
       "symbol": "ZFHX3",
@@ -12309,7 +12897,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 11112
     },
     {
       "symbol": "ZFYVE26",
@@ -12324,7 +12913,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 7665
     },
     {
       "symbol": "ZMYM2",
@@ -12339,7 +12929,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4134
     },
     {
       "symbol": "ZMYM3",
@@ -12354,7 +12945,8 @@
           "inheritance": "X-linked recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4119
     },
     {
       "symbol": "ZNF142",
@@ -12369,7 +12961,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5664
     },
     {
       "symbol": "ZNF292",
@@ -12384,7 +12977,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 8172
     },
     {
       "symbol": "ZNF335",
@@ -12399,7 +12993,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 4029
     },
     {
       "symbol": "ZNF407",
@@ -12414,7 +13009,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 6747
     },
     {
       "symbol": "ZNF462",
@@ -12429,7 +13025,8 @@
           "inheritance": "Autosomal dominant",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 7521
     },
     {
       "symbol": "ZNF469",
@@ -12444,7 +13041,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 11862
     },
     {
       "symbol": "ZNFX1",
@@ -12459,7 +13057,8 @@
           "inheritance": "Autosomal recessive",
           "status": "confirmed"
         }
-      ]
+      ],
+      "largestCds": 5757
     }
   ]
 }

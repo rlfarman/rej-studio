@@ -20,6 +20,8 @@ interface ToggleCardProperties {
   /** Docs URL shown on a small "?" icon at the edge of the card. */
   helpHref?: string
   children?: React.ReactNode
+  /** Rendered below the description only when the toggle is checked. */
+  activeChildren?: React.ReactNode
 }
 
 export function ToggleCard({
@@ -29,6 +31,7 @@ export function ToggleCard({
   badge,
   helpHref,
   children,
+  activeChildren,
 }: ToggleCardProperties) {
   const { control } = useFormContext<FormValues>()
   return (
@@ -38,13 +41,16 @@ export function ToggleCard({
       render={({ field }) => {
         const checked = field.value as boolean
         return (
-          <FormItem className="space-y-0">
+          <FormItem className="gap-0">
             <div
               className={cn(
-                'flex flex-row items-start gap-1 rounded-lg border p-3 transition-colors',
+                'flex flex-row items-start gap-1 border p-3 transition-colors',
                 checked
                   ? 'border-primary/40 bg-primary/5'
                   : 'hover:bg-muted/50',
+                activeChildren && checked
+                  ? 'rounded-t-lg border-b-0'
+                  : 'rounded-lg',
               )}
             >
               <label
@@ -84,6 +90,16 @@ export function ToggleCard({
                 />
               )}
             </div>
+            {activeChildren && checked && (
+              <div
+                className={cn(
+                  'border-primary/40 bg-primary/5 rounded-b-lg border border-t-0 px-3 pt-3 pb-3',
+                  'motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-top-1 motion-safe:duration-200',
+                )}
+              >
+                {activeChildren}
+              </div>
+            )}
           </FormItem>
         )
       }}

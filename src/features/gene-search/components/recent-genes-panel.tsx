@@ -20,6 +20,7 @@ export function RecentGenes() {
   return (
     <ExpandableSidebarList
       label={copy.label}
+      persistKey="sidebar:recent-genes:open"
       items={recentGenes}
       getItemKey={(gene) => gene.id}
       onClear={clearRecentGenes}

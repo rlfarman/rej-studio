@@ -80,6 +80,33 @@ export function filterAssociations(
   })
 }
 
+export const SORT_KEYS = ['symbol', 'phenotypes', 'cds'] as const
+export type SortKey = (typeof SORT_KEYS)[number]
+export type SortDir = 'asc' | 'desc'
+
+export function sortAssociations(
+  rows: AssociationRow[],
+  key: SortKey,
+  dir: SortDir,
+): AssociationRow[] {
+  // Rows with unknown largestCds always sort to the bottom regardless of dir,
+  // so an empty value never jumps to the top of a "largest first" sort.
+  const sign = dir === 'asc' ? 1 : -1
+  const copy = [...rows]
+  copy.sort((a, b) => {
+    if (key === 'symbol') return sign * a.symbol.localeCompare(b.symbol)
+    if (key === 'phenotypes')
+      return sign * (a.phenotypes.length - b.phenotypes.length)
+    const av = a.largestCds
+    const bv = b.largestCds
+    if (av == null && bv == null) return a.symbol.localeCompare(b.symbol)
+    if (av == null) return 1
+    if (bv == null) return -1
+    return sign * (av - bv)
+  })
+  return copy
+}
+
 export function bucketCounts(
   rows: AssociationRow[],
 ): Record<InheritanceBucket, number> {
