@@ -1,0 +1,85 @@
+{
+  "width": 1920,
+  "height": 1080,
+  "fps": 30,
+  "shots": [
+    {
+      "id": "search-empty",
+      "file": "000-search-empty.png",
+      "caption": "Search 20,000+ genes",
+      "durationInSeconds": 3,
+      "focus": {
+        "x": 0.39427083333333335,
+        "y": 0.09861111111111111,
+        "width": 0.3572916666666667,
+        "height": 0.037037037037037035
+      }
+    },
+    {
+      "id": "search-results",
+      "file": "001-search-results.png",
+      "caption": "Typed \"MYO7A\"",
+      "durationInSeconds": 3,
+      "focus": {
+        "x": 0.3776041666666667,
+        "y": 0.20185185185185187,
+        "width": 0.378125,
+        "height": 0.02962962962962963
+      }
+    },
+    {
+      "id": "isoform-table",
+      "file": "002-isoform-table.png",
+      "caption": "Pick the largest isoform",
+      "durationInSeconds": 4,
+      "focus": {
+        "x": 0.30833333333333335,
+        "y": 0.5920283564814814,
+        "width": 0.5166666666666667,
+        "height": 0.04537037037037037
+      }
+    },
+    {
+      "id": "isoform-customize",
+      "file": "003-isoform-customize.png",
+      "caption": "Customize",
+      "durationInSeconds": 2,
+      "focus": {
+        "x": 0.7854166666666667,
+        "y": 0.5998987268518519,
+        "width": 0.016666666666666666,
+        "height": 0.02962962962962963
+      }
+    },
+    {
+      "id": "design-form",
+      "file": "004-design-form.png",
+      "caption": "Design tool",
+      "durationInSeconds": 5
+    },
+    {
+      "id": "design-submit",
+      "file": "005-design-submit.png",
+      "caption": "Run optimizer",
+      "durationInSeconds": 3,
+      "focus": {
+        "x": 0.7060953776041666,
+        "y": 1.2837962962962963,
+        "width": 0.07255045572916667,
+        "height": 0.03333333333333333
+      }
+    },
+    {
+      "id": "result-score",
+      "file": "006-result-score.png",
+      "caption": "Optimized",
+      "durationInSeconds": 5,
+      "focus": {
+        "x": 0.3614583333333333,
+        "y": 0.39351851851851855,
+        "width": 0.09283854166666666,
+        "height": 0.014814814814814815
+      }
+    }
+  ]
+}
