@@ -12,6 +12,7 @@ import {
 } from '@/features/design-tool/hooks/use-job-history'
 import type { ProcessResult } from '@/features/design-tool/types/process-result'
 import type { FormValues } from '@/features/design-tool/types/form-schema'
+import { trackEvent } from '@/lib/analytics'
 
 type JobStatus = 'idle' | 'submitting' | EntryStatus
 
@@ -96,13 +97,18 @@ export function useJob({
         })
       } else {
         // Modal backend: pending. The global watcher will poll and upgrade.
+        // Seed a small initial progress so the bar appears immediately —
+        // otherwise we wait ~2s for the first poll before anything shows.
         upsertEntry({
           id: newJobId,
           status: 'running',
           formValues: values,
+          progress: 0.03,
+          stage: 'Queued',
         })
       }
       setJobId(newJobId)
+      trackEvent({ event: 'job_submit', job_id: newJobId })
     },
   })
 

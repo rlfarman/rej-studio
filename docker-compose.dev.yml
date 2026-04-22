@@ -1,0 +1,39 @@
+services:
+  fastapi:
+    build:
+      context: .
+      dockerfile: docker/dev.fastapi.Dockerfile
+    ports:
+      - '8000:8000'
+    volumes:
+      - ./python:/app/python
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:8000/api/py/docs']
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  next:
+    build:
+      context: .
+      dockerfile: docker/dev.next.Dockerfile
+    ports:
+      - '3000:3000'
+    volumes:
+      - .:/app
+      - /app/node_modules
+    env_file:
+      - .env
+    environment:
+      - WATCHPACK_POLLING=true
+      - LOCAL_API_URL=http://fastapi:8000
+    depends_on:
+      fastapi:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:3000/api/version']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s

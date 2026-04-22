@@ -239,6 +239,7 @@ function baseFormValues(
   },
 ): FormValues {
   return {
+    sequenceType: 'dna' as const,
     removeCrypticSpliceSites: true,
     '5PrimeStimulatoryIntron': true,
     '3PrimeStimulatoryIntron': true,
@@ -250,6 +251,7 @@ function baseFormValues(
     reduceKmerComplexityWeight: 1,
     enforceGcContent: true,
     species: 'human',
+    proteinSequence: '',
     ...overrides,
   }
 }

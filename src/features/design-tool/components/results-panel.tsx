@@ -1,15 +1,16 @@
 'use client'
 
-import { memo, useMemo, useState } from 'react'
+import { memo, useMemo } from 'react'
 import { m } from 'motion/react'
 import {
   Download,
-  Copy,
-  Check,
   Clock,
   Scissors,
-  ArrowRight,
   ChevronRight,
+  ChevronDown,
+  Check,
+  Copy,
+  FileText,
   Package,
   Link2,
   Activity,
@@ -35,8 +36,20 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { cn } from '@/lib/utils'
 import { fadeUp } from '@/lib/motion'
+import { MetricCell } from '@/components/metric-cell'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
 import type { ProcessResult } from '@/features/design-tool/types/process-result'
 import { toast } from 'sonner'
@@ -50,12 +63,17 @@ import { AavResults } from './aav-size-estimator'
 import { SplitBar } from '@/components/bio/split-bar'
 import { ObjectivesSummary } from './objectives-output'
 import { formatFasta } from '@/lib/bio/fasta'
+import { downloadTextFile } from '@/lib/download-file'
 import { isSpecies } from '@/lib/bio/species'
 import type { DesignToolSpecies } from '@/features/design-tool/types/species-options'
 import { computeGcPercent, countCpG } from '@/lib/bio/sequence-utils'
 import { deriveKeyMetrics } from '@/features/design-tool/utils/objective-metrics'
 import { SPECIES_DISPLAY_NAME } from '@/lib/bio/species'
 import { toCodons } from '@/lib/bio/genetic-code'
+import { designToolCopy } from '../copy'
+import { errorsCopy } from '@/copy/errors'
+
+const resultsCopy = designToolCopy.results
 
 interface ResultsPanelProps {
   result: ProcessResult
@@ -92,76 +110,17 @@ function SplitVisualization({
       <div className="flex items-center gap-2 text-sm">
         <Scissors className="text-muted-foreground size-4" />
         <span>
-          Split at position{' '}
+          {resultsCopy.splitAtPosition}{' '}
           <span className="font-mono font-medium">
             {splitPoint.toLocaleString()}
           </span>{' '}
-          ({Math.round(percentage)}% / {Math.round(100 - percentage)}%)
+          {resultsCopy.splitRatio(
+            Math.round(percentage),
+            Math.round(100 - percentage),
+          )}
         </span>
       </div>
       <SplitBar fivePrimeLength={seq5Length} threePrimeLength={seq3Length} />
-    </div>
-  )
-}
-
-function MetricCell({
-  label,
-  before,
-  after,
-  unit,
-  lowerIsBetter,
-  formatter,
-  className,
-}: {
-  label: string
-  before: number | null
-  after: number | null
-  unit?: string
-  lowerIsBetter?: boolean
-  formatter?: (n: number) => string
-  className?: string
-}) {
-  const fmt =
-    formatter ??
-    ((n: number) => (Number.isInteger(n) ? n.toLocaleString() : n.toFixed(1)))
-  const hasBoth = before !== null && after !== null
-  const delta = hasBoth ? after - before : 0
-  const improved = lowerIsBetter ? delta < 0 : delta > 0
-  const worsened = lowerIsBetter ? delta > 0 : delta < 0
-
-  return (
-    <div className={cn('bg-muted/30 min-w-0 px-3 py-2', className)}>
-      <div className="text-muted-foreground truncate text-[10px] font-medium tracking-wider uppercase">
-        {label}
-      </div>
-      <div className="mt-0.5 flex min-w-0 items-center gap-1 text-sm tabular-nums">
-        {hasBoth ? (
-          <>
-            <span className="text-muted-foreground truncate">
-              {fmt(before)}
-              {unit}
-            </span>
-            <ArrowRight className="text-muted-foreground size-3 shrink-0" />
-            <span
-              className={cn(
-                'truncate font-medium',
-                improved && 'text-emerald-600 dark:text-emerald-400',
-                worsened && 'text-red-600 dark:text-red-400',
-              )}
-            >
-              {fmt(after)}
-              {unit}
-            </span>
-          </>
-        ) : after !== null ? (
-          <span className="truncate font-medium">
-            {fmt(after)}
-            {unit}
-          </span>
-        ) : (
-          <span className="text-muted-foreground">—</span>
-        )}
-      </div>
     </div>
   )
 }
@@ -208,7 +167,6 @@ function MetricsStrip({ result }: { result: ProcessResult }) {
     }
   }, [result])
 
-  const totalObjectives = stats.after.passedCount + stats.after.failedCount
   const showDonors =
     stats.keyBefore.spliceDonors > 0 || stats.keyAfter.spliceDonors > 0
   const showAcceptors =
@@ -216,17 +174,11 @@ function MetricsStrip({ result }: { result: ProcessResult }) {
   const showCai = stats.keyAfter.caiScore !== null
 
   return (
-    <div className="bg-border grid grid-cols-2 gap-px overflow-hidden rounded-lg border sm:grid-cols-3 lg:grid-cols-5">
+    <div className="bg-border grid grid-cols-1 gap-px overflow-hidden rounded-lg border sm:grid-cols-2 md:grid-cols-4">
       <MetricCell
         label="Score"
         before={stats.before.totalScore}
         after={stats.after.totalScore}
-      />
-      <MetricCell
-        label="Objectives"
-        before={null}
-        after={totalObjectives > 0 ? stats.after.passedCount : null}
-        formatter={(n) => `${n} / ${totalObjectives}`}
       />
       <MetricCell
         label="GC"
@@ -274,90 +226,129 @@ function MetricsStrip({ result }: { result: ProcessResult }) {
   )
 }
 
-type ViewerTab = 'seq5' | 'seq3' | 'full'
+const INTRON_MARKER_RE = /(\[REJ5\]|\[REJ3\])/g
 
-function SequenceViewer({ result }: { result: ProcessResult }) {
-  const [active, setActive] = useState<ViewerTab>('seq5')
+function renderSequenceWithIntrons(sequence: string) {
+  const parts = sequence.split(INTRON_MARKER_RE)
+  return parts.map((part, i) => {
+    if (part === '[REJ5]' || part === '[REJ3]') {
+      const isFive = part === '[REJ5]'
+      const tip = isFive
+        ? resultsCopy.intronTooltip.fivePrime
+        : resultsCopy.intronTooltip.threePrime
+      return (
+        <Tooltip key={i}>
+          <TooltipTrigger asChild>
+            <span
+              className={
+                isFive
+                  ? 'text-info-soft bg-info/15 dark:text-info cursor-help rounded px-1 font-semibold'
+                  : 'bg-primary/15 text-primary dark:text-primary-foreground dark:bg-primary/40 cursor-help rounded px-1 font-semibold'
+              }
+            >
+              {part}
+            </span>
+          </TooltipTrigger>
+          <TooltipContent className="max-w-xs">{tip}</TooltipContent>
+        </Tooltip>
+      )
+    }
+    return <span key={i}>{part}</span>
+  })
+}
+
+function SequenceCard({
+  label,
+  sequence,
+  fastaName,
+}: {
+  label: string
+  sequence: string
+  fastaName: string
+}) {
   const { copy, isCopied } = useCopyToClipboard({ showToast: false })
-
-  const tabs: Array<{ id: ViewerTab; label: string }> = [
-    { id: 'seq5', label: "5' Sequence" },
-    { id: 'seq3', label: "3' Sequence" },
-    { id: 'full', label: 'Full optimized' },
-  ]
-
-  const current =
-    active === 'seq5'
-      ? { sequence: result.seq5, fastaSuffix: '5prime' }
-      : active === 'seq3'
-        ? { sequence: result.seq3, fastaSuffix: '3prime' }
-        : { sequence: result.optimized_sequence, fastaSuffix: 'optimized' }
-
-  const rawId = `seq-${active}-raw`
-  const fastaId = `seq-${active}-fasta`
-  const fastaName = `${result.name}_${current.fastaSuffix}`
-
+  const justCopied = isCopied('fasta') || isCopied('seq')
+  const displayLength = sequence.replace(INTRON_MARKER_RE, '').length
   return (
-    <div className="space-y-2">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <div className="bg-muted/60 inline-flex rounded-md border p-0.5">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => setActive(tab.id)}
-                className={cn(
-                  'rounded px-2.5 py-1 text-xs font-medium transition-colors',
-                  active === tab.id
-                    ? 'bg-background text-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground',
-                )}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-          <Badge variant="secondary">
-            {current.sequence.length.toLocaleString()} bp
+    <div className="bg-muted/30 space-y-2 rounded-lg border p-3">
+      <div className="flex flex-wrap items-center justify-between gap-1.5">
+        <div className="flex items-center gap-1.5">
+          <span className="text-xs font-medium">{label}</span>
+          <Badge variant="secondary" className="text-[10px]">
+            {displayLength.toLocaleString()} bp
           </Badge>
         </div>
-        <div className="flex gap-1">
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="h-7 gap-1.5 px-2 text-xs"
-            onClick={() =>
-              copy(formatFasta(fastaName, current.sequence), fastaId)
-            }
-          >
-            {isCopied(fastaId) ? (
-              <Check className="size-3" />
-            ) : (
-              <Copy className="size-3" />
-            )}
-            FASTA
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="h-7 gap-1.5 px-2 text-xs"
-            onClick={() => copy(current.sequence, rawId)}
-          >
-            {isCopied(rawId) ? (
-              <Check className="size-3" />
-            ) : (
-              <Copy className="size-3" />
-            )}
-            {isCopied(rawId) ? 'Copied' : 'Copy'}
-          </Button>
-        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-9 gap-1.5 px-3 text-xs"
+              aria-label={resultsCopy.sequenceCard.exportAria(label)}
+            >
+              {justCopied ? (
+                <Check className="size-3.5" />
+              ) : (
+                <Download className="size-3.5" />
+              )}
+              {justCopied
+                ? resultsCopy.sequenceCard.copied
+                : resultsCopy.sequenceCard.exportLabel}
+              <ChevronDown className="size-3.5 opacity-60" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem
+              onClick={() => copy(formatFasta(fastaName, sequence), 'fasta')}
+            >
+              <FileText className="size-4" />
+              {resultsCopy.sequenceCard.copyFasta}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => copy(sequence, 'seq')}>
+              <Copy className="size-4" />
+              {resultsCopy.sequenceCard.copySequence}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={() =>
+                downloadTextFile(
+                  `${fastaName}.fasta`,
+                  formatFasta(fastaName, sequence),
+                )
+              }
+            >
+              <Download className="size-4" />
+              {resultsCopy.sequenceCard.downloadFasta}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
-      <pre className="bg-muted max-h-40 overflow-auto rounded-md p-3 font-mono text-xs break-all whitespace-pre-wrap">
-        {current.sequence}
+      <pre className="bg-muted max-h-40 overflow-auto rounded-md p-2.5 font-mono text-xs break-all whitespace-pre-wrap">
+        {renderSequenceWithIntrons(sequence)}
       </pre>
+    </div>
+  )
+}
+
+function SequenceViewer({ result }: { result: ProcessResult }) {
+  return (
+    <div className="space-y-3">
+      <SequenceCard
+        label={resultsCopy.sequenceCard.fiveLabel}
+        sequence={result.seq5}
+        fastaName={`${result.name}_5prime`}
+      />
+      <SequenceCard
+        label={resultsCopy.sequenceCard.threeLabel}
+        sequence={result.seq3}
+        fastaName={`${result.name}_3prime`}
+      />
+      <SequenceCard
+        label={resultsCopy.sequenceCard.fullLabel}
+        sequence={result.optimized_sequence}
+        fastaName={`${result.name}_optimized`}
+      />
     </div>
   )
 }
@@ -381,7 +372,7 @@ function ExpandableRow({
       open={defaultOpen}
     >
       <summary className="flex cursor-pointer list-none items-center gap-2 py-1 text-sm select-none [&::-webkit-details-marker]:hidden">
-        <ChevronRight className="text-muted-foreground size-4 shrink-0 transition-transform group-open:rotate-90" />
+        <ChevronRight className="text-muted-foreground size-4 shrink-0 transition-transform duration-200 group-open:rotate-90" />
         <Icon className="text-muted-foreground size-4 shrink-0" />
         <span className="font-medium">{title}</span>
         {summary && (
@@ -399,21 +390,23 @@ function WggwTable({
   wggwInfo: NonNullable<ProcessResult['wggw_info']>
 }) {
   const siteLabels: Record<string, string> = {
-    main: 'Main Junction',
-    stim5: "5' Stimulatory",
-    stim3: "3' Stimulatory",
+    main: resultsCopy.wggwTable.main,
+    stim5: resultsCopy.wggwTable.stim5,
+    stim3: resultsCopy.wggwTable.stim3,
   }
   return (
     <div className="overflow-auto rounded-md border">
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Site</TableHead>
-            <TableHead>Position</TableHead>
-            <TableHead>Motif</TableHead>
-            <TableHead>Distance</TableHead>
-            <TableHead>Original Codons</TableHead>
-            <TableHead>New Codons</TableHead>
+            <TableHead>{resultsCopy.wggwTable.headers.site}</TableHead>
+            <TableHead>{resultsCopy.wggwTable.headers.position}</TableHead>
+            <TableHead>{resultsCopy.wggwTable.headers.motif}</TableHead>
+            <TableHead>{resultsCopy.wggwTable.headers.distance}</TableHead>
+            <TableHead>
+              {resultsCopy.wggwTable.headers.originalCodons}
+            </TableHead>
+            <TableHead>{resultsCopy.wggwTable.headers.newCodons}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -460,7 +453,9 @@ function ResultsPanelImpl({ result, optionsUsed, species }: ResultsPanelProps) {
     try {
       downloadResultsZip(result, optionsUsed)
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Download failed.')
+      toast.error(
+        error instanceof Error ? error.message : errorsCopy.download.failure,
+      )
     }
   }
 
@@ -481,17 +476,22 @@ function ResultsPanelImpl({ result, optionsUsed, species }: ResultsPanelProps) {
       )
         changed++
     }
-    return `${changed.toLocaleString()} of ${total.toLocaleString()} codons changed`
+    return resultsCopy.summaries.codonsChanged(
+      changed.toLocaleString(),
+      total.toLocaleString(),
+    )
   }, [result.original_sequence, result.optimized_sequence])
 
   const objectivesSummary = useMemo(() => {
     const after = parseObjectives(result.objectives_after)
     const total = after.passedCount + after.failedCount
     if (total === 0) return undefined
-    return `${after.passedCount} of ${total} passed`
+    return resultsCopy.summaries.objectivesPassed(after.passedCount, total)
   }, [result.objectives_after])
 
-  const junctionSummary = `±18 bp at ${result.split_point.toLocaleString()}`
+  const junctionSummary = resultsCopy.summaries.junction(
+    result.split_point.toLocaleString(),
+  )
 
   return (
     <m.div variants={fadeUp} initial="hidden" animate="visible">
@@ -499,26 +499,25 @@ function ResultsPanelImpl({ result, optionsUsed, species }: ResultsPanelProps) {
         <CardHeader>
           <div className="flex items-center justify-between gap-3">
             <div>
-              <CardTitle>Results</CardTitle>
+              <CardTitle>{resultsCopy.heading}</CardTitle>
               <CardDescription className="flex items-center gap-1.5">
                 <Clock className="size-3" />
-                Completed in {result.processing_time_seconds}s
+                {resultsCopy.completedIn(result.processing_time_seconds)}
                 {result.used_wggw_as_split && (
                   <Badge variant="secondary" className="ml-1">
-                    WGGW split
+                    {resultsCopy.wggwSplitBadge}
                   </Badge>
                 )}
               </CardDescription>
             </div>
             <Button
               type="button"
-              variant="outline"
-              size="sm"
-              className="gap-1.5"
+              size="default"
+              className="bg-accent text-accent-foreground hover:bg-accent/80 gap-1.5 shadow-sm"
               onClick={handleDownloadZip}
             >
               <Download className="size-4" />
-              Download ZIP
+              {resultsCopy.downloadZip}
             </Button>
           </div>
         </CardHeader>
@@ -535,25 +534,9 @@ function ResultsPanelImpl({ result, optionsUsed, species }: ResultsPanelProps) {
 
           <div className="-mx-1">
             <ExpandableRow
-              title="AAV packaging"
-              icon={Package}
-              summary={aavSummary(seq5Clean.length, seq3Clean.length)}
+              title={resultsCopy.sections.visualizations}
+              icon={Activity}
             >
-              <AavResults
-                seq5Length={seq5Clean.length}
-                seq3Length={seq3Clean.length}
-              />
-            </ExpandableRow>
-            {wggwCount > 0 && result.wggw_info && (
-              <ExpandableRow
-                title="WGGW motif details"
-                icon={Link2}
-                summary={`${wggwCount} site${wggwCount === 1 ? '' : 's'}`}
-              >
-                <WggwTable wggwInfo={result.wggw_info} />
-              </ExpandableRow>
-            )}
-            <ExpandableRow title="Sequence visualizations" icon={Activity}>
               <SequenceVisualizations
                 original={result.original_sequence}
                 optimized={result.optimized_sequence}
@@ -561,7 +544,7 @@ function ResultsPanelImpl({ result, optionsUsed, species }: ResultsPanelProps) {
               />
             </ExpandableRow>
             <ExpandableRow
-              title="Codon changes"
+              title={resultsCopy.sections.codonChanges}
               icon={Shield}
               summary={codonChangesSummary}
             >
@@ -572,7 +555,7 @@ function ResultsPanelImpl({ result, optionsUsed, species }: ResultsPanelProps) {
               />
             </ExpandableRow>
             <ExpandableRow
-              title="Junction context"
+              title={resultsCopy.sections.junctionContext}
               icon={Scissors}
               summary={junctionSummary}
             >
@@ -582,7 +565,10 @@ function ResultsPanelImpl({ result, optionsUsed, species }: ResultsPanelProps) {
                 wggwMotif={result.wggw_info?.main?.motif}
               />
             </ExpandableRow>
-            <ExpandableRow title="Restriction site map" icon={FlaskConical}>
+            <ExpandableRow
+              title={resultsCopy.sections.restrictionSites}
+              icon={FlaskConical}
+            >
               <RestrictionSiteMap
                 original={result.original_sequence}
                 optimized={result.optimized_sequence}
@@ -590,7 +576,7 @@ function ResultsPanelImpl({ result, optionsUsed, species }: ResultsPanelProps) {
             </ExpandableRow>
             {isSpecies(species) && (
               <ExpandableRow
-                title="Codon usage delta"
+                title={resultsCopy.sections.codonUsageDelta}
                 icon={TrendingUp}
                 summary={SPECIES_DISPLAY_NAME[species]}
               >
@@ -602,7 +588,26 @@ function ResultsPanelImpl({ result, optionsUsed, species }: ResultsPanelProps) {
               </ExpandableRow>
             )}
             <ExpandableRow
-              title="Objectives report"
+              title={resultsCopy.sections.aavPackaging}
+              icon={Package}
+              summary={aavSummary(seq5Clean.length, seq3Clean.length)}
+            >
+              <AavResults
+                seq5Length={seq5Clean.length}
+                seq3Length={seq3Clean.length}
+              />
+            </ExpandableRow>
+            {wggwCount > 0 && result.wggw_info && (
+              <ExpandableRow
+                title={resultsCopy.sections.wggwDetails}
+                icon={Link2}
+                summary={resultsCopy.summaries.wggwSites(wggwCount)}
+              >
+                <WggwTable wggwInfo={result.wggw_info} />
+              </ExpandableRow>
+            )}
+            <ExpandableRow
+              title={resultsCopy.sections.objectivesReport}
               icon={ClipboardCheck}
               summary={objectivesSummary}
             >

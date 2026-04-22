@@ -1,0 +1,131 @@
+---
+title: Glossary
+description: Short definitions of the biology and algorithm terms you'll see in REJ Studio.
+---
+
+## Biology
+
+### CDS (coding sequence)
+
+The stretch of DNA that translates into protein — from the `ATG` start
+codon to the stop codon. REJ Studio's optimizer operates on CDS, not
+UTRs, introns, or full genomic sequences.
+
+### Isoform (transcript)
+
+A distinct transcript variant produced from a gene. A single gene
+typically has multiple isoforms that differ in exon composition,
+transcription start site, or polyadenylation site. They usually encode
+related — but not always identical — proteins; some isoforms differ
+only in untranslated regions and produce the same protein. REJ Studio's
+gene pages list every annotated isoform.
+
+### Codon
+
+A group of three bases that encodes one amino acid. Most amino acids
+have multiple synonymous codons — different DNA, same protein — which is
+what lets the optimizer rewrite a sequence without changing what it
+codes for.
+
+### CpG dinucleotide
+
+A cytosine immediately 5′ of a guanine on the same strand
+(5′-C-p-G-3′). Unmethylated CpGs in delivered nucleic acids are
+recognized by TLR9 and drive innate immune responses; for constructs
+that integrate into genomic DNA, CpG-rich regions are also preferential
+substrates for DNA methylation, which can silence transcription. For
+therapeutic constructs you typically want fewer of them.
+
+### Cryptic splice site
+
+A sequence motif that resembles a bona fide 5′ donor or 3′ acceptor
+splice site closely enough that the spliceosome may use it instead of
+(or in addition to) the intended site. If your construct is transcribed
+in a cell with active splicing machinery, a cryptic site can cause
+silent excision of a portion of the CDS, producing a truncated or
+frame-shifted protein. Avoiding these motifs keeps the intended reading
+frame intact.
+
+### WGGW motif
+
+A four-base motif where `W = A or T`, i.e. `[AT]GG[AT]` — `AGGA`,
+`AGGT`, `TGGA`, or `TGGT`. These are the recognition substrates for RNA
+End-Joining, and REJ Studio uses them to choose where to split a coding
+sequence into 5' and 3' fragments.
+
+### Split point
+
+The position in a CDS where REJ Studio divides the sequence into 5′ and
+3′ fragments. The splitter prefers WGGW motifs closest to the midpoint
+so the two halves are roughly balanced and both carry a WGGW substrate
+at the joint. "Split point" is distinct from a spliceosomal splice
+junction (an exon–intron boundary); it refers only to where the
+construct is cleaved for REJ delivery. A balanced split looks like
+this:
+
+<SplitBar fivePrimeLength={1836} threePrimeLength={1920} />
+
+### Stimulatory intron
+
+A short intron placed in a transcript to raise steady-state mRNA and
+protein levels via intron-mediated enhancement (coupling to splicing,
+export, and translation). REJ Studio does not embed an intron sequence
+itself — when this option is enabled it marks a `[STIMINTRON]`
+placeholder in the output FASTA at a WGGW-compatible position roughly
+150 bp from the split. You substitute your chosen intron sequence at
+that marker during synthesis. The protein is unchanged; enhancement is
+expected but is not guaranteed for every construct or cell context.
+
+## Algorithm
+
+### DNAChisel
+
+The open-source codon-optimization library REJ Studio's backend uses.
+It treats optimization as a constraint-satisfaction problem: you declare
+hard constraints (must be satisfied) and soft objectives (should be
+minimized), and the solver searches for a coding-equivalent sequence
+that meets them.
+
+### Hard constraint vs. soft objective
+
+A **hard constraint** must be satisfied — if the solver can't meet it,
+the job fails or the constraint is reported as violated. GC content in
+REJ Studio is a hard constraint. A **soft objective** is something the
+solver tries to minimize (lower is better) alongside everything else;
+codon usage and k-mer complexity are soft objectives, with per-objective
+weights that control how much each one pulls on the final sequence.
+
+### K-mer complexity
+
+A measure of sequence diversity at a given window length _k_. A
+sequence where every _k_-long substring is unique is maximally complex
+at that window; one with many repeated _k_-mers is low-complexity.
+Repeats of 10+ bases are a common failure mode in commercial DNA
+synthesis and can drive homologous recombination during assembly. REJ
+Studio's optimizer uses DNAChisel's `UniquifyAllKmers` to push toward
+unique 10-mers across each fragment.
+
+### Codon adaptation
+
+Rewriting each codon to favor the synonym preferred by a target
+organism's tRNA pool, without changing the encoded protein. Different
+species have different usage tables, so picking the right one matters
+if translation efficiency is the goal. REJ Studio uses DNAChisel's
+`CodonOptimize` spec against _H. sapiens_ or _M. musculus_ frequency
+tables.
+
+## Output
+
+### Optimization report
+
+The per-objective breakdown returned after a job finishes: which
+constraints were satisfied, which objectives were minimized, and how
+much each one changed from the input. See
+[Reading your results](/docs/guides/reading-results).
+
+### Diagnostic badges
+
+Quick-read indicators shown above the optimized sequence. Use them
+for a glance-level sanity check; use the full report for the details.
+
+<DiagBadge status="good" label="GC 48.2%" tooltip="GC content is in the optimal 35–60% range." /> <DiagBadge status="warn" label="CpG: 24" tooltip="CpG count is moderate." /> <DiagBadge status="neutral" label="1,182 bp / 393 aa" tooltip="Sequence length." />

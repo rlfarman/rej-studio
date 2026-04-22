@@ -18,3 +18,14 @@ export type IsoformListItem = Pick<
   | 'proteinSequenceLength'
   | 'species'
 >
+
+// Minimal projection of a design-tool job used by the command palette. Kept
+// here (not imported from `design-tool`) so the gene-search feature stays
+// within its boundary — see ESLint `import/no-restricted-paths`. The app-level
+// shell is responsible for mapping the real job store into this shape.
+export interface JobSearchItem {
+  id: string
+  name: string
+  status: 'running' | 'completed' | 'failed' | 'cancelled'
+  sequenceLength: number
+}

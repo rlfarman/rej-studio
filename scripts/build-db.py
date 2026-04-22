@@ -17,13 +17,9 @@ import os
 import sys
 import time
 
-CSV_PATH = os.path.join(
-    os.path.dirname(__file__), "..", "drizzle", "transcript_metadata.csv"
-)
+CSV_PATH = os.path.join(os.path.dirname(__file__), "..", "drizzle", "transcript_metadata.csv")
 GENES_OUT = os.path.join(os.path.dirname(__file__), "..", "data", "genes.jsonl")
-ISOFORMS_OUT = os.path.join(
-    os.path.dirname(__file__), "..", "data", "isoforms.jsonl"
-)
+ISOFORMS_OUT = os.path.join(os.path.dirname(__file__), "..", "data", "isoforms.jsonl")
 
 
 def derive_species(transcript_id: str) -> str:
@@ -40,6 +36,47 @@ def serialize_alternate_symbols(symbols: list[str]) -> str:
     if not symbols:
         return ""
     return "|" + "|".join(symbols) + "|"
+
+
+# Required keys in each JSONL row — mirrors the Drizzle schema.
+GENE_REQUIRED_KEYS = {"id", "symbol", "name", "species", "alternateSymbols"}
+ISOFORM_REQUIRED_KEYS = {
+    "id",
+    "geneId",
+    "codingSequenceLength",
+    "proteinSequenceLength",
+    "codingSequence",
+    "proteinSequence",
+    "species",
+}
+
+
+def _validate_jsonl(path: str, required_keys: set[str], label: str) -> None:
+    """Validate every row in a JSONL file has the expected shape."""
+    errors: list[str] = []
+    with open(path) as f:
+        for lineno, line in enumerate(f, 1):
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                obj = json.loads(line)
+            except json.JSONDecodeError as e:
+                errors.append(f"  {label}:{lineno}: invalid JSON — {e}")
+                continue
+            if not isinstance(obj, dict):
+                errors.append(f"  {label}:{lineno}: expected object, got {type(obj).__name__}")
+                continue
+            missing = required_keys - set(obj.keys())
+            if missing:
+                errors.append(f"  {label}:{lineno}: missing keys: {', '.join(sorted(missing))}")
+    if errors:
+        print(f"ERROR: {len(errors)} validation error(s) in {label}:")
+        for err in errors[:20]:
+            print(err)
+        if len(errors) > 20:
+            print(f"  ... and {len(errors) - 20} more")
+        sys.exit(1)
 
 
 def main():
@@ -105,6 +142,12 @@ def main():
     )
     print(f"  {GENES_OUT}")
     print(f"  {ISOFORMS_OUT}")
+
+    # Validate output JSONL — catch malformed rows before load-db.ts chokes.
+    print("\nValidating JSONL output...")
+    _validate_jsonl(GENES_OUT, GENE_REQUIRED_KEYS, "genes")
+    _validate_jsonl(ISOFORMS_OUT, ISOFORM_REQUIRED_KEYS, "isoforms")
+    print("Validation passed.")
 
 
 if __name__ == "__main__":

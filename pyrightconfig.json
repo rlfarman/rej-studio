@@ -1,0 +1,10 @@
+{
+  "include": ["python", "modal"],
+  "exclude": ["venv", ".venv", "**/__pycache__"],
+  "pythonVersion": "3.11",
+  "typeCheckingMode": "basic",
+  "reportMissingImports": true,
+  "reportMissingTypeStubs": false,
+  "venvPath": ".",
+  "venv": "venv"
+}

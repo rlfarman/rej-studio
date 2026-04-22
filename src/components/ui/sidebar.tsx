@@ -25,12 +25,51 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 
-const SIDEBAR_COOKIE_NAME = 'sidebar_state'
-const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
-const SIDEBAR_WIDTH = '16rem'
+// Sidebar state is persisted in localStorage (not cookies) to keep the
+// `(app)` layout fully static — reading cookies server-side would force
+// dynamic rendering on every initial load. A small inline script in the
+// layout reads these keys and sets data attributes on <html> before React
+// hydrates, so initial render matches the user's preference without a flash.
+const SIDEBAR_STORAGE_STATE = 'rej-sidebar-state'
+const SIDEBAR_STORAGE_WIDTH = 'rej-sidebar-width'
+const SIDEBAR_PRELOAD_STATE_ATTR = 'sidebarPreloadOpen'
+const SIDEBAR_PRELOAD_WIDTH_ATTR = 'sidebarPreloadWidth'
+const SIDEBAR_WIDTH_DEFAULT = 256
+const SIDEBAR_WIDTH_MIN = 200
+const SIDEBAR_WIDTH_MAX = 480
 const SIDEBAR_WIDTH_MOBILE = '18rem'
 const SIDEBAR_WIDTH_ICON = '3rem'
 const SIDEBAR_KEYBOARD_SHORTCUT = 'b'
+
+// React 19 no longer patches up hydration mismatches, so the useState
+// initializer must return the same value on server and client. We read the
+// preload attributes in a layout effect instead — it fires after hydration
+// but before paint, so the preloaded state is applied without a visible flash.
+function readPreloadedOpen(): boolean | null {
+  const preload = document.documentElement.dataset[SIDEBAR_PRELOAD_STATE_ATTR]
+  if (preload === 'true') return true
+  if (preload === 'false') return false
+  return null
+}
+
+function readPreloadedWidth(): number | null {
+  const preload = document.documentElement.dataset[SIDEBAR_PRELOAD_WIDTH_ATTR]
+  const n = preload ? Number(preload) : NaN
+  if (!Number.isFinite(n)) return null
+  return Math.round(Math.min(SIDEBAR_WIDTH_MAX, Math.max(SIDEBAR_WIDTH_MIN, n)))
+}
+
+function writeStorage(key: string, value: string) {
+  try {
+    window.localStorage.setItem(key, value)
+  } catch {
+    // localStorage may be unavailable (private mode, quota) — preference
+    // just doesn't persist across reloads, which is acceptable.
+  }
+}
+
+const useIsomorphicLayoutEffect =
+  typeof window !== 'undefined' ? React.useLayoutEffect : React.useEffect
 
 type SidebarContext = {
   state: 'expanded' | 'collapsed'
@@ -40,6 +79,8 @@ type SidebarContext = {
   setOpenMobile: (open: boolean) => void
   isMobile: boolean
   toggleSidebar: () => void
+  width: number
+  setWidth: (width: number) => void
 }
 
 const SidebarContext = React.createContext<SidebarContext | null>(null)
@@ -55,6 +96,7 @@ function useSidebar() {
 
 function SidebarProvider({
   defaultOpen = true,
+  defaultWidth = SIDEBAR_WIDTH_DEFAULT,
   open: openProp,
   onOpenChange: setOpenProp,
   className,
@@ -63,14 +105,16 @@ function SidebarProvider({
   ...props
 }: React.ComponentProps<'div'> & {
   defaultOpen?: boolean
+  defaultWidth?: number
   open?: boolean
   onOpenChange?: (open: boolean) => void
 }) {
   const isMobile = useIsMobile()
   const [openMobile, setOpenMobile] = React.useState(false)
 
-  // This is the internal state of the sidebar.
-  // We use openProp and setOpenProp for control from outside the component.
+  // State starts at the fallback so SSR and initial client render match; a
+  // layout effect below reads the preload data attributes and syncs state to
+  // the user's persisted preference before the browser paints.
   const [_open, _setOpen] = React.useState(defaultOpen)
   const open = openProp ?? _open
   const setOpen = React.useCallback(
@@ -82,11 +126,35 @@ function SidebarProvider({
         _setOpen(openState)
       }
 
-      // This sets the cookie to keep the sidebar state.
-      document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
+      writeStorage(SIDEBAR_STORAGE_STATE, String(openState))
     },
     [setOpenProp, open],
   )
+
+  // Sidebar width state for drag-to-resize.
+  const [width, _setWidth] = React.useState(defaultWidth)
+  const setWidth = React.useCallback((w: number) => {
+    const clamped = Math.round(
+      Math.min(SIDEBAR_WIDTH_MAX, Math.max(SIDEBAR_WIDTH_MIN, w)),
+    )
+    _setWidth(clamped)
+  }, [])
+
+  // Apply preloaded state from <html> dataset. Runs after hydration but
+  // before paint, so users who customized their sidebar don't see the
+  // fallback state briefly on reload.
+  useIsomorphicLayoutEffect(() => {
+    const preloadedOpen = readPreloadedOpen()
+    if (preloadedOpen !== null && preloadedOpen !== _open) {
+      _setOpen(preloadedOpen)
+    }
+    const preloadedWidth = readPreloadedWidth()
+    if (preloadedWidth !== null && preloadedWidth !== width) {
+      _setWidth(preloadedWidth)
+    }
+    // Run only on mount — we're hydrating from a snapshot set before React
+    // rendered, not subscribing to changes.
+  }, [])
 
   // Helper to toggle the sidebar.
   const toggleSidebar = React.useCallback(() => {
@@ -122,8 +190,20 @@ function SidebarProvider({
       openMobile,
       setOpenMobile,
       toggleSidebar,
+      width,
+      setWidth,
     }),
-    [state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar],
+    [
+      state,
+      open,
+      setOpen,
+      isMobile,
+      openMobile,
+      setOpenMobile,
+      toggleSidebar,
+      width,
+      setWidth,
+    ],
   )
 
   return (
@@ -133,7 +213,7 @@ function SidebarProvider({
           data-slot="sidebar-wrapper"
           style={
             {
-              '--sidebar-width': SIDEBAR_WIDTH,
+              '--sidebar-width': `${width}px`,
               '--sidebar-width-icon': SIDEBAR_WIDTH_ICON,
               ...style,
             } as React.CSSProperties
@@ -277,7 +357,69 @@ function SidebarTrigger({
 }
 
 function SidebarRail({ className, ...props }: React.ComponentProps<'button'>) {
-  const { toggleSidebar } = useSidebar()
+  const { toggleSidebar, setWidth, width, open } = useSidebar()
+  const isDragging = React.useRef(false)
+  const startX = React.useRef(0)
+  const startWidth = React.useRef(0)
+  const totalDelta = React.useRef(0)
+
+  const handlePointerDown = React.useCallback(
+    (e: React.PointerEvent) => {
+      if (!open) {
+        toggleSidebar()
+        return
+      }
+      e.preventDefault()
+      isDragging.current = true
+      startX.current = e.clientX
+      startWidth.current = width
+      totalDelta.current = 0
+      document.body.style.cursor = 'col-resize'
+      document.body.style.userSelect = 'none'
+
+      const handlePointerMove = (e: PointerEvent) => {
+        if (!isDragging.current) return
+        const delta = e.clientX - startX.current
+        totalDelta.current = delta
+        setWidth(startWidth.current + delta)
+      }
+
+      const handlePointerUp = () => {
+        document.body.style.cursor = ''
+        document.body.style.userSelect = ''
+        window.removeEventListener('pointermove', handlePointerMove)
+        window.removeEventListener('pointerup', handlePointerUp)
+
+        if (Math.abs(totalDelta.current) < 5) {
+          // Treat as a click — toggle sidebar
+          isDragging.current = false
+          toggleSidebar()
+          return
+        }
+
+        const clamped = Math.round(
+          Math.min(
+            SIDEBAR_WIDTH_MAX,
+            Math.max(
+              SIDEBAR_WIDTH_MIN,
+              startWidth.current + totalDelta.current,
+            ),
+          ),
+        )
+        writeStorage(SIDEBAR_STORAGE_WIDTH, String(clamped))
+        isDragging.current = false
+      }
+
+      window.addEventListener('pointermove', handlePointerMove)
+      window.addEventListener('pointerup', handlePointerUp)
+    },
+    [open, width, setWidth, toggleSidebar],
+  )
+
+  const handleDoubleClick = React.useCallback(() => {
+    setWidth(SIDEBAR_WIDTH_DEFAULT)
+    writeStorage(SIDEBAR_STORAGE_WIDTH, String(SIDEBAR_WIDTH_DEFAULT))
+  }, [setWidth])
 
   return (
     <button
@@ -285,12 +427,13 @@ function SidebarRail({ className, ...props }: React.ComponentProps<'button'>) {
       data-slot="sidebar-rail"
       aria-label="Toggle Sidebar"
       tabIndex={-1}
-      onClick={toggleSidebar}
-      title="Toggle Sidebar"
+      onPointerDown={handlePointerDown}
+      onDoubleClick={handleDoubleClick}
+      title="Drag to resize — click to toggle — double-click to reset"
       className={cn(
         'hover:after:bg-sidebar-border absolute inset-y-0 z-20 hidden w-4 -translate-x-1/2 transition-all ease-linear group-data-[side=left]:-right-4 group-data-[side=right]:left-0 after:absolute after:inset-y-0 after:left-1/2 after:w-[2px] sm:flex',
-        'in-data-[side=left]:cursor-w-resize in-data-[side=right]:cursor-e-resize',
-        '[[data-side=left][data-state=collapsed]_&]:cursor-e-resize [[data-side=right][data-state=collapsed]_&]:cursor-w-resize',
+        'cursor-col-resize',
+        'hover:after:w-[4px] hover:after:-translate-x-[1px]',
         'hover:group-data-[collapsible=offcanvas]:bg-sidebar group-data-[collapsible=offcanvas]:translate-x-0 group-data-[collapsible=offcanvas]:after:left-full',
         '[[data-side=left][data-collapsible=offcanvas]_&]:-right-2',
         '[[data-side=right][data-collapsible=offcanvas]_&]:-left-2',
@@ -301,9 +444,9 @@ function SidebarRail({ className, ...props }: React.ComponentProps<'button'>) {
   )
 }
 
-function SidebarInset({ className, ...props }: React.ComponentProps<'main'>) {
+function SidebarInset({ className, ...props }: React.ComponentProps<'div'>) {
   return (
-    <main
+    <div
       data-slot="sidebar-inset"
       className={cn(
         'bg-background relative flex w-full flex-1 flex-col',
@@ -471,7 +614,7 @@ function SidebarMenuItem({ className, ...props }: React.ComponentProps<'li'>) {
 }
 
 const sidebarMenuButtonVariants = cva(
-  'peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-hidden ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-data-[sidebar=menu-action]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0',
+  'peer/menu-button group/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-hidden ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-data-[sidebar=menu-action]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0',
   {
     variants: {
       variant: {

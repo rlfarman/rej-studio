@@ -3,9 +3,11 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import { type SpeciesFilter, isSpeciesFilter } from '@/lib/bio/species'
+import { trackEvent } from '@/lib/analytics'
 
 interface SpeciesState {
   species: SpeciesFilter
+  setSpecies: (value: SpeciesFilter) => void
   handleSpeciesChange: (value: SpeciesFilter) => void
 }
 
@@ -18,10 +20,17 @@ function readSpeciesFromQuery(): SpeciesFilter | null {
 
 export const useSpeciesStore = create<SpeciesState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       species: 'both',
+      setSpecies: (value) => set({ species: value }),
       handleSpeciesChange: (value) => {
+        const previous = get().species
         set({ species: value })
+        trackEvent({
+          event: 'species_filter_change',
+          species: value,
+          previous_species: previous,
+        })
         if (typeof window !== 'undefined') {
           const url = new URL(window.location.href)
           url.searchParams.set('species', value)

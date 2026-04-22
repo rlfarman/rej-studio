@@ -1,0 +1,81 @@
+name: Uptime
+
+# Self-hosted Upptime-style probe. Hits /api/health on a schedule from the
+# GitHub Actions runner and opens an issue when the probe fails. Zero
+# external vendor — results stored as issues and workflow runs.
+#
+# For a richer dashboard, spin up a sibling repo using the Upptime template
+# (https://upptime.js.org) and point it at /api/health. This file is the
+# "good enough" in-repo version.
+
+on:
+  schedule:
+    - cron: '*/10 * * * *' # every 10 minutes
+  workflow_dispatch:
+
+concurrency:
+  group: uptime
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  probe:
+    name: Probe /api/health
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check production health
+        id: probe
+        env:
+          HEALTH_URL: ${{ vars.HEALTH_URL }}
+        run: |
+          set -uo pipefail
+          if [ -z "${HEALTH_URL:-}" ]; then
+            echo "::warning::HEALTH_URL repo variable not set — skipping probe."
+            exit 0
+          fi
+          start=$(date +%s%N)
+          http_code=$(curl -s -o body.json -w "%{http_code}" --max-time 15 "$HEALTH_URL" || echo "000")
+          end=$(date +%s%N)
+          latency_ms=$(( (end - start) / 1000000 ))
+          echo "http_code=$http_code" >> "$GITHUB_OUTPUT"
+          echo "latency_ms=$latency_ms" >> "$GITHUB_OUTPUT"
+          echo "body=$(cat body.json | head -c 500)" >> "$GITHUB_OUTPUT"
+          if [ "$http_code" != "200" ]; then
+            exit 1
+          fi
+          echo "OK ($latency_ms ms)"
+
+      - name: Open/update incident issue on failure
+        if: failure()
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.0.1
+        with:
+          script: |
+            const marker = '<!-- uptime-incident -->'
+            const title = '🚨 Uptime incident: /api/health failing'
+            const body = `${marker}
+            Health probe failed at ${new Date().toISOString()}.
+
+            - HTTP status: \`${{ steps.probe.outputs.http_code }}\`
+            - Latency: \`${{ steps.probe.outputs.latency_ms }} ms\`
+            - Body (truncated): \`${{ steps.probe.outputs.body }}\`
+
+            Workflow run: ${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner, repo: context.repo.repo,
+              state: 'open', labels: 'incident',
+            })
+            const existing = issues.find(i => i.body?.includes(marker))
+            if (existing) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: existing.number, body,
+              })
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner, repo: context.repo.repo,
+                title, body, labels: ['incident'],
+              })
+            }

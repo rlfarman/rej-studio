@@ -1,27 +1,73 @@
 version: 2
 updates:
-  - package-ecosystem: "npm"
-    directory: "/"
+  - package-ecosystem: 'npm'
+    directory: '/'
     schedule:
-      interval: "weekly"
+      interval: 'weekly'
     open-pull-requests-limit: 10
     groups:
       radix-ui:
         patterns:
-          - "@radix-ui/*"
+          - '@radix-ui/*'
+          - 'radix-ui'
       types:
         patterns:
-          - "@types/*"
+          - '@types/*'
+      eslint:
+        patterns:
+          - 'eslint'
+          - 'eslint-*'
+          - '@eslint/*'
+      drizzle:
+        patterns:
+          - 'drizzle-orm'
+          - 'drizzle-kit'
+      react:
+        patterns:
+          - 'react'
+          - 'react-dom'
+          - 'react-hook-form'
+          - '@hookform/*'
+      next:
+        patterns:
+          - 'next'
+          - 'next-*'
+          - '@next/*'
+          - 'eslint-config-next'
+      tailwind:
+        patterns:
+          - 'tailwindcss'
+          - 'tailwindcss-*'
+          - '@tailwindcss/*'
+          - 'tailwind-merge'
+          - 'prettier-plugin-tailwindcss'
+      tanstack:
+        patterns:
+          - '@tanstack/*'
       dev-dependencies:
-        dependency-type: "development"
+        dependency-type: 'development'
+        exclude-patterns:
+          - 'eslint*'
+          - '@eslint/*'
+          - 'drizzle-*'
+          - '@next/*'
+          - 'tailwindcss*'
+          - '@tailwindcss/*'
+          - 'prettier-plugin-*'
+          - '@tanstack/*'
 
-  - package-ecosystem: "pip"
-    directory: "/"
+  - package-ecosystem: 'pip'
+    directory: '/'
     schedule:
-      interval: "weekly"
+      interval: 'weekly'
     open-pull-requests-limit: 5
 
-  - package-ecosystem: "github-actions"
-    directory: "/"
+  - package-ecosystem: 'github-actions'
+    directory: '/'
     schedule:
-      interval: "weekly"
+      interval: 'weekly'
+    open-pull-requests-limit: 5
+    groups:
+      actions:
+        patterns:
+          - '*'

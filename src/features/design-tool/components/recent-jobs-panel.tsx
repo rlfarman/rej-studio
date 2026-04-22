@@ -1,10 +1,5 @@
 'use client'
-import { useState } from 'react'
 import {
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarMenu,
   SidebarMenuAction,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -14,24 +9,23 @@ import {
   type JobHistoryEntry,
 } from '@/features/design-tool/hooks/use-job-history'
 import { cancelJob as cancelJobAction } from '@/features/design-tool/api/jobs'
-import { Button } from '@/components/ui/button'
-import { TruncatedText } from '@/components/truncated-text'
+import { ExpandableSidebarList } from '@/components/expandable-sidebar-list'
 import { Loader2, CircleAlert, X } from 'lucide-react'
+import { designToolCopy } from '../copy'
 
-const COLLAPSED_COUNT = 5
-const EXPANDED_MAX = 15
+const copy = designToolCopy.recentJobs
 
 function formatTimeAgo(dateString: string): string {
   const seconds = Math.floor(
     (Date.now() - new Date(dateString).getTime()) / 1000,
   )
-  if (seconds < 60) return 'just now'
+  if (seconds < 60) return copy.justNow
   const minutes = Math.floor(seconds / 60)
-  if (minutes < 60) return `${minutes}m ago`
+  if (minutes < 60) return copy.minutesAgo(minutes)
   const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `${hours}h ago`
+  if (hours < 24) return copy.hoursAgo(hours)
   const days = Math.floor(hours / 24)
-  return `${days}d ago`
+  return copy.daysAgo(days)
 }
 
 interface RecentJobsProps {
@@ -45,7 +39,6 @@ export function RecentJobs({ onSelectJob }: RecentJobsProps) {
   const clearHistory = useJobHistory((s) => s.clearHistory)
   const removeEntry = useJobHistory((s) => s.removeEntry)
   const upsertEntry = useJobHistory((s) => s.upsertEntry)
-  const [expanded, setExpanded] = useState(false)
 
   // X on a running entry cancels the backend job (eagerly marking it
   // cancelled in the store) rather than silently dismissing while the
@@ -57,7 +50,7 @@ export function RecentJobs({ onSelectJob }: RecentJobsProps) {
         status: 'cancelled',
         error: {
           code: 'cancelled',
-          message: 'Cancelled',
+          message: copy.cancelledMessage,
           retriable: true,
         },
       })
@@ -67,95 +60,63 @@ export function RecentJobs({ onSelectJob }: RecentJobsProps) {
     }
   }
 
-  const hiddenCount = entries.length - COLLAPSED_COUNT
-  const visibleItems = expanded
-    ? entries.slice(0, EXPANDED_MAX)
-    : entries.slice(0, COLLAPSED_COUNT)
-
   return (
-    <SidebarGroup>
-      <div className="flex items-center justify-between">
-        <SidebarGroupLabel>Recent Jobs</SidebarGroupLabel>
-        {entries.length > 0 && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={clearHistory}
-            className="text-xs"
-          >
-            Clear
-          </Button>
-        )}
-      </div>
-      <SidebarGroupContent>
-        {entries.length > 0 ? (
-          <>
-            <SidebarMenu
-              className={expanded ? 'max-h-80 overflow-y-auto' : undefined}
+    <ExpandableSidebarList
+      label={copy.label}
+      persistKey="sidebar:recent-jobs:open"
+      items={entries}
+      getItemKey={(entry) => entry.id}
+      onClear={clearHistory}
+      emptyMessage={copy.empty}
+      menuAriaLabel={copy.menuAria}
+      renderItem={(entry) => {
+        const isError =
+          entry.status === 'failed' || entry.status === 'cancelled'
+        const subline =
+          entry.status === 'running'
+            ? (entry.stage ??
+              (entry.progress !== undefined
+                ? `${Math.round(entry.progress * 100)}%`
+                : copy.running))
+            : isError && entry.error
+              ? entry.error.message
+              : formatTimeAgo(entry.createdAt)
+        return (
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              size="sm"
+              className="h-auto items-start py-1.5 [&>svg]:size-3"
+              onClick={() => onSelectJob?.(entry)}
             >
-              {visibleItems.map((entry) => (
-                <SidebarMenuItem key={entry.id}>
-                  <SidebarMenuButton onClick={() => onSelectJob?.(entry)}>
-                    {entry.status === 'running' && (
-                      <Loader2 className="size-3 flex-shrink-0 animate-spin" />
-                    )}
-                    {(entry.status === 'failed' ||
-                      entry.status === 'cancelled') && (
-                      <CircleAlert className="text-destructive size-3 flex-shrink-0" />
-                    )}
-                    <TruncatedText
-                      tooltip={
-                        (entry.status === 'failed' ||
-                          entry.status === 'cancelled') &&
-                        entry.error
-                          ? entry.error.message
-                          : entry.name
-                      }
-                      className="truncate text-xs"
-                    >
-                      {entry.name}
-                    </TruncatedText>
-                    <span className="text-muted-foreground ml-auto flex-shrink-0 text-[10px]">
-                      {entry.status === 'running'
-                        ? (entry.stage ??
-                          (entry.progress !== undefined
-                            ? `${Math.round(entry.progress * 100)}%`
-                            : 'running'))
-                        : formatTimeAgo(entry.createdAt)}
-                    </span>
-                  </SidebarMenuButton>
-                  <SidebarMenuAction
-                    showOnHover
-                    onClick={() => handleRemove(entry)}
-                    aria-label={
-                      entry.status === 'running'
-                        ? `Cancel ${entry.name}`
-                        : `Remove ${entry.name} from recent jobs`
-                    }
-                    className="bg-sidebar hover:bg-sidebar-accent"
-                  >
-                    <X />
-                  </SidebarMenuAction>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-            {hiddenCount > 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setExpanded(!expanded)}
-                className="text-muted-foreground w-full text-xs"
-              >
-                {expanded ? 'Show less' : `+ Show ${hiddenCount} more`}
-              </Button>
-            )}
-          </>
-        ) : (
-          <div className="text-muted-foreground p-4 text-xs">
-            Your completed optimization jobs will appear here.
-          </div>
-        )}
-      </SidebarGroupContent>
-    </SidebarGroup>
+              {entry.status === 'running' && (
+                <Loader2 className="mt-0.5 flex-shrink-0 animate-spin" />
+              )}
+              {isError && (
+                <CircleAlert className="text-destructive mt-0.5 flex-shrink-0" />
+              )}
+              <div className="flex min-w-0 flex-1 flex-col gap-0.5 leading-tight">
+                <span className="line-clamp-2 pr-5 font-medium">
+                  {entry.name}
+                </span>
+                <span className="text-muted-foreground group-hover/menu-button:text-sidebar-accent-foreground line-clamp-2 pr-5 text-[11px]">
+                  {subline}
+                </span>
+              </div>
+            </SidebarMenuButton>
+            <SidebarMenuAction
+              showOnHover
+              onClick={() => handleRemove(entry)}
+              aria-label={
+                entry.status === 'running'
+                  ? copy.cancelAria(entry.name)
+                  : copy.removeAria(entry.name)
+              }
+            >
+              <X />
+            </SidebarMenuAction>
+          </SidebarMenuItem>
+        )
+      }}
+    />
   )
 }

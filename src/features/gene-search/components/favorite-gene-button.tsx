@@ -5,6 +5,8 @@ import { useFavoriteGenes } from '@/features/gene-search/stores/favorite-genes-s
 import { AnimatePresence, m } from 'motion/react'
 import { popSpring } from '@/lib/motion'
 import type { SavedGene } from '@/features/gene-search/types/domain-types'
+import { trackEvent } from '@/lib/analytics'
+import { geneSearchCopy } from '../copy'
 
 interface FavoriteButtonProps {
   gene: SavedGene
@@ -21,6 +23,12 @@ export function FavoriteGeneButton({ gene }: FavoriteButtonProps) {
     } else {
       addFavoriteGene(gene)
     }
+    trackEvent({
+      event: 'favorite_gene_toggle',
+      gene_id: gene.id,
+      symbol: gene.symbol,
+      action: isFavorite ? 'remove' : 'add',
+    })
   }
 
   return (
@@ -28,7 +36,11 @@ export function FavoriteGeneButton({ gene }: FavoriteButtonProps) {
       onClick={handleFavoriteClick}
       variant="ghost"
       size="icon"
-      aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+      aria-label={
+        isFavorite
+          ? geneSearchCopy.favoriteButton.remove
+          : geneSearchCopy.favoriteButton.add
+      }
     >
       <AnimatePresence mode="wait" initial={false}>
         <m.div
@@ -39,9 +51,7 @@ export function FavoriteGeneButton({ gene }: FavoriteButtonProps) {
         >
           <Star
             className={`size-5 transition-colors duration-200 ${
-              isFavorite
-                ? 'fill-yellow-400 text-yellow-400'
-                : 'text-muted-foreground'
+              isFavorite ? 'fill-warning text-warning' : 'text-muted-foreground'
             }`}
           />
         </m.div>

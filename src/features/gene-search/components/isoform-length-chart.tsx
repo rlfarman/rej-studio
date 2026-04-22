@@ -7,25 +7,13 @@ import { BarChart3 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
   assessDesignSuitability,
-  type Suitability,
+  getSuitabilityConfig,
 } from '@/lib/bio/design-suitability'
 import { useSpeciesContext } from '@/stores/species-store'
 import type { IsoformListItem } from '@/features/gene-search/types/domain-types'
 
 interface Props {
   isoforms: IsoformListItem[]
-}
-
-const SUITABILITY_COLOR: Record<Suitability, string> = {
-  'single-aav': 'bg-emerald-500/70',
-  'dual-aav': 'bg-amber-500/70',
-  'triple-aav': 'bg-red-500/70',
-}
-
-const SUITABILITY_LABEL: Record<Suitability, string> = {
-  'single-aav': 'Single AAV',
-  'dual-aav': 'Dual AAV',
-  'triple-aav': 'Triple AAV',
 }
 
 // AAV packaging thresholds from design-suitability.ts
@@ -83,28 +71,33 @@ export function IsoformLengthChart({ isoforms }: Props) {
           CDS length by isoform
         </div>
         <div className="flex items-center gap-3 text-[10px]">
-          {(['single-aav', 'dual-aav', 'triple-aav'] as const).map((s) => (
-            <span
-              key={s}
-              className="text-muted-foreground flex items-center gap-1"
-            >
-              <span className={cn('size-2 rounded-sm', SUITABILITY_COLOR[s])} />
-              {SUITABILITY_LABEL[s]}
-            </span>
-          ))}
+          {(['single-aav', 'dual-aav', 'triple-aav'] as const).map((s) => {
+            const cfg = getSuitabilityConfig(s)
+            return (
+              <span
+                key={s}
+                className="text-muted-foreground flex items-center gap-1"
+              >
+                <span className={cn('size-2 rounded-sm', cfg.fillClass)} />
+                {cfg.label}
+              </span>
+            )
+          })}
         </div>
       </div>
 
       <div className="space-y-1">
         {rows.map((row) => {
           const pct = (row.length / scaleMax) * 100
+          const cfg = getSuitabilityConfig(row.suitability)
           return (
             <Link
               key={row.id}
               href={buildHref(row.id)}
               scroll={false}
               className="group hover:bg-muted/40 focus-visible:ring-ring -mx-1 flex items-center gap-2 rounded-sm px-1 py-0.5 text-[10px] transition-colors focus-visible:ring-2 focus-visible:outline-none"
-              title={`${row.id} · ${row.length.toLocaleString()} bp · ${SUITABILITY_LABEL[row.suitability]}`}
+              title={`${row.id} · ${row.length.toLocaleString()} bp · ${cfg.label}`}
+              aria-label={`${row.id}, ${row.length.toLocaleString()} base pairs, ${cfg.label}`}
             >
               <span className="text-muted-foreground group-hover:text-foreground w-28 shrink-0 truncate font-mono">
                 {row.id}
@@ -113,7 +106,7 @@ export function IsoformLengthChart({ isoforms }: Props) {
                 <div
                   className={cn(
                     'h-full transition-opacity group-hover:opacity-100',
-                    SUITABILITY_COLOR[row.suitability],
+                    cfg.fillClass,
                   )}
                   style={{ width: `${pct}%` }}
                 />
@@ -128,6 +121,12 @@ export function IsoformLengthChart({ isoforms }: Props) {
                   aria-hidden="true"
                 />
               </div>
+              <span
+                className="text-muted-foreground w-6 shrink-0 text-center font-mono tabular-nums"
+                aria-hidden="true"
+              >
+                {cfg.short}
+              </span>
               <span className="text-muted-foreground w-16 shrink-0 text-right font-mono tabular-nums">
                 {row.length.toLocaleString()}
               </span>

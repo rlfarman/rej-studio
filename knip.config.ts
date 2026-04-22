@@ -1,4 +1,6 @@
-const config = {
+import type { KnipConfig } from 'knip'
+
+const config: KnipConfig = {
   entry: [
     'src/app/**/{page,layout,template,loading,error,not-found,route,default}.{ts,tsx}',
     'src/app/**/{opengraph,twitter}-image.{ts,tsx}',
@@ -8,9 +10,14 @@ const config = {
     'src/sentry.edge.config.ts',
     'next.config.{ts,js,mjs}',
     'scripts/**/*.{ts,tsx}',
+    'src/test/**',
   ],
   project: ['src/**/*.{ts,tsx}', 'scripts/**/*.{ts,tsx}'],
   ignore: ['src/components/ui/**'],
+  storybook: {
+    config: ['.storybook/main.ts', '.storybook/preview.ts'],
+    entry: ['src/**/*.stories.{ts,tsx}'],
+  },
   ignoreDependencies: [
     // Tailwind / PostCSS pipeline — imported by PostCSS, not by app code
     'tailwindcss',
@@ -21,10 +28,8 @@ const config = {
     '@radix-ui/react-radio-group',
     '@radix-ui/react-slider',
     '@radix-ui/react-toggle',
-    // Legacy aggregate package kept around for compatibility, but not imported
-    'radix-ui',
   ],
-  ignoreBinaries: ['verify', 'pip', 'python3'],
+  ignoreBinaries: ['pip', 'python3'],
 }
 
 export default config

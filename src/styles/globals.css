@@ -1,4 +1,8 @@
 @import 'tailwindcss';
+@import '../features/onboarding/tour.css';
+@import 'fumadocs-ui/css/neutral.css';
+@import 'fumadocs-ui/css/preset.css';
+@source '../../node_modules/fumadocs-ui/dist/**/*.js';
 /*
   ---break---
 */
@@ -9,8 +13,9 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-source-sans);
+  --font-mono: var(--font-source-mono);
+  --font-display: var(--font-source-serif), ui-serif, Georgia, serif;
   --background-image-gradient-radial: radial-gradient(var(--tw-gradient-stops));
   --background-image-gradient-conic: conic-gradient(
     from 180deg at 50% 50%,
@@ -18,8 +23,17 @@
   );
 }
 
+html,
+body {
+  height: 100%;
+}
+
 html {
-  font-family: var(--font-geist-sans);
+  font-family: var(--font-source-sans);
+}
+
+body {
+  font-feature-settings: 'cv11', 'ss01';
 }
 
 /*
@@ -63,39 +77,61 @@ html {
 */
 
 :root {
-  --background: oklch(0.965 0 0);
-  --foreground: oklch(0.15 0 0);
-  --card: oklch(0.99 0 0);
-  --card-foreground: oklch(0.15 0 0);
-  --popover: oklch(0.99 0 0);
-  --popover-foreground: oklch(0.15 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  --background: oklch(0.97 0.005 265);
+  --foreground: oklch(0.18 0.02 265);
+  --card: oklch(0.995 0.003 265);
+  --card-foreground: oklch(0.18 0.02 265);
+  --popover: oklch(0.995 0.003 265);
+  --popover-foreground: oklch(0.18 0.02 265);
+  --primary: oklch(0.42 0.15 265);
+  --primary-foreground: oklch(0.985 0.005 265);
+  --secondary: oklch(0.96 0.01 265);
+  --secondary-foreground: oklch(0.3 0.08 265);
+  --muted: oklch(0.96 0.008 265);
+  --muted-foreground: oklch(0.45 0.02 265);
+  --accent: oklch(0.93 0.08 125);
+  --accent-foreground: oklch(0.28 0.1 140);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.577 0.245 27.325);
-  --border: oklch(0.88 0 0);
-  --input: oklch(0.88 0 0);
-  --ring: oklch(0.87 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
+  --border: oklch(0.88 0.01 265);
+  --input: oklch(0.88 0.01 265);
+  --ring: oklch(0.42 0.15 265);
+  --chart-1: oklch(0.42 0.15 265);
+  --chart-2: oklch(0.58 0.13 210);
+  --chart-3: oklch(0.65 0.14 170);
+  --chart-4: oklch(0.78 0.17 140);
+  --chart-5: oklch(0.85 0.18 125);
   --radius: 0.625rem;
-  --sidebar: oklch(0.97 0 0);
-  --sidebar-foreground: oklch(0.15 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.88 0 0);
-  --sidebar-ring: oklch(0.87 0 0);
+  --sidebar: oklch(0.96 0.01 265);
+  --sidebar-foreground: oklch(0.18 0.02 265);
+  --sidebar-primary: oklch(0.42 0.15 265);
+  --sidebar-primary-foreground: oklch(0.985 0.005 265);
+  --sidebar-accent: oklch(0.93 0.08 125);
+  --sidebar-accent-foreground: oklch(0.28 0.1 140);
+  --sidebar-border: oklch(0.88 0.01 265);
+  --sidebar-ring: oklch(0.42 0.15 265);
+  --success: oklch(0.696 0.17 145);
+  --success-foreground: oklch(0.985 0.005 265);
+  --success-soft: oklch(0.508 0.118 148);
+  --warning: oklch(0.78 0.158 58);
+  --warning-foreground: oklch(0.25 0.08 58);
+  --warning-soft: oklch(0.55 0.14 55);
+  --danger: oklch(0.637 0.237 25);
+  --danger-foreground: oklch(0.985 0.005 265);
+  --danger-soft: oklch(0.505 0.213 28);
+  --info: oklch(0.6 0.14 230);
+  --info-foreground: oklch(0.985 0.005 265);
+  --info-soft: oklch(0.48 0.12 232);
+
+  /* AAV packaging — categorical, not a quality ramp.
+     Uses distinct hues from the chart palette so single/dual/triple read as
+     three options, not three grades of "bad". */
+  --aav-single: oklch(0.58 0.13 230); /* blue */
+  --aav-single-soft: oklch(0.45 0.1 230);
+  --aav-dual: oklch(0.65 0.14 195); /* teal */
+  --aav-dual-soft: oklch(0.5 0.11 195);
+  --aav-triple: oklch(0.62 0.15 155); /* green — the app's target case */
+  --aav-triple-soft: oklch(0.48 0.12 150);
 }
 
 /*
@@ -103,38 +139,57 @@ html {
 */
 
 .dark {
-  --background: oklch(0.17 0 0);
-  --foreground: oklch(0.94 0 0);
-  --card: oklch(0.24 0 0);
-  --card-foreground: oklch(0.94 0 0);
-  --popover: oklch(0.24 0 0);
-  --popover-foreground: oklch(0.94 0 0);
-  --primary: oklch(0.985 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
+  --background: oklch(0.17 0.012 265);
+  --foreground: oklch(0.94 0.01 265);
+  --card: oklch(0.23 0.015 265);
+  --card-foreground: oklch(0.94 0.01 265);
+  --popover: oklch(0.23 0.015 265);
+  --popover-foreground: oklch(0.94 0.01 265);
+  --primary: oklch(0.72 0.17 265);
+  --primary-foreground: oklch(0.15 0.02 265);
+  --secondary: oklch(0.27 0.02 265);
+  --secondary-foreground: oklch(0.94 0.01 265);
+  --muted: oklch(0.27 0.015 265);
+  --muted-foreground: oklch(0.72 0.01 265);
+  --accent: oklch(0.82 0.2 125);
+  --accent-foreground: oklch(0.2 0.06 140);
   --destructive: oklch(0.396 0.141 25.723);
   --destructive-foreground: oklch(0.637 0.237 25.331);
-  --border: oklch(0.38 0 0);
-  --input: oklch(0.38 0 0);
-  --ring: oklch(0.5 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.23 0 0);
-  --sidebar-foreground: oklch(0.94 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(0.38 0 0);
-  --sidebar-ring: oklch(0.439 0 0);
+  --border: oklch(0.36 0.015 265);
+  --input: oklch(0.36 0.015 265);
+  --ring: oklch(0.72 0.17 265);
+  --chart-1: oklch(0.72 0.17 265);
+  --chart-2: oklch(0.7 0.14 210);
+  --chart-3: oklch(0.72 0.14 170);
+  --chart-4: oklch(0.8 0.18 140);
+  --chart-5: oklch(0.85 0.2 125);
+  --sidebar: oklch(0.22 0.015 265);
+  --sidebar-foreground: oklch(0.94 0.01 265);
+  --sidebar-primary: oklch(0.72 0.17 265);
+  --sidebar-primary-foreground: oklch(0.15 0.02 265);
+  --sidebar-accent: oklch(0.82 0.2 125);
+  --sidebar-accent-foreground: oklch(0.2 0.06 140);
+  --sidebar-border: oklch(0.36 0.015 265);
+  --sidebar-ring: oklch(0.72 0.17 265);
+  --success: oklch(0.78 0.16 145);
+  --success-foreground: oklch(0.15 0.04 145);
+  --success-soft: oklch(0.84 0.13 148);
+  --warning: oklch(0.83 0.16 62);
+  --warning-foreground: oklch(0.2 0.06 58);
+  --warning-soft: oklch(0.88 0.13 58);
+  --danger: oklch(0.704 0.191 22);
+  --danger-foreground: oklch(0.15 0.04 25);
+  --danger-soft: oklch(0.78 0.14 22);
+  --info: oklch(0.72 0.14 232);
+  --info-foreground: oklch(0.15 0.04 230);
+  --info-soft: oklch(0.8 0.11 232);
+
+  --aav-single: oklch(0.72 0.15 232);
+  --aav-single-soft: oklch(0.8 0.12 232);
+  --aav-dual: oklch(0.75 0.14 195);
+  --aav-dual-soft: oklch(0.82 0.11 195);
+  --aav-triple: oklch(0.78 0.16 150);
+  --aav-triple-soft: oklch(0.84 0.13 150);
 }
 
 /*
@@ -166,6 +221,7 @@ html {
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
+  --radius-xs: calc(var(--radius) - 6px);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -178,6 +234,24 @@ html {
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-warning-soft: var(--warning-soft);
+  --color-danger: var(--danger);
+  --color-danger-foreground: var(--danger-foreground);
+  --color-danger-soft: var(--danger-soft);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-info-soft: var(--info-soft);
+  --color-aav-single: var(--aav-single);
+  --color-aav-single-soft: var(--aav-single-soft);
+  --color-aav-dual: var(--aav-dual);
+  --color-aav-dual-soft: var(--aav-dual-soft);
+  --color-aav-triple: var(--aav-triple);
+  --color-aav-triple-soft: var(--aav-triple-soft);
 }
 
 /*
@@ -191,11 +265,57 @@ html {
   body {
     @apply bg-background text-foreground;
   }
+  h1,
+  h2 {
+    font-family: var(--font-display);
+  }
 }
 
-/* Hero staggered fade-up entrance — CSS-driven so it starts on first paint,
-   no JS hydration needed. */
-@keyframes hero-fade-up {
+/* Typography scale — semantic roles, applied as utility classes.
+   Use these instead of ad-hoc text-[10px] / text-xs / font-semibold combos.
+   The `type-*` prefix keeps them outside Tailwind's `text-*` group so
+   tailwind-merge doesn't drop them as conflicts with text-color utilities. */
+
+/* Uppercase micro-label for table/metric columns and section eyebrows. */
+@utility type-overline {
+  font-size: 0.625rem; /* 10px */
+  line-height: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+/* Page-level title — serif display treatment. */
+@utility type-page-title {
+  font-family: var(--font-display);
+  font-size: 1.875rem; /* 30px */
+  line-height: 1.15;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+}
+
+@media (min-width: 768px) {
+  .type-page-title {
+    font-size: 2.25rem; /* 36px */
+  }
+}
+
+/* Section title inside cards/panels — sans, compact. */
+@utility type-section-title {
+  font-size: 1.125rem; /* 18px */
+  line-height: 1.3;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+/* Fade-up entrance — CSS-driven so it starts on first paint,
+   no JS hydration needed.
+   .fade-up        — single element entrance (no stagger)
+   .fade-up-stagger — staggered entrance, set --stagger (0-based index) per child
+   .hero-stagger    — alias for homepage (legacy compat) */
+@keyframes fade-up {
   from {
     opacity: 0;
     translate: 0 12px;
@@ -206,10 +326,80 @@ html {
   }
 }
 
+.fade-up {
+  animation: fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.fade-up-stagger {
+  --stagger: 0;
+  animation: fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1)
+    calc(var(--stagger) * 80ms) both;
+}
+
 .hero-stagger {
   --stagger: 0;
-  animation: hero-fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1)
+  animation: fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1)
     calc(var(--stagger) * 60ms) both;
+}
+
+/* Align Fumadocs sidebar with the app sidebar. */
+#nd-docs-layout {
+  --fd-sidebar-width: 0px;
+}
+
+@media (min-width: 768px) {
+  #nd-docs-layout {
+    --fd-sidebar-width: 256px;
+  }
+}
+
+#nd-sidebar {
+  --color-fd-card: var(--sidebar);
+  --color-fd-foreground: var(--sidebar-foreground);
+  --color-fd-muted-foreground: var(--sidebar-foreground);
+  --color-fd-accent: var(--sidebar-accent);
+  --color-fd-accent-foreground: var(--sidebar-accent-foreground);
+  --color-fd-border: var(--sidebar-border);
+  --color-fd-primary: var(--sidebar-accent-foreground);
+}
+
+.dark #nd-sidebar {
+  --color-fd-muted-foreground: oklch(0.7 0 0);
+}
+
+/* Match Fumadocs page background to the app background. */
+#nd-docs-layout {
+  --color-fd-background: var(--background);
+}
+
+/* View Transitions — crossfade on full-layout changes (e.g. app ↔ docs). */
+::view-transition-old(root) {
+  animation: vt-fade-out 150ms ease-in both;
+}
+
+::view-transition-new(root) {
+  animation: vt-fade-in 200ms ease-out 100ms both;
+}
+
+/* Suspense reveal — content fading in after async data resolves. */
+::view-transition-old(.suspense-reveal) {
+  animation: none;
+}
+
+::view-transition-new(.suspense-reveal) {
+  animation: fade-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes vt-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes vt-fade-in {
+  from {
+    opacity: 0;
+  }
 }
 
 /* Progress-bar shimmer sweep — signals activity even when width is static. */
@@ -219,5 +409,106 @@ html {
   }
   100% {
     transform: translateX(100%);
+  }
+}
+
+/* Indeterminate progress — sweeps a segment across the bar when we have
+   no numeric progress yet. Covers the gap before the first poll lands. */
+@keyframes indeterminate {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(400%);
+  }
+}
+
+/* Skeleton shimmer — smoother than animate-pulse, sweeps a highlight across. */
+@keyframes skeleton-shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Slow breath — a barely-there 4s pulse for idle focal elements (landing
+   hero icon). Amplitude is intentionally tiny so it reads as "alive" in
+   peripheral vision without asking for attention. */
+@keyframes gentle-breath {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.85;
+  }
+  50% {
+    transform: scale(1.06);
+    opacity: 1;
+  }
+}
+
+/* Completion bloom — single expanding ring for success moments (job done,
+   etc.). Fires once; pairs with a subtle scale bump on the host element. */
+@keyframes completion-bloom {
+  0% {
+    opacity: 0.55;
+    transform: scale(0.6);
+  }
+  70% {
+    opacity: 0;
+    transform: scale(2.2);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(2.2);
+  }
+}
+
+@keyframes completion-pop {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* DnaLoader — rungs light up left-to-right in sequence. */
+@keyframes dna-rung-glow {
+  0%,
+  100% {
+    opacity: 0.15;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* DnaLoader — subtle current flowing along a helix strand. Tiled dash
+   pattern drifts by exactly one tile so the loop has no seam. */
+@keyframes dna-strand-flow {
+  0% {
+    stroke-dashoffset: 0;
+  }
+  100% {
+    stroke-dashoffset: -24;
+  }
+}
+
+/* DnaLoader — soft stroke-width/opacity breathe on each strand, paired
+   with flow for a living, slightly unsettled feel. */
+@keyframes dna-strand-breathe {
+  0%,
+  100% {
+    stroke-width: 1.25;
+    opacity: 0.7;
+  }
+  50% {
+    stroke-width: 1.75;
+    opacity: 1;
   }
 }

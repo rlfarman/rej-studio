@@ -1,102 +1,104 @@
 'use server'
 
-import { db } from '@/drizzle/db'
-import { SelectGene, genes, isoforms } from '@/drizzle/schema'
-import { sql, eq, or } from 'drizzle-orm'
 import {
-  ENST_REGEX,
-  ENSG_REGEX,
-} from '@/features/gene-search/utils/ensembl-regex'
-import type { SpeciesFilter } from '@/lib/bio/species'
+  fetchGenesBySearch,
+  fetchGeneBySymbol,
+  fetchSimilarGenes,
+} from '@/features/gene-search/api/gene-queries'
+import type { GeneSearchResult } from '@/features/gene-search/api/gene-queries'
+import { speciesFilterSchema, type SpeciesFilter } from '@/lib/bio/species'
+import { z } from 'zod'
+import { headers } from 'next/headers'
+import { createUpstashRateLimiter } from '@/lib/upstash'
+import { createLogger } from '@/lib/logger'
 
-export type GeneSearchResult = Pick<
-  SelectGene,
-  'id' | 'name' | 'symbol' | 'species'
-> & {
-  matchedIsoformId?: string
+// NOTE: GeneSearchResult is NOT re-exported from this 'use server' file.
+// Turbopack treats all exports from server action files as server actions,
+// which fails for type-only exports. Import GeneSearchResult directly from
+// '@/features/gene-search/api/gene-queries' instead.
+
+export interface SearchGenesResult {
+  results: GeneSearchResult[]
+  error?: string
 }
 
-const geneSearchColumns = {
-  id: genes.id,
-  name: genes.name,
-  symbol: genes.symbol,
-  species: genes.species,
-} as const
+const log = createLogger('gene-search')
+
+// 30 searches per minute per IP. Generous for normal use but caps automated
+// scraping that would hammer the Neon DB.
+const searchLimiter = createUpstashRateLimiter({
+  prefix: 'search',
+  maxRequests: 30,
+  windowMs: 60_000,
+})
+
+// Defense-in-depth: server actions are reachable from any caller (client, other
+// server code), so re-validate inputs at the boundary even though call-sites
+// pass typed values. A hostile client can construct arbitrary payloads.
+const searchGenesInput = z.object({
+  query: z.string().max(200),
+  species: speciesFilterSchema.default('both'),
+})
+
+const geneSymbolInput = z.object({
+  symbol: z.string().min(1).max(100),
+  species: speciesFilterSchema.optional(),
+})
 
 export async function searchGenes(
   query: string,
   species: SpeciesFilter = 'both',
-): Promise<GeneSearchResult[]> {
-  const trimmedQuery = query.trim()
-  if (trimmedQuery.length === 0) return []
+): Promise<SearchGenesResult> {
+  const parsed = searchGenesInput.parse({ query, species })
+  const trimmedQuery = parsed.query.trim()
+  if (trimmedQuery.length === 0) return { results: [] }
 
-  if (ENST_REGEX.test(trimmedQuery)) {
-    const [result] = await db
-      .select({ ...geneSearchColumns, matchedIsoformId: isoforms.id })
-      .from(isoforms)
-      .innerJoin(genes, eq(isoforms.geneId, genes.id))
-      .where(eq(isoforms.id, trimmedQuery))
-      .limit(1)
-    return result ? [result] : []
+  const hdrs = await headers()
+  const ip = hdrs.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
+  const { ok: allowed, resetMs } = await searchLimiter.check(ip)
+  if (!allowed) {
+    const retrySeconds = Math.ceil(resetMs / 1000)
+    throw new Error(`Too many search requests. Please wait ${retrySeconds}s.`)
   }
 
-  if (ENSG_REGEX.test(trimmedQuery)) {
-    const [result] = await db
-      .select(geneSearchColumns)
-      .from(genes)
-      .where(eq(genes.id, trimmedQuery))
-      .limit(1)
-    return result ? [result] : []
+  try {
+    const results = await fetchGenesBySearch(trimmedQuery, parsed.species)
+    // Structured search analytics — log query, species filter, and result
+    // count so we can understand what users search for. No PII (IP is not
+    // included); the query itself is gene/disease terminology, not personal.
+    log.info('search', {
+      query: trimmedQuery,
+      species: parsed.species,
+      resultCount: results.length,
+    })
+    return { results }
+  } catch (err) {
+    log.error('search query failed', err, { query: trimmedQuery })
+    // Return empty results with an error flag instead of crashing — the UI
+    // can distinguish "no matches" from "search is broken" and show a warning.
+    return { results: [], error: 'Search is temporarily unavailable.' }
   }
-
-  // Dialect-neutral search: LOWER(col) LIKE '%query%' works in Postgres, SQLite,
-  // and MySQL without modification (no ILIKE, no dialect-specific operators).
-  // alternateSymbols stores original casing (pipe-delimited) for display, so we
-  // LOWER() it at query time too.
-  const lowerQuery = trimmedQuery.toLowerCase()
-  const prefixPattern = `${lowerQuery}%`
-  const containsPattern = `%${lowerQuery}%`
-
-  const symbolMatch = sql`LOWER(${genes.symbol}) LIKE ${containsPattern}`
-  const nameMatch = sql`LOWER(${genes.name}) LIKE ${containsPattern}`
-  const altMatch = sql`LOWER(${genes.alternateSymbols}) LIKE ${containsPattern}`
-  const speciesMatch =
-    species !== 'both' ? eq(genes.species, species) : undefined
-
-  const rankExpression = sql<number>`
-    CASE
-      WHEN LOWER(${genes.symbol}) = ${lowerQuery} THEN 0
-      WHEN LOWER(${genes.symbol}) LIKE ${prefixPattern} THEN 1
-      WHEN LOWER(${genes.name}) LIKE ${prefixPattern} THEN 2
-      WHEN LOWER(${genes.symbol}) LIKE ${containsPattern} THEN 3
-      WHEN LOWER(${genes.name}) LIKE ${containsPattern} THEN 4
-      ELSE 5
-    END
-  `
-
-  return db
-    .select(geneSearchColumns)
-    .from(genes)
-    .where(
-      speciesMatch
-        ? sql`(${or(symbolMatch, nameMatch, altMatch)}) AND ${speciesMatch}`
-        : or(symbolMatch, nameMatch, altMatch),
-    )
-    .orderBy(rankExpression, genes.name)
-    .limit(6)
 }
 
 export async function getGeneBySymbol(symbol: string, species?: SpeciesFilter) {
-  const conditions =
-    species && species !== 'both'
-      ? sql`${eq(genes.symbol, symbol)} AND ${eq(genes.species, species)}`
-      : eq(genes.symbol, symbol)
+  const parsed = geneSymbolInput.parse({ symbol, species })
+  return fetchGeneBySymbol(parsed.symbol, parsed.species)
+}
 
-  const [gene] = await db
-    .select(geneSearchColumns)
-    .from(genes)
-    .where(conditions)
-    .limit(1)
+/**
+ * Find genes with symbols similar to the given input. Used for "did you mean?"
+ * suggestions on the 404 page. Uses prefix matching and LIKE patterns to find
+ * close matches without requiring pg_trgm.
+ */
+export async function findSimilarGenes(
+  symbol: string,
+): Promise<{ symbol: string; species: string }[]> {
+  const cleaned = symbol.trim().toUpperCase().slice(0, 20)
+  if (cleaned.length === 0) return []
 
-  return gene
+  try {
+    return await fetchSimilarGenes(cleaned)
+  } catch {
+    return []
+  }
 }

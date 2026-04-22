@@ -1,14 +1,12 @@
 /**
- * Structured client-side logger. Thin wrapper over console that tags every
- * message with a scope and surfaces errors in a consistent shape.
+ * Structured logger. In production (server-side), outputs newline-delimited
+ * JSON for log aggregation (Axiom, Datadog, CloudWatch, etc.). In development
+ * or in the browser, falls back to human-readable console output.
  *
  * Usage:
  *   const log = createLogger('job-watcher')
  *   log.info('polling started', { jobId })
  *   log.error('poll failed', err, { jobId })
- *
- * Kept intentionally small — swap the sink here if we later add remote
- * reporting (Sentry, etc.) without touching call sites.
  */
 
 type LogLevel = 'debug' | 'info' | 'warn' | 'error'
@@ -24,7 +22,37 @@ interface Logger {
   error: (msg: string, error?: unknown, context?: LogContext) => void
 }
 
-function emit(level: LogLevel, scope: string, msg: string, extras: LogContext) {
+const isServer = typeof window === 'undefined'
+const isProduction = process.env.NODE_ENV === 'production'
+const useJson = isServer && isProduction
+
+function emitJson(
+  level: LogLevel,
+  scope: string,
+  msg: string,
+  extras: LogContext,
+) {
+  const entry = JSON.stringify({
+    level,
+    scope,
+    msg,
+    ts: new Date().toISOString(),
+    ...(Object.keys(extras).length > 0 ? extras : undefined),
+  })
+  // Use stderr for warn/error so log routers can split by stream
+  if (level === 'error' || level === 'warn') {
+    process.stderr.write(entry + '\n')
+  } else {
+    process.stdout.write(entry + '\n')
+  }
+}
+
+function emitConsole(
+  level: LogLevel,
+  scope: string,
+  msg: string,
+  extras: LogContext,
+) {
   const prefix = `[${scope}]`
   const payload = Object.keys(extras).length > 0 ? extras : undefined
   const sink = console[level] ?? console.log
@@ -34,6 +62,8 @@ function emit(level: LogLevel, scope: string, msg: string, extras: LogContext) {
     sink(prefix, msg)
   }
 }
+
+const emit = useJson ? emitJson : emitConsole
 
 function serializeError(error: unknown): LogContext {
   if (error instanceof Error) {

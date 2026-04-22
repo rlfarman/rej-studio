@@ -2,7 +2,7 @@
 import { useEffect, useState, useSyncExternalStore } from 'react'
 import { CommandDialog } from '@/components/ui/command'
 import { useRouter } from 'next/navigation'
-import { type GeneSearchResult } from '@/features/gene-search/api/genes'
+import { type SearchGenesResult } from '@/features/gene-search/api/genes'
 import { Button } from '@/components/ui/button'
 import { SearchIcon } from 'lucide-react'
 import { useGeneSearch } from '@/features/gene-search/hooks/use-gene-search'
@@ -10,15 +10,24 @@ import { GeneSearchCommand } from './gene-search-command'
 import { useRecentGenes } from '@/features/gene-search/stores/recent-genes-store'
 import { useFavoriteGenes } from '@/features/gene-search/stores/favorite-genes-store'
 import { geneHref, type SpeciesFilter } from '@/lib/bio/species'
-import type { SavedGene } from '@/features/gene-search/types/domain-types'
+import type {
+  SavedGene,
+  JobSearchItem,
+} from '@/features/gene-search/types/domain-types'
+import { trackEvent } from '@/lib/analytics'
+import { geneSearchCopy } from '../copy'
 
 interface GeneSearchProperties {
   searchGenes: (
     content: string,
     species?: SpeciesFilter,
-  ) => Promise<GeneSearchResult[]>
+  ) => Promise<SearchGenesResult>
   defaultQuery?: string
   isDialog?: boolean
+  // Jobs to merge into search results. Supplied by the app-level shell so
+  // `GeneSearch` doesn't need to cross the feature boundary into `design-tool`.
+  jobs?: JobSearchItem[]
+  onSelectJob?: (id: string) => void
 }
 
 function subscribeToPlatformStore() {
@@ -33,17 +42,28 @@ function getPlatformServerSnapshot() {
   return false
 }
 
+const EMPTY_JOBS: JobSearchItem[] = []
+
 export function GeneSearch({
   searchGenes,
   defaultQuery,
   isDialog = false,
+  jobs = EMPTY_JOBS,
+  onSelectJob,
 }: GeneSearchProperties) {
   const router = useRouter()
-  const { query, setQuery, hasSearched, searchResults, isLoading, error } =
-    useGeneSearch({
-      searchGenes,
-      defaultQuery,
-    })
+  const {
+    query,
+    setQuery,
+    hasSearched,
+    searchResults,
+    isLoading,
+    error,
+    retry,
+  } = useGeneSearch({
+    searchGenes,
+    defaultQuery,
+  })
   const [isOpen, setIsOpen] = useState(false)
   const { recentGenes, addRecentGene } = useRecentGenes()
   const { favoriteGenes } = useFavoriteGenes()
@@ -56,8 +76,19 @@ export function GeneSearch({
   const handleSelect = (gene: SavedGene) => {
     setIsOpen(false)
     addRecentGene(gene)
+    trackEvent({
+      event: 'gene_select',
+      symbol: gene.symbol,
+      species: gene.species ?? 'unknown',
+      isoform_id: gene.matchedIsoformId,
+    })
     router.push(geneHref(gene.symbol, gene.species, gene.matchedIsoformId))
     setQuery(gene.symbol)
+  }
+
+  const handleSelectJob = (entry: JobSearchItem) => {
+    setIsOpen(false)
+    onSelectJob?.(entry.id)
   }
 
   useEffect(() => {
@@ -78,15 +109,15 @@ export function GeneSearch({
         <Button
           variant="outline"
           onClick={() => setIsOpen(true)}
-          className="text-muted-foreground hover:text-muted-foreground w-full min-w-42 cursor-pointer justify-between md:min-w-72 xl:min-w-108"
+          className="group text-muted-foreground hover:text-accent-foreground w-full min-w-42 cursor-pointer justify-between md:min-w-72 xl:min-w-108"
         >
           <div className="flex items-center gap-2">
             <SearchIcon className="h-5 w-5" />
-            <span>Search for Genes</span>
+            <span>{geneSearchCopy.trigger.label}</span>
           </div>
-          <p className="text-muted-foreground hidden text-sm md:block">
-            Press{' '}
-            <kbd className="bg-muted text-muted-foreground pointer-events-none inline-flex h-5 items-center gap-1 rounded border px-1.5 font-mono text-[10px] font-medium opacity-100 select-none">
+          <p className="text-muted-foreground group-hover:text-accent-foreground hidden text-sm md:block">
+            {geneSearchCopy.trigger.kbdHintPrefix}{' '}
+            <kbd className="bg-muted text-muted-foreground group-hover:bg-accent-foreground/10 group-hover:text-accent-foreground pointer-events-none inline-flex h-5 items-center gap-1 rounded border px-1.5 font-mono text-[10px] font-medium opacity-100 select-none">
               <span className="text-xs">{isMac ? '⌘' : 'Ctrl+'}</span>K
             </kbd>
           </p>
@@ -101,8 +132,11 @@ export function GeneSearch({
             setIsOpen={setIsOpen}
             handleSelect={handleSelect}
             error={error}
+            retry={retry}
             recentGenes={recentGenes}
             favoriteGenes={favoriteGenes}
+            jobs={jobs}
+            handleSelectJob={handleSelectJob}
           />
         </CommandDialog>
       </div>
@@ -119,8 +153,11 @@ export function GeneSearch({
       setIsOpen={setIsOpen}
       handleSelect={handleSelect}
       error={error}
+      retry={retry}
       recentGenes={recentGenes}
       favoriteGenes={favoriteGenes}
+      jobs={jobs}
+      handleSelectJob={handleSelectJob}
     />
   )
 }

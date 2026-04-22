@@ -1,0 +1,70 @@
+---
+title: Design a sequence
+description: How to configure the optimization parameters and run a job.
+---
+
+## Open the design tool
+
+You can get there two ways:
+
+1. **From an isoform** — the CDS is pre-filled and the gene symbol is
+   attached.
+2. **Standalone** — paste your own CDS. It must start with `ATG`, end
+   with a stop codon, and be a multiple of three.
+
+## Pick a split point
+
+The split-point slider defaults to the WGGW motif closest to the CDS
+midpoint — a balanced split with a WGGW substrate at the joint. Drag
+it to pick a different motif if you have a reason to (e.g. avoiding a
+problematic region).
+
+The split bar shows how balanced the two fragments are. A good split
+looks like this:
+
+<SplitBarShowcase />
+
+## Choose your optimization parameters
+
+Start with the defaults. They enable all objectives at balanced
+weights — good for a first pass. See
+[Parameters reference](/docs/reference/parameters) for what each one
+does in detail.
+
+If you want to customize:
+
+- **Toggle objectives on/off** depending on what matters for your
+  construct. Not every design needs CpG minimization, for example.
+- **Adjust weights** only when the defaults give you a result that's
+  strong at one thing and weak at another. Bump the weight of whatever
+  you care more about. 2x is a big move — don't over-swing.
+- **Enable stimulatory introns** (5', 3', or both) if expression is
+  limiting. The protein is unchanged but each intron adds length.
+
+## Submit and wait
+
+Click **Submit**. The backend splits at the selected WGGW motif and
+optimizes each fragment independently. This usually takes a few
+seconds.
+
+## Iterate
+
+The form remembers your last parameters. The most productive workflow
+is:
+
+1. **Run once with defaults**, read the
+   [report](/docs/guides/reading-results).
+2. **Change one thing at a time** — toggle an objective, bump a weight,
+   move the split point.
+3. **Compare reports** to understand which constraint was doing what.
+
+### Tips
+
+- **Watch for objective conflicts.** Maximum codon optimization and
+  aggressive motif removal sometimes pull in opposite directions. The
+  report will show which objective is hardest to satisfy.
+- **Don't over-tune weights.** Big swings on one objective usually
+  cost everything else.
+- **When in doubt, widen a constraint.** Loosening is usually right
+  when the solver is trapped; tightening is for when the result is
+  too permissive.

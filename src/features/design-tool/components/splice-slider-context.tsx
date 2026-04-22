@@ -254,8 +254,8 @@ export function SpliceSliderContext({
                       isSelected
                         ? 'bg-primary h-4 w-1.5'
                         : site.alreadyPresent
-                          ? 'h-3 w-1 bg-emerald-500/75'
-                          : 'h-3 w-1 bg-amber-500/90',
+                          ? 'bg-success/75 h-3 w-1'
+                          : 'bg-warning/90 h-3 w-1',
                     )}
                   />
                 </button>
@@ -366,21 +366,21 @@ function roleStylesFor(role: CodonRole): {
       }
     case 'start':
       return {
-        container: 'bg-emerald-500/15 ring-emerald-500/40 ring-1',
-        aa: 'text-emerald-700 dark:text-emerald-300 font-semibold',
-        base: 'text-emerald-700 dark:text-emerald-300',
+        container: 'bg-success/15 ring-success/40 ring-1',
+        aa: 'text-success-soft font-semibold',
+        base: 'text-success-soft',
       }
     case 'stop':
       return {
-        container: 'bg-red-500/15 ring-red-500/40 ring-1',
-        aa: 'text-red-700 dark:text-red-300 font-semibold',
-        base: 'text-red-700 dark:text-red-300',
+        container: 'bg-danger/15 ring-danger/40 ring-1',
+        aa: 'text-danger-soft font-semibold',
+        base: 'text-danger-soft',
       }
     case 'internal-stop':
       return {
-        container: 'bg-red-500/20 ring-red-500/50 ring-1',
-        aa: 'text-red-700 dark:text-red-300 font-semibold',
-        base: 'text-red-700 dark:text-red-300',
+        container: 'bg-danger/20 ring-danger/50 ring-1',
+        aa: 'text-danger-soft font-semibold',
+        base: 'text-danger-soft',
       }
     default:
       return {
@@ -529,8 +529,8 @@ function FrameAtSplit({
                   c.role === 'split' ? '' : roleStyles.container,
                   selectedCodonIndices.has(c.idx) &&
                     (selectedSite?.alreadyPresent
-                      ? 'bg-emerald-500/10 ring-1 ring-emerald-500/30'
-                      : 'bg-amber-500/10 ring-1 ring-amber-500/30'),
+                      ? 'bg-success/10 ring-success/30 ring-1'
+                      : 'bg-warning/10 ring-warning/30 ring-1'),
                 )}
               >
                 <span
@@ -559,8 +559,8 @@ function FrameAtSplit({
                           roleStyles.base,
                           inSelected &&
                             (selectedSite?.alreadyPresent
-                              ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
-                              : 'bg-amber-500/15 text-amber-700 dark:text-amber-300'),
+                              ? 'bg-success/15 text-success-soft'
+                              : 'bg-warning/15 text-warning-soft'),
                           isChanged &&
                             'underline decoration-2 underline-offset-2',
                           isCutBase && 'border-primary border-r-2',
@@ -597,8 +597,8 @@ function FrameAtSplit({
                     isSelected
                       ? 'bg-primary'
                       : site.alreadyPresent
-                        ? 'bg-emerald-500'
-                        : 'bg-amber-500',
+                        ? 'bg-success'
+                        : 'bg-warning',
                   )}
                 />
                 <span
@@ -656,8 +656,8 @@ function FrameAtSplit({
                       className={cn(
                         'rounded-full px-1.5 py-0.5 text-[10px] font-medium',
                         site.alreadyPresent
-                          ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
-                          : 'bg-amber-500/15 text-amber-700 dark:text-amber-300',
+                          ? 'bg-success/15 text-success-soft'
+                          : 'bg-warning/15 text-warning-soft',
                       )}
                     >
                       {site.alreadyPresent
@@ -700,8 +700,8 @@ function FrameAtSplit({
                       className={cn(
                         'rounded-md px-2 py-1 font-mono text-xs font-semibold',
                         selectedSite.alreadyPresent
-                          ? 'bg-emerald-500/12 text-emerald-700 dark:text-emerald-300'
-                          : 'bg-amber-500/14 text-amber-700 dark:text-amber-300',
+                          ? 'bg-success/12 text-success-soft'
+                          : 'bg-warning/14 text-warning-soft',
                       )}
                     >
                       {selectedSite.motif}
@@ -880,8 +880,8 @@ function RewritePreview({
                         index === 3 && 'ml-1',
                         inMotif &&
                           (alreadyPresent
-                            ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
-                            : 'bg-amber-500/15 text-amber-700 dark:text-amber-300'),
+                            ? 'bg-success/15 text-success-soft'
+                            : 'bg-warning/15 text-warning-soft'),
                         isChanged &&
                           'underline decoration-2 underline-offset-2',
                         isCut && 'border-primary border-r-2',

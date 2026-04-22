@@ -1,0 +1,88 @@
+---
+title: Reading your results
+description: How to interpret the optimization output and decide what to do next.
+---
+
+When a job finishes you'll see three things: the **optimized
+fragments** (5′ and 3′), an **optimization report**, and a set of
+**diagnostic badges**.
+
+## Check the diagnostic badges
+
+The header shows quick-read indicators. Here's what a typical set
+of badges looks like:
+
+<DiagBadgeShowcase />
+
+Each badge is color-coded:
+
+- <DiagBadge status="good" label="Good" tooltip="Within the optimal range." /> — within the optimal range.
+- <DiagBadge status="warn" label="Warning" tooltip="Outside the optimal range but not critical." /> — outside the optimal range but not critical.
+- <DiagBadge status="error" label="Error" tooltip="A problem that may need attention." /> — a problem that needs attention.
+- <DiagBadge status="neutral" label="Info" tooltip="Informational." /> — informational (e.g. sequence length).
+
+These badges are a summary, not a substitute for the full report.
+
+## Read the optimization report
+
+The report gives a per-constraint breakdown of what the solver did.
+For each constraint you enabled you'll see:
+
+- Whether it was **satisfied**, **partially satisfied**, or
+  **violated**.
+- The **score** the solver ended on (lower is better for most
+  constraints).
+- A short **explanation** of what changed — e.g. "3 CpG sites
+  removed", "splice site at position 412 neutralized".
+
+A constraint that shows "violated" is usually either unreachable given
+your other constraints (the solver can't satisfy all of them
+simultaneously) or unreachable given the amino acid sequence (no
+synonymous rewrite exists that meets it). The report will tell you
+which.
+
+## Handle violations
+
+If a constraint is violated:
+
+1. **Relax or disable the offending constraint** and re-run. Start
+   with the lowest-priority objective.
+2. **Check for conflicts** — aggressive codon optimization and CpG
+   minimization can fight the GC window.
+3. **Check your input** — if it's already outside 35-60% GC, the
+   solver may not be able to recover.
+
+See [Troubleshooting](/docs/guides/troubleshooting) for specific
+error messages.
+
+## Review AAV packaging estimates
+
+If your sequence is large enough to require dual-vector delivery,
+the results page shows an AAV packaging estimate for each fragment:
+
+<AavResultsShowcase />
+
+This tells you whether each half fits within the AAV packaging limit
+(~4.7 kb of total cargo, including ITRs, promoter, poly-A, and any
+other regulatory elements) and helps you decide whether to adjust the
+split point.
+
+## Download and save
+
+Click **Download FASTA** to save the optimized fragments. The
+filename includes the gene symbol (or `Custom` if you pasted your
+own).
+
+<Callout type="warn">
+Results live in the browser session only. Download before closing
+the tab — there is no way to recover a lost result.
+</Callout>
+
+## Validate experimentally
+
+The optimizer is a constraint solver; the report tells you what
+sequence-level properties it achieved, not what the construct will do
+in cells. Nothing in the report predicts protein expression level,
+mRNA stability, folding, immunogenicity, or end-joining efficiency —
+those all have to be measured. Every sequence designed here should be
+tested before you trust it.

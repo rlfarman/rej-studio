@@ -68,7 +68,7 @@ function GcContentTrack({ original, optimized, splitPoint }: Props) {
           <Activity className="text-muted-foreground size-4" />
           GC Content (sliding window)
         </div>
-        <div className="flex items-center gap-3 text-[10px]">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
           <span className="text-muted-foreground flex items-center gap-1">
             <span className="bg-muted-foreground/40 h-0.5 w-4 rounded-full" />
             Original
@@ -78,7 +78,7 @@ function GcContentTrack({ original, optimized, splitPoint }: Props) {
             Optimized
           </span>
           <span className="text-muted-foreground flex items-center gap-1">
-            <span className="size-2 rounded-sm bg-emerald-500/15 ring-1 ring-emerald-500/30" />
+            <span className="bg-success/15 ring-success/30 size-2 rounded-sm ring-1" />
             Target {TARGET_GC_MIN}–{TARGET_GC_MAX}%
           </span>
         </div>
@@ -97,7 +97,7 @@ function GcContentTrack({ original, optimized, splitPoint }: Props) {
             y={bandTop}
             width={width}
             height={bandBottom - bandTop}
-            className="fill-emerald-500/10"
+            className="fill-success/10"
           />
           {/* 50% baseline */}
           <line

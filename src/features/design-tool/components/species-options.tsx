@@ -12,24 +12,31 @@ import { Dna } from 'lucide-react'
 import { useFormContext } from 'react-hook-form'
 import { DESIGN_TOOL_SPECIES_OPTIONS } from '../types/species-options'
 import { FormValues } from '../types/form-schema'
+import { designToolCopy } from '../copy'
 
 export function SpeciesOptions() {
-  const { control } = useFormContext<FormValues>()
+  const { control, watch } = useFormContext<FormValues>()
+  const sequenceType = watch('sequenceType')
+  const isProtein = sequenceType === 'protein'
   return (
     <FormField
       name="species"
       control={control}
       render={({ field }) => (
         <FormItem>
-          <FormLabel>Harmonize codon usage for species</FormLabel>
+          <FormLabel>
+            {designToolCopy.speciesOptions.label}
+            {isProtein && <span aria-hidden="true"> *</span>}
+          </FormLabel>
           <FormControl>
             <div
               role="radiogroup"
-              aria-label="Harmonize codon usage for species"
+              aria-label={designToolCopy.speciesOptions.label}
               className="grid grid-cols-1 gap-2 sm:grid-cols-3"
             >
               {DESIGN_TOOL_SPECIES_OPTIONS.map(({ label, value }) => {
                 const isActive = field.value === value
+                const isDisabled = isProtein && value === 'none'
 
                 return (
                   <button
@@ -37,12 +44,21 @@ export function SpeciesOptions() {
                     type="button"
                     role="radio"
                     aria-checked={isActive}
+                    aria-disabled={isDisabled}
+                    disabled={isDisabled}
+                    title={
+                      isDisabled
+                        ? designToolCopy.speciesOptions.noneDisabledHint
+                        : undefined
+                    }
                     onClick={() => field.onChange(value)}
                     className={cn(
                       'flex items-center gap-2 rounded-lg border px-3 py-2 text-left transition-colors',
                       isActive
                         ? 'border-primary bg-primary/5 ring-primary/20 ring-1'
                         : 'hover:bg-muted/50',
+                      isDisabled &&
+                        'cursor-not-allowed opacity-50 hover:bg-transparent',
                     )}
                   >
                     {value === 'none' ? (
