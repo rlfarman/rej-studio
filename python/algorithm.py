@@ -1335,7 +1335,7 @@ def process_single_request_json(CDS, name, OPTIONS, on_progress=None):
     options_copy = OPTIONS.copy()
 
     if on_progress is not None:
-        on_progress(0.05, "Validating sequence")
+        on_progress(0.05, "Checking sequence")
 
     # Run the optimization and splitting
     seq5, seq3, obj_before, obj_after, optimized_seq = optimize_and_split(
