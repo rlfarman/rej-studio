@@ -73,5 +73,27 @@ export const onboardingCopy = {
           'Submit your sequence. Results include optimized fragments, codon changes, restriction sites, and downloadable files.',
       },
     },
+    guided: {
+      history: {
+        title: 'Your work lives here',
+        description:
+          'Favorites, recent searches, and past jobs stick around in the sidebar so you can pick up where you left off.',
+      },
+      disease: {
+        title: 'Disease landscape',
+        description:
+          'Browse genes grouped by disease to find a target when you don’t have one in mind.',
+      },
+      docs: {
+        title: 'Read the manual',
+        description:
+          'The docs cover algorithm details, output formats, and integration notes whenever you need a deeper dive.',
+      },
+      settings: {
+        title: 'Settings & preferences',
+        description:
+          'Toggle theme, species defaults, and data export from here.',
+      },
+    },
   },
 } as const

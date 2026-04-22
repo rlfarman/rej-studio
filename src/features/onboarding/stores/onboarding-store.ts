@@ -9,6 +9,7 @@ interface OnboardingState {
   hasSeenWelcome: boolean
   activeTourId: TourId | null
   welcomeDialogOpen: boolean
+  guidedStepIndex: number
 
   markTourCompleted: (tourId: TourId) => void
   markWelcomeSeen: () => void
@@ -18,6 +19,7 @@ interface OnboardingState {
   isTourCompleted: (tourId: TourId) => boolean
   openWelcome: () => void
   closeWelcome: () => void
+  setGuidedStepIndex: (index: number) => void
 }
 
 export const useOnboarding = create<OnboardingState>()(
@@ -27,6 +29,7 @@ export const useOnboarding = create<OnboardingState>()(
       hasSeenWelcome: false,
       activeTourId: null,
       welcomeDialogOpen: false,
+      guidedStepIndex: 0,
 
       markTourCompleted: (tourId) =>
         set((state) => ({
@@ -37,7 +40,11 @@ export const useOnboarding = create<OnboardingState>()(
 
       markWelcomeSeen: () => set({ hasSeenWelcome: true }),
 
-      startTour: (tourId) => set({ activeTourId: tourId }),
+      startTour: (tourId) =>
+        set({
+          activeTourId: tourId,
+          ...(tourId === 'guided' ? { guidedStepIndex: 0 } : {}),
+        }),
 
       endTour: () => {
         const { activeTourId } = get()
@@ -47,6 +54,7 @@ export const useOnboarding = create<OnboardingState>()(
               ? state.completedTours
               : [...state.completedTours, activeTourId],
             activeTourId: null,
+            guidedStepIndex: 0,
           }))
         }
       },
@@ -56,12 +64,15 @@ export const useOnboarding = create<OnboardingState>()(
           completedTours: [],
           hasSeenWelcome: false,
           activeTourId: null,
+          guidedStepIndex: 0,
         }),
 
       isTourCompleted: (tourId) => get().completedTours.includes(tourId),
 
       openWelcome: () => set({ welcomeDialogOpen: true }),
       closeWelcome: () => set({ welcomeDialogOpen: false }),
+
+      setGuidedStepIndex: (index) => set({ guidedStepIndex: index }),
     }),
     {
       name: 'rej-studio:onboarding',

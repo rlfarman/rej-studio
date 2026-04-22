@@ -169,14 +169,12 @@
 
 /* ── Overlay — slightly stronger to separate from dark theme chrome ────── */
 .driver-active .driver-overlay {
-  opacity: 0.65 !important;
+  opacity: 0.55 !important;
 }
-
-/* ── Stage highlight — subtle ring so the active target reads ──────────── */
-.driver-active .driver-active-element {
-  box-shadow: 0 0 0 2px var(--ring);
-  border-radius: 12px;
-}
+/* driver.js renders its own stage cutout via the SVG overlay (controlled by
+ * stagePadding + stageRadius on the driver config). Don't add a second ring
+ * here — it stacks oddly and forcing a border-radius on the target clobbers
+ * the element's real shape. */
 
 /* Respect motion preferences */
 @media (prefers-reduced-motion: reduce) {
