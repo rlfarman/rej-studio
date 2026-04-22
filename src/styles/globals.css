@@ -122,6 +122,9 @@ body {
   --info: oklch(0.6 0.14 230);
   --info-foreground: oklch(0.985 0.005 265);
   --info-soft: oklch(0.48 0.12 232);
+  --marker: oklch(0.62 0.12 200);
+  --marker-foreground: oklch(0.985 0.005 265);
+  --marker-soft: oklch(0.48 0.1 200);
 
   /* AAV packaging — categorical, not a quality ramp.
      Uses distinct hues from the chart palette so single/dual/triple read as
@@ -183,6 +186,9 @@ body {
   --info: oklch(0.72 0.14 232);
   --info-foreground: oklch(0.15 0.04 230);
   --info-soft: oklch(0.8 0.11 232);
+  --marker: oklch(0.75 0.12 200);
+  --marker-foreground: oklch(0.15 0.04 200);
+  --marker-soft: oklch(0.82 0.1 200);
 
   --aav-single: oklch(0.72 0.15 232);
   --aav-single-soft: oklch(0.8 0.12 232);
@@ -246,6 +252,9 @@ body {
   --color-info: var(--info);
   --color-info-foreground: var(--info-foreground);
   --color-info-soft: var(--info-soft);
+  --color-marker: var(--marker);
+  --color-marker-foreground: var(--marker-foreground);
+  --color-marker-soft: var(--marker-soft);
   --color-aav-single: var(--aav-single);
   --color-aav-single-soft: var(--aav-single-soft);
   --color-aav-dual: var(--aav-dual);
