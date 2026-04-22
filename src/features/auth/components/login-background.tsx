@@ -43,7 +43,7 @@ export function LoginBackground() {
         strokeLinecap="round"
         pathLength={100}
         strokeDasharray="38 12"
-        className="stroke-primary/30 [animation:dna-strand-flow_5s_linear_infinite,dna-strand-breathe_4s_ease-in-out_infinite] motion-reduce:animate-none"
+        className="stroke-primary/30 [animation:helix-bg-flow_5s_linear_infinite,dna-strand-breathe_4s_ease-in-out_infinite] motion-reduce:animate-none"
       />
       {/* Strand 2 — flows in reverse, slightly dimmer */}
       <path
@@ -53,7 +53,7 @@ export function LoginBackground() {
         strokeLinecap="round"
         pathLength={100}
         strokeDasharray="38 12"
-        className="stroke-primary/20 [animation:dna-strand-flow_5s_linear_infinite_reverse,dna-strand-breathe_4s_ease-in-out_2s_infinite] motion-reduce:animate-none"
+        className="stroke-primary/20 [animation:helix-bg-flow_5s_linear_infinite_reverse,dna-strand-breathe_4s_ease-in-out_2s_infinite] motion-reduce:animate-none"
       />
       {/* Rungs — glow sequentially */}
       {HELIX_RUNGS.map(({ x, y1, y2 }, i) => (
