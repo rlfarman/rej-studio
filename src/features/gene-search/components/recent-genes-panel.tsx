@@ -33,6 +33,7 @@ export function RecentGenes() {
           >
             <Link
               href={geneHref(gene.symbol, gene.species)}
+              prefetch
               className="flex items-start gap-2"
             >
               {gene.species && (

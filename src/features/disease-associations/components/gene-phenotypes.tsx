@@ -1,10 +1,10 @@
 import { ExternalLink } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
-import type { LandscapeRow, PhenotypeStatus } from '../types'
-import { diseaseLandscapeCopy } from '../copy'
+import type { AssociationRow, PhenotypeStatus } from '../types'
+import { diseaseAssociationsCopy } from '../copy'
 
 type Props = {
-  row: LandscapeRow
+  row: AssociationRow
   omimMim?: number | null
 }
 
@@ -16,8 +16,8 @@ const STATUS_BADGE_CLASS: Record<PhenotypeStatus, string> = {
 }
 
 export function GenePhenotypes({ row, omimMim }: Props) {
-  const { heading, subtitle, openOmimGene } = diseaseLandscapeCopy.geneDetail
-  const { statusLabel, mimLinkAria } = diseaseLandscapeCopy.phenotype
+  const { heading, subtitle, openOmimGene } = diseaseAssociationsCopy.geneDetail
+  const { statusLabel, mimLinkAria } = diseaseAssociationsCopy.phenotype
 
   return (
     <section className="flex flex-col gap-3">

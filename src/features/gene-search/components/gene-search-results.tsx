@@ -65,6 +65,7 @@ export async function GeneSearchResults({
           >
             <Link
               href={geneHref(gene.symbol, gene.species, gene.matchedIsoformId)}
+              prefetch
               className="flex min-w-0 flex-1 items-center gap-4 px-2 py-2.5"
             >
               <Badge className="grid w-24 shrink-0 grid-cols-[24px_1fr] items-center gap-2 font-mono">

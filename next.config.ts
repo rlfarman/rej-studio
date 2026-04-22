@@ -18,6 +18,16 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
   experimental: {
     viewTransition: true,
+    optimizePackageImports: [
+      'motion',
+      'lucide-react',
+      '@radix-ui/react-icons',
+      'fumadocs-ui',
+      'fumadocs-core',
+      '@tanstack/react-query',
+      'react-hook-form',
+      'date-fns',
+    ],
   },
   // PGlite uses native/WASM modules that must not be bundled by webpack/turbopack.
   serverExternalPackages: ['@electric-sql/pglite'],

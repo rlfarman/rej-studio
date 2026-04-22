@@ -16,9 +16,9 @@ import { GeneBreadcrumbJsonLd } from '@/features/gene-search/components/gene-bre
 import { SpeciesSync } from '@/features/gene-search/components/species-sync'
 import { TrackOnMount } from '@/components/track-on-mount'
 import { GeneDetailTour } from '@/features/onboarding/components/gene-detail-tour'
-import { findBySymbol } from '@/features/disease-landscape/api/landscape'
-import { GenePhenotypes } from '@/features/disease-landscape/components/gene-phenotypes'
-import type { LandscapeRow } from '@/features/disease-landscape/types'
+import { findBySymbol } from '@/features/disease-associations/api/associations'
+import { GenePhenotypes } from '@/features/disease-associations/components/gene-phenotypes'
+import type { AssociationRow } from '@/features/disease-associations/types'
 import { ExternalLink } from 'lucide-react'
 import { SpeciesIcon } from '@/components/bio/species-icon'
 import { PageTitle } from '@/components/page-title'
@@ -83,11 +83,11 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 async function IsoformSection({
   gene,
   highlightedIsoformId,
-  landscapeRow,
+  associationRow,
 }: {
   gene: { id: string; symbol: string; name: string }
   highlightedIsoformId?: string
-  landscapeRow?: LandscapeRow
+  associationRow?: AssociationRow
 }) {
   const isoforms = await getIsoformsByGene(gene.id)
 
@@ -126,7 +126,7 @@ async function IsoformSection({
           isoforms={isoforms}
           highlightedIsoformId={highlightedIsoformId}
         />
-        {landscapeRow && <GenePhenotypes row={landscapeRow} />}
+        {associationRow && <GenePhenotypes row={associationRow} />}
         <section className="flex flex-col gap-6">
           <IsoformLengthChart isoforms={isoforms} />
           <IsoformIdentityMatrix isoforms={isoforms} />
@@ -144,9 +144,9 @@ export default async function GeneSymbolPage(props: Props) {
   }
 
   const { isoform: highlightedIsoformId } = await props.searchParams
-  // Landscape is human-only; key by symbol since /genes/<sym> may resolve to
+  // Associations are human-only; key by symbol since /genes/<sym> may resolve to
   // mouse by default and mouse Ensembl IDs (ENSMUSG...) never match human data.
-  const landscapeRow =
+  const associationRow =
     gene.species === 'human' ? findBySymbol(gene.symbol) : undefined
 
   return (
@@ -194,7 +194,7 @@ export default async function GeneSymbolPage(props: Props) {
             <IsoformSection
               gene={gene}
               highlightedIsoformId={highlightedIsoformId}
-              landscapeRow={landscapeRow}
+              associationRow={associationRow}
             />
           </ViewTransition>
         </Suspense>
