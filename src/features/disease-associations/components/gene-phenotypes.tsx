@@ -1,23 +1,23 @@
 import { ExternalLink } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
-import type { LandscapeRow, PhenotypeStatus } from '../types'
-import { diseaseLandscapeCopy } from '../copy'
+import type { AssociationRow, PhenotypeStatus } from '../types'
+import { diseaseAssociationsCopy } from '../copy'
 
 type Props = {
-  row: LandscapeRow
+  row: AssociationRow
   omimMim?: number | null
 }
 
 const STATUS_BADGE_CLASS: Record<PhenotypeStatus, string> = {
-  confirmed: 'bg-chart-2/10 text-chart-2 border-chart-2/20',
+  confirmed: '',
   provisional: 'bg-muted text-muted-foreground border-border',
   susceptibility: 'bg-chart-4/10 text-chart-4 border-chart-4/20',
   nondisease: 'bg-muted text-muted-foreground border-border',
 }
 
 export function GenePhenotypes({ row, omimMim }: Props) {
-  const { heading, subtitle, openOmimGene } = diseaseLandscapeCopy.geneDetail
-  const { statusLabel, mimLinkAria } = diseaseLandscapeCopy.phenotype
+  const { heading, subtitle, openOmimGene } = diseaseAssociationsCopy.geneDetail
+  const { statusLabel, mimLinkAria } = diseaseAssociationsCopy.phenotype
 
   return (
     <section className="flex flex-col gap-3">
@@ -48,12 +48,14 @@ export function GenePhenotypes({ row, omimMim }: Props) {
           >
             <div className="flex items-start justify-between gap-3">
               <span className="text-sm">{p.name}</span>
-              <Badge
-                variant="outline"
-                className={`shrink-0 text-[10px] font-normal ${STATUS_BADGE_CLASS[p.status]}`}
-              >
-                {statusLabel[p.status]}
-              </Badge>
+              {p.status !== 'confirmed' && (
+                <Badge
+                  variant="outline"
+                  className={`shrink-0 text-[10px] font-normal ${STATUS_BADGE_CLASS[p.status]}`}
+                >
+                  {statusLabel[p.status]}
+                </Badge>
+              )}
             </div>
             <div className="text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
               {p.inheritance && <span>{p.inheritance}</span>}
@@ -64,10 +66,11 @@ export function GenePhenotypes({ row, omimMim }: Props) {
                     href={`https://omim.org/entry/${p.mim}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="hover:text-foreground inline-flex items-center gap-1 font-mono"
+                    className="hover:text-foreground inline-flex items-center gap-1"
                     aria-label={mimLinkAria(p.mim)}
                   >
-                    {p.mim}
+                    <span>OMIM</span>
+                    <span className="font-mono">{p.mim}</span>
                     <ExternalLink className="size-3" aria-hidden />
                   </a>
                 </>

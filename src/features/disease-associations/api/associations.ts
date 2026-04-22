@@ -1,19 +1,23 @@
 import { cache } from 'react'
-import landscape from '../data/landscape.json'
-import type { LandscapeData, LandscapeRow, InheritanceBucket } from '../types'
+import associations from '../data/associations.json'
+import type {
+  AssociationData,
+  AssociationRow,
+  InheritanceBucket,
+} from '../types'
 import { INHERITANCE_BUCKETS } from '../types'
 
-const data = landscape as LandscapeData
+const data = associations as AssociationData
 
-export const getLandscape = cache((): LandscapeRow[] => data.rows)
+export const getAssociations = cache((): AssociationRow[] => data.rows)
 
 export const findByEnsemblId = cache(
-  (ensemblGeneId: string): LandscapeRow | undefined =>
+  (ensemblGeneId: string): AssociationRow | undefined =>
     data.rows.find((r) => r.ensemblGeneId === ensemblGeneId),
 )
 
 export const findBySymbol = cache(
-  (symbol: string): LandscapeRow | undefined => {
+  (symbol: string): AssociationRow | undefined => {
     const q = symbol.toUpperCase()
     return data.rows.find((r) => r.symbol.toUpperCase() === q)
   },
@@ -37,7 +41,7 @@ export function bucketInheritance(term: string): InheritanceBucket | null {
   return null
 }
 
-export function rowBuckets(row: LandscapeRow): Set<InheritanceBucket> {
+export function rowBuckets(row: AssociationRow): Set<InheritanceBucket> {
   const buckets = new Set<InheritanceBucket>()
   for (const term of row.inheritance) {
     const b = bucketInheritance(term)
@@ -46,15 +50,15 @@ export function rowBuckets(row: LandscapeRow): Set<InheritanceBucket> {
   return buckets
 }
 
-export type LandscapeFilters = {
+export type AssociationFilters = {
   query?: string
   inheritance?: InheritanceBucket[]
 }
 
-export function filterLandscape(
-  rows: LandscapeRow[],
-  filters: LandscapeFilters,
-): LandscapeRow[] {
+export function filterAssociations(
+  rows: AssociationRow[],
+  filters: AssociationFilters,
+): AssociationRow[] {
   const q = filters.query?.trim().toLowerCase() ?? ''
   const buckets = filters.inheritance ?? []
 
@@ -80,11 +84,11 @@ export const SORT_KEYS = ['symbol', 'phenotypes', 'cds'] as const
 export type SortKey = (typeof SORT_KEYS)[number]
 export type SortDir = 'asc' | 'desc'
 
-export function sortLandscape(
-  rows: LandscapeRow[],
+export function sortAssociations(
+  rows: AssociationRow[],
   key: SortKey,
   dir: SortDir,
-): LandscapeRow[] {
+): AssociationRow[] {
   // Rows with unknown largestCds always sort to the bottom regardless of dir,
   // so an empty value never jumps to the top of a "largest first" sort.
   const sign = dir === 'asc' ? 1 : -1
@@ -104,7 +108,7 @@ export function sortLandscape(
 }
 
 export function bucketCounts(
-  rows: LandscapeRow[],
+  rows: AssociationRow[],
 ): Record<InheritanceBucket, number> {
   const counts = Object.fromEntries(
     INHERITANCE_BUCKETS.map((b) => [b, 0]),

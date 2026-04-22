@@ -12,7 +12,7 @@ export type Phenotype = {
   status: PhenotypeStatus
 }
 
-export type LandscapeRow = {
+export type AssociationRow = {
   symbol: string
   name: string
   ensemblGeneId: string | null
@@ -20,14 +20,14 @@ export type LandscapeRow = {
   phenotypes: Phenotype[]
   /**
    * Largest `coding_sequence_length` across this gene's human isoforms, or
-   * null if no isoform is present in the seed. Baked into landscape.json at
-   * build time by `scripts/enrich-disease-landscape.ts`.
+   * null if no isoform is present in the seed. Baked into associations.json at
+   * build time by `scripts/enrich-disease-associations.ts`.
    */
   largestCds: number | null
 }
 
-export type LandscapeData = {
-  rows: LandscapeRow[]
+export type AssociationData = {
+  rows: AssociationRow[]
 }
 
 export const INHERITANCE_BUCKETS = [

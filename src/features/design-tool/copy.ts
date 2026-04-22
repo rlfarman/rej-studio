@@ -214,7 +214,13 @@ export const designToolCopy = {
     heading: 'Results',
     completedIn: (seconds: number) => `Completed in ${seconds}s`,
     wggwSplitBadge: 'WGGW split',
-    downloadZip: 'Download ZIP',
+    downloadZip: 'Download Results',
+    intronTooltip: {
+      fivePrime:
+        '5′ stimulatory intron insertion site — place an intron here during synthesis to enhance 5′ fragment expression.',
+      threePrime:
+        '3′ stimulatory intron insertion site — place an intron here during synthesis to enhance 3′ fragment expression.',
+    },
     splitAtPosition: 'Split at position',
     splitRatio: (left: number, right: number) => `(${left}% / ${right}%)`,
     sequenceCard: {

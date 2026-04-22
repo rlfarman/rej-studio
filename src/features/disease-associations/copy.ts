@@ -1,6 +1,6 @@
-export const diseaseLandscapeCopy = {
+export const diseaseAssociationsCopy = {
   page: {
-    title: 'Disease landscape',
+    title: 'Disease associations',
     subtitle:
       'Human disease-associated genes whose longest coding sequence exceeds 4,000 bp — a curated set of large-CDS therapeutic targets from OMIM.',
     sourceLabel: 'Source',

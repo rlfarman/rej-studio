@@ -10,12 +10,12 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { cn } from '@/lib/utils'
-import type { LandscapeRow } from '../types'
-import { diseaseLandscapeCopy } from '../copy'
-import { rowBuckets, type SortDir, type SortKey } from '../api/landscape'
+import type { AssociationRow } from '../types'
+import { diseaseAssociationsCopy } from '../copy'
+import { rowBuckets, type SortDir, type SortKey } from '../api/associations'
 
 type Props = {
-  rows: LandscapeRow[]
+  rows: AssociationRow[]
   sortKey: SortKey
   sortDir: SortDir
   /**
@@ -26,9 +26,9 @@ type Props = {
 }
 
 const cdsFormatter = new Intl.NumberFormat('en-US')
-const { largestCdsUnit, largestCdsUnknown } = diseaseLandscapeCopy.table
+const { largestCdsUnit, largestCdsUnknown } = diseaseAssociationsCopy.table
 
-export function LandscapeTable({
+export function AssociationsTable({
   rows,
   sortKey,
   sortDir,
@@ -37,7 +37,7 @@ export function LandscapeTable({
   if (rows.length === 0) {
     return (
       <div className="text-muted-foreground rounded-md border p-6 text-center text-sm">
-        {diseaseLandscapeCopy.table.empty}
+        {diseaseAssociationsCopy.table.empty}
       </div>
     )
   }
@@ -46,24 +46,24 @@ export function LandscapeTable({
 
   return (
     <div className="overflow-hidden rounded-md border">
-      <Table aria-label={diseaseLandscapeCopy.table.ariaLabel}>
+      <Table aria-label={diseaseAssociationsCopy.table.ariaLabel}>
         <TableHeader>
           <TableRow className="bg-muted/40">
             <TableHead className="w-[120px]">
               <SortHeader
-                label={diseaseLandscapeCopy.table.columns.symbol}
+                label={diseaseAssociationsCopy.table.columns.symbol}
                 column="symbol"
                 defaultDir="asc"
                 {...headerProps}
               />
             </TableHead>
-            <TableHead>{diseaseLandscapeCopy.table.columns.name}</TableHead>
+            <TableHead>{diseaseAssociationsCopy.table.columns.name}</TableHead>
             <TableHead className="w-[280px]">
-              {diseaseLandscapeCopy.table.columns.inheritance}
+              {diseaseAssociationsCopy.table.columns.inheritance}
             </TableHead>
             <TableHead className="w-[110px] text-right">
               <SortHeader
-                label={diseaseLandscapeCopy.table.columns.phenotypeCount}
+                label={diseaseAssociationsCopy.table.columns.phenotypeCount}
                 column="phenotypes"
                 defaultDir="desc"
                 align="right"
@@ -72,7 +72,7 @@ export function LandscapeTable({
             </TableHead>
             <TableHead className="w-[130px] text-right">
               <SortHeader
-                label={diseaseLandscapeCopy.table.columns.largestCds}
+                label={diseaseAssociationsCopy.table.columns.largestCds}
                 column="cds"
                 defaultDir="desc"
                 align="right"
@@ -90,7 +90,7 @@ export function LandscapeTable({
                   <Link
                     href={`/genes/${encodeURIComponent(row.symbol)}?species=human`}
                     className="text-primary font-mono font-semibold hover:underline"
-                    aria-label={diseaseLandscapeCopy.table.viewGeneAria(
+                    aria-label={diseaseAssociationsCopy.table.viewGeneAria(
                       row.symbol,
                     )}
                   >

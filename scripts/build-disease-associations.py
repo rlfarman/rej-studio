@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
-"""Build the disease-landscape JSON from the OMIM curated CSV.
+"""Build the disease-associations JSON from the OMIM curated CSV.
 
 Reads drizzle/disease_associated_genes.csv and emits a pruned, parsed JSON
-file consumed server-side by src/features/disease-landscape/. Only the four
+file consumed server-side by src/features/disease-associations/. Only the four
 scientifically interesting columns are retained (symbol, name, inheritance,
 phenotypes) plus ensembl_gene_id for deep-linking into /genes/[symbol].
 
 If data/isoforms.jsonl exists (produced by `pnpm db:build`), each row is also
 annotated with `largestCds` — the max coding_sequence_length across the
-gene's human isoforms — so the landscape table renders statically without a
-runtime DB query. Missing: run `pnpm tsx scripts/enrich-disease-landscape.ts`
+gene's human isoforms — so the associations table renders statically without a
+runtime DB query. Missing: run `pnpm tsx scripts/enrich-disease-associations.ts`
 to pull the values straight from the live DB instead.
 
-Run: python3 scripts/build-disease-landscape.py
+Run: python3 scripts/build-disease-associations.py
 """
 
 from __future__ import annotations
@@ -27,7 +27,7 @@ HERE = os.path.dirname(__file__)
 CSV_PATH = os.path.join(HERE, "..", "drizzle", "disease_associated_genes.csv")
 ISOFORMS_JSONL = os.path.join(HERE, "..", "data", "isoforms.jsonl")
 OUT_PATH = os.path.join(
-    HERE, "..", "src", "features", "disease-landscape", "data", "landscape.json"
+    HERE, "..", "src", "features", "disease-associations", "data", "associations.json"
 )
 
 # Each OMIM phenotype record ends with: `NNNNNN (N), Inheritance` — or, for
@@ -101,7 +101,7 @@ def load_max_cds_by_gene() -> dict[str, int]:
     """Build a {gene_id: largest_cds_length} map from data/isoforms.jsonl.
 
     Returns an empty dict if the JSONL isn't present — callers then leave
-    `largestCds` as null and expect enrich-disease-landscape.ts to fill it.
+    `largestCds` as null and expect enrich-disease-associations.ts to fill it.
     """
     if not os.path.exists(ISOFORMS_JSONL):
         return {}
@@ -130,8 +130,8 @@ def main() -> None:
         print(f"Loaded max CDS for {len(max_cds)} human genes from {ISOFORMS_JSONL}")
     else:
         print(
-            f"No {ISOFORMS_JSONL} found — landscape rows will have largestCds=null "
-            "(run `pnpm tsx scripts/enrich-disease-landscape.ts` to fill from DB)"
+            f"No {ISOFORMS_JSONL} found — associations rows will have largestCds=null "
+            "(run `pnpm tsx scripts/enrich-disease-associations.ts` to fill from DB)"
         )
 
     rows: list[dict] = []
