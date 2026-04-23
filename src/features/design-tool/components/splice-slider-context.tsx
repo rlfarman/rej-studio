@@ -29,7 +29,6 @@ interface Props {
 const MIN_CONTEXT_WINDOW = 18
 const MAX_CONTEXT_WINDOW = 72
 const PX_PER_BASE = 18
-const RULER_LABEL_CODON_INTERVAL = 5
 
 interface WggwSiteCandidate extends RankedInducibleWggwCandidate {
   rewriteOptions: WggwRecodingOption[]
@@ -217,7 +216,7 @@ export function SpliceSliderContext({
     }
   }, [jumpToSibling, midpoint, onSnap, shortcutsActive])
 
-  const positionPct = (position / seqLen) * 100
+  const positionPct = splitPositionToPercent(position, seqLen)
   const fivePrimeLength = position
   const threePrimeLength = seqLen - position
   const fivePct = seqLen > 0 ? (fivePrimeLength / seqLen) * 100 : 50
@@ -328,7 +327,7 @@ export function SpliceSliderContext({
             onPointerDown={handleTrackPointerDown}
             className="focus-visible:ring-ring bg-background/80 relative h-16 cursor-ew-resize touch-none rounded-lg border select-none focus:outline-none focus-visible:ring-2"
           >
-            <div className="absolute inset-x-0 top-0 flex h-11 overflow-hidden rounded-t-lg">
+            <div className="absolute inset-x-0 top-0 z-10 flex h-11 overflow-hidden rounded-t-lg">
               <div
                 className="bg-primary/15 flex min-w-0 items-center justify-center"
                 style={{ width: `${fivePct}%` }}
@@ -342,10 +341,29 @@ export function SpliceSliderContext({
                   3′ · {threePrimeLength.toLocaleString()} bp
                 </span>
               </div>
+              <div
+                className="pointer-events-none absolute inset-y-0 left-0 w-0 -translate-x-1/2"
+                style={{ left: `${positionPct}%` }}
+                aria-hidden="true"
+              >
+                <div className="absolute top-1/2 left-1/2 z-10 flex -translate-x-1/2 -translate-y-1/2 items-center gap-1">
+                  <ChevronLeft
+                    className="text-foreground/55 size-3 shrink-0"
+                    strokeWidth={2.5}
+                  />
+                  <div className="bg-background text-foreground inline-flex min-w-max items-center rounded-md border px-2.5 py-1 font-mono text-xs font-semibold whitespace-nowrap tabular-nums shadow-sm">
+                    {position.toLocaleString()} bp
+                  </div>
+                  <ChevronRight
+                    className="text-foreground/55 size-3 shrink-0"
+                    strokeWidth={2.5}
+                  />
+                </div>
+              </div>
             </div>
             <div className="bg-background/70 absolute inset-x-0 bottom-0 h-5 overflow-hidden rounded-b-lg border-t">
               {wggwSites.map((site, i) => {
-                const x = (site.position / seqLen) * 100
+                const x = splitPositionToPercent(site.position, seqLen)
                 const isSelected = selectedSite?.position === site.position
                 return (
                   <button
@@ -373,21 +391,11 @@ export function SpliceSliderContext({
               })}
             </div>
             <div
-              className="pointer-events-none absolute inset-y-0 w-0"
+              className="pointer-events-none absolute inset-y-0 left-0 z-0 w-0 -translate-x-1/2"
               style={{ left: `${positionPct}%` }}
               aria-hidden="true"
             >
-              <div className="border-foreground/85 absolute inset-y-0 border-l-2" />
-              <div className="text-foreground/55 absolute top-5 left-1/2 flex -translate-x-1/2 items-center gap-3">
-                <ChevronLeft className="size-3" strokeWidth={2.5} />
-                <ChevronRight className="size-3" strokeWidth={2.5} />
-              </div>
-            </div>
-            <div
-              className="bg-background text-foreground pointer-events-none absolute -top-3 -translate-x-1/2 rounded-md border px-2.5 py-1 font-mono text-xs font-semibold tabular-nums shadow-sm"
-              style={{ left: `${positionPct}%` }}
-            >
-              {position.toLocaleString()} bp
+              <div className="border-foreground/85 absolute inset-y-0 left-1/2 z-0 -translate-x-1/2 border-l-2" />
             </div>
           </div>
 
@@ -510,15 +518,11 @@ function Toolbar({
           <ToolbarButton
             onClick={onMidpoint}
             title="Snap to midpoint (m)"
-            variant="accent"
             compact
           >
             Midpoint
           </ToolbarButton>
           <div className="flex items-center gap-1">
-            <span className="text-muted-foreground text-[10px] font-medium">
-              bp
-            </span>
             <input
               type="text"
               inputMode="numeric"
@@ -533,7 +537,7 @@ function Toolbar({
                 }
               }}
               className="bg-background h-5 w-12 rounded-sm border px-1 font-mono text-[10px] outline-none"
-              placeholder="742"
+              placeholder="742 bp"
               aria-label="Jump to base-pair position"
             />
             <ToolbarButton onClick={onJumpSubmit} title="Jump to bp" compact>
@@ -701,8 +705,7 @@ function LocalSequenceView({
         >
           {ctx.codons.map((codon) => {
             const hasBoundaryLabel =
-              codon.idx < ctx.codons[ctx.codons.length - 1].idx &&
-              (codon.idx + 1) % RULER_LABEL_CODON_INTERVAL === 0
+              codon.idx < ctx.codons[ctx.codons.length - 1].idx
             const boundaryPosition = codon.end + 1
             return (
               <div
@@ -801,7 +804,7 @@ function LocalSequenceView({
                 <div
                   key={base.position}
                   className={cn(
-                    'text-muted-foreground flex h-9 items-center justify-center text-xs font-semibold tabular-nums',
+                    'text-muted-foreground flex h-9 items-center justify-center text-sm font-semibold tabular-nums',
                     base.role === 'start' && 'text-success-soft',
                     (base.role === 'stop' || base.role === 'internal-stop') &&
                       'text-danger-soft',
@@ -1544,6 +1547,11 @@ function findSequenceMatches(sequence: string, query: string) {
     startIndex = foundIndex + 1
   }
   return matches
+}
+
+function splitPositionToPercent(position: number, sequenceLength: number) {
+  if (sequenceLength <= 0) return 0
+  return (position / sequenceLength) * 100
 }
 
 function roleStylesFor(role: CodonRole): {
