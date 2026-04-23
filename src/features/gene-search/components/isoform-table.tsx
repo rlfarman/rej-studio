@@ -575,7 +575,7 @@ function ExpandedDetails({
 
   return (
     <div className="space-y-4">
-      <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs sm:hidden sm:grid-cols-3">
+      <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs sm:hidden">
         <div>
           <dt className="text-muted-foreground">Protein</dt>
           <dd className="font-mono tabular-nums">

@@ -11,7 +11,7 @@ export function Footer() {
   const copied = isCopied()
 
   return (
-    <footer className="mx-auto mt-auto w-full max-w-4xl px-4 pt-4 pb-6 sm:px-6 lg:px-4">
+    <footer className="mx-auto mt-auto w-full max-w-4xl px-4 pt-4 pb-6 sm:px-6">
       <button
         onClick={() => copy(CITATION)}
         title="Copy citation to clipboard"
