@@ -77,8 +77,8 @@ export function JunctionContext({
           </span>
         </div>
         <div className="text-muted-foreground type-micro mt-2 flex justify-center gap-8">
-          <span>← 5′ fragment ends</span>
-          <span>3′ fragment starts →</span>
+          <span>← 5′ sequence ends</span>
+          <span>3′ sequence starts →</span>
         </div>
       </div>
       {wggwMotif && motifStartRel !== null && (

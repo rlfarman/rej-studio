@@ -41,8 +41,8 @@ export const designToolCopy = {
       `Split position must be ≤ ${max} (sequence length − 1).`,
   },
   sequenceInput: {
-    labelProtein: 'Enter your protein sequence',
-    labelDna: 'Enter your coding sequence',
+    labelProtein: 'Enter your sequence',
+    labelDna: 'Enter your sequence',
     typeToggleAria: 'Sequence type',
     typeDna: 'DNA',
     typeProtein: 'Protein',
@@ -69,7 +69,13 @@ export const designToolCopy = {
     charTypeNonNucleotide: 'non-nucleotide',
     reverseTranslated: (bp: string, species: string) =>
       `→ ${bp} bp DNA generated (${species} codon preferences)`,
-    selectSpeciesHint: 'Select a species above to generate the DNA sequence.',
+    selectSpeciesHint:
+      'Select a target species in Sequence design options to generate the DNA sequence.',
+    reverseTranslateButton: 'Reverse translate to continue',
+    reverseTranslateSpeciesRequired:
+      'Select a target species before reverse translating.',
+    reverseTranslateProteinRequired:
+      'Enter a protein sequence before reverse translating.',
   },
   nameInput: {
     label: 'Choose a name for your coding sequence',
@@ -85,99 +91,68 @@ export const designToolCopy = {
     // but no backend stage has arrived yet (pre-submit / first 500ms).
     processing: 'Running…',
     success: 'Optimization complete',
-    idle: 'Run optimizer',
+    idle: 'Run designer',
   },
   optimizationOptions: {
     objectivesHeading: 'Sequence objectives',
     constraintsHeading: 'Constraints',
+    codonOptimize: {
+      label: 'Codon usage optimization',
+      description: 'Target species for codon-aware sequence design.',
+      enableSpeciesFirst:
+        'Enable codon usage optimization to select a species.',
+    },
     removeCrypticSpliceSites: {
       label: 'Remove cryptic splice sites',
       description:
-        'Penalizes 5′ donor- and 3′ acceptor-like motifs the spliceosome could use to silently excise part of the CDS in mammalian cells.',
+        'Minimize cryptic donor and acceptor motifs that may interfere with intended splicing.',
     },
     minimizeCpGs: {
       label: 'Minimize CpG sites',
-      description:
-        'Reduces CpG dinucleotides, which can trigger TLR9-mediated innate immune sensing — and, for constructs that integrate, promoter-level methylation.',
+      description: 'Reduce CpG dinucleotides which may reduce TLR recognition',
     },
     reduceKmer: {
-      label: 'Reduce k-mer complexity',
+      label: 'Increase k-mer diversity',
       description:
-        'Pushes for unique 10-base k-mers across the sequence. Repeats at this length make synthesis flakier and increase homologous-recombination risk during assembly.',
+        'Pushes for unique 10-mers across the sequence to improve feasibility of synthesis',
     },
     enforceGc: {
       label: 'Enforce 35–60% GC content',
-      description:
-        'Keeps GC content in the 35–60% window typical of stable mammalian CDSs. Values outside this range often correlate with poor transcript stability or synthesis issues.',
-      badge: 'Hard constraint',
+      description: '',
+      badge: '',
     },
   },
   weights: {
-    tiers: {
-      gentle: 'Gentle',
-      moderate: 'Moderate',
-      strong: 'Strong',
-      aggressive: 'Aggressive',
-    },
-    tierAria: (label: string) => `${label} tier`,
-    exactAria: (label: string) => `${label} exact weight`,
-    codonOptimize: {
-      label: 'Codon optimization',
-      description:
-        'How strongly to prefer codons favored by the target species.',
-      enableLinkText: 'Select a species',
-      enableSuffix: 'above to enable codon optimization.',
-    },
-    removeSplice: {
-      label: 'Cryptic splice site removal',
-      description:
-        'How hard to push against splice-like motifs. Higher values clear more sites but leave the solver fewer codon choices.',
-      enableLinkText: 'Enable cryptic splice site removal',
-      enableSuffix: 'above to set this weight.',
-    },
-    minimizeCpG: {
-      label: 'CpG minimization',
-      description:
-        'How strongly to avoid CpG dinucleotides. High values greatly reduce CpGs but may lower GC content.',
-      enableLinkText: 'Enable CpG minimization',
-      enableSuffix: 'above to set this weight.',
-    },
-    reduceKmer: {
-      label: 'k-mer complexity reduction',
-      description:
-        'How hard to push toward unique 10-mers. Helps synthesis and reduces recombination risk during assembly.',
-      enableLinkText: 'Enable k-mer complexity reduction',
-      enableSuffix: 'above to set this weight.',
-    },
+    label: 'Weight',
+    inputAria: 'Weight',
   },
   stimulatoryIntrons: {
     fivePrime: {
-      label: '5′ stimulatory intron',
-      description:
-        'Marks a site ~150 bp upstream of the split (at the nearest WGGW-compatible position) where you can place an intron during synthesis — intended to enhance 5′ fragment expression.',
+      label: '5′ Stimulatory intron',
+      description: '~150 bp upstream of the REJ intron',
     },
     threePrime: {
-      label: '3′ stimulatory intron',
-      description:
-        'Marks a site ~150 bp downstream of the split (at the nearest WGGW-compatible position) where you can place an intron during synthesis — intended to enhance 3′ fragment expression.',
+      label: '3′ Stimulatory intron',
+      description: '~150 bp downstream of the REJ intron',
     },
-    diagramFragment: 'fragment',
+    diagramFragment: 'sequence',
     diagramSpliceJunction: 'split point',
   },
   form: {
     title: 'REJ Studio Design Tool',
     description:
-      'Paste a coding sequence, tune the objectives, and generate optimized fragments for RNA end-joining.',
+      'Paste a coding sequence, tune the objectives, and generate optimized sequences for RNA end-joining.',
     spliceJunctionLabel: 'Split point',
-    spliceJunctionHint: 'Set where the CDS divides into 5′ and 3′ fragments.',
-    optimizationHeading: 'Optimization',
-    optimizationDescription:
-      'Fine-tune individual parameters, then run the optimizer.',
+    spliceJunctionHint: 'Set where the CDS divides into 5′ and 3′ sequences.',
+    optimizationHeading: 'Design Objectives',
+    optimizationDescription: '',
     accordion: {
-      codonOptimization: 'Codon optimization',
-      codonOptimizationHint: 'Control which sequence features are optimized.',
+      codonOptimization: 'Sequence design options',
+      codonOptimizationHint:
+        'Select objectives for the codon-aware sequence designer.',
       stimulatoryIntrons: 'Stimulatory introns',
-      stimulatoryIntronsHint: 'Add introns to boost fragment expression.',
+      stimulatoryIntronsHint:
+        'Add cis-introns up or downstream of the REJ intron to boost trans-splicing',
       parameterWeights: 'Parameter weights',
       parameterWeightsHint:
         'Control how much each objective influences the result.',
@@ -228,9 +203,9 @@ export const designToolCopy = {
     downloadZip: 'Download Results',
     intronTooltip: {
       fivePrime:
-        '5′ stimulatory intron insertion site — place an intron here during synthesis to enhance 5′ fragment expression.',
+        '5′ stimulatory intron insertion site — place an intron here during synthesis to enhance 5′ sequence expression.',
       threePrime:
-        '3′ stimulatory intron insertion site — place an intron here during synthesis to enhance 3′ fragment expression.',
+        '3′ stimulatory intron insertion site — place an intron here during synthesis to enhance 3′ sequence expression.',
     },
     splitAtPosition: 'Split at position',
     splitRatio: (left: number, right: number) => `(${left}% / ${right}%)`,
