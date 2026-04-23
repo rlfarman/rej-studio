@@ -80,13 +80,10 @@ export function SpliceSliderContext({
   const [activeSitePosition, setActiveSitePosition] = useState<number | null>(
     null,
   )
-  const fallbackSiteIndex = nearestSiteIndex(wggwSites, position)
   const selectedSite = useMemo(
     () =>
-      wggwSites.find((site) => site.position === activeSitePosition) ??
-      siteAtPosition ??
-      (fallbackSiteIndex === -1 ? null : wggwSites[fallbackSiteIndex]),
-    [activeSitePosition, fallbackSiteIndex, siteAtPosition, wggwSites],
+      wggwSites.find((site) => site.position === activeSitePosition) ?? null,
+    [activeSitePosition, wggwSites],
   )
   const selectedSiteIndex = selectedSite
     ? wggwSites.findIndex((site) => site.position === selectedSite.position)
@@ -255,40 +252,6 @@ export function SpliceSliderContext({
     target.addEventListener('pointermove', handleMove)
     target.addEventListener('pointerup', handleUp)
     target.addEventListener('pointercancel', handleUp)
-  }
-
-  const handleTrackKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    const target = e.target as HTMLElement | null
-    if (
-      target &&
-      (target instanceof HTMLInputElement ||
-        target instanceof HTMLTextAreaElement ||
-        target instanceof HTMLSelectElement ||
-        target.isContentEditable)
-    ) {
-      return
-    }
-    const step = e.altKey ? 3 : 1
-    const big = (e.shiftKey ? 10 : 1) * step
-    if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
-      e.preventDefault()
-      onSnap(position - big)
-    } else if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
-      e.preventDefault()
-      onSnap(position + big)
-    } else if (e.key === 'Home') {
-      e.preventDefault()
-      onSnap(1)
-    } else if (e.key === 'End') {
-      e.preventDefault()
-      onSnap(seqLen - 1)
-    } else if (e.key === 'PageDown') {
-      e.preventDefault()
-      onSnap(position - Math.max(1, Math.round(seqLen / 20)))
-    } else if (e.key === 'PageUp') {
-      e.preventDefault()
-      onSnap(position + Math.max(1, Math.round(seqLen / 20)))
-    }
   }
 
   const jumpToPosition = (nextPosition: number) => {
