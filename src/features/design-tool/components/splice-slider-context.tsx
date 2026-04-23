@@ -823,13 +823,17 @@ function LocalSequenceView({
             {ctx.bases.map((base) => {
               const inSelected = selectedBases.has(base.position)
               const isChanged = selectedChangedBases.has(base.position)
-              const isSelectedStart = selectedSite?.motifStart === base.position
+              const selectedMotifStart = selectedSite?.motifStart
+              const isSelectedStart =
+                selectedMotifStart !== undefined &&
+                selectedMotifStart === base.position
               const isSelectedEnd =
-                selectedSite?.motifStart + 3 === base.position
+                selectedMotifStart !== undefined &&
+                selectedMotifStart + 3 === base.position
               const isMotifG =
-                selectedSite &&
-                (base.position === selectedSite.motifStart + 1 ||
-                  base.position === selectedSite.motifStart + 2)
+                selectedMotifStart !== undefined &&
+                (base.position === selectedMotifStart + 1 ||
+                  base.position === selectedMotifStart + 2)
               return (
                 <div
                   key={base.position}
@@ -1376,7 +1380,7 @@ function formatAminoAcidGuideText(
   splitPosition: number,
 ) {
   const coreText = buildDisplayCoreText(windowStart, windowEnd, splitPosition)
-  const chars = [...`...${coreText}...`].map((char) =>
+  const chars: string[] = [...`...${coreText}...`].map((char) =>
     char === '|' ? '|' : ' ',
   )
   const boundaryIndexes = getCodonBoundaryDisplayIndexes(
@@ -1408,7 +1412,7 @@ function formatAminoAcidGuideText(
 }
 
 function buildMotifGuide(displayText: string, boundaryIndexes: number[]) {
-  const chars = [...displayText].map(() => ' ')
+  const chars: string[] = [...displayText].map(() => ' ')
   const splitIndex = displayText.indexOf('|')
   if (splitIndex === -1) {
     return { text: chars.join(''), boundaryIndexes }
