@@ -145,7 +145,7 @@ export function ExpandableSidebarList<T>({
           ) : (
             <div className="flex flex-col items-center gap-1.5 px-4 py-5 text-center">
               {EmptyIcon && (
-                <EmptyIcon className="text-muted-foreground/40 mb-0.5 size-5 [animation:gentle-breath_3s_ease-in-out_infinite]" />
+                <EmptyIcon className="text-muted-foreground/40 mb-0.5 size-5" />
               )}
               <p className="text-muted-foreground text-xs">{emptyMessage}</p>
             </div>
