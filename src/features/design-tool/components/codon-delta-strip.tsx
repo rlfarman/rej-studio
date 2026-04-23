@@ -23,8 +23,7 @@ interface CellDelta {
 /**
  * Per-codon preference delta (after − before) for a species. Green =
  * became more preferred, red = became less preferred, muted = unchanged.
- * Sits alongside the single-strand CodonUsageStrip to make the optimizer's
- * work visible codon-by-codon.
+ * Makes the optimizer's work visible codon-by-codon.
  */
 export function CodonDeltaStrip({ original, optimized, species }: Props) {
   const { cells, improved, regressed, meanBefore, meanAfter } = useMemo(() => {
