@@ -28,7 +28,6 @@ type Props = {
 const cdsFormatter = new Intl.NumberFormat('en-US')
 const { largestCdsUnit, largestCdsUnknown, phenotypeUnknown } =
   diseaseAssociationsCopy.table
-const PHENOTYPE_MAX_LENGTH = 44
 
 export function AssociationsTable({
   rows,
@@ -139,8 +138,7 @@ export function AssociationsTable({
 function firstPhenotypeLabel(row: AssociationRow): string {
   const name = row.phenotypes[0]?.name.trim()
   if (!name) return phenotypeUnknown
-  if (name.length <= PHENOTYPE_MAX_LENGTH) return name
-  return `${name.slice(0, PHENOTYPE_MAX_LENGTH - 1).trimEnd()}…`
+  return name.split(',', 1)[0]?.trim() || phenotypeUnknown
 }
 
 type SortHeaderProps = {
