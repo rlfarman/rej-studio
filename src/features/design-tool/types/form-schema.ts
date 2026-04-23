@@ -154,17 +154,6 @@ export const validationSchema = z
         })
       }
     }
-    if (
-      data.selectedWggwSite &&
-      data.selectedWggwSite.position !== data.spliceJunctionPosition
-    ) {
-      ctx.addIssue({
-        path: ['selectedWggwSite'],
-        code: z.ZodIssueCode.custom,
-        message:
-          'Selected WGGW site must match the current splice junction position.',
-      })
-    }
   })
 
 export type FormValues = z.infer<typeof validationSchema>

@@ -18,9 +18,10 @@ interface Props {
   onSelectionChange: (site: SelectedWggwSite | null) => void
 }
 
-const MIN_CONTEXT_WINDOW = 6
-const MAX_CONTEXT_WINDOW = 30
-const PX_PER_CODON = 28
+const MIN_CONTEXT_WINDOW = 18
+const MAX_CONTEXT_WINDOW = 72
+const PX_PER_BASE = 18
+const RULER_LABEL_CODON_INTERVAL = 5
 
 interface WggwSiteCandidate extends RankedInducibleWggwCandidate {
   rewriteOptions: WggwRecodingOption[]
@@ -43,9 +44,20 @@ export function SpliceSliderContext({
 
   const midpoint = Math.max(1, Math.min(seqLen - 1, Math.floor(seqLen / 2)))
 
-  const selectedSite = useMemo(
+  const siteAtPosition = useMemo(
     () => wggwSites.find((site) => site.position === position) ?? null,
     [position, wggwSites],
+  )
+  const [activeSitePosition, setActiveSitePosition] = useState<number | null>(
+    null,
+  )
+  const fallbackSiteIndex = nearestSiteIndex(wggwSites, position)
+  const selectedSite = useMemo(
+    () =>
+      wggwSites.find((site) => site.position === activeSitePosition) ??
+      siteAtPosition ??
+      (fallbackSiteIndex === -1 ? null : wggwSites[fallbackSiteIndex]),
+    [activeSitePosition, fallbackSiteIndex, siteAtPosition, wggwSites],
   )
   const selectedSiteIndex = selectedSite
     ? wggwSites.findIndex((site) => site.position === selectedSite.position)
@@ -72,10 +84,10 @@ export function SpliceSliderContext({
     const update = () => {
       const width = el.clientWidth
       if (width <= 0) return
-      const fit = Math.floor(width / PX_PER_CODON)
+      const fit = Math.floor(width / PX_PER_BASE)
       const half = Math.max(
         MIN_CONTEXT_WINDOW,
-        Math.min(MAX_CONTEXT_WINDOW, Math.floor((fit - 1) / 2)),
+        Math.min(MAX_CONTEXT_WINDOW, Math.floor(fit / 2)),
       )
       setContextWindow(half)
     }
@@ -86,7 +98,7 @@ export function SpliceSliderContext({
   }, [])
 
   const frameContext = useMemo(
-    () => buildFrameContext(sequence, position, contextWindow),
+    () => buildSequenceContext(sequence, position, contextWindow),
     [sequence, position, contextWindow],
   )
 
@@ -149,12 +161,12 @@ export function SpliceSliderContext({
     if (wggwSites.length === 0) return
     if (selectedSiteIndex === -1) {
       const next = nearestSiteIndex(wggwSites, position)
-      if (next !== -1) onSnap(wggwSites[next].position)
+      if (next !== -1) handleSelectSite(wggwSites[next])
       return
     }
     const target = selectedSiteIndex + dir
     if (target < 0 || target >= wggwSites.length) return
-    onSnap(wggwSites[target].position)
+    handleSelectSite(wggwSites[target])
   }
 
   const handleTrackKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
@@ -196,6 +208,11 @@ export function SpliceSliderContext({
     }
   }
 
+  const handleSelectSite = (site: WggwSiteCandidate) => {
+    setActiveSitePosition(site.position)
+    onSnap(site.position)
+  }
+
   return (
     <div className="space-y-3">
       <Toolbar
@@ -214,7 +231,7 @@ export function SpliceSliderContext({
         }
       />
 
-      <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(300px,360px)] lg:items-start">
+      <div className="space-y-3">
         <div className="min-w-0 space-y-2">
           <div
             ref={trackRef}
@@ -227,9 +244,9 @@ export function SpliceSliderContext({
             aria-valuetext={`bp ${position.toLocaleString()} of ${seqLen.toLocaleString()}`}
             onPointerDown={handleTrackPointerDown}
             onKeyDown={handleTrackKeyDown}
-            className="focus-visible:ring-ring bg-background/80 relative cursor-ew-resize touch-none rounded-xl border shadow-sm select-none focus:outline-none focus-visible:ring-2"
+            className="focus-visible:ring-ring bg-background/80 relative h-16 cursor-ew-resize touch-none rounded-xl border shadow-sm select-none focus:outline-none focus-visible:ring-2"
           >
-            <div className="relative flex h-16 w-full overflow-hidden rounded-xl">
+            <div className="absolute inset-x-0 top-0 flex h-11 overflow-hidden rounded-t-xl">
               <div
                 className="bg-primary/15 flex min-w-0 items-center justify-center"
                 style={{ width: `${fivePct}%` }}
@@ -254,7 +271,7 @@ export function SpliceSliderContext({
                     key={`${site.position}-${i}`}
                     onClick={(e) => {
                       e.stopPropagation()
-                      onSnap(site.position)
+                      handleSelectSite(site)
                     }}
                     onPointerDown={(e) => e.stopPropagation()}
                     title={`WGGW ${site.motif} · bp ${site.position.toLocaleString()} · ${site.baseChanges} bp change${site.baseChanges === 1 ? '' : 's'}`}
@@ -279,7 +296,10 @@ export function SpliceSliderContext({
               aria-hidden="true"
             >
               <div className="border-foreground/85 absolute inset-y-0 border-l-2" />
-              <div className="bg-foreground/90 absolute top-2 left-1/2 size-3 -translate-x-1/2 rotate-45 rounded-[2px]" />
+              <div className="text-foreground/55 absolute top-5 left-1/2 flex -translate-x-1/2 items-center gap-3">
+                <ChevronLeft className="size-3" strokeWidth={2.5} />
+                <ChevronRight className="size-3" strokeWidth={2.5} />
+              </div>
             </div>
             <div
               className="bg-background text-foreground pointer-events-none absolute -top-3 -translate-x-1/2 rounded-md border px-2.5 py-1 font-mono text-xs font-semibold tabular-nums shadow-sm"
@@ -289,13 +309,13 @@ export function SpliceSliderContext({
             </div>
           </div>
 
-          <CodonStrip
+          <LocalSequenceView
             ctx={frameContext}
             sites={wggwSites}
             selectedSite={selectedSite}
             currentRewrite={currentRewrite}
             stripRef={frameStripRef}
-            onSnap={onSnap}
+            onSelectSite={handleSelectSite}
           />
         </div>
 
@@ -413,6 +433,180 @@ function LegendDot({ tone }: { tone: 'success' | 'marker' | 'primary' }) {
         tone === 'primary' && 'bg-primary',
       )}
     />
+  )
+}
+
+function LocalSequenceView({
+  ctx,
+  sites,
+  selectedSite,
+  currentRewrite,
+  stripRef,
+  onSelectSite,
+}: {
+  ctx: SequenceContext
+  sites: WggwSiteCandidate[]
+  selectedSite: WggwSiteCandidate | null
+  currentRewrite: WggwRecodingOption | null
+  stripRef: React.RefObject<HTMLDivElement | null>
+  onSelectSite: (site: WggwSiteCandidate) => void
+}) {
+  const visibleSites = useMemo(
+    () =>
+      sites.filter(
+        (site) => site.motifStart <= ctx.end && site.motifStart + 3 >= ctx.start,
+      ),
+    [ctx.end, ctx.start, sites],
+  )
+  const selectedBases = useMemo(() => {
+    const s = new Set<number>()
+    if (!selectedSite) return s
+    for (let k = 0; k < 4; k++) s.add(selectedSite.motifStart + k)
+    return s
+  }, [selectedSite])
+
+  const selectedChangedBases = useMemo(() => {
+    const s = new Set<number>()
+    if (!selectedSite || !currentRewrite) return s
+    for (let i = 0; i < selectedSite.originalHexamer.length; i++) {
+      if (selectedSite.originalHexamer[i] !== currentRewrite.newHexamer[i]) {
+        s.add(selectedSite.hexamerStart + i)
+      }
+    }
+    return s
+  }, [currentRewrite, selectedSite])
+
+  const templateColumns = `repeat(${ctx.bases.length}, minmax(0, 1fr))`
+
+  return (
+    <div className="space-y-1.5">
+      <div className="text-muted-foreground flex justify-end px-1 font-mono text-[10px] leading-none tabular-nums">
+        <span>
+          bp {ctx.start.toLocaleString()}-{ctx.end.toLocaleString()}
+        </span>
+      </div>
+      <div
+        ref={stripRef}
+        role="group"
+        aria-label="Sequence context around WGGW split site"
+        className="bg-muted/40 rounded-lg border p-3 font-mono text-[11px] leading-none shadow-sm"
+      >
+        <div
+          className="relative z-10 grid h-8 gap-[1px]"
+          style={{ gridTemplateColumns: templateColumns }}
+          aria-hidden="true"
+        >
+          {ctx.codons.map((codon) => {
+            const isMajorTick =
+              codon.idx % RULER_LABEL_CODON_INTERVAL === 0
+            return (
+              <div
+                key={`rail-${codon.idx}`}
+                className="relative h-full"
+                style={{
+                  gridColumn: `${codon.columnStart} / ${codon.columnEnd}`,
+                }}
+              >
+                {isMajorTick ? (
+                  <span className="text-muted-foreground/75 absolute top-1 left-1/2 -translate-x-1/2 font-mono text-[9px] tabular-nums">
+                    {(codon.start + 1).toLocaleString()}
+                  </span>
+                ) : (
+                  <span className="absolute top-1 left-1/2 block h-2.5 w-px -translate-x-1/2 rounded-full bg-border/70" />
+                )}
+                <span
+                  className={cn(
+                    'text-muted-foreground/70 absolute bottom-0 left-1/2 -translate-x-1/2 text-[10px] tabular-nums',
+                    codon.role === 'start' && 'text-success-soft font-semibold',
+                    (codon.role === 'stop' ||
+                      codon.role === 'internal-stop') &&
+                      'text-danger-soft font-semibold',
+                  )}
+                  title={`Codon ${codon.idx + 1}: ${codon.codon}`}
+                >
+                  {codon.aa ?? '.'}
+                </span>
+              </div>
+            )
+          })}
+        </div>
+
+        <div className="relative mt-1">
+          <div
+            className="absolute inset-0 z-20 grid"
+            style={{ gridTemplateColumns: templateColumns }}
+          >
+            {visibleSites.map((site, index) => {
+              const isSelected = selectedSite?.position === site.position
+              const visibleStart = Math.max(site.motifStart, ctx.start)
+              const visibleEnd = Math.min(site.motifStart + 3, ctx.end)
+              const columnStart = visibleStart - ctx.start + 1
+              const columnSpan = visibleEnd - visibleStart + 1
+              const boundaryPct =
+                ((site.position - visibleStart) / columnSpan) * 100
+              return (
+                <button
+                  type="button"
+                  key={`${site.position}-${site.motifStart}`}
+                  onClick={() => onSelectSite(site)}
+                  title={`WGGW ${site.motif} · split between bp ${(site.position - 1).toLocaleString()} and ${site.position.toLocaleString()} · ${site.baseChanges} bp change${site.baseChanges === 1 ? '' : 's'}`}
+                  aria-label={`Select WGGW ${formatMotifSplit(site.motif)} split between bp ${site.position - 1} and ${site.position}`}
+                  className={cn(
+                    'group relative h-9 cursor-pointer rounded-sm border transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                    isSelected
+                      ? 'z-30 border-primary/80 bg-primary/25 shadow-sm'
+                      : 'border-marker/45 bg-marker/14 hover:z-20 hover:border-marker/80 hover:bg-marker/24',
+                  )}
+                  style={{
+                    gridColumn: `${columnStart} / span ${columnSpan}`,
+                    gridRow: '1 / 2',
+                    zIndex: isSelected ? 30 : 10 + index,
+                  }}
+                >
+                  <span
+                    className={cn(
+                      'absolute top-0 bottom-0 w-px -translate-x-1/2 transition-all group-hover:w-0.5',
+                      isSelected ? 'bg-primary w-0.5' : 'bg-marker/90',
+                    )}
+                    style={{ left: `${boundaryPct}%` }}
+                  />
+                </button>
+              )
+            })}
+          </div>
+          <div
+            className="border-border/60 bg-background/30 pointer-events-none relative z-30 grid overflow-hidden rounded-md border"
+            style={{ gridTemplateColumns: templateColumns }}
+          >
+            {ctx.bases.map((base) => {
+              const inSelected = selectedBases.has(base.position)
+              const isChanged = selectedChangedBases.has(base.position)
+              const isMotifG =
+                selectedSite &&
+                (base.position === selectedSite.motifStart + 1 ||
+                  base.position === selectedSite.motifStart + 2)
+              return (
+                <div
+                  key={base.position}
+                  className={cn(
+                    'text-muted-foreground flex h-9 items-center justify-center text-xs font-semibold tabular-nums',
+                    base.role === 'start' && 'text-success-soft',
+                    (base.role === 'stop' || base.role === 'internal-stop') &&
+                      'text-danger-soft',
+                    inSelected && 'text-primary',
+                    isMotifG && 'text-foreground',
+                    isChanged && 'underline decoration-2 underline-offset-4',
+                  )}
+                  title={`bp ${base.position.toLocaleString()}`}
+                >
+                  {base.base}
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -585,16 +779,20 @@ function Inspector({
   }
 
   const peptide = translatePair(selectedSite.originalCodons)
+  const splitMotif = formatMotifSplit(selectedSite.motif)
+  const splitBoundary = `bp ${(selectedSite.position - 1).toLocaleString()} / ${selectedSite.position.toLocaleString()}`
 
   return (
     <div className="bg-muted/30 space-y-3 rounded-lg border p-3 text-xs">
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-foreground text-sm font-semibold">Selected</span>
+        <span className="text-foreground text-sm font-semibold">
+          Selected split
+        </span>
         <span className="bg-marker/15 text-marker-soft rounded-md px-2 py-0.5 font-mono text-xs font-semibold">
-          {selectedSite.motif}
+          {splitMotif}
         </span>
         <span className="text-muted-foreground font-mono text-xs tabular-nums">
-          bp {selectedSite.position.toLocaleString()}
+          {splitBoundary}
         </span>
         <span className="text-muted-foreground ml-auto font-mono text-[11px] tabular-nums">
           {selectedSite.fivePrimeLength.toLocaleString()} /{' '}
@@ -605,6 +803,10 @@ function Inspector({
       <div className="flex flex-wrap gap-1.5">
         <StatChip label={`${currentRewrite.baseChanges} bp Δ`} tone="neutral" />
         <StatChip label={`Peptide ${peptide}`} tone="neutral" />
+        <StatChip
+          label={frameBoundaryLabel(selectedSite.position)}
+          tone="neutral"
+        />
       </div>
 
       {selectedSite.rewriteOptions.length > 1 && (
@@ -648,6 +850,17 @@ function Inspector({
       />
     </div>
   )
+}
+
+function formatMotifSplit(motif: string) {
+  return `${motif.slice(0, 2)}|${motif.slice(2)}`
+}
+
+function frameBoundaryLabel(position: number) {
+  const basesBeforeBoundary = Math.max(0, position - 1)
+  const frameOffset = basesBeforeBoundary % 3
+  if (frameOffset === 0) return 'Between codons'
+  return `After codon base ${frameOffset}`
 }
 
 function RewriteDiff({
@@ -860,6 +1073,91 @@ function roleStylesFor(role: CodonRole): {
 }
 
 type CodonRole = 'start' | 'stop' | 'internal-stop' | 'split' | 'context'
+
+interface SequenceContext {
+  start: number
+  end: number
+  position: number
+  cutPct: number
+  bases: {
+    base: string
+    position: number
+    role: CodonRole
+  }[]
+  codons: {
+    codon: string
+    aa: string | null
+    idx: number
+    start: number
+    end: number
+    columnStart: number
+    columnEnd: number
+    role: CodonRole
+  }[]
+}
+
+function cutPercent(position: number, start: number, baseCount: number) {
+  if (baseCount <= 0) return 0
+  return Math.max(0, Math.min(100, ((position - start) / baseCount) * 100))
+}
+
+function buildSequenceContext(
+  sequence: string,
+  position: number,
+  contextWindow: number,
+): SequenceContext {
+  const upper = sequence.toUpperCase().replace(/U/g, 'T')
+  const seqLen = upper.length
+  const clampedPosition = Math.max(1, Math.min(seqLen, position))
+  const start = Math.max(1, clampedPosition - contextWindow)
+  const end = Math.min(seqLen, clampedPosition + contextWindow - 1)
+  const bases: SequenceContext['bases'] = []
+
+  for (let pos = start; pos <= end; pos++) {
+    const codonIdx = Math.floor((pos - 1) / 3)
+    const codonStart = codonIdx * 3 + 1
+    const codon = upper.slice(codonStart - 1, codonStart + 2)
+    const aa = codon.length === 3 ? translateCodon(codon) : null
+    let role: CodonRole = 'context'
+    if (codonStart === 1) role = 'start'
+    else if (codonStart + 2 >= seqLen && aa === '*') role = 'stop'
+    else if (aa === '*') role = 'internal-stop'
+    bases.push({ base: upper[pos - 1] ?? '.', position: pos, role })
+  }
+
+  const firstCodonIdx = Math.floor((start - 1) / 3)
+  const lastCodonIdx = Math.floor((end - 1) / 3)
+  const codons: SequenceContext['codons'] = []
+  for (let idx = firstCodonIdx; idx <= lastCodonIdx; idx++) {
+    const codonStart = idx * 3 + 1
+    const codonEnd = codonStart + 2
+    const codon = upper.slice(codonStart - 1, codonStart + 2)
+    const aa = codon.length === 3 ? translateCodon(codon) : null
+    let role: CodonRole = 'context'
+    if (codonStart === 1) role = 'start'
+    else if (codonEnd >= seqLen && aa === '*') role = 'stop'
+    else if (aa === '*') role = 'internal-stop'
+    codons.push({
+      codon,
+      aa,
+      idx,
+      start: codonStart,
+      end: codonEnd,
+      columnStart: Math.max(codonStart, start) - start + 1,
+      columnEnd: Math.min(codonEnd, end) - start + 2,
+      role,
+    })
+  }
+
+  return {
+    start,
+    end,
+    position: clampedPosition,
+    cutPct: cutPercent(clampedPosition, start, bases.length),
+    bases,
+    codons,
+  }
+}
 
 interface FrameContext {
   splitCodon: number
