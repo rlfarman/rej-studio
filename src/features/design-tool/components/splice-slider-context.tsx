@@ -1,6 +1,14 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import {
+  Fragment,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react'
 import { cn } from '@/lib/utils'
 import {
   rankInducibleWggwByBalance,
@@ -34,13 +42,34 @@ export function SpliceSliderContext({
   onSelectionChange,
 }: Props) {
   const seqLen = sequence.length
+  const rootRef = useRef<HTMLDivElement>(null)
   const trackRef = useRef<HTMLDivElement>(null)
   const frameStripRef = useRef<HTMLDivElement>(null)
+  const [shortcutsActive, setShortcutsActive] = useState(false)
+  const [jumpValue, setJumpValue] = useState('')
+  const [searchValue, setSearchValue] = useState('')
+  const [searchMatchIndex, setSearchMatchIndex] = useState(0)
 
   const wggwSites = useMemo<WggwSiteCandidate[]>(() => {
     if (seqLen < 12) return []
     return groupWggwSites(rankInducibleWggwByBalance(sequence))
   }, [sequence, seqLen])
+  const normalizedSequence = useMemo(
+    () => sequence.toUpperCase().replace(/U/g, 'T'),
+    [sequence],
+  )
+  const normalizedSearch = useMemo(
+    () =>
+      searchValue
+        .toUpperCase()
+        .replace(/U/g, 'T')
+        .replace(/[^ACGT]/g, ''),
+    [searchValue],
+  )
+  const searchMatches = useMemo(
+    () => findSequenceMatches(normalizedSequence, normalizedSearch),
+    [normalizedSearch, normalizedSequence],
+  )
 
   const midpoint = Math.max(1, Math.min(seqLen - 1, Math.floor(seqLen / 2)))
 
@@ -102,6 +131,29 @@ export function SpliceSliderContext({
     [sequence, position, contextWindow],
   )
 
+  const handleSelectSite = useCallback(
+    (site: WggwSiteCandidate) => {
+      setActiveSitePosition(site.position)
+      onSnap(site.position)
+    },
+    [onSnap],
+  )
+
+  const jumpToSibling = useCallback(
+    (dir: -1 | 1) => {
+      if (wggwSites.length === 0) return
+      if (selectedSiteIndex === -1) {
+        const next = nearestSiteIndex(wggwSites, position)
+        if (next !== -1) handleSelectSite(wggwSites[next])
+        return
+      }
+      const target = selectedSiteIndex + dir
+      if (target < 0 || target >= wggwSites.length) return
+      handleSelectSite(wggwSites[target])
+    },
+    [handleSelectSite, position, selectedSiteIndex, wggwSites],
+  )
+
   useEffect(() => {
     if (!selectedSite || !currentRewrite) {
       onSelectionChange(null)
@@ -118,7 +170,55 @@ export function SpliceSliderContext({
     })
   }, [currentRewrite, onSelectionChange, selectedSite])
 
-  if (seqLen < 12) return null
+  useEffect(() => {
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as Node | null
+      setShortcutsActive(!!target && !!rootRef.current?.contains(target))
+    }
+
+    const handleFocusIn = (event: FocusEvent) => {
+      const target = event.target as Node | null
+      setShortcutsActive(!!target && !!rootRef.current?.contains(target))
+    }
+
+    const handleWindowKeyDown = (event: KeyboardEvent) => {
+      if (!shortcutsActive) return
+      const target = event.target as HTMLElement | null
+      if (
+        target &&
+        (target instanceof HTMLInputElement ||
+          target instanceof HTMLTextAreaElement ||
+          target instanceof HTMLSelectElement ||
+          target.isContentEditable)
+      ) {
+        return
+      }
+
+      if (event.key === '[') {
+        event.preventDefault()
+        jumpToSibling(-1)
+        return
+      }
+      if (event.key === ']') {
+        event.preventDefault()
+        jumpToSibling(1)
+        return
+      }
+      if (event.key === 'm' || event.key === 'M') {
+        event.preventDefault()
+        onSnap(midpoint)
+      }
+    }
+
+    window.addEventListener('pointerdown', handlePointerDown)
+    window.addEventListener('focusin', handleFocusIn)
+    window.addEventListener('keydown', handleWindowKeyDown)
+    return () => {
+      window.removeEventListener('pointerdown', handlePointerDown)
+      window.removeEventListener('focusin', handleFocusIn)
+      window.removeEventListener('keydown', handleWindowKeyDown)
+    }
+  }, [jumpToSibling, midpoint, onSnap, shortcutsActive])
 
   const positionPct = (position / seqLen) * 100
   const fivePrimeLength = position
@@ -157,32 +257,15 @@ export function SpliceSliderContext({
     target.addEventListener('pointercancel', handleUp)
   }
 
-  const jumpToSibling = (dir: -1 | 1) => {
-    if (wggwSites.length === 0) return
-    if (selectedSiteIndex === -1) {
-      const next = nearestSiteIndex(wggwSites, position)
-      if (next !== -1) handleSelectSite(wggwSites[next])
-      return
-    }
-    const target = selectedSiteIndex + dir
-    if (target < 0 || target >= wggwSites.length) return
-    handleSelectSite(wggwSites[target])
-  }
-
   const handleTrackKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    if (e.key === '[') {
-      e.preventDefault()
-      jumpToSibling(-1)
-      return
-    }
-    if (e.key === ']') {
-      e.preventDefault()
-      jumpToSibling(1)
-      return
-    }
-    if (e.key === 'm' || e.key === 'M') {
-      e.preventDefault()
-      onSnap(midpoint)
+    const target = e.target as HTMLElement | null
+    if (
+      target &&
+      (target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement ||
+        target instanceof HTMLSelectElement ||
+        target.isContentEditable)
+    ) {
       return
     }
     const step = e.altKey ? 3 : 1
@@ -208,15 +291,52 @@ export function SpliceSliderContext({
     }
   }
 
-  const handleSelectSite = (site: WggwSiteCandidate) => {
-    setActiveSitePosition(site.position)
-    onSnap(site.position)
+  const jumpToPosition = (nextPosition: number) => {
+    onSnap(Math.max(1, Math.min(seqLen - 1, nextPosition)))
   }
 
+  const handleJumpSubmit = () => {
+    const parsed = Number.parseInt(jumpValue, 10)
+    if (Number.isNaN(parsed)) return
+    jumpToPosition(parsed)
+  }
+
+  const jumpToSearchMatch = (nextIndex: number) => {
+    if (searchMatches.length === 0) return
+    const normalizedIndex =
+      ((nextIndex % searchMatches.length) + searchMatches.length) %
+      searchMatches.length
+    setSearchMatchIndex(normalizedIndex)
+    const match = searchMatches[normalizedIndex]
+    const target = match.start + Math.floor(match.length / 2)
+    jumpToPosition(target)
+  }
+
+  if (seqLen < 12) return null
+
   return (
-    <div className="space-y-3">
+    <div
+      ref={rootRef}
+      className="space-y-2"
+      onPointerDownCapture={() => setShortcutsActive(true)}
+      onFocusCapture={() => setShortcutsActive(true)}
+    >
       <Toolbar
         total={wggwSites.length}
+        currentIndex={selectedSiteIndex >= 0 ? selectedSiteIndex + 1 : 0}
+        jumpValue={jumpValue}
+        searchValue={searchValue}
+        searchMatchCount={searchMatches.length}
+        searchMatchIndex={searchMatchIndex}
+        onJumpChange={setJumpValue}
+        onJumpSubmit={handleJumpSubmit}
+        onSearchChange={(value) => {
+          setSearchValue(value)
+          setSearchMatchIndex(0)
+        }}
+        onSearchNext={() => jumpToSearchMatch(searchMatchIndex + 1)}
+        onSearchPrev={() => jumpToSearchMatch(searchMatchIndex - 1)}
+        onSearchSubmit={() => jumpToSearchMatch(searchMatchIndex)}
         onPrev={() => jumpToSibling(-1)}
         onNext={() => jumpToSibling(1)}
         onMidpoint={() => onSnap(midpoint)}
@@ -231,7 +351,7 @@ export function SpliceSliderContext({
         }
       />
 
-      <div className="space-y-3">
+      <div className="space-y-2">
         <div className="min-w-0 space-y-2">
           <div
             ref={trackRef}
@@ -243,10 +363,9 @@ export function SpliceSliderContext({
             aria-valuenow={position}
             aria-valuetext={`bp ${position.toLocaleString()} of ${seqLen.toLocaleString()}`}
             onPointerDown={handleTrackPointerDown}
-            onKeyDown={handleTrackKeyDown}
-            className="focus-visible:ring-ring bg-background/80 relative h-16 cursor-ew-resize touch-none rounded-xl border shadow-sm select-none focus:outline-none focus-visible:ring-2"
+            className="focus-visible:ring-ring bg-background/80 relative h-16 cursor-ew-resize touch-none rounded-lg border select-none focus:outline-none focus-visible:ring-2"
           >
-            <div className="absolute inset-x-0 top-0 flex h-11 overflow-hidden rounded-t-xl">
+            <div className="absolute inset-x-0 top-0 flex h-11 overflow-hidden rounded-t-lg">
               <div
                 className="bg-primary/15 flex min-w-0 items-center justify-center"
                 style={{ width: `${fivePct}%` }}
@@ -261,7 +380,7 @@ export function SpliceSliderContext({
                 </span>
               </div>
             </div>
-            <div className="bg-background/70 absolute inset-x-0 bottom-0 h-5 overflow-hidden rounded-b-xl border-t">
+            <div className="bg-background/70 absolute inset-x-0 bottom-0 h-5 overflow-hidden rounded-b-lg border-t">
               {wggwSites.map((site, i) => {
                 const x = (site.position / seqLen) * 100
                 const isSelected = selectedSite?.position === site.position
@@ -320,6 +439,7 @@ export function SpliceSliderContext({
         </div>
 
         <Inspector
+          sequence={sequence}
           selectedSite={selectedSite}
           currentRewrite={currentRewrite}
           selectedRewriteIndex={selectedRewriteIndex}
@@ -337,6 +457,17 @@ export function SpliceSliderContext({
 
 function Toolbar({
   total,
+  currentIndex,
+  jumpValue,
+  searchValue,
+  searchMatchCount,
+  searchMatchIndex,
+  onJumpChange,
+  onJumpSubmit,
+  onSearchChange,
+  onSearchPrev,
+  onSearchNext,
+  onSearchSubmit,
   onPrev,
   onNext,
   onMidpoint,
@@ -344,6 +475,17 @@ function Toolbar({
   canNext,
 }: {
   total: number
+  currentIndex: number
+  jumpValue: string
+  searchValue: string
+  searchMatchCount: number
+  searchMatchIndex: number
+  onJumpChange: (value: string) => void
+  onJumpSubmit: () => void
+  onSearchChange: (value: string) => void
+  onSearchPrev: () => void
+  onSearchNext: () => void
+  onSearchSubmit: () => void
   onPrev: () => void
   onNext: () => void
   onMidpoint: () => void
@@ -351,41 +493,139 @@ function Toolbar({
   canNext: boolean
 }) {
   return (
-    <div className="bg-background/60 flex flex-wrap items-center justify-between gap-2 rounded-lg border px-3 py-2">
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
-        <span className="text-muted-foreground flex items-center gap-1.5">
-          <LegendDot tone="marker" />
-          <span className="text-foreground font-semibold tabular-nums">
-            {total.toLocaleString()}
-          </span>{' '}
-          WGGW candidate{total === 1 ? '' : 's'}
-        </span>
+    <div className="bg-background/25 grid w-full gap-x-3 gap-y-1 rounded-sm px-1 py-0.5 md:grid-cols-3 md:items-center">
+      <div className="min-w-0">
+        <ToolbarSection label="Find">
+          <input
+            type="text"
+            value={searchValue}
+            onChange={(event) => onSearchChange(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') {
+                event.preventDefault()
+                if (event.shiftKey) onSearchPrev()
+                else onSearchSubmit()
+              }
+            }}
+            className="bg-background h-5 w-16 rounded-sm border px-1 font-mono text-[10px] uppercase outline-none"
+            placeholder="ACGT"
+            aria-label="Search sequence"
+          />
+          <ToolbarButton
+            onClick={onSearchPrev}
+            disabled={searchMatchCount === 0}
+            title="Previous search match"
+            compact
+          >
+            <ChevronLeft className="size-3" />
+          </ToolbarButton>
+          {searchValue && (
+            <span className="text-muted-foreground min-w-8 text-center font-mono text-[10px] tabular-nums">
+              {searchMatchCount === 0
+                ? '0/0'
+                : `${searchMatchIndex + 1}/${searchMatchCount}`}
+            </span>
+          )}
+          {!searchValue && (
+            <span className="text-muted-foreground min-w-8 text-center font-mono text-[10px] tabular-nums">
+              0/0
+            </span>
+          )}
+          <ToolbarButton
+            onClick={onSearchNext}
+            disabled={searchMatchCount === 0}
+            title="Next search match"
+            compact
+          >
+            <ChevronRight className="size-3" />
+          </ToolbarButton>
+        </ToolbarSection>
       </div>
-      <div className="flex items-center gap-1.5">
-        <ToolbarButton
-          onClick={onPrev}
-          disabled={!canPrev}
-          title="Previous WGGW site ([)"
-        >
-          <ChevronLeft className="size-3.5" />
-          <span className="hidden sm:inline">Prev</span>
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={onMidpoint}
-          title="Snap to midpoint (m)"
-          variant="accent"
-        >
-          <AlignCenter className="size-3.5" />
-          <span className="hidden sm:inline">Midpoint</span>
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={onNext}
-          disabled={!canNext}
-          title="Next WGGW site (])"
-        >
-          <span className="hidden sm:inline">Next</span>
-          <ChevronRight className="size-3.5" />
-        </ToolbarButton>
+
+      <div className="min-w-0">
+        <ToolbarSection label="Jump">
+          <ToolbarButton
+            onClick={onMidpoint}
+            title="Snap to midpoint (m)"
+            variant="accent"
+            compact
+          >
+            Midpoint
+          </ToolbarButton>
+          <div className="flex items-center gap-1">
+            <span className="text-muted-foreground text-[10px] font-medium">
+              bp
+            </span>
+            <input
+              type="text"
+              inputMode="numeric"
+              value={jumpValue}
+              onChange={(event) =>
+                onJumpChange(event.target.value.replace(/[^\d]/g, ''))
+              }
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') {
+                  event.preventDefault()
+                  onJumpSubmit()
+                }
+              }}
+              className="bg-background h-5 w-12 rounded-sm border px-1 font-mono text-[10px] outline-none"
+              placeholder="742"
+              aria-label="Jump to base-pair position"
+            />
+            <ToolbarButton onClick={onJumpSubmit} title="Jump to bp" compact>
+              Go
+            </ToolbarButton>
+          </div>
+        </ToolbarSection>
+      </div>
+
+      <div className="min-w-0 md:justify-self-end">
+        <ToolbarSection label="Sites">
+          <ToolbarButton
+            onClick={onPrev}
+            disabled={!canPrev}
+            title="Previous WGGW site ([)"
+            compact
+          >
+            <ChevronLeft className="size-3.5" />
+            <span className="hidden sm:inline">Prev</span>
+          </ToolbarButton>
+          <ToolbarButton
+            onClick={onNext}
+            disabled={!canNext}
+            title="Next WGGW site (])"
+            compact
+          >
+            <span className="hidden sm:inline">Next</span>
+            <ChevronRight className="size-3.5" />
+          </ToolbarButton>
+          <span className="text-muted-foreground min-w-12 text-center font-mono text-[10px] tabular-nums">
+            {currentIndex}/{total}
+          </span>
+        </ToolbarSection>
+      </div>
+    </div>
+  )
+}
+
+function ToolbarSection({
+  label,
+  children,
+}: {
+  label: string
+  children: ReactNode
+}) {
+  return (
+    <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-1">
+      <span className="text-muted-foreground text-[10px] font-medium tracking-[0.08em] uppercase">
+        {label}
+      </span>
+      <div className="flex min-w-0 items-center gap-1">
+        <div className="bg-border/70 h-4 w-px shrink-0" aria-hidden="true" />
+        <div className="flex min-w-0 flex-wrap items-center gap-1">
+          {children}
+        </div>
       </div>
     </div>
   )
@@ -397,12 +637,14 @@ function ToolbarButton({
   disabled,
   title,
   variant = 'default',
+  compact = false,
 }: {
   children: ReactNode
   onClick: () => void
   disabled?: boolean
   title?: string
   variant?: 'default' | 'accent'
+  compact?: boolean
 }) {
   return (
     <button
@@ -411,7 +653,9 @@ function ToolbarButton({
       disabled={disabled}
       title={title}
       className={cn(
-        'inline-flex h-8 items-center gap-1 rounded-md border px-2.5 text-xs font-medium transition-colors',
+        compact
+          ? 'inline-flex h-6 items-center gap-1 rounded-md border px-1.5 text-[11px] font-medium transition-colors'
+          : 'inline-flex h-7 items-center gap-1 rounded-md border px-2 text-[11px] font-medium transition-colors',
         'disabled:pointer-events-none disabled:opacity-40',
         variant === 'accent'
           ? 'border-primary/40 bg-primary/5 text-primary hover:bg-primary/10'
@@ -454,7 +698,8 @@ function LocalSequenceView({
   const visibleSites = useMemo(
     () =>
       sites.filter(
-        (site) => site.motifStart <= ctx.end && site.motifStart + 3 >= ctx.start,
+        (site) =>
+          site.motifStart <= ctx.end && site.motifStart + 3 >= ctx.start,
       ),
     [ctx.end, ctx.start, sites],
   )
@@ -480,16 +725,11 @@ function LocalSequenceView({
 
   return (
     <div className="space-y-1.5">
-      <div className="text-muted-foreground flex justify-end px-1 font-mono text-[10px] leading-none tabular-nums">
-        <span>
-          bp {ctx.start.toLocaleString()}-{ctx.end.toLocaleString()}
-        </span>
-      </div>
       <div
         ref={stripRef}
         role="group"
         aria-label="Sequence context around WGGW split site"
-        className="bg-muted/40 rounded-lg border p-3 font-mono text-[11px] leading-none shadow-sm"
+        className="bg-muted/40 rounded-lg border p-3 font-mono text-[11px] leading-none"
       >
         <div
           className="relative z-10 grid h-8 gap-[1px]"
@@ -497,8 +737,10 @@ function LocalSequenceView({
           aria-hidden="true"
         >
           {ctx.codons.map((codon) => {
-            const isMajorTick =
-              codon.idx % RULER_LABEL_CODON_INTERVAL === 0
+            const hasBoundaryLabel =
+              codon.idx < ctx.codons[ctx.codons.length - 1].idx &&
+              (codon.idx + 1) % RULER_LABEL_CODON_INTERVAL === 0
+            const boundaryPosition = codon.end + 1
             return (
               <div
                 key={`rail-${codon.idx}`}
@@ -507,25 +749,25 @@ function LocalSequenceView({
                   gridColumn: `${codon.columnStart} / ${codon.columnEnd}`,
                 }}
               >
-                {isMajorTick ? (
-                  <span className="text-muted-foreground/75 absolute top-1 left-1/2 -translate-x-1/2 font-mono text-[9px] tabular-nums">
-                    {(codon.start + 1).toLocaleString()}
+                {hasBoundaryLabel ? (
+                  <span className="text-muted-foreground/75 absolute top-1 left-full -translate-x-1/2 font-mono text-[9px] tabular-nums">
+                    {boundaryPosition.toLocaleString()}
                   </span>
-                ) : (
-                  <span className="absolute top-1 left-1/2 block h-2.5 w-px -translate-x-1/2 rounded-full bg-border/70" />
-                )}
+                ) : null}
                 <span
                   className={cn(
                     'text-muted-foreground/70 absolute bottom-0 left-1/2 -translate-x-1/2 text-[10px] tabular-nums',
                     codon.role === 'start' && 'text-success-soft font-semibold',
-                    (codon.role === 'stop' ||
-                      codon.role === 'internal-stop') &&
+                    (codon.role === 'stop' || codon.role === 'internal-stop') &&
                       'text-danger-soft font-semibold',
                   )}
                   title={`Codon ${codon.idx + 1}: ${codon.codon}`}
                 >
                   {codon.aa ?? '.'}
                 </span>
+                {codon.idx < ctx.codons[ctx.codons.length - 1].idx && (
+                  <span className="bg-border/70 absolute bottom-[2px] left-full h-2.5 w-px -translate-x-1/2 rounded-full" />
+                )}
               </div>
             )
           })}
@@ -552,10 +794,10 @@ function LocalSequenceView({
                   title={`WGGW ${site.motif} · split between bp ${(site.position - 1).toLocaleString()} and ${site.position.toLocaleString()} · ${site.baseChanges} bp change${site.baseChanges === 1 ? '' : 's'}`}
                   aria-label={`Select WGGW ${formatMotifSplit(site.motif)} split between bp ${site.position - 1} and ${site.position}`}
                   className={cn(
-                    'group relative h-9 cursor-pointer rounded-sm border transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                    'group focus-visible:ring-ring relative flex h-full cursor-pointer items-center overflow-hidden rounded-sm border transition-all focus:outline-none focus-visible:ring-2',
                     isSelected
-                      ? 'z-30 border-primary/80 bg-primary/25 shadow-sm'
-                      : 'border-marker/45 bg-marker/14 hover:z-20 hover:border-marker/80 hover:bg-marker/24',
+                      ? 'border-primary/80 bg-primary/25 z-30 shadow-sm'
+                      : 'border-marker/45 bg-marker/14 hover:border-marker/80 hover:bg-marker/24 hover:z-20',
                   )}
                   style={{
                     gridColumn: `${columnStart} / span ${columnSpan}`,
@@ -581,6 +823,9 @@ function LocalSequenceView({
             {ctx.bases.map((base) => {
               const inSelected = selectedBases.has(base.position)
               const isChanged = selectedChangedBases.has(base.position)
+              const isSelectedStart = selectedSite?.motifStart === base.position
+              const isSelectedEnd =
+                selectedSite?.motifStart + 3 === base.position
               const isMotifG =
                 selectedSite &&
                 (base.position === selectedSite.motifStart + 1 ||
@@ -593,9 +838,11 @@ function LocalSequenceView({
                     base.role === 'start' && 'text-success-soft',
                     (base.role === 'stop' || base.role === 'internal-stop') &&
                       'text-danger-soft',
-                    inSelected && 'text-primary',
+                    inSelected && 'bg-primary/15 text-primary',
+                    inSelected && isSelectedStart && 'rounded-l-sm',
+                    inSelected && isSelectedEnd && 'rounded-r-sm',
                     isMotifG && 'text-foreground',
-                    isChanged && 'underline decoration-2 underline-offset-4',
+                    isChanged && 'text-primary',
                   )}
                   title={`bp ${base.position.toLocaleString()}`}
                 >
@@ -706,7 +953,7 @@ function CodonStrip({
               className={cn(
                 'flex flex-1 flex-col items-center gap-0.5 rounded-sm px-[3px] py-1',
                 c.role === 'split' ? '' : roleStyles.container,
-                isSelectedCodon && 'bg-marker/10 ring-marker/30 ring-1',
+                isSelectedCodon && 'bg-primary/10 ring-primary/30 ring-1',
               )}
             >
               <span
@@ -733,9 +980,8 @@ function CodonStrip({
                       key={bi}
                       className={cn(
                         roleStyles.base,
-                        inSelected && 'bg-marker/15 text-marker-soft',
-                        isChanged &&
-                          'underline decoration-2 underline-offset-2',
+                        inSelected && 'bg-primary/15 text-primary',
+                        isChanged && 'text-primary',
                         isCutBase && 'border-primary border-r-2',
                       )}
                     >
@@ -753,11 +999,13 @@ function CodonStrip({
 }
 
 function Inspector({
+  sequence,
   selectedSite,
   currentRewrite,
   selectedRewriteIndex,
   onSelectRewrite,
 }: {
+  sequence: string
   selectedSite: WggwSiteCandidate | null
   currentRewrite: WggwRecodingOption | null
   selectedRewriteIndex: number
@@ -778,43 +1026,39 @@ function Inspector({
     )
   }
 
-  const peptide = translatePair(selectedSite.originalCodons)
-  const splitMotif = formatMotifSplit(selectedSite.motif)
-  const splitBoundary = `bp ${(selectedSite.position - 1).toLocaleString()} / ${selectedSite.position.toLocaleString()}`
+  const rewrittenSequence = applyRewriteToSequence(
+    sequence,
+    selectedSite.hexamerStart,
+    currentRewrite.newHexamer,
+  )
+  const editedPositions = getEditedPositions(selectedSite, currentRewrite)
+  const originalSplitContext = buildSplitContext(
+    sequence,
+    selectedSite.position,
+    selectedSite.motifStart,
+    editedPositions,
+  )
+  const designedSplitContext = buildSplitContext(
+    rewrittenSequence,
+    selectedSite.position,
+    selectedSite.motifStart,
+    editedPositions,
+  )
 
   return (
-    <div className="bg-muted/30 space-y-3 rounded-lg border p-3 text-xs">
+    <div className="bg-muted/30 space-y-4 rounded-lg border p-4 text-xs">
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-foreground text-sm font-semibold">
           Selected split
         </span>
-        <span className="bg-marker/15 text-marker-soft rounded-md px-2 py-0.5 font-mono text-xs font-semibold">
-          {splitMotif}
-        </span>
-        <span className="text-muted-foreground font-mono text-xs tabular-nums">
-          {splitBoundary}
-        </span>
-        <span className="text-muted-foreground ml-auto font-mono text-[11px] tabular-nums">
-          {selectedSite.fivePrimeLength.toLocaleString()} /{' '}
-          {selectedSite.threePrimeLength.toLocaleString()}
-        </span>
       </div>
 
-      <div className="flex flex-wrap gap-1.5">
-        <StatChip label={`${currentRewrite.baseChanges} bp Δ`} tone="neutral" />
-        <StatChip label={`Peptide ${peptide}`} tone="neutral" />
-        <StatChip
-          label={frameBoundaryLabel(selectedSite.position)}
-          tone="neutral"
-        />
-      </div>
-
-      {selectedSite.rewriteOptions.length > 1 && (
+      <div className="grid gap-3 lg:grid-cols-[11.5rem_minmax(0,1fr)]">
         <div className="space-y-1.5">
           <div className="text-muted-foreground text-[10px] font-medium tracking-[0.08em] uppercase">
             Synonymous rewrites
           </div>
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-col gap-1.5">
             {selectedSite.rewriteOptions.map((option, index) => {
               const active = index === selectedRewriteIndex
               return (
@@ -823,31 +1067,83 @@ function Inspector({
                   key={`${option.newHexamer}-${index}`}
                   onClick={() => onSelectRewrite(index)}
                   className={cn(
-                    'inline-flex items-center gap-1.5 rounded-md border px-2 py-1 font-mono text-[11px] transition-colors',
+                    'grid min-w-[11.5rem] grid-cols-[2.5rem_minmax(0,1fr)_2.5rem] items-center gap-2 self-start rounded-md border px-3 py-2.5 font-mono text-[12px] transition-colors',
                     active
                       ? 'border-primary bg-primary/10 text-primary'
                       : 'text-muted-foreground hover:border-primary/30 hover:bg-background/60',
                   )}
                 >
-                  <span className="font-semibold">
-                    {option.newHexamer.slice(0, 3)} {option.newHexamer.slice(3)}
+                  <span aria-hidden="true" />
+                  <span className="flex flex-col items-center gap-0.5 leading-tight">
+                    <span
+                      className="grid font-mono text-[12px] leading-none"
+                      style={{ gridTemplateColumns: 'repeat(7, 1ch)' }}
+                    >
+                      <span className="text-muted-foreground/80 col-start-2 text-center font-medium">
+                        {translateCodon(option.newCodons[0]) ?? '?'}
+                      </span>
+                      <span className="text-muted-foreground/80 col-start-6 text-center font-medium">
+                        {translateCodon(option.newCodons[1]) ?? '?'}
+                      </span>
+                    </span>
+                    <span
+                      className="grid font-mono leading-none font-semibold"
+                      style={{ gridTemplateColumns: 'repeat(7, 1ch)' }}
+                    >
+                      <span className="col-span-3 text-center">
+                        {option.newCodons[0]}
+                      </span>
+                      <span className="col-span-3 col-start-5 text-center">
+                        {option.newCodons[1]}
+                      </span>
+                    </span>
                   </span>
-                  <span className="bg-muted text-muted-foreground rounded px-1 text-[10px] font-medium">
-                    {option.baseChanges}Δ
+                  <span className="flex justify-end">
+                    {option.baseChanges === 0 && (
+                      <span className="border-primary/25 bg-primary/10 text-primary rounded border px-1 py-px text-[9px] font-medium tracking-[0.04em] uppercase">
+                        Native
+                      </span>
+                    )}
                   </span>
                 </button>
               )
             })}
           </div>
         </div>
-      )}
 
-      <RewriteDiff
-        beforeHexamer={selectedSite.originalHexamer}
-        afterHexamer={currentRewrite.newHexamer}
-        motifStart={currentRewrite.motifOffset}
-        cutOffset={selectedSite.position - selectedSite.hexamerStart}
-      />
+        <div className="space-y-1.5">
+          <div className="text-muted-foreground text-[10px] font-medium tracking-[0.08em] uppercase">
+            Sequence context
+          </div>
+          <div className="bg-background/80 space-y-1 rounded-md border px-3 py-2.5">
+            <AlignedAaRow
+              label="AA"
+              guide={buildAminoAcidGuide(
+                sequence,
+                originalSplitContext.windowStart,
+                originalSplitContext.windowEnd,
+                selectedSite.position,
+              )}
+            />
+            <AlignedSequenceRow
+              label="Original sequence"
+              context={originalSplitContext}
+            />
+            <AlignedSequenceRow
+              label="Designed sequence"
+              context={designedSplitContext}
+            />
+            <AlignedAaRow
+              label="Motif"
+              guide={buildMotifGuide(
+                designedSplitContext.displayText,
+                designedSplitContext.boundaryIndexes,
+              )}
+              hideBoundaries
+            />
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
@@ -856,113 +1152,350 @@ function formatMotifSplit(motif: string) {
   return `${motif.slice(0, 2)}|${motif.slice(2)}`
 }
 
-function frameBoundaryLabel(position: number) {
-  const basesBeforeBoundary = Math.max(0, position - 1)
-  const frameOffset = basesBeforeBoundary % 3
-  if (frameOffset === 0) return 'Between codons'
-  return `After codon base ${frameOffset}`
-}
-
-function RewriteDiff({
-  beforeHexamer,
-  afterHexamer,
-  motifStart,
-  cutOffset,
-}: {
-  beforeHexamer: string
-  afterHexamer: string
-  motifStart: number
-  cutOffset: number
-}) {
-  return (
-    <div className="bg-background/80 space-y-1 rounded-md border p-2 font-mono text-[11px]">
-      <DiffRow label="Before" hexamer={beforeHexamer} />
-      <DiffRow
-        label="After"
-        hexamer={afterHexamer}
-        changedFrom={beforeHexamer}
-        motifStart={motifStart}
-        cutOffset={cutOffset}
-      />
-    </div>
-  )
-}
-
-function DiffRow({
-  label,
-  hexamer,
-  changedFrom,
-  motifStart,
-  cutOffset,
-}: {
-  label: string
-  hexamer: string
-  changedFrom?: string
-  motifStart?: number
-  cutOffset?: number
-}) {
-  return (
-    <div className="grid grid-cols-[48px_minmax(0,1fr)] items-center gap-2">
-      <span className="text-muted-foreground text-[10px] tracking-[0.08em] uppercase">
-        {label}
-      </span>
-      <div className="flex">
-        {[...hexamer].map((base, index) => {
-          const inMotif =
-            motifStart !== undefined &&
-            index >= motifStart &&
-            index < motifStart + 4
-          const isChanged = changedFrom ? changedFrom[index] !== base : false
-          const isCut = cutOffset !== undefined && index === cutOffset
-          return (
-            <span
-              key={index}
-              className={cn(
-                'px-[1px]',
-                index === 3 && 'ml-1',
-                inMotif && 'bg-marker/15 text-marker-soft',
-                isChanged && 'underline decoration-2 underline-offset-2',
-                isCut && 'border-primary border-r-2',
-              )}
-            >
-              {base}
-            </span>
-          )
-        })}
-      </div>
-    </div>
-  )
-}
-
-function StatChip({
-  label,
-  tone,
-}: {
-  label: string
-  tone: 'success' | 'warning' | 'neutral'
-}) {
-  return (
-    <span
-      className={cn(
-        'rounded-md border px-2 py-0.5 text-[11px] font-medium',
-        tone === 'success' &&
-          'border-success/30 bg-success/10 text-success-soft',
-        tone === 'warning' && 'border-marker/30 bg-marker/10 text-marker-soft',
-        tone === 'neutral' &&
-          'border-border bg-background/60 text-muted-foreground',
-      )}
-    >
-      {label}
-    </span>
-  )
-}
-
 function Kbd({ children }: { children: ReactNode }) {
   return (
     <kbd className="bg-background text-foreground inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded border px-1 font-mono text-[10px] font-semibold">
       {children}
     </kbd>
   )
+}
+
+function AlignedAaRow({
+  label,
+  guide,
+  hideBoundaries = false,
+}: {
+  label: string
+  guide: ReturnType<typeof buildAminoAcidGuide>
+  hideBoundaries?: boolean
+}) {
+  return (
+    <div className="grid grid-cols-[7.5rem_minmax(0,1fr)] items-start gap-3 font-mono text-[14px] leading-[1.2]">
+      <div className="text-muted-foreground pt-[1px] text-[10px] font-medium tracking-[0.08em] uppercase">
+        {label}
+      </div>
+      <SequenceGuideText
+        text={guide.text}
+        boundaryIndexes={guide.boundaryIndexes}
+        hideBoundaries={hideBoundaries}
+      />
+    </div>
+  )
+}
+
+function AlignedSequenceRow({
+  label,
+  context,
+}: {
+  label: string
+  context: ReturnType<typeof buildSplitContext>
+}) {
+  return (
+    <div className="grid grid-cols-[7.5rem_minmax(0,1fr)] items-start gap-3 font-mono text-[14px] leading-[1.2]">
+      <div className="text-muted-foreground pt-[1px] text-[10px] font-medium tracking-[0.08em] whitespace-nowrap uppercase">
+        {label}
+      </div>
+      <SequenceGuideText
+        text={context.displayText}
+        boundaryIndexes={context.boundaryIndexes}
+        editedIndexes={context.displayEditedIndexes}
+      />
+    </div>
+  )
+}
+
+function SequenceGuideText({
+  text,
+  boundaryIndexes,
+  editedIndexes = [],
+  hideBoundaries = false,
+}: {
+  text: string
+  boundaryIndexes: number[]
+  editedIndexes?: number[]
+  hideBoundaries?: boolean
+}) {
+  const editedSet = new Set(editedIndexes)
+  const boundarySet = new Set(boundaryIndexes)
+
+  return (
+    <div className="overflow-x-auto">
+      <div className="inline-flex items-stretch whitespace-pre">
+        {[...text].map((char, index) => (
+          <Fragment key={`${char}-${index}`}>
+            <span
+              className={cn(
+                'inline-flex min-w-[1ch] items-center justify-center',
+                char === '|' && 'text-primary font-bold',
+                editedSet.has(index) && 'font-semibold',
+              )}
+            >
+              {char}
+            </span>
+            {boundarySet.has(index) && (
+              <span
+                className="inline-flex w-[3px] items-center justify-center"
+                aria-hidden="true"
+              >
+                <span
+                  className={cn(
+                    'h-[1.05em] w-px',
+                    hideBoundaries ? 'bg-transparent' : 'bg-border/80',
+                  )}
+                />
+              </span>
+            )}
+          </Fragment>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function HighlightedSequence({
+  text,
+  highlightStart,
+  highlightEnd,
+  editedIndexes = [],
+  separatorIndexes = [],
+}: {
+  text: string
+  highlightStart: number
+  highlightEnd: number
+  editedIndexes?: number[]
+  separatorIndexes?: number[]
+}) {
+  let baseIndex = 0
+  const editedSet = new Set(editedIndexes)
+
+  return (
+    <>
+      {[...text].map((char, index) => {
+        if (
+          (separatorIndexes.includes(baseIndex) && char === ' ') ||
+          char === '|'
+        ) {
+          return <span key={`${char}-${index}`}>{char}</span>
+        }
+
+        const isHighlighted =
+          baseIndex >= highlightStart && baseIndex < highlightEnd
+        const isEdited = editedSet.has(baseIndex)
+        baseIndex++
+
+        return (
+          <span
+            key={`${char}-${index}`}
+            className={cn(
+              isHighlighted && 'bg-marker/15 font-semibold',
+              isEdited && 'text-primary',
+            )}
+          >
+            {char}
+          </span>
+        )
+      })}
+    </>
+  )
+}
+
+function applyRewriteToSequence(
+  sequence: string,
+  hexamerStart: number,
+  newHexamer: string,
+) {
+  const startIndex = hexamerStart - 1
+  return (
+    sequence.slice(0, startIndex) +
+    newHexamer +
+    sequence.slice(startIndex + newHexamer.length)
+  )
+}
+
+function buildSplitContext(
+  sequence: string,
+  position: number,
+  motifStart: number,
+  editedPositions: Set<number>,
+) {
+  const leftStart = Math.max(1, position - 15)
+  const rightEnd = Math.min(sequence.length, position + 14)
+  const left = sequence.slice(leftStart - 1, position - 1)
+  const right = sequence.slice(position - 1, rightEnd)
+  const text = `${left}|${right}`
+  const displayCoreText = text
+  const displayText = `...${displayCoreText}...`
+  const boundaryIndexes = getCodonBoundaryDisplayIndexes(
+    leftStart,
+    rightEnd,
+    position,
+    3,
+  )
+  const highlightStart = Math.max(0, motifStart - leftStart)
+  const highlightEnd = Math.min(text.length, highlightStart + 5)
+  const editedIndexes = [...editedPositions]
+    .filter((pos) => pos >= leftStart && pos <= rightEnd)
+    .map((pos) => pos - leftStart)
+  const displayEditedIndexes = editedIndexes.map((index) =>
+    index >= position - leftStart ? index + 4 : index + 3,
+  )
+
+  return {
+    text,
+    displayText,
+    boundaryIndexes,
+    highlightStart,
+    highlightEnd,
+    editedIndexes,
+    displayEditedIndexes,
+    windowStart: leftStart,
+    windowEnd: rightEnd,
+  }
+}
+
+function translatePair(codons: [string, string]) {
+  return codons.map((codon) => translateCodon(codon) ?? '?').join('')
+}
+
+function buildAminoAcidGuide(
+  sequence: string,
+  windowStart: number,
+  windowEnd: number,
+  splitPosition: number,
+) {
+  const upper = sequence.toUpperCase().replace(/U/g, 'T')
+  return {
+    ...formatAminoAcidGuideText(upper, windowStart, windowEnd, splitPosition),
+  }
+}
+
+function formatAminoAcidGuideText(
+  sequence: string,
+  windowStart: number,
+  windowEnd: number,
+  splitPosition: number,
+) {
+  const coreText = buildDisplayCoreText(windowStart, windowEnd, splitPosition)
+  const chars = [...`...${coreText}...`].map((char) =>
+    char === '|' ? '|' : ' ',
+  )
+  const boundaryIndexes = getCodonBoundaryDisplayIndexes(
+    windowStart,
+    windowEnd,
+    splitPosition,
+    3,
+  )
+
+  const firstCodonStart = Math.floor((windowStart - 1) / 3) * 3 + 1
+  for (
+    let codonStart = firstCodonStart;
+    codonStart <= windowEnd - 2;
+    codonStart += 3
+  ) {
+    const codonEnd = codonStart + 2
+    if (codonStart < windowStart || codonEnd > windowEnd) continue
+    const aa = translateCodon(sequence.slice(codonStart - 1, codonEnd)) ?? '.'
+    const midpoint = codonStart + 1
+    const displayIndex = getDisplayIndexForPosition(
+      midpoint,
+      windowStart,
+      splitPosition,
+    )
+    chars[displayIndex] = aa
+  }
+
+  return { text: chars.join(''), boundaryIndexes }
+}
+
+function buildMotifGuide(displayText: string, boundaryIndexes: number[]) {
+  const chars = [...displayText].map(() => ' ')
+  const splitIndex = displayText.indexOf('|')
+  if (splitIndex === -1) {
+    return { text: chars.join(''), boundaryIndexes }
+  }
+
+  chars[splitIndex - 2] = 'W'
+  chars[splitIndex - 1] = 'G'
+  chars[splitIndex] = '|'
+  chars[splitIndex + 1] = 'G'
+  chars[splitIndex + 2] = 'W'
+
+  return {
+    text: chars.join(''),
+    boundaryIndexes,
+  }
+}
+
+function getDisplayIndexForPosition(
+  position: number,
+  windowStart: number,
+  splitPosition: number,
+) {
+  let index = 3
+  for (let pos = windowStart; pos < position; pos++) {
+    if (pos === splitPosition) index++
+    index++
+  }
+  if (position === splitPosition) index++
+  return index
+}
+
+function buildDisplayCoreText(
+  windowStart: number,
+  windowEnd: number,
+  splitPosition: number,
+) {
+  const chars: string[] = []
+  for (let pos = windowStart; pos <= windowEnd; pos++) {
+    if (pos === splitPosition) chars.push('|')
+    chars.push(' ')
+  }
+  return chars.join('')
+}
+
+function getCodonBoundaryDisplayIndexes(
+  windowStart: number,
+  windowEnd: number,
+  splitPosition: number,
+  prefixLength: number,
+) {
+  const indexes: number[] = []
+  for (let pos = windowStart; pos < windowEnd; pos++) {
+    if (pos === splitPosition - 1) continue
+    if (pos % 3 !== 0) continue
+    let index = prefixLength
+    for (let cursor = windowStart; cursor <= pos; cursor++) {
+      if (cursor === splitPosition) index++
+      index++
+    }
+    indexes.push(index - 1)
+  }
+  return indexes
+}
+
+function getEditedIndexesForHexamer(
+  originalHexamer: string,
+  nextHexamer: string,
+) {
+  const editedIndexes: number[] = []
+  for (let i = 0; i < originalHexamer.length; i++) {
+    if (originalHexamer[i] !== nextHexamer[i]) editedIndexes.push(i)
+  }
+  return editedIndexes
+}
+
+function getEditedPositions(
+  selectedSite: WggwSiteCandidate,
+  currentRewrite: WggwRecodingOption,
+) {
+  const positions = new Set<number>()
+  for (const index of getEditedIndexesForHexamer(
+    selectedSite.originalHexamer,
+    currentRewrite.newHexamer,
+  )) {
+    positions.add(selectedSite.hexamerStart + index)
+  }
+  return positions
 }
 
 function dedupeRewriteOptions(options: WggwRecodingOption[]) {
@@ -1031,6 +1564,19 @@ function nearestSiteIndex(
     }
   }
   return bestIdx
+}
+
+function findSequenceMatches(sequence: string, query: string) {
+  if (!query) return []
+  const matches: Array<{ start: number; length: number }> = []
+  let startIndex = 0
+  while (startIndex < sequence.length) {
+    const foundIndex = sequence.indexOf(query, startIndex)
+    if (foundIndex === -1) break
+    matches.push({ start: foundIndex + 1, length: query.length })
+    startIndex = foundIndex + 1
+  }
+  return matches
 }
 
 function roleStylesFor(role: CodonRole): {
@@ -1109,8 +1655,11 @@ function buildSequenceContext(
   const upper = sequence.toUpperCase().replace(/U/g, 'T')
   const seqLen = upper.length
   const clampedPosition = Math.max(1, Math.min(seqLen, position))
-  const start = Math.max(1, clampedPosition - contextWindow)
-  const end = Math.min(seqLen, clampedPosition + contextWindow - 1)
+  const desiredWindowSize = Math.max(1, contextWindow * 2)
+  const centeredStart = Math.max(1, clampedPosition - contextWindow)
+  const maxStart = Math.max(1, seqLen - desiredWindowSize + 1)
+  const start = Math.min(centeredStart, maxStart)
+  const end = Math.min(seqLen, start + desiredWindowSize - 1)
   const bases: SequenceContext['bases'] = []
 
   for (let pos = start; pos <= end; pos++) {
@@ -1205,8 +1754,4 @@ function buildFrameContext(
   }
 
   return { splitCodon, frameOffset, codons }
-}
-
-function translatePair(codons: [string, string]) {
-  return codons.map((codon) => translateCodon(codon) ?? '?').join('')
 }
