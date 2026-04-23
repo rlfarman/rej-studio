@@ -1,6 +1,6 @@
 'use client'
 
-import { memo, useMemo } from 'react'
+import { memo, useMemo, useState } from 'react'
 import { m } from 'motion/react'
 import {
   Download,
@@ -37,6 +37,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { fadeUp } from '@/lib/motion'
+import { cn } from '@/lib/utils'
 import { MetricCell } from '@/components/metric-cell'
 import {
   DropdownMenu,
@@ -366,21 +367,34 @@ function ExpandableRow({
   children: React.ReactNode
   defaultOpen?: boolean
 }) {
+  const [open, setOpen] = useState(defaultOpen)
+
   return (
-    <details
-      className="group border-t py-2 first:border-t-0"
-      open={defaultOpen}
-    >
-      <summary className="flex cursor-pointer list-none items-center gap-2 py-1 text-sm select-none [&::-webkit-details-marker]:hidden">
-        <ChevronRight className="text-muted-foreground size-4 shrink-0 transition-transform duration-200 group-open:rotate-90" />
+    <div className="border-t py-2 first:border-t-0">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full cursor-pointer items-center gap-2 py-1 text-sm select-none"
+        aria-expanded={open}
+      >
+        <ChevronRight
+          className={cn(
+            'text-muted-foreground size-4 shrink-0 transition-transform duration-200',
+            open && 'rotate-90',
+          )}
+        />
         <Icon className="text-muted-foreground size-4 shrink-0" />
         <span className="font-medium">{title}</span>
         {summary && (
           <span className="text-muted-foreground text-xs">— {summary}</span>
         )}
-      </summary>
-      <div className="pt-3 pb-2 pl-6">{children}</div>
-    </details>
+      </button>
+      {open && (
+        <div className="motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-top-1 pt-3 pb-2 pl-6 motion-safe:duration-150">
+          {children}
+        </div>
+      )}
+    </div>
   )
 }
 

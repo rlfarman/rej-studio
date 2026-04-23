@@ -9,7 +9,7 @@ import Link from 'next/link'
 import { geneHref } from '@/lib/bio/species'
 import { ExpandableSidebarList } from '@/components/expandable-sidebar-list'
 import { SpeciesIcon } from '@/components/bio/species-icon'
-import { X } from 'lucide-react'
+import { X, Clock } from 'lucide-react'
 import { geneSearchCopy } from '../copy'
 
 const copy = geneSearchCopy.recentGenesPanel
@@ -25,6 +25,7 @@ export function RecentGenes() {
       getItemKey={(gene) => gene.id}
       onClear={clearRecentGenes}
       emptyMessage={copy.empty}
+      emptyIcon={Clock}
       renderItem={(gene) => (
         <SidebarMenuItem>
           <SidebarMenuButton

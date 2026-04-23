@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { ExternalLink } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   Tooltip,
   TooltipContent,
@@ -117,8 +118,30 @@ export async function GeneSearchResults({
 
 export function GeneSearchResultsLoading() {
   return (
-    <p className="text-muted-foreground px-2 py-4 text-sm" aria-live="polite">
-      Loading…
-    </p>
+    <div className="flex flex-col gap-2" aria-busy="true" aria-live="polite">
+      <div className="px-1">
+        <Skeleton className="h-3 w-14" />
+      </div>
+      <div className="divide-border divide-y">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div key={i} className="flex items-center gap-4 px-2 py-2.5">
+            <Skeleton
+              className="h-5 w-24 rounded-full"
+              style={{ animationDelay: `${i * 40}ms` }}
+            />
+            <div className="flex flex-1 flex-col gap-1.5">
+              <Skeleton
+                className="h-3.5 w-3/4"
+                style={{ animationDelay: `${i * 40 + 20}ms` }}
+              />
+              <Skeleton
+                className="h-3 w-1/2"
+                style={{ animationDelay: `${i * 40 + 40}ms` }}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   )
 }

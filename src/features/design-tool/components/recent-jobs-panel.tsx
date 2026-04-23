@@ -10,7 +10,7 @@ import {
 } from '@/features/design-tool/hooks/use-job-history'
 import { cancelJob as cancelJobAction } from '@/features/design-tool/api/jobs'
 import { ExpandableSidebarList } from '@/components/expandable-sidebar-list'
-import { Loader2, CircleAlert, X } from 'lucide-react'
+import { Loader2, CircleAlert, X, FlaskConical } from 'lucide-react'
 import { designToolCopy } from '../copy'
 
 const copy = designToolCopy.recentJobs
@@ -68,6 +68,7 @@ export function RecentJobs({ onSelectJob }: RecentJobsProps) {
       getItemKey={(entry) => entry.id}
       onClear={clearHistory}
       emptyMessage={copy.empty}
+      emptyIcon={FlaskConical}
       menuAriaLabel={copy.menuAria}
       renderItem={(entry) => {
         const isError =

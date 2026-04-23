@@ -1,6 +1,8 @@
+'use client'
+
 import { ArrowRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import type { ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 
 type MetricCellCommonProps = {
   label: string
@@ -25,6 +27,37 @@ type MetricCellComparativeProps = MetricCellCommonProps & {
 }
 
 type MetricCellProps = MetricCellSimpleProps | MetricCellComparativeProps
+
+function useCountUp(to: number | null, from: number | null): number | null {
+  const [display, setDisplay] = useState<number | null>(from ?? to)
+  const rafRef = useRef<number>(0)
+
+  useEffect(() => {
+    if (to === null) return
+    const target = to
+    const start = from ?? target
+    if (start === target) {
+      setDisplay(target)
+      return
+    }
+
+    const duration = 1000
+    const startTime = performance.now()
+
+    function tick(now: number) {
+      const t = Math.min((now - startTime) / duration, 1)
+      // ease-out-expo
+      const eased = t === 1 ? 1 : 1 - Math.pow(2, -10 * t)
+      setDisplay(start + (target - start) * eased)
+      if (t < 1) rafRef.current = requestAnimationFrame(tick)
+    }
+
+    rafRef.current = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(rafRef.current)
+  }, [to, from])
+
+  return display
+}
 
 function Label({ children }: { children: ReactNode }) {
   return <div className="type-overline truncate">{children}</div>
@@ -62,6 +95,7 @@ function ComparativeCell({
   const delta = hasBoth ? after - before : 0
   const improved = lowerIsBetter ? delta < 0 : delta > 0
   const worsened = lowerIsBetter ? delta > 0 : delta < 0
+  const animated = useCountUp(after, hasBoth ? before : null)
 
   return (
     <div className={cn('bg-muted/30 min-w-0 px-3 py-2', className)}>
@@ -81,7 +115,7 @@ function ComparativeCell({
                 worsened && 'text-danger-soft',
               )}
             >
-              {fmt(after)}
+              {animated !== null ? fmt(animated) : fmt(after)}
               {unit}
             </span>
           </>

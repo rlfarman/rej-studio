@@ -1,5 +1,11 @@
 'use client'
-import { Fragment, useEffect, useState, type ReactNode } from 'react'
+import {
+  Fragment,
+  useEffect,
+  useState,
+  type ComponentType,
+  type ReactNode,
+} from 'react'
 import { ChevronRight } from 'lucide-react'
 import {
   SidebarGroup,
@@ -19,6 +25,7 @@ interface ExpandableSidebarListProps<T> {
   getItemKey: (item: T) => string
   renderItem: (item: T) => ReactNode
   emptyMessage: string
+  emptyIcon?: ComponentType<{ className?: string }>
   onClear?: () => void
   collapsedCount?: number
   expandedMax?: number
@@ -35,6 +42,7 @@ export function ExpandableSidebarList<T>({
   getItemKey,
   renderItem,
   emptyMessage,
+  emptyIcon: EmptyIcon,
   onClear,
   collapsedCount = DEFAULT_COLLAPSED_COUNT,
   expandedMax = DEFAULT_EXPANDED_MAX,
@@ -135,8 +143,11 @@ export function ExpandableSidebarList<T>({
               )}
             </>
           ) : (
-            <div className="text-muted-foreground p-4 text-xs">
-              {emptyMessage}
+            <div className="flex flex-col items-center gap-1.5 px-4 py-5 text-center">
+              {EmptyIcon && (
+                <EmptyIcon className="text-muted-foreground/40 mb-0.5 size-5 [animation:gentle-breath_3s_ease-in-out_infinite]" />
+              )}
+              <p className="text-muted-foreground text-xs">{emptyMessage}</p>
             </div>
           )}
         </SidebarGroupContent>
