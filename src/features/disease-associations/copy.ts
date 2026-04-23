@@ -20,10 +20,10 @@ export const diseaseAssociationsCopy = {
       name: 'Name',
       phenotype: 'Association',
       inheritance: 'Inheritance',
-      phenotypes: 'Phenotypes',
     },
     largestCdsUnit: 'bp',
     largestCdsUnknown: '—',
+    phenotypeUnknown: '—',
     empty: 'No genes match the current filters.',
     resultsSummary: (shown: number, total: number) =>
       shown === total ? `${total} genes` : `${shown} of ${total} genes`,

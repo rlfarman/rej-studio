@@ -10,7 +10,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { cn } from '@/lib/utils'
-import type { AssociationRow } from '../types'
+import { formatInheritanceLabel, type AssociationRow } from '../types'
 import { diseaseAssociationsCopy } from '../copy'
 import { rowBuckets, type SortDir, type SortKey } from '../api/associations'
 
@@ -26,7 +26,9 @@ type Props = {
 }
 
 const cdsFormatter = new Intl.NumberFormat('en-US')
-const { largestCdsUnit, largestCdsUnknown } = diseaseAssociationsCopy.table
+const { largestCdsUnit, largestCdsUnknown, phenotypeUnknown } =
+  diseaseAssociationsCopy.table
+const PHENOTYPE_MAX_LENGTH = 44
 
 export function AssociationsTable({
   rows,
@@ -135,15 +137,10 @@ export function AssociationsTable({
 }
 
 function firstPhenotypeLabel(row: AssociationRow): string {
-  const name = row.phenotypes[0]?.name?.trim()
-  if (!name) return largestCdsUnknown
-  return name.split(',', 1)[0]?.trim() || largestCdsUnknown
-}
-
-function formatInheritanceLabel(bucket: string): string {
-  if (bucket === 'Autosomal dominant') return 'Dominant'
-  if (bucket === 'Autosomal recessive') return 'Recessive'
-  return bucket
+  const name = row.phenotypes[0]?.name.trim()
+  if (!name) return phenotypeUnknown
+  if (name.length <= PHENOTYPE_MAX_LENGTH) return name
+  return `${name.slice(0, PHENOTYPE_MAX_LENGTH - 1).trimEnd()}…`
 }
 
 type SortHeaderProps = {
