@@ -71,7 +71,7 @@ export function RunningPlaceholder({
             />
           </div>
           {displayedPct !== null && (
-            <p className="text-muted-foreground mt-1.5 text-center text-[10px] tabular-nums">
+            <p className="text-muted-foreground type-micro mt-1.5 text-center tabular-nums">
               {displayedPct}%
             </p>
           )}

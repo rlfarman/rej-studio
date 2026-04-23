@@ -69,7 +69,7 @@ export function ToggleCard({
                       {label}
                     </span>
                     {badge ? (
-                      <Badge variant="outline" className="text-[10px]">
+                      <Badge variant="outline" className="type-micro">
                         {badge}
                       </Badge>
                     ) : null}

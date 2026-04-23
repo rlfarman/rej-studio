@@ -471,7 +471,7 @@ function CodonStrip({
       ref={stripRef}
       role="group"
       aria-label="Codon context around splice junction"
-      className="bg-muted/40 rounded-lg border p-2 font-mono text-[11px] leading-none shadow-sm"
+      className="bg-muted/40 type-nano rounded-lg border p-2 font-mono leading-none shadow-sm"
     >
       <div className="mb-1 flex w-full items-end gap-[1px]">
         {ctx.codons.map((c) => {
@@ -596,7 +596,7 @@ function Inspector({
         <span className="text-muted-foreground font-mono text-xs tabular-nums">
           bp {selectedSite.position.toLocaleString()}
         </span>
-        <span className="text-muted-foreground ml-auto font-mono text-[11px] tabular-nums">
+        <span className="text-muted-foreground type-nano ml-auto font-mono tabular-nums">
           {selectedSite.fivePrimeLength.toLocaleString()} /{' '}
           {selectedSite.threePrimeLength.toLocaleString()}
         </span>
@@ -609,7 +609,7 @@ function Inspector({
 
       {selectedSite.rewriteOptions.length > 1 && (
         <div className="space-y-1.5">
-          <div className="text-muted-foreground text-[10px] font-medium tracking-[0.08em] uppercase">
+          <div className="text-muted-foreground type-micro font-medium tracking-[0.08em] uppercase">
             Synonymous rewrites
           </div>
           <div className="flex flex-wrap gap-1.5">
@@ -621,7 +621,7 @@ function Inspector({
                   key={`${option.newHexamer}-${index}`}
                   onClick={() => onSelectRewrite(index)}
                   className={cn(
-                    'inline-flex items-center gap-1.5 rounded-md border px-2 py-1 font-mono text-[11px] transition-colors',
+                    'type-nano inline-flex items-center gap-1.5 rounded-md border px-2 py-1 font-mono transition-colors',
                     active
                       ? 'border-primary bg-primary/10 text-primary'
                       : 'text-muted-foreground hover:border-primary/30 hover:bg-background/60',
@@ -630,7 +630,7 @@ function Inspector({
                   <span className="font-semibold">
                     {option.newHexamer.slice(0, 3)} {option.newHexamer.slice(3)}
                   </span>
-                  <span className="bg-muted text-muted-foreground rounded px-1 text-[10px] font-medium">
+                  <span className="bg-muted text-muted-foreground type-micro rounded px-1 font-medium">
                     {option.baseChanges}Δ
                   </span>
                 </button>
@@ -662,7 +662,7 @@ function RewriteDiff({
   cutOffset: number
 }) {
   return (
-    <div className="bg-background/80 space-y-1 rounded-md border p-2 font-mono text-[11px]">
+    <div className="bg-background/80 type-nano space-y-1 rounded-md border p-2 font-mono">
       <DiffRow label="Before" hexamer={beforeHexamer} />
       <DiffRow
         label="After"
@@ -690,7 +690,7 @@ function DiffRow({
 }) {
   return (
     <div className="grid grid-cols-[48px_minmax(0,1fr)] items-center gap-2">
-      <span className="text-muted-foreground text-[10px] tracking-[0.08em] uppercase">
+      <span className="text-muted-foreground type-micro tracking-[0.08em] uppercase">
         {label}
       </span>
       <div className="flex">
@@ -731,7 +731,7 @@ function StatChip({
   return (
     <span
       className={cn(
-        'rounded-md border px-2 py-0.5 text-[11px] font-medium',
+        'type-nano rounded-md border px-2 py-0.5 font-medium',
         tone === 'success' &&
           'border-success/30 bg-success/10 text-success-soft',
         tone === 'warning' && 'border-marker/30 bg-marker/10 text-marker-soft',
@@ -746,7 +746,7 @@ function StatChip({
 
 function Kbd({ children }: { children: ReactNode }) {
   return (
-    <kbd className="bg-background text-foreground inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded border px-1 font-mono text-[10px] font-semibold">
+    <kbd className="bg-background text-foreground type-micro inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded border px-1 font-mono font-semibold">
       {children}
     </kbd>
   )

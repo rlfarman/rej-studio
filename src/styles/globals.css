@@ -135,6 +135,14 @@ body {
   --aav-dual-soft: oklch(0.5 0.11 195);
   --aav-triple: oklch(0.62 0.15 155); /* green — the app's target case */
   --aav-triple-soft: oklch(0.48 0.12 150);
+
+  /* Codon preference heatmap — perceptual ramp from rare (warm) to
+     preferred (cool-green). Kept separate from chart-* so tuning the
+     heatmap doesn't drag the rest of the palette with it. */
+  --codon-rare: oklch(0.637 0.237 25);
+  --codon-mid: oklch(0.78 0.158 75);
+  --codon-preferred: oklch(0.696 0.17 155);
+  --codon-null: oklch(0.88 0.01 265);
 }
 
 /*
@@ -196,6 +204,11 @@ body {
   --aav-dual-soft: oklch(0.82 0.11 195);
   --aav-triple: oklch(0.78 0.16 150);
   --aav-triple-soft: oklch(0.84 0.13 150);
+
+  --codon-rare: oklch(0.704 0.191 22);
+  --codon-mid: oklch(0.83 0.16 72);
+  --codon-preferred: oklch(0.78 0.16 150);
+  --codon-null: oklch(0.36 0.015 265);
 }
 
 /*
@@ -261,6 +274,10 @@ body {
   --color-aav-dual-soft: var(--aav-dual-soft);
   --color-aav-triple: var(--aav-triple);
   --color-aav-triple-soft: var(--aav-triple-soft);
+  --color-codon-rare: var(--codon-rare);
+  --color-codon-mid: var(--codon-mid);
+  --color-codon-preferred: var(--codon-preferred);
+  --color-codon-null: var(--codon-null);
 }
 
 /*
@@ -284,6 +301,21 @@ body {
    Use these instead of ad-hoc text-[10px] / text-xs / font-semibold combos.
    The `type-*` prefix keeps them outside Tailwind's `text-*` group so
    tailwind-merge doesn't drop them as conflicts with text-color utilities. */
+
+/* 10px — smallest legible size. Use for overline labels, dense chart
+   annotations, legend text. Tighter line-height than Tailwind's text-xs. */
+@utility type-micro {
+  font-size: 0.625rem; /* 10px */
+  line-height: 0.875rem;
+}
+
+/* 11px — between Tailwind's text-[10px] and text-xs (12px). Use for
+   sidebar metadata, inline badges, and secondary labels where text-xs
+   feels too heavy. */
+@utility type-nano {
+  font-size: 0.6875rem; /* 11px */
+  line-height: 1rem;
+}
 
 /* Uppercase micro-label for table/metric columns and section eyebrows. */
 @utility type-overline {
@@ -590,5 +622,20 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .login-btn-scan::after {
     animation: none;
+  }
+}
+
+/* Honor reduced-motion globally for idle/infinite decorative animations.
+   Keep functional motion (view-transitions, fade-up) enabled — it's brief
+   and conveys state change. This blanket rule kills scanning/breathing
+   effects that would otherwise run forever. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

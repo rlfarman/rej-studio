@@ -106,7 +106,7 @@ export function IsoformSplitPreview({
         threePrimeLength={best.threePrimeLength}
       />
 
-      <div className="text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[10px] tabular-nums">
+      <div className="text-muted-foreground type-micro flex flex-wrap items-center gap-x-3 gap-y-0.5 tabular-nums">
         <span>
           5′ AAV: {fiveAavTotal.toLocaleString()} bp{' '}
           <span className={fiveFits ? 'text-success-soft' : 'text-danger-soft'}>
@@ -129,7 +129,7 @@ export function IsoformSplitPreview({
 
       {alternatives.length > 0 && (
         <div
-          className="text-muted-foreground flex flex-wrap items-center gap-1.5 text-[10px]"
+          className="text-muted-foreground type-micro flex flex-wrap items-center gap-1.5"
           title="Next balanced WGGW-capable candidates — adjust to these in the design tool if the best one doesn't fit AAV."
         >
           <span>Alternatives:</span>

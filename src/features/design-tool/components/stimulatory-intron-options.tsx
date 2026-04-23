@@ -29,26 +29,26 @@ export function StimulatoryIntronOptions() {
 function SpliceJunctionDiagram() {
   return (
     <div
-      className="bg-muted/40 text-muted-foreground rounded-md border px-3 py-2.5 text-[11px]"
+      className="bg-muted/40 text-muted-foreground type-nano rounded-md border px-3 py-2.5"
       aria-hidden="true"
     >
       <div className="flex items-center gap-2">
-        <span className="font-mono text-[10px] tracking-wider uppercase">
+        <span className="type-micro font-mono tracking-wider uppercase">
           5′
         </span>
-        <div className="bg-primary/15 border-primary/30 flex h-6 flex-1 items-center justify-center rounded-l-sm border-y border-l text-[10px]">
+        <div className="bg-primary/15 border-primary/30 type-micro flex h-6 flex-1 items-center justify-center rounded-l-sm border-y border-l">
           {copy.diagramFragment}
         </div>
         <div className="bg-primary/40 h-6 w-px" />
-        <div className="bg-primary/15 border-primary/30 flex h-6 flex-1 items-center justify-center rounded-r-sm border-y border-r text-[10px]">
+        <div className="bg-primary/15 border-primary/30 type-micro flex h-6 flex-1 items-center justify-center rounded-r-sm border-y border-r">
           {copy.diagramFragment}
         </div>
-        <span className="font-mono text-[10px] tracking-wider uppercase">
+        <span className="type-micro font-mono tracking-wider uppercase">
           3′
         </span>
       </div>
       <div className="mt-1 flex items-center justify-center gap-1.5 text-center">
-        <span className="text-muted-foreground/80 text-[10px]">
+        <span className="text-muted-foreground/80 type-micro">
           {copy.diagramSpliceJunction}
         </span>
       </div>

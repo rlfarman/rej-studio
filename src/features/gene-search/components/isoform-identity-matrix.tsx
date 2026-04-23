@@ -91,7 +91,7 @@ export function IsoformIdentityMatrix({ isoforms }: Props) {
           <Grid3x3 className="text-muted-foreground size-4" />
           Pairwise identity
         </div>
-        <div className="text-muted-foreground flex items-center gap-2 text-[10px]">
+        <div className="text-muted-foreground type-micro flex items-center gap-2">
           <span>0%</span>
           <span className="h-2 w-20 rounded-sm bg-gradient-to-r from-slate-200 via-amber-400 to-emerald-600 dark:from-slate-800" />
           <span>100%</span>
@@ -131,7 +131,7 @@ export function IsoformIdentityMatrix({ isoforms }: Props) {
         </div>
       </div>
 
-      <p className="text-muted-foreground text-[10px] leading-relaxed">
+      <p className="text-muted-foreground type-micro leading-relaxed">
         Identity estimated from shared prefix + suffix of protein sequences.
         Pairs ≥95% share most coding content — consider optimizing one per
         cluster.

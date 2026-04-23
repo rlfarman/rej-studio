@@ -70,7 +70,7 @@ export function IsoformLengthChart({ isoforms }: Props) {
           <BarChart3 className="text-muted-foreground size-4" />
           CDS length by isoform
         </div>
-        <div className="flex items-center gap-3 text-[10px]">
+        <div className="type-micro flex items-center gap-3">
           {(['single-aav', 'dual-aav', 'triple-aav'] as const).map((s) => {
             const cfg = getSuitabilityConfig(s)
             return (
@@ -95,7 +95,7 @@ export function IsoformLengthChart({ isoforms }: Props) {
               key={row.id}
               href={buildHref(row.id)}
               scroll={false}
-              className="group hover:bg-muted/40 focus-visible:ring-ring -mx-1 flex items-center gap-2 rounded-sm px-1 py-0.5 text-[10px] transition-colors focus-visible:ring-2 focus-visible:outline-none"
+              className="group hover:bg-muted/40 focus-visible:ring-ring type-micro -mx-1 flex items-center gap-2 rounded-sm px-1 py-0.5 transition-colors focus-visible:ring-2 focus-visible:outline-none"
               title={`${row.id} · ${row.length.toLocaleString()} bp · ${cfg.label}`}
               aria-label={`${row.id}, ${row.length.toLocaleString()} base pairs, ${cfg.label}`}
             >
@@ -135,7 +135,7 @@ export function IsoformLengthChart({ isoforms }: Props) {
         })}
       </div>
 
-      <div className="text-muted-foreground flex items-center gap-2 text-[10px] tabular-nums">
+      <div className="text-muted-foreground type-micro flex items-center gap-2 tabular-nums">
         <span className="w-28 shrink-0" />
         <div className="relative h-3 flex-1">
           <span className="absolute left-0">0</span>

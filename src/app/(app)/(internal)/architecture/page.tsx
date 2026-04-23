@@ -22,7 +22,7 @@ function Arrow({
     return (
       <div className="flex flex-col items-center justify-center gap-0.5 px-2">
         {label && (
-          <span className="text-muted-foreground text-[10px] whitespace-nowrap">
+          <span className="text-muted-foreground type-micro whitespace-nowrap">
             {label}
           </span>
         )}
@@ -34,7 +34,7 @@ function Arrow({
     return (
       <div className="flex flex-col items-center justify-center gap-0.5 px-2">
         {label && (
-          <span className="text-muted-foreground text-[10px] whitespace-nowrap">
+          <span className="text-muted-foreground type-micro whitespace-nowrap">
             {label}
           </span>
         )}
@@ -46,7 +46,7 @@ function Arrow({
     return (
       <div className="flex flex-col items-center justify-center gap-0.5 px-2">
         {label && (
-          <span className="text-muted-foreground text-[10px] whitespace-nowrap">
+          <span className="text-muted-foreground type-micro whitespace-nowrap">
             {label}
           </span>
         )}
@@ -57,7 +57,7 @@ function Arrow({
   return (
     <div className="flex flex-col items-center gap-0.5 py-1">
       {label && (
-        <span className="text-muted-foreground text-[10px] whitespace-nowrap">
+        <span className="text-muted-foreground type-micro whitespace-nowrap">
           {label}
         </span>
       )}
@@ -87,9 +87,9 @@ function ServiceBox({
   return (
     <div className={`rounded-lg p-3 ${bg}`}>
       <div className="mb-0.5 text-sm font-semibold">{name}</div>
-      <div className="text-muted-foreground font-mono text-[11px]">{tech}</div>
+      <div className="text-muted-foreground type-nano font-mono">{tech}</div>
       {details && (
-        <div className="text-muted-foreground mt-1.5 space-y-0.5 text-[10px]">
+        <div className="text-muted-foreground type-micro mt-1.5 space-y-0.5">
           {details.map((d) => (
             <div key={d}>• {d}</div>
           ))}
@@ -147,17 +147,17 @@ export default function ArchitecturePage() {
               ]}
             />
           </div>
-          <div className="text-muted-foreground mt-3 flex flex-wrap gap-2 text-[10px]">
-            <Badge variant="secondary" className="text-[10px]">
+          <div className="text-muted-foreground type-micro mt-3 flex flex-wrap gap-2">
+            <Badge variant="secondary" className="type-micro">
               Source Sans/Serif/Mono
             </Badge>
-            <Badge variant="secondary" className="text-[10px]">
+            <Badge variant="secondary" className="type-micro">
               Tailwind v4
             </Badge>
-            <Badge variant="secondary" className="text-[10px]">
+            <Badge variant="secondary" className="type-micro">
               Web Vitals → GTM
             </Badge>
-            <Badge variant="secondary" className="text-[10px]">
+            <Badge variant="secondary" className="type-micro">
               Sentry (client)
             </Badge>
           </div>
@@ -340,13 +340,13 @@ export default function ArchitecturePage() {
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-sm">
-                <Badge className="bg-chart-2/10 text-chart-2 border-chart-2/20 border font-mono text-[10px]">
+                <Badge className="bg-chart-2/10 text-chart-2 border-chart-2/20 type-micro border font-mono">
                   DB
                 </Badge>
                 Neon (Postgres)
               </CardTitle>
             </CardHeader>
-            <CardContent className="text-[11px]">
+            <CardContent className="type-nano">
               <div className="space-y-1">
                 <div className="text-muted-foreground font-mono">
                   Drizzle ORM
@@ -376,13 +376,13 @@ export default function ArchitecturePage() {
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-sm">
-                <Badge className="bg-chart-4/10 text-chart-4 border-chart-4/20 border font-mono text-[10px]">
+                <Badge className="bg-chart-4/10 text-chart-4 border-chart-4/20 type-micro border font-mono">
                   Cache
                 </Badge>
                 Upstash Redis
               </CardTitle>
             </CardHeader>
-            <CardContent className="text-[11px]">
+            <CardContent className="type-nano">
               <div className="space-y-1">
                 <div className="text-muted-foreground font-mono">
                   Free tier (10k req/day)
@@ -417,13 +417,13 @@ export default function ArchitecturePage() {
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-sm">
-                <Badge className="bg-chart-1/10 text-chart-1 border-chart-1/20 border font-mono text-[10px]">
+                <Badge className="bg-chart-1/10 text-chart-1 border-chart-1/20 type-micro border font-mono">
                   Compute
                 </Badge>
                 Modal
               </CardTitle>
             </CardHeader>
-            <CardContent className="text-[11px]">
+            <CardContent className="type-nano">
               <div className="space-y-1">
                 <div className="text-muted-foreground font-mono">
                   FastAPI + DNAChisel
@@ -467,7 +467,7 @@ export default function ArchitecturePage() {
             {/* Vercel path */}
             <div className="space-y-2">
               <div className="text-sm font-semibold">Vercel (default)</div>
-              <div className="bg-muted/50 space-y-1 rounded-lg p-3 text-[11px]">
+              <div className="bg-muted/50 type-nano space-y-1 rounded-lg p-3">
                 <div className="flex items-center gap-2">
                   <Badge variant="secondary" className="text-[9px]">
                     Edge
@@ -494,7 +494,7 @@ export default function ArchitecturePage() {
               <div className="text-sm font-semibold">
                 Cloudflare Workers (alt)
               </div>
-              <div className="bg-muted/50 space-y-1 rounded-lg p-3 text-[11px]">
+              <div className="bg-muted/50 type-nano space-y-1 rounded-lg p-3">
                 <div className="flex items-center gap-2">
                   <Badge variant="secondary" className="text-[9px]">
                     Worker
@@ -522,19 +522,19 @@ export default function ArchitecturePage() {
           <div>
             <div className="type-overline mb-2">Observability Stack</div>
             <div className="flex flex-wrap gap-2">
-              <Badge className="bg-chart-5/10 text-chart-5 border-chart-5/20 border text-[10px]">
+              <Badge className="bg-chart-5/10 text-chart-5 border-chart-5/20 type-micro border">
                 Sentry — errors
               </Badge>
-              <Badge className="bg-chart-2/10 text-chart-2 border-chart-2/20 border text-[10px]">
+              <Badge className="bg-chart-2/10 text-chart-2 border-chart-2/20 type-micro border">
                 OpenTelemetry — traces
               </Badge>
-              <Badge className="bg-chart-3/10 text-chart-3 border-chart-3/20 border text-[10px]">
+              <Badge className="bg-chart-3/10 text-chart-3 border-chart-3/20 type-micro border">
                 GTM + GA4 — analytics
               </Badge>
-              <Badge className="bg-chart-4/10 text-chart-4 border-chart-4/20 border text-[10px]">
+              <Badge className="bg-chart-4/10 text-chart-4 border-chart-4/20 type-micro border">
                 Structured logs — stdout
               </Badge>
-              <Badge className="bg-chart-1/10 text-chart-1 border-chart-1/20 border text-[10px]">
+              <Badge className="bg-chart-1/10 text-chart-1 border-chart-1/20 type-micro border">
                 CSP reports — /api/csp-report
               </Badge>
             </div>
@@ -547,7 +547,7 @@ export default function ArchitecturePage() {
         <CardHeader className="pb-3">
           <CardTitle className="text-base">Data Flow</CardTitle>
         </CardHeader>
-        <CardContent className="text-[11px]">
+        <CardContent className="type-nano">
           <div className="grid grid-cols-2 gap-x-8 gap-y-2">
             <div>
               <div className="mb-1 font-semibold">Gene Search</div>

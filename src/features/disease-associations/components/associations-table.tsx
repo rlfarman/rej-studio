@@ -106,7 +106,7 @@ export function AssociationsTable({
                       <Badge
                         key={b}
                         variant="secondary"
-                        className="text-[10px] font-normal"
+                        className="type-micro font-normal"
                       >
                         {b}
                       </Badge>
