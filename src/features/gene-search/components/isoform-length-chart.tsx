@@ -4,6 +4,7 @@ import { useMemo } from 'react'
 import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { BarChart3 } from 'lucide-react'
+import { m } from 'motion/react'
 import { cn } from '@/lib/utils'
 import {
   assessDesignSuitability,
@@ -87,7 +88,7 @@ export function IsoformLengthChart({ isoforms }: Props) {
       </div>
 
       <div className="space-y-1">
-        {rows.map((row) => {
+        {rows.map((row, i) => {
           const pct = (row.length / scaleMax) * 100
           const cfg = getSuitabilityConfig(row.suitability)
           return (
@@ -103,12 +104,19 @@ export function IsoformLengthChart({ isoforms }: Props) {
                 {row.id}
               </span>
               <div className="bg-muted/30 relative h-3 flex-1 overflow-hidden rounded-sm">
-                <div
+                <m.div
                   className={cn(
-                    'h-full transition-opacity group-hover:opacity-100',
+                    'h-full origin-left transition-opacity group-hover:opacity-100',
                     cfg.fillClass,
                   )}
                   style={{ width: `${pct}%` }}
+                  initial={{ scaleX: 0, opacity: 0.6 }}
+                  animate={{ scaleX: 1, opacity: 1 }}
+                  transition={{
+                    duration: 0.6,
+                    delay: Math.min(i * 0.04, 0.4),
+                    ease: [0.16, 1, 0.3, 1],
+                  }}
                 />
                 <div
                   className="bg-border/80 pointer-events-none absolute inset-y-0 w-px"
