@@ -174,7 +174,7 @@ function MetricsStrip({ result }: { result: ProcessResult }) {
   const showCai = stats.keyAfter.caiScore !== null
 
   return (
-    <div className="bg-border grid grid-cols-1 gap-px overflow-hidden rounded-lg border sm:grid-cols-2 md:grid-cols-4">
+    <div className="bg-border grid grid-cols-1 gap-px overflow-hidden rounded-lg border sm:grid-cols-2 lg:grid-cols-4">
       <MetricCell
         label="Score"
         before={stats.before.totalScore}

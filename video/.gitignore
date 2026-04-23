@@ -1,0 +1,4 @@
+public/frames/
+public/music/*
+!public/music/.gitkeep
+out/
