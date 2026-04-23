@@ -56,7 +56,7 @@ export function JunctionContext({
     <div className="space-y-2">
       <div className="bg-muted/30 overflow-x-auto rounded-md border p-3">
         <div className="flex items-center justify-center gap-0 font-mono text-sm">
-          <span className="text-muted-foreground mr-2 text-[10px] tabular-nums">
+          <span className="text-muted-foreground type-micro mr-2 tabular-nums">
             {leftStart.toLocaleString()}
           </span>
           <div className="flex">
@@ -72,17 +72,17 @@ export function JunctionContext({
           <div className="flex">
             {right.split('').map((c, i) => renderChar(c, left.length + i))}
           </div>
-          <span className="text-muted-foreground ml-2 text-[10px] tabular-nums">
+          <span className="text-muted-foreground type-micro ml-2 tabular-nums">
             {rightEnd.toLocaleString()}
           </span>
         </div>
-        <div className="text-muted-foreground mt-2 flex justify-center gap-8 text-[10px]">
+        <div className="text-muted-foreground type-micro mt-2 flex justify-center gap-8">
           <span>← 5′ fragment ends</span>
           <span>3′ fragment starts →</span>
         </div>
       </div>
       {wggwMotif && motifStartRel !== null && (
-        <div className="text-muted-foreground text-[10px]">
+        <div className="text-muted-foreground type-micro">
           WGGW motif{' '}
           <span className="bg-primary/20 text-primary rounded px-1 font-mono font-semibold">
             {wggwMotif}

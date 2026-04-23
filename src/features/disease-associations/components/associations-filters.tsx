@@ -117,7 +117,7 @@ export function AssociationsFilters({ bucketCounts }: Props) {
               {bucket}
               <span
                 className={cn(
-                  'ml-1.5 font-mono text-[10px]',
+                  'type-micro ml-1.5 font-mono',
                   active ? 'opacity-80' : 'text-muted-foreground',
                 )}
               >

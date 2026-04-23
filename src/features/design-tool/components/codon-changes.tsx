@@ -70,7 +70,7 @@ export function CodonChanges({ original, optimized, splitPoint }: Props) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-end gap-2">
-        <div className="flex items-center gap-2 text-[10px]">
+        <div className="type-micro flex items-center gap-2">
           <span
             className={cn(
               'rounded-full px-2 py-0.5 font-medium tabular-nums',
@@ -94,7 +94,7 @@ export function CodonChanges({ original, optimized, splitPoint }: Props) {
 
       {/* Translation conservation strip */}
       <div className="space-y-1">
-        <div className="text-muted-foreground text-[10px]">
+        <div className="text-muted-foreground type-micro">
           Translation conservation
         </div>
         <div
@@ -121,7 +121,7 @@ export function CodonChanges({ original, optimized, splitPoint }: Props) {
               ),
             )}
         </div>
-        <div className="text-muted-foreground text-[10px]">
+        <div className="text-muted-foreground type-micro">
           {allSynonymous
             ? 'All changes are synonymous — protein sequence is preserved.'
             : `${nonSynonymous} non-synonymous substitution(s) — protein sequence has changed.`}

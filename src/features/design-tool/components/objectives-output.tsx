@@ -111,7 +111,7 @@ function EntryRow({
       {/* status icon */}
       <span
         className={cn(
-          'mt-[1px] flex size-4 shrink-0 items-center justify-center rounded-full text-[10px] font-bold',
+          'type-micro mt-[1px] flex size-4 shrink-0 items-center justify-center rounded-full font-bold',
           entry.passes
             ? 'bg-success/15 text-success-soft'
             : 'bg-danger/15 text-danger-soft',
@@ -147,7 +147,7 @@ function EntryRow({
 
       {/* body */}
       <div className="min-w-0 flex-1">
-        <div className="flex items-baseline gap-1.5 font-mono text-[11px] leading-tight">
+        <div className="type-nano flex items-baseline gap-1.5 font-mono leading-tight">
           <span className="truncate font-semibold" title={parsed.full}>
             {highlightMatches(parsed.name, query)}
           </span>
@@ -160,7 +160,7 @@ function EntryRow({
             </span>
           )}
         </div>
-        <div className="text-muted-foreground mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] leading-tight">
+        <div className="text-muted-foreground type-micro mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 leading-tight">
           {entry.message && (
             <span className="truncate" title={entry.message}>
               {highlightMatches(entry.message, query)}
@@ -178,7 +178,7 @@ function EntryRow({
       <div className="mt-[1px] flex shrink-0 flex-col items-end gap-0.5">
         <span
           className={cn(
-            'font-mono text-[10px] tabular-nums',
+            'type-micro font-mono tabular-nums',
             entry.score < 0
               ? 'text-danger-soft'
               : entry.score > 0
@@ -246,7 +246,7 @@ function ComparisonPanel({
         <CopyButton
           text={rawText}
           copiedLabel="Copied"
-          className="h-6 gap-1 px-1.5 text-[10px]"
+          className="type-micro h-6 gap-1 px-1.5"
           disabled={!rawText}
         >
           Copy raw
@@ -334,7 +334,7 @@ function ComparisonPanel({
                 renderRow(seg.row)
               ) : (
                 <details key={seg.id} className="group/collapsed">
-                  <summary className="hover:bg-muted/40 text-muted-foreground flex cursor-pointer items-center gap-1.5 px-2.5 py-1 text-[10px] select-none">
+                  <summary className="hover:bg-muted/40 text-muted-foreground type-micro flex cursor-pointer items-center gap-1.5 px-2.5 py-1 select-none">
                     <ChevronRight className="size-3 shrink-0 transition-transform group-open/collapsed:rotate-90" />
                     <span>
                       {seg.rows.length} passing objective
@@ -355,7 +355,7 @@ function ComparisonPanel({
           )}
         </div>
         <div className="bg-background/95 sticky bottom-0 border-t backdrop-blur-sm">
-          <div className="flex items-center justify-between gap-2 px-2.5 py-1.5 font-mono text-[11px]">
+          <div className="type-nano flex items-center justify-between gap-2 px-2.5 py-1.5 font-mono">
             <span className="text-foreground font-semibold">
               TOTAL{' '}
               <span className="tabular-nums">
@@ -365,7 +365,7 @@ function ComparisonPanel({
             {isAfter && scoreDelta !== null && (
               <span
                 className={cn(
-                  'rounded-sm px-1.5 py-0.5 text-[10px] font-semibold tabular-nums',
+                  'type-micro rounded-sm px-1.5 py-0.5 font-semibold tabular-nums',
                   scoreDelta > 0.001
                     ? 'bg-success/15 text-success-soft'
                     : scoreDelta < -0.001
@@ -601,7 +601,7 @@ function RawReportView({ text }: { text: string }) {
   const lines = text.split('\n')
   const width = String(lines.length).length
   return (
-    <div className="bg-muted max-h-64 overflow-auto rounded-md font-mono text-[11px]">
+    <div className="bg-muted type-nano max-h-64 overflow-auto rounded-md font-mono">
       <div>
         {lines.map((raw, i) => {
           const { depth, cleaned, status } = classifyRawLine(raw)
@@ -626,7 +626,7 @@ function RawReportView({ text }: { text: string }) {
             <div
               key={i}
               id={`raw-line-${i + 1}`}
-              className="group flex items-start gap-2 px-2 hover:bg-black/[0.03] dark:hover:bg-white/[0.03]"
+              className="hover:bg-muted/40 group flex items-start gap-2 px-2"
             >
               <span
                 className="text-muted-foreground/50 shrink-0 text-right tabular-nums select-none"
@@ -812,7 +812,7 @@ export function ObjectivesSummary({
                   icon={FileText}
                   variant="outline"
                   copiedLabel="Copied"
-                  className="h-7 shrink-0 gap-1 px-2 text-[11px]"
+                  className="type-nano h-7 shrink-0 gap-1 px-2"
                 >
                   Copy as MD
                 </CopyButton>

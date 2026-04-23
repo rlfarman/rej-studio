@@ -67,7 +67,7 @@ export function GcSparkline({ sequence }: Props) {
           vectorEffect="non-scaling-stroke"
         />
       </svg>
-      <span className="text-muted-foreground shrink-0 text-[10px] tabular-nums">
+      <span className="text-muted-foreground type-micro shrink-0 tabular-nums">
         GC {overallGc.toFixed(1)}%
       </span>
     </div>

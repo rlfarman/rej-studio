@@ -139,7 +139,7 @@ function GcContentTrack({ original, optimized, splitPoint }: Props) {
           />
         </svg>
       </div>
-      <div className="text-muted-foreground flex justify-between text-[10px] tabular-nums">
+      <div className="text-muted-foreground type-micro flex justify-between tabular-nums">
         <span>0</span>
         <span>{Math.round(maxLen / 2).toLocaleString()}</span>
         <span>{maxLen.toLocaleString()} bp</span>
@@ -171,7 +171,7 @@ function ChangeDensityTrack({ original, optimized, splitPoint }: Props) {
           <GitCompareArrows className="text-muted-foreground size-4" />
           Change Density
         </div>
-        <span className="text-muted-foreground text-[10px] tabular-nums">
+        <span className="text-muted-foreground type-micro tabular-nums">
           {total.toLocaleString()} bases changed across{' '}
           {bins.length.toLocaleString()} bins
         </span>
@@ -206,7 +206,7 @@ function ChangeDensityTrack({ original, optimized, splitPoint }: Props) {
           )
         })}
       </div>
-      <div className="text-muted-foreground flex justify-between text-[10px] tabular-nums">
+      <div className="text-muted-foreground type-micro flex justify-between tabular-nums">
         <span>5′ · 0</span>
         {splitPoint !== undefined && (
           <span>split · {splitPoint.toLocaleString()}</span>

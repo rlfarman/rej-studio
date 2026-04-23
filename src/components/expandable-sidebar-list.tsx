@@ -97,7 +97,7 @@ export function ExpandableSidebarList<T>({
             />
             <span className="truncate">{label}</span>
             {hasItems && (
-              <span className="text-muted-foreground ml-auto font-mono text-[10px] tabular-nums">
+              <span className="text-muted-foreground type-micro ml-auto font-mono tabular-nums">
                 {items.length}
               </span>
             )}

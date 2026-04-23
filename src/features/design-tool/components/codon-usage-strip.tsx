@@ -51,11 +51,11 @@ export function CodonUsageStrip({ sequence, species }: Props) {
   return (
     <div className="space-y-1.5">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1.5 text-[11px] font-medium">
+        <div className="type-nano flex items-center gap-1.5 font-medium">
           <Sparkles className="text-muted-foreground size-3" />
           Codon preference · {SPECIES_DISPLAY_NAME[species]}
         </div>
-        <span className="text-muted-foreground text-[10px] tabular-nums">
+        <span className="text-muted-foreground type-micro tabular-nums">
           mean {(meanPref * 100).toFixed(0)}% · {rareCount.toLocaleString()}{' '}
           rare
           {totalCodons > cells.length && (
@@ -73,21 +73,30 @@ export function CodonUsageStrip({ sequence, species }: Props) {
         aria-label={`Codon usage preference strip for ${SPECIES_DISPLAY_NAME[species]}`}
       >
         {cells.map((cell) => {
-          // Map pref [0,1] to a color: red (0) → amber (0.5) → emerald (1).
           const p = cell.pref
-          const color =
+          const bucket =
             p === null
-              ? 'rgb(var(--muted))'
+              ? 'var(--codon-null)'
               : p >= 0.7
-                ? `rgba(16, 185, 129, ${0.4 + p * 0.6})` // emerald
+                ? 'var(--codon-preferred)'
                 : p >= 0.4
-                  ? `rgba(234, 179, 8, ${0.5 + p * 0.4})` // amber
-                  : `rgba(239, 68, 68, ${0.5 + (1 - p) * 0.4})` // red
+                  ? 'var(--codon-mid)'
+                  : 'var(--codon-rare)'
+          const alpha =
+            p === null
+              ? 1
+              : p >= 0.7
+                ? 0.4 + p * 0.6
+                : p >= 0.4
+                  ? 0.5 + p * 0.4
+                  : 0.5 + (1 - p) * 0.4
           return (
             <div
               key={cell.idx}
               className="h-full min-w-0 flex-1"
-              style={{ backgroundColor: color }}
+              style={{
+                backgroundColor: `color-mix(in oklch, ${bucket} ${Math.round(alpha * 100)}%, transparent)`,
+              }}
               title={
                 p !== null
                   ? `Codon ${cell.idx + 1}: ${cell.codon} — ${(p * 100).toFixed(0)}% of best synonymous`
@@ -97,9 +106,15 @@ export function CodonUsageStrip({ sequence, species }: Props) {
           )
         })}
       </div>
-      <div className="text-muted-foreground flex items-center gap-1 text-[10px]">
+      <div className="text-muted-foreground type-micro flex items-center gap-1">
         <span>rare</span>
-        <span className="h-2 flex-1 rounded-sm bg-gradient-to-r from-red-500/80 via-amber-500/80 to-emerald-500/80" />
+        <span
+          className="h-2 flex-1 rounded-sm"
+          style={{
+            backgroundImage:
+              'linear-gradient(to right, var(--codon-rare), var(--codon-mid), var(--codon-preferred))',
+          }}
+        />
         <span>preferred</span>
       </div>
     </div>

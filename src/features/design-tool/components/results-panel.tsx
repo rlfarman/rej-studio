@@ -274,7 +274,7 @@ function SequenceCard({
       <div className="flex flex-wrap items-center justify-between gap-1.5">
         <div className="flex items-center gap-1.5">
           <span className="text-xs font-medium">{label}</span>
-          <Badge variant="secondary" className="text-[10px]">
+          <Badge variant="secondary" className="type-micro">
             {displayLength.toLocaleString()} bp
           </Badge>
         </div>
