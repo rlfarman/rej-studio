@@ -99,7 +99,7 @@ export function SidebarMenu() {
                   >
                     {THEMES.map(({ value, label, icon: Icon }) => (
                       <DropdownMenuRadioItem key={value} value={value}>
-                        <Icon className="h-4 w-4" />
+                        <Icon className="text-foreground h-4 w-4" />
                         {label}
                       </DropdownMenuRadioItem>
                     ))}
@@ -108,11 +108,11 @@ export function SidebarMenu() {
                 </>
               )}
               <DropdownMenuItem onClick={exportUserData}>
-                <Download className="h-4 w-4" />
+                <Download className="text-foreground h-4 w-4" />
                 {menuCopy.exportData}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>
-                <Upload className="h-4 w-4" />
+                <Upload className="text-foreground h-4 w-4" />
                 {menuCopy.importData}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
@@ -123,7 +123,7 @@ export function SidebarMenu() {
                   toast.success(menuCopy.toursReset)
                 }}
               >
-                <GraduationCap className="h-4 w-4" />
+                <GraduationCap className="text-foreground h-4 w-4" />
                 {menuCopy.restartTours}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
@@ -133,7 +133,7 @@ export function SidebarMenu() {
                   toast.success(menuCopy.seedResult(favorites, recents, jobs))
                 }}
               >
-                <Sprout className="h-4 w-4" />
+                <Sprout className="text-foreground h-4 w-4" />
                 {menuCopy.seedData}
               </DropdownMenuItem>
               <DropdownMenuItem
@@ -149,7 +149,7 @@ export function SidebarMenu() {
                   }
                 }}
               >
-                <Eraser className="h-4 w-4" />
+                <Eraser className="text-foreground h-4 w-4" />
                 {menuCopy.clearSeedData}
               </DropdownMenuItem>
             </DropdownMenuContent>
