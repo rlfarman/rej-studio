@@ -1,10 +1,10 @@
 export const diseaseAssociationsCopy = {
   page: {
-    title: 'Disease associations',
+    title: 'Disease Associations',
     subtitle:
       'Human disease-associated genes whose longest coding sequence exceeds 4,000 bp — a curated set of large-CDS therapeutic targets from OMIM.',
     sourceLabel: 'Source',
-    source: 'OMIM phenotype catalog',
+    source: 'OMIM Phenotype Catalog (4/2026)',
   },
   filters: {
     searchPlaceholder: 'Filter by gene, name, or phenotype…',
@@ -15,12 +15,12 @@ export const diseaseAssociationsCopy = {
   table: {
     ariaLabel: 'Disease-associated genes',
     columns: {
+      largestCds: 'Largest CDS',
       symbol: 'Gene',
       name: 'Name',
+      phenotype: 'Association',
       inheritance: 'Inheritance',
       phenotypes: 'Phenotypes',
-      phenotypeCount: 'Phenotypes',
-      largestCds: 'Largest CDS',
     },
     largestCdsUnit: 'bp',
     largestCdsUnknown: '—',
@@ -42,7 +42,7 @@ export const diseaseAssociationsCopy = {
     mimLinkAria: (mim: number) => `OMIM phenotype ${mim} (opens in new tab)`,
   },
   geneDetail: {
-    heading: 'Disease associations',
+    heading: 'Disease Associations',
     subtitle: 'Reported phenotypes from the OMIM catalog.',
     openOmimGene: 'Open gene in OMIM',
   },

@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { X } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { INHERITANCE_BUCKETS, type InheritanceBucket } from '../types'
+import { FILTER_INHERITANCE_BUCKETS, type InheritanceBucket } from '../types'
 import { diseaseAssociationsCopy } from '../copy'
 
 const SEARCH_PARAM = 'q'
@@ -97,7 +97,7 @@ export function AssociationsFilters({ bucketCounts }: Props) {
         <span className="text-muted-foreground mr-1 text-xs font-semibold tracking-wider uppercase">
           {diseaseAssociationsCopy.filters.inheritanceLabel}
         </span>
-        {INHERITANCE_BUCKETS.map((bucket) => {
+        {FILTER_INHERITANCE_BUCKETS.map((bucket) => {
           const active = activeBuckets.has(bucket)
           const count = bucketCounts[bucket]
           if (count === 0) return null
@@ -114,7 +114,7 @@ export function AssociationsFilters({ bucketCounts }: Props) {
                   : 'bg-card text-foreground hover:bg-muted',
               )}
             >
-              {bucket}
+              {formatInheritanceLabel(bucket)}
               <span
                 className={cn(
                   'type-micro ml-1.5 font-mono',
@@ -129,4 +129,10 @@ export function AssociationsFilters({ bucketCounts }: Props) {
       </div>
     </div>
   )
+}
+
+function formatInheritanceLabel(bucket: InheritanceBucket): string {
+  if (bucket === 'Autosomal dominant') return 'Dominant'
+  if (bucket === 'Autosomal recessive') return 'Recessive'
+  return bucket
 }
