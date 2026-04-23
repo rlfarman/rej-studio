@@ -118,8 +118,6 @@ export const designToolCopy = {
     },
     enforceGc: {
       label: 'Enforce 35–60% GC content',
-      description: '',
-      badge: '',
     },
   },
   weights: {

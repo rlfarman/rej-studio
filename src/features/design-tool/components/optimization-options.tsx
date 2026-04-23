@@ -30,7 +30,7 @@ function CodonOptimizationCard() {
 
   const handleToggle = (checked: boolean) => {
     if (checked) {
-      setValue('species', enabled ? species : 'human')
+      setValue('species', 'human')
       return
     }
 
@@ -140,8 +140,6 @@ export function CodonOptimizationOptions() {
           <ToggleCard
             name="enforceGcContent"
             label={copy.enforceGc.label}
-            description={copy.enforceGc.description}
-            badge={copy.enforceGc.badge}
             // helpHref="/docs/design-tool#gc-content"
           />
         </div>

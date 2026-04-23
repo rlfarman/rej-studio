@@ -40,13 +40,7 @@ function WeightField({
                 inline ? 'flex items-center justify-end gap-2' : 'space-y-2'
               }
             >
-              <FormLabel
-                className={
-                  disabled
-                    ? 'text-muted-foreground text-xs font-medium'
-                    : 'text-muted-foreground text-xs font-medium'
-                }
-              >
+              <FormLabel className="text-muted-foreground text-xs font-medium">
                 {copy.label}
               </FormLabel>
               <FormControl>

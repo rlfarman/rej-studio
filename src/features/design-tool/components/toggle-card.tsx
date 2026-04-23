@@ -13,7 +13,7 @@ type BoolField = FieldPathByValue<FormValues, boolean>
 interface ToggleCardProperties {
   name: BoolField
   label: string
-  description: string
+  description?: string
   badge?: string
   /** Docs URL shown on a small "?" icon at the edge of the card. */
   helpHref?: string
