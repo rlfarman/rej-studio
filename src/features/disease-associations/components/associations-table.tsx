@@ -10,7 +10,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { cn } from '@/lib/utils'
-import type { AssociationRow } from '../types'
+import { formatInheritanceLabel, type AssociationRow } from '../types'
 import { diseaseAssociationsCopy } from '../copy'
 import { rowBuckets, type SortDir, type SortKey } from '../api/associations'
 
@@ -26,7 +26,8 @@ type Props = {
 }
 
 const cdsFormatter = new Intl.NumberFormat('en-US')
-const { largestCdsUnit, largestCdsUnknown } = diseaseAssociationsCopy.table
+const { largestCdsUnit, largestCdsUnknown, phenotypeUnknown } =
+  diseaseAssociationsCopy.table
 
 export function AssociationsTable({
   rows,
@@ -49,7 +50,7 @@ export function AssociationsTable({
       <Table aria-label={diseaseAssociationsCopy.table.ariaLabel}>
         <TableHeader>
           <TableRow className="bg-muted/40">
-            <TableHead className="w-[120px]">
+            <TableHead className="w-[96px]">
               <SortHeader
                 label={diseaseAssociationsCopy.table.columns.symbol}
                 column="symbol"
@@ -57,20 +58,16 @@ export function AssociationsTable({
                 {...headerProps}
               />
             </TableHead>
-            <TableHead>{diseaseAssociationsCopy.table.columns.name}</TableHead>
-            <TableHead className="w-[280px]">
+            <TableHead className="min-w-[240px]">
+              {diseaseAssociationsCopy.table.columns.name}
+            </TableHead>
+            <TableHead className="w-[220px]">
+              {diseaseAssociationsCopy.table.columns.phenotype}
+            </TableHead>
+            <TableHead className="w-[220px]">
               {diseaseAssociationsCopy.table.columns.inheritance}
             </TableHead>
-            <TableHead className="w-[110px] text-right">
-              <SortHeader
-                label={diseaseAssociationsCopy.table.columns.phenotypeCount}
-                column="phenotypes"
-                defaultDir="desc"
-                align="right"
-                {...headerProps}
-              />
-            </TableHead>
-            <TableHead className="w-[130px] text-right">
+            <TableHead className="w-[104px] text-right">
               <SortHeader
                 label={diseaseAssociationsCopy.table.columns.largestCds}
                 column="cds"
@@ -84,6 +81,7 @@ export function AssociationsTable({
         <TableBody>
           {rows.map((row) => {
             const buckets = Array.from(rowBuckets(row))
+            const phenotype = firstPhenotypeLabel(row)
             return (
               <TableRow key={row.symbol} className="hover:bg-muted/30">
                 <TableCell className="py-2.5">
@@ -100,6 +98,9 @@ export function AssociationsTable({
                 <TableCell className="text-muted-foreground py-2.5 text-sm">
                   {row.name}
                 </TableCell>
+                <TableCell className="text-muted-foreground py-2.5 text-sm">
+                  {phenotype}
+                </TableCell>
                 <TableCell className="py-2.5">
                   <div className="flex flex-wrap gap-1">
                     {buckets.map((b) => (
@@ -108,13 +109,10 @@ export function AssociationsTable({
                         variant="secondary"
                         className="type-micro font-normal"
                       >
-                        {b}
+                        {formatInheritanceLabel(b)}
                       </Badge>
                     ))}
                   </div>
-                </TableCell>
-                <TableCell className="text-muted-foreground py-2.5 text-right font-mono text-xs">
-                  {row.phenotypes.length}
                 </TableCell>
                 <TableCell className="text-muted-foreground py-2.5 text-right font-mono text-xs">
                   {row.largestCds != null ? (
@@ -135,6 +133,16 @@ export function AssociationsTable({
       </Table>
     </div>
   )
+}
+
+const PHENOTYPE_MAX_CHARS = 48
+
+function firstPhenotypeLabel(row: AssociationRow): string {
+  const name = row.phenotypes[0]?.name.trim()
+  if (!name) return phenotypeUnknown
+  return name.length > PHENOTYPE_MAX_CHARS
+    ? name.slice(0, PHENOTYPE_MAX_CHARS).trimEnd() + '…'
+    : name
 }
 
 type SortHeaderProps = {
