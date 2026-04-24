@@ -69,6 +69,8 @@ export function SpliceSliderContext({
     () => findSequenceMatches(normalizedSequence, normalizedSearch),
     [normalizedSearch, normalizedSequence],
   )
+  const activeSearchMatch =
+    searchMatches.length > 0 ? (searchMatches[searchMatchIndex] ?? null) : null
 
   const midpoint = Math.max(1, Math.min(seqLen - 1, Math.floor(seqLen / 2)))
 
@@ -404,6 +406,7 @@ export function SpliceSliderContext({
             sites={wggwSites}
             selectedSite={selectedSite}
             currentRewrite={currentRewrite}
+            activeSearchMatch={activeSearchMatch}
             stripRef={frameStripRef}
             onSelectSite={handleSelectSite}
           />
@@ -652,6 +655,7 @@ function LocalSequenceView({
   sites,
   selectedSite,
   currentRewrite,
+  activeSearchMatch,
   stripRef,
   onSelectSite,
 }: {
@@ -659,6 +663,7 @@ function LocalSequenceView({
   sites: WggwSiteCandidate[]
   selectedSite: WggwSiteCandidate | null
   currentRewrite: WggwRecodingOption | null
+  activeSearchMatch: { start: number; length: number } | null
   stripRef: React.RefObject<HTMLDivElement | null>
   onSelectSite: (site: WggwSiteCandidate) => void
 }) {
@@ -687,6 +692,25 @@ function LocalSequenceView({
     }
     return s
   }, [currentRewrite, selectedSite])
+  const activeSearchBases = useMemo(() => {
+    const s = new Set<number>()
+    if (!activeSearchMatch) return s
+    for (let i = 0; i < activeSearchMatch.length; i++) {
+      s.add(activeSearchMatch.start + i)
+    }
+    return s
+  }, [activeSearchMatch])
+  const visibleActiveSearchMatch = useMemo(() => {
+    if (!activeSearchMatch) return null
+    const matchEnd = activeSearchMatch.start + activeSearchMatch.length - 1
+    const visibleStart = Math.max(activeSearchMatch.start, ctx.start)
+    const visibleEnd = Math.min(matchEnd, ctx.end)
+    if (visibleStart > visibleEnd) return null
+    return {
+      columnStart: visibleStart - ctx.start + 1,
+      columnSpan: visibleEnd - visibleStart + 1,
+    }
+  }, [activeSearchMatch, ctx.end, ctx.start])
 
   const templateColumns = `repeat(${ctx.bases.length}, minmax(0, 1fr))`
 
@@ -741,7 +765,7 @@ function LocalSequenceView({
 
         <div className="relative mt-1">
           <div
-            className="absolute inset-0 z-20 grid"
+            className="absolute inset-px z-20 grid"
             style={{ gridTemplateColumns: templateColumns }}
           >
             {visibleSites.map((site, index) => {
@@ -762,8 +786,8 @@ function LocalSequenceView({
                   className={cn(
                     'group focus-visible:ring-ring relative flex h-full cursor-pointer items-center overflow-hidden rounded-sm border transition-all focus:outline-none focus-visible:ring-2',
                     isSelected
-                      ? 'border-primary/80 bg-primary/25 z-30 shadow-sm'
-                      : 'border-marker/45 bg-marker/14 hover:border-marker/80 hover:bg-marker/24 hover:z-20',
+                      ? 'border-primary bg-primary/32 z-30 shadow-sm'
+                      : 'border-marker/60 bg-marker/18 hover:border-marker/90 hover:bg-marker/28 hover:z-20',
                   )}
                   style={{
                     gridColumn: `${columnStart} / span ${columnSpan}`,
@@ -773,8 +797,8 @@ function LocalSequenceView({
                 >
                   <span
                     className={cn(
-                      'absolute top-0 bottom-0 w-px -translate-x-1/2 transition-all group-hover:w-0.5',
-                      isSelected ? 'bg-primary w-0.5' : 'bg-marker/90',
+                      'absolute top-0 bottom-0 w-0.5 -translate-x-1/2 transition-all group-hover:w-[3px]',
+                      isSelected ? 'bg-primary w-[3px]' : 'bg-marker',
                     )}
                     style={{ left: `${boundaryPct}%` }}
                   />
@@ -786,9 +810,24 @@ function LocalSequenceView({
             className="border-border/60 bg-background/30 pointer-events-none relative z-30 grid overflow-hidden rounded-md border"
             style={{ gridTemplateColumns: templateColumns }}
           >
+            {visibleActiveSearchMatch ? (
+              <div
+                className="pointer-events-none absolute inset-x-0 bottom-1 z-0 grid"
+                style={{ gridTemplateColumns: templateColumns }}
+                aria-hidden="true"
+              >
+                <div
+                  className="bg-foreground h-0.5 rounded-full"
+                  style={{
+                    gridColumn: `${visibleActiveSearchMatch.columnStart} / span ${visibleActiveSearchMatch.columnSpan}`,
+                  }}
+                />
+              </div>
+            ) : null}
             {ctx.bases.map((base) => {
               const inSelected = selectedBases.has(base.position)
               const isChanged = selectedChangedBases.has(base.position)
+              const inActiveSearchMatch = activeSearchBases.has(base.position)
               const selectedMotifStart = selectedSite?.motifStart
               const isSelectedStart =
                 selectedMotifStart !== undefined &&
@@ -804,10 +843,11 @@ function LocalSequenceView({
                 <div
                   key={base.position}
                   className={cn(
-                    'text-muted-foreground flex h-9 items-center justify-center text-sm font-semibold tabular-nums',
+                    'text-muted-foreground relative z-10 flex h-9 items-center justify-center text-sm font-semibold tabular-nums',
                     base.role === 'start' && 'text-success-soft',
                     (base.role === 'stop' || base.role === 'internal-stop') &&
                       'text-danger-soft',
+                    inActiveSearchMatch && 'text-foreground',
                     inSelected && 'bg-primary/15 text-primary',
                     inSelected && isSelectedStart && 'rounded-l-sm',
                     inSelected && isSelectedEnd && 'rounded-r-sm',
