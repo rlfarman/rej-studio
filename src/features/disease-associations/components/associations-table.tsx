@@ -135,10 +135,14 @@ export function AssociationsTable({
   )
 }
 
+const PHENOTYPE_MAX_CHARS = 48
+
 function firstPhenotypeLabel(row: AssociationRow): string {
   const name = row.phenotypes[0]?.name.trim()
   if (!name) return phenotypeUnknown
-  return name.split(',', 1)[0]?.trim() || phenotypeUnknown
+  return name.length > PHENOTYPE_MAX_CHARS
+    ? name.slice(0, PHENOTYPE_MAX_CHARS).trimEnd() + '…'
+    : name
 }
 
 type SortHeaderProps = {
