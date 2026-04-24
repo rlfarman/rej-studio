@@ -41,8 +41,8 @@ export const designToolCopy = {
       `Split position must be ≤ ${max} (sequence length − 1).`,
   },
   sequenceInput: {
-    labelProtein: 'Enter your sequence *',
-    labelDna: 'Enter your sequence *',
+    labelProtein: 'Enter your sequence',
+    labelDna: 'Enter your sequence',
     typeToggleAria: 'Sequence type',
     typeDna: 'DNA',
     typeProtein: 'Protein',
@@ -78,7 +78,7 @@ export const designToolCopy = {
       'Enter a protein sequence before reverse translating.',
   },
   nameInput: {
-    label: 'Choose a name for your coding sequence *',
+    label: 'Choose a name for your coding sequence',
     placeholder: 'My Custom Sequence',
   },
   speciesOptions: {

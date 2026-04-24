@@ -274,7 +274,8 @@ export function CodingSequenceInput() {
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex flex-wrap items-center gap-2 sm:gap-3">
               <FormLabel>
-                {isProtein ? copy.labelProtein : copy.labelDna}
+                {isProtein ? copy.labelProtein : copy.labelDna}{' '}
+                <span aria-hidden="true">*</span>
               </FormLabel>
               <SequenceTypeToggle
                 value={sequenceType}

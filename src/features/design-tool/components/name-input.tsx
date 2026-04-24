@@ -25,7 +25,9 @@ export function NameInput() {
       render={({ field }) => (
         <FormItem>
           <div className="flex items-center justify-between gap-4">
-            <FormLabel>{designToolCopy.nameInput.label}</FormLabel>
+            <FormLabel>
+              {designToolCopy.nameInput.label} <span aria-hidden="true">*</span>
+            </FormLabel>
             <span
               className={cn(
                 'text-muted-foreground shrink-0 text-xs tabular-nums',
