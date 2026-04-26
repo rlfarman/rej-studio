@@ -49,7 +49,8 @@ const FORM_VALUES = {
   enforceGcContent: false,
   '5PrimeStimulatoryIntron': false,
   '3PrimeStimulatoryIntron': false,
-  spliceJunctionPosition: 3,
+  spliceJunctionPositions: [3],
+  selectedWggwSites: [],
 }
 
 beforeEach(() => {

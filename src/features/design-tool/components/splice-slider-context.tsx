@@ -17,24 +17,95 @@ import {
   type WggwRecodingOption,
 } from '@/lib/bio/sequence-utils'
 import { translateCodon } from '@/lib/bio/genetic-code'
-import { ChevronLeft, ChevronRight, AlignCenter } from 'lucide-react'
+import {
+  ChevronLeft,
+  ChevronRight,
+  AlignCenter,
+  X,
+  Plus,
+  Check,
+  AlertTriangle,
+} from 'lucide-react'
+import { toast } from 'sonner'
 import type { SelectedWggwSite } from '../types/form-schema'
 
 interface Props {
   sequence: string
-  position: number
-  onSnap: (position: number) => void
-  onSelectionChange: (site: SelectedWggwSite | null) => void
+  positions: number[]
+  onPositionsChange: (positions: number[]) => void
+  onSelectionChange: (sites: (SelectedWggwSite | null)[]) => void
 }
 
 interface WggwSiteCandidate extends RankedInducibleWggwCandidate {
   rewriteOptions: WggwRecodingOption[]
 }
 
+const SPLICE_TONES: Array<{
+  caret: string
+  caretRing: string
+  border: string
+  hoverBorder: string
+  tickBg: string
+  baseBg: string
+  baseText: string
+  fillSeg: string
+  text: string
+}> = [
+  {
+    caret: 'bg-primary',
+    caretRing: 'ring-primary/40',
+    border: 'border-primary',
+    hoverBorder: 'hover:border-primary/40',
+    tickBg: 'bg-primary',
+    baseBg: 'bg-primary/15',
+    baseText: 'text-primary',
+    fillSeg: 'bg-primary/15',
+    text: 'text-primary',
+  },
+  {
+    caret: 'bg-marker',
+    caretRing: 'ring-marker/40',
+    border: 'border-marker',
+    hoverBorder: 'hover:border-marker/40',
+    tickBg: 'bg-marker',
+    baseBg: 'bg-marker/20',
+    baseText: 'text-marker',
+    fillSeg: 'bg-marker/15',
+    text: 'text-marker',
+  },
+]
+
+function spliceTone(index: number) {
+  return SPLICE_TONES[index] ?? SPLICE_TONES[0]
+}
+
+// AAV packaging threshold: each fragment must fit in a single AAV (~<4 kb
+// is the safe upper bound for the typical AAV cassette). When a fragment
+// exceeds this, the chosen split won't actually package — flag it.
+const AAV_MAX_BP = 4000
+
+function buildSegments(
+  positions: number[],
+  seqLen: number,
+): Array<{ start: number; end: number; label: string }> {
+  if (positions.length === 0) {
+    return [{ start: 0, end: seqLen, label: 'sequence' }]
+  }
+  const segs: Array<{ start: number; end: number; label: string }> = []
+  let prev = 0
+  positions.forEach((pos, i) => {
+    const label = i === 0 ? '5′' : `mid${i}`
+    segs.push({ start: prev, end: pos, label })
+    prev = pos
+  })
+  segs.push({ start: prev, end: seqLen, label: '3′' })
+  return segs
+}
+
 export function SpliceSliderContext({
   sequence,
-  position,
-  onSnap,
+  positions,
+  onPositionsChange,
   onSelectionChange,
 }: Props) {
   const seqLen = sequence.length
@@ -101,75 +172,189 @@ export function SpliceSliderContext({
 
   const midpoint = Math.max(1, Math.min(seqLen - 1, Math.floor(seqLen / 2)))
 
-  const siteAtPosition = useMemo(
-    () => wggwSites.find((site) => site.position === position) ?? null,
-    [position, wggwSites],
-  )
-  const [activeSitePosition, setActiveSitePosition] = useState<number | null>(
-    null,
-  )
-  const selectedSite = useMemo(
-    () =>
-      wggwSites.find((site) => site.position === activeSitePosition) ?? null,
-    [activeSitePosition, wggwSites],
-  )
-  const selectedSiteIndex = selectedSite
-    ? wggwSites.findIndex((site) => site.position === selectedSite.position)
-    : -1
+  const spliceCount = Math.max(1, positions.length)
+  const [activeSpliceIndex, setActiveSpliceIndex] = useState(0)
+  const clampedActiveIndex = Math.min(activeSpliceIndex, spliceCount - 1)
+  const activePosition = positions[clampedActiveIndex] ?? midpoint
 
-  const [rewriteSelection, setRewriteSelection] = useState<{
-    position: number | null
-    index: number
-  }>({ position: null, index: 0 })
-  const selectedRewriteIndex =
-    selectedSite?.position === rewriteSelection.position
-      ? rewriteSelection.index
-      : 0
-  const currentRewrite =
-    selectedSite?.rewriteOptions[
-      Math.min(selectedRewriteIndex, selectedSite.rewriteOptions.length - 1)
-    ] ?? null
+  const [activeSitePositions, setActiveSitePositions] = useState<
+    (number | null)[]
+  >(() => positions.map(() => null))
+
+  // Keep activeSitePositions in sync with the splice count (positions array
+  // length). When the user adds or removes a splice slot, mirror that here.
+  useEffect(() => {
+    setActiveSitePositions((prev) => {
+      if (prev.length === spliceCount) return prev
+      const next = prev.slice(0, spliceCount)
+      while (next.length < spliceCount) next.push(null)
+      return next
+    })
+  }, [spliceCount])
+
+  const selectedSites = useMemo(
+    () =>
+      activeSitePositions.map(
+        (pos) => wggwSites.find((s) => s.position === pos) ?? null,
+      ),
+    [activeSitePositions, wggwSites],
+  )
+  const selectedSiteIndices = selectedSites.map((site) =>
+    site ? wggwSites.findIndex((s) => s.position === site.position) : -1,
+  )
+
+  const [rewriteSelections, setRewriteSelections] = useState<
+    { position: number | null; index: number }[]
+  >(() => positions.map(() => ({ position: null, index: 0 })))
+
+  useEffect(() => {
+    setRewriteSelections((prev) => {
+      if (prev.length === spliceCount) return prev
+      const next = prev.slice(0, spliceCount)
+      while (next.length < spliceCount) next.push({ position: null, index: 0 })
+      return next
+    })
+  }, [spliceCount])
+
+  const currentRewrites = selectedSites.map((site, i) => {
+    if (!site) return null
+    const sel = rewriteSelections[i]
+    const idx = sel?.position === site.position ? sel.index : 0
+    return (
+      site.rewriteOptions[Math.min(idx, site.rewriteOptions.length - 1)] ?? null
+    )
+  })
 
   const frameContext = useMemo(() => buildSequenceContext(sequence), [sequence])
 
-  const handleSelectSite = useCallback(
-    (site: WggwSiteCandidate) => {
-      setActiveSitePosition(site.position)
-      onSnap(site.position)
+  // Throttle the swap toast so a single drag-cross emits one notification,
+  // not one per pointermove that crosses.
+  const lastSwapToastRef = useRef(0)
+
+  // When the user drags a caret past another, auto-swap so positions stay
+  // sorted (Splice 1 always 5'-most). The parallel state arrays
+  // (activeSitePositions, rewriteSelections) are permuted to match, and
+  // activeSpliceIndex follows so the user keeps controlling the same caret
+  // visually.
+  const setPositionAt = useCallback(
+    (idx: number, value: number) => {
+      const v = Math.max(1, Math.min(seqLen - 1, value))
+      const next = [...positions]
+      next[idx] = v
+      const indexed = next.map((p, i) => ({ p, original: i }))
+      indexed.sort((a, b) => a.p - b.p)
+      const permuted = indexed.some((x, i) => x.original !== i)
+      if (permuted) {
+        setActiveSitePositions((prev) =>
+          indexed.map((x) => prev[x.original] ?? null),
+        )
+        setRewriteSelections((prev) =>
+          indexed.map((x) => prev[x.original] ?? { position: null, index: 0 }),
+        )
+        setActiveSpliceIndex((prev) => {
+          const i = indexed.findIndex((x) => x.original === prev)
+          return i === -1 ? prev : i
+        })
+        const now = Date.now()
+        if (now - lastSwapToastRef.current > 1500) {
+          lastSwapToastRef.current = now
+          toast('Splices reordered to keep Splice 1 5′-most', {
+            duration: 2000,
+          })
+        }
+      }
+      onPositionsChange(indexed.map((x) => x.p))
     },
-    [onSnap],
+    [onPositionsChange, positions, seqLen],
+  )
+
+  // Brief pulse on a splice's readout right after a tick is assigned to
+  // it — closes the "silent magic" loop for nearest-caret routing.
+  const [recentlyAssignedSplice, setRecentlyAssignedSplice] = useState<
+    number | null
+  >(null)
+
+  // When a tick is clicked without an explicit splice index, assign it to
+  // the splice whose caret is nearest the chosen site. This matches the
+  // user's spatial intuition (clicking a tick on the right side of the
+  // sequence "obviously" wants the right-side splice).
+  const handleSelectSite = useCallback(
+    (site: WggwSiteCandidate, spliceIdx?: number) => {
+      let idx = spliceIdx ?? clampedActiveIndex
+      if (spliceIdx === undefined && positions.length > 1) {
+        let best = 0
+        let bestDist = Infinity
+        positions.forEach((p, i) => {
+          const d = Math.abs(p - site.position)
+          if (d < bestDist) {
+            best = i
+            bestDist = d
+          }
+        })
+        idx = best
+      }
+      setActiveSitePositions((prev) => {
+        const next = [...prev]
+        next[idx] = site.position
+        return next
+      })
+      setActiveSpliceIndex(idx)
+      setPositionAt(idx, site.position)
+      setRecentlyAssignedSplice(idx)
+      window.setTimeout(() => {
+        setRecentlyAssignedSplice((prev) => (prev === idx ? null : prev))
+      }, 700)
+    },
+    [clampedActiveIndex, positions, setPositionAt],
   )
 
   const jumpToSibling = useCallback(
     (dir: -1 | 1) => {
       if (wggwSites.length === 0) return
-      if (selectedSiteIndex === -1) {
-        const next = nearestSiteIndex(wggwSites, position)
-        if (next !== -1) handleSelectSite(wggwSites[next])
+      const idx = clampedActiveIndex
+      const currentSiteIndex = selectedSiteIndices[idx] ?? -1
+      if (currentSiteIndex === -1) {
+        const nextIdx = nearestSiteIndex(wggwSites, activePosition)
+        if (nextIdx !== -1) handleSelectSite(wggwSites[nextIdx], idx)
         return
       }
-      const target = selectedSiteIndex + dir
+      const target = currentSiteIndex + dir
       if (target < 0 || target >= wggwSites.length) return
-      handleSelectSite(wggwSites[target])
+      handleSelectSite(wggwSites[target], idx)
     },
-    [handleSelectSite, position, selectedSiteIndex, wggwSites],
+    [
+      activePosition,
+      clampedActiveIndex,
+      handleSelectSite,
+      selectedSiteIndices,
+      wggwSites,
+    ],
   )
 
+  // Emit selected sites + current rewrites whenever they change.
   useEffect(() => {
-    if (!selectedSite || !currentRewrite) {
-      onSelectionChange(null)
-      return
-    }
-    onSelectionChange({
-      position: selectedSite.position,
-      motifStart: selectedSite.motifStart,
-      motif: selectedSite.motif,
-      hexamerStart: selectedSite.hexamerStart,
-      originalCodons: selectedSite.originalCodons,
-      newCodons: currentRewrite.newCodons,
-      newHexamer: currentRewrite.newHexamer,
-    })
-  }, [currentRewrite, onSelectionChange, selectedSite])
+    onSelectionChange(
+      selectedSites.map((site, i) => {
+        const rewrite = currentRewrites[i]
+        if (!site || !rewrite) return null
+        return {
+          position: site.position,
+          motifStart: site.motifStart,
+          motif: site.motif,
+          hexamerStart: site.hexamerStart,
+          originalCodons: site.originalCodons,
+          newCodons: rewrite.newCodons,
+          newHexamer: rewrite.newHexamer,
+        }
+      }),
+    )
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    onSelectionChange,
+    // Stringify to detect deep changes without putting array refs in deps
+    JSON.stringify(selectedSites.map((s) => s?.position ?? null)),
+    JSON.stringify(currentRewrites.map((r) => r?.newHexamer ?? null)),
+  ])
 
   useEffect(() => {
     const handlePointerDown = (event: PointerEvent) => {
@@ -207,7 +392,15 @@ export function SpliceSliderContext({
       }
       if (event.key === 'm' || event.key === 'M') {
         event.preventDefault()
-        onSnap(midpoint)
+        setPositionAt(clampedActiveIndex, midpoint)
+        return
+      }
+      if ((event.key === '1' || event.key === '2') && positions.length > 1) {
+        const idx = event.key === '1' ? 0 : 1
+        if (idx < positions.length) {
+          event.preventDefault()
+          setActiveSpliceIndex(idx)
+        }
       }
     }
 
@@ -219,16 +412,18 @@ export function SpliceSliderContext({
       window.removeEventListener('focusin', handleFocusIn)
       window.removeEventListener('keydown', handleWindowKeyDown)
     }
-  }, [jumpToSibling, midpoint, onSnap, shortcutsActive])
-
-  const positionPct = splitPositionToPercent(position, seqLen)
-  const fivePrimeLength = position
-  const threePrimeLength = seqLen - position
-  const fivePct = seqLen > 0 ? (fivePrimeLength / seqLen) * 100 : 50
+  }, [
+    clampedActiveIndex,
+    jumpToSibling,
+    midpoint,
+    positions.length,
+    setPositionAt,
+    shortcutsActive,
+  ])
 
   const positionFromPointer = (clientX: number): number => {
     const track = trackRef.current
-    if (!track) return position
+    if (!track) return activePosition
     const rect = track.getBoundingClientRect()
     const x = Math.max(0, Math.min(clientX - rect.left, rect.width))
     const frac = rect.width > 0 ? x / rect.width : 0
@@ -242,18 +437,42 @@ export function SpliceSliderContext({
     scroller.scrollLeft = targetCenter - scroller.clientWidth / 2
   }
 
-  const handleTrackPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    if ((e.target as HTMLElement).closest('button')) return
+  // Begin a pointer-driven drag of a specific splice's caret. Used by both
+  // the slider track (where dragIdx is the nearest caret to the click)
+  // and the bp-readout buttons above the track (which drag their own
+  // caret). The drag uses pointer-delta from the press point so the caret
+  // follows the cursor smoothly even when the readout doesn't visually
+  // sit exactly on the caret line (e.g. clamped near the edges).
+  const startDrag = (
+    spliceIdx: number,
+    e: React.PointerEvent<HTMLElement>,
+    snapToInitial: boolean,
+  ) => {
     e.preventDefault()
     const target = e.currentTarget
     target.setPointerCapture(e.pointerId)
-    target.focus()
-    const initial = positionFromPointer(e.clientX)
-    onSnap(initial)
-    scrollStripToPosition(initial)
+    setActiveSpliceIndex(spliceIdx)
+    const startClientX = e.clientX
+    const startPos = positions[spliceIdx] ?? midpoint
+    if (snapToInitial) {
+      const initial = positionFromPointer(e.clientX)
+      setPositionAt(spliceIdx, initial)
+      scrollStripToPosition(initial)
+    }
+    const track = trackRef.current
+    const trackWidth = track?.getBoundingClientRect().width ?? 0
     const handleMove = (ev: PointerEvent) => {
-      const next = positionFromPointer(ev.clientX)
-      onSnap(next)
+      let next: number
+      if (snapToInitial) {
+        next = positionFromPointer(ev.clientX)
+      } else if (trackWidth > 0) {
+        const dx = ev.clientX - startClientX
+        const dpos = (dx / trackWidth) * seqLen
+        next = Math.max(1, Math.min(seqLen - 1, Math.round(startPos + dpos)))
+      } else {
+        next = startPos
+      }
+      setPositionAt(spliceIdx, next)
       scrollStripToPosition(next)
     }
     const handleUp = () => {
@@ -269,8 +488,101 @@ export function SpliceSliderContext({
     target.addEventListener('pointercancel', handleUp)
   }
 
+  const handleTrackPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    const initial = positionFromPointer(e.clientX)
+    let dragIdx = 0
+    let bestDist = Infinity
+    positions.forEach((p, i) => {
+      const d = Math.abs(p - initial)
+      if (d < bestDist) {
+        bestDist = d
+        dragIdx = i
+      }
+    })
+    e.currentTarget.focus()
+    startDrag(dragIdx, e, true)
+  }
+
   const jumpToPosition = (nextPosition: number) => {
-    onSnap(Math.max(1, Math.min(seqLen - 1, nextPosition)))
+    setPositionAt(
+      clampedActiveIndex,
+      Math.max(1, Math.min(seqLen - 1, nextPosition)),
+    )
+  }
+
+  // Cache the removed splice's site + rewrite so a subsequent + Splice
+  // restores the user's last selection rather than starting fresh.
+  const [splice2Cache, setSplice2Cache] = useState<{
+    position: number
+    sitePosition: number | null
+    rewriteIndex: number
+  } | null>(null)
+
+  const addSplice = () => {
+    if (positions.length >= 2) return
+    const existing = positions[0] ?? midpoint
+    // Cache is only restored if (a) the cached position is still distinct
+    // from the remaining splice's position, (b) the cached position fits
+    // inside the current sequence, and (c) any cached site still exists
+    // among the candidate WGGW sites (catches sequence edits that
+    // invalidated the original site).
+    const cache = splice2Cache
+    const cacheIsValid =
+      cache !== null &&
+      cache.position !== existing &&
+      cache.position >= 1 &&
+      cache.position < seqLen &&
+      (cache.sitePosition === null ||
+        wggwSites.some((s) => s.position === cache.sitePosition))
+    if (cache && cacheIsValid) {
+      const sorted = [existing, cache.position].sort((a, b) => a - b)
+      const restoreIdx = sorted.indexOf(cache.position)
+      onPositionsChange(sorted)
+      setActiveSitePositions((prev) => {
+        const next = [...prev]
+        while (next.length < 2) next.push(null)
+        next[restoreIdx] = cache.sitePosition
+        return next
+      })
+      setRewriteSelections((prev) => {
+        const next = [...prev]
+        while (next.length < 2) next.push({ position: null, index: 0 })
+        next[restoreIdx] = {
+          position: cache.sitePosition,
+          index: cache.rewriteIndex,
+        }
+        return next
+      })
+      setActiveSpliceIndex(restoreIdx)
+      setSplice2Cache(null)
+      return
+    }
+    if (cache && !cacheIsValid) {
+      // Stale cache (sequence changed significantly): drop it.
+      setSplice2Cache(null)
+    }
+    // No usable cache: default new splice to 2/3 (or 1/3) of the sequence.
+    const candidate =
+      existing < midpoint
+        ? Math.floor((seqLen * 2) / 3)
+        : Math.floor(seqLen / 3)
+    const next = [existing, candidate].sort((a, b) => a - b)
+    onPositionsChange(next)
+    setActiveSpliceIndex(next.indexOf(candidate))
+  }
+
+  const removeSplice = (idx: number) => {
+    if (positions.length <= 1) return
+    setSplice2Cache({
+      position: positions[idx],
+      sitePosition: activeSitePositions[idx] ?? null,
+      rewriteIndex: rewriteSelections[idx]?.index ?? 0,
+    })
+    const next = positions.filter((_, i) => i !== idx)
+    setActiveSitePositions((prev) => prev.filter((_, i) => i !== idx))
+    setRewriteSelections((prev) => prev.filter((_, i) => i !== idx))
+    onPositionsChange(next)
+    setActiveSpliceIndex(0)
   }
 
   const handleQuerySubmit = () => {
@@ -296,6 +608,14 @@ export function SpliceSliderContext({
 
   if (seqLen < 12) return null
 
+  const fragmentLengths = buildSegments(positions, seqLen).map(
+    (s) => s.end - s.start,
+  )
+  const oversizeFragments = fragmentLengths.filter(
+    (bp) => bp > AAV_MAX_BP,
+  ).length
+  const aavConfigLabel = positions.length === 1 ? 'Dual AAV' : 'Triple AAV'
+
   return (
     <div
       ref={rootRef}
@@ -303,6 +623,36 @@ export function SpliceSliderContext({
       onPointerDownCapture={() => setShortcutsActive(true)}
       onFocusCapture={() => setShortcutsActive(true)}
     >
+      <div className="text-muted-foreground flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-1 text-[11px]">
+        <div className="flex items-center gap-2 font-mono tabular-nums">
+          <span className="text-foreground font-semibold">
+            {aavConfigLabel}
+          </span>
+          <span className="text-muted-foreground/70">·</span>
+          <span>
+            {fragmentLengths.length} fragment
+            {fragmentLengths.length === 1 ? '' : 's'}
+          </span>
+          <span className="text-muted-foreground/70">·</span>
+          <span>
+            {fragmentLengths.map((bp) => bp.toLocaleString()).join(' / ')} bp
+          </span>
+        </div>
+        {oversizeFragments > 0 ? (
+          <span className="text-danger-soft inline-flex items-center gap-1 font-medium">
+            <AlertTriangle className="size-3" />
+            {oversizeFragments} fragment
+            {oversizeFragments === 1 ? '' : 's'} exceeds{' '}
+            {AAV_MAX_BP.toLocaleString()} bp
+          </span>
+        ) : (
+          <span className="text-success-soft inline-flex items-center gap-1 font-medium">
+            <Check className="size-3" />
+            All fragments within AAV limit
+          </span>
+        )}
+      </div>
+
       <Toolbar
         queryValue={queryValue}
         queryMode={queryMode}
@@ -315,11 +665,86 @@ export function SpliceSliderContext({
         onQuerySubmit={handleQuerySubmit}
         onSearchNext={() => jumpToSearchMatch(searchMatchIndex + 1)}
         onSearchPrev={() => jumpToSearchMatch(searchMatchIndex - 1)}
-        onMidpoint={() => onSnap(midpoint)}
+        onMidpoint={() => setPositionAt(clampedActiveIndex, midpoint)}
       />
 
       <div className="space-y-2">
         <div className="flex min-w-0 flex-col gap-2">
+          <div className="relative h-7">
+            {positions.map((pos, idx) => {
+              const tone = spliceTone(idx)
+              const pct = splitPositionToPercent(pos, seqLen)
+              const siteIdx = selectedSiteIndices[idx] ?? -1
+              const canPrev =
+                siteIdx > 0 || (siteIdx === -1 && wggwSites.length > 0)
+              const canNext =
+                (siteIdx >= 0 && siteIdx < wggwSites.length - 1) ||
+                (siteIdx === -1 && wggwSites.length > 0)
+              const isActive = idx === clampedActiveIndex
+              return (
+                <div
+                  key={`readout-${idx}`}
+                  className="absolute top-0 -translate-x-1/2"
+                  style={{ left: `${pct}%` }}
+                >
+                  <div className="flex items-center gap-1">
+                    {isActive && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setActiveSpliceIndex(idx)
+                          jumpToSibling(-1)
+                        }}
+                        disabled={!canPrev}
+                        title={`Previous WGGW site (splice ${idx + 1})`}
+                        aria-label={`Previous WGGW site for splice ${idx + 1}`}
+                        className="text-foreground/55 hover:text-foreground inline-flex size-4 items-center justify-center rounded transition-colors disabled:pointer-events-none disabled:opacity-30"
+                      >
+                        <ChevronLeft className="size-3" strokeWidth={2.5} />
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onPointerDown={(e) => startDrag(idx, e, false)}
+                      title={`Splice ${idx + 1} at bp ${pos.toLocaleString()} — drag to move`}
+                      className={cn(
+                        'bg-background inline-flex min-w-max cursor-grab touch-none items-center rounded-md border px-2 py-0.5 font-mono text-xs font-semibold whitespace-nowrap tabular-nums shadow-sm transition-all active:cursor-grabbing',
+                        isActive
+                          ? cn('ring-2', tone.caretRing, tone.text)
+                          : 'text-muted-foreground/80 opacity-70',
+                        recentlyAssignedSplice === idx &&
+                          'animate-[pulse_0.6s_ease-out_1]',
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          'mr-1.5 inline-block size-1.5 rounded-full',
+                          tone.caret,
+                        )}
+                        aria-hidden="true"
+                      />
+                      {pos.toLocaleString()} bp
+                    </button>
+                    {isActive && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setActiveSpliceIndex(idx)
+                          jumpToSibling(1)
+                        }}
+                        disabled={!canNext}
+                        title={`Next WGGW site (splice ${idx + 1})`}
+                        aria-label={`Next WGGW site for splice ${idx + 1}`}
+                        className="text-foreground/55 hover:text-foreground inline-flex size-4 items-center justify-center rounded transition-colors disabled:pointer-events-none disabled:opacity-30"
+                      >
+                        <ChevronRight className="size-3" strokeWidth={2.5} />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
           <div
             ref={trackRef}
             role="slider"
@@ -327,77 +752,79 @@ export function SpliceSliderContext({
             aria-label="Splice junction position"
             aria-valuemin={1}
             aria-valuemax={seqLen - 1}
-            aria-valuenow={position}
-            aria-valuetext={`bp ${position.toLocaleString()} of ${seqLen.toLocaleString()}`}
+            aria-valuenow={activePosition}
+            aria-valuetext={`bp ${activePosition.toLocaleString()} of ${seqLen.toLocaleString()}`}
             onPointerDown={handleTrackPointerDown}
             className="focus-visible:ring-ring bg-background/80 relative h-16 cursor-ew-resize touch-none rounded-lg border select-none focus:outline-none focus-visible:ring-2"
           >
             <div className="absolute inset-x-0 top-0 z-10 flex h-11 overflow-hidden rounded-t-lg">
-              <div
-                className="bg-primary/15 flex min-w-0 items-center justify-center"
-                style={{ width: `${fivePct}%` }}
-              >
-                <span className="text-primary pointer-events-none truncate px-4 text-sm font-semibold tracking-[0.01em] tabular-nums">
-                  5′ · {fivePrimeLength.toLocaleString()} bp
-                </span>
-              </div>
-              <div className="bg-muted/50 flex min-w-0 flex-1 items-center justify-center">
-                <span className="text-muted-foreground pointer-events-none truncate px-4 text-sm font-semibold tracking-[0.01em] tabular-nums">
-                  3′ · {threePrimeLength.toLocaleString()} bp
-                </span>
-              </div>
-              <div
-                className="pointer-events-none absolute inset-y-0 left-0 w-0 -translate-x-1/2"
-                style={{ left: `${positionPct}%` }}
-                aria-hidden="true"
-              >
-                <div className="absolute top-1/2 left-1/2 z-10 flex -translate-x-1/2 -translate-y-1/2 items-center gap-1">
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      jumpToSibling(-1)
-                    }}
-                    onPointerDown={(e) => e.stopPropagation()}
-                    disabled={
-                      !(
-                        selectedSiteIndex > 0 ||
-                        (selectedSiteIndex === -1 && wggwSites.length > 0)
-                      )
-                    }
-                    title="Previous WGGW site ([)"
-                    aria-label="Previous WGGW site"
-                    className="text-foreground/55 hover:text-foreground pointer-events-auto inline-flex size-4 cursor-pointer items-center justify-center rounded transition-colors disabled:pointer-events-none disabled:opacity-30"
+              {buildSegments(positions, seqLen).map((seg, i, arr) => {
+                const segTone =
+                  i === arr.length - 1
+                    ? { fillSeg: 'bg-muted/50', text: 'text-muted-foreground' }
+                    : spliceTone(i)
+                const widthPct = ((seg.end - seg.start) / seqLen) * 100
+                const fragmentBp = seg.end - seg.start
+                const overAAV = fragmentBp > AAV_MAX_BP
+                return (
+                  <div
+                    key={`seg-${i}`}
+                    className={cn(
+                      'flex min-w-0 items-center justify-center',
+                      overAAV ? 'bg-danger/15' : segTone.fillSeg,
+                    )}
+                    style={{ width: `${widthPct}%` }}
                   >
-                    <ChevronLeft className="size-3" strokeWidth={2.5} />
-                  </button>
-                  <div className="bg-background text-foreground inline-flex min-w-max items-center rounded-md border px-2.5 py-1 font-mono text-xs font-semibold whitespace-nowrap tabular-nums shadow-sm">
-                    {position.toLocaleString()} bp
+                    <span
+                      className={cn(
+                        'pointer-events-none truncate px-4 text-sm font-semibold tracking-[0.01em] tabular-nums',
+                        overAAV ? 'text-danger-soft' : segTone.text,
+                      )}
+                      title={
+                        overAAV
+                          ? `${fragmentBp.toLocaleString()} bp exceeds the ~${AAV_MAX_BP.toLocaleString()} bp AAV packaging limit`
+                          : `${fragmentBp.toLocaleString()} bp · within the AAV packaging limit`
+                      }
+                    >
+                      {seg.label} · {fragmentBp.toLocaleString()} bp
+                    </span>
                   </div>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      jumpToSibling(1)
-                    }}
-                    onPointerDown={(e) => e.stopPropagation()}
-                    disabled={
-                      !(
-                        (selectedSiteIndex >= 0 &&
-                          selectedSiteIndex < wggwSites.length - 1) ||
-                        (selectedSiteIndex === -1 && wggwSites.length > 0)
-                      )
-                    }
-                    title="Next WGGW site (])"
-                    aria-label="Next WGGW site"
-                    className="text-foreground/55 hover:text-foreground pointer-events-auto inline-flex size-4 cursor-pointer items-center justify-center rounded transition-colors disabled:pointer-events-none disabled:opacity-30"
-                  >
-                    <ChevronRight className="size-3" strokeWidth={2.5} />
-                  </button>
-                </div>
-              </div>
+                )
+              })}
             </div>
-            <div className="bg-background/70 absolute inset-x-0 bottom-0 h-5 overflow-hidden rounded-b-lg border-t">
+            <div
+              role="presentation"
+              className="bg-background/70 absolute inset-x-0 bottom-0 h-5 cursor-pointer overflow-hidden rounded-b-lg border-t"
+              // Parent-routed tick selection: compute clicked bp from
+              // clientX and pick the nearest WGGW site within a small
+              // pixel threshold. Avoids the prior bug where overlapping
+              // tick hit-areas biased clicks toward the right-most tick.
+              onPointerDown={(e) => {
+                e.stopPropagation()
+                const track = trackRef.current
+                if (!track || wggwSites.length === 0) return
+                const rect = track.getBoundingClientRect()
+                if (rect.width <= 0) return
+                const x = Math.max(
+                  0,
+                  Math.min(e.clientX - rect.left, rect.width),
+                )
+                const clickBp = (x / rect.width) * seqLen
+                let nearest: WggwSiteCandidate | null = null
+                let bestDist = Infinity
+                for (const site of wggwSites) {
+                  const d = Math.abs(site.position - clickBp)
+                  if (d < bestDist) {
+                    bestDist = d
+                    nearest = site
+                  }
+                }
+                const pixelDist = (bestDist / seqLen) * rect.width
+                if (nearest && pixelDist <= 14) {
+                  handleSelectSite(nearest)
+                }
+              }}
+            >
               {stripWindow && (
                 <div
                   className="bg-foreground/8 pointer-events-none absolute inset-y-0"
@@ -410,97 +837,160 @@ export function SpliceSliderContext({
               )}
               {wggwSites.map((site, i) => {
                 const x = splitPositionToPercent(site.position, seqLen)
-                const isSelected = selectedSite?.position === site.position
+                const selectedAt = activeSitePositions.findIndex(
+                  (p) => p === site.position,
+                )
+                const isSelected = selectedAt !== -1
                 const costTone = costToneFor(site.baseChanges)
                 return (
-                  <button
-                    type="button"
+                  <span
                     key={`${site.position}-${i}`}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleSelectSite(site)
-                    }}
-                    onPointerDown={(e) => e.stopPropagation()}
-                    aria-pressed={isSelected}
+                    aria-hidden="true"
                     title={`WGGW ${site.motif} · bp ${site.position.toLocaleString()} · ${site.baseChanges} bp change${site.baseChanges === 1 ? '' : 's'}`}
-                    className="group absolute top-0 flex h-full w-7 -translate-x-1/2 cursor-pointer items-center justify-center"
+                    className={cn(
+                      'pointer-events-none absolute top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full',
+                      isSelected
+                        ? cn(spliceTone(selectedAt).tickBg, 'h-4 w-1.5')
+                        : cn(costTone.tickBg, 'h-3 w-1'),
+                    )}
                     style={{ left: `${x}%` }}
-                  >
-                    <span
-                      className={cn(
-                        'rounded-full transition-all group-hover:h-4',
-                        isSelected
-                          ? 'bg-primary h-4 w-1.5'
-                          : cn(costTone.tickBg, 'h-3 w-1'),
-                      )}
-                    />
-                  </button>
+                  />
                 )
               })}
             </div>
-            <div
-              className="pointer-events-none absolute inset-y-0 left-0 z-0 w-0 -translate-x-1/2"
-              style={{ left: `${positionPct}%` }}
-              aria-hidden="true"
-            >
-              <div className="border-foreground/85 absolute inset-y-0 left-1/2 z-0 -translate-x-1/2 border-l-2" />
-            </div>
+            {positions.map((pos, idx) => {
+              const pct = splitPositionToPercent(pos, seqLen)
+              const tone = spliceTone(idx)
+              return (
+                <div
+                  key={`cut-${idx}`}
+                  className="pointer-events-none absolute inset-y-0 left-0 z-0 w-0 -translate-x-1/2"
+                  style={{ left: `${pct}%` }}
+                  aria-hidden="true"
+                >
+                  <div
+                    className={cn(
+                      'absolute inset-y-0 left-1/2 z-0 -translate-x-1/2 border-l-2',
+                      tone.border,
+                    )}
+                  />
+                </div>
+              )
+            })}
           </div>
 
           <LocalSequenceView
             ctx={frameContext}
             sites={wggwSites}
-            selectedSite={selectedSite}
-            currentRewrite={currentRewrite}
+            selectedSites={selectedSites}
+            currentRewrites={currentRewrites}
             activeSearchMatch={activeSearchMatch}
-            cursorPosition={position}
+            cursorPositions={positions}
+            activeSpliceIndex={clampedActiveIndex}
             stripRef={frameStripRef}
             onSelectSite={handleSelectSite}
           />
-          <div className="flex justify-end px-1">
+          <div className="flex items-center justify-between gap-3 px-1">
+            {positions.length < 2 ? (
+              <button
+                type="button"
+                onClick={addSplice}
+                title="Add a second splice (for triple-AAV cassettes)"
+                className="text-muted-foreground hover:text-foreground hover:bg-muted/60 bg-background/80 inline-flex h-6 shrink-0 items-center gap-1 rounded-md border px-2 text-[10px] font-medium transition-colors"
+              >
+                <Plus className="size-3" />
+                Splice
+              </button>
+            ) : (
+              <span className="text-muted-foreground/70 text-[10px] font-medium">
+                Splice {clampedActiveIndex + 1} of {positions.length}
+              </span>
+            )}
             <ShortcutHint
               active={shortcutsActive}
+              spliceCount={positions.length}
               canPrev={
-                selectedSiteIndex > 0 ||
-                (selectedSiteIndex === -1 && wggwSites.length > 0)
+                (selectedSiteIndices[clampedActiveIndex] ?? -1) > 0 ||
+                ((selectedSiteIndices[clampedActiveIndex] ?? -1) === -1 &&
+                  wggwSites.length > 0)
               }
               canNext={
-                (selectedSiteIndex >= 0 &&
-                  selectedSiteIndex < wggwSites.length - 1) ||
-                (selectedSiteIndex === -1 && wggwSites.length > 0)
+                ((selectedSiteIndices[clampedActiveIndex] ?? -1) >= 0 &&
+                  (selectedSiteIndices[clampedActiveIndex] ?? -1) <
+                    wggwSites.length - 1) ||
+                ((selectedSiteIndices[clampedActiveIndex] ?? -1) === -1 &&
+                  wggwSites.length > 0)
               }
               onPrev={() => jumpToSibling(-1)}
               onNext={() => jumpToSibling(1)}
-              onMidpoint={() => onSnap(midpoint)}
+              onMidpoint={() => setPositionAt(clampedActiveIndex, midpoint)}
+              onSwitchSplice={
+                positions.length > 1
+                  ? (idx) => setActiveSpliceIndex(idx)
+                  : undefined
+              }
             />
           </div>
         </div>
 
-        <Inspector
-          sequence={sequence}
-          selectedSite={selectedSite}
-          selectedSiteIndex={selectedSiteIndex}
-          totalSites={wggwSites.length}
-          currentRewrite={currentRewrite}
-          selectedRewriteIndex={selectedRewriteIndex}
-          canPrevSite={
-            selectedSiteIndex > 0 ||
-            (selectedSiteIndex === -1 && wggwSites.length > 0)
-          }
-          canNextSite={
-            (selectedSiteIndex >= 0 &&
-              selectedSiteIndex < wggwSites.length - 1) ||
-            (selectedSiteIndex === -1 && wggwSites.length > 0)
-          }
-          onPrevSite={() => jumpToSibling(-1)}
-          onNextSite={() => jumpToSibling(1)}
-          onSelectRewrite={(index) =>
-            setRewriteSelection({
-              position: selectedSite?.position ?? null,
-              index,
-            })
-          }
-        />
+        <div
+          className={cn(
+            'grid min-w-0 gap-3',
+            positions.length > 1 && '2xl:grid-cols-2',
+          )}
+        >
+          {positions.map((_pos, idx) => (
+            <Inspector
+              key={`inspector-${idx}`}
+              spliceIndex={idx}
+              spliceCount={positions.length}
+              tone={spliceTone(idx)}
+              isActive={idx === clampedActiveIndex}
+              onActivate={() => setActiveSpliceIndex(idx)}
+              onRemoveSplice={
+                positions.length > 1 ? () => removeSplice(idx) : undefined
+              }
+              sequence={sequence}
+              selectedSite={selectedSites[idx]}
+              selectedSiteIndex={selectedSiteIndices[idx] ?? -1}
+              totalSites={wggwSites.length}
+              currentRewrite={currentRewrites[idx]}
+              selectedRewriteIndex={(() => {
+                const sel = rewriteSelections[idx]
+                const site = selectedSites[idx]
+                if (!sel || !site) return 0
+                return sel.position === site.position ? sel.index : 0
+              })()}
+              canPrevSite={
+                (selectedSiteIndices[idx] ?? -1) > 0 ||
+                ((selectedSiteIndices[idx] ?? -1) === -1 &&
+                  wggwSites.length > 0)
+              }
+              canNextSite={
+                ((selectedSiteIndices[idx] ?? -1) >= 0 &&
+                  (selectedSiteIndices[idx] ?? -1) < wggwSites.length - 1) ||
+                ((selectedSiteIndices[idx] ?? -1) === -1 &&
+                  wggwSites.length > 0)
+              }
+              onPrevSite={() => {
+                setActiveSpliceIndex(idx)
+                jumpToSibling(-1)
+              }}
+              onNextSite={() => {
+                setActiveSpliceIndex(idx)
+                jumpToSibling(1)
+              }}
+              onSelectRewrite={(index) => {
+                const site = selectedSites[idx]
+                setRewriteSelections((prev) => {
+                  const next = [...prev]
+                  next[idx] = { position: site?.position ?? null, index }
+                  return next
+                })
+              }}
+            />
+          ))}
+        </div>
       </div>
     </div>
   )
@@ -667,19 +1157,21 @@ function LegendDot({ tone }: { tone: 'success' | 'marker' | 'primary' }) {
 function LocalSequenceView({
   ctx,
   sites,
-  selectedSite,
-  currentRewrite,
+  selectedSites,
+  currentRewrites,
   activeSearchMatch,
-  cursorPosition,
+  cursorPositions,
+  activeSpliceIndex,
   stripRef,
   onSelectSite,
 }: {
   ctx: SequenceContext
   sites: WggwSiteCandidate[]
-  selectedSite: WggwSiteCandidate | null
-  currentRewrite: WggwRecodingOption | null
+  selectedSites: (WggwSiteCandidate | null)[]
+  currentRewrites: (WggwRecodingOption | null)[]
   activeSearchMatch: { start: number; length: number } | null
-  cursorPosition: number
+  cursorPositions: number[]
+  activeSpliceIndex: number
   stripRef: React.RefObject<HTMLDivElement | null>
   onSelectSite: (site: WggwSiteCandidate) => void
 }) {
@@ -689,31 +1181,53 @@ function LocalSequenceView({
     return map
   }, [sites])
 
-  const siteCoverByBase = useMemo(() => {
-    const map = new Map<number, WggwSiteCandidate>()
-    for (const site of sites) {
+  // For each base position, which selected splice index (if any) covers it.
+  // Selected sites win over unselected; among selected, lower splice index
+  // wins (splice 1 takes priority on overlapping bases).
+  const selectedCoverByBase = useMemo(() => {
+    const map = new Map<
+      number,
+      { spliceIndex: number; site: WggwSiteCandidate }
+    >()
+    selectedSites.forEach((site, spliceIndex) => {
+      if (!site) return
       for (let k = 0; k < 4; k++) {
         const pos = site.motifStart + k
-        const existing = map.get(pos)
-        // Selected site wins; otherwise first one stays.
-        if (!existing || selectedSite?.position === site.position) {
-          map.set(pos, site)
-        }
+        if (!map.has(pos)) map.set(pos, { spliceIndex, site })
+      }
+    })
+    return map
+  }, [selectedSites])
+
+  // Other (non-selected) sites' base coverage, used for hover affordance.
+  const otherSiteCoverByBase = useMemo(() => {
+    const map = new Map<number, WggwSiteCandidate>()
+    const selectedPositions = new Set(
+      selectedSites.filter((s) => s).map((s) => s!.position),
+    )
+    for (const site of sites) {
+      if (selectedPositions.has(site.position)) continue
+      for (let k = 0; k < 4; k++) {
+        const pos = site.motifStart + k
+        if (!map.has(pos)) map.set(pos, site)
       }
     }
     return map
-  }, [sites, selectedSite?.position])
+  }, [sites, selectedSites])
 
   const changedBases = useMemo(() => {
-    const s = new Set<number>()
-    if (!selectedSite || !currentRewrite) return s
-    for (let i = 0; i < selectedSite.originalHexamer.length; i++) {
-      if (selectedSite.originalHexamer[i] !== currentRewrite.newHexamer[i]) {
-        s.add(selectedSite.hexamerStart + i)
+    const s = new Map<number, number>() // base position → splice index
+    selectedSites.forEach((site, spliceIndex) => {
+      const rewrite = currentRewrites[spliceIndex]
+      if (!site || !rewrite) return
+      for (let i = 0; i < site.originalHexamer.length; i++) {
+        if (site.originalHexamer[i] !== rewrite.newHexamer[i]) {
+          s.set(site.hexamerStart + i, spliceIndex)
+        }
       }
-    }
+    })
     return s
-  }, [currentRewrite, selectedSite])
+  }, [currentRewrites, selectedSites])
 
   const searchMatchBases = useMemo(() => {
     const s = new Set<number>()
@@ -725,19 +1239,35 @@ function LocalSequenceView({
   }, [activeSearchMatch])
 
   const seqLen = ctx.end - ctx.start + 1
+  const focusPosition = cursorPositions[activeSpliceIndex] ?? cursorPositions[0]
+  // Smooth scroll only on "big jumps" (active-splice switch, midpoint, [/],
+  // GoTo). Drag emits per-frame focus updates with small deltas — those
+  // stay instant since the slider's pointer handler already imperatively
+  // scrolled the strip in the same frame.
+  const lastFocusRef = useRef<number | null>(null)
   useLayoutEffect(() => {
     const scroller = stripRef.current
-    if (!scroller || seqLen <= 0) return
-    const center = () => {
-      const targetCenter =
-        ((cursorPosition - ctx.start + 0.5) / seqLen) * scroller.scrollWidth
-      scroller.scrollLeft = targetCenter - scroller.clientWidth / 2
+    if (!scroller || seqLen <= 0 || focusPosition == null) return
+    const targetCenter =
+      ((focusPosition - ctx.start + 0.5) / seqLen) * scroller.scrollWidth
+    const left = targetCenter - scroller.clientWidth / 2
+    const prev = lastFocusRef.current
+    const isBigJump = prev !== null && Math.abs(focusPosition - prev) > 30
+    if (isBigJump) {
+      scroller.scrollTo({ left, behavior: 'smooth' })
+    } else {
+      scroller.scrollLeft = left
     }
-    center()
-    const ro = new ResizeObserver(center)
+    lastFocusRef.current = focusPosition
+    const onResize = () => {
+      const t =
+        ((focusPosition - ctx.start + 0.5) / seqLen) * scroller.scrollWidth
+      scroller.scrollLeft = t - scroller.clientWidth / 2
+    }
+    const ro = new ResizeObserver(onResize)
     ro.observe(scroller)
     return () => ro.disconnect()
-  }, [stripRef, cursorPosition, ctx.start, seqLen])
+  }, [stripRef, focusPosition, ctx.start, seqLen])
 
   return (
     <div
@@ -752,11 +1282,11 @@ function LocalSequenceView({
             key={codon.idx}
             codon={codon}
             site={siteByMotifStart.get(codon.start) ?? null}
-            siteCoverByBase={siteCoverByBase}
-            selectedSitePosition={selectedSite?.position ?? null}
+            selectedCoverByBase={selectedCoverByBase}
+            otherSiteCoverByBase={otherSiteCoverByBase}
             changedBases={changedBases}
             searchMatchBases={searchMatchBases}
-            cursorPosition={cursorPosition}
+            cursorPositions={cursorPositions}
             isLast={codonIdx === ctx.codons.length - 1}
             onSelectSite={onSelectSite}
           />
@@ -769,26 +1299,35 @@ function LocalSequenceView({
 function CodonCard({
   codon,
   site,
-  siteCoverByBase,
-  selectedSitePosition,
+  selectedCoverByBase,
+  otherSiteCoverByBase,
   changedBases,
   searchMatchBases,
-  cursorPosition,
+  cursorPositions,
   isLast,
   onSelectSite,
 }: {
   codon: SequenceContext['codons'][number]
   site: WggwSiteCandidate | null
-  siteCoverByBase: Map<number, WggwSiteCandidate>
-  selectedSitePosition: number | null
-  changedBases: Set<number>
+  selectedCoverByBase: Map<
+    number,
+    { spliceIndex: number; site: WggwSiteCandidate }
+  >
+  otherSiteCoverByBase: Map<number, WggwSiteCandidate>
+  changedBases: Map<number, number>
   searchMatchBases: Set<number>
-  cursorPosition: number
+  cursorPositions: number[]
   isLast: boolean
   onSelectSite: (site: WggwSiteCandidate) => void
 }) {
   const roleStyles = roleStylesFor(codon.role)
-  const siteIsSelected = site && selectedSitePosition === site.position
+  const startCover = site
+    ? [...selectedCoverByBase.values()].find(
+        (c) => c.site.position === site.position,
+      )
+    : undefined
+  const siteIsSelected = !!startCover
+  const siteSpliceTone = startCover ? spliceTone(startCover.spliceIndex) : null
 
   return (
     <div
@@ -813,8 +1352,8 @@ function CodonCard({
             <span
               className={cn(
                 'rounded-full transition-all',
-                siteIsSelected
-                  ? 'bg-primary h-3 w-2'
+                siteIsSelected && siteSpliceTone
+                  ? cn(siteSpliceTone.tickBg, 'h-3 w-2')
                   : cn(costToneFor(site.baseChanges).tickBg, 'h-2 w-2'),
               )}
             />
@@ -825,7 +1364,9 @@ function CodonCard({
         className={cn(
           'text-[10px] leading-4 tabular-nums',
           roleStyles.aa,
-          siteIsSelected && 'text-primary font-semibold',
+          siteIsSelected &&
+            siteSpliceTone &&
+            cn(siteSpliceTone.text, 'font-semibold'),
         )}
         title={`Codon ${codon.idx + 1}: ${codon.codon}`}
       >
@@ -835,15 +1376,25 @@ function CodonCard({
         {[0, 1, 2].map((bi) => {
           const pos = codon.start + bi
           const base = codon.codon[bi] ?? ''
-          const coverSite = siteCoverByBase.get(pos)
-          const inSelectedMotif =
-            coverSite && coverSite.position === selectedSitePosition
-          const inOtherSite = coverSite && !inSelectedMotif
+          const selectedCover = selectedCoverByBase.get(pos)
+          const otherCover = !selectedCover
+            ? otherSiteCoverByBase.get(pos)
+            : undefined
+          const inSelectedMotif = !!selectedCover
+          const inOtherSite = !!otherCover
+          const coverSite = selectedCover?.site ?? otherCover ?? null
           const isMotifStart = coverSite && coverSite.motifStart === pos
           const isMotifEnd = coverSite && coverSite.motifStart + 3 === pos
-          const isCutBase = pos === cursorPosition
-          const isChanged = changedBases.has(pos)
+          const cutSpliceIndex = cursorPositions.findIndex((cp) => cp === pos)
+          const isCutBase = cutSpliceIndex !== -1
+          const cutTone = isCutBase ? spliceTone(cutSpliceIndex) : null
+          const changedSpliceIdx = changedBases.get(pos) ?? -1
+          const isChanged = changedSpliceIdx !== -1
+          const changeTone = isChanged ? spliceTone(changedSpliceIdx) : null
           const inSearchMatch = searchMatchBases.has(pos)
+          const selectedTone = selectedCover
+            ? spliceTone(selectedCover.spliceIndex)
+            : null
           return (
             <button
               key={pos}
@@ -856,20 +1407,28 @@ function CodonCard({
                 'relative flex h-5 w-[14px] items-center justify-center text-sm font-semibold tabular-nums transition-colors',
                 roleStyles.base,
                 inOtherSite &&
-                  'bg-marker/15 text-foreground hover:bg-marker/25 cursor-pointer',
+                  'bg-marker/10 text-foreground hover:bg-marker/20 cursor-pointer',
                 inSelectedMotif &&
-                  'bg-primary/15 text-primary hover:bg-primary/20 cursor-pointer',
+                  selectedTone &&
+                  cn(
+                    selectedTone.baseBg,
+                    selectedTone.baseText,
+                    'cursor-pointer',
+                  ),
                 isMotifStart && 'rounded-l-sm',
                 isMotifEnd && 'rounded-r-sm',
-                isChanged && 'text-primary',
+                changeTone && changeTone.text,
                 inSearchMatch &&
                   'ring-foreground/60 z-10 rounded-sm ring-1 ring-inset',
               )}
             >
               {base}
-              {isCutBase && (
+              {isCutBase && cutTone && (
                 <span
-                  className="bg-foreground absolute top-0 bottom-0 -left-px w-px"
+                  className={cn(
+                    'absolute top-0 bottom-0 -left-px w-px',
+                    cutTone.tickBg,
+                  )}
                   aria-hidden="true"
                 />
               )}
@@ -883,6 +1442,12 @@ function CodonCard({
 
 function Inspector({
   sequence,
+  spliceIndex,
+  spliceCount,
+  tone,
+  isActive,
+  onActivate,
+  onRemoveSplice,
   selectedSite,
   selectedSiteIndex,
   totalSites,
@@ -895,6 +1460,12 @@ function Inspector({
   onSelectRewrite,
 }: {
   sequence: string
+  spliceIndex: number
+  spliceCount: number
+  tone: (typeof SPLICE_TONES)[number]
+  isActive: boolean
+  onActivate: () => void
+  onRemoveSplice?: () => void
   selectedSite: WggwSiteCandidate | null
   selectedSiteIndex: number
   totalSites: number
@@ -906,11 +1477,63 @@ function Inspector({
   onNextSite: () => void
   onSelectRewrite: (index: number) => void
 }) {
+  const cardClass = cn(
+    'flex min-w-0 flex-col gap-4 rounded-lg border p-4 text-xs transition-all cursor-pointer',
+    spliceCount > 1
+      ? isActive
+        ? cn('bg-muted/40 ring-2 shadow-sm', tone.caretRing)
+        : cn(
+            'bg-muted/20 opacity-55 hover:opacity-80',
+            'hover:bg-muted/30',
+            tone.hoverBorder,
+          )
+      : 'bg-muted/30 cursor-default',
+  )
+
+  const spliceLabel = spliceCount > 1 ? `Splice ${spliceIndex + 1}` : null
+
+  const headerEyebrow = spliceLabel ? (
+    <div className="flex items-center justify-between gap-2">
+      <button
+        type="button"
+        onClick={onActivate}
+        className={cn(
+          'inline-flex items-center gap-1.5 text-[10px] font-semibold tracking-[0.08em] uppercase transition-colors',
+          isActive ? tone.text : 'text-muted-foreground',
+        )}
+      >
+        <span
+          className={cn('inline-block size-1.5 rounded-full', tone.caret)}
+          aria-hidden="true"
+        />
+        {spliceLabel}
+      </button>
+      {onRemoveSplice && (
+        <button
+          type="button"
+          onClick={onRemoveSplice}
+          title={`Remove ${spliceLabel}`}
+          aria-label={`Remove ${spliceLabel}`}
+          className="text-muted-foreground hover:text-foreground hover:bg-muted/60 inline-flex size-5 items-center justify-center rounded transition-colors"
+        >
+          <X className="size-3" />
+        </button>
+      )}
+    </div>
+  ) : null
+
   if (!selectedSite || !currentRewrite) {
+    const emptyHint =
+      spliceCount > 1
+        ? spliceIndex === 0
+          ? 'Pick the 5′ WGGW site'
+          : 'Pick the 3′ WGGW site'
+        : 'Pick a WGGW site'
     return (
-      <div className="bg-muted/30 flex min-h-[280px] flex-col gap-3 rounded-lg border p-4 text-xs">
+      <div className={cn(cardClass, 'min-h-0')} onPointerDown={onActivate}>
+        {headerEyebrow}
         <div className="text-foreground flex items-center justify-between gap-2 text-sm font-semibold">
-          <span>Pick a WGGW site</span>
+          <span>{emptyHint}</span>
           <SiteNav
             label={`${totalSites} site${totalSites === 1 ? '' : 's'}`}
             canPrev={canPrevSite}
@@ -919,11 +1542,6 @@ function Inspector({
             onNext={onNextSite}
           />
         </div>
-        <p className="text-muted-foreground leading-relaxed">
-          Drag the caret to a nearby tick, click a tick directly, or press{' '}
-          <Kbd>m</Kbd> to snap to the midpoint. Use <Kbd>[</Kbd> / <Kbd>]</Kbd>{' '}
-          to step between sites.
-        </p>
       </div>
     )
   }
@@ -950,7 +1568,8 @@ function Inspector({
   const siteCostTone = costToneFor(selectedSite.baseChanges)
 
   return (
-    <div className="bg-muted/30 flex min-h-[280px] flex-col gap-4 rounded-lg border p-4 text-xs">
+    <div className={cardClass} onPointerDown={onActivate}>
+      {headerEyebrow}
       <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
         <div className="text-foreground flex flex-wrap items-baseline gap-x-2 gap-y-0.5 font-mono text-sm tabular-nums">
           <span className="font-semibold">
@@ -982,10 +1601,16 @@ function Inspector({
 
       <div className="space-y-3">
         <div className="space-y-1.5">
-          <div className="text-muted-foreground text-[10px] font-medium tracking-[0.08em] uppercase">
-            Synonymous rewrites
+          <div className="text-muted-foreground flex items-center justify-between text-[10px] font-medium tracking-[0.08em] uppercase">
+            <span>Synonymous rewrites</span>
+            {selectedSite.rewriteOptions.length > 1 && (
+              <span className="text-muted-foreground/70 normal-case">
+                {selectedRewriteIndex + 1} of{' '}
+                {selectedSite.rewriteOptions.length}
+              </span>
+            )}
           </div>
-          <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1">
+          <RewriteRow>
             {selectedSite.rewriteOptions.map((option, index) => {
               const active = index === selectedRewriteIndex
               const optionTone = costToneFor(option.baseChanges)
@@ -1041,7 +1666,7 @@ function Inspector({
                 </button>
               )
             })}
-          </div>
+          </RewriteRow>
         </div>
 
         <div className="space-y-1.5">
@@ -1091,6 +1716,65 @@ function Inspector({
 
 function formatMotifSplit(motif: string) {
   return `${motif.slice(0, 2)}|${motif.slice(2)}`
+}
+
+// A horizontal scroller for rewrite chips that surfaces the
+// "scrollable" affordance via a CSS mask: chips fade to transparent at
+// any edge that has content offscreen in that direction. Mask-based
+// instead of an overlay-gradient so it's bg-color-agnostic — it just
+// dissolves the chips themselves at the edge.
+function RewriteRow({ children }: { children: ReactNode }) {
+  const scrollerRef = useRef<HTMLDivElement>(null)
+  const [edges, setEdges] = useState<{ left: boolean; right: boolean }>({
+    left: false,
+    right: false,
+  })
+
+  useEffect(() => {
+    const el = scrollerRef.current
+    if (!el) return
+    const update = () => {
+      setEdges({
+        left: el.scrollLeft > 4,
+        right: el.scrollLeft + el.clientWidth < el.scrollWidth - 4,
+      })
+    }
+    update()
+    el.addEventListener('scroll', update, { passive: true })
+    const ro = new ResizeObserver(update)
+    ro.observe(el)
+    return () => {
+      el.removeEventListener('scroll', update)
+      ro.disconnect()
+    }
+  }, [])
+
+  const fadeStops = (() => {
+    if (edges.left && edges.right) {
+      return 'linear-gradient(to right, transparent 0, black 24px, black calc(100% - 24px), transparent 100%)'
+    }
+    if (edges.left) {
+      return 'linear-gradient(to right, transparent 0, black 24px)'
+    }
+    if (edges.right) {
+      return 'linear-gradient(to right, black calc(100% - 24px), transparent 100%)'
+    }
+    return undefined
+  })()
+
+  return (
+    <div
+      ref={scrollerRef}
+      className="-mx-1 flex gap-1.5 overflow-x-auto px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      style={
+        fadeStops
+          ? { maskImage: fadeStops, WebkitMaskImage: fadeStops }
+          : undefined
+      }
+    >
+      {children}
+    </div>
+  )
 }
 
 function Kbd({ children }: { children: ReactNode }) {
@@ -1604,27 +2288,50 @@ function costToneFor(baseChanges: number): CostTone {
 
 function ShortcutHint({
   active,
+  spliceCount,
   canPrev,
   canNext,
   onPrev,
   onNext,
   onMidpoint,
+  onSwitchSplice,
 }: {
   active: boolean
+  spliceCount: number
   canPrev: boolean
   canNext: boolean
   onPrev: () => void
   onNext: () => void
   onMidpoint: () => void
+  onSwitchSplice?: (idx: number) => void
 }) {
+  // Keyboard shortcuts are noise on touch viewports — hide entirely below
+  // md (no physical keyboard typically).
   return (
     <div
       className={cn(
-        'text-muted-foreground/70 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] transition-opacity',
+        'text-muted-foreground/70 hidden flex-wrap items-center gap-x-3 gap-y-1 text-[10px] transition-opacity md:flex',
         active ? 'opacity-100' : 'pointer-events-none opacity-0',
       )}
       aria-hidden={!active}
     >
+      {onSwitchSplice && spliceCount > 1 && (
+        <span className="flex items-center gap-1">
+          <ShortcutHintButton
+            onClick={() => onSwitchSplice(0)}
+            title="Focus splice 1"
+          >
+            <Kbd>1</Kbd>
+          </ShortcutHintButton>
+          <ShortcutHintButton
+            onClick={() => onSwitchSplice(1)}
+            title="Focus splice 2"
+          >
+            <Kbd>2</Kbd>
+          </ShortcutHintButton>
+          <span>focus</span>
+        </span>
+      )}
       <ShortcutHintButton
         onClick={onPrev}
         disabled={!canPrev}

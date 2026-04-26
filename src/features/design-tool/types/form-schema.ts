@@ -73,24 +73,25 @@ const proteinSequenceSchema = z
 
 export const validationSchema = z
   .object({
-    selectedWggwSite: z
-      .object({
-        position: z.number().int().min(1),
-        motifStart: z.number().int().min(1),
-        motif: z.string().regex(WGGW_REGEX),
-        hexamerStart: z.number().int().min(1),
-        originalCodons: z.tuple([
-          z.string().regex(CODON_REGEX),
-          z.string().regex(CODON_REGEX),
-        ]),
-        newCodons: z.tuple([
-          z.string().regex(CODON_REGEX),
-          z.string().regex(CODON_REGEX),
-        ]),
-        newHexamer: z.string().regex(/^[ACGTUacgtu]{6}$/),
-      })
-      .nullable()
-      .optional(),
+    selectedWggwSites: z.array(
+      z
+        .object({
+          position: z.number().int().min(1),
+          motifStart: z.number().int().min(1),
+          motif: z.string().regex(WGGW_REGEX),
+          hexamerStart: z.number().int().min(1),
+          originalCodons: z.tuple([
+            z.string().regex(CODON_REGEX),
+            z.string().regex(CODON_REGEX),
+          ]),
+          newCodons: z.tuple([
+            z.string().regex(CODON_REGEX),
+            z.string().regex(CODON_REGEX),
+          ]),
+          newHexamer: z.string().regex(/^[ACGTUacgtu]{6}$/),
+        })
+        .nullable(),
+    ),
     sequenceType: z.enum(['dna', 'protein']),
     codingSequence: z.string(),
     proteinSequence: z.string(),
@@ -109,7 +110,7 @@ export const validationSchema = z
     enforceGcContent: z.boolean(),
     '5PrimeStimulatoryIntron': z.boolean(),
     '3PrimeStimulatoryIntron': z.boolean(),
-    spliceJunctionPosition: z.number().min(1),
+    spliceJunctionPositions: z.array(z.number().int().min(1)).min(1).max(2),
   })
   .superRefine((data, ctx) => {
     // Validate the active sequence field based on sequenceType
@@ -140,21 +141,36 @@ export const validationSchema = z
       }
     }
 
-    // Cross-field: splice position must lie strictly inside the coding
-    // sequence (1 ≤ position ≤ length - 1). Only validate when we have
-    // a DNA sequence (in protein mode, codingSequence is set after
-    // reverse translation and may be empty at validation time).
+    // Cross-field: splice positions must lie strictly inside the coding
+    // sequence (1 ≤ position ≤ length - 1) and be sorted ascending. Only
+    // validate when we have a DNA sequence (in protein mode, codingSequence
+    // is set after reverse translation and may be empty at validation time).
     if (data.sequenceType === 'dna' && data.codingSequence.length > 0) {
       const max = data.codingSequence.length - 1
-      if (data.spliceJunctionPosition > max) {
-        ctx.addIssue({
-          path: ['spliceJunctionPosition'],
-          code: z.ZodIssueCode.custom,
-          message: designToolCopy.validation.spliceTooLarge(max),
-        })
+      data.spliceJunctionPositions.forEach((pos, i) => {
+        if (pos > max) {
+          ctx.addIssue({
+            path: ['spliceJunctionPositions', i],
+            code: z.ZodIssueCode.custom,
+            message: designToolCopy.validation.spliceTooLarge(max),
+          })
+        }
+      })
+      for (let i = 1; i < data.spliceJunctionPositions.length; i++) {
+        if (
+          data.spliceJunctionPositions[i] <= data.spliceJunctionPositions[i - 1]
+        ) {
+          ctx.addIssue({
+            path: ['spliceJunctionPositions', i],
+            code: z.ZodIssueCode.custom,
+            message: 'Splice positions must be in ascending order',
+          })
+        }
       }
     }
   })
 
 export type FormValues = z.infer<typeof validationSchema>
-export type SelectedWggwSite = NonNullable<FormValues['selectedWggwSite']>
+export type SelectedWggwSite = NonNullable<
+  FormValues['selectedWggwSites'][number]
+>

@@ -9,6 +9,11 @@ export function buildJobParams(values: FormValues) {
 }
 
 function buildOptions(values: FormValues) {
+  const positions = values.spliceJunctionPositions
+  const sites = values.selectedWggwSites
+  // Backwards-compat: emit single split_point / selected_wggw_site for the
+  // common 1-splice case so the existing Python backend keeps working
+  // without changes. For 2+ splices, also emit array forms.
   return {
     codon_optimize: values.species !== 'none' ? values.species : null,
     codon_optimize_weight: values.codonOptimizeWeight,
@@ -21,8 +26,12 @@ function buildOptions(values: FormValues) {
     enforce_gc: values.enforceGcContent,
     stim_5: values['5PrimeStimulatoryIntron'],
     stim_3: values['3PrimeStimulatoryIntron'],
-    split_point: values.spliceJunctionPosition,
-    selected_wggw_site: serializeSelectedWggwSite(values.selectedWggwSite),
+    split_point: positions[0] ?? null,
+    selected_wggw_site: serializeSelectedWggwSite(sites[0] ?? null),
+    ...(positions.length > 1 && {
+      split_points: positions,
+      selected_wggw_sites: sites.map(serializeSelectedWggwSite),
+    }),
     ensure_wggw: true,
     wggw_threshold: 300,
   }

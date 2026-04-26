@@ -81,12 +81,13 @@ export function GeneSplitterForm({
       proteinSequence: '',
       name: defaultName ?? '',
       species: defaultSpecies ?? 'none',
-      selectedWggwSite: null,
-      spliceJunctionPosition:
+      selectedWggwSites: [null],
+      spliceJunctionPositions: [
         defaultSpliceJunctionPosition ??
-        (defaultCodingSequence
-          ? Math.floor(defaultCodingSequence.length / 2)
-          : 1),
+          (defaultCodingSequence
+            ? Math.floor(defaultCodingSequence.length / 2)
+            : 1),
+      ],
     },
   })
 
