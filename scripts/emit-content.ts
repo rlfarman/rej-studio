@@ -213,7 +213,10 @@ async function main() {
       searchOptions: {
         boost: { symbol: 5, alternateSymbols: 3, name: 1 },
         prefix: true,
-        fuzzy: 0.2,
+        // Tight fuzzy. Biology symbols like "CFTR" should not match
+        // "F2R" or other near-misses; prefix carries most of the
+        // partial-match weight.
+        fuzzy: 0.1,
       },
     })
     mini.addAll(docs)

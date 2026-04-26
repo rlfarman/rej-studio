@@ -47,7 +47,7 @@ async function loadShard(species: string): Promise<MiniSearch<SearchDoc>> {
       searchOptions: {
         boost: { symbol: 5, alternateSymbols: 3, name: 1 },
         prefix: true,
-        fuzzy: 0.2,
+        fuzzy: 0.1,
       },
     })
   })()
@@ -148,12 +148,7 @@ export async function searchGenesClient(
   const shards = await Promise.all(speciesShards(species).map(loadShard))
   const lower = trimmed.toLowerCase()
   const aggregated = shards.flatMap((mini) =>
-    mini.search(trimmed, {
-      boost: { symbol: 5, alternateSymbols: 3, name: 1 },
-      prefix: true,
-      fuzzy: 0.2,
-      combineWith: 'AND',
-    }),
+    mini.search(trimmed, { combineWith: 'AND' }),
   )
 
   // MiniSearch scores are reasonable but biology queries benefit from extra
