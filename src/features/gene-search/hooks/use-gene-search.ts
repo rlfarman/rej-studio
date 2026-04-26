@@ -1,31 +1,19 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useDebounce } from 'use-debounce'
 import {
-  keepPreviousData,
-  useQuery,
-  useQueryClient,
-} from '@tanstack/react-query'
-import type { GeneSearchResult } from '@/features/gene-search/api/gene-queries'
-import type { SearchGenesResult } from '@/features/gene-search/api/genes'
-import type { SpeciesFilter } from '@/lib/bio/species'
+  searchGenesClient,
+  type GeneSearchResult,
+} from '@/features/gene-search/utils/client-search'
 import { useSpeciesContext } from '@/stores/species-store'
 import { trackEvent } from '@/lib/analytics'
 
 interface UseGeneSearchProps {
-  searchGenes: (
-    content: string,
-    species?: SpeciesFilter,
-  ) => Promise<SearchGenesResult>
   defaultQuery?: string
 }
 
 const EMPTY_RESULTS: GeneSearchResult[] = []
 
-export function useGeneSearch({
-  searchGenes,
-  defaultQuery,
-}: UseGeneSearchProps) {
-  const queryClient = useQueryClient()
+export function useGeneSearch({ defaultQuery }: UseGeneSearchProps = {}) {
   const [query, setQuery] = useState(defaultQuery ?? '')
   const [debouncedQuery] = useDebounce(query, 250)
   const { species } = useSpeciesContext()
@@ -33,48 +21,67 @@ export function useGeneSearch({
   const trimmed = debouncedQuery.trim()
   const enabled = trimmed.length > 0
 
-  const { data, isFetching, isError } = useQuery({
-    queryKey: ['gene-search', trimmed, species],
-    queryFn: () => searchGenes(trimmed, species),
-    enabled,
-    staleTime: 30_000,
-    // Keep the previous query's results mounted while a new query loads, so
-    // the list doesn't blank out between keystrokes. Pairs with a delayed
-    // inline loader in the input to avoid flash-of-loading on fast queries.
-    placeholderData: keepPreviousData,
-  })
+  const [results, setResults] = useState<GeneSearchResult[]>(EMPTY_RESULTS)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [hasSearched, setHasSearched] = useState(false)
+
+  const runIdRef = useRef(0)
+
+  const runSearch = useCallback(async () => {
+    const runId = ++runIdRef.current
+    if (!enabled) {
+      setResults(EMPTY_RESULTS)
+      setIsLoading(false)
+      setError(null)
+      setHasSearched(false)
+      return
+    }
+    setIsLoading(true)
+    setError(null)
+    try {
+      const out = await searchGenesClient(trimmed, species)
+      if (runId !== runIdRef.current) return
+      setResults(out)
+      setHasSearched(true)
+      setIsLoading(false)
+    } catch (err) {
+      if (runId !== runIdRef.current) return
+      setError('Search is temporarily unavailable.')
+      setIsLoading(false)
+      setHasSearched(true)
+      // Surface to console so devtools shows the underlying cause.
+      console.error('[gene-search]', err)
+    }
+  }, [enabled, trimmed, species])
+
+  useEffect(() => {
+    runSearch()
+  }, [runSearch])
 
   // Track completed searches (fires once per unique query+species+results).
   const lastTrackedQuery = useRef('')
   useEffect(() => {
-    if (!data || !trimmed || trimmed === lastTrackedQuery.current) return
+    if (!hasSearched || !trimmed || trimmed === lastTrackedQuery.current) return
     lastTrackedQuery.current = trimmed
     trackEvent({
       event: 'gene_search',
       query: trimmed,
       species,
-      result_count: data.results.length,
+      result_count: results.length,
     })
-  }, [data, trimmed, species])
-
-  // Distinguish between: network error (isError), server-side DB error
-  // (data.error), and genuine empty results (data.results.length === 0).
-  const error = isError
-    ? 'Search failed. Please try again.'
-    : (data?.error ?? null)
+  }, [hasSearched, results, trimmed, species])
 
   const retry = useCallback(() => {
-    queryClient.invalidateQueries({
-      queryKey: ['gene-search', trimmed, species],
-    })
-  }, [queryClient, trimmed, species])
+    runSearch()
+  }, [runSearch])
 
   return {
     query,
     setQuery,
-    hasSearched: enabled && data !== undefined,
-    searchResults: data?.results ?? EMPTY_RESULTS,
-    isLoading: enabled && isFetching,
+    hasSearched: enabled && hasSearched,
+    searchResults: results,
+    isLoading: enabled && isLoading,
     error,
     retry,
   }

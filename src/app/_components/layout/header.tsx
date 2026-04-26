@@ -1,7 +1,6 @@
 'use client'
 import { useSyncExternalStore } from 'react'
 import { GeneSearchShell } from '@/app/_components/gene-search-shell'
-import { searchGenes } from '@/features/gene-search/api/genes'
 import { usePathname } from 'next/navigation'
 import {
   Tooltip,
@@ -142,13 +141,7 @@ export function Header() {
         </Tooltip>
       </div>
       <div className="flex flex-1 justify-center">
-        {!isHomePage && (
-          <GeneSearchShell
-            searchGenes={searchGenes}
-            defaultQuery={geneSymbol}
-            isDialog
-          />
-        )}
+        {!isHomePage && <GeneSearchShell defaultQuery={geneSymbol} isDialog />}
       </div>
     </header>
   )

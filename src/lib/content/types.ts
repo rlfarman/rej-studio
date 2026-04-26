@@ -18,6 +18,7 @@ export interface ContentGene {
 }
 
 export interface ManifestEntry {
+  id: string
   symbol: string
   species: string
 }

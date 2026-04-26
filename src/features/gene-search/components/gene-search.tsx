@@ -2,14 +2,13 @@
 import { useEffect, useState, useSyncExternalStore } from 'react'
 import { CommandDialog } from '@/components/ui/command'
 import { useRouter } from 'next/navigation'
-import { type SearchGenesResult } from '@/features/gene-search/api/genes'
 import { Button } from '@/components/ui/button'
 import { SearchIcon } from 'lucide-react'
 import { useGeneSearch } from '@/features/gene-search/hooks/use-gene-search'
 import { GeneSearchCommand } from './gene-search-command'
 import { useRecentGenes } from '@/features/gene-search/stores/recent-genes-store'
 import { useFavoriteGenes } from '@/features/gene-search/stores/favorite-genes-store'
-import { geneHref, type SpeciesFilter } from '@/lib/bio/species'
+import { geneHref } from '@/lib/bio/species'
 import type {
   SavedGene,
   JobSearchItem,
@@ -18,10 +17,6 @@ import { trackEvent } from '@/lib/analytics'
 import { geneSearchCopy } from '../copy'
 
 interface GeneSearchProperties {
-  searchGenes: (
-    content: string,
-    species?: SpeciesFilter,
-  ) => Promise<SearchGenesResult>
   defaultQuery?: string
   isDialog?: boolean
   // Jobs to merge into search results. Supplied by the app-level shell so
@@ -45,7 +40,6 @@ function getPlatformServerSnapshot() {
 const EMPTY_JOBS: JobSearchItem[] = []
 
 export function GeneSearch({
-  searchGenes,
   defaultQuery,
   isDialog = false,
   jobs = EMPTY_JOBS,
@@ -60,10 +54,7 @@ export function GeneSearch({
     isLoading,
     error,
     retry,
-  } = useGeneSearch({
-    searchGenes,
-    defaultQuery,
-  })
+  } = useGeneSearch({ defaultQuery })
   const [isOpen, setIsOpen] = useState(false)
   const { recentGenes, addRecentGene } = useRecentGenes()
   const { favoriteGenes } = useFavoriteGenes()

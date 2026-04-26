@@ -151,9 +151,10 @@ async function main() {
     )
   }
 
-  // Manifest: list of {symbol, species} for sitemap + generateStaticParams.
+  // Manifest: list of {id, symbol, species} for sitemap + generateStaticParams,
+  // also serves as the gene-id-to-symbol resolver for client search ENSG lookups.
   const manifestEntries = namedGenes
-    .map((g) => ({ symbol: g.symbol, species: g.species }))
+    .map((g) => ({ id: g.id, symbol: g.symbol, species: g.species }))
     .sort(
       (a, b) =>
         a.symbol.localeCompare(b.symbol) || a.species.localeCompare(b.species),

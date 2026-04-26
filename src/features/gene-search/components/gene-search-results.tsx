@@ -1,4 +1,10 @@
-import { searchGenes } from '@/features/gene-search/api/genes'
+'use client'
+
+import { useEffect, useState } from 'react'
+import {
+  searchGenesClient,
+  type GeneSearchResult,
+} from '@/features/gene-search/utils/client-search'
 import { geneHref, type SpeciesFilter } from '@/lib/bio/species'
 import Link from 'next/link'
 import { ExternalLink } from 'lucide-react'
@@ -20,11 +26,34 @@ interface GeneSearchResultsProps {
   species: SpeciesFilter
 }
 
-export async function GeneSearchResults({
-  query,
-  species,
-}: GeneSearchResultsProps) {
-  const { results, error } = await searchGenes(query, species)
+export function GeneSearchResults({ query, species }: GeneSearchResultsProps) {
+  const [results, setResults] = useState<GeneSearchResult[]>([])
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    let cancelled = false
+    setLoading(true)
+    setError(null)
+    searchGenesClient(query, species).then(
+      (out) => {
+        if (cancelled) return
+        setResults(out)
+        setLoading(false)
+      },
+      (err) => {
+        if (cancelled) return
+        console.error('[gene-search-results]', err)
+        setError('Search is temporarily unavailable.')
+        setLoading(false)
+      },
+    )
+    return () => {
+      cancelled = true
+    }
+  }, [query, species])
+
+  if (loading) return <GeneSearchResultsLoading />
 
   if (error) {
     return (
