@@ -1,22 +1,17 @@
-import { getDb } from '@/drizzle/db'
-import { genes } from '@/drizzle/schema'
+import { readManifest } from '@/lib/content/server'
 import { source } from '@/lib/source'
 import type { MetadataRoute } from 'next'
 
 /**
- * Auto-generated sitemap from the genes table. Since gene data is read-only
- * and only changes on re-seed, we generate the full list on each build/request
- * and let Next.js cache it.
+ * Sitemap from the static gene manifest emitted by scripts/emit-content.ts.
+ * No DB round-trip — the file is on disk after `pnpm content:emit`.
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const db = await getDb()
-  const allGenes = await db
-    .select({ symbol: genes.symbol, species: genes.species })
-    .from(genes)
+  const manifest = await readManifest()
 
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://rejstudio.com'
 
-  const geneEntries: MetadataRoute.Sitemap = allGenes.map((gene) => ({
+  const geneEntries: MetadataRoute.Sitemap = manifest.genes.map((gene) => ({
     url: `${baseUrl}/genes/${gene.symbol}?species=${gene.species}`,
     changeFrequency: 'monthly',
     priority: 0.7,
