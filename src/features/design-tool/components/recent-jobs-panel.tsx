@@ -11,6 +11,7 @@ import {
 import { cancelJob as cancelJobAction } from '@/features/design-tool/api/jobs'
 import { ExpandableSidebarList } from '@/components/expandable-sidebar-list'
 import { Loader2, CircleAlert, X } from 'lucide-react'
+import { AnimatePresence, m } from 'motion/react'
 import { designToolCopy } from '../copy'
 
 const copy = designToolCopy.recentJobs
@@ -98,9 +99,31 @@ export function RecentJobs({ onSelectJob }: RecentJobsProps) {
                 <span className="line-clamp-2 pr-5 font-medium">
                   {entry.name}
                 </span>
-                <span className="text-muted-foreground group-hover/menu-button:text-sidebar-accent-foreground line-clamp-2 pr-5 text-[11px]">
-                  {subline}
-                </span>
+                <div className="relative min-h-[14px] pr-5">
+                  <AnimatePresence mode="wait" initial={false}>
+                    <m.span
+                      key={subline}
+                      initial={{ opacity: 0, y: 3 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -3 }}
+                      transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                      className="text-muted-foreground group-hover/menu-button:text-sidebar-accent-foreground type-nano line-clamp-2 block"
+                    >
+                      {subline}
+                    </m.span>
+                  </AnimatePresence>
+                </div>
+                {entry.status === 'running' && entry.progress !== undefined && (
+                  <div className="bg-sidebar-border mt-1 h-0.5 w-full overflow-hidden rounded-full">
+                    <m.div
+                      className="bg-primary h-full origin-left"
+                      initial={false}
+                      animate={{ scaleX: Math.max(0.02, entry.progress) }}
+                      transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+                      style={{ width: '100%' }}
+                    />
+                  </div>
+                )}
               </div>
             </SidebarMenuButton>
             <SidebarMenuAction

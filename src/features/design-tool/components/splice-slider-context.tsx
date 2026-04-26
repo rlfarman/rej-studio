@@ -1,108 +1,71 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 import {
-  findWggwMotifs,
-  slidingGcContent,
-  rankWggwByBalance,
-  computeGcPercent,
-  assessFragmentBalance,
+  rankInducibleWggwByBalance,
+  type RankedInducibleWggwCandidate,
+  type WggwRecodingOption,
 } from '@/lib/bio/sequence-utils'
-import { translateCodon, AMINO_ACID_NAMES } from '@/lib/bio/genetic-code'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
-import { Keyboard } from 'lucide-react'
-import { AAV_OVERHEAD_BP, AAV_PACKAGING_LIMIT } from '@/lib/bio/aav'
+import { translateCodon } from '@/lib/bio/genetic-code'
+import { ChevronLeft, ChevronRight, AlignCenter } from 'lucide-react'
+import type { SelectedWggwSite } from '../types/form-schema'
 
 interface Props {
   sequence: string
   position: number
   onSnap: (position: number) => void
+  onSelectionChange: (site: SelectedWggwSite | null) => void
 }
 
-const MAX_WGGW_MARKERS = 200
-const MIN_CONTEXT_WINDOW = 6 // minimum codons on each side of the split
-const MAX_CONTEXT_WINDOW = 30 // cap to keep text readable
-const PX_PER_CODON = 28 // approximate minimum width for a 3-base codon box
+const MIN_CONTEXT_WINDOW = 6
+const MAX_CONTEXT_WINDOW = 30
+const PX_PER_CODON = 28
 
-/**
- * Context strip that sits directly under the splice-junction slider. It
- * surfaces raw, defensible measurements for the current cut rather than
- * combining them into an arbitrary composite score:
- *
- * - Drag-to-set GC micro-profile with the 40–60% reference band
- * - WGGW ticks aligned to the slider, snappable on click
- * - Balanced WGGW candidates — every motif in the sequence ranked by
- *   distance from a 50/50 split (single criterion: fragment balance)
- * - Per-fragment length, GC%, and AAV fit (hard ~4.7kb packaging limit)
- * - Codon-level frame-at-split readout with ±6 codons of context
- */
-export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
+interface WggwSiteCandidate extends RankedInducibleWggwCandidate {
+  rewriteOptions: WggwRecodingOption[]
+}
+
+export function SpliceSliderContext({
+  sequence,
+  position,
+  onSnap,
+  onSelectionChange,
+}: Props) {
   const seqLen = sequence.length
   const trackRef = useRef<HTMLDivElement>(null)
-
-  const { gcPoints, wggwMotifs, nearestWggw, balancedWggw } = useMemo(() => {
-    if (seqLen < 12) {
-      return {
-        gcPoints: [],
-        wggwMotifs: [],
-        nearestWggw: null,
-        balancedWggw: [],
-      }
-    }
-    // Window scales with sequence length: bigger windows for long CDSs,
-    // tighter windows for short ones. 30–120bp range feels sensible.
-    const window = Math.min(120, Math.max(30, Math.round(seqLen / 40)))
-    const step = Math.max(1, Math.round(window / 6))
-    const gcPoints = slidingGcContent(sequence, window, step)
-
-    const motifs = findWggwMotifs(sequence).slice(0, MAX_WGGW_MARKERS)
-
-    // Nearest WGGW to the current cut, for the "snap to nearest" button.
-    let nearest: {
-      position: number
-      motif: string
-      distance: number
-    } | null = null
-    for (const m of motifs) {
-      const mid = m.position + 1
-      const d = Math.abs(mid - position)
-      if (!nearest || d < nearest.distance) {
-        nearest = { position: mid, motif: m.motif, distance: d }
-      }
-    }
-
-    const balancedWggw = rankWggwByBalance(sequence).slice(0, 3)
-
-    return { gcPoints, wggwMotifs: motifs, nearestWggw: nearest, balancedWggw }
-  }, [sequence, seqLen, position])
-
-  const fragmentStats = useMemo(() => {
-    if (seqLen < 2) return null
-    const fiveSeq = sequence.slice(0, position)
-    const threeSeq = sequence.slice(position)
-    return {
-      five: {
-        length: fiveSeq.length,
-        gc: computeGcPercent(fiveSeq.toUpperCase()),
-        aavTotal: fiveSeq.length + AAV_OVERHEAD_BP,
-      },
-      three: {
-        length: threeSeq.length,
-        gc: computeGcPercent(threeSeq.toUpperCase()),
-        aavTotal: threeSeq.length + AAV_OVERHEAD_BP,
-      },
-    }
-  }, [sequence, position, seqLen])
-
-  const [contextWindow, setContextWindow] = useState(MIN_CONTEXT_WINDOW)
   const frameStripRef = useRef<HTMLDivElement>(null)
 
-  // Measure the strip and fit as many codons as possible within MIN/MAX bounds.
+  const wggwSites = useMemo<WggwSiteCandidate[]>(() => {
+    if (seqLen < 12) return []
+    return groupWggwSites(rankInducibleWggwByBalance(sequence))
+  }, [sequence, seqLen])
+
+  const midpoint = Math.max(1, Math.min(seqLen - 1, Math.floor(seqLen / 2)))
+
+  const selectedSite = useMemo(
+    () => wggwSites.find((site) => site.position === position) ?? null,
+    [position, wggwSites],
+  )
+  const selectedSiteIndex = selectedSite
+    ? wggwSites.findIndex((site) => site.position === selectedSite.position)
+    : -1
+
+  const [rewriteSelection, setRewriteSelection] = useState<{
+    position: number | null
+    index: number
+  }>({ position: null, index: 0 })
+  const selectedRewriteIndex =
+    selectedSite?.position === rewriteSelection.position
+      ? rewriteSelection.index
+      : 0
+  const currentRewrite =
+    selectedSite?.rewriteOptions[
+      Math.min(selectedRewriteIndex, selectedSite.rewriteOptions.length - 1)
+    ] ?? null
+
+  const [contextWindow, setContextWindow] = useState(MIN_CONTEXT_WINDOW)
+
   useEffect(() => {
     const el = frameStripRef.current
     if (!el) return
@@ -110,11 +73,11 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
       const width = el.clientWidth
       if (width <= 0) return
       const fit = Math.floor(width / PX_PER_CODON)
-      // Total codons = 2*window + 1 ≤ fit → window ≤ (fit - 1) / 2.
-      // On narrow viewports this can fall below MIN_CONTEXT_WINDOW; shrink
-      // below the preferred minimum rather than overflow the container.
-      const raw = Math.floor((fit - 1) / 2)
-      setContextWindow(Math.max(1, Math.min(MAX_CONTEXT_WINDOW, raw)))
+      const half = Math.max(
+        MIN_CONTEXT_WINDOW,
+        Math.min(MAX_CONTEXT_WINDOW, Math.floor((fit - 1) / 2)),
+      )
+      setContextWindow(half)
     }
     update()
     const ro = new ResizeObserver(update)
@@ -122,26 +85,34 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
     return () => ro.disconnect()
   }, [])
 
-  const frameContext = useMemo(() => {
-    return buildFrameContext(sequence, position, contextWindow)
-  }, [sequence, position, contextWindow])
+  const frameContext = useMemo(
+    () => buildFrameContext(sequence, position, contextWindow),
+    [sequence, position, contextWindow],
+  )
+
+  useEffect(() => {
+    if (!selectedSite || !currentRewrite) {
+      onSelectionChange(null)
+      return
+    }
+    onSelectionChange({
+      position: selectedSite.position,
+      motifStart: selectedSite.motifStart,
+      motif: selectedSite.motif,
+      hexamerStart: selectedSite.hexamerStart,
+      originalCodons: selectedSite.originalCodons,
+      newCodons: currentRewrite.newCodons,
+      newHexamer: currentRewrite.newHexamer,
+    })
+  }, [currentRewrite, onSelectionChange, selectedSite])
 
   if (seqLen < 12) return null
 
-  // Build the GC polyline path within a fixed-height SVG (viewBox 100x20).
-  // We output a normalized x in [0,100] and y flipped so higher GC goes up.
-  const pathData = gcPoints
-    .map((p, i) => {
-      const x = (p.position / (seqLen - 1)) * 100
-      const y = 20 - (p.gc / 100) * 20
-      return `${i === 0 ? 'M' : 'L'} ${x.toFixed(2)} ${y.toFixed(2)}`
-    })
-    .join(' ')
-
   const positionPct = (position / seqLen) * 100
-  const candidateSet = new Set(balancedWggw.map((c) => c.position))
+  const fivePrimeLength = position
+  const threePrimeLength = seqLen - position
+  const fivePct = seqLen > 0 ? (fivePrimeLength / seqLen) * 100 : 50
 
-  // Drag-to-set: convert pointer X to a 1..seqLen-1 position.
   const positionFromPointer = (clientX: number): number => {
     const track = trackRef.current
     if (!track) return position
@@ -152,7 +123,6 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
   }
 
   const handleTrackPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    // Let WGGW tick buttons handle their own clicks.
     if ((e.target as HTMLElement).closest('button')) return
     e.preventDefault()
     const target = e.currentTarget
@@ -175,8 +145,34 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
     target.addEventListener('pointercancel', handleUp)
   }
 
+  const jumpToSibling = (dir: -1 | 1) => {
+    if (wggwSites.length === 0) return
+    if (selectedSiteIndex === -1) {
+      const next = nearestSiteIndex(wggwSites, position)
+      if (next !== -1) onSnap(wggwSites[next].position)
+      return
+    }
+    const target = selectedSiteIndex + dir
+    if (target < 0 || target >= wggwSites.length) return
+    onSnap(wggwSites[target].position)
+  }
+
   const handleTrackKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    // Alt/Option = step by whole codon (3 bp). Shift = ×10.
+    if (e.key === '[') {
+      e.preventDefault()
+      jumpToSibling(-1)
+      return
+    }
+    if (e.key === ']') {
+      e.preventDefault()
+      jumpToSibling(1)
+      return
+    }
+    if (e.key === 'm' || e.key === 'M') {
+      e.preventDefault()
+      onSnap(midpoint)
+      return
+    }
     const step = e.altKey ? 3 : 1
     const big = (e.shiftKey ? 10 : 1) * step
     if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
@@ -200,385 +196,628 @@ export function SpliceSliderContext({ sequence, position, onSnap }: Props) {
     }
   }
 
-  const fivePrimeLength = fragmentStats?.five.length ?? 0
-  const threePrimeLength = fragmentStats?.three.length ?? 0
-  const fivePct = (fivePrimeLength / seqLen) * 100
+  return (
+    <div className="space-y-3">
+      <Toolbar
+        total={wggwSites.length}
+        onPrev={() => jumpToSibling(-1)}
+        onNext={() => jumpToSibling(1)}
+        onMidpoint={() => onSnap(midpoint)}
+        canPrev={
+          selectedSiteIndex > 0 ||
+          (selectedSiteIndex === -1 && wggwSites.length > 0)
+        }
+        canNext={
+          (selectedSiteIndex >= 0 &&
+            selectedSiteIndex < wggwSites.length - 1) ||
+          (selectedSiteIndex === -1 && wggwSites.length > 0)
+        }
+      />
 
-  // AAV capacity zones: which slider positions yield fragments that fit the
-  // ~4.7 kb packaging limit once ITR/promoter overhead is added. Surfaced
-  // proactively as a thin stripe above the fragment bar so users can see
-  // safe regions at a glance before committing to a cut.
-  const maxPayload = AAV_PACKAGING_LIMIT - AAV_OVERHEAD_BP
-  const tightPayload = AAV_PACKAGING_LIMIT + 300 - AAV_OVERHEAD_BP
-  const safeLeft = Math.max(1, seqLen - maxPayload)
-  const safeRight = Math.min(seqLen - 1, maxPayload)
-  const tightLeft = Math.max(1, seqLen - tightPayload)
-  const tightRight = Math.min(seqLen - 1, tightPayload)
-  const hasSafeZone = safeLeft <= safeRight
-  const showAavZones = seqLen > maxPayload
+      <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(300px,360px)] lg:items-start">
+        <div className="min-w-0 space-y-2">
+          <div
+            ref={trackRef}
+            role="slider"
+            tabIndex={0}
+            aria-label="Splice junction position"
+            aria-valuemin={1}
+            aria-valuemax={seqLen - 1}
+            aria-valuenow={position}
+            aria-valuetext={`bp ${position.toLocaleString()} of ${seqLen.toLocaleString()}`}
+            onPointerDown={handleTrackPointerDown}
+            onKeyDown={handleTrackKeyDown}
+            className="focus-visible:ring-ring bg-background/80 relative cursor-ew-resize touch-none rounded-xl border shadow-sm select-none focus:outline-none focus-visible:ring-2"
+          >
+            <div className="relative flex h-16 w-full overflow-hidden rounded-xl">
+              <div
+                className="bg-primary/15 flex min-w-0 items-center justify-center"
+                style={{ width: `${fivePct}%` }}
+              >
+                <span className="text-primary pointer-events-none truncate px-4 text-sm font-semibold tracking-[0.01em] tabular-nums">
+                  5′ · {fivePrimeLength.toLocaleString()} bp
+                </span>
+              </div>
+              <div className="bg-muted/50 flex min-w-0 flex-1 items-center justify-center">
+                <span className="text-muted-foreground pointer-events-none truncate px-4 text-sm font-semibold tracking-[0.01em] tabular-nums">
+                  3′ · {threePrimeLength.toLocaleString()} bp
+                </span>
+              </div>
+            </div>
+            <div className="bg-background/70 absolute inset-x-0 bottom-0 h-5 overflow-hidden rounded-b-xl border-t">
+              {wggwSites.map((site, i) => {
+                const x = (site.position / seqLen) * 100
+                const isSelected = selectedSite?.position === site.position
+                return (
+                  <button
+                    type="button"
+                    key={`${site.position}-${i}`}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onSnap(site.position)
+                    }}
+                    onPointerDown={(e) => e.stopPropagation()}
+                    title={`WGGW ${site.motif} · bp ${site.position.toLocaleString()} · ${site.baseChanges} bp change${site.baseChanges === 1 ? '' : 's'}`}
+                    className="group absolute top-0 flex h-full w-7 -translate-x-1/2 cursor-pointer items-center justify-center"
+                    style={{ left: `${x}%` }}
+                  >
+                    <span
+                      className={cn(
+                        'rounded-full transition-all group-hover:h-4',
+                        isSelected
+                          ? 'bg-primary h-4 w-1.5'
+                          : 'bg-marker h-3 w-1',
+                      )}
+                    />
+                  </button>
+                )
+              })}
+            </div>
+            <div
+              className="pointer-events-none absolute inset-y-0 w-0"
+              style={{ left: `${positionPct}%` }}
+              aria-hidden="true"
+            >
+              <div className="border-foreground/85 absolute inset-y-0 border-l-2" />
+              <div className="bg-foreground/90 absolute top-2 left-1/2 size-3 -translate-x-1/2 rotate-45 rounded-[2px]" />
+            </div>
+            <div
+              className="bg-background text-foreground pointer-events-none absolute -top-3 -translate-x-1/2 rounded-md border px-2.5 py-1 font-mono text-xs font-semibold tabular-nums shadow-sm"
+              style={{ left: `${positionPct}%` }}
+            >
+              {position.toLocaleString()} bp
+            </div>
+          </div>
 
-  // Split-level warnings surfaced inside the slider itself. Thresholds mirror
-  // the AAV zone stripe above the fragment bar and FragmentPill's tight/exceeds
-  // labels: ≤limit = fits (green), ≤limit+300 = tight (yellow, warn), over = red (error).
-  const balance = assessFragmentBalance(position, seqLen)
-  const TIGHT_LIMIT = AAV_PACKAGING_LIMIT + 300
-  const fiveTotal = fragmentStats?.five.aavTotal ?? 0
-  const threeTotal = fragmentStats?.three.aavTotal ?? 0
-  const fiveExceeds = fiveTotal > TIGHT_LIMIT
-  const threeExceeds = threeTotal > TIGHT_LIMIT
-  const fiveTight = !fiveExceeds && fiveTotal > AAV_PACKAGING_LIMIT
-  const threeTight = !threeExceeds && threeTotal > AAV_PACKAGING_LIMIT
-  const warnings: { level: 'warn' | 'error'; message: string }[] = []
-  if (fiveExceeds || threeExceeds) {
-    const which = [fiveExceeds && '5′', threeExceeds && '3′']
-      .filter(Boolean)
-      .join(' & ')
-    warnings.push({
-      level: 'error',
-      message: `${which} fragment + AAV overhead exceeds ~${AAV_PACKAGING_LIMIT.toLocaleString()} bp packaging limit.`,
-    })
-  } else if (fiveTight || threeTight) {
-    const which = [fiveTight && '5′', threeTight && '3′']
-      .filter(Boolean)
-      .join(' & ')
-    warnings.push({
-      level: 'warn',
-      message: `${which} fragment + AAV overhead is tight (within 300 bp of the ~${AAV_PACKAGING_LIMIT.toLocaleString()} bp packaging limit).`,
-    })
-  }
-  if (balance === 'imbalanced') {
-    warnings.push({
-      level: 'error',
-      message:
-        'Fragments are highly imbalanced — consider a more centered split.',
-    })
-  } else if (balance === 'moderate' && warnings.length === 0) {
-    warnings.push({
-      level: 'warn',
-      message: 'Fragments are moderately imbalanced.',
-    })
-  }
-  // Split-point proximity to start/stop codon
-  const MIN_MARGIN = 150
-  if (seqLen > MIN_MARGIN * 2) {
-    if (position < MIN_MARGIN) {
-      warnings.push({
-        level: 'warn',
-        message: `Split point is within ${MIN_MARGIN} bp of the start codon — very little 5′ fragment for stable expression.`,
-      })
+          <CodonStrip
+            ctx={frameContext}
+            sites={wggwSites}
+            selectedSite={selectedSite}
+            currentRewrite={currentRewrite}
+            stripRef={frameStripRef}
+            onSnap={onSnap}
+          />
+        </div>
+
+        <Inspector
+          selectedSite={selectedSite}
+          currentRewrite={currentRewrite}
+          selectedRewriteIndex={selectedRewriteIndex}
+          onSelectRewrite={(index) =>
+            setRewriteSelection({
+              position: selectedSite?.position ?? null,
+              index,
+            })
+          }
+        />
+      </div>
+    </div>
+  )
+}
+
+function Toolbar({
+  total,
+  onPrev,
+  onNext,
+  onMidpoint,
+  canPrev,
+  canNext,
+}: {
+  total: number
+  onPrev: () => void
+  onNext: () => void
+  onMidpoint: () => void
+  canPrev: boolean
+  canNext: boolean
+}) {
+  return (
+    <div className="bg-background/60 flex flex-wrap items-center justify-between gap-2 rounded-lg border px-3 py-2">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+        <span className="text-muted-foreground flex items-center gap-1.5">
+          <LegendDot tone="marker" />
+          <span className="text-foreground font-semibold tabular-nums">
+            {total.toLocaleString()}
+          </span>{' '}
+          WGGW candidate{total === 1 ? '' : 's'}
+        </span>
+      </div>
+      <div className="flex items-center gap-1.5">
+        <ToolbarButton
+          onClick={onPrev}
+          disabled={!canPrev}
+          title="Previous WGGW site ([)"
+        >
+          <ChevronLeft className="size-3.5" />
+          <span className="hidden sm:inline">Prev</span>
+        </ToolbarButton>
+        <ToolbarButton
+          onClick={onMidpoint}
+          title="Snap to midpoint (m)"
+          variant="accent"
+        >
+          <AlignCenter className="size-3.5" />
+          <span className="hidden sm:inline">Midpoint</span>
+        </ToolbarButton>
+        <ToolbarButton
+          onClick={onNext}
+          disabled={!canNext}
+          title="Next WGGW site (])"
+        >
+          <span className="hidden sm:inline">Next</span>
+          <ChevronRight className="size-3.5" />
+        </ToolbarButton>
+      </div>
+    </div>
+  )
+}
+
+function ToolbarButton({
+  children,
+  onClick,
+  disabled,
+  title,
+  variant = 'default',
+}: {
+  children: ReactNode
+  onClick: () => void
+  disabled?: boolean
+  title?: string
+  variant?: 'default' | 'accent'
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      title={title}
+      className={cn(
+        'inline-flex h-8 items-center gap-1 rounded-md border px-2.5 text-xs font-medium transition-colors',
+        'disabled:pointer-events-none disabled:opacity-40',
+        variant === 'accent'
+          ? 'border-primary/40 bg-primary/5 text-primary hover:bg-primary/10'
+          : 'text-muted-foreground hover:text-foreground hover:bg-muted/60',
+      )}
+    >
+      {children}
+    </button>
+  )
+}
+
+function LegendDot({ tone }: { tone: 'success' | 'marker' | 'primary' }) {
+  return (
+    <span
+      className={cn(
+        'inline-block h-2 w-2 rounded-full',
+        tone === 'success' && 'bg-success',
+        tone === 'marker' && 'bg-marker',
+        tone === 'primary' && 'bg-primary',
+      )}
+    />
+  )
+}
+
+function CodonStrip({
+  ctx,
+  sites,
+  selectedSite,
+  currentRewrite,
+  stripRef,
+  onSnap,
+}: {
+  ctx: FrameContext
+  sites: WggwSiteCandidate[]
+  selectedSite: WggwSiteCandidate | null
+  currentRewrite: WggwRecodingOption | null
+  stripRef: React.RefObject<HTMLDivElement | null>
+  onSnap: (position: number) => void
+}) {
+  const siteByFirstCodon = useMemo(() => {
+    const map = new Map<number, WggwSiteCandidate>()
+    for (const site of sites) {
+      const firstCodonIdx = Math.floor((site.hexamerStart - 1) / 3)
+      map.set(firstCodonIdx, site)
     }
-    if (seqLen - position < MIN_MARGIN) {
-      warnings.push({
-        level: 'warn',
-        message: `Split point is within ${MIN_MARGIN} bp of the stop codon — very little 3′ fragment for stable expression.`,
-      })
+    return map
+  }, [sites])
+  const selectedBases = useMemo(() => {
+    const s = new Set<number>()
+    if (!selectedSite) return s
+    for (let k = 0; k < 4; k++) s.add(selectedSite.motifStart + k)
+    return s
+  }, [selectedSite])
+
+  const selectedChangedBases = useMemo(() => {
+    const s = new Set<number>()
+    if (!selectedSite || !currentRewrite) return s
+    for (let i = 0; i < selectedSite.originalHexamer.length; i++) {
+      if (selectedSite.originalHexamer[i] !== currentRewrite.newHexamer[i]) {
+        s.add(selectedSite.hexamerStart + i)
+      }
     }
-  }
+    return s
+  }, [currentRewrite, selectedSite])
+
+  const selectedCodonIndices = useMemo(() => {
+    const s = new Set<number>()
+    if (!selectedSite) return s
+    const firstCodonIdx = Math.floor((selectedSite.hexamerStart - 1) / 3)
+    s.add(firstCodonIdx)
+    s.add(firstCodonIdx + 1)
+    return s
+  }, [selectedSite])
 
   return (
-    <div className="space-y-2">
-      {/* Unified composite slider: viz bar + GC profile + WGGW ticks.
-          Drag anywhere, arrow keys to nudge, Home/End to jump to ends. */}
-      <div className="space-y-1">
-        <div
-          ref={trackRef}
-          role="slider"
-          tabIndex={0}
-          aria-label="Split point position"
-          aria-valuemin={1}
-          aria-valuemax={seqLen - 1}
-          aria-valuenow={position}
-          aria-valuetext={`bp ${position.toLocaleString()} of ${seqLen.toLocaleString()}`}
-          onPointerDown={handleTrackPointerDown}
-          onKeyDown={handleTrackKeyDown}
-          className="focus-visible:ring-ring relative cursor-ew-resize touch-none rounded-md border select-none focus:outline-none focus-visible:ring-2"
-        >
-          {/* AAV capacity zones: green = both fragments fit, yellow = tight,
-              red = over ~4.7 kb packaging limit. Hidden for sequences that
-              already fit as a monomer. */}
-          {showAavZones && (
+    <div
+      ref={stripRef}
+      role="group"
+      aria-label="Codon context around splice junction"
+      className="bg-muted/40 type-nano rounded-lg border p-2 font-mono leading-none shadow-sm"
+    >
+      <div className="mb-1 flex w-full items-end gap-[1px]">
+        {ctx.codons.map((c) => {
+          const site = siteByFirstCodon.get(c.idx)
+          const isSelected = site && selectedSite?.position === site.position
+          return (
             <div
-              className="relative h-1.5 w-full overflow-hidden rounded-t-sm"
-              aria-hidden="true"
-              title="AAV packaging zones: green fits, yellow tight, red over limit"
+              key={`marker-${c.idx}`}
+              className="flex h-3 flex-1 justify-center"
             >
-              <div className="bg-destructive/25 absolute inset-0" />
-              <div
-                className="bg-warning/40 absolute inset-y-0"
-                style={{
-                  left: `${(tightLeft / seqLen) * 100}%`,
-                  right: `${((seqLen - tightRight) / seqLen) * 100}%`,
-                }}
-              />
-              {hasSafeZone && (
-                <div
-                  className="bg-success/40 absolute inset-y-0"
-                  style={{
-                    left: `${(safeLeft / seqLen) * 100}%`,
-                    right: `${((seqLen - safeRight) / seqLen) * 100}%`,
-                  }}
-                />
-              )}
-            </div>
-          )}
-          {/* Top lane: 5′/3′ fragment bar */}
-          <div
-            className={cn(
-              'relative flex h-7 w-full overflow-hidden',
-              !showAavZones && 'rounded-t-sm',
-            )}
-          >
-            <div
-              className="bg-primary/15 flex min-w-0 items-center justify-center"
-              style={{ width: `${fivePct}%` }}
-            >
-              <span className="text-primary pointer-events-none truncate px-1.5 text-xs font-medium">
-                5′ · {fivePrimeLength.toLocaleString()} bp
-              </span>
-            </div>
-            <div className="bg-muted/50 flex min-w-0 flex-1 items-center justify-center">
-              <span className="text-muted-foreground pointer-events-none truncate px-1.5 text-xs font-medium">
-                3′ · {threePrimeLength.toLocaleString()} bp
-              </span>
-            </div>
-            {/* 40/60 balance target band — visual hint for the "balanced" range */}
-            <div
-              className="border-success/50 pointer-events-none absolute inset-y-0 border-x border-dashed"
-              style={{ left: '40%', width: '20%' }}
-              aria-hidden="true"
-              title="Balanced split range (40–60%)"
-            />
-          </div>
-          {/* Middle lane: GC profile */}
-          <svg
-            viewBox="0 0 100 20"
-            preserveAspectRatio="none"
-            className="bg-muted/20 block h-8 w-full"
-            aria-hidden="true"
-          >
-            {/* 40-60% reference band */}
-            <rect
-              x={0}
-              y={20 - (60 / 100) * 20}
-              width={100}
-              height={((60 - 40) / 100) * 20}
-              className="fill-success/10"
-            />
-            {/* 50% reference line */}
-            <line
-              x1={0}
-              x2={100}
-              y1={10}
-              y2={10}
-              className="stroke-muted-foreground/30"
-              strokeWidth={0.3}
-              vectorEffect="non-scaling-stroke"
-              strokeDasharray="2 2"
-            />
-            {/* GC polyline */}
-            {pathData && (
-              <path
-                d={pathData}
-                className="stroke-primary fill-none"
-                strokeWidth={1.5}
-                vectorEffect="non-scaling-stroke"
-              />
-            )}
-          </svg>
-          {/* Bottom lane: WGGW ticks */}
-          <div className="bg-muted/30 relative h-3 w-full rounded-b-sm">
-            {wggwMotifs.map((m, i) => {
-              const mid = m.position + 1
-              const x = (mid / seqLen) * 100
-              const isNearest =
-                nearestWggw !== null && nearestWggw.position === mid
-              const isCandidate = candidateSet.has(mid)
-              return (
+              {site ? (
                 <button
                   type="button"
-                  key={`${mid}-${i}`}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onSnap(mid)
-                  }}
-                  onPointerDown={(e) => e.stopPropagation()}
-                  title={`WGGW ${m.motif} at bp ${m.position}–${m.position + 3} · snap`}
-                  aria-label={`Snap to WGGW motif ${m.motif} at position ${m.position}`}
-                  className="group focus-visible:ring-ring absolute top-0 flex h-full w-3 -translate-x-1/2 cursor-pointer items-stretch justify-center rounded-sm focus-visible:ring-2 focus-visible:outline-none"
-                  style={{ left: `${x}%` }}
+                  onClick={() => onSnap(site.position)}
+                  title={`WGGW ${site.motif} · bp ${site.position.toLocaleString()} · ${site.baseChanges} bp change${site.baseChanges === 1 ? '' : 's'}`}
+                  aria-label={`Select WGGW site at bp ${site.position}`}
+                  className="group flex h-full w-full cursor-pointer items-end justify-center"
                 >
                   <span
                     className={cn(
-                      'w-[3px] rounded-sm transition-colors',
-                      'group-hover:bg-success/90',
-                      isCandidate
-                        ? 'bg-warning'
-                        : isNearest
-                          ? 'bg-success'
-                          : 'bg-success/60',
+                      'rounded-full transition-all group-hover:h-3',
+                      isSelected ? 'bg-primary h-3 w-1.5' : 'bg-marker h-2 w-1',
                     )}
                   />
+                </button>
+              ) : null}
+            </div>
+          )
+        })}
+      </div>
+      <div className="flex w-full items-center gap-[1px]">
+        {ctx.codons.map((c) => {
+          const roleStyles = roleStylesFor(c.role)
+          const isSelectedCodon = selectedCodonIndices.has(c.idx)
+          return (
+            <div
+              key={c.idx}
+              className={cn(
+                'flex flex-1 flex-col items-center gap-0.5 rounded-sm px-[3px] py-1',
+                c.role === 'split' ? '' : roleStyles.container,
+                isSelectedCodon && 'bg-marker/10 ring-marker/30 ring-1',
+              )}
+            >
+              <span
+                className={cn(
+                  'tabular-nums',
+                  roleStyles.aa,
+                  isSelectedCodon && 'text-foreground',
+                )}
+              >
+                {c.aa ?? '·'}
+              </span>
+              <span className="flex">
+                {[0, 1, 2].map((bi) => {
+                  const base = c.codon[bi]
+                  const basePos = c.idx * 3 + bi + 1
+                  const isCutBase =
+                    c.isSplit &&
+                    ((ctx.frameOffset === 1 && bi === 0) ||
+                      (ctx.frameOffset === 2 && bi === 1))
+                  const inSelected = selectedBases.has(basePos)
+                  const isChanged = selectedChangedBases.has(basePos)
+                  return (
+                    <span
+                      key={bi}
+                      className={cn(
+                        roleStyles.base,
+                        inSelected && 'bg-marker/15 text-marker-soft',
+                        isChanged &&
+                          'underline decoration-2 underline-offset-2',
+                        isCutBase && 'border-primary border-r-2',
+                      )}
+                    >
+                      {base ?? '·'}
+                    </span>
+                  )
+                })}
+              </span>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+function Inspector({
+  selectedSite,
+  currentRewrite,
+  selectedRewriteIndex,
+  onSelectRewrite,
+}: {
+  selectedSite: WggwSiteCandidate | null
+  currentRewrite: WggwRecodingOption | null
+  selectedRewriteIndex: number
+  onSelectRewrite: (index: number) => void
+}) {
+  if (!selectedSite || !currentRewrite) {
+    return (
+      <div className="bg-muted/30 flex min-h-[228px] flex-col justify-center gap-2 rounded-lg border p-4 text-xs">
+        <div className="text-foreground text-sm font-semibold">
+          Pick a WGGW site
+        </div>
+        <p className="text-muted-foreground leading-relaxed">
+          Drag the caret to a nearby tick, click a tick directly, or press{' '}
+          <Kbd>m</Kbd> to snap to the midpoint. Use <Kbd>[</Kbd> / <Kbd>]</Kbd>{' '}
+          to step between sites.
+        </p>
+      </div>
+    )
+  }
+
+  const peptide = translatePair(selectedSite.originalCodons)
+
+  return (
+    <div className="bg-muted/30 space-y-3 rounded-lg border p-3 text-xs">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-foreground text-sm font-semibold">Selected</span>
+        <span className="bg-marker/15 text-marker-soft rounded-md px-2 py-0.5 font-mono text-xs font-semibold">
+          {selectedSite.motif}
+        </span>
+        <span className="text-muted-foreground font-mono text-xs tabular-nums">
+          bp {selectedSite.position.toLocaleString()}
+        </span>
+        <span className="text-muted-foreground type-nano ml-auto font-mono tabular-nums">
+          {selectedSite.fivePrimeLength.toLocaleString()} /{' '}
+          {selectedSite.threePrimeLength.toLocaleString()}
+        </span>
+      </div>
+
+      <div className="flex flex-wrap gap-1.5">
+        <StatChip label={`${currentRewrite.baseChanges} bp Δ`} tone="neutral" />
+        <StatChip label={`Peptide ${peptide}`} tone="neutral" />
+      </div>
+
+      {selectedSite.rewriteOptions.length > 1 && (
+        <div className="space-y-1.5">
+          <div className="text-muted-foreground type-micro font-medium tracking-[0.08em] uppercase">
+            Synonymous rewrites
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {selectedSite.rewriteOptions.map((option, index) => {
+              const active = index === selectedRewriteIndex
+              return (
+                <button
+                  type="button"
+                  key={`${option.newHexamer}-${index}`}
+                  onClick={() => onSelectRewrite(index)}
+                  className={cn(
+                    'type-nano inline-flex items-center gap-1.5 rounded-md border px-2 py-1 font-mono transition-colors',
+                    active
+                      ? 'border-primary bg-primary/10 text-primary'
+                      : 'text-muted-foreground hover:border-primary/30 hover:bg-background/60',
+                  )}
+                >
+                  <span className="font-semibold">
+                    {option.newHexamer.slice(0, 3)} {option.newHexamer.slice(3)}
+                  </span>
+                  <span className="bg-muted text-muted-foreground type-micro rounded px-1 font-medium">
+                    {option.baseChanges}Δ
+                  </span>
                 </button>
               )
             })}
           </div>
-          {/* Current position indicator spanning all three lanes */}
-          <div
-            className="border-foreground pointer-events-none absolute inset-y-0 w-0 border-l-2"
-            style={{ left: `${positionPct}%` }}
-            aria-hidden="true"
-          />
-        </div>
-        {/* Single readout */}
-        <div className="text-muted-foreground flex items-center justify-between gap-2 text-[10px]">
-          <span className="font-mono tabular-nums">
-            bp {position.toLocaleString()} ·{' '}
-            {Math.round((fivePrimeLength / seqLen) * 100)}/
-            {Math.round((threePrimeLength / seqLen) * 100)} 5′/3′
-            {nearestWggw && (
-              <>
-                {' · nearest WGGW '}
-                {nearestWggw.distance === 0
-                  ? 'on cut'
-                  : `${nearestWggw.position > position ? '+' : '−'}${nearestWggw.distance} bp`}
-              </>
-            )}
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span>WGGW: {wggwMotifs.length}</span>
-            <KeyboardHelp />
-          </span>
-        </div>
-        {/* Inline split warnings — moved here from the diagnostics badges */}
-        {warnings.length > 0 && (
-          <div className="space-y-0.5">
-            {warnings.map((w, i) => (
-              <div
-                key={i}
-                className={cn(
-                  'flex items-center gap-1.5 rounded-sm border px-2 py-1 text-[10px]',
-                  w.level === 'error'
-                    ? 'border-danger/40 bg-danger/10 text-danger-soft'
-                    : 'border-warning/40 bg-warning/10 text-warning-soft',
-                )}
-              >
-                <span aria-hidden="true">
-                  {w.level === 'error' ? '⚠' : '!'}
-                </span>
-                {w.message}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Balanced WGGW candidates — ranked by one criterion: |pos − len/2| */}
-      {balancedWggw.length > 0 && (
-        <div className="flex flex-wrap items-center gap-2 text-[10px]">
-          <span
-            className="text-muted-foreground"
-            title="WGGW motifs ranked by distance from a 50/50 split"
-          >
-            Balanced WGGW motifs:
-          </span>
-          {balancedWggw.map((c, i) => {
-            const isCurrent = Math.abs(c.position - position) <= 1
-            const fiveAav = c.fivePrimeLength + AAV_OVERHEAD_BP
-            const threeAav = c.threePrimeLength + AAV_OVERHEAD_BP
-            const bothFit =
-              fiveAav <= AAV_PACKAGING_LIMIT && threeAav <= AAV_PACKAGING_LIMIT
-            return (
-              <button
-                type="button"
-                key={c.position}
-                onClick={() => onSnap(c.position)}
-                title={`${c.motif} at bp ${c.position.toLocaleString()} · 5′ ${c.fivePrimeLength.toLocaleString()} bp · 3′ ${c.threePrimeLength.toLocaleString()} bp · ${c.distanceFromCenter.toLocaleString()} bp from center`}
-                className={cn(
-                  'focus-visible:ring-ring rounded-sm border px-1.5 py-0.5 font-mono tabular-nums transition-colors focus-visible:ring-2 focus-visible:outline-none',
-                  isCurrent
-                    ? 'border-primary bg-primary/10 text-primary'
-                    : 'hover:border-primary/60 hover:text-foreground text-muted-foreground',
-                )}
-              >
-                #{i + 1} {c.motif}@{c.position.toLocaleString()}
-                {!bothFit && (
-                  <span
-                    className="text-danger-soft ml-1"
-                    title="One fragment + AAV overhead exceeds ~4,700 bp"
-                  >
-                    ⚠
-                  </span>
-                )}
-              </button>
-            )
-          })}
         </div>
       )}
 
-      {/* Per-fragment readout — length, GC%, AAV fit */}
-      {fragmentStats && (
-        <div className="grid grid-cols-2 gap-2 text-[10px]">
-          <FragmentPill
-            label="5′"
-            length={fragmentStats.five.length}
-            gc={fragmentStats.five.gc}
-            aavTotal={fragmentStats.five.aavTotal}
-          />
-          <FragmentPill
-            label="3′"
-            length={fragmentStats.three.length}
-            gc={fragmentStats.three.gc}
-            aavTotal={fragmentStats.three.aavTotal}
-          />
-        </div>
-      )}
-
-      {/* Frame-at-split readout */}
-      <FrameAtSplit
-        ctx={frameContext}
-        position={position}
-        onSnap={onSnap}
-        stripRef={frameStripRef}
-        wggwMotifs={wggwMotifs}
+      <RewriteDiff
+        beforeHexamer={selectedSite.originalHexamer}
+        afterHexamer={currentRewrite.newHexamer}
+        motifStart={currentRewrite.motifOffset}
+        cutOffset={selectedSite.position - selectedSite.hexamerStart}
       />
     </div>
   )
 }
 
-function FragmentPill({
+function RewriteDiff({
+  beforeHexamer,
+  afterHexamer,
+  motifStart,
+  cutOffset,
+}: {
+  beforeHexamer: string
+  afterHexamer: string
+  motifStart: number
+  cutOffset: number
+}) {
+  return (
+    <div className="bg-background/80 type-nano space-y-1 rounded-md border p-2 font-mono">
+      <DiffRow label="Before" hexamer={beforeHexamer} />
+      <DiffRow
+        label="After"
+        hexamer={afterHexamer}
+        changedFrom={beforeHexamer}
+        motifStart={motifStart}
+        cutOffset={cutOffset}
+      />
+    </div>
+  )
+}
+
+function DiffRow({
   label,
-  length,
-  gc,
-  aavTotal,
+  hexamer,
+  changedFrom,
+  motifStart,
+  cutOffset,
 }: {
   label: string
-  length: number
-  gc: number
-  aavTotal: number
+  hexamer: string
+  changedFrom?: string
+  motifStart?: number
+  cutOffset?: number
 }) {
-  const fits = aavTotal <= AAV_PACKAGING_LIMIT
-  const tight = !fits && aavTotal <= AAV_PACKAGING_LIMIT + 300
-  const fitLabel = fits ? 'fits' : tight ? 'tight' : 'exceeds'
-  const fitColor = fits
-    ? 'text-success-soft'
-    : tight
-      ? 'text-warning-soft'
-      : 'text-danger-soft'
   return (
-    <div
-      className="bg-muted/30 flex items-center justify-between gap-2 rounded-sm border px-2 py-1"
-      title={`${label} fragment: ${length.toLocaleString()} bp + ${AAV_OVERHEAD_BP.toLocaleString()} bp overhead = ${aavTotal.toLocaleString()} bp (AAV limit ${AAV_PACKAGING_LIMIT.toLocaleString()} bp)`}
-    >
-      <span className="text-muted-foreground font-medium">{label}</span>
-      <div className="flex items-center gap-2 font-mono tabular-nums">
-        <span className="text-foreground">{length.toLocaleString()} bp</span>
-        <span className="text-muted-foreground">{gc.toFixed(0)}% GC</span>
-        <span className={cn('font-medium', fitColor)} title="AAV packaging">
-          {fitLabel}
-        </span>
+    <div className="grid grid-cols-[48px_minmax(0,1fr)] items-center gap-2">
+      <span className="text-muted-foreground type-micro tracking-[0.08em] uppercase">
+        {label}
+      </span>
+      <div className="flex">
+        {[...hexamer].map((base, index) => {
+          const inMotif =
+            motifStart !== undefined &&
+            index >= motifStart &&
+            index < motifStart + 4
+          const isChanged = changedFrom ? changedFrom[index] !== base : false
+          const isCut = cutOffset !== undefined && index === cutOffset
+          return (
+            <span
+              key={index}
+              className={cn(
+                'px-[1px]',
+                index === 3 && 'ml-1',
+                inMotif && 'bg-marker/15 text-marker-soft',
+                isChanged && 'underline decoration-2 underline-offset-2',
+                isCut && 'border-primary border-r-2',
+              )}
+            >
+              {base}
+            </span>
+          )
+        })}
       </div>
     </div>
   )
+}
+
+function StatChip({
+  label,
+  tone,
+}: {
+  label: string
+  tone: 'success' | 'warning' | 'neutral'
+}) {
+  return (
+    <span
+      className={cn(
+        'type-nano rounded-md border px-2 py-0.5 font-medium',
+        tone === 'success' &&
+          'border-success/30 bg-success/10 text-success-soft',
+        tone === 'warning' && 'border-marker/30 bg-marker/10 text-marker-soft',
+        tone === 'neutral' &&
+          'border-border bg-background/60 text-muted-foreground',
+      )}
+    >
+      {label}
+    </span>
+  )
+}
+
+function Kbd({ children }: { children: ReactNode }) {
+  return (
+    <kbd className="bg-background text-foreground type-micro inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded border px-1 font-mono font-semibold">
+      {children}
+    </kbd>
+  )
+}
+
+function dedupeRewriteOptions(options: WggwRecodingOption[]) {
+  const seen = new Set<string>()
+  return options.filter((option) => {
+    const key = `${option.motif}|${option.newHexamer}|${option.motifOffset}`
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
+}
+
+function groupWggwSites(
+  candidates: RankedInducibleWggwCandidate[],
+): WggwSiteCandidate[] {
+  const byPosition = new Map<number, RankedInducibleWggwCandidate[]>()
+  for (const candidate of candidates) {
+    const group = byPosition.get(candidate.position)
+    if (group) group.push(candidate)
+    else byPosition.set(candidate.position, [candidate])
+  }
+
+  return [...byPosition.values()]
+    .map((group) => {
+      const representative = [...group].sort((a, b) => {
+        if (a.alreadyPresent !== b.alreadyPresent) {
+          return a.alreadyPresent ? -1 : 1
+        }
+        if (a.baseChanges !== b.baseChanges)
+          return a.baseChanges - b.baseChanges
+        return a.newHexamer.localeCompare(b.newHexamer)
+      })[0]
+      const rewriteOptions = dedupeRewriteOptions(
+        group.flatMap((candidate) => candidate.rewriteOptions),
+      ).sort((a, b) => {
+        if (a.baseChanges !== b.baseChanges)
+          return a.baseChanges - b.baseChanges
+        return a.newHexamer.localeCompare(b.newHexamer)
+      })
+      const primary = rewriteOptions[0]
+      return {
+        ...representative,
+        newHexamer: primary?.newHexamer ?? representative.newHexamer,
+        newCodons: primary?.newCodons ?? representative.newCodons,
+        baseChanges: primary?.baseChanges ?? representative.baseChanges,
+        alreadyPresent:
+          (primary?.baseChanges ?? representative.baseChanges) === 0,
+        rewriteOptions,
+      }
+    })
+    .sort((a, b) => a.position - b.position)
+}
+
+function nearestSiteIndex(
+  sites: WggwSiteCandidate[],
+  position: number,
+): number {
+  if (sites.length === 0) return -1
+  let bestIdx = 0
+  let bestDist = Math.abs(sites[0].position - position)
+  for (let i = 1; i < sites.length; i++) {
+    const d = Math.abs(sites[i].position - position)
+    if (d < bestDist) {
+      bestDist = d
+      bestIdx = i
+    }
+  }
+  return bestIdx
 }
 
 function roleStylesFor(role: CodonRole): {
@@ -620,27 +859,11 @@ function roleStylesFor(role: CodonRole): {
   }
 }
 
-function roleLabelFor(role: CodonRole): string | null {
-  switch (role) {
-    case 'start':
-      return 'start codon'
-    case 'stop':
-      return 'stop codon'
-    case 'internal-stop':
-      return 'premature stop'
-    default:
-      return null
-  }
-}
-
 type CodonRole = 'start' | 'stop' | 'internal-stop' | 'split' | 'context'
 
 interface FrameContext {
-  /** Codon index (0-based) being bisected. */
   splitCodon: number
-  /** 0, 1, or 2 — byte offset of the cut within the split codon. */
   frameOffset: number
-  /** Codons surrounding the split (indices splitCodon-N … splitCodon+N). */
   codons: {
     codon: string
     aa: string | null
@@ -656,8 +879,6 @@ function buildFrameContext(
   contextWindow: number,
 ): FrameContext {
   const upper = sequence.toUpperCase().replace(/U/g, 'T')
-  // position is 1-based cut index: the cut falls *before* base at `position`.
-  // Convert to 0-based cut index.
   const cut = Math.max(0, position - 1)
   const splitCodon = Math.floor(cut / 3)
   const frameOffset = cut % 3
@@ -666,7 +887,6 @@ function buildFrameContext(
 
   let start = Math.max(0, splitCodon - contextWindow)
   let end = Math.min(totalCodons, splitCodon + contextWindow + 1)
-  // Rebalance if the split is near either end so we still show a full window.
   const wanted = contextWindow * 2 + 1
   if (end - start < wanted) {
     if (start === 0) end = Math.min(totalCodons, start + wanted)
@@ -689,187 +909,6 @@ function buildFrameContext(
   return { splitCodon, frameOffset, codons }
 }
 
-function FrameAtSplit({
-  ctx,
-  position,
-  onSnap,
-  stripRef,
-  wggwMotifs,
-}: {
-  ctx: FrameContext
-  position: number
-  onSnap: (position: number) => void
-  stripRef: React.RefObject<HTMLDivElement | null>
-  wggwMotifs: { position: number; motif: string }[]
-}) {
-  // 1-based base positions belonging to any WGGW motif (each motif spans 4 bp).
-  const wggwBases = useMemo(() => {
-    const s = new Set<number>()
-    for (const m of wggwMotifs) {
-      for (let k = 0; k < 4; k++) s.add(m.position + k)
-    }
-    return s
-  }, [wggwMotifs])
-
-  // Pick the WGGW cut nearest a codon's base range, if any overlap. Used so
-  // clicking a WGGW-highlighted codon snaps to the motif's midpoint cut
-  // (consistent with clicking the tick above) rather than the codon start.
-  const wggwCutForCodon = (codonIdx: number): number | null => {
-    const codonStart = codonIdx * 3 + 1 // 1-based
-    const codonEnd = codonStart + 2
-    let best: { cut: number; dist: number } | null = null
-    for (const m of wggwMotifs) {
-      const motifStart = m.position
-      const motifEnd = m.position + 3
-      if (motifEnd < codonStart || motifStart > codonEnd) continue
-      const cut = m.position + 1 // midpoint cut (same as the tick)
-      const center = codonStart + 1
-      const d = Math.abs(cut - center)
-      if (!best || d < best.dist) best = { cut, dist: d }
-    }
-    return best ? best.cut : null
-  }
-  const splitCodon = ctx.codons.find((c) => c.isSplit)
-  const aaName =
-    splitCodon?.aa && AMINO_ACID_NAMES[splitCodon.aa]
-      ? AMINO_ACID_NAMES[splitCodon.aa]
-      : null
-
-  const frameLabel =
-    ctx.frameOffset === 0
-      ? 'between codons'
-      : ctx.frameOffset === 1
-        ? 'after base 1'
-        : 'after base 2'
-
-  return (
-    <div className="space-y-1">
-      <div className="flex items-center justify-between text-[10px]">
-        <span className="text-muted-foreground">
-          Frame at split · codon {ctx.splitCodon + 1}
-          {splitCodon?.aa && (
-            <>
-              {' '}
-              <span className="text-foreground font-mono">
-                {splitCodon.codon}
-              </span>
-              {aaName && splitCodon.aa !== '*' && (
-                <span className="text-muted-foreground">
-                  {' '}
-                  = {aaName} ({splitCodon.aa})
-                </span>
-              )}
-              {splitCodon.aa === '*' && (
-                <span className="text-danger-soft"> = stop</span>
-              )}
-            </>
-          )}
-        </span>
-        <span className="text-muted-foreground font-mono">
-          cut {frameLabel} · bp {position.toLocaleString()}
-        </span>
-      </div>
-      <div
-        ref={stripRef}
-        className="bg-muted/40 rounded-sm border p-1.5 font-mono text-[10px] leading-none"
-        role="img"
-        aria-label="Codon context around split point"
-      >
-        <div className="flex w-full items-center gap-[1px]">
-          {ctx.codons.map((c) => {
-            const roleStyles = roleStylesFor(c.role)
-            const roleLabel = roleLabelFor(c.role)
-            const wggwCut = wggwCutForCodon(c.idx)
-            const snapTarget = wggwCut ?? c.idx * 3 + 1
-            const snapLabel = wggwCut
-              ? `WGGW midpoint (bp ${wggwCut.toLocaleString()})`
-              : `codon start (bp ${(c.idx * 3 + 1).toLocaleString()})`
-            return (
-              <button
-                type="button"
-                key={c.idx}
-                onClick={() => onSnap(snapTarget)}
-                title={`${roleLabel ? roleLabel + ' · ' : ''}codon ${c.idx + 1}${c.aa ? ` (${c.codon} = ${c.aa})` : ''} · snap cut to ${snapLabel}`}
-                className={cn(
-                  'hover:bg-primary/10 hover:ring-primary/30 focus-visible:ring-ring flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-sm px-[3px] py-1 transition-colors hover:ring-1 focus-visible:ring-2 focus-visible:outline-none',
-                  roleStyles.container,
-                )}
-              >
-                <span className={cn('tabular-nums', roleStyles.aa)}>
-                  {c.aa ?? '·'}
-                </span>
-                <span className="flex">
-                  {[0, 1, 2].map((bi) => {
-                    const base = c.codon[bi]
-                    const basePos = c.idx * 3 + bi + 1 // 1-based
-                    const isCutBase =
-                      c.isSplit &&
-                      ((ctx.frameOffset === 1 && bi === 0) ||
-                        (ctx.frameOffset === 2 && bi === 1))
-                    const inWggw = wggwBases.has(basePos)
-                    return (
-                      <span
-                        key={bi}
-                        className={cn(
-                          roleStyles.base,
-                          inWggw &&
-                            'border-success text-success-soft border-b-2',
-                          isCutBase && 'border-primary border-r-2',
-                        )}
-                      >
-                        {base ?? '·'}
-                      </span>
-                    )
-                  })}
-                </span>
-              </button>
-            )
-          })}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function KeyboardHelp() {
-  return (
-    <Popover>
-      <PopoverTrigger
-        type="button"
-        aria-label="Keyboard shortcuts"
-        className="hover:text-foreground focus-visible:ring-ring text-muted-foreground rounded-sm p-0.5 transition-colors focus-visible:ring-2 focus-visible:outline-none"
-      >
-        <Keyboard className="size-3" />
-      </PopoverTrigger>
-      <PopoverContent side="top" align="end" className="w-auto p-2 text-[10px]">
-        <div className="mb-1 text-[10px] font-medium">Keyboard shortcuts</div>
-        <div className="space-y-0.5 font-mono">
-          <ShortcutRow keys={['←', '→']} desc="nudge ±1 bp" />
-          <ShortcutRow keys={['⇧', '←/→']} desc="±10 bp" />
-          <ShortcutRow keys={['⌥', '←/→']} desc="±1 codon" />
-          <ShortcutRow keys={['⌥⇧', '←/→']} desc="±10 codons" />
-          <ShortcutRow keys={['PgUp', 'PgDn']} desc="±5%" />
-          <ShortcutRow keys={['Home', 'End']} desc="jump to ends" />
-        </div>
-      </PopoverContent>
-    </Popover>
-  )
-}
-
-function ShortcutRow({ keys, desc }: { keys: string[]; desc: string }) {
-  return (
-    <div className="flex items-center justify-between gap-3">
-      <span className="flex items-center gap-1">
-        {keys.map((k, i) => (
-          <kbd
-            key={i}
-            className="bg-muted border-border rounded border px-1 py-0.5 text-[9px] leading-none"
-          >
-            {k}
-          </kbd>
-        ))}
-      </span>
-      <span className="text-muted-foreground">{desc}</span>
-    </div>
-  )
+function translatePair(codons: [string, string]) {
+  return codons.map((codon) => translateCodon(codon) ?? '?').join('')
 }

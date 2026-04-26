@@ -17,13 +17,9 @@ import os
 import sys
 import time
 
-CSV_PATH = os.path.join(
-    os.path.dirname(__file__), "..", "drizzle", "transcript_metadata.csv"
-)
+CSV_PATH = os.path.join(os.path.dirname(__file__), "..", "drizzle", "transcript_metadata.csv")
 GENES_OUT = os.path.join(os.path.dirname(__file__), "..", "data", "genes.jsonl")
-ISOFORMS_OUT = os.path.join(
-    os.path.dirname(__file__), "..", "data", "isoforms.jsonl"
-)
+ISOFORMS_OUT = os.path.join(os.path.dirname(__file__), "..", "data", "isoforms.jsonl")
 
 
 def derive_species(transcript_id: str) -> str:

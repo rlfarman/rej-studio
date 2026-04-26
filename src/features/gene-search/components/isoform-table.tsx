@@ -439,20 +439,25 @@ function IsoformRow({
           >
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="hidden sm:inline-flex"
-                  disabled
-                  aria-label={`Download precomputed ZIP for ${isoform.id}`}
-                >
-                  <PackageOpen className="size-4" />
-                  <span className="hidden md:inline">Precomputed</span>
+                <Button variant="ghost" size="sm" asChild>
+                  <a
+                    href={`https://rej-seq-1.s3.us-west-004.backblazeb2.com/rej/v1.0/zips/${isoform.id}_v1.0.zip`}
+                    download={`${isoform.id}_v1.0.zip`}
+                    className="hidden sm:inline-flex"
+                    aria-label={`Download precomputed ZIP for ${isoform.id}`}
+                    onClick={() =>
+                      trackEvent({
+                        event: 'precomputed_download',
+                        isoform_id: isoform.id,
+                      })
+                    }
+                  >
+                    <PackageOpen className="size-4" />
+                    <span className="hidden md:inline">Precomputed</span>
+                  </a>
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>
-                Download precomputed — coming soon
-              </TooltipContent>
+              <TooltipContent>Download precomputed ZIP</TooltipContent>
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -575,7 +580,7 @@ function ExpandedDetails({
 
   return (
     <div className="space-y-4">
-      <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs sm:hidden sm:grid-cols-3">
+      <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs sm:hidden">
         <div>
           <dt className="text-muted-foreground">Protein</dt>
           <dd className="font-mono tabular-nums">

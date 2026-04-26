@@ -23,8 +23,7 @@ interface CellDelta {
 /**
  * Per-codon preference delta (after − before) for a species. Green =
  * became more preferred, red = became less preferred, muted = unchanged.
- * Sits alongside the single-strand CodonUsageStrip to make the optimizer's
- * work visible codon-by-codon.
+ * Makes the optimizer's work visible codon-by-codon.
  */
 export function CodonDeltaStrip({ original, optimized, species }: Props) {
   const { cells, improved, regressed, meanBefore, meanAfter } = useMemo(() => {
@@ -72,7 +71,7 @@ export function CodonDeltaStrip({ original, optimized, species }: Props) {
   return (
     <div className="space-y-1.5">
       <div className="flex items-center justify-end">
-        <span className="text-muted-foreground text-[10px] tabular-nums">
+        <span className="text-muted-foreground type-micro tabular-nums">
           mean {(meanBefore * 100).toFixed(0)}% → {(meanAfter * 100).toFixed(0)}
           %
           <span
@@ -124,7 +123,7 @@ export function CodonDeltaStrip({ original, optimized, species }: Props) {
           )
         })}
       </div>
-      <div className="text-muted-foreground flex items-center gap-1 text-[10px]">
+      <div className="text-muted-foreground type-micro flex items-center gap-1">
         <span>regressed</span>
         <span className="h-2 flex-1 rounded-sm bg-gradient-to-r from-red-500/70 via-slate-400/25 to-emerald-500/70" />
         <span>improved</span>

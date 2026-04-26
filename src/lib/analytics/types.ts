@@ -34,6 +34,7 @@ export type AnalyticsEvent =
     }
   | { event: 'job_failed'; job_id: string; error_code: string }
   | { event: 'sequence_download'; isoform_id: string }
+  | { event: 'precomputed_download'; isoform_id: string }
   | { event: 'data_export' }
   | { event: 'data_import'; category_count: number }
   | {

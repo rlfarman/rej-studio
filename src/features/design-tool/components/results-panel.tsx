@@ -1,7 +1,7 @@
 'use client'
 
-import { memo, useMemo } from 'react'
-import { m } from 'motion/react'
+import { memo, useMemo, useState } from 'react'
+import { AnimatePresence, m } from 'motion/react'
 import {
   Download,
   Clock,
@@ -36,7 +36,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { fadeUp } from '@/lib/motion'
+import { fadeUp, popSpring } from '@/lib/motion'
 import { MetricCell } from '@/components/metric-cell'
 import {
   DropdownMenu,
@@ -174,7 +174,7 @@ function MetricsStrip({ result }: { result: ProcessResult }) {
   const showCai = stats.keyAfter.caiScore !== null
 
   return (
-    <div className="bg-border grid grid-cols-1 gap-px overflow-hidden rounded-lg border sm:grid-cols-2 md:grid-cols-4">
+    <div className="bg-border grid grid-cols-1 gap-px overflow-hidden rounded-lg border sm:grid-cols-2 lg:grid-cols-4">
       <MetricCell
         label="Score"
         before={stats.before.totalScore}
@@ -274,7 +274,7 @@ function SequenceCard({
       <div className="flex flex-wrap items-center justify-between gap-1.5">
         <div className="flex items-center gap-1.5">
           <span className="text-xs font-medium">{label}</span>
-          <Badge variant="secondary" className="text-[10px]">
+          <Badge variant="secondary" className="type-micro">
             {displayLength.toLocaleString()} bp
           </Badge>
         </div>
@@ -287,11 +287,31 @@ function SequenceCard({
               className="h-9 gap-1.5 px-3 text-xs"
               aria-label={resultsCopy.sequenceCard.exportAria(label)}
             >
-              {justCopied ? (
-                <Check className="size-3.5" />
-              ) : (
-                <Download className="size-3.5" />
-              )}
+              <AnimatePresence mode="wait" initial={false}>
+                {justCopied ? (
+                  <m.span
+                    key="check"
+                    initial={{ scale: 0.6, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0.6, opacity: 0 }}
+                    transition={popSpring}
+                    className="inline-flex"
+                  >
+                    <Check className="size-3.5" />
+                  </m.span>
+                ) : (
+                  <m.span
+                    key="download"
+                    initial={{ scale: 0.6, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0.6, opacity: 0 }}
+                    transition={popSpring}
+                    className="inline-flex"
+                  >
+                    <Download className="size-3.5" />
+                  </m.span>
+                )}
+              </AnimatePresence>
               {justCopied
                 ? resultsCopy.sequenceCard.copied
                 : resultsCopy.sequenceCard.exportLabel}
@@ -366,21 +386,46 @@ function ExpandableRow({
   children: React.ReactNode
   defaultOpen?: boolean
 }) {
+  const [open, setOpen] = useState(defaultOpen)
   return (
-    <details
-      className="group border-t py-2 first:border-t-0"
-      open={defaultOpen}
-    >
-      <summary className="flex cursor-pointer list-none items-center gap-2 py-1 text-sm select-none [&::-webkit-details-marker]:hidden">
-        <ChevronRight className="text-muted-foreground size-4 shrink-0 transition-transform duration-200 group-open:rotate-90" />
+    <div className="border-t py-2 first:border-t-0">
+      <button
+        type="button"
+        aria-expanded={open}
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full cursor-pointer items-center gap-2 py-1 text-left text-sm select-none"
+      >
+        <m.span
+          animate={{ rotate: open ? 90 : 0 }}
+          transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+          className="inline-flex"
+        >
+          <ChevronRight className="text-muted-foreground size-4 shrink-0" />
+        </m.span>
         <Icon className="text-muted-foreground size-4 shrink-0" />
         <span className="font-medium">{title}</span>
         {summary && (
           <span className="text-muted-foreground text-xs">— {summary}</span>
         )}
-      </summary>
-      <div className="pt-3 pb-2 pl-6">{children}</div>
-    </details>
+      </button>
+      <AnimatePresence initial={false}>
+        {open && (
+          <m.div
+            key="content"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{
+              height: { duration: 0.3, ease: [0.16, 1, 0.3, 1] },
+              opacity: { duration: 0.2 },
+            }}
+            className="overflow-hidden"
+          >
+            <div className="pt-3 pb-2 pl-6">{children}</div>
+          </m.div>
+        )}
+      </AnimatePresence>
+    </div>
   )
 }
 

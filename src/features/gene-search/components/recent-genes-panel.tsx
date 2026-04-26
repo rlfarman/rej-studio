@@ -45,7 +45,7 @@ export function RecentGenes() {
               )}
               <div className="flex min-w-0 flex-1 flex-col gap-0.5 leading-tight">
                 <span className="font-mono font-medium">{gene.symbol}</span>
-                <span className="text-muted-foreground group-hover/menu-button:text-sidebar-accent-foreground line-clamp-2 pr-5 text-[11px]">
+                <span className="text-muted-foreground group-hover/menu-button:text-sidebar-accent-foreground type-nano line-clamp-2 pr-5">
                   {gene.name}
                 </span>
               </div>

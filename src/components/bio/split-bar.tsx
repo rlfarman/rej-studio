@@ -19,12 +19,12 @@ export function SplitBar({ fivePrimeLength, threePrimeLength }: SplitBarProps) {
         className="bg-primary/15 border-primary flex min-w-0 items-center justify-center border-r-2 transition-all"
         style={{ width: `${percentage}%` }}
       >
-        <span className="text-primary truncate px-1.5 text-[10px] font-medium">
+        <span className="text-primary type-micro truncate px-1.5 font-medium">
           5&apos; &middot; {fivePrimeLength.toLocaleString()} bp
         </span>
       </div>
       <div className="bg-muted/50 flex min-w-0 flex-1 items-center justify-center">
-        <span className="text-muted-foreground truncate px-1.5 text-[10px] font-medium">
+        <span className="text-muted-foreground type-micro truncate px-1.5 font-medium">
           3&apos; &middot; {threePrimeLength.toLocaleString()} bp
         </span>
       </div>

@@ -90,7 +90,7 @@ export function RestrictionSiteMap({ original, optimized }: Props) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-end">
-        <div className="text-muted-foreground flex items-center gap-3 text-[10px] tabular-nums">
+        <div className="text-muted-foreground type-micro flex items-center gap-3 tabular-nums">
           <span>
             {totalBefore} → {totalAfter} total
           </span>
@@ -163,7 +163,7 @@ function EnzymeTrack({
   }, [row, maxLen])
 
   return (
-    <div className="group flex items-center gap-2 text-[10px]">
+    <div className="group type-micro flex items-center gap-2">
       <span className="text-muted-foreground w-16 shrink-0 truncate font-mono">
         {row.enzyme}
       </span>

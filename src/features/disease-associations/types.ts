@@ -43,3 +43,19 @@ export const INHERITANCE_BUCKETS = [
 ] as const
 
 export type InheritanceBucket = (typeof INHERITANCE_BUCKETS)[number]
+
+export const FILTER_INHERITANCE_BUCKETS = [
+  'Autosomal dominant',
+  'Autosomal recessive',
+  'X-linked',
+  'Y-linked',
+  'Mitochondrial',
+  'Somatic mutation',
+  'Digenic',
+] as const satisfies readonly InheritanceBucket[]
+
+export function formatInheritanceLabel(bucket: string): string {
+  if (bucket === 'Autosomal dominant') return 'Dominant'
+  if (bucket === 'Autosomal recessive') return 'Recessive'
+  return bucket
+}
