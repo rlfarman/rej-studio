@@ -13,19 +13,12 @@ import {
 } from '@/components/ui/card'
 import { DNASplicer } from './dna-splicer'
 import { Form } from '@/components/ui/form'
-import {
-  Accordion,
-  AccordionItem,
-  AccordionTrigger,
-  AccordionContent,
-} from '@/components/ui/accordion'
 import type { DesignToolSpecies } from '@/features/design-tool/types/species-options'
 import type { ProcessResult } from '@/features/design-tool/types/process-result'
 import { validationSchema, FormValues } from '../types/form-schema'
 import { formatOptionsForReport } from '../utils/form-handler'
 import { useJob } from '@/features/design-tool/hooks/use-job'
 import { CustomizationOptions } from './customization-options'
-import { SpeciesOptions } from './species-options'
 import { CodonOptimizationOptions } from './optimization-options'
 import { StimulatoryIntronOptions } from './stimulatory-intron-options'
 import { SubmitButton } from './submit-button'
@@ -191,15 +184,16 @@ export function GeneSplitterForm({
             >
               <CardHeader>
                 <CardTitle asChild>
-                  <h1>{copy.title}</h1>
+                  <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">
+                    {copy.title}
+                  </h1>
                 </CardTitle>
                 <CardDescription>{copy.description}</CardDescription>
               </CardHeader>
-              <CardContent className="flex flex-col gap-8">
+              <CardContent className="space-y-6">
                 <div data-tour="dt-sequence">
                   <CustomizationOptions />
                 </div>
-                <SpeciesOptions />
                 <div className="flex flex-col gap-2" data-tour="dt-splicer">
                   <p className="text-sm font-medium">
                     {copy.spliceJunctionLabel}
@@ -218,45 +212,44 @@ export function GeneSplitterForm({
               style={{ '--stagger': 1 } as React.CSSProperties}
               data-tour="dt-optimization"
             >
-              <CardHeader>
+              <CardHeader className="pb-2">
                 <CardTitle asChild>
-                  <h2>{copy.optimizationHeading}</h2>
+                  <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">
+                    {copy.optimizationHeading}
+                  </h2>
                 </CardTitle>
-                <CardDescription>
-                  {copy.optimizationDescription}
-                </CardDescription>
+                {copy.optimizationDescription ? (
+                  <CardDescription>
+                    {copy.optimizationDescription}
+                  </CardDescription>
+                ) : null}
               </CardHeader>
-              <CardContent>
-                <Accordion type="multiple">
-                  <AccordionItem value="codon-optimization">
-                    <AccordionTrigger>
-                      <div>
-                        <p>{copy.accordion.codonOptimization}</p>
-                        <p className="text-muted-foreground text-sm">
-                          {copy.accordion.codonOptimizationHint}
-                        </p>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="pt-4 pb-8">
-                      <CodonOptimizationOptions />
-                    </AccordionContent>
-                  </AccordionItem>
-                  <AccordionItem value="fragment-options">
-                    <AccordionTrigger>
-                      <div>
-                        <p>{copy.accordion.stimulatoryIntrons}</p>
-                        <p className="text-muted-foreground text-sm">
-                          {copy.accordion.stimulatoryIntronsHint}
-                        </p>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="pt-4 pb-8">
-                      <StimulatoryIntronOptions />
-                    </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
+              <CardContent className="space-y-6 pt-0">
+                <section className="space-y-3">
+                  <div className="space-y-1">
+                    <h3 className="text-base font-medium">
+                      {copy.accordion.codonOptimization}
+                    </h3>
+                    <p className="text-muted-foreground text-sm">
+                      {copy.accordion.codonOptimizationHint}
+                    </p>
+                  </div>
+                  <CodonOptimizationOptions />
+                </section>
+
+                <section className="space-y-3">
+                  <div className="space-y-1">
+                    <h3 className="text-base font-medium">
+                      {copy.accordion.stimulatoryIntrons}
+                    </h3>
+                    <p className="text-muted-foreground text-sm">
+                      {copy.accordion.stimulatoryIntronsHint}
+                    </p>
+                  </div>
+                  <StimulatoryIntronOptions />
+                </section>
               </CardContent>
-              <CardFooter className="justify-end" data-tour="dt-submit">
+              <CardFooter className="justify-end pt-4" data-tour="dt-submit">
                 <SubmitButton
                   isJobRunning={job.isLoading}
                   isJobComplete={job.status === 'completed'}

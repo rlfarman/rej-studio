@@ -5,7 +5,6 @@ import {
   FormItem,
   FormLabel,
   FormControl,
-  FormAssistiveText,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { FormValues } from '../types/form-schema'
@@ -25,9 +24,19 @@ export function NameInput() {
       control={control}
       render={({ field }) => (
         <FormItem>
-          <FormLabel>
-            {designToolCopy.nameInput.label} <span aria-hidden="true">*</span>
-          </FormLabel>
+          <div className="flex items-center justify-between gap-4">
+            <FormLabel>
+              {designToolCopy.nameInput.label} <span aria-hidden="true">*</span>
+            </FormLabel>
+            <span
+              className={cn(
+                'text-muted-foreground shrink-0 text-xs tabular-nums',
+                length > MAX_NAME_LENGTH && 'text-destructive-foreground',
+              )}
+            >
+              {length.toLocaleString()} / {MAX_NAME_LENGTH.toLocaleString()}
+            </span>
+          </div>
           <FormControl>
             <Input
               type="text"
@@ -37,21 +46,6 @@ export function NameInput() {
               {...field}
             />
           </FormControl>
-          <FormAssistiveText>
-            <span className="flex min-h-5 items-start justify-between gap-4">
-              <span />
-              <span
-                className={cn(
-                  'shrink-0 tabular-nums',
-                  length > MAX_NAME_LENGTH
-                    ? 'text-destructive-foreground'
-                    : 'text-muted-foreground',
-                )}
-              >
-                {length.toLocaleString()} / {MAX_NAME_LENGTH.toLocaleString()}
-              </span>
-            </span>
-          </FormAssistiveText>
         </FormItem>
       )}
     />
