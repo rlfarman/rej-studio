@@ -30,26 +30,34 @@ if [ ! -e "$WORKTREE_ROOT/.env" ]; then
   fi
 fi
 
-# Symlink venv/ from the main repo (Python deps are heavy; sharing is fine).
+# Python venv: create in the main repo if absent, then symlink here.
+# Creating in the main repo means all worktrees share one install.
 if [ ! -e "$WORKTREE_ROOT/venv" ]; then
-  if [ -d "$MAIN_REPO/venv" ]; then
-    ln -s "$MAIN_REPO/venv" "$WORKTREE_ROOT/venv"
-    echo "Linked venv -> $MAIN_REPO/venv"
-  else
-    echo "Warning: $MAIN_REPO/venv not found — create one with: python3 -m venv venv" >&2
+  if [ ! -d "$MAIN_REPO/venv" ]; then
+    echo "Creating Python venv..."
+    python3 -m venv "$MAIN_REPO/venv"
+    "$MAIN_REPO/venv/bin/pip" install -q -r "$MAIN_REPO/python/requirements.txt"
+    echo "Python venv created at $MAIN_REPO/venv"
   fi
+  ln -s "$MAIN_REPO/venv" "$WORKTREE_ROOT/venv"
+  echo "Linked venv -> $MAIN_REPO/venv"
 fi
 
-# Install Node deps in the worktree. Can't share node_modules across worktrees
-# safely (Next.js build state leaks) — each worktree needs its own.
-# Use a login shell so pnpm is found regardless of whether nvm/Homebrew/etc. are
-# already on PATH — lets this script run from minimal-env contexts (e.g. Claude
-# Code's Bash tool) as well as interactive shells.
-if [ ! -d "$WORKTREE_ROOT/node_modules" ]; then
-  echo "Running pnpm install..."
-  (cd "$WORKTREE_ROOT" && /bin/zsh -l -c "pnpm install")
+# Node deps: symlink the main repo's node_modules when package.json is identical
+# (the common case). Build state lives in .next/, not node_modules, so sharing is
+# safe. Fall back to pnpm install only when dependencies have diverged.
+# Use a login shell so pnpm is on PATH in minimal-env contexts (e.g. Claude Code).
+if [ ! -e "$WORKTREE_ROOT/node_modules" ]; then
+  if diff -q "$MAIN_REPO/package.json" "$WORKTREE_ROOT/package.json" >/dev/null 2>&1 \
+      && [ -d "$MAIN_REPO/node_modules" ]; then
+    ln -s "$MAIN_REPO/node_modules" "$WORKTREE_ROOT/node_modules"
+    echo "Linked node_modules -> $MAIN_REPO/node_modules (package.json identical)"
+  else
+    echo "Running pnpm install (package.json differs or main node_modules missing)..."
+    (cd "$WORKTREE_ROOT" && /bin/zsh -l -c "pnpm install")
+  fi
 else
-  echo "node_modules present — skipping pnpm install (run manually if package.json changed)."
+  echo "node_modules present — skipping (run pnpm install manually if package.json changed)."
 fi
 
 echo "Bootstrap complete. You can now run: pnpm dev"

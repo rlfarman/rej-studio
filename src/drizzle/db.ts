@@ -24,9 +24,6 @@ const devLogger = {
 }
 
 function createNeonDb() {
-  // Enable connection caching on the Neon proxy. This lets the proxy reuse
-  // compute node lookups across HTTP requests, shaving ~10ms off query latency.
-  neonConfig.fetchConnectionCache = true
   const sql = neon(databaseUrl)
   return drizzleNeon(sql, { schema, logger: devLogger })
 }
