@@ -1876,7 +1876,20 @@ function SequenceContextTable({ rows }: { rows: SequenceRow[] }) {
           </div>
         ))}
       </div>
-      <div ref={scrollerRef} className="overflow-x-auto">
+      <div
+        ref={scrollerRef}
+        className="overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        // Mask the leading and trailing edges so characters that fall
+        // outside the visible window dissolve to transparent rather than
+        // get hard-clipped mid-glyph. The center (around the splice) is
+        // fully opaque.
+        style={{
+          maskImage:
+            'linear-gradient(to right, transparent 0, black 24px, black calc(100% - 24px), transparent 100%)',
+          WebkitMaskImage:
+            'linear-gradient(to right, transparent 0, black 24px, black calc(100% - 24px), transparent 100%)',
+        }}
+      >
         <div className="flex w-max flex-col gap-1">
           {rows.map((row, rowIdx) => (
             <SequenceRowText
