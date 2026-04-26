@@ -273,6 +273,11 @@ export function SpliceSliderContext({
   const [recentlyAssignedSplice, setRecentlyAssignedSplice] = useState<
     number | null
   >(null)
+  // Hovered tick by site position. Tracked at the strip level since the
+  // tick spans themselves are pointer-events-none.
+  const [hoveredSitePosition, setHoveredSitePosition] = useState<number | null>(
+    null,
+  )
 
   // When a tick is clicked without an explicit splice index, assign it to
   // the splice whose caret is nearest the chosen site. This matches the
@@ -824,6 +829,34 @@ export function SpliceSliderContext({
                   handleSelectSite(nearest)
                 }
               }}
+              // Track which tick is hovered so we can mirror the prior
+              // group-hover affordance on the (now pointer-events-none)
+              // tick spans.
+              onPointerMove={(e) => {
+                const track = trackRef.current
+                if (!track || wggwSites.length === 0) return
+                const rect = track.getBoundingClientRect()
+                if (rect.width <= 0) return
+                const x = Math.max(
+                  0,
+                  Math.min(e.clientX - rect.left, rect.width),
+                )
+                const hoverBp = (x / rect.width) * seqLen
+                let nearest: WggwSiteCandidate | null = null
+                let bestDist = Infinity
+                for (const site of wggwSites) {
+                  const d = Math.abs(site.position - hoverBp)
+                  if (d < bestDist) {
+                    bestDist = d
+                    nearest = site
+                  }
+                }
+                const pixelDist = (bestDist / seqLen) * rect.width
+                setHoveredSitePosition(
+                  nearest && pixelDist <= 14 ? nearest.position : null,
+                )
+              }}
+              onPointerLeave={() => setHoveredSitePosition(null)}
             >
               {stripWindow && (
                 <div
@@ -841,6 +874,7 @@ export function SpliceSliderContext({
                   (p) => p === site.position,
                 )
                 const isSelected = selectedAt !== -1
+                const isHovered = hoveredSitePosition === site.position
                 const costTone = costToneFor(site.baseChanges)
                 return (
                   <span
@@ -848,10 +882,14 @@ export function SpliceSliderContext({
                     aria-hidden="true"
                     title={`WGGW ${site.motif} · bp ${site.position.toLocaleString()} · ${site.baseChanges} bp change${site.baseChanges === 1 ? '' : 's'}`}
                     className={cn(
-                      'pointer-events-none absolute top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full',
+                      'pointer-events-none absolute top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full transition-all',
                       isSelected
                         ? cn(spliceTone(selectedAt).tickBg, 'h-4 w-1.5')
-                        : cn(costTone.tickBg, 'h-3 w-1'),
+                        : cn(
+                            costTone.tickBg,
+                            isHovered ? 'h-4 w-1.5' : 'h-3 w-1',
+                          ),
+                      isHovered && 'ring-foreground/30 z-10 ring-1',
                     )}
                     style={{ left: `${x}%` }}
                   />
