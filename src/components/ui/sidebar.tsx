@@ -25,51 +25,24 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 
-// Sidebar state is persisted in localStorage (not cookies) to keep the
-// `(app)` layout fully static — reading cookies server-side would force
-// dynamic rendering on every initial load. A small inline script in the
-// layout reads these keys and sets data attributes on <html> before React
-// hydrates, so initial render matches the user's preference without a flash.
-const SIDEBAR_STORAGE_STATE = 'rej-sidebar-state'
-const SIDEBAR_STORAGE_WIDTH = 'rej-sidebar-width'
-const SIDEBAR_PRELOAD_STATE_ATTR = 'sidebarPreloadOpen'
-const SIDEBAR_PRELOAD_WIDTH_ATTR = 'sidebarPreloadWidth'
-const SIDEBAR_WIDTH_DEFAULT = 256
-const SIDEBAR_WIDTH_MIN = 200
-const SIDEBAR_WIDTH_MAX = 480
+// Sidebar state is persisted in cookies so the server can render the correct
+// initial open/width on first paint. The (app) layout reads these via
+// next/headers and passes them as defaultOpen/defaultWidth to SidebarProvider
+// — same pattern shadcn ships upstream.
+export const SIDEBAR_COOKIE_OPEN = 'sidebar_state'
+export const SIDEBAR_COOKIE_WIDTH = 'sidebar_width'
+const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 365 // 1 year
+export const SIDEBAR_WIDTH_DEFAULT = 256
+export const SIDEBAR_WIDTH_MIN = 200
+export const SIDEBAR_WIDTH_MAX = 480
 const SIDEBAR_WIDTH_MOBILE = '18rem'
 const SIDEBAR_WIDTH_ICON = '3rem'
 const SIDEBAR_KEYBOARD_SHORTCUT = 'b'
 
-// React 19 no longer patches up hydration mismatches, so the useState
-// initializer must return the same value on server and client. We read the
-// preload attributes in a layout effect instead — it fires after hydration
-// but before paint, so the preloaded state is applied without a visible flash.
-function readPreloadedOpen(): boolean | null {
-  const preload = document.documentElement.dataset[SIDEBAR_PRELOAD_STATE_ATTR]
-  if (preload === 'true') return true
-  if (preload === 'false') return false
-  return null
+function writeCookie(name: string, value: string) {
+  if (typeof document === 'undefined') return
+  document.cookie = `${name}=${value}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}; SameSite=Lax`
 }
-
-function readPreloadedWidth(): number | null {
-  const preload = document.documentElement.dataset[SIDEBAR_PRELOAD_WIDTH_ATTR]
-  const n = preload ? Number(preload) : NaN
-  if (!Number.isFinite(n)) return null
-  return Math.round(Math.min(SIDEBAR_WIDTH_MAX, Math.max(SIDEBAR_WIDTH_MIN, n)))
-}
-
-function writeStorage(key: string, value: string) {
-  try {
-    window.localStorage.setItem(key, value)
-  } catch {
-    // localStorage may be unavailable (private mode, quota) — preference
-    // just doesn't persist across reloads, which is acceptable.
-  }
-}
-
-const useIsomorphicLayoutEffect =
-  typeof window !== 'undefined' ? React.useLayoutEffect : React.useEffect
 
 type SidebarContext = {
   state: 'expanded' | 'collapsed'
@@ -81,6 +54,7 @@ type SidebarContext = {
   toggleSidebar: () => void
   width: number
   setWidth: (width: number) => void
+  commitWidth: (width: number) => void
 }
 
 const SidebarContext = React.createContext<SidebarContext | null>(null)
@@ -112,9 +86,8 @@ function SidebarProvider({
   const isMobile = useIsMobile()
   const [openMobile, setOpenMobile] = React.useState(false)
 
-  // State starts at the fallback so SSR and initial client render match; a
-  // layout effect below reads the preload data attributes and syncs state to
-  // the user's persisted preference before the browser paints.
+  // Server already rendered with the cookie-derived defaultOpen, so the
+  // initial state matches what the user saw on first paint.
   const [_open, _setOpen] = React.useState(defaultOpen)
   const open = openProp ?? _open
   const setOpen = React.useCallback(
@@ -126,12 +99,13 @@ function SidebarProvider({
         _setOpen(openState)
       }
 
-      writeStorage(SIDEBAR_STORAGE_STATE, String(openState))
+      writeCookie(SIDEBAR_COOKIE_OPEN, String(openState))
     },
     [setOpenProp, open],
   )
 
-  // Sidebar width state for drag-to-resize.
+  // Width is in-memory during drag — commitWidth writes the cookie on
+  // pointer-up so we don't spam Set-Cookie on every move.
   const [width, _setWidth] = React.useState(defaultWidth)
   const setWidth = React.useCallback((w: number) => {
     const clamped = Math.round(
@@ -139,21 +113,12 @@ function SidebarProvider({
     )
     _setWidth(clamped)
   }, [])
-
-  // Apply preloaded state from <html> dataset. Runs after hydration but
-  // before paint, so users who customized their sidebar don't see the
-  // fallback state briefly on reload.
-  useIsomorphicLayoutEffect(() => {
-    const preloadedOpen = readPreloadedOpen()
-    if (preloadedOpen !== null && preloadedOpen !== _open) {
-      _setOpen(preloadedOpen)
-    }
-    const preloadedWidth = readPreloadedWidth()
-    if (preloadedWidth !== null && preloadedWidth !== width) {
-      _setWidth(preloadedWidth)
-    }
-    // Run only on mount — we're hydrating from a snapshot set before React
-    // rendered, not subscribing to changes.
+  const commitWidth = React.useCallback((w: number) => {
+    const clamped = Math.round(
+      Math.min(SIDEBAR_WIDTH_MAX, Math.max(SIDEBAR_WIDTH_MIN, w)),
+    )
+    _setWidth(clamped)
+    writeCookie(SIDEBAR_COOKIE_WIDTH, String(clamped))
   }, [])
 
   // Helper to toggle the sidebar.
@@ -192,6 +157,7 @@ function SidebarProvider({
       toggleSidebar,
       width,
       setWidth,
+      commitWidth,
     }),
     [
       state,
@@ -203,6 +169,7 @@ function SidebarProvider({
       toggleSidebar,
       width,
       setWidth,
+      commitWidth,
     ],
   )
 
@@ -357,7 +324,7 @@ function SidebarTrigger({
 }
 
 function SidebarRail({ className, ...props }: React.ComponentProps<'button'>) {
-  const { toggleSidebar, setWidth, width, open } = useSidebar()
+  const { toggleSidebar, setWidth, commitWidth, width, open } = useSidebar()
   const isDragging = React.useRef(false)
   const startX = React.useRef(0)
   const startWidth = React.useRef(0)
@@ -397,29 +364,19 @@ function SidebarRail({ className, ...props }: React.ComponentProps<'button'>) {
           return
         }
 
-        const clamped = Math.round(
-          Math.min(
-            SIDEBAR_WIDTH_MAX,
-            Math.max(
-              SIDEBAR_WIDTH_MIN,
-              startWidth.current + totalDelta.current,
-            ),
-          ),
-        )
-        writeStorage(SIDEBAR_STORAGE_WIDTH, String(clamped))
+        commitWidth(startWidth.current + totalDelta.current)
         isDragging.current = false
       }
 
       window.addEventListener('pointermove', handlePointerMove)
       window.addEventListener('pointerup', handlePointerUp)
     },
-    [open, width, setWidth, toggleSidebar],
+    [open, width, setWidth, commitWidth, toggleSidebar],
   )
 
   const handleDoubleClick = React.useCallback(() => {
-    setWidth(SIDEBAR_WIDTH_DEFAULT)
-    writeStorage(SIDEBAR_STORAGE_WIDTH, String(SIDEBAR_WIDTH_DEFAULT))
-  }, [setWidth])
+    commitWidth(SIDEBAR_WIDTH_DEFAULT)
+  }, [commitWidth])
 
   return (
     <button
