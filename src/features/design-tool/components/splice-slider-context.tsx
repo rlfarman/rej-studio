@@ -19,6 +19,7 @@ import {
 import { translateCodon } from '@/lib/bio/genetic-code'
 import { ChevronLeft, ChevronRight, AlignCenter, X, Plus } from 'lucide-react'
 import { toast } from 'sonner'
+import { Button } from '@/components/ui/button'
 import type { SelectedWggwSite } from '../types/form-schema'
 
 interface Props {
@@ -60,7 +61,7 @@ const SPLICE_TONES: Array<{
     border: 'border-marker',
     hoverBorder: 'hover:border-marker/40',
     tickBg: 'bg-marker',
-    baseBg: 'bg-marker/20',
+    baseBg: 'bg-marker/15',
     baseText: 'text-marker',
     fillSeg: 'bg-marker/15',
     text: 'text-marker',
@@ -864,7 +865,7 @@ export function SpliceSliderContext({
             >
               {stripWindow && (
                 <div
-                  className="bg-foreground/8 pointer-events-none absolute inset-y-0"
+                  className="bg-foreground/10 pointer-events-none absolute inset-y-0"
                   style={{
                     left: `${((stripWindow.start - 1) / seqLen) * 100}%`,
                     width: `${((stripWindow.end - stripWindow.start + 1) / seqLen) * 100}%`,
@@ -934,15 +935,17 @@ export function SpliceSliderContext({
           />
           <div className="flex items-center justify-between gap-3 px-1">
             {positions.length < 2 ? (
-              <button
+              <Button
                 type="button"
+                variant="outline"
+                size="sm"
                 onClick={addSplice}
                 title="Add a second splice (for triple-AAV cassettes)"
-                className="text-muted-foreground hover:text-foreground hover:bg-muted/60 bg-background/80 inline-flex h-6 shrink-0 items-center gap-1 rounded-md border px-2 text-[10px] font-medium transition-colors"
+                className="text-muted-foreground hover:text-foreground"
               >
-                <Plus className="size-3" />
+                <Plus />
                 Splice
-              </button>
+              </Button>
             ) : (
               <span />
             )}
@@ -1108,15 +1111,17 @@ function Toolbar({
           )}
         </div>
       </div>
-      <button
+      <Button
         type="button"
+        variant="outline"
+        size="sm"
         onClick={onMidpoint}
         title="Snap caret to midpoint (m)"
-        className="text-muted-foreground hover:text-foreground hover:bg-muted/60 bg-background/80 inline-flex h-7 shrink-0 items-center gap-1 rounded-md border px-2 text-[11px] font-medium transition-colors"
+        className="text-muted-foreground hover:text-foreground"
       >
-        <AlignCenter className="size-3" />
+        <AlignCenter />
         Midpoint
-      </button>
+      </Button>
     </div>
   )
 }
@@ -1136,27 +1141,31 @@ function SiteNav({
 }) {
   return (
     <div className="text-muted-foreground inline-flex items-center gap-1 font-mono text-[11px] font-normal tabular-nums">
-      <button
+      <Button
         type="button"
+        variant="ghost"
+        size="icon"
         onClick={onPrev}
         disabled={!canPrev}
         title="Previous WGGW site ([)"
         aria-label="Previous WGGW site"
-        className="hover:text-foreground hover:bg-muted/60 inline-flex size-5 items-center justify-center rounded transition-colors disabled:pointer-events-none disabled:opacity-30"
+        className="hover:text-foreground size-5 [&_svg:not([class*='size-'])]:size-3.5"
       >
-        <ChevronLeft className="size-3.5" />
-      </button>
+        <ChevronLeft />
+      </Button>
       <span className="px-0.5">{label}</span>
-      <button
+      <Button
         type="button"
+        variant="ghost"
+        size="icon"
         onClick={onNext}
         disabled={!canNext}
         title="Next WGGW site (])"
         aria-label="Next WGGW site"
-        className="hover:text-foreground hover:bg-muted/60 inline-flex size-5 items-center justify-center rounded transition-colors disabled:pointer-events-none disabled:opacity-30"
+        className="hover:text-foreground size-5 [&_svg:not([class*='size-'])]:size-3.5"
       >
-        <ChevronRight className="size-3.5" />
-      </button>
+        <ChevronRight />
+      </Button>
     </div>
   )
 }
@@ -1539,15 +1548,17 @@ function Inspector({
         {spliceLabel}
       </button>
       {onRemoveSplice && (
-        <button
+        <Button
           type="button"
+          variant="ghost"
+          size="icon"
           onClick={onRemoveSplice}
           title={`Remove ${spliceLabel}`}
           aria-label={`Remove ${spliceLabel}`}
-          className="text-muted-foreground hover:text-foreground hover:bg-muted/60 inline-flex size-5 items-center justify-center rounded transition-colors"
+          className="text-muted-foreground hover:text-foreground size-5"
         >
           <X className="size-3" />
-        </button>
+        </Button>
       )}
     </div>
   ) : null
