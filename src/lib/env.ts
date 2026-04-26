@@ -17,12 +17,6 @@ const serverSchema = z
       .enum(['development', 'production', 'test'])
       .default('development'),
 
-    // Database connection. In production, a Neon Postgres URL. In development,
-    // can be a Neon URL, a file path for PGlite ('file:./data/local.db'),
-    // 'memory://' for in-memory PGlite, or empty to default to PGlite at
-    // ./data/local.db. PGlite is embedded Postgres — full SQL compatibility.
-    DATABASE_URL: z.string().default(''),
-
     // Compute backend. In production, must be "modal". In dev, "local" (or
     // unset) falls through to the uvicorn dev server.
     COMPUTE_BACKEND: z.enum(['modal', 'local']).optional(),
@@ -68,14 +62,6 @@ const serverSchema = z
   .superRefine((data, ctx) => {
     // Production guardrails.
     if (isProd) {
-      if (!data.DATABASE_URL || !data.DATABASE_URL.startsWith('postgres')) {
-        ctx.addIssue({
-          path: ['DATABASE_URL'],
-          code: z.ZodIssueCode.custom,
-          message:
-            'DATABASE_URL must be a Postgres connection string in production (PGlite is dev-only).',
-        })
-      }
       if (data.COMPUTE_BACKEND !== 'modal') {
         ctx.addIssue({
           path: ['COMPUTE_BACKEND'],

@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { notFound } from 'next/navigation'
 import { Badge } from '@/components/ui/badge'
 import { readGeneBySymbol, readManifest } from '@/lib/content/server'
@@ -7,7 +8,6 @@ import IsoformTable, {
 import { IsoformSummary } from '@/features/gene-search/components/isoform-summary'
 import { IsoformLengthChart } from '@/features/gene-search/components/isoform-length-chart'
 import { IsoformIdentityMatrix } from '@/features/gene-search/components/isoform-identity-matrix'
-import { Suspense, ViewTransition } from 'react'
 import { FavoriteGeneButton } from '@/features/gene-search/components/favorite-gene-button'
 import { GeneJsonLd } from '@/features/gene-search/components/gene-jsonld'
 import { GeneBreadcrumbJsonLd } from '@/features/gene-search/components/gene-breadcrumb-jsonld'
@@ -83,6 +83,22 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   }
 }
 
+async function HighlightedIsoformTable({
+  isoforms,
+  searchParams,
+}: {
+  isoforms: import('@/lib/content/types').ContentIsoform[]
+  searchParams: Props['searchParams']
+}) {
+  const { isoform: highlightedIsoformId } = await searchParams
+  return (
+    <IsoformTable
+      isoforms={isoforms}
+      highlightedIsoformId={highlightedIsoformId}
+    />
+  )
+}
+
 export default async function GeneSymbolPage(props: Props) {
   const gene = await resolveGene(props)
 
@@ -90,7 +106,6 @@ export default async function GeneSymbolPage(props: Props) {
     notFound()
   }
 
-  const { isoform: highlightedIsoformId } = await props.searchParams
   // Disease associations are baked into the per-gene JSON at emit time
   // (human only); no runtime lookup. Cast bridges the lib/feature boundary —
   // lib/content/types stores it as `unknown` to stay feature-agnostic.
@@ -140,36 +155,36 @@ export default async function GeneSymbolPage(props: Props) {
             )}
           </div>
         </header>
+        <GeneJsonLd
+          gene={gene}
+          isoformCount={isoforms.length}
+          species={speciesAvailable}
+        />
+        <TrackOnMount
+          event={{
+            event: 'isoform_view',
+            gene_symbol: gene.symbol,
+            gene_id: gene.id,
+            isoform_count: isoforms.length,
+          }}
+        />
+        <IsoformSummary isoforms={isoforms} />
+        {/* Suspense isolates the dynamic searchParams read so the static
+            shell of the page can be cached when cacheComponents is on. */}
         <Suspense fallback={<IsoformTableLoading />}>
-          <ViewTransition enter="suspense-reveal" default="none">
-            <GeneJsonLd
-              gene={gene}
-              isoformCount={isoforms.length}
-              species={speciesAvailable}
-            />
-            <TrackOnMount
-              event={{
-                event: 'isoform_view',
-                gene_symbol: gene.symbol,
-                gene_id: gene.id,
-                isoform_count: isoforms.length,
-              }}
-            />
-            <IsoformSummary isoforms={isoforms} />
-            <IsoformTable
-              isoforms={isoforms}
-              highlightedIsoformId={highlightedIsoformId}
-            />
-            {associationRow && <GenePhenotypes row={associationRow} />}
-            <section className="flex flex-col gap-6">
-              <IsoformLengthChart isoforms={isoforms} />
-              <IsoformIdentityMatrix
-                isoforms={isoforms}
-                matrix={gene.identityMatrix}
-              />
-            </section>
-          </ViewTransition>
+          <HighlightedIsoformTable
+            isoforms={isoforms}
+            searchParams={props.searchParams}
+          />
         </Suspense>
+        {associationRow && <GenePhenotypes row={associationRow} />}
+        <section className="flex flex-col gap-6">
+          <IsoformLengthChart isoforms={isoforms} />
+          <IsoformIdentityMatrix
+            isoforms={isoforms}
+            matrix={gene.identityMatrix}
+          />
+        </section>
       </div>
     </>
   )

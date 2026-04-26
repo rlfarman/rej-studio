@@ -1,3 +1,5 @@
+import type { Suitability } from '@/lib/bio/design-suitability'
+
 export interface SavedGene {
   id: string
   name: string
@@ -10,16 +12,24 @@ export interface SavedGene {
   isSeed?: boolean
 }
 
-// Shape every per-isoform UI consumer agrees on. proteinSequenceLength is
-// derived from codingSequenceLength on read (no separate column shipped).
-// proteinSequence is no longer carried — the only consumer (the identity
-// matrix) reads a precomputed matrix instead.
+/**
+ * Shape every per-isoform UI consumer agrees on. Sequences are NOT carried
+ * here — they're lazy-loaded via useIsoformSequence/fetchIsoformSequence
+ * when actually needed (row expansion, copy/download, comparison sheet).
+ *
+ * Default-render metrics are precomputed at emit time so list views render
+ * without scanning sequences. proteinSequenceLength is derived from
+ * codingSequenceLength on read.
+ */
 export interface IsoformListItem {
   id: string
-  codingSequence: string
   codingSequenceLength: number
   proteinSequenceLength: number
   species: string
+  gcPercent: number
+  cpgCount: number
+  wggwCount: number
+  suitability: Suitability
 }
 
 // Minimal projection of a design-tool job used by the command palette. Kept

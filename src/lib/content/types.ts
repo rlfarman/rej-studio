@@ -1,16 +1,27 @@
+import type { Suitability } from '@/lib/bio/design-suitability'
+
 // Disease-association rows are baked in by the emit step. The shape is owned
 // by the disease-associations feature; lib/ stays feature-agnostic by using
 // `unknown` here. Consumers in app/ or features/ cast back to AssociationRow.
 export type ContentAssociation = unknown
 
+/**
+ * Per-isoform shape emitted to genes-meta/<bucket>.json. Sequences live in
+ * sequences/<bucket>.json and are lazy-loaded on demand. proteinSequenceLength
+ * is derived from codingSequenceLength on read.
+ */
 export interface ContentIsoform {
   id: string
   geneId: string
   codingSequenceLength: number
-  /** Derived from codingSequenceLength on read; not stored in the JSON. */
   proteinSequenceLength: number
-  codingSequence: string
   species: string
+  // Precomputed at emit time so the gene page renders without scanning
+  // sequences and keeps RSC payloads tiny.
+  gcPercent: number
+  cpgCount: number
+  wggwCount: number
+  suitability: Suitability
 }
 
 export interface ContentIdentityMatrix {
@@ -23,12 +34,9 @@ export interface ContentGene {
   symbol: string
   name: string
   species: string
-  alternateSymbols: string
+  alternateSymbols: string[]
   isoforms: ContentIsoform[]
   identityMatrix: ContentIdentityMatrix
-  // Baked-in disease association row, human only. Pre-resolved at emit time
-  // so the gene page render does no association lookup. Shape: AssociationRow
-  // from src/features/disease-associations/types.
   association?: ContentAssociation
 }
 
@@ -42,5 +50,9 @@ export interface ContentManifest {
   genes: ManifestEntry[]
 }
 
-export type IsoformIndexEntry = { symbol: string; species: string }
+export type IsoformIndexEntry = {
+  symbol: string
+  species: string
+  bucket: string
+}
 export type IsoformIndex = Record<string, IsoformIndexEntry>

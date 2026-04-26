@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import {
   Sheet,
   SheetContent,
@@ -21,37 +22,50 @@ import { Button } from '@/components/ui/button'
 import { ExternalLink } from 'lucide-react'
 import Link from 'next/link'
 import { SPECIES_DISPLAY_NAME } from '@/lib/bio/species'
-import {
-  computeGcPercent,
-  hasStartCodon,
-  getStopCodonStatus,
-} from '@/lib/bio/sequence-utils'
-import {
-  assessDesignSuitability,
-  getSuitabilityConfig,
-} from '@/lib/bio/design-suitability'
+import { hasStartCodon, getStopCodonStatus } from '@/lib/bio/sequence-utils'
+import { getSuitabilityConfig } from '@/lib/bio/design-suitability'
 import type { IsoformListItem } from '@/features/gene-search/types/domain-types'
+import { fetchIsoformSequences } from '@/features/gene-search/utils/use-isoform-sequence'
 
 interface IsoformComparisonSheetProps {
   isoforms: IsoformListItem[]
   children: React.ReactNode
 }
 
+type Analysis = IsoformListItem & {
+  startCodon: boolean
+  stopCodon: 'present' | 'absent' | 'none'
+  suitConfig: ReturnType<typeof getSuitabilityConfig>
+}
+
 export function IsoformComparisonSheet({
   isoforms,
   children,
 }: IsoformComparisonSheetProps) {
-  const analyses = isoforms.map((iso) => {
-    const suitability = assessDesignSuitability(iso.codingSequence)
-    return {
-      ...iso,
-      gc: computeGcPercent(iso.codingSequence),
-      startCodon: hasStartCodon(iso.codingSequence),
-      stopCodon: getStopCodonStatus(iso.codingSequence),
-      suitability,
-      suitConfig: getSuitabilityConfig(suitability),
+  const [open, setOpen] = useState(false)
+  const [analyses, setAnalyses] = useState<Analysis[] | null>(null)
+
+  useEffect(() => {
+    if (!open) return
+    let cancelled = false
+    ;(async () => {
+      const seqs = await fetchIsoformSequences(isoforms.map((i) => i.id))
+      if (cancelled) return
+      const result: Analysis[] = isoforms.map((iso) => {
+        const seq = seqs[iso.id] ?? ''
+        return {
+          ...iso,
+          startCodon: hasStartCodon(seq),
+          stopCodon: getStopCodonStatus(seq),
+          suitConfig: getSuitabilityConfig(iso.suitability),
+        }
+      })
+      setAnalyses(result)
+    })()
+    return () => {
+      cancelled = true
     }
-  })
+  }, [open, isoforms])
 
   const allSame = (values: (string | number | boolean)[]) =>
     values.every((v) => v === values[0])
@@ -61,7 +75,7 @@ export function IsoformComparisonSheet({
   }
 
   return (
-    <Sheet>
+    <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>{children}</SheetTrigger>
       <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-lg">
         <SheetHeader>
@@ -72,98 +86,108 @@ export function IsoformComparisonSheet({
         </SheetHeader>
 
         <div className="overflow-x-auto px-4">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="min-w-24">Property</TableHead>
-                {analyses.map((iso) => (
-                  <TableHead
-                    key={iso.id}
-                    className="min-w-28 font-mono text-xs"
-                  >
-                    {iso.id}
-                  </TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <CompRow
-                label="Species"
-                values={analyses.map(
-                  (a) =>
-                    SPECIES_DISPLAY_NAME[
-                      a.species as keyof typeof SPECIES_DISPLAY_NAME
-                    ] ?? 'Unknown',
-                )}
-                diffClass={diffClass(analyses.map((a) => a.species))}
-              />
-              <CompRow
-                label="CDS Length"
-                values={analyses.map(
-                  (a) => `${a.codingSequenceLength.toLocaleString()} bp`,
-                )}
-                diffClass={diffClass(
-                  analyses.map((a) => a.codingSequenceLength),
-                )}
-              />
-              <CompRow
-                label="Protein Length"
-                values={analyses.map(
-                  (a) => `${a.proteinSequenceLength.toLocaleString()} aa`,
-                )}
-                diffClass={diffClass(
-                  analyses.map((a) => a.proteinSequenceLength),
-                )}
-              />
-              <CompRow
-                label="GC Content"
-                values={analyses.map((a) => `${a.gc.toFixed(1)}%`)}
-                diffClass={diffClass(analyses.map((a) => Math.round(a.gc)))}
-              />
-              <CompRow
-                label="Start Codon"
-                values={analyses.map((a) => (a.startCodon ? 'ATG' : 'Missing'))}
-                diffClass={diffClass(analyses.map((a) => a.startCodon))}
-              />
-              <CompRow
-                label="Stop Codon"
-                values={analyses.map((a) =>
-                  a.stopCodon === 'present' ? 'Present' : 'Missing',
-                )}
-                diffClass={diffClass(analyses.map((a) => a.stopCodon))}
-              />
-              <TableRow>
-                <TableCell className="text-muted-foreground text-xs font-semibold">
-                  Suitability
-                </TableCell>
-                {analyses.map((a) => (
-                  <TableCell
-                    key={a.id}
-                    className={diffClass(analyses.map((x) => x.suitability))}
-                  >
-                    <Badge className={`text-xs ${a.suitConfig.badgeClass}`}>
-                      {a.suitConfig.label}
-                    </Badge>
+          {analyses === null ? (
+            <p className="text-muted-foreground py-8 text-center text-sm">
+              Loading sequences…
+            </p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="min-w-24">Property</TableHead>
+                  {analyses.map((iso) => (
+                    <TableHead
+                      key={iso.id}
+                      className="min-w-28 font-mono text-xs"
+                    >
+                      {iso.id}
+                    </TableHead>
+                  ))}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <CompRow
+                  label="Species"
+                  values={analyses.map(
+                    (a) =>
+                      SPECIES_DISPLAY_NAME[
+                        a.species as keyof typeof SPECIES_DISPLAY_NAME
+                      ] ?? 'Unknown',
+                  )}
+                  diffClass={diffClass(analyses.map((a) => a.species))}
+                />
+                <CompRow
+                  label="CDS Length"
+                  values={analyses.map(
+                    (a) => `${a.codingSequenceLength.toLocaleString()} bp`,
+                  )}
+                  diffClass={diffClass(
+                    analyses.map((a) => a.codingSequenceLength),
+                  )}
+                />
+                <CompRow
+                  label="Protein Length"
+                  values={analyses.map(
+                    (a) => `${a.proteinSequenceLength.toLocaleString()} aa`,
+                  )}
+                  diffClass={diffClass(
+                    analyses.map((a) => a.proteinSequenceLength),
+                  )}
+                />
+                <CompRow
+                  label="GC Content"
+                  values={analyses.map((a) => `${a.gcPercent.toFixed(1)}%`)}
+                  diffClass={diffClass(
+                    analyses.map((a) => Math.round(a.gcPercent)),
+                  )}
+                />
+                <CompRow
+                  label="Start Codon"
+                  values={analyses.map((a) =>
+                    a.startCodon ? 'ATG' : 'Missing',
+                  )}
+                  diffClass={diffClass(analyses.map((a) => a.startCodon))}
+                />
+                <CompRow
+                  label="Stop Codon"
+                  values={analyses.map((a) =>
+                    a.stopCodon === 'present' ? 'Present' : 'Missing',
+                  )}
+                  diffClass={diffClass(analyses.map((a) => a.stopCodon))}
+                />
+                <TableRow>
+                  <TableCell className="text-muted-foreground text-xs font-semibold">
+                    Suitability
                   </TableCell>
-                ))}
-              </TableRow>
-              <TableRow>
-                <TableCell className="text-muted-foreground text-xs font-semibold">
-                  Design
-                </TableCell>
-                {analyses.map((a) => (
-                  <TableCell key={a.id}>
-                    <Button variant="outline" size="sm" asChild>
-                      <Link href={`/design-tool?isoform=${a.id}`}>
-                        <ExternalLink className="size-3.5" />
-                        Design
-                      </Link>
-                    </Button>
+                  {analyses.map((a) => (
+                    <TableCell
+                      key={a.id}
+                      className={diffClass(analyses.map((x) => x.suitability))}
+                    >
+                      <Badge className={`text-xs ${a.suitConfig.badgeClass}`}>
+                        {a.suitConfig.label}
+                      </Badge>
+                    </TableCell>
+                  ))}
+                </TableRow>
+                <TableRow>
+                  <TableCell className="text-muted-foreground text-xs font-semibold">
+                    Design
                   </TableCell>
-                ))}
-              </TableRow>
-            </TableBody>
-          </Table>
+                  {analyses.map((a) => (
+                    <TableCell key={a.id}>
+                      <Button variant="outline" size="sm" asChild>
+                        <Link href={`/design-tool?isoform=${a.id}`}>
+                          <ExternalLink className="size-3.5" />
+                          Design
+                        </Link>
+                      </Button>
+                    </TableCell>
+                  ))}
+                </TableRow>
+              </TableBody>
+            </Table>
+          )}
         </div>
       </SheetContent>
     </Sheet>

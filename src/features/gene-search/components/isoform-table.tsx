@@ -43,18 +43,14 @@ import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
 import { formatFasta } from '@/lib/bio/fasta'
 import { downloadTextFile } from '@/lib/download-file'
 import { trackEvent } from '@/lib/analytics'
-import {
-  assessDesignSuitability,
-  getSuitabilityConfig,
-} from '@/lib/bio/design-suitability'
-import {
-  computeGcPercent,
-  countCpG,
-  rankWggwByBalance,
-} from '@/lib/bio/sequence-utils'
+import { getSuitabilityConfig } from '@/lib/bio/design-suitability'
 import { IsoformValidationBadges } from './isoform-validation-badges'
 import { IsoformSplitPreview } from './isoform-split-preview'
 import type { IsoformListItem } from '@/features/gene-search/types/domain-types'
+import {
+  fetchIsoformSequence,
+  useIsoformSequence,
+} from '@/features/gene-search/utils/use-isoform-sequence'
 
 interface IsoformListProps {
   isoforms: IsoformListItem[]
@@ -101,9 +97,8 @@ export default function IsoformTable({
     [species, isoforms],
   )
 
-  // Pre-compute per-isoform metrics once per filtered set. Previously, sorting
-  // by GC/CpG/WGGW/suitability ran O(n log n) calls to the sequence scanners
-  // on every sort; now each metric is computed exactly once per isoform.
+  // Metrics are precomputed at build time and ride on the IsoformListItem.
+  // We just memoize the suitability config (display-time, not data) per row.
   const metrics = useMemo(() => {
     const map = new Map<
       string,
@@ -111,19 +106,17 @@ export default function IsoformTable({
         gcPercent: number
         cpgCount: number
         wggwCount: number
-        suitability: ReturnType<typeof assessDesignSuitability>
+        suitability: IsoformListItem['suitability']
         suitConfig: ReturnType<typeof getSuitabilityConfig>
       }
     >()
     for (const isoform of filteredIsoforms) {
-      const upperSeq = isoform.codingSequence.toUpperCase()
-      const suitability = assessDesignSuitability(isoform.codingSequence)
       map.set(isoform.id, {
-        gcPercent: computeGcPercent(upperSeq),
-        cpgCount: countCpG(upperSeq),
-        wggwCount: rankWggwByBalance(upperSeq).length,
-        suitability,
-        suitConfig: getSuitabilityConfig(suitability),
+        gcPercent: isoform.gcPercent,
+        cpgCount: isoform.cpgCount,
+        wggwCount: isoform.wggwCount,
+        suitability: isoform.suitability,
+        suitConfig: getSuitabilityConfig(isoform.suitability),
       })
     }
     return map
@@ -358,7 +351,7 @@ function IsoformRow({
   gcPercent: number
   cpgCount: number
   wggwCount: number
-  suitability: ReturnType<typeof assessDesignSuitability>
+  suitability: IsoformListItem['suitability']
   suitConfig: ReturnType<typeof getSuitabilityConfig>
   cdsId: string
   fastaId: string
@@ -486,27 +479,29 @@ function IsoformRow({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem
-                  onClick={() => copy(isoform.codingSequence, cdsId)}
+                  onClick={async () => {
+                    const seq = await fetchIsoformSequence(isoform.id)
+                    copy(seq, cdsId)
+                  }}
                 >
                   <Copy className="size-4" />
                   {isCopied(cdsId) ? 'Copied!' : 'Copy CDS'}
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  onClick={() =>
-                    copy(
-                      formatFasta(isoform.id, isoform.codingSequence),
-                      fastaId,
-                    )
-                  }
+                  onClick={async () => {
+                    const seq = await fetchIsoformSequence(isoform.id)
+                    copy(formatFasta(isoform.id, seq), fastaId)
+                  }}
                 >
                   <FileText className="size-4" />
                   {isCopied(fastaId) ? 'Copied!' : 'Copy FASTA'}
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  onClick={() => {
+                  onClick={async () => {
+                    const seq = await fetchIsoformSequence(isoform.id)
                     downloadTextFile(
                       `${isoform.id}.fasta`,
-                      formatFasta(isoform.id, isoform.codingSequence),
+                      formatFasta(isoform.id, seq),
                     )
                     trackEvent({
                       event: 'sequence_download',
@@ -549,8 +544,8 @@ function IsoformRow({
                   gcPercent={gcPercent}
                   cpgCount={cpgCount}
                   wggwCount={wggwCount}
-                  suitability={suitability}
                   suitConfig={suitConfig}
+                  isExpanded={isExpanded}
                 />
               </div>
             </div>
@@ -566,17 +561,20 @@ function ExpandedDetails({
   gcPercent,
   cpgCount,
   wggwCount,
-  suitability,
   suitConfig,
+  isExpanded,
 }: {
   isoform: IsoformListItem
   gcPercent: number
   cpgCount: number
   wggwCount: number
-  suitability: ReturnType<typeof assessDesignSuitability>
   suitConfig: ReturnType<typeof getSuitabilityConfig>
+  isExpanded: boolean
 }) {
   const needsSplit = isoform.codingSequenceLength > 4700
+  // Lazy-fetch the sequence only when the row is expanded. Passing `null`
+  // until then avoids hammering the bucket fetch on initial mount of every row.
+  const { sequence } = useIsoformSequence(isExpanded ? isoform.id : null)
 
   return (
     <div className="space-y-4">
@@ -635,11 +633,15 @@ function ExpandedDetails({
         </div>
       </dl>
 
-      <IsoformValidationBadges codingSequence={isoform.codingSequence} />
+      {sequence ? (
+        <IsoformValidationBadges codingSequence={sequence} />
+      ) : (
+        <div className="text-muted-foreground text-xs">Loading checks…</div>
+      )}
 
-      {needsSplit && (
+      {needsSplit && sequence && (
         <IsoformSplitPreview
-          codingSequence={isoform.codingSequence}
+          codingSequence={sequence}
           codingSequenceLength={isoform.codingSequenceLength}
         />
       )}

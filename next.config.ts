@@ -29,8 +29,6 @@ const nextConfig: NextConfig = {
       'date-fns',
     ],
   },
-  // PGlite uses native/WASM modules that must not be bundled by webpack/turbopack.
-  serverExternalPackages: ['@electric-sql/pglite'],
   turbopack: {
     root: path.resolve(__dirname),
   },

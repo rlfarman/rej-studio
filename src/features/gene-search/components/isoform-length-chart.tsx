@@ -6,10 +6,7 @@ import { usePathname, useSearchParams } from 'next/navigation'
 import { BarChart3 } from 'lucide-react'
 import { m } from 'motion/react'
 import { cn } from '@/lib/utils'
-import {
-  assessDesignSuitability,
-  getSuitabilityConfig,
-} from '@/lib/bio/design-suitability'
+import { getSuitabilityConfig } from '@/lib/bio/design-suitability'
 import { useSpeciesContext } from '@/stores/species-store'
 import type { IsoformListItem } from '@/features/gene-search/types/domain-types'
 
@@ -54,7 +51,7 @@ export function IsoformLengthChart({ isoforms }: Props) {
     const rows = filtered.map((i) => ({
       id: i.id,
       length: i.codingSequenceLength,
-      suitability: assessDesignSuitability(i.codingSequence),
+      suitability: i.suitability,
     }))
     return { rows, scaleMax }
   }, [isoforms, species])

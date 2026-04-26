@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server'
 import { headers } from 'next/headers'
-import { sql } from 'drizzle-orm'
-import { getDb } from '@/drizzle/db'
+import { existsSync } from 'fs'
+import { join } from 'path'
 import { env } from '@/lib/env'
-import { createUpstashRateLimiter, redis } from '@/lib/upstash'
+import { createUpstashRateLimiter } from '@/lib/upstash'
 import { withCors } from '@/lib/api-cors'
 
 // Rate limit: 20 requests per minute per IP.
@@ -15,65 +15,12 @@ const limiter = createUpstashRateLimiter({
 
 const HEALTH_AUTH_TOKEN = process.env.HEALTH_AUTH_TOKEN
 
-// --- Rolling latency tracker ------------------------------------------------
-// Keeps the last N DB latency samples so the health endpoint can report
-// percentiles (p50, p95, p99) over time, not just a point-in-time ping.
-// When Redis is available, samples persist across redeploys and are shared
-// across instances. Falls back to in-memory otherwise.
-const MAX_SAMPLES = 100
-const LATENCY_KEY = 'health:db_latency'
-const dbLatencySamplesLocal: number[] = []
-
-async function recordLatency(ms: number) {
-  if (redis) {
-    try {
-      await redis.lpush(LATENCY_KEY, ms)
-      await redis.ltrim(LATENCY_KEY, 0, MAX_SAMPLES - 1)
-      return
-    } catch {
-      // Redis unavailable — fall through to local
-    }
-  }
-  dbLatencySamplesLocal.push(ms)
-  if (dbLatencySamplesLocal.length > MAX_SAMPLES) dbLatencySamplesLocal.shift()
-}
-
-function percentile(sorted: number[], p: number): number {
-  if (sorted.length === 0) return 0
-  const idx = Math.ceil((p / 100) * sorted.length) - 1
-  return sorted[Math.max(0, idx)]
-}
-
-async function getLatencyStats() {
-  let samples: number[]
-  if (redis) {
-    try {
-      const raw = await redis.lrange(LATENCY_KEY, 0, MAX_SAMPLES - 1)
-      samples = raw.map(Number)
-    } catch {
-      // Redis unavailable — fall through to local
-      samples = dbLatencySamplesLocal
-    }
-  } else {
-    samples = dbLatencySamplesLocal
-  }
-  if (samples.length === 0) return null
-  const sorted = [...samples].sort((a, b) => a - b)
-  return {
-    samples: sorted.length,
-    p50: percentile(sorted, 50),
-    p95: percentile(sorted, 95),
-    p99: percentile(sorted, 99),
-  }
-}
-
 // --- Types ------------------------------------------------------------------
 type CheckStatus = 'ok' | 'fail' | 'skipped'
 
 interface Check {
   status: CheckStatus
   latencyMs?: number
-  latencyStats?: Awaited<ReturnType<typeof getLatencyStats>>
   error?: string
 }
 
@@ -82,31 +29,28 @@ interface HealthResponse {
   timestamp: string
   version: string
   checks: {
-    database: Check
+    content: Check
     modal: Check
   }
 }
 
-async function checkDatabase(): Promise<Check> {
-  const start = performance.now()
-  try {
-    const db = await getDb()
-    await db.execute(sql`SELECT 1`)
-    const ms = Math.round(performance.now() - start)
-    await recordLatency(ms)
-    return {
-      status: 'ok',
-      latencyMs: ms,
-      latencyStats: await getLatencyStats(),
-    }
-  } catch (err) {
-    const ms = Math.round(performance.now() - start)
-    return {
-      status: 'fail',
-      latencyMs: ms,
-      error: err instanceof Error ? err.message : 'unknown error',
+/**
+ * Verify the static content artifacts shipped with the deploy. There's no
+ * runtime DB to ping — gene/isoform reads come from public/data, written at
+ * build by `pnpm content:rebuild`.
+ */
+function checkContent(): Check {
+  const root = process.cwd()
+  const required = [
+    'public/data/manifest.json',
+    'public/data/isoform-index.json',
+  ]
+  for (const path of required) {
+    if (!existsSync(join(root, path))) {
+      return { status: 'fail', error: `missing ${path}` }
     }
   }
+  return { status: 'ok' }
 }
 
 async function checkModal(): Promise<Check> {
@@ -163,9 +107,12 @@ export async function GET() {
     )
   }
 
-  const [database, modal] = await Promise.all([checkDatabase(), checkModal()])
+  const [content, modal] = await Promise.all([
+    Promise.resolve(checkContent()),
+    checkModal(),
+  ])
 
-  const degraded = database.status === 'fail' || modal.status === 'fail'
+  const degraded = content.status === 'fail' || modal.status === 'fail'
 
   // When HEALTH_AUTH_TOKEN is configured, require it to see full check details.
   // Unauthenticated callers still get a status code (for load-balancer probes)
@@ -194,7 +141,7 @@ export async function GET() {
     status: degraded ? 'degraded' : 'ok',
     timestamp: new Date().toISOString(),
     version: process.env.npm_package_version ?? 'unknown',
-    checks: { database, modal },
+    checks: { content, modal },
   }
 
   return withCors(

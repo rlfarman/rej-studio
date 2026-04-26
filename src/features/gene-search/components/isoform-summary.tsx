@@ -4,7 +4,6 @@ import { useMemo } from 'react'
 import { cn } from '@/lib/utils'
 import { useSpeciesContext } from '@/stores/species-store'
 import {
-  assessDesignSuitability,
   getSuitabilityConfig,
   type Suitability,
 } from '@/lib/bio/design-suitability'
@@ -44,9 +43,7 @@ export function IsoformSummary({ isoforms }: IsoformSummaryProps) {
       'dual-aav': 0,
       'triple-aav': 0,
     }
-    for (const i of filtered) {
-      counts[assessDesignSuitability(i.codingSequence)]++
-    }
+    for (const i of filtered) counts[i.suitability]++
 
     return { stats: { shortest, longest }, counts }
   }, [filtered])

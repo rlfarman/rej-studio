@@ -5,17 +5,27 @@ import { join } from 'path'
 import { cache } from 'react'
 import type {
   ContentGene,
+  ContentIsoform,
   ContentManifest,
   IsoformIndex,
   IsoformIndexEntry,
 } from './types'
 
-// Static gene/isoform content lives in public/data, written at build time by
-// scripts/emit-content.ts. These readers read directly from the filesystem on
-// the server so the data is bundled into prerendered pages but never sent to
-// the client (no module-level imports).
+// Static gene/isoform content lives in public/data, written by
+// scripts/emit-content.ts. Server reads come straight from the filesystem,
+// so prerendered pages bake in only the precomputed numbers — sequences
+// stay in their own buckets and are lazy-loaded by the client on demand.
 
 const CONTENT_DIR = join(process.cwd(), 'public', 'data')
+
+function bucketOf(symbol: string): string {
+  const c = symbol[0]?.toUpperCase() ?? '_'
+  return /^[A-Z]$/.test(c) ? c : '_'
+}
+
+function proteinLenFromCds(cdsLen: number): number {
+  return Math.max(0, Math.floor(cdsLen / 3) - 1)
+}
 
 export const readManifest = cache(async (): Promise<ContentManifest> => {
   const raw = await readFile(join(CONTENT_DIR, 'manifest.json'), 'utf8')
@@ -27,46 +37,48 @@ export const readIsoformIndex = cache(async (): Promise<IsoformIndex> => {
   return JSON.parse(raw) as IsoformIndex
 })
 
-/**
- * Protein length excludes the stop codon: codingSequenceLength = (proteinAA + 1) * 3.
- * Returns 0 if the CDS is too short to encode anything.
- */
-function proteinLenFromCds(cdsLen: number): number {
-  return Math.max(0, Math.floor(cdsLen / 3) - 1)
-}
+type RawIsoform = Omit<ContentIsoform, 'proteinSequenceLength'>
+type RawGene = Omit<ContentGene, 'isoforms'> & { isoforms: RawIsoform[] }
 
-const readGeneFile = cache(
-  async (symbol: string): Promise<ContentGene[] | null> => {
-    const path = join(CONTENT_DIR, 'genes', `${symbol}.json`)
-    if (!existsSync(path)) return null
+const readMetaBucket = cache(
+  async (bucket: string): Promise<Record<string, ContentGene[]>> => {
+    const path = join(CONTENT_DIR, 'genes-meta', `${bucket}.json`)
+    if (!existsSync(path)) return {}
     const raw = await readFile(path, 'utf8')
-    const parsed = JSON.parse(raw) as Array<
-      Omit<ContentGene, 'isoforms'> & {
-        isoforms: Array<
-          Omit<ContentGene['isoforms'][number], 'proteinSequenceLength'>
-        >
-      }
-    >
-    return parsed.map((g) => ({
-      ...g,
-      isoforms: g.isoforms.map((i) => ({
-        ...i,
-        proteinSequenceLength: proteinLenFromCds(i.codingSequenceLength),
-      })),
-    }))
+    const parsed = JSON.parse(raw) as Record<string, RawGene[]>
+    const out: Record<string, ContentGene[]> = {}
+    for (const [symbol, entries] of Object.entries(parsed)) {
+      out[symbol] = entries.map((g) => ({
+        ...g,
+        isoforms: g.isoforms.map((i) => ({
+          ...i,
+          proteinSequenceLength: proteinLenFromCds(i.codingSequenceLength),
+        })),
+      }))
+    }
+    return out
+  },
+)
+
+const readSeqBucket = cache(
+  async (bucket: string): Promise<Record<string, string>> => {
+    const path = join(CONTENT_DIR, 'sequences', `${bucket}.json`)
+    if (!existsSync(path)) return {}
+    const raw = await readFile(path, 'utf8')
+    return JSON.parse(raw) as Record<string, string>
   },
 )
 
 /**
  * Look up a gene by symbol (and optional species). When multiple species share
- * a symbol and species is unspecified, the first entry wins — matching the old
- * Postgres behavior where `LIMIT 1` without an order returned one arbitrarily.
+ * a symbol and species is unspecified, the first entry wins.
  */
 export async function readGeneBySymbol(
   symbol: string,
   species?: string | undefined,
 ): Promise<ContentGene | null> {
-  const entries = await readGeneFile(symbol)
+  const bucket = await readMetaBucket(bucketOf(symbol))
+  const entries = bucket[symbol]
   if (!entries || entries.length === 0) return null
   if (species && species !== 'both') {
     return entries.find((e) => e.species === species) ?? null
@@ -94,12 +106,13 @@ export async function readIsoformAndGene(
   if (!gene) return null
   const iso = gene.isoforms.find((i) => i.id === isoformId)
   if (!iso) return null
+  const cds = (await readSeqBucket(ref.bucket))[isoformId] ?? ''
   return {
     isoform: {
       id: iso.id,
       species: iso.species,
       geneId: iso.geneId,
-      codingSequence: iso.codingSequence,
+      codingSequence: cds,
     },
     gene: { id: gene.id, name: gene.name, symbol: gene.symbol },
   }
@@ -107,8 +120,7 @@ export async function readIsoformAndGene(
 
 /**
  * Fuzzy-ish symbol suggestions for the not-found page. Reads the manifest
- * (small) and ranks by prefix > substring > short prefix, mirroring the old
- * `fetchSimilarGenes` ladder.
+ * and ranks by prefix > substring > short prefix.
  */
 export async function findSimilarSymbols(
   upperSymbol: string,
