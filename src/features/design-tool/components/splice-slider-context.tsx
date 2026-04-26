@@ -52,6 +52,7 @@ import {
   getEditedPositions,
   groupWggwSites,
   nearestSiteIndex,
+  pickTopSites,
   roleStylesFor,
   splitPositionToPercent,
 } from './splice-slider/sequence-helpers'
@@ -920,6 +921,8 @@ export function SpliceSliderContext({
               selectedSite={selectedSites[idx]}
               selectedSiteIndex={selectedSiteIndices[idx] ?? -1}
               totalSites={wggwSites.length}
+              topPicks={pickTopSites(wggwSites, activeSitePositions, idx, 6)}
+              onSelectSite={handleSelectSite}
               currentRewrite={currentRewrites[idx]}
               selectedRewriteIndex={(() => {
                 const sel = rewriteSelections[idx]
@@ -1433,6 +1436,8 @@ function Inspector({
   selectedSite,
   selectedSiteIndex,
   totalSites,
+  topPicks,
+  onSelectSite,
   currentRewrite,
   selectedRewriteIndex,
   canPrevSite,
@@ -1451,6 +1456,8 @@ function Inspector({
   selectedSite: WggwSiteCandidate | null
   selectedSiteIndex: number
   totalSites: number
+  topPicks: WggwSiteCandidate[]
+  onSelectSite: (site: WggwSiteCandidate) => void
   currentRewrite: WggwRecodingOption | null
   selectedRewriteIndex: number
   canPrevSite: boolean
@@ -1529,6 +1536,55 @@ function Inspector({
             onNext={onNextSite}
           />
         </div>
+        {topPicks.length > 0 && (
+          <div className="space-y-1.5">
+            <div className="text-muted-foreground text-[10px] font-medium tracking-[0.08em] uppercase">
+              Top picks
+            </div>
+            <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
+              {topPicks.map((site) => {
+                const cost = costToneFor(site.baseChanges)
+                return (
+                  <button
+                    type="button"
+                    key={site.position}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onSelectSite(site)
+                    }}
+                    title={`WGGW ${site.motif} · bp ${site.position.toLocaleString()} · ${
+                      site.baseChanges === 0
+                        ? 'Native'
+                        : `${site.baseChanges} bp change${site.baseChanges === 1 ? '' : 's'}`
+                    }`}
+                    className="hover:border-primary/30 hover:bg-background/60 text-muted-foreground flex flex-col items-start gap-0.5 rounded-md border px-2.5 py-1.5 font-mono text-[11px] transition-colors"
+                  >
+                    <span className="text-foreground tabular-nums">
+                      bp {site.position.toLocaleString()}
+                    </span>
+                    <span
+                      className={cn(
+                        'rounded border px-1 py-px text-[9px] font-medium tracking-[0.04em] uppercase',
+                        cost.badgeBorder,
+                        cost.badgeBg,
+                        cost.text,
+                      )}
+                    >
+                      {site.baseChanges === 0
+                        ? 'Native'
+                        : `${site.baseChanges} bp`}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
+        <p className="text-muted-foreground/80 mt-auto text-[11px] leading-relaxed">
+          Or click a tick on the slider above, drag a caret, or step through all{' '}
+          {totalSites} sites with the{' '}
+          <span className="text-foreground">{'< >'}</span> buttons.
+        </p>
       </div>
     )
   }

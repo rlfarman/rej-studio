@@ -84,6 +84,44 @@ export function findSequenceMatches(sequence: string, query: string) {
   return matches
 }
 
+// Pick the top N WGGW sites for a given splice slot, ranked by lowest
+// base-change cost. Sites already selected for other splices are
+// excluded. For multi-splice configurations, sites are biased toward
+// the splice's "side" of the sequence: splice 0 prefers earlier sites,
+// splice 1 prefers later sites.
+export function pickTopSites(
+  sites: WggwSiteCandidate[],
+  selectedPositions: (number | null)[],
+  spliceIndex: number,
+  count: number,
+): WggwSiteCandidate[] {
+  const otherSelected = new Set(
+    selectedPositions
+      .map((p, i) => (i === spliceIndex ? null : p))
+      .filter((p): p is number => p !== null),
+  )
+  const isMultiSplice = selectedPositions.length > 1
+  const seqLength =
+    sites.length > 0 ? Math.max(...sites.map((s) => s.position)) : 0
+  return sites
+    .filter((s) => !otherSelected.has(s.position))
+    .map((site) => {
+      // For multi-splice, score by cost + a small "side preference"
+      // penalty so splice 1 prefers earlier sites and splice 2 prefers
+      // later sites. Single-splice configs sort purely by cost.
+      const sidePenalty = isMultiSplice
+        ? Math.abs(
+            site.position / Math.max(1, seqLength) -
+              (spliceIndex === 0 ? 0.33 : 0.66),
+          )
+        : 0
+      return { site, score: site.baseChanges + sidePenalty }
+    })
+    .sort((a, b) => a.score - b.score || a.site.position - b.site.position)
+    .slice(0, count)
+    .map((entry) => entry.site)
+}
+
 export function nearestSiteIndex(
   sites: WggwSiteCandidate[],
   position: number,
