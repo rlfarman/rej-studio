@@ -25,16 +25,23 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 
+import {
+  SIDEBAR_COOKIE_OPEN,
+  SIDEBAR_COOKIE_WIDTH,
+  SIDEBAR_COOKIE_MAX_AGE,
+  SIDEBAR_WIDTH_DEFAULT,
+  SIDEBAR_WIDTH_MIN,
+  SIDEBAR_WIDTH_MAX,
+} from '@/components/ui/sidebar-constants'
+
 // Sidebar preferences persist in cookies so the server can read them and
 // render with the correct state on first paint — no flash, no hydration
 // mismatch. The `(app)` layout reads the cookie and passes `defaultOpen` /
 // `defaultWidth` into SidebarProvider. This is shadcn's sidebar pattern.
-export const SIDEBAR_COOKIE_OPEN = 'sidebar_state'
-export const SIDEBAR_COOKIE_WIDTH = 'sidebar_width'
-const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 365 // 1 year
-const SIDEBAR_WIDTH_DEFAULT = 256
-const SIDEBAR_WIDTH_MIN = 200
-const SIDEBAR_WIDTH_MAX = 480
+//
+// Cookie-name constants live in `./sidebar-constants` (non-client module)
+// because exporting plain values from a 'use client' module turns them
+// into opaque references when imported by a server component.
 const SIDEBAR_WIDTH_MOBILE = '18rem'
 const SIDEBAR_WIDTH_ICON = '3rem'
 const SIDEBAR_KEYBOARD_SHORTCUT = 'b'

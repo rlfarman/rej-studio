@@ -2,22 +2,20 @@ import { Suspense } from 'react'
 import { cookies } from 'next/headers'
 import { Header } from '@/app/_components/layout/header'
 import { Footer } from '@/app/_components/layout/footer'
+import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import {
-  SidebarInset,
-  SidebarProvider,
   SIDEBAR_COOKIE_OPEN,
   SIDEBAR_COOKIE_WIDTH,
-} from '@/components/ui/sidebar'
+  SIDEBAR_WIDTH_DEFAULT,
+  SIDEBAR_WIDTH_MIN,
+  SIDEBAR_WIDTH_MAX,
+} from '@/components/ui/sidebar-constants'
 import { AppSidebar } from '@/app/_components/layout/app-sidebar'
 import { MaintenanceBanner } from '@/components/maintenance-banner'
 import { WelcomeDialog } from '@/features/onboarding/components/welcome-dialog'
 import { HelpButton } from '@/features/onboarding/components/help-button'
 import { GuidedTourRunner } from '@/features/onboarding/components/guided-tour-runner'
 import { TourRingOverlay } from '@/features/onboarding/components/tour-ring-overlay'
-
-const SIDEBAR_WIDTH_DEFAULT = 256
-const SIDEBAR_WIDTH_MIN = 200
-const SIDEBAR_WIDTH_MAX = 480
 
 // Sidebar preferences live in cookies so the server can render with the
 // correct open/width on first paint — no flash, no hydration mismatch, no
