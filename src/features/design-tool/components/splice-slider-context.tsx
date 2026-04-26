@@ -177,20 +177,20 @@ export function SpliceSliderContext({
   const clampedActiveIndex = Math.min(activeSpliceIndex, spliceCount - 1)
   const activePosition = positions[clampedActiveIndex] ?? midpoint
 
-  const [activeSitePositions, setActiveSitePositions] = useState<
+  // Raw mutable state. Reads go through `activeSitePositions` /
+  // `rewriteSelections` below, which normalize the array length to
+  // `spliceCount` during render — no separate sync effect needed.
+  const [activeSitePositionsRaw, setActiveSitePositions] = useState<
     (number | null)[]
   >(() => positions.map(() => null))
-
-  // Keep activeSitePositions in sync with the splice count (positions array
-  // length). When the user adds or removes a splice slot, mirror that here.
-  useEffect(() => {
-    setActiveSitePositions((prev) => {
-      if (prev.length === spliceCount) return prev
-      const next = prev.slice(0, spliceCount)
-      while (next.length < spliceCount) next.push(null)
-      return next
-    })
-  }, [spliceCount])
+  const activeSitePositions = useMemo(() => {
+    if (activeSitePositionsRaw.length === spliceCount) {
+      return activeSitePositionsRaw
+    }
+    const next = activeSitePositionsRaw.slice(0, spliceCount)
+    while (next.length < spliceCount) next.push(null)
+    return next
+  }, [activeSitePositionsRaw, spliceCount])
 
   const selectedSites = useMemo(
     () =>
@@ -203,18 +203,17 @@ export function SpliceSliderContext({
     site ? wggwSites.findIndex((s) => s.position === site.position) : -1,
   )
 
-  const [rewriteSelections, setRewriteSelections] = useState<
+  const [rewriteSelectionsRaw, setRewriteSelections] = useState<
     { position: number | null; index: number }[]
   >(() => positions.map(() => ({ position: null, index: 0 })))
-
-  useEffect(() => {
-    setRewriteSelections((prev) => {
-      if (prev.length === spliceCount) return prev
-      const next = prev.slice(0, spliceCount)
-      while (next.length < spliceCount) next.push({ position: null, index: 0 })
-      return next
-    })
-  }, [spliceCount])
+  const rewriteSelections = useMemo(() => {
+    if (rewriteSelectionsRaw.length === spliceCount) {
+      return rewriteSelectionsRaw
+    }
+    const next = rewriteSelectionsRaw.slice(0, spliceCount)
+    while (next.length < spliceCount) next.push({ position: null, index: 0 })
+    return next
+  }, [rewriteSelectionsRaw, spliceCount])
 
   const currentRewrites = selectedSites.map((site, i) => {
     if (!site) return null
@@ -273,11 +272,27 @@ export function SpliceSliderContext({
   const [recentlyAssignedSplice, setRecentlyAssignedSplice] = useState<
     number | null
   >(null)
-  // Hovered tick by site position. Tracked at the strip level since the
-  // tick spans themselves are pointer-events-none.
-  const [hoveredSitePosition, setHoveredSitePosition] = useState<number | null>(
-    null,
-  )
+  // Hover handled imperatively via a data attribute (pointer-move on the
+  // strip would otherwise rerender the component on every frame). The
+  // hovered tick is identified by [data-site-pos]; Tailwind's data
+  // variants on the tick spans render the hover decoration without React.
+  const wggwStripRef = useRef<HTMLDivElement>(null)
+  const hoveredTickRef = useRef<HTMLElement | null>(null)
+  const setHoveredTick = useCallback((sitePosition: number | null) => {
+    const strip = wggwStripRef.current
+    if (!strip) return
+    const next = sitePosition
+      ? strip.querySelector<HTMLElement>(`[data-site-pos="${sitePosition}"]`)
+      : null
+    if (hoveredTickRef.current === next) return
+    if (hoveredTickRef.current) {
+      delete hoveredTickRef.current.dataset.tickHovered
+    }
+    if (next) {
+      next.dataset.tickHovered = 'true'
+    }
+    hoveredTickRef.current = next
+  }, [])
 
   // When a tick is clicked without an explicit splice index, assign it to
   // the splice whose caret is nearest the chosen site. This matches the
@@ -336,7 +351,13 @@ export function SpliceSliderContext({
     ],
   )
 
-  // Emit selected sites + current rewrites whenever they change.
+  // Emit selected sites + current rewrites whenever they change. Use
+  // primitive composite keys so the effect deps are cheap to compare and
+  // skip when nothing semantic has changed.
+  const sitePositionsKey = selectedSites.map((s) => s?.position ?? '').join('|')
+  const rewriteHexamerKey = currentRewrites
+    .map((r) => r?.newHexamer ?? '')
+    .join('|')
   useEffect(() => {
     onSelectionChange(
       selectedSites.map((site, i) => {
@@ -354,12 +375,7 @@ export function SpliceSliderContext({
       }),
     )
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    onSelectionChange,
-    // Stringify to detect deep changes without putting array refs in deps
-    JSON.stringify(selectedSites.map((s) => s?.position ?? null)),
-    JSON.stringify(currentRewrites.map((r) => r?.newHexamer ?? null)),
-  ])
+  }, [onSelectionChange, sitePositionsKey, rewriteHexamerKey])
 
   useEffect(() => {
     const handlePointerDown = (event: PointerEvent) => {
@@ -798,6 +814,7 @@ export function SpliceSliderContext({
               })}
             </div>
             <div
+              ref={wggwStripRef}
               role="presentation"
               className="bg-background/70 absolute inset-x-0 bottom-0 h-5 cursor-pointer overflow-hidden rounded-b-lg border-t"
               // Parent-routed tick selection: compute clicked bp from
@@ -829,9 +846,6 @@ export function SpliceSliderContext({
                   handleSelectSite(nearest)
                 }
               }}
-              // Track which tick is hovered so we can mirror the prior
-              // group-hover affordance on the (now pointer-events-none)
-              // tick spans.
               onPointerMove={(e) => {
                 const track = trackRef.current
                 if (!track || wggwSites.length === 0) return
@@ -852,11 +866,11 @@ export function SpliceSliderContext({
                   }
                 }
                 const pixelDist = (bestDist / seqLen) * rect.width
-                setHoveredSitePosition(
+                setHoveredTick(
                   nearest && pixelDist <= 14 ? nearest.position : null,
                 )
               }}
-              onPointerLeave={() => setHoveredSitePosition(null)}
+              onPointerLeave={() => setHoveredTick(null)}
             >
               {stripWindow && (
                 <div
@@ -874,11 +888,11 @@ export function SpliceSliderContext({
                   (p) => p === site.position,
                 )
                 const isSelected = selectedAt !== -1
-                const isHovered = hoveredSitePosition === site.position
                 const costTone = costToneFor(site.baseChanges)
                 return (
                   <span
                     key={`${site.position}-${i}`}
+                    data-site-pos={site.position}
                     aria-hidden="true"
                     title={`WGGW ${site.motif} · bp ${site.position.toLocaleString()} · ${site.baseChanges} bp change${site.baseChanges === 1 ? '' : 's'}`}
                     className={cn(
@@ -887,9 +901,9 @@ export function SpliceSliderContext({
                         ? cn(spliceTone(selectedAt).tickBg, 'h-4 w-1.5')
                         : cn(
                             costTone.tickBg,
-                            isHovered ? 'h-4 w-1.5' : 'h-3 w-1',
+                            'h-3 w-1',
+                            'data-[tick-hovered=true]:ring-foreground/30 data-[tick-hovered=true]:z-10 data-[tick-hovered=true]:h-4 data-[tick-hovered=true]:w-1.5 data-[tick-hovered=true]:ring-1',
                           ),
-                      isHovered && 'ring-foreground/30 z-10 ring-1',
                     )}
                     style={{ left: `${x}%` }}
                   />
@@ -1370,7 +1384,7 @@ function CodonCard({
   return (
     <div
       className={cn(
-        'flex w-[42px] shrink-0 flex-col items-stretch text-center',
+        'flex w-[42px] shrink-0 flex-col items-stretch text-center [contain-intrinsic-size:42px_56px] [content-visibility:auto]',
         !isLast && 'border-border/60 border-r',
       )}
     >
