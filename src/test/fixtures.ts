@@ -15,7 +15,6 @@ export function makeGene(overrides: Partial<SelectGene> = {}): SelectGene {
     name: `Test Gene ${geneCounter}`,
     species: 'human',
     alternateSymbols: '',
-    searchVector: null,
     ...overrides,
   }
 }

@@ -1,16 +1,7 @@
-import { pgTable, text, integer, index, customType } from 'drizzle-orm/pg-core'
-
-// Custom type for Postgres tsvector columns. Drizzle doesn't have a built-in
-// tsvector type, but we can define one that maps to the correct SQL.
-const tsvector = customType<{ data: string }>({
-  dataType() {
-    return 'tsvector'
-  },
-})
+import { pgTable, text, integer, index } from 'drizzle-orm/pg-core'
 
 // alternateSymbols is pipe-delimited (e.g. "|Abca1|Cerp|Tgd|") so search queries
 // can use a plain LOWER(col) LIKE '%query%' pattern that works in any SQL dialect.
-// Parse with parseAlternateSymbols() from @/lib/bio/gene-symbols for display.
 // Original casing is preserved.
 
 export const genes = pgTable(
@@ -21,16 +12,11 @@ export const genes = pgTable(
     name: text('name').notNull(),
     species: text('species').notNull(),
     alternateSymbols: text('alternate_symbols').notNull().default(''),
-    // Full-text search vector. Populated by a trigger or during seed.
-    // Combines symbol (weight A), name (weight B), and alternateSymbols (weight C)
-    // for ranked full-text search via GIN index.
-    searchVector: tsvector('search_vector'),
   },
   (table) => [
     index('idx_genes_symbol').on(table.symbol),
     index('idx_genes_name').on(table.name),
     index('idx_genes_species').on(table.species),
-    index('idx_genes_search_vector').using('gin', table.searchVector),
   ],
 )
 

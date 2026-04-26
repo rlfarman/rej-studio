@@ -353,14 +353,14 @@ export default function ArchitecturePage() {
                 </div>
                 <div>
                   • <span className="font-semibold">genes</span> — symbol, name,
-                  species, tsvector
+                  species, alternate symbols
                 </div>
                 <div>
                   • <span className="font-semibold">isoforms</span> — CDS,
                   protein, lengths
                 </div>
                 <div className="text-muted-foreground mt-1.5">
-                  GIN index on search_vector
+                  Authoring source only — runtime reads come from static JSON
                 </div>
                 <div className="text-muted-foreground">
                   Indexes on species, CDS length
