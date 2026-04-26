@@ -29,7 +29,7 @@ export function makeIsoform(
     codingSequenceLength: 900,
     proteinSequenceLength: 300,
     codingSequence: 'ATGAAATGA',
-    proteinSequence: 'MK*',
+    proteinSequence: '',
     species: 'human',
     ...overrides,
   }

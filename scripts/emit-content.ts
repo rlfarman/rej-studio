@@ -2,32 +2,59 @@
  * Emit static gene/isoform content from Postgres to public/data/.
  *
  * Reads the gene + isoform tables once and writes:
- *   public/data/manifest.json          — { genes: [{symbol, species}] }
+ *   public/data/manifest.json          — { genes: [{id, symbol, species}] }
  *   public/data/isoform-index.json     — { [isoformId]: {symbol, species} }
- *   public/data/search-index.json      — MiniSearch.toJSON() over symbols/names/aliases
- *   public/data/genes/<symbol>.json    — full gene + isoforms payload (one file per symbol)
+ *   public/data/genes/<symbol>.json    — full gene + isoforms payload, including
+ *                                        a precomputed identity matrix and
+ *                                        baked-in disease associations
+ *   public/data/search-index-<sp>.json — species-sharded MiniSearch indexes
+ *
+ * `proteinSequence` is NOT emitted — it's derivable from the coding sequence
+ * via translation, and the only consumer (the identity matrix) gets the
+ * precomputed matrix instead. `proteinSequenceLength` is also dropped; it's
+ * derivable from `codingSequenceLength`.
  *
  * Idempotent: clears public/data/genes/ and rewrites everything. Safe to re-run.
  *
- * Skipped automatically when DATABASE_URL is missing AND artifacts already exist
- * (so CI builds work without a live DB once the artifacts are cached).
+ * Skipped automatically when DATABASE_URL is missing AND artifacts already
+ * exist (so CI builds work without a live DB once the artifacts are cached).
  *
  * Usage:
  *   pnpm content:emit
  *   tsx --env-file=.env scripts/emit-content.ts
  */
 
-import { mkdirSync, rmSync, writeFileSync, existsSync } from 'fs'
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from 'fs'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import MiniSearch from 'minisearch'
 import { gt, asc } from 'drizzle-orm'
 import { getDb } from '../src/drizzle/db'
 import { genes, isoforms } from '../src/drizzle/schema'
+import type {
+  AssociationData,
+  AssociationRow,
+} from '../src/features/disease-associations/types'
+import { translate } from '../src/lib/bio/genetic-code'
 
 const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 const OUT_DIR = join(REPO_ROOT, 'public', 'data')
 const GENES_DIR = join(OUT_DIR, 'genes')
+const ASSOCIATIONS_PATH = join(
+  REPO_ROOT,
+  'src',
+  'features',
+  'disease-associations',
+  'data',
+  'associations.json',
+)
 
 type GeneRow = {
   id: string
@@ -37,7 +64,7 @@ type GeneRow = {
   alternateSymbols: string
 }
 
-type IsoformRow = {
+type IsoformDbRow = {
   id: string
   geneId: string
   codingSequenceLength: number
@@ -47,13 +74,69 @@ type IsoformRow = {
   species: string
 }
 
-type GeneEntry = GeneRow & {
-  isoforms: IsoformRow[]
+type EmittedIsoform = {
+  id: string
+  geneId: string
+  codingSequenceLength: number
+  codingSequence: string
+  species: string
 }
+
+type IdentityMatrix = {
+  ids: string[]
+  rows: number[][]
+}
+
+type GeneEntry = GeneRow & {
+  isoforms: EmittedIsoform[]
+  identityMatrix: IdentityMatrix
+  association?: AssociationRow
+}
+
+const MAX_MATRIX_ISOFORMS = 16
 
 function parseAlternates(s: string): string[] {
   if (!s) return []
   return s.split('|').filter((x) => x.length > 0)
+}
+
+/**
+ * % protein-sequence identity from end-anchored prefix/suffix overlap. Mirrors
+ * `proteinIdentity` in src/features/gene-search/components/isoform-identity-matrix.tsx;
+ * keep them in sync. Most isoforms differ by exon inclusion, so they share
+ * large contiguous blocks at the start and end.
+ */
+function proteinIdentity(a: string, b: string): number {
+  if (a === b) return 100
+  const shorter = a.length <= b.length ? a : b
+  const longer = a.length <= b.length ? b : a
+  if (shorter.length === 0) return 0
+  let prefix = 0
+  while (prefix < shorter.length && shorter[prefix] === longer[prefix]) prefix++
+  let suffix = 0
+  while (
+    suffix < shorter.length - prefix &&
+    shorter[shorter.length - 1 - suffix] === longer[longer.length - 1 - suffix]
+  ) {
+    suffix++
+  }
+  return ((prefix + suffix) / longer.length) * 100
+}
+
+function computeIdentityMatrix(
+  isoformsForGene: IsoformDbRow[],
+): IdentityMatrix {
+  // Sort by protein length descending so the longest isoform is in the
+  // top-left corner (matches the runtime component's ordering).
+  const sorted = [...isoformsForGene].sort(
+    (a, b) => b.proteinSequenceLength - a.proteinSequenceLength,
+  )
+  const trimmed = sorted.slice(0, MAX_MATRIX_ISOFORMS)
+  const ids = trimmed.map((i) => i.id)
+  const rows = trimmed.map((a) =>
+    trimmed.map((b) => proteinIdentity(a.proteinSequence, b.proteinSequence)),
+  )
+  return { ids, rows }
 }
 
 async function main() {
@@ -81,7 +164,7 @@ async function main() {
     .from(genes)
   // Paginate by id — full table is >64MB, which exceeds Neon HTTP's response cap.
   const PAGE_SIZE = 5000
-  const allIsoforms: IsoformRow[] = []
+  const allIsoforms: IsoformDbRow[] = []
   let cursor = ''
   while (true) {
     const page = await db
@@ -109,8 +192,21 @@ async function main() {
     `[emit-content] loaded ${allGenes.length} genes, ${allIsoforms.length} isoforms`,
   )
 
-  // Group isoforms by gene id.
-  const isoformsByGene = new Map<string, IsoformRow[]>()
+  // Disease associations are JSON-backed and human-only. Bake the row for each
+  // human gene into its per-gene file so the page render needs no runtime lookup.
+  const associationsBySymbol = new Map<string, AssociationRow>()
+  if (existsSync(ASSOCIATIONS_PATH)) {
+    const raw = readFileSync(ASSOCIATIONS_PATH, 'utf8')
+    const parsed = JSON.parse(raw) as AssociationData
+    for (const row of parsed.rows) {
+      associationsBySymbol.set(row.symbol.toUpperCase(), row)
+    }
+    console.log(
+      `[emit-content] loaded ${associationsBySymbol.size} disease associations`,
+    )
+  }
+
+  const isoformsByGene = new Map<string, IsoformDbRow[]>()
   for (const iso of allIsoforms) {
     let arr = isoformsByGene.get(iso.geneId)
     if (!arr) {
@@ -122,27 +218,54 @@ async function main() {
   for (const list of isoformsByGene.values())
     list.sort((a, b) => a.id.localeCompare(b.id))
 
-  // Filter out genes with empty symbols (not addressable in the URL).
   const namedGenes = allGenes.filter((g) => g.symbol.length > 0)
 
-  // Group genes by symbol — same symbol may exist for human and mouse.
+  // Validate that protein sequences match what we'd derive from CDS, so we
+  // know it's safe to drop the column. Sample a few hundred isoforms.
+  let mismatches = 0
+  const SAMPLE = Math.min(allIsoforms.length, 500)
+  for (let i = 0; i < SAMPLE; i++) {
+    const iso = allIsoforms[Math.floor((i * allIsoforms.length) / SAMPLE)]
+    // Strip trailing stop codon translation ('*') to compare against the
+    // protein column, which historically excludes the stop.
+    const derived = translate(iso.codingSequence).replace(/\*$/, '')
+    if (derived !== iso.proteinSequence) mismatches++
+  }
+  if (mismatches > 0) {
+    console.warn(
+      `[emit-content] WARNING: ${mismatches}/${SAMPLE} sampled protein sequences differ from translated CDS. ` +
+        `Components that derive protein from CDS may render slightly different content than what's in the DB.`,
+    )
+  }
+
   const bySymbol = new Map<string, GeneEntry[]>()
   for (const g of namedGenes) {
-    const list = bySymbol.get(g.symbol) ?? []
+    const isos = isoformsByGene.get(g.id) ?? []
+    const emittedIsos: EmittedIsoform[] = isos.map((i) => ({
+      id: i.id,
+      geneId: i.geneId,
+      codingSequenceLength: i.codingSequenceLength,
+      codingSequence: i.codingSequence,
+      species: i.species,
+    }))
     const entry: GeneEntry = {
       ...g,
-      isoforms: isoformsByGene.get(g.id) ?? [],
+      isoforms: emittedIsos,
+      identityMatrix: computeIdentityMatrix(isos),
     }
+    if (g.species === 'human') {
+      const assoc = associationsBySymbol.get(g.symbol.toUpperCase())
+      if (assoc) entry.association = assoc
+    }
+    const list = bySymbol.get(g.symbol) ?? []
     list.push(entry)
     bySymbol.set(g.symbol, list)
   }
 
-  // Reset output dir.
   rmSync(GENES_DIR, { recursive: true, force: true })
   mkdirSync(GENES_DIR, { recursive: true })
   mkdirSync(OUT_DIR, { recursive: true })
 
-  // Per-gene JSON files.
   for (const [symbol, entries] of bySymbol) {
     writeFileSync(
       join(GENES_DIR, `${symbol}.json`),
@@ -151,8 +274,6 @@ async function main() {
     )
   }
 
-  // Manifest: list of {id, symbol, species} for sitemap + generateStaticParams,
-  // also serves as the gene-id-to-symbol resolver for client search ENSG lookups.
   const manifestEntries = namedGenes
     .map((g) => ({ id: g.id, symbol: g.symbol, species: g.species }))
     .sort(
@@ -165,13 +286,12 @@ async function main() {
     'utf8',
   )
 
-  // Isoform → {symbol, species} index for /design-tool prefill and ENST search routing.
   const isoformIndex: Record<string, { symbol: string; species: string }> = {}
   const geneById = new Map<string, GeneRow>()
   for (const g of namedGenes) geneById.set(g.id, g)
   for (const iso of allIsoforms) {
     const g = geneById.get(iso.geneId)
-    if (!g) continue // skip isoforms whose gene was filtered out
+    if (!g) continue
     isoformIndex[iso.id] = { symbol: g.symbol, species: g.species }
   }
   writeFileSync(
@@ -180,11 +300,8 @@ async function main() {
     'utf8',
   )
 
-  // Client-side MiniSearch indexes, sharded by species. The combined index
-  // exceeds 2 MB gzipped, so we emit one shard per species and the client
-  // lazy-loads the right one based on the species filter (loading both when
-  // species === 'both'). Field weights mirror the old ts_rank ladder:
-  // symbol (5) > alternateSymbols (3) > name (1).
+  // MiniSearch shards by species. Combined index >2 MB gzipped, so split and
+  // lazy-load on the client based on the active species filter.
   type SearchDoc = {
     id: string
     geneId: string
@@ -232,12 +349,8 @@ async function main() {
     )
   }
 
-  // Stats.
-  const stat = (path: string) => {
-    const { statSync } = require('fs')
-    const bytes = statSync(path).size
-    return `${(bytes / 1024 / 1024).toFixed(2)} MB`
-  }
+  const stat = (path: string) =>
+    `${(statSync(path).size / 1024 / 1024).toFixed(2)} MB`
   console.log(`[emit-content] wrote:`)
   console.log(`  ${bySymbol.size} per-gene files in public/data/genes/`)
   console.log(`  manifest.json (${stat(join(OUT_DIR, 'manifest.json'))})`)

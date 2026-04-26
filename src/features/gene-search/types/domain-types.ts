@@ -1,6 +1,7 @@
-import type { SelectGene, SelectIsoform } from '@/drizzle/schema'
-
-export type SavedGene = Pick<SelectGene, 'id' | 'name' | 'symbol'> & {
+export interface SavedGene {
+  id: string
+  name: string
+  symbol: string
   species?: string
   matchedIsoformId?: string
   // True when this entry was added by the seed-data demo action. Used to
@@ -9,15 +10,17 @@ export type SavedGene = Pick<SelectGene, 'id' | 'name' | 'symbol'> & {
   isSeed?: boolean
 }
 
-export type IsoformListItem = Pick<
-  SelectIsoform,
-  | 'id'
-  | 'codingSequence'
-  | 'proteinSequence'
-  | 'codingSequenceLength'
-  | 'proteinSequenceLength'
-  | 'species'
->
+// Shape every per-isoform UI consumer agrees on. proteinSequenceLength is
+// derived from codingSequenceLength on read (no separate column shipped).
+// proteinSequence is no longer carried — the only consumer (the identity
+// matrix) reads a precomputed matrix instead.
+export interface IsoformListItem {
+  id: string
+  codingSequence: string
+  codingSequenceLength: number
+  proteinSequenceLength: number
+  species: string
+}
 
 // Minimal projection of a design-tool job used by the command palette. Kept
 // here (not imported from `design-tool`) so the gene-search feature stays

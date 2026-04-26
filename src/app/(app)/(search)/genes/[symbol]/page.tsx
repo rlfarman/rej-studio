@@ -14,7 +14,6 @@ import { GeneBreadcrumbJsonLd } from '@/features/gene-search/components/gene-bre
 import { SpeciesSync } from '@/features/gene-search/components/species-sync'
 import { TrackOnMount } from '@/components/track-on-mount'
 import { GeneDetailTour } from '@/features/onboarding/components/gene-detail-tour'
-import { findBySymbol } from '@/features/disease-associations/api/associations'
 import { GenePhenotypes } from '@/features/disease-associations/components/gene-phenotypes'
 import type { AssociationRow } from '@/features/disease-associations/types'
 import { ExternalLink } from 'lucide-react'
@@ -92,11 +91,10 @@ export default async function GeneSymbolPage(props: Props) {
   }
 
   const { isoform: highlightedIsoformId } = await props.searchParams
-  // Associations are human-only; key by symbol since /genes/<sym> may resolve to
-  // mouse by default and mouse Ensembl IDs (ENSMUSG...) never match human data.
-  const associationRow =
-    gene.species === 'human' ? findBySymbol(gene.symbol) : undefined
-
+  // Disease associations are baked into the per-gene JSON at emit time
+  // (human only); no runtime lookup. Cast bridges the lib/feature boundary —
+  // lib/content/types stores it as `unknown` to stay feature-agnostic.
+  const associationRow = gene.association as AssociationRow | undefined
   const isoforms = gene.isoforms
   const speciesAvailable = [
     ...new Set(isoforms.map((i) => i.species)),
@@ -165,7 +163,10 @@ export default async function GeneSymbolPage(props: Props) {
             {associationRow && <GenePhenotypes row={associationRow} />}
             <section className="flex flex-col gap-6">
               <IsoformLengthChart isoforms={isoforms} />
-              <IsoformIdentityMatrix isoforms={isoforms} />
+              <IsoformIdentityMatrix
+                isoforms={isoforms}
+                matrix={gene.identityMatrix}
+              />
             </section>
           </ViewTransition>
         </Suspense>

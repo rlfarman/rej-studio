@@ -27,12 +27,33 @@ export const readIsoformIndex = cache(async (): Promise<IsoformIndex> => {
   return JSON.parse(raw) as IsoformIndex
 })
 
+/**
+ * Protein length excludes the stop codon: codingSequenceLength = (proteinAA + 1) * 3.
+ * Returns 0 if the CDS is too short to encode anything.
+ */
+function proteinLenFromCds(cdsLen: number): number {
+  return Math.max(0, Math.floor(cdsLen / 3) - 1)
+}
+
 const readGeneFile = cache(
   async (symbol: string): Promise<ContentGene[] | null> => {
     const path = join(CONTENT_DIR, 'genes', `${symbol}.json`)
     if (!existsSync(path)) return null
     const raw = await readFile(path, 'utf8')
-    return JSON.parse(raw) as ContentGene[]
+    const parsed = JSON.parse(raw) as Array<
+      Omit<ContentGene, 'isoforms'> & {
+        isoforms: Array<
+          Omit<ContentGene['isoforms'][number], 'proteinSequenceLength'>
+        >
+      }
+    >
+    return parsed.map((g) => ({
+      ...g,
+      isoforms: g.isoforms.map((i) => ({
+        ...i,
+        proteinSequenceLength: proteinLenFromCds(i.codingSequenceLength),
+      })),
+    }))
   },
 )
 

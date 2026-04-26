@@ -84,6 +84,17 @@ const nextConfig: NextConfig = {
         },
       ],
     },
+    // Static gene/isoform content emitted by `pnpm content:emit`. Artifacts
+    // are immutable per deploy; cache aggressively at the browser and CDN.
+    {
+      source: '/data/:path*',
+      headers: [
+        {
+          key: 'Cache-Control',
+          value: 'public, max-age=31536000, immutable',
+        },
+      ],
+    },
     {
       source: '/(.*)',
       headers: [

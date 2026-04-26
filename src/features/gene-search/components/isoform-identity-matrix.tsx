@@ -10,50 +10,24 @@ import type { IsoformListItem } from '@/features/gene-search/types/domain-types'
 
 interface Props {
   isoforms: IsoformListItem[]
+  // Precomputed at build time by scripts/emit-content.ts. `ids` lists the
+  // top-N isoforms by protein length descending (matches the heatmap order);
+  // `rows[i][j]` is the % protein-sequence identity between ids[i] and ids[j].
+  matrix: { ids: string[]; rows: number[][] }
 }
 
-const MAX_ISOFORMS = 16
 const MIN_ISOFORMS = 2
-
-/**
- * Compute % protein-sequence identity between two isoforms using end-anchored
- * prefix/suffix overlap. Most isoforms differ by exon inclusion, so they share
- * large contiguous blocks at the start and end — this catches those cases
- * cheaply without a full alignment.
- */
-function proteinIdentity(a: string, b: string): number {
-  if (a === b) return 100
-  const shorter = a.length <= b.length ? a : b
-  const longer = a.length <= b.length ? b : a
-  if (shorter.length === 0) return 0
-
-  // Shared prefix.
-  let prefix = 0
-  while (prefix < shorter.length && shorter[prefix] === longer[prefix]) prefix++
-
-  // Shared suffix.
-  let suffix = 0
-  while (
-    suffix < shorter.length - prefix &&
-    shorter[shorter.length - 1 - suffix] === longer[longer.length - 1 - suffix]
-  ) {
-    suffix++
-  }
-
-  const matches = prefix + suffix
-  return (matches / longer.length) * 100
-}
 
 /**
  * Triangular heatmap of pairwise % identity between isoform protein
  * sequences. Surfaces near-duplicate isoforms so users don't waste time
  * optimizing functionally redundant transcripts separately.
  *
- * Identity is computed as prefix+suffix match / longer protein length.
- * This is a fast proxy, not a full alignment — good enough to cluster
- * isoforms by similarity but not for exact percent identity claims.
+ * Identity is computed at build time as prefix+suffix match / longer protein
+ * length — fast proxy, not a full alignment, good enough to cluster isoforms
+ * by similarity but not for exact percent identity claims.
  */
-export function IsoformIdentityMatrix({ isoforms }: Props) {
+export function IsoformIdentityMatrix({ isoforms, matrix }: Props) {
   const { species } = useSpeciesContext()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -64,23 +38,20 @@ export function IsoformIdentityMatrix({ isoforms }: Props) {
     return `${pathname}?${params.toString()}#isoform-row-${id}`
   }
 
+  // The precomputed matrix covers all isoforms across both species. Trim
+  // rows/columns to those that match the active species filter.
   const { rows, ids } = useMemo(() => {
-    const filtered = isoforms.filter((i) => {
+    const speciesById = new Map(isoforms.map((i) => [i.id, i.species]))
+    const allowed = matrix.ids.map((id) => {
       if (!species || species === 'both') return true
-      return i.species.toLowerCase() === species
+      return (speciesById.get(id) ?? '').toLowerCase() === species
     })
-    // Sort by protein length descending so the longest (usually canonical)
-    // isoform is in the top-left corner.
-    const sorted = [...filtered].sort(
-      (a, b) => b.proteinSequenceLength - a.proteinSequenceLength,
-    )
-    const trimmed = sorted.slice(0, MAX_ISOFORMS)
-    const ids = trimmed.map((i) => i.id)
-    const rows = trimmed.map((a) =>
-      trimmed.map((b) => proteinIdentity(a.proteinSequence, b.proteinSequence)),
-    )
-    return { rows, ids }
-  }, [isoforms, species])
+    const keptIds = matrix.ids.filter((_, i) => allowed[i])
+    const keptRows = matrix.rows
+      .filter((_, i) => allowed[i])
+      .map((row) => row.filter((_, j) => allowed[j]))
+    return { rows: keptRows, ids: keptIds }
+  }, [matrix, isoforms, species])
 
   if (ids.length < MIN_ISOFORMS) return null
 
