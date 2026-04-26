@@ -1266,27 +1266,35 @@ function LocalSequenceView({
   }, [stripRef, focusPosition, ctx.start, seqLen])
 
   return (
+    // Outer card carries the rounded border + bg; the inner div is the
+    // actual scroller. Padding on the outer keeps the scrollbar inset
+    // from the card's rounded corners (so it doesn't bleed past them)
+    // while still being visible as a scroll affordance.
     <div
-      ref={stripRef}
       role="group"
       aria-label="Sequence context around WGGW split site"
-      className="bg-muted/40 overflow-x-auto rounded-lg border px-2 py-2 font-mono text-[11px] leading-none [scrollbar-width:none] sm:py-3 [&::-webkit-scrollbar]:hidden"
+      className="bg-muted/40 rounded-lg border px-2 py-2 font-mono text-[11px] leading-none sm:py-3"
     >
-      <div className="flex items-stretch">
-        {ctx.codons.map((codon, codonIdx) => (
-          <CodonCard
-            key={codon.idx}
-            codon={codon}
-            site={siteByMotifStart.get(codon.start) ?? null}
-            selectedCoverByBase={selectedCoverByBase}
-            otherSiteCoverByBase={otherSiteCoverByBase}
-            changedBases={changedBases}
-            searchMatchBases={searchMatchBases}
-            cursorPositions={cursorPositions}
-            isLast={codonIdx === ctx.codons.length - 1}
-            onSelectSite={onSelectSite}
-          />
-        ))}
+      <div
+        ref={stripRef}
+        className="overflow-x-auto [scrollbar-color:rgb(0_0_0/0.18)_transparent] [scrollbar-width:thin]"
+      >
+        <div className="flex items-stretch">
+          {ctx.codons.map((codon, codonIdx) => (
+            <CodonCard
+              key={codon.idx}
+              codon={codon}
+              site={siteByMotifStart.get(codon.start) ?? null}
+              selectedCoverByBase={selectedCoverByBase}
+              otherSiteCoverByBase={otherSiteCoverByBase}
+              changedBases={changedBases}
+              searchMatchBases={searchMatchBases}
+              cursorPositions={cursorPositions}
+              isLast={codonIdx === ctx.codons.length - 1}
+              onSelectSite={onSelectSite}
+            />
+          ))}
+        </div>
       </div>
     </div>
   )
