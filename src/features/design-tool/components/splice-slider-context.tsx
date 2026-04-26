@@ -17,15 +17,7 @@ import {
   type WggwRecodingOption,
 } from '@/lib/bio/sequence-utils'
 import { translateCodon } from '@/lib/bio/genetic-code'
-import {
-  ChevronLeft,
-  ChevronRight,
-  AlignCenter,
-  X,
-  Plus,
-  Check,
-  AlertTriangle,
-} from 'lucide-react'
+import { ChevronLeft, ChevronRight, AlignCenter, X, Plus } from 'lucide-react'
 import { toast } from 'sonner'
 import type { SelectedWggwSite } from '../types/form-schema'
 
@@ -94,7 +86,10 @@ function buildSegments(
   const segs: Array<{ start: number; end: number; label: string }> = []
   let prev = 0
   positions.forEach((pos, i) => {
-    const label = i === 0 ? '5′' : `mid${i}`
+    // Inner segments don't need a "midN" label — the 5′ / 3′ ends are
+    // self-evident from position; everything between them is just "more
+    // of the gene".
+    const label = i === 0 ? '5′' : ''
     segs.push({ start: prev, end: pos, label })
     prev = pos
   })
@@ -629,14 +624,6 @@ export function SpliceSliderContext({
 
   if (seqLen < 12) return null
 
-  const fragmentLengths = buildSegments(positions, seqLen).map(
-    (s) => s.end - s.start,
-  )
-  const oversizeFragments = fragmentLengths.filter(
-    (bp) => bp > AAV_MAX_BP,
-  ).length
-  const aavConfigLabel = positions.length === 1 ? 'Dual AAV' : 'Triple AAV'
-
   return (
     <div
       ref={rootRef}
@@ -644,36 +631,6 @@ export function SpliceSliderContext({
       onPointerDownCapture={() => setShortcutsActive(true)}
       onFocusCapture={() => setShortcutsActive(true)}
     >
-      <div className="text-muted-foreground flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-1 text-[11px]">
-        <div className="flex items-center gap-2 font-mono tabular-nums">
-          <span className="text-foreground font-semibold">
-            {aavConfigLabel}
-          </span>
-          <span className="text-muted-foreground/70">·</span>
-          <span>
-            {fragmentLengths.length} fragment
-            {fragmentLengths.length === 1 ? '' : 's'}
-          </span>
-          <span className="text-muted-foreground/70">·</span>
-          <span>
-            {fragmentLengths.map((bp) => bp.toLocaleString()).join(' / ')} bp
-          </span>
-        </div>
-        {oversizeFragments > 0 ? (
-          <span className="text-danger-soft inline-flex items-center gap-1 font-medium">
-            <AlertTriangle className="size-3" />
-            {oversizeFragments} fragment
-            {oversizeFragments === 1 ? '' : 's'} exceeds{' '}
-            {AAV_MAX_BP.toLocaleString()} bp
-          </span>
-        ) : (
-          <span className="text-success-soft inline-flex items-center gap-1 font-medium">
-            <Check className="size-3" />
-            All fragments within AAV limit
-          </span>
-        )}
-      </div>
-
       <Toolbar
         queryValue={queryValue}
         queryMode={queryMode}
@@ -780,10 +737,18 @@ export function SpliceSliderContext({
           >
             <div className="absolute inset-x-0 top-0 z-10 flex h-11 overflow-hidden rounded-t-lg">
               {buildSegments(positions, seqLen).map((seg, i, arr) => {
-                const segTone =
-                  i === arr.length - 1
-                    ? { fillSeg: 'bg-muted/50', text: 'text-muted-foreground' }
-                    : spliceTone(i)
+                // Segments are colored by which splice "owns" them: the
+                // 5′ segment uses splice 1's tone, the 3′ segment uses
+                // the last splice's tone (when there is a 2nd splice),
+                // and any middle segment(s) stay muted as the "between"
+                // region.
+                const isFirst = i === 0
+                const isLast = i === arr.length - 1
+                const segTone = isFirst
+                  ? spliceTone(0)
+                  : isLast && positions.length > 1
+                    ? spliceTone(positions.length - 1)
+                    : { fillSeg: 'bg-muted/50', text: 'text-muted-foreground' }
                 const widthPct = ((seg.end - seg.start) / seqLen) * 100
                 const fragmentBp = seg.end - seg.start
                 const overAAV = fragmentBp > AAV_MAX_BP
@@ -807,7 +772,8 @@ export function SpliceSliderContext({
                           : `${fragmentBp.toLocaleString()} bp · within the AAV packaging limit`
                       }
                     >
-                      {seg.label} · {fragmentBp.toLocaleString()} bp
+                      {seg.label && `${seg.label} · `}
+                      {fragmentBp.toLocaleString()} bp
                     </span>
                   </div>
                 )
@@ -954,33 +920,11 @@ export function SpliceSliderContext({
                 Splice
               </button>
             ) : (
-              <span className="text-muted-foreground/70 text-[10px] font-medium">
-                Splice {clampedActiveIndex + 1} of {positions.length}
-              </span>
+              <span />
             )}
             <ShortcutHint
               active={shortcutsActive}
               spliceCount={positions.length}
-              canPrev={
-                (selectedSiteIndices[clampedActiveIndex] ?? -1) > 0 ||
-                ((selectedSiteIndices[clampedActiveIndex] ?? -1) === -1 &&
-                  wggwSites.length > 0)
-              }
-              canNext={
-                ((selectedSiteIndices[clampedActiveIndex] ?? -1) >= 0 &&
-                  (selectedSiteIndices[clampedActiveIndex] ?? -1) <
-                    wggwSites.length - 1) ||
-                ((selectedSiteIndices[clampedActiveIndex] ?? -1) === -1 &&
-                  wggwSites.length > 0)
-              }
-              onPrev={() => jumpToSibling(-1)}
-              onNext={() => jumpToSibling(1)}
-              onMidpoint={() => setPositionAt(clampedActiveIndex, midpoint)}
-              onSwitchSplice={
-                positions.length > 1
-                  ? (idx) => setActiveSpliceIndex(idx)
-                  : undefined
-              }
             />
           </div>
         </div>
@@ -2354,24 +2298,12 @@ function costToneFor(baseChanges: number): CostTone {
 function ShortcutHint({
   active,
   spliceCount,
-  canPrev,
-  canNext,
-  onPrev,
-  onNext,
-  onMidpoint,
-  onSwitchSplice,
 }: {
   active: boolean
   spliceCount: number
-  canPrev: boolean
-  canNext: boolean
-  onPrev: () => void
-  onNext: () => void
-  onMidpoint: () => void
-  onSwitchSplice?: (idx: number) => void
 }) {
-  // Keyboard shortcuts are noise on touch viewports — hide entirely below
-  // md (no physical keyboard typically).
+  // Static documentation, not duplicate UI: hints describe the shortcut,
+  // they don't fire it. Hidden below md (no physical keyboard typically).
   return (
     <div
       className={cn(
@@ -2380,72 +2312,27 @@ function ShortcutHint({
       )}
       aria-hidden={!active}
     >
-      {onSwitchSplice && spliceCount > 1 && (
+      {spliceCount > 1 && (
         <span className="flex items-center gap-1">
-          <ShortcutHintButton
-            onClick={() => onSwitchSplice(0)}
-            title="Focus splice 1"
-          >
-            <Kbd>1</Kbd>
-          </ShortcutHintButton>
-          <ShortcutHintButton
-            onClick={() => onSwitchSplice(1)}
-            title="Focus splice 2"
-          >
-            <Kbd>2</Kbd>
-          </ShortcutHintButton>
+          <Kbd>1</Kbd>
+          <Kbd>2</Kbd>
           <span>focus</span>
         </span>
       )}
-      <ShortcutHintButton
-        onClick={onPrev}
-        disabled={!canPrev}
-        title="Previous WGGW site"
-      >
+      <span className="flex items-center gap-1">
         <Kbd>[</Kbd>
-        <span>prev</span>
-      </ShortcutHintButton>
-      <ShortcutHintButton
-        onClick={onNext}
-        disabled={!canNext}
-        title="Next WGGW site"
-      >
         <Kbd>]</Kbd>
-        <span>next</span>
-      </ShortcutHintButton>
-      <ShortcutHintButton onClick={onMidpoint} title="Snap caret to midpoint">
+        <span>step site</span>
+      </span>
+      <span className="flex items-center gap-1">
         <Kbd>m</Kbd>
         <span>midpoint</span>
-      </ShortcutHintButton>
-      <span className="flex items-center gap-1 px-1">
+      </span>
+      <span className="flex items-center gap-1">
         <Kbd>↵</Kbd>
         <span>find / jump</span>
       </span>
     </div>
-  )
-}
-
-function ShortcutHintButton({
-  children,
-  onClick,
-  disabled,
-  title,
-}: {
-  children: ReactNode
-  onClick: () => void
-  disabled?: boolean
-  title?: string
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      title={title}
-      className="hover:text-foreground hover:bg-muted/60 -mx-1 inline-flex items-center gap-1 rounded px-1 py-0.5 transition-colors disabled:pointer-events-none disabled:opacity-40"
-    >
-      {children}
-    </button>
   )
 }
 
