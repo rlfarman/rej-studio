@@ -8,7 +8,7 @@ const TP53_CDS =
 function Playground({ sequence }: { sequence: string }) {
   const [position, setPosition] = useState(Math.floor(sequence.length / 2))
   return (
-    <div className="mx-auto max-w-5xl">
+    <div className="mx-auto w-full max-w-5xl p-4">
       <SpliceSliderContext
         sequence={sequence}
         position={position}
@@ -22,6 +22,7 @@ function Playground({ sequence }: { sequence: string }) {
 const meta = {
   title: 'DesignTool/SpliceSliderContext',
   component: Playground,
+  parameters: { layout: 'fullscreen' },
 } satisfies Meta<typeof Playground>
 
 export default meta
