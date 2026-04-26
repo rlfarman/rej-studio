@@ -9,7 +9,8 @@ REJ Studio is a bioinformatics web app for RNA End-Joining sequence design. User
 - **Next.js 16 (App Router)** — Frontend and server actions. All user-facing routes live under the `(app)` group, which contains `(search)` for gene browsing, `(design-tool)` for the optimization form, and `(internal)` for non-indexed pages (e.g. `/architecture`). Fumadocs powers `/docs`. Frontend source lives under `src/`.
 - **Bulletproof-react structure** — Code is organized into `src/features/<feature>/` (self-contained: `api/`, `components/`, `hooks/`, `stores/`, `types/`, `utils/`) plus shared layers (`src/components/`, `src/lib/`, `src/hooks/`, `src/stores/`). Cross-feature imports and shared→feature imports are forbidden by ESLint (`import/no-restricted-paths`).
 - **FastAPI (Python)** — Runs the DNA optimization algorithm. Canonical code lives in `python/`. Single endpoint: `POST /api/py/process`. In development, Next.js proxies `/api/py/*` to a local uvicorn at `localhost:8000`. In production Python does NOT run on Vercel or Cloudflare — it's deployed to Modal and called directly from server actions. `COMPUTE_BACKEND=modal` is required in prod on every host; the local backend is dev-only.
-- **Postgres + Drizzle ORM** — Read-only gene/isoform/sequence data. Production uses Neon over HTTP via `@neondatabase/serverless`. Local dev and CI fall back to PGlite (embedded Postgres) when `DATABASE_URL` is empty, a `file:` path, or `memory://` — full Postgres compatibility including `tsvector` and GIN indexes. Driver selection is in `src/drizzle/db.ts`; schema is in `src/drizzle/schema.ts`.
+- **Postgres + Drizzle ORM** — Authoring source for gene/isoform metadata; not read at runtime. The runtime gene-search read path is fully static (see _Static gene/isoform content_ below). Production uses Neon over HTTP via `@neondatabase/serverless` for `pnpm db:push`/`db:upload`/`content:emit` and for any future read paths. Local dev and CI fall back to PGlite when `DATABASE_URL` is empty, `file:`, or `memory://`. Driver selection is in `src/drizzle/db.ts`; schema is in `src/drizzle/schema.ts`.
+- **Static gene/isoform content** — `pnpm content:emit` (run as a `prebuild` hook) reads Postgres once and writes to `public/data/`: a per-gene JSON file under `genes/<symbol>.json` (full gene + isoform payload), `manifest.json` (the `{id, symbol, species}` list that drives `generateStaticParams` and the sitemap), `isoform-index.json` (`{[isoformId]: {symbol, species}}` for the design-tool prefill and ENST search routing), and `search-index-{human,mouse}.json` (species-sharded MiniSearch indexes). The emit step is skipped when `DATABASE_URL` is missing AND the artifacts already exist, so CI builds work without a live DB once cached. Loaders live in `src/lib/content/server.ts`; client search lives in `src/features/gene-search/utils/client-search.ts`.
 - **shadcn/ui + Radix UI** — Component library. UI primitives live in `src/components/ui/`. Config in `components.json`.
 - **Zustand** — Global client state (favorites, recent genes, species filter) lives in `src/stores/` (shared) or `src/features/<feature>/stores/` (feature-owned).
 - **Auth** — Basic-auth guard on the landing page via middleware (`src/proxy.ts`). Engages only when both `BASIC_AUTH_USER` and `BASIC_AUTH_PASSWORD` are set; skip locally with `BYPASS_AUTH=true`. The `/api/health` endpoint optionally gates detailed diagnostics behind `HEALTH_AUTH_TOKEN`.
@@ -59,6 +60,7 @@ pnpm db:build     # Emit neutral JSONL seed from source CSV (data/*.jsonl)
 pnpm db:push      # Create/update tables in $DATABASE_URL from schema.ts
 pnpm db:upload    # Load JSONL into $DATABASE_URL via Drizzle (dialect-neutral)
 pnpm db:studio    # Browse DB in Drizzle Studio (local.drizzle.studio)
+pnpm content:emit # Emit static gene content from Postgres to public/data/
 ```
 
 ## User-Facing Copy
@@ -85,15 +87,15 @@ User-facing strings (headings, descriptions, toasts, validation messages, tour c
 
 ## Database
 
-Primary store is a Neon (Postgres) database. The Next.js server connects via the Neon HTTP driver (`src/drizzle/db.ts`); every query is a serverless HTTP round-trip. Schema is in `src/drizzle/schema.ts`; tables: `genes`, `isoforms`.
+Postgres is the **authoring source** for gene/isoform metadata; it is **not** read at runtime by the gene-search or design-tool flows. Schema is in `src/drizzle/schema.ts`; tables: `genes`, `isoforms`. The Next.js server still talks to Neon via the Neon HTTP driver (`src/drizzle/db.ts`) for tooling (`db:push`, `db:upload`, `content:emit`); local dev and CI fall back to PGlite.
 
-App code uses dialect-neutral SQL (Drizzle query builder + `LOWER(col) LIKE '%x%'`) so the DB backend can be swapped without touching queries.
-
-To seed / refresh:
+To seed / refresh and republish gene data:
 
 1. `pnpm db:build` — emit `data/genes.jsonl` + `data/isoforms.jsonl` from `drizzle/transcript_metadata.csv`.
 2. `pnpm db:push` — create tables in `$DATABASE_URL` from `schema.ts`.
 3. `pnpm db:upload` — load JSONL via Drizzle INSERTs.
+4. `pnpm content:emit` — read Postgres once and write the static content to `public/data/`.
+5. Deploy. Vercel / Cloudflare will run `content:emit` automatically as the `prebuild` hook, but committing or caching the artifacts is fine too.
 
 ## Environment Variables
 
@@ -157,6 +159,7 @@ Shared Claude Code permissions, deny rules, and sandbox config live in `.agents/
 - **Adding a new feature**: Create `src/features/<name>/` with the standard subfolders. ESLint boundary rules apply automatically (no config changes needed).
 - **Adding shared code**: If used by ≥2 features, decide by domain: bio-specific → `src/lib/bio/` or `src/components/bio/`; generic → `src/lib/` or `src/components/`.
 - **Modifying the optimization algorithm**: Edit `python/algorithm.py`. The FastAPI endpoint is in `python/index.py`. In production this runs on Modal (see `modal/app.py`), so redeploy Modal after changes.
-- **Database schema changes**: Edit `src/drizzle/schema.ts`, update `scripts/build-db.py` if the JSONL shape needs to change, then `pnpm db:build && pnpm db:push && pnpm db:upload`.
+- **Database schema changes**: Edit `src/drizzle/schema.ts`, update `scripts/build-db.py` if the JSONL shape needs to change, then `pnpm db:build && pnpm db:push && pnpm db:upload`. If the change affects what's emitted to `public/data/`, also update `scripts/emit-content.ts` and re-run `pnpm content:emit`.
+- **Modifying gene data (reseed)**: `pnpm db:build` (CSV → JSONL) → `pnpm db:push` (sync schema) → `pnpm db:upload` (load JSONL into Postgres) → `pnpm content:emit` (write static JSON to `public/data/`) → deploy. The `prebuild` hook runs `content:emit` automatically, but a manual run is still needed if you're inspecting the output before deploy.
 - **Switching DB backend**: Edit `src/drizzle/db.ts` and the connection driver — it's a 5-file change.
 - **Switching deploy target (Vercel ↔ Cloudflare)**: Update `next.config.ts` and build scripts.
