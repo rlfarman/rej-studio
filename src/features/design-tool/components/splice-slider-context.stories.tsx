@@ -52,20 +52,22 @@ export const TP53Dual: Story = {
   },
 }
 
-// Synthetic >10 kb CDS (TP53 tiled) to exercise the AAV-overflow flow:
-// pickDefaultSplitPoints auto-suggests two splices and the segment labels
-// flag any fragment that exceeds the AAV packaging limit.
-const TRIPLE_CDS = (() => {
-  const repeats = Math.ceil(10000 / TP53_CDS.length)
-  // Strip the trailing stop codon from all but the last copy so the result
-  // still parses as a single CDS.
-  const body = TP53_CDS.slice(0, -3)
-  return body.repeat(repeats) + 'TGA'
+// Demo sequence for the triple-AAV layout case. Real candidates are
+// genes like dystrophin (DMD, ~11 kb) or neurofibromin (NF1, ~8.5 kb);
+// inlining one of those CDSes in a story file is unwieldy, so the demo
+// stitches real TP53 fragments together into a >10 kb CDS that the
+// component can render meaningfully. The exact sequence content is not
+// what's being demoed — the layout, fragment-length labels, and
+// auto-suggested two splices are.
+const TRIPLE_AAV_DEMO_CDS = (() => {
+  const tilesNeeded = Math.ceil(10000 / TP53_CDS.length)
+  const body = TP53_CDS.slice(0, -3) // strip trailing stop on all but the last
+  return body.repeat(tilesNeeded) + 'TGA'
 })()
 
-export const TripleAAV: Story = {
+export const TripleAAVDemo: Story = {
   args: {
-    sequence: TRIPLE_CDS,
-    initialPositions: pickDefaultSplitPoints(TRIPLE_CDS),
+    sequence: TRIPLE_AAV_DEMO_CDS,
+    initialPositions: pickDefaultSplitPoints(TRIPLE_AAV_DEMO_CDS),
   },
 }

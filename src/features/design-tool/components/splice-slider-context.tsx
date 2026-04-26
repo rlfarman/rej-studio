@@ -76,6 +76,28 @@ function spliceTone(index: number) {
 // exceeds this, the chosen split won't actually package — flag it.
 const AAV_MAX_BP = 4000
 
+// Minimum sequence length before the slider renders. Shorter than this
+// can't have a meaningful splice junction (cut + buffer on both sides).
+const MIN_SEQUENCE_LENGTH = 12
+
+// Tick-click hit-detection: parent-routed click on the WGGW strip picks
+// the nearest site within this many pixels of the click. Larger than the
+// visible tick width (~4px) so the hit area feels generous; small enough
+// that adjacent ticks don't both qualify.
+const TICK_CLICK_THRESHOLD_PX = 14
+
+// When the cursor moves by more than this many bp between renders, treat
+// it as a "jump" (active-splice switch, midpoint, GoTo, etc.) and smooth-
+// scroll the strip. Smaller deltas are presumed to come from a drag and
+// scroll instantly so the strip stays glued to the cursor.
+const STRIP_SMOOTH_SCROLL_THRESHOLD_BP = 30
+
+// Cosmetic timing: how long the assigned splice's bp readout pulses after
+// a tick-click, and the toast cooldown / duration for auto-swap.
+const RECENTLY_ASSIGNED_DURATION_MS = 700
+const SWAP_TOAST_THROTTLE_MS = 1500
+const SWAP_TOAST_DURATION_MS = 2000
+
 function buildSegments(
   positions: number[],
   seqLen: number,
@@ -143,7 +165,7 @@ export function SpliceSliderContext({
   const searchValue = queryMode === 'sequence' ? queryValue : ''
 
   const wggwSites = useMemo<WggwSiteCandidate[]>(() => {
-    if (seqLen < 12) return []
+    if (seqLen < MIN_SEQUENCE_LENGTH) return []
     return groupWggwSites(rankInducibleWggwByBalance(sequence))
   }, [sequence, seqLen])
   const normalizedSequence = useMemo(
@@ -250,10 +272,10 @@ export function SpliceSliderContext({
           return i === -1 ? prev : i
         })
         const now = Date.now()
-        if (now - lastSwapToastRef.current > 1500) {
+        if (now - lastSwapToastRef.current > SWAP_TOAST_THROTTLE_MS) {
           lastSwapToastRef.current = now
           toast('Splices reordered to keep Splice 1 5′-most', {
-            duration: 2000,
+            duration: SWAP_TOAST_DURATION_MS,
           })
         }
       }
@@ -318,7 +340,7 @@ export function SpliceSliderContext({
       setRecentlyAssignedSplice(idx)
       window.setTimeout(() => {
         setRecentlyAssignedSplice((prev) => (prev === idx ? null : prev))
-      }, 700)
+      }, RECENTLY_ASSIGNED_DURATION_MS)
     },
     [clampedActiveIndex, positions, setPositionAt],
   )
@@ -622,7 +644,7 @@ export function SpliceSliderContext({
     jumpToPosition(target)
   }
 
-  if (seqLen < 12) return null
+  if (seqLen < MIN_SEQUENCE_LENGTH) return null
 
   return (
     <div
@@ -808,7 +830,7 @@ export function SpliceSliderContext({
                   }
                 }
                 const pixelDist = (bestDist / seqLen) * rect.width
-                if (nearest && pixelDist <= 14) {
+                if (nearest && pixelDist <= TICK_CLICK_THRESHOLD_PX) {
                   handleSelectSite(nearest)
                 }
               }}
@@ -833,7 +855,9 @@ export function SpliceSliderContext({
                 }
                 const pixelDist = (bestDist / seqLen) * rect.width
                 setHoveredTick(
-                  nearest && pixelDist <= 14 ? nearest.position : null,
+                  nearest && pixelDist <= TICK_CLICK_THRESHOLD_PX
+                    ? nearest.position
+                    : null,
                 )
               }}
               onPointerLeave={() => setHoveredTick(null)}
@@ -1248,7 +1272,9 @@ function LocalSequenceView({
       ((focusPosition - ctx.start + 0.5) / seqLen) * scroller.scrollWidth
     const left = targetCenter - scroller.clientWidth / 2
     const prev = lastFocusRef.current
-    const isBigJump = prev !== null && Math.abs(focusPosition - prev) > 30
+    const isBigJump =
+      prev !== null &&
+      Math.abs(focusPosition - prev) > STRIP_SMOOTH_SCROLL_THRESHOLD_BP
     if (isBigJump) {
       scroller.scrollTo({ left, behavior: 'smooth' })
     } else {
