@@ -46,6 +46,9 @@ function buildCsp(): string {
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob: https://www.googletagmanager.com",
     "font-src 'self'",
+    // Sentry Replay (and similar instrumentation) constructs Web Workers from
+    // a blob: URL. Without this, default-src blocks them.
+    "worker-src 'self' blob:",
     "connect-src 'self' https://*.sentry.io https://www.google-analytics.com https://*.modal.run",
     "frame-ancestors 'none'",
     "base-uri 'self'",
