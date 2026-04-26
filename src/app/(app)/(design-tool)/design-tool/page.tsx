@@ -1,4 +1,4 @@
-import { getIsoformAndGeneByIsoformId } from '@/features/gene-search/api/isoforms'
+import { readIsoformAndGene } from '@/lib/content/server'
 import { GeneSplitterForm } from '@/features/design-tool/components/gene-splitter-form'
 import type { DesignToolSpecies } from '@/features/design-tool/types/species-options'
 import { isSpecies } from '@/lib/bio/species'
@@ -42,9 +42,7 @@ async function DesignToolPage({
     return <GeneSplitterForm key={jobId ?? 'new'} defaultJobId={jobId} />
   }
 
-  const result = isoformId
-    ? await getIsoformAndGeneByIsoformId(isoformId)
-    : undefined
+  const result = isoformId ? await readIsoformAndGene(isoformId) : undefined
 
   if (!result) {
     return <GeneSplitterForm key={jobId ?? 'new'} defaultJobId={jobId} />

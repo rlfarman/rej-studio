@@ -1,7 +1,6 @@
 import { notFound } from 'next/navigation'
 import { Badge } from '@/components/ui/badge'
-import { getGeneBySymbol } from '@/features/gene-search/api/genes'
-import { getIsoformsByGene } from '@/features/gene-search/api/isoforms'
+import { readGeneBySymbol, readManifest } from '@/lib/content/server'
 import IsoformTable, {
   IsoformTableLoading,
 } from '@/features/gene-search/components/isoform-table'
@@ -22,7 +21,6 @@ import { ExternalLink } from 'lucide-react'
 import { SpeciesIcon } from '@/components/bio/species-icon'
 import { PageTitle } from '@/components/page-title'
 import { Metadata } from 'next'
-import { cache } from 'react'
 import {
   SPECIES_DISPLAY_NAME,
   isSpecies,
@@ -35,12 +33,24 @@ type Props = {
   searchParams: Promise<{ species?: string; isoform?: string }>
 }
 
-const getCachedGeneBySymbol = cache(getGeneBySymbol)
+export async function generateStaticParams() {
+  const manifest = await readManifest()
+  // The route is /genes/[symbol]; species lives in searchParams. Emit one
+  // entry per unique symbol (a symbol may map to both human and mouse).
+  const seen = new Set<string>()
+  const params: { symbol: string }[] = []
+  for (const entry of manifest.genes) {
+    if (seen.has(entry.symbol)) continue
+    seen.add(entry.symbol)
+    params.push({ symbol: entry.symbol })
+  }
+  return params
+}
 
 async function resolveGene({ params, searchParams }: Props) {
   const { symbol } = await params
   const { species } = await searchParams
-  return getCachedGeneBySymbol(symbol, parseSpeciesParam(species))
+  return readGeneBySymbol(symbol, parseSpeciesParam(species))
 }
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
@@ -74,55 +84,6 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   }
 }
 
-/**
- * Async server component that fetches isoforms and renders the full isoform
- * section. Wrapped in Suspense by the parent so the gene header streams
- * immediately while the DB query resolves.
- */
-async function IsoformSection({
-  gene,
-  highlightedIsoformId,
-  associationRow,
-}: {
-  gene: { id: string; symbol: string; name: string }
-  highlightedIsoformId?: string
-  associationRow?: AssociationRow
-}) {
-  const isoforms = await getIsoformsByGene(gene.id)
-
-  const speciesAvailable = [
-    ...new Set(isoforms.map((i) => i.species)),
-  ] as Species[]
-
-  return (
-    <>
-      <GeneJsonLd
-        gene={gene}
-        isoformCount={isoforms.length}
-        species={speciesAvailable}
-      />
-      <TrackOnMount
-        event={{
-          event: 'isoform_view',
-          gene_symbol: gene.symbol,
-          gene_id: gene.id,
-          isoform_count: isoforms.length,
-        }}
-      />
-      <IsoformSummary isoforms={isoforms} />
-      <IsoformTable
-        isoforms={isoforms}
-        highlightedIsoformId={highlightedIsoformId}
-      />
-      {associationRow && <GenePhenotypes row={associationRow} />}
-      <section className="flex flex-col gap-6">
-        <IsoformLengthChart isoforms={isoforms} />
-        <IsoformIdentityMatrix isoforms={isoforms} />
-      </section>
-    </>
-  )
-}
-
 export default async function GeneSymbolPage(props: Props) {
   const gene = await resolveGene(props)
 
@@ -135,6 +96,11 @@ export default async function GeneSymbolPage(props: Props) {
   // mouse by default and mouse Ensembl IDs (ENSMUSG...) never match human data.
   const associationRow =
     gene.species === 'human' ? findBySymbol(gene.symbol) : undefined
+
+  const isoforms = gene.isoforms
+  const speciesAvailable = [
+    ...new Set(isoforms.map((i) => i.species)),
+  ] as Species[]
 
   return (
     <>
@@ -178,11 +144,29 @@ export default async function GeneSymbolPage(props: Props) {
         </header>
         <Suspense fallback={<IsoformTableLoading />}>
           <ViewTransition enter="suspense-reveal" default="none">
-            <IsoformSection
+            <GeneJsonLd
               gene={gene}
-              highlightedIsoformId={highlightedIsoformId}
-              associationRow={associationRow}
+              isoformCount={isoforms.length}
+              species={speciesAvailable}
             />
+            <TrackOnMount
+              event={{
+                event: 'isoform_view',
+                gene_symbol: gene.symbol,
+                gene_id: gene.id,
+                isoform_count: isoforms.length,
+              }}
+            />
+            <IsoformSummary isoforms={isoforms} />
+            <IsoformTable
+              isoforms={isoforms}
+              highlightedIsoformId={highlightedIsoformId}
+            />
+            {associationRow && <GenePhenotypes row={associationRow} />}
+            <section className="flex flex-col gap-6">
+              <IsoformLengthChart isoforms={isoforms} />
+              <IsoformIdentityMatrix isoforms={isoforms} />
+            </section>
           </ViewTransition>
         </Suspense>
       </div>

@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { SearchIcon } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { SpeciesIcon } from '@/components/bio/species-icon'
-import { findSimilarGenes } from '@/features/gene-search/api/genes'
+import { findSimilarSymbols } from '@/lib/content/server'
 
 /**
  * Gene not-found page. Renders fuzzy "did you mean?" suggestions when the
@@ -19,7 +19,9 @@ export default async function GeneNotFound() {
   const symbolMatch = url.match(/\/genes\/([^/?]+)/)
   const symbol = symbolMatch ? decodeURIComponent(symbolMatch[1]) : null
 
-  const suggestions = symbol ? await findSimilarGenes(symbol) : []
+  const suggestions = symbol
+    ? await findSimilarSymbols(symbol.trim().toUpperCase().slice(0, 20))
+    : []
 
   return (
     <div className="flex items-center justify-center px-4 py-16">

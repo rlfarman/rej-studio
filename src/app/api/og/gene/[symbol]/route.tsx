@@ -1,6 +1,5 @@
 import { ImageResponse } from 'next/og'
-import { getGeneBySymbol } from '@/features/gene-search/api/genes'
-import { getIsoformsByGene } from '@/features/gene-search/api/isoforms'
+import { readGeneBySymbol } from '@/lib/content/server'
 import { parseSpeciesParam } from '@/lib/bio/species'
 import {
   OG_ACCENT,
@@ -21,7 +20,7 @@ export async function GET(
 ) {
   const { symbol } = await context.params
   const { searchParams } = new URL(request.url)
-  const gene = await getGeneBySymbol(
+  const gene = await readGeneBySymbol(
     symbol,
     parseSpeciesParam(searchParams.get('species') ?? undefined),
   )
@@ -62,7 +61,7 @@ export async function GET(
     )
   }
 
-  const isoforms = await getIsoformsByGene(gene.id)
+  const isoforms = gene.isoforms
   const isoformCount = isoforms.length
   const species = [...new Set(isoforms.map((i) => i.species))]
 

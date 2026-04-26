@@ -48,7 +48,7 @@ type IsoformRow = {
 }
 
 type GeneEntry = GeneRow & {
-  isoforms: Omit<IsoformRow, 'geneId'>[]
+  isoforms: IsoformRow[]
 }
 
 function parseAlternates(s: string): string[] {
@@ -131,10 +131,7 @@ async function main() {
     const list = bySymbol.get(g.symbol) ?? []
     const entry: GeneEntry = {
       ...g,
-      isoforms: (isoformsByGene.get(g.id) ?? []).map((i) => {
-        const { geneId: _drop, ...rest } = i
-        return rest
-      }),
+      isoforms: isoformsByGene.get(g.id) ?? [],
     }
     list.push(entry)
     bySymbol.set(g.symbol, list)
