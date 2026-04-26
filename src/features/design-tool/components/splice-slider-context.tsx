@@ -1459,8 +1459,11 @@ function Inspector({
   onNextSite: () => void
   onSelectRewrite: (index: number) => void
 }) {
+  // Pin every card to the populated-state min-height so the empty and
+  // selected states occupy the same footprint. Prevents the layout jump
+  // when the user goes from "Pick a WGGW site" to a populated inspector.
   const cardClass = cn(
-    'flex min-w-0 flex-col gap-4 rounded-lg border p-4 text-xs transition-all cursor-pointer',
+    'flex min-h-[280px] min-w-0 flex-col gap-4 rounded-lg border p-4 text-xs transition-all cursor-pointer',
     spliceCount > 1
       ? isActive
         ? cn('bg-muted/40 ring-2 shadow-sm', tone.caretRing)
@@ -1514,7 +1517,7 @@ function Inspector({
           : 'Pick the 3′ WGGW site'
         : 'Pick a WGGW site'
     return (
-      <div className={cn(cardClass, 'min-h-0')} onPointerDown={onActivate}>
+      <div className={cardClass} onPointerDown={onActivate}>
         {headerEyebrow}
         <div className="text-foreground flex items-center justify-between gap-2 text-sm font-semibold">
           <span>{emptyHint}</span>
