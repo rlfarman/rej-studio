@@ -1,0 +1,5175 @@
+{
+  "XPO6": [
+    {
+      "id": "ENSMUSG00000000131",
+      "symbol": "XPO6",
+      "name": "Exportin 6",
+      "species": "mouse",
+      "alternateSymbols": [
+        "2610005L19RIK",
+        "C230091E20RIK",
+        "RANBP20",
+        "EXP6",
+        "MKIAA0370"
+      ],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000009344",
+          "geneId": "ENSMUSG00000000131",
+          "codingSequenceLength": 3375,
+          "species": "mouse",
+          "gcPercent": 50.5,
+          "cpgCount": 92,
+          "wggwCount": 82,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000165608",
+          "geneId": "ENSMUSG00000000131",
+          "codingSequenceLength": 264,
+          "species": "mouse",
+          "gcPercent": 52.3,
+          "cpgCount": 5,
+          "wggwCount": 5,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000168189",
+          "geneId": "ENSMUSG00000000131",
+          "codingSequenceLength": 3378,
+          "species": "mouse",
+          "gcPercent": 50.6,
+          "cpgCount": 92,
+          "wggwCount": 82,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000171861",
+          "geneId": "ENSMUSG00000000131",
+          "codingSequenceLength": 216,
+          "species": "mouse",
+          "gcPercent": 49.5,
+          "cpgCount": 5,
+          "wggwCount": 4,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENSMUST00000168189",
+          "ENSMUST00000009344",
+          "ENSMUST00000165608",
+          "ENSMUST00000171861"
+        ],
+        "rows": [
+          [100, 99.9, 0.1, 0.1],
+          [99.9, 100, 0.1, 0.1],
+          [0.1, 0.1, 100, 1.1],
+          [0.1, 0.1, 1.1, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000169180",
+      "symbol": "XPO6",
+      "name": "Exportin 6",
+      "species": "human",
+      "alternateSymbols": ["EXP6", "RANBP20"],
+      "isoforms": [
+        {
+          "id": "ENST00000304658",
+          "geneId": "ENSG00000169180",
+          "codingSequenceLength": 3378,
+          "species": "human",
+          "gcPercent": 51.2,
+          "cpgCount": 90,
+          "wggwCount": 81,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000565698",
+          "geneId": "ENSG00000169180",
+          "codingSequenceLength": 3336,
+          "species": "human",
+          "gcPercent": 51.2,
+          "cpgCount": 90,
+          "wggwCount": 80,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000568065",
+          "geneId": "ENSG00000169180",
+          "codingSequenceLength": 399,
+          "species": "human",
+          "gcPercent": 52.6,
+          "cpgCount": 11,
+          "wggwCount": 9,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000569315",
+          "geneId": "ENSG00000169180",
+          "codingSequenceLength": 462,
+          "species": "human",
+          "gcPercent": 55.6,
+          "cpgCount": 12,
+          "wggwCount": 13,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENST00000304658",
+          "ENST00000565698",
+          "ENST00000569315",
+          "ENST00000568065"
+        ],
+        "rows": [
+          [100, 98.8, 0.2, 2.4],
+          [98.8, 100, 0.2, 2.4],
+          [0.2, 0.2, 100, 1.3],
+          [2.4, 2.4, 1.3, 100]
+        ]
+      }
+    }
+  ],
+  "XK": [
+    {
+      "id": "ENSMUSG00000015342",
+      "symbol": "XK",
+      "name": "X-linked Kx Blood Group",
+      "species": "mouse",
+      "alternateSymbols": ["1810038K19RIK", "XRG1", "XKH"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000015486",
+          "geneId": "ENSMUSG00000015342",
+          "codingSequenceLength": 1341,
+          "species": "mouse",
+          "gcPercent": 51.4,
+          "cpgCount": 47,
+          "wggwCount": 24,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENSMUST00000015486"], "rows": [[100]] }
+    },
+    {
+      "id": "ENSG00000047597",
+      "symbol": "XK",
+      "name": "X-linked Kx Blood Group Antigen, Kell And Vps13a Binding Protein",
+      "species": "human",
+      "alternateSymbols": ["KX", "NA", "NAC", "X1K", "XKR1"],
+      "isoforms": [
+        {
+          "id": "ENST00000378616",
+          "geneId": "ENSG00000047597",
+          "codingSequenceLength": 1335,
+          "species": "human",
+          "gcPercent": 51,
+          "cpgCount": 41,
+          "wggwCount": 26,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENST00000378616"], "rows": [[100]] }
+    }
+  ],
+  "XAB2": [
+    {
+      "id": "ENSMUSG00000019470",
+      "symbol": "XAB2",
+      "name": "Xpa Binding Protein 2",
+      "species": "mouse",
+      "alternateSymbols": ["0610041O14RIK"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000019614",
+          "geneId": "ENSMUSG00000019470",
+          "codingSequenceLength": 2568,
+          "species": "mouse",
+          "gcPercent": 56.2,
+          "cpgCount": 113,
+          "wggwCount": 67,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000159235",
+          "geneId": "ENSMUSG00000019470",
+          "codingSequenceLength": 273,
+          "species": "mouse",
+          "gcPercent": 56.4,
+          "cpgCount": 12,
+          "wggwCount": 7,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENSMUST00000019614", "ENSMUST00000159235"],
+        "rows": [
+          [100, 7.8],
+          [7.8, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000076924",
+      "symbol": "XAB2",
+      "name": "Xpa Binding Protein 2",
+      "species": "human",
+      "alternateSymbols": ["HCNP", "HCRN", "NTC90", "SYF1"],
+      "isoforms": [
+        {
+          "id": "ENST00000358368",
+          "geneId": "ENSG00000076924",
+          "codingSequenceLength": 2568,
+          "species": "human",
+          "gcPercent": 61.6,
+          "cpgCount": 184,
+          "wggwCount": 72,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENST00000358368"], "rows": [[100]] }
+    }
+  ],
+  "XRCC3": [
+    {
+      "id": "ENSMUSG00000021287",
+      "symbol": "XRCC3",
+      "name": "X-ray Repair Complementing Defective Repair In Chinese Hamster Cells 3",
+      "species": "mouse",
+      "alternateSymbols": [],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000021715",
+          "geneId": "ENSMUSG00000021287",
+          "codingSequenceLength": 1050,
+          "species": "mouse",
+          "gcPercent": 60,
+          "cpgCount": 37,
+          "wggwCount": 26,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000127281",
+          "geneId": "ENSMUSG00000021287",
+          "codingSequenceLength": 648,
+          "species": "mouse",
+          "gcPercent": 60.6,
+          "cpgCount": 28,
+          "wggwCount": 12,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENSMUST00000021715", "ENSMUST00000127281"],
+        "rows": [
+          [100, 53.7],
+          [53.7, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000126215",
+      "symbol": "XRCC3",
+      "name": "X-ray Repair Cross Complementing 3",
+      "species": "human",
+      "alternateSymbols": ["CMM6"],
+      "isoforms": [
+        {
+          "id": "ENST00000352127",
+          "geneId": "ENSG00000126215",
+          "codingSequenceLength": 1041,
+          "species": "human",
+          "gcPercent": 63.2,
+          "cpgCount": 56,
+          "wggwCount": 23,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000553264",
+          "geneId": "ENSG00000126215",
+          "codingSequenceLength": 1041,
+          "species": "human",
+          "gcPercent": 63.2,
+          "cpgCount": 56,
+          "wggwCount": 23,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000553361",
+          "geneId": "ENSG00000126215",
+          "codingSequenceLength": 450,
+          "species": "human",
+          "gcPercent": 59.8,
+          "cpgCount": 22,
+          "wggwCount": 11,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000554913",
+          "geneId": "ENSG00000126215",
+          "codingSequenceLength": 1041,
+          "species": "human",
+          "gcPercent": 63.2,
+          "cpgCount": 56,
+          "wggwCount": 23,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000554974",
+          "geneId": "ENSG00000126215",
+          "codingSequenceLength": 426,
+          "species": "human",
+          "gcPercent": 66.9,
+          "cpgCount": 21,
+          "wggwCount": 7,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000555055",
+          "geneId": "ENSG00000126215",
+          "codingSequenceLength": 1041,
+          "species": "human",
+          "gcPercent": 63.2,
+          "cpgCount": 56,
+          "wggwCount": 23,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000555964",
+          "geneId": "ENSG00000126215",
+          "codingSequenceLength": 306,
+          "species": "human",
+          "gcPercent": 57.2,
+          "cpgCount": 13,
+          "wggwCount": 10,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000557439",
+          "geneId": "ENSG00000126215",
+          "codingSequenceLength": 453,
+          "species": "human",
+          "gcPercent": 59.6,
+          "cpgCount": 22,
+          "wggwCount": 11,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENST00000352127",
+          "ENST00000553264",
+          "ENST00000554913",
+          "ENST00000555055",
+          "ENST00000557439",
+          "ENST00000553361",
+          "ENST00000554974",
+          "ENST00000555964"
+        ],
+        "rows": [
+          [100, 100, 100, 100, 39.2, 38.9, 40.9, 29.4],
+          [100, 100, 100, 100, 39.2, 38.9, 40.9, 29.4],
+          [100, 100, 100, 100, 39.2, 38.9, 40.9, 29.4],
+          [100, 100, 100, 100, 39.2, 38.9, 40.9, 29.4],
+          [39.2, 39.2, 39.2, 39.2, 100, 99.3, 1.3, 67.5],
+          [38.9, 38.9, 38.9, 38.9, 99.3, 100, 0.7, 68],
+          [40.9, 40.9, 40.9, 40.9, 1.3, 0.7, 100, 0.7],
+          [29.4, 29.4, 29.4, 29.4, 67.5, 68, 0.7, 100]
+        ]
+      }
+    }
+  ],
+  "XRCC4": [
+    {
+      "id": "ENSMUSG00000021615",
+      "symbol": "XRCC4",
+      "name": "X-ray Repair Complementing Defective Repair In Chinese Hamster Cells 4",
+      "species": "mouse",
+      "alternateSymbols": ["2310057B22RIK"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000022115",
+          "geneId": "ENSMUSG00000021615",
+          "codingSequenceLength": 981,
+          "species": "mouse",
+          "gcPercent": 44.6,
+          "cpgCount": 12,
+          "wggwCount": 28,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000159199",
+          "geneId": "ENSMUSG00000021615",
+          "codingSequenceLength": 945,
+          "species": "mouse",
+          "gcPercent": 43.4,
+          "cpgCount": 12,
+          "wggwCount": 32,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000161396",
+          "geneId": "ENSMUSG00000021615",
+          "codingSequenceLength": 249,
+          "species": "mouse",
+          "gcPercent": 45,
+          "cpgCount": 3,
+          "wggwCount": 10,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENSMUST00000022115",
+          "ENSMUST00000159199",
+          "ENSMUST00000161396"
+        ],
+        "rows": [
+          [100, 89.6, 25.4],
+          [89.6, 100, 26.3],
+          [25.4, 26.3, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000152422",
+      "symbol": "XRCC4",
+      "name": "X-ray Repair Cross Complementing 4",
+      "species": "human",
+      "alternateSymbols": ["SSMED", "HXRCC4"],
+      "isoforms": [
+        {
+          "id": "ENST00000282268",
+          "geneId": "ENSG00000152422",
+          "codingSequenceLength": 1005,
+          "species": "human",
+          "gcPercent": 38.7,
+          "cpgCount": 7,
+          "wggwCount": 22,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000338635",
+          "geneId": "ENSG00000152422",
+          "codingSequenceLength": 1011,
+          "species": "human",
+          "gcPercent": 38.7,
+          "cpgCount": 7,
+          "wggwCount": 22,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000396027",
+          "geneId": "ENSG00000152422",
+          "codingSequenceLength": 1005,
+          "species": "human",
+          "gcPercent": 38.7,
+          "cpgCount": 7,
+          "wggwCount": 22,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000511817",
+          "geneId": "ENSG00000152422",
+          "codingSequenceLength": 1011,
+          "species": "human",
+          "gcPercent": 38.7,
+          "cpgCount": 7,
+          "wggwCount": 22,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENST00000338635",
+          "ENST00000511817",
+          "ENST00000282268",
+          "ENST00000396027"
+        ],
+        "rows": [
+          [100, 100, 99.1, 99.1],
+          [100, 100, 99.1, 99.1],
+          [99.1, 99.1, 100, 100],
+          [99.1, 99.1, 100, 100]
+        ]
+      }
+    }
+  ],
+  "XPO7": [
+    {
+      "id": "ENSMUSG00000022100",
+      "symbol": "XPO7",
+      "name": "Exportin 7",
+      "species": "mouse",
+      "alternateSymbols": ["4930506C02RIK", "RANBP16", "EXP7"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000022696",
+          "geneId": "ENSMUSG00000022100",
+          "codingSequenceLength": 3264,
+          "species": "mouse",
+          "gcPercent": 47.6,
+          "cpgCount": 68,
+          "wggwCount": 63,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000167242",
+          "geneId": "ENSMUSG00000022100",
+          "codingSequenceLength": 3267,
+          "species": "mouse",
+          "gcPercent": 47.6,
+          "cpgCount": 68,
+          "wggwCount": 63,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000226448",
+          "geneId": "ENSMUSG00000022100",
+          "codingSequenceLength": 3174,
+          "species": "mouse",
+          "gcPercent": 47.6,
+          "cpgCount": 65,
+          "wggwCount": 61,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000228346",
+          "geneId": "ENSMUSG00000022100",
+          "codingSequenceLength": 3267,
+          "species": "mouse",
+          "gcPercent": 47.6,
+          "cpgCount": 68,
+          "wggwCount": 63,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENSMUST00000167242",
+          "ENSMUST00000228346",
+          "ENSMUST00000022696",
+          "ENSMUST00000226448"
+        ],
+        "rows": [
+          [100, 61, 99.9, 39.1],
+          [61, 100, 99.4, 0.2],
+          [99.9, 99.4, 100, 97.2],
+          [39.1, 0.2, 97.2, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000130227",
+      "symbol": "XPO7",
+      "name": "Exportin 7",
+      "species": "human",
+      "alternateSymbols": ["EXP7", "RANBP16"],
+      "isoforms": [
+        {
+          "id": "ENST00000252512",
+          "geneId": "ENSG00000130227",
+          "codingSequenceLength": 3264,
+          "species": "human",
+          "gcPercent": 47.8,
+          "cpgCount": 73,
+          "wggwCount": 64,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000433566",
+          "geneId": "ENSG00000130227",
+          "codingSequenceLength": 3267,
+          "species": "human",
+          "gcPercent": 47.8,
+          "cpgCount": 72,
+          "wggwCount": 65,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENST00000433566", "ENST00000252512"],
+        "rows": [
+          [100, 99.4],
+          [99.4, 100]
+        ]
+      }
+    }
+  ],
+  "XDH": [
+    {
+      "id": "ENSMUSG00000024066",
+      "symbol": "XDH",
+      "name": "Xanthine Dehydrogenase",
+      "species": "mouse",
+      "alternateSymbols": ["XO", "XOR", "XOX-1", "XOX1"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000024866",
+          "geneId": "ENSMUSG00000024066",
+          "codingSequenceLength": 4008,
+          "species": "mouse",
+          "gcPercent": 52.7,
+          "cpgCount": 99,
+          "wggwCount": 121,
+          "suitability": "dual-aav"
+        },
+        {
+          "id": "ENSMUST00000233392",
+          "geneId": "ENSMUSG00000024066",
+          "codingSequenceLength": 1230,
+          "species": "mouse",
+          "gcPercent": 52,
+          "cpgCount": 31,
+          "wggwCount": 27,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENSMUST00000024866", "ENSMUST00000233392"],
+        "rows": [
+          [100, 23.7],
+          [23.7, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000158125",
+      "symbol": "XDH",
+      "name": "Xanthine Dehydrogenase",
+      "species": "human",
+      "alternateSymbols": ["XAN1", "XO", "XOR"],
+      "isoforms": [
+        {
+          "id": "ENST00000379416",
+          "geneId": "ENSG00000158125",
+          "codingSequenceLength": 4002,
+          "species": "human",
+          "gcPercent": 53.8,
+          "cpgCount": 90,
+          "wggwCount": 111,
+          "suitability": "dual-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENST00000379416"], "rows": [[100]] }
+    }
+  ],
+  "XIAP": [
+    {
+      "id": "ENSMUSG00000025860",
+      "symbol": "XIAP",
+      "name": "X-linked Inhibitor Of Apoptosis",
+      "species": "mouse",
+      "alternateSymbols": [
+        "1110015C02RIK",
+        "AIPA",
+        "API3",
+        "BIRC4",
+        "IAP3",
+        "ILP-1",
+        "MIHA"
+      ],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000026978",
+          "geneId": "ENSMUSG00000025860",
+          "codingSequenceLength": 1491,
+          "species": "mouse",
+          "gcPercent": 42.1,
+          "cpgCount": 25,
+          "wggwCount": 36,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000055483",
+          "geneId": "ENSMUSG00000025860",
+          "codingSequenceLength": 1491,
+          "species": "mouse",
+          "gcPercent": 42.1,
+          "cpgCount": 25,
+          "wggwCount": 36,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000115094",
+          "geneId": "ENSMUSG00000025860",
+          "codingSequenceLength": 1491,
+          "species": "mouse",
+          "gcPercent": 42.1,
+          "cpgCount": 25,
+          "wggwCount": 36,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000115095",
+          "geneId": "ENSMUSG00000025860",
+          "codingSequenceLength": 1491,
+          "species": "mouse",
+          "gcPercent": 42.1,
+          "cpgCount": 25,
+          "wggwCount": 36,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENSMUST00000026978",
+          "ENSMUST00000055483",
+          "ENSMUST00000115094",
+          "ENSMUST00000115095"
+        ],
+        "rows": [
+          [100, 100, 100, 100],
+          [100, 100, 100, 100],
+          [100, 100, 100, 100],
+          [100, 100, 100, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000101966",
+      "symbol": "XIAP",
+      "name": "X-linked Inhibitor Of Apoptosis",
+      "species": "human",
+      "alternateSymbols": [
+        "API3",
+        "BIRC4",
+        "IAP-3",
+        "ILP1",
+        "MIHA",
+        "XLP2",
+        "HIAP-3",
+        "HIAP3"
+      ],
+      "isoforms": [
+        {
+          "id": "ENST00000355640",
+          "geneId": "ENSG00000101966",
+          "codingSequenceLength": 1494,
+          "species": "human",
+          "gcPercent": 40.2,
+          "cpgCount": 14,
+          "wggwCount": 39,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000371199",
+          "geneId": "ENSG00000101966",
+          "codingSequenceLength": 1494,
+          "species": "human",
+          "gcPercent": 40.2,
+          "cpgCount": 14,
+          "wggwCount": 39,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000422098",
+          "geneId": "ENSG00000101966",
+          "codingSequenceLength": 1494,
+          "species": "human",
+          "gcPercent": 40.2,
+          "cpgCount": 14,
+          "wggwCount": 39,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000430625",
+          "geneId": "ENSG00000101966",
+          "codingSequenceLength": 468,
+          "species": "human",
+          "gcPercent": 40.4,
+          "cpgCount": 6,
+          "wggwCount": 11,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENST00000355640",
+          "ENST00000371199",
+          "ENST00000422098",
+          "ENST00000430625"
+        ],
+        "rows": [
+          [100, 100, 100, 31.3],
+          [100, 100, 100, 31.3],
+          [100, 100, 100, 31.3],
+          [31.3, 31.3, 31.3, 100]
+        ]
+      }
+    }
+  ],
+  "XRCC5": [
+    {
+      "id": "ENSMUSG00000026187",
+      "symbol": "XRCC5",
+      "name": "X-ray Repair Complementing Defective Repair In Chinese Hamster Cells 5",
+      "species": "mouse",
+      "alternateSymbols": ["CTC85", "CTCBF", "KU80", "KU86", "KUP80"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000027379",
+          "geneId": "ENSMUSG00000026187",
+          "codingSequenceLength": 2199,
+          "species": "mouse",
+          "gcPercent": 44.8,
+          "cpgCount": 49,
+          "wggwCount": 50,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENSMUST00000027379"], "rows": [[100]] }
+    },
+    {
+      "id": "ENSG00000079246",
+      "symbol": "XRCC5",
+      "name": "X-ray Repair Cross Complementing 5",
+      "species": "human",
+      "alternateSymbols": ["KARP-1", "KARP1", "KU80", "KUB2", "KU86", "NFIV"],
+      "isoforms": [
+        {
+          "id": "ENST00000392132",
+          "geneId": "ENSG00000079246",
+          "codingSequenceLength": 2199,
+          "species": "human",
+          "gcPercent": 42.6,
+          "cpgCount": 30,
+          "wggwCount": 56,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000392133",
+          "geneId": "ENSG00000079246",
+          "codingSequenceLength": 2199,
+          "species": "human",
+          "gcPercent": 42.6,
+          "cpgCount": 30,
+          "wggwCount": 56,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENST00000392132", "ENST00000392133"],
+        "rows": [
+          [100, 100],
+          [100, 100]
+        ]
+      }
+    }
+  ],
+  "XPR1": [
+    {
+      "id": "ENSMUSG00000026469",
+      "symbol": "XPR1",
+      "name": "Xenotropic And Polytropic Retrovirus Receptor 1",
+      "species": "mouse",
+      "alternateSymbols": ["RMC-1", "RMC1", "SXV", "SYG1", "XR"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000027741",
+          "geneId": "ENSMUSG00000026469",
+          "codingSequenceLength": 2088,
+          "species": "mouse",
+          "gcPercent": 45.9,
+          "cpgCount": 53,
+          "wggwCount": 42,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000111774",
+          "geneId": "ENSMUSG00000026469",
+          "codingSequenceLength": 2040,
+          "species": "mouse",
+          "gcPercent": 45.9,
+          "cpgCount": 51,
+          "wggwCount": 41,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000111775",
+          "geneId": "ENSMUSG00000026469",
+          "codingSequenceLength": 1893,
+          "species": "mouse",
+          "gcPercent": 45.7,
+          "cpgCount": 45,
+          "wggwCount": 40,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENSMUST00000027741",
+          "ENSMUST00000111774",
+          "ENSMUST00000111775"
+        ],
+        "rows": [
+          [100, 97.3, 90.7],
+          [97.3, 100, 64.3],
+          [90.7, 64.3, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000143324",
+      "symbol": "XPR1",
+      "name": "Xenotropic And Polytropic Retrovirus Receptor 1",
+      "species": "human",
+      "alternateSymbols": ["IBGC6", "SLC53A1", "SYG1", "X3"],
+      "isoforms": [
+        {
+          "id": "ENST00000367589",
+          "geneId": "ENSG00000143324",
+          "codingSequenceLength": 1896,
+          "species": "human",
+          "gcPercent": 45.4,
+          "cpgCount": 45,
+          "wggwCount": 43,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000367590",
+          "geneId": "ENSG00000143324",
+          "codingSequenceLength": 2091,
+          "species": "human",
+          "gcPercent": 45.5,
+          "cpgCount": 51,
+          "wggwCount": 46,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENST00000367590", "ENST00000367589"],
+        "rows": [
+          [100, 90.7],
+          [90.7, 100]
+        ]
+      }
+    }
+  ],
+  "XCL1": [
+    {
+      "id": "ENSMUSG00000026573",
+      "symbol": "XCL1",
+      "name": "Chemokine (c Motif) Ligand 1",
+      "species": "mouse",
+      "alternateSymbols": ["ATAC", "LTN", "LPTN", "SCM-1", "SCM-1A", "SCYC1"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000027860",
+          "geneId": "ENSMUSG00000026573",
+          "codingSequenceLength": 345,
+          "species": "mouse",
+          "gcPercent": 50.7,
+          "cpgCount": 4,
+          "wggwCount": 6,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENSMUST00000027860"], "rows": [[100]] }
+    },
+    {
+      "id": "ENSG00000143184",
+      "symbol": "XCL1",
+      "name": "X-c Motif Chemokine Ligand 1",
+      "species": "human",
+      "alternateSymbols": [
+        "ATAC",
+        "LPTN",
+        "LTN",
+        "SCM-1",
+        "SCM-1A",
+        "SCM1",
+        "SCM1A",
+        "SCYC1"
+      ],
+      "isoforms": [
+        {
+          "id": "ENST00000367818",
+          "geneId": "ENSG00000143184",
+          "codingSequenceLength": 345,
+          "species": "human",
+          "gcPercent": 50.1,
+          "cpgCount": 6,
+          "wggwCount": 8,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENST00000367818"], "rows": [[100]] }
+    }
+  ],
+  "XIRP2": [
+    {
+      "id": "ENSMUSG00000027022",
+      "symbol": "XIRP2",
+      "name": "Xin Actin-binding Repeat Containing 2",
+      "species": "mouse",
+      "alternateSymbols": [
+        "2310003D02RIK",
+        "2310008C07RIK",
+        "A530024P18RIK",
+        "CMYA3",
+        "GM352",
+        "XIN2"
+      ],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000028410",
+          "geneId": "ENSMUSG00000027022",
+          "codingSequenceLength": 11355,
+          "species": "mouse",
+          "gcPercent": 42,
+          "cpgCount": 152,
+          "wggwCount": 220,
+          "suitability": "triple-aav"
+        },
+        {
+          "id": "ENSMUST00000112347",
+          "geneId": "ENSMUSG00000027022",
+          "codingSequenceLength": 9852,
+          "species": "mouse",
+          "gcPercent": 41.6,
+          "cpgCount": 118,
+          "wggwCount": 193,
+          "suitability": "triple-aav"
+        },
+        {
+          "id": "ENSMUST00000238878",
+          "geneId": "ENSMUSG00000027022",
+          "codingSequenceLength": 852,
+          "species": "mouse",
+          "gcPercent": 41.1,
+          "cpgCount": 11,
+          "wggwCount": 12,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000238912",
+          "geneId": "ENSMUSG00000027022",
+          "codingSequenceLength": 10539,
+          "species": "mouse",
+          "gcPercent": 42.3,
+          "cpgCount": 133,
+          "wggwCount": 215,
+          "suitability": "triple-aav"
+        },
+        {
+          "id": "ENSMUST00000239009",
+          "geneId": "ENSMUSG00000027022",
+          "codingSequenceLength": 2793,
+          "species": "mouse",
+          "gcPercent": 45.6,
+          "cpgCount": 57,
+          "wggwCount": 65,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000239060",
+          "geneId": "ENSMUSG00000027022",
+          "codingSequenceLength": 2106,
+          "species": "mouse",
+          "gcPercent": 43.7,
+          "cpgCount": 42,
+          "wggwCount": 43,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENSMUST00000028410",
+          "ENSMUST00000238912",
+          "ENSMUST00000112347",
+          "ENSMUST00000239009",
+          "ENSMUST00000239060",
+          "ENSMUST00000238878"
+        ],
+        "rows": [
+          [100, 0.1, 85.9, 14.1, 18.4, 0.5],
+          [0.1, 100, 93.5, 11.2, 0.1, 0.1],
+          [85.9, 93.5, 100, 0.1, 5, 0.6],
+          [14.1, 11.2, 0.1, 100, 75.4, 0.2],
+          [18.4, 0.1, 5, 75.4, 100, 2.7],
+          [0.5, 0.1, 0.6, 0.2, 2.7, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000163092",
+      "symbol": "XIRP2",
+      "name": "Xin Actin Binding Repeat Containing 2",
+      "species": "human",
+      "alternateSymbols": ["CMYA3"],
+      "isoforms": [
+        {
+          "id": "ENST00000409043",
+          "geneId": "ENSG00000163092",
+          "codingSequenceLength": 2817,
+          "species": "human",
+          "gcPercent": 41.7,
+          "cpgCount": 31,
+          "wggwCount": 75,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000409195",
+          "geneId": "ENSG00000163092",
+          "codingSequenceLength": 10650,
+          "species": "human",
+          "gcPercent": 39.8,
+          "cpgCount": 113,
+          "wggwCount": 226,
+          "suitability": "triple-aav"
+        },
+        {
+          "id": "ENST00000409273",
+          "geneId": "ENSG00000163092",
+          "codingSequenceLength": 9984,
+          "species": "human",
+          "gcPercent": 39,
+          "cpgCount": 97,
+          "wggwCount": 203,
+          "suitability": "triple-aav"
+        },
+        {
+          "id": "ENST00000409605",
+          "geneId": "ENSG00000163092",
+          "codingSequenceLength": 2151,
+          "species": "human",
+          "gcPercent": 38.9,
+          "cpgCount": 15,
+          "wggwCount": 52,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000409728",
+          "geneId": "ENSG00000163092",
+          "codingSequenceLength": 2916,
+          "species": "human",
+          "gcPercent": 41.9,
+          "cpgCount": 32,
+          "wggwCount": 75,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000628543",
+          "geneId": "ENSG00000163092",
+          "codingSequenceLength": 10125,
+          "species": "human",
+          "gcPercent": 39.3,
+          "cpgCount": 103,
+          "wggwCount": 207,
+          "suitability": "triple-aav"
+        },
+        {
+          "id": "ENST00000672671",
+          "geneId": "ENSG00000163092",
+          "codingSequenceLength": 11514,
+          "species": "human",
+          "gcPercent": 38.8,
+          "cpgCount": 105,
+          "wggwCount": 238,
+          "suitability": "triple-aav"
+        },
+        {
+          "id": "ENST00000672716",
+          "geneId": "ENSG00000163092",
+          "codingSequenceLength": 2841,
+          "species": "human",
+          "gcPercent": 41.9,
+          "cpgCount": 32,
+          "wggwCount": 76,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENST00000672671",
+          "ENST00000409195",
+          "ENST00000628543",
+          "ENST00000409273",
+          "ENST00000409728",
+          "ENST00000672716",
+          "ENST00000409043",
+          "ENST00000409605"
+        ],
+        "rows": [
+          [100, 0.1, 0.1, 85.9, 14.1, 14.2, 14.1, 18.6],
+          [0.1, 100, 95.1, 93.7, 5.3, 0.1, 11.1, 0.1],
+          [0.1, 95.1, 100, 98.6, 0.1, 0.1, 0.1, 0.1],
+          [85.9, 93.7, 98.6, 100, 0.1, 0.1, 0.1, 5.1],
+          [14.1, 5.3, 0.1, 0.1, 100, 77.4, 96.6, 73.8],
+          [14.2, 0.1, 0.1, 0.1, 77.4, 100, 99.2, 75.7],
+          [14.1, 11.1, 0.1, 0.1, 96.6, 99.2, 100, 76.4],
+          [18.6, 0.1, 0.1, 5.1, 73.8, 75.7, 76.4, 100]
+        ]
+      }
+    }
+  ],
+  "XRN2": [
+    {
+      "id": "ENSMUSG00000027433",
+      "symbol": "XRN2",
+      "name": "5'-3' Exoribonuclease 2",
+      "species": "mouse",
+      "alternateSymbols": [],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000028921",
+          "geneId": "ENSMUSG00000027433",
+          "codingSequenceLength": 2856,
+          "species": "mouse",
+          "gcPercent": 44.7,
+          "cpgCount": 49,
+          "wggwCount": 71,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENSMUST00000028921"], "rows": [[100]] }
+    },
+    {
+      "id": "ENSG00000088930",
+      "symbol": "XRN2",
+      "name": "5'-3' Exoribonuclease 2",
+      "species": "human",
+      "alternateSymbols": [],
+      "isoforms": [
+        {
+          "id": "ENST00000377191",
+          "geneId": "ENSG00000088930",
+          "codingSequenceLength": 2853,
+          "species": "human",
+          "gcPercent": 44.3,
+          "cpgCount": 44,
+          "wggwCount": 73,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENST00000377191"], "rows": [[100]] }
+    }
+  ],
+  "XPA": [
+    {
+      "id": "ENSMUSG00000028329",
+      "symbol": "XPA",
+      "name": "Xeroderma Pigmentosum, Complementation Group A",
+      "species": "mouse",
+      "alternateSymbols": ["XPAC"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000030013",
+          "geneId": "ENSMUSG00000028329",
+          "codingSequenceLength": 819,
+          "species": "mouse",
+          "gcPercent": 51.5,
+          "cpgCount": 45,
+          "wggwCount": 18,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000058232",
+          "geneId": "ENSMUSG00000028329",
+          "codingSequenceLength": 840,
+          "species": "mouse",
+          "gcPercent": 51.4,
+          "cpgCount": 45,
+          "wggwCount": 17,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000132358",
+          "geneId": "ENSMUSG00000028329",
+          "codingSequenceLength": 405,
+          "species": "mouse",
+          "gcPercent": 47.4,
+          "cpgCount": 8,
+          "wggwCount": 12,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000142380",
+          "geneId": "ENSMUSG00000028329",
+          "codingSequenceLength": 819,
+          "species": "mouse",
+          "gcPercent": 53.6,
+          "cpgCount": 48,
+          "wggwCount": 19,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENSMUST00000058232",
+          "ENSMUST00000030013",
+          "ENSMUST00000142380",
+          "ENSMUST00000132358"
+        ],
+        "rows": [
+          [100, 80, 79.6, 0.4],
+          [80, 100, 81.7, 0.4],
+          [79.6, 81.7, 100, 0],
+          [0.4, 0.4, 0, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000136936",
+      "symbol": "XPA",
+      "name": "Xpa, Dna Damage Recognition And Repair Factor",
+      "species": "human",
+      "alternateSymbols": ["XP1", "XPAC"],
+      "isoforms": [
+        {
+          "id": "ENST00000375128",
+          "geneId": "ENSG00000136936",
+          "codingSequenceLength": 822,
+          "species": "human",
+          "gcPercent": 44.9,
+          "cpgCount": 32,
+          "wggwCount": 13,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000462523",
+          "geneId": "ENSG00000136936",
+          "codingSequenceLength": 795,
+          "species": "human",
+          "gcPercent": 45.8,
+          "cpgCount": 28,
+          "wggwCount": 15,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENST00000375128", "ENST00000462523"],
+        "rows": [
+          [100, 82.5],
+          [82.5, 100]
+        ]
+      }
+    }
+  ],
+  "XRCC2": [
+    {
+      "id": "ENSMUSG00000028933",
+      "symbol": "XRCC2",
+      "name": "X-ray Repair Complementing Defective Repair In Chinese Hamster Cells 2",
+      "species": "mouse",
+      "alternateSymbols": ["4921524O04RIK", "8030409M04RIK", "RAD51", "RECA"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000030773",
+          "geneId": "ENSMUSG00000028933",
+          "codingSequenceLength": 837,
+          "species": "mouse",
+          "gcPercent": 50.3,
+          "cpgCount": 30,
+          "wggwCount": 14,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENSMUST00000030773"], "rows": [[100]] }
+    },
+    {
+      "id": "ENSG00000196584",
+      "symbol": "XRCC2",
+      "name": "X-ray Repair Cross Complementing 2",
+      "species": "human",
+      "alternateSymbols": ["FANCU", "POF17", "SPGF50"],
+      "isoforms": [
+        {
+          "id": "ENST00000359321",
+          "geneId": "ENSG00000196584",
+          "codingSequenceLength": 843,
+          "species": "human",
+          "gcPercent": 40.6,
+          "cpgCount": 12,
+          "wggwCount": 18,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000698506",
+          "geneId": "ENSG00000196584",
+          "codingSequenceLength": 675,
+          "species": "human",
+          "gcPercent": 39.6,
+          "cpgCount": 10,
+          "wggwCount": 14,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENST00000359321", "ENST00000698506"],
+        "rows": [
+          [100, 80.1],
+          [80.1, 100]
+        ]
+      }
+    }
+  ],
+  "XPC": [
+    {
+      "id": "ENSMUSG00000030094",
+      "symbol": "XPC",
+      "name": "Xeroderma Pigmentosum, Complementation Group C",
+      "species": "mouse",
+      "alternateSymbols": [],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000032182",
+          "geneId": "ENSMUSG00000030094",
+          "codingSequenceLength": 2793,
+          "species": "mouse",
+          "gcPercent": 54.9,
+          "cpgCount": 92,
+          "wggwCount": 74,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENSMUST00000032182"], "rows": [[100]] }
+    },
+    {
+      "id": "ENSG00000154767",
+      "symbol": "XPC",
+      "name": "Xpc Complex Subunit, Dna Damage Recognition And Repair Factor",
+      "species": "human",
+      "alternateSymbols": ["RAD4", "XP3", "XPCC", "P125"],
+      "isoforms": [
+        {
+          "id": "ENST00000285021",
+          "geneId": "ENSG00000154767",
+          "codingSequenceLength": 2823,
+          "species": "human",
+          "gcPercent": 53.1,
+          "cpgCount": 79,
+          "wggwCount": 75,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000476581",
+          "geneId": "ENSG00000154767",
+          "codingSequenceLength": 423,
+          "species": "human",
+          "gcPercent": 51.5,
+          "cpgCount": 14,
+          "wggwCount": 13,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000511155",
+          "geneId": "ENSG00000154767",
+          "codingSequenceLength": 504,
+          "species": "human",
+          "gcPercent": 51.8,
+          "cpgCount": 17,
+          "wggwCount": 9,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENST00000285021", "ENST00000511155", "ENST00000476581"],
+        "rows": [
+          [100, 3, 14.7],
+          [3, 100, 16.7],
+          [14.7, 16.7, 100]
+        ]
+      }
+    }
+  ],
+  "XYLT1": [
+    {
+      "id": "ENSMUSG00000030657",
+      "symbol": "XYLT1",
+      "name": "Xylosyltransferase 1",
+      "species": "mouse",
+      "alternateSymbols": ["8030490L12"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000032892",
+          "geneId": "ENSMUSG00000030657",
+          "codingSequenceLength": 2862,
+          "species": "mouse",
+          "gcPercent": 58,
+          "cpgCount": 106,
+          "wggwCount": 76,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENSMUST00000032892"], "rows": [[100]] }
+    }
+  ],
+  "XKRX": [
+    {
+      "id": "ENSMUSG00000031258",
+      "symbol": "XKRX",
+      "name": "X-linked Kx Blood Group Related, X-linked",
+      "species": "mouse",
+      "alternateSymbols": ["A630026F04"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000033611",
+          "geneId": "ENSMUSG00000031258",
+          "codingSequenceLength": 1350,
+          "species": "mouse",
+          "gcPercent": 47.1,
+          "cpgCount": 22,
+          "wggwCount": 29,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENSMUST00000033611"], "rows": [[100]] }
+    },
+    {
+      "id": "ENSG00000182489",
+      "symbol": "XKRX",
+      "name": "Xk Related X-linked",
+      "species": "human",
+      "alternateSymbols": ["XKR2", "XPLAC", "XRG2"],
+      "isoforms": [
+        {
+          "id": "ENST00000372956",
+          "geneId": "ENSG00000182489",
+          "codingSequenceLength": 1350,
+          "species": "human",
+          "gcPercent": 47.6,
+          "cpgCount": 20,
+          "wggwCount": 34,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000468904",
+          "geneId": "ENSG00000182489",
+          "codingSequenceLength": 420,
+          "species": "human",
+          "gcPercent": 41.9,
+          "cpgCount": 6,
+          "wggwCount": 11,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENST00000372956", "ENST00000468904"],
+        "rows": [
+          [100, 24.9],
+          [24.9, 100]
+        ]
+      }
+    }
+  ],
+  "XRN1": [
+    {
+      "id": "ENSMUSG00000032410",
+      "symbol": "XRN1",
+      "name": "5'-3' Exoribonuclease 1",
+      "species": "mouse",
+      "alternateSymbols": ["DHM2", "EXO", "MXRN1"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000034981",
+          "geneId": "ENSMUSG00000032410",
+          "codingSequenceLength": 5172,
+          "species": "mouse",
+          "gcPercent": 42.9,
+          "cpgCount": 92,
+          "wggwCount": 109,
+          "suitability": "dual-aav"
+        },
+        {
+          "id": "ENSMUST00000185633",
+          "geneId": "ENSMUSG00000032410",
+          "codingSequenceLength": 5160,
+          "species": "mouse",
+          "gcPercent": 42.9,
+          "cpgCount": 92,
+          "wggwCount": 109,
+          "suitability": "dual-aav"
+        },
+        {
+          "id": "ENSMUST00000190665",
+          "geneId": "ENSMUSG00000032410",
+          "codingSequenceLength": 2910,
+          "species": "mouse",
+          "gcPercent": 40.4,
+          "cpgCount": 51,
+          "wggwCount": 72,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENSMUST00000034981",
+          "ENSMUST00000185633",
+          "ENSMUST00000190665"
+        ],
+        "rows": [
+          [100, 99.8, 36.5],
+          [99.8, 100, 36.6],
+          [36.5, 36.6, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000114127",
+      "symbol": "XRN1",
+      "name": "5'-3' Exoribonuclease 1",
+      "species": "human",
+      "alternateSymbols": ["SEP1"],
+      "isoforms": [
+        {
+          "id": "ENST00000264951",
+          "geneId": "ENSG00000114127",
+          "codingSequenceLength": 5121,
+          "species": "human",
+          "gcPercent": 39.9,
+          "cpgCount": 46,
+          "wggwCount": 114,
+          "suitability": "dual-aav"
+        },
+        {
+          "id": "ENST00000392981",
+          "geneId": "ENSG00000114127",
+          "codingSequenceLength": 5085,
+          "species": "human",
+          "gcPercent": 39.8,
+          "cpgCount": 46,
+          "wggwCount": 113,
+          "suitability": "dual-aav"
+        },
+        {
+          "id": "ENST00000463916",
+          "geneId": "ENSG00000114127",
+          "codingSequenceLength": 1380,
+          "species": "human",
+          "gcPercent": 38.3,
+          "cpgCount": 16,
+          "wggwCount": 32,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000486211",
+          "geneId": "ENSG00000114127",
+          "codingSequenceLength": 324,
+          "species": "human",
+          "gcPercent": 41,
+          "cpgCount": 6,
+          "wggwCount": 9,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENST00000264951",
+          "ENST00000392981",
+          "ENST00000463916",
+          "ENST00000486211"
+        ],
+        "rows": [
+          [100, 88.4, 26.3, 6.1],
+          [88.4, 100, 26.5, 6.1],
+          [26.3, 26.5, 100, 22.6],
+          [6.1, 6.1, 22.6, 100]
+        ]
+      }
+    }
+  ],
+  "XRRA1": [
+    {
+      "id": "ENSMUSG00000035211",
+      "symbol": "XRRA1",
+      "name": "X-ray Radiation Resistance Associated 1",
+      "species": "mouse",
+      "alternateSymbols": [],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000036155",
+          "geneId": "ENSMUSG00000035211",
+          "codingSequenceLength": 2361,
+          "species": "mouse",
+          "gcPercent": 54.2,
+          "cpgCount": 90,
+          "wggwCount": 56,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000207855",
+          "geneId": "ENSMUSG00000035211",
+          "codingSequenceLength": 1086,
+          "species": "mouse",
+          "gcPercent": 49.4,
+          "cpgCount": 24,
+          "wggwCount": 35,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000208354",
+          "geneId": "ENSMUSG00000035211",
+          "codingSequenceLength": 390,
+          "species": "mouse",
+          "gcPercent": 50.8,
+          "cpgCount": 12,
+          "wggwCount": 12,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000248072",
+          "geneId": "ENSMUSG00000035211",
+          "codingSequenceLength": 2538,
+          "species": "mouse",
+          "gcPercent": 54.4,
+          "cpgCount": 104,
+          "wggwCount": 62,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENSMUST00000248072",
+          "ENSMUST00000036155",
+          "ENSMUST00000207855",
+          "ENSMUST00000208354"
+        ],
+        "rows": [
+          [100, 93, 0.1, 0.1],
+          [93, 100, 43.5, 14.7],
+          [0.1, 43.5, 100, 32],
+          [0.1, 14.7, 32, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000166435",
+      "symbol": "XRRA1",
+      "name": "X-ray Radiation Resistance Associated 1",
+      "species": "human",
+      "alternateSymbols": [],
+      "isoforms": [
+        {
+          "id": "ENST00000321448",
+          "geneId": "ENSG00000166435",
+          "codingSequenceLength": 1554,
+          "species": "human",
+          "gcPercent": 53.5,
+          "cpgCount": 38,
+          "wggwCount": 41,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000340360",
+          "geneId": "ENSG00000166435",
+          "codingSequenceLength": 2379,
+          "species": "human",
+          "gcPercent": 52.3,
+          "cpgCount": 57,
+          "wggwCount": 66,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000527087",
+          "geneId": "ENSG00000166435",
+          "codingSequenceLength": 1797,
+          "species": "human",
+          "gcPercent": 51.5,
+          "cpgCount": 39,
+          "wggwCount": 54,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000530562",
+          "geneId": "ENSG00000166435",
+          "codingSequenceLength": 726,
+          "species": "human",
+          "gcPercent": 54.3,
+          "cpgCount": 18,
+          "wggwCount": 17,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000531849",
+          "geneId": "ENSG00000166435",
+          "codingSequenceLength": 348,
+          "species": "human",
+          "gcPercent": 49.1,
+          "cpgCount": 5,
+          "wggwCount": 12,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000684022",
+          "geneId": "ENSG00000166435",
+          "codingSequenceLength": 2403,
+          "species": "human",
+          "gcPercent": 52.3,
+          "cpgCount": 57,
+          "wggwCount": 66,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000705661",
+          "geneId": "ENSG00000166435",
+          "codingSequenceLength": 2556,
+          "species": "human",
+          "gcPercent": 52.8,
+          "cpgCount": 70,
+          "wggwCount": 69,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENST00000705661",
+          "ENST00000684022",
+          "ENST00000340360",
+          "ENST00000527087",
+          "ENST00000321448",
+          "ENST00000530562",
+          "ENST00000531849"
+        ],
+        "rows": [
+          [100, 80.3, 93.1, 0.1, 48.2, 0.1, 0.1],
+          [80.3, 100, 99, 13.7, 51.4, 0.2, 0.2],
+          [93.1, 99, 100, 41.2, 52, 0.3, 0.3],
+          [0.1, 13.7, 41.2, 100, 0.3, 40.4, 0.3],
+          [48.2, 51.4, 52, 0.3, 100, 0.4, 18.1],
+          [0.1, 0.2, 0.3, 40.4, 0.4, 100, 0.8],
+          [0.1, 0.2, 0.3, 0.3, 18.1, 0.8, 100]
+        ]
+      }
+    }
+  ],
+  "XKR7": [
+    {
+      "id": "ENSMUSG00000042631",
+      "symbol": "XKR7",
+      "name": "X-linked Kx Blood Group Related 7",
+      "species": "mouse",
+      "alternateSymbols": [],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000037235",
+          "geneId": "ENSMUSG00000042631",
+          "codingSequenceLength": 1743,
+          "species": "mouse",
+          "gcPercent": 63.7,
+          "cpgCount": 123,
+          "wggwCount": 34,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENSMUST00000037235"], "rows": [[100]] }
+    },
+    {
+      "id": "ENSG00000260903",
+      "symbol": "XKR7",
+      "name": "Xk Related 7",
+      "species": "human",
+      "alternateSymbols": ["C20ORF159", "DJ310O13.4"],
+      "isoforms": [
+        {
+          "id": "ENST00000562532",
+          "geneId": "ENSG00000260903",
+          "codingSequenceLength": 1740,
+          "species": "human",
+          "gcPercent": 67,
+          "cpgCount": 146,
+          "wggwCount": 30,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENST00000562532"], "rows": [[100]] }
+    }
+  ],
+  "XYLB": [
+    {
+      "id": "ENSMUSG00000035769",
+      "symbol": "XYLB",
+      "name": "Xylulokinase Homolog (h. Influenzae)",
+      "species": "mouse",
+      "alternateSymbols": [],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000039610",
+          "geneId": "ENSMUSG00000035769",
+          "codingSequenceLength": 1656,
+          "species": "mouse",
+          "gcPercent": 55.9,
+          "cpgCount": 60,
+          "wggwCount": 44,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENSMUST00000039610"], "rows": [[100]] }
+    },
+    {
+      "id": "ENSG00000093217",
+      "symbol": "XYLB",
+      "name": "Xylulokinase",
+      "species": "human",
+      "alternateSymbols": [],
+      "isoforms": [
+        {
+          "id": "ENST00000207870",
+          "geneId": "ENSG00000093217",
+          "codingSequenceLength": 1611,
+          "species": "human",
+          "gcPercent": 53.3,
+          "cpgCount": 44,
+          "wggwCount": 45,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000427323",
+          "geneId": "ENSG00000093217",
+          "codingSequenceLength": 201,
+          "species": "human",
+          "gcPercent": 51.7,
+          "cpgCount": 5,
+          "wggwCount": 7,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000649234",
+          "geneId": "ENSG00000093217",
+          "codingSequenceLength": 930,
+          "species": "human",
+          "gcPercent": 53.7,
+          "cpgCount": 24,
+          "wggwCount": 25,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000650590",
+          "geneId": "ENSG00000093217",
+          "codingSequenceLength": 1668,
+          "species": "human",
+          "gcPercent": 52.7,
+          "cpgCount": 40,
+          "wggwCount": 46,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENST00000650590",
+          "ENST00000207870",
+          "ENST00000649234",
+          "ENST00000427323"
+        ],
+        "rows": [
+          [100, 12.8, 12.8, 8.6],
+          [12.8, 100, 52.7, 9.3],
+          [12.8, 52.7, 100, 15.5],
+          [8.6, 9.3, 15.5, 100]
+        ]
+      }
+    }
+  ],
+  "XPOT": [
+    {
+      "id": "ENSMUSG00000034667",
+      "symbol": "XPOT",
+      "name": "Exportin, Trna (nuclear Export Receptor For Trnas)",
+      "species": "mouse",
+      "alternateSymbols": ["1110004L07RIK", "3110065H13RIK", "EXPORTIN-T"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000039810",
+          "geneId": "ENSMUSG00000034667",
+          "codingSequenceLength": 2892,
+          "species": "mouse",
+          "gcPercent": 49,
+          "cpgCount": 100,
+          "wggwCount": 65,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000217865",
+          "geneId": "ENSMUSG00000034667",
+          "codingSequenceLength": 618,
+          "species": "mouse",
+          "gcPercent": 43.9,
+          "cpgCount": 15,
+          "wggwCount": 11,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000218004",
+          "geneId": "ENSMUSG00000034667",
+          "codingSequenceLength": 2889,
+          "species": "mouse",
+          "gcPercent": 49,
+          "cpgCount": 101,
+          "wggwCount": 66,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENSMUST00000039810",
+          "ENSMUST00000218004",
+          "ENSMUST00000217865"
+        ],
+        "rows": [
+          [100, 99.5, 0],
+          [99.5, 100, 0],
+          [0, 0, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000184575",
+      "symbol": "XPOT",
+      "name": "Exportin For Trna",
+      "species": "human",
+      "alternateSymbols": ["XPO3"],
+      "isoforms": [
+        {
+          "id": "ENST00000332707",
+          "geneId": "ENSG00000184575",
+          "codingSequenceLength": 2889,
+          "species": "human",
+          "gcPercent": 40.7,
+          "cpgCount": 35,
+          "wggwCount": 57,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENST00000332707"], "rows": [[100]] }
+    }
+  ],
+  "XPNPEP3": [
+    {
+      "id": "ENSMUSG00000022401",
+      "symbol": "XPNPEP3",
+      "name": "X-prolyl Aminopeptidase 3, Mitochondrial",
+      "species": "mouse",
+      "alternateSymbols": ["APP3", "E430012M05RIK"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000041609",
+          "geneId": "ENSMUSG00000022401",
+          "codingSequenceLength": 1161,
+          "species": "mouse",
+          "gcPercent": 51.2,
+          "cpgCount": 32,
+          "wggwCount": 30,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000163754",
+          "geneId": "ENSMUSG00000022401",
+          "codingSequenceLength": 1521,
+          "species": "mouse",
+          "gcPercent": 50.9,
+          "cpgCount": 41,
+          "wggwCount": 40,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000165258",
+          "geneId": "ENSMUSG00000022401",
+          "codingSequenceLength": 210,
+          "species": "mouse",
+          "gcPercent": 58.6,
+          "cpgCount": 9,
+          "wggwCount": 3,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENSMUST00000163754",
+          "ENSMUST00000041609",
+          "ENSMUST00000165258"
+        ],
+        "rows": [
+          [100, 69.6, 12.2],
+          [69.6, 100, 16],
+          [12.2, 16, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000196236",
+      "symbol": "XPNPEP3",
+      "name": "X-prolyl Aminopeptidase 3",
+      "species": "human",
+      "alternateSymbols": ["APP3", "ICP55", "NPHPL1"],
+      "isoforms": [
+        {
+          "id": "ENST00000357137",
+          "geneId": "ENSG00000196236",
+          "codingSequenceLength": 1524,
+          "species": "human",
+          "gcPercent": 49.3,
+          "cpgCount": 34,
+          "wggwCount": 39,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000428799",
+          "geneId": "ENSG00000196236",
+          "codingSequenceLength": 210,
+          "species": "human",
+          "gcPercent": 57.1,
+          "cpgCount": 8,
+          "wggwCount": 5,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENST00000357137", "ENST00000428799"],
+        "rows": [
+          [100, 12],
+          [12, 100]
+        ]
+      }
+    }
+  ],
+  "XKR8": [
+    {
+      "id": "ENSMUSG00000037752",
+      "symbol": "XKR8",
+      "name": "X-linked Kx Blood Group Related 8",
+      "species": "mouse",
+      "alternateSymbols": ["4931440N07RIK", "GM1031", "XRG8", "MXKR8"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000045550",
+          "geneId": "ENSMUSG00000037752",
+          "codingSequenceLength": 1206,
+          "species": "mouse",
+          "gcPercent": 57.1,
+          "cpgCount": 41,
+          "wggwCount": 26,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENSMUST00000045550"], "rows": [[100]] }
+    },
+    {
+      "id": "ENSG00000158156",
+      "symbol": "XKR8",
+      "name": "Xk Related 8",
+      "species": "human",
+      "alternateSymbols": ["XRG8", "HXKR8"],
+      "isoforms": [
+        {
+          "id": "ENST00000373884",
+          "geneId": "ENSG00000158156",
+          "codingSequenceLength": 1188,
+          "species": "human",
+          "gcPercent": 65.5,
+          "cpgCount": 64,
+          "wggwCount": 18,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000675282",
+          "geneId": "ENSG00000158156",
+          "codingSequenceLength": 492,
+          "species": "human",
+          "gcPercent": 69.5,
+          "cpgCount": 40,
+          "wggwCount": 11,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000675359",
+          "geneId": "ENSG00000158156",
+          "codingSequenceLength": 303,
+          "species": "human",
+          "gcPercent": 66.3,
+          "cpgCount": 19,
+          "wggwCount": 8,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000675575",
+          "geneId": "ENSG00000158156",
+          "codingSequenceLength": 492,
+          "species": "human",
+          "gcPercent": 69.5,
+          "cpgCount": 40,
+          "wggwCount": 11,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000675759",
+          "geneId": "ENSG00000158156",
+          "codingSequenceLength": 795,
+          "species": "human",
+          "gcPercent": 62.4,
+          "cpgCount": 29,
+          "wggwCount": 9,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000676017",
+          "geneId": "ENSG00000158156",
+          "codingSequenceLength": 624,
+          "species": "human",
+          "gcPercent": 65.5,
+          "cpgCount": 44,
+          "wggwCount": 16,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENST00000373884",
+          "ENST00000675759",
+          "ENST00000676017",
+          "ENST00000675282",
+          "ENST00000675575",
+          "ENST00000675359"
+        ],
+        "rows": [
+          [100, 66.9, 41.4, 41.4, 41.4, 0.3],
+          [66.9, 100, 0.8, 0.8, 0.8, 0.4],
+          [41.4, 0.8, 100, 78.8, 78.8, 0.5],
+          [41.4, 0.8, 78.8, 100, 100, 0.6],
+          [41.4, 0.8, 78.8, 100, 100, 0.6],
+          [0.3, 0.4, 0.5, 0.6, 0.6, 100]
+        ]
+      }
+    }
+  ],
+  "XXYLT1": [
+    {
+      "id": "ENSMUSG00000047434",
+      "symbol": "XXYLT1",
+      "name": "Xyloside Xylosyltransferase 1",
+      "species": "mouse",
+      "alternateSymbols": [],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000055389",
+          "geneId": "ENSMUSG00000047434",
+          "codingSequenceLength": 1179,
+          "species": "mouse",
+          "gcPercent": 63.4,
+          "cpgCount": 80,
+          "wggwCount": 23,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENSMUST00000055389"], "rows": [[100]] }
+    },
+    {
+      "id": "ENSG00000173950",
+      "symbol": "XXYLT1",
+      "name": "Xyloside Xylosyltransferase 1",
+      "species": "human",
+      "alternateSymbols": ["C3ORF21"],
+      "isoforms": [
+        {
+          "id": "ENST00000310380",
+          "geneId": "ENSG00000173950",
+          "codingSequenceLength": 1182,
+          "species": "human",
+          "gcPercent": 65,
+          "cpgCount": 90,
+          "wggwCount": 22,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000356740",
+          "geneId": "ENSG00000173950",
+          "codingSequenceLength": 564,
+          "species": "human",
+          "gcPercent": 60.6,
+          "cpgCount": 23,
+          "wggwCount": 14,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000418940",
+          "geneId": "ENSG00000173950",
+          "codingSequenceLength": 255,
+          "species": "human",
+          "gcPercent": 52.2,
+          "cpgCount": 7,
+          "wggwCount": 3,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000429994",
+          "geneId": "ENSG00000173950",
+          "codingSequenceLength": 744,
+          "species": "human",
+          "gcPercent": 59,
+          "cpgCount": 33,
+          "wggwCount": 15,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000437101",
+          "geneId": "ENSG00000173950",
+          "codingSequenceLength": 573,
+          "species": "human",
+          "gcPercent": 60.9,
+          "cpgCount": 28,
+          "wggwCount": 15,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENST00000310380",
+          "ENST00000429994",
+          "ENST00000437101",
+          "ENST00000356740",
+          "ENST00000418940"
+        ],
+        "rows": [
+          [100, 57.6, 45.2, 33.8, 0.5],
+          [57.6, 100, 71.8, 53.6, 29.4],
+          [45.2, 71.8, 100, 69.6, 1],
+          [33.8, 53.6, 69.6, 100, 1.1],
+          [0.5, 29.4, 1, 1.1, 100]
+        ]
+      }
+    }
+  ],
+  "XKR5": [
+    {
+      "id": "ENSMUSG00000039814",
+      "symbol": "XKR5",
+      "name": "X-linked Kx Blood Group Related 5",
+      "species": "mouse",
+      "alternateSymbols": ["5430438H03RIK", "XRG5"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000055503",
+          "geneId": "ENSMUSG00000039814",
+          "codingSequenceLength": 1533,
+          "species": "mouse",
+          "gcPercent": 55.5,
+          "cpgCount": 28,
+          "wggwCount": 44,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000095438",
+          "geneId": "ENSMUSG00000039814",
+          "codingSequenceLength": 2031,
+          "species": "mouse",
+          "gcPercent": 57,
+          "cpgCount": 46,
+          "wggwCount": 54,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000143913",
+          "geneId": "ENSMUSG00000039814",
+          "codingSequenceLength": 339,
+          "species": "mouse",
+          "gcPercent": 58.1,
+          "cpgCount": 16,
+          "wggwCount": 4,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENSMUST00000095438",
+          "ENSMUST00000055503",
+          "ENSMUST00000143913"
+        ],
+        "rows": [
+          [100, 75.5, 12.1],
+          [75.5, 100, 0.4],
+          [12.1, 0.4, 100]
+        ]
+      }
+    }
+  ],
+  "XBP1": [
+    {
+      "id": "ENSMUSG00000020484",
+      "symbol": "XBP1",
+      "name": "X-box Binding Protein 1",
+      "species": "mouse",
+      "alternateSymbols": ["D11ERTD39E", "TREB-5", "TREB5", "XBP-1"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000063084",
+          "geneId": "ENSMUSG00000020484",
+          "codingSequenceLength": 804,
+          "species": "mouse",
+          "gcPercent": 57.6,
+          "cpgCount": 39,
+          "wggwCount": 28,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000149623",
+          "geneId": "ENSMUSG00000020484",
+          "codingSequenceLength": 645,
+          "species": "mouse",
+          "gcPercent": 51.6,
+          "cpgCount": 12,
+          "wggwCount": 24,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000239150",
+          "geneId": "ENSMUSG00000020484",
+          "codingSequenceLength": 1116,
+          "species": "mouse",
+          "gcPercent": 54.7,
+          "cpgCount": 40,
+          "wggwCount": 36,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENSMUST00000239150",
+          "ENSMUST00000063084",
+          "ENSMUST00000149623"
+        ],
+        "rows": [
+          [100, 42.2, 0.5],
+          [42.2, 100, 75],
+          [0.5, 75, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000100219",
+      "symbol": "XBP1",
+      "name": "X-box Binding Protein 1",
+      "species": "human",
+      "alternateSymbols": ["TREB-5", "TREB5", "XBP-1", "XBP2"],
+      "isoforms": [
+        {
+          "id": "ENST00000216037",
+          "geneId": "ENSG00000100219",
+          "codingSequenceLength": 786,
+          "species": "human",
+          "gcPercent": 58.7,
+          "cpgCount": 34,
+          "wggwCount": 22,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000344347",
+          "geneId": "ENSG00000100219",
+          "codingSequenceLength": 1131,
+          "species": "human",
+          "gcPercent": 55.2,
+          "cpgCount": 38,
+          "wggwCount": 29,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000403532",
+          "geneId": "ENSG00000100219",
+          "codingSequenceLength": 801,
+          "species": "human",
+          "gcPercent": 58.1,
+          "cpgCount": 34,
+          "wggwCount": 23,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000405219",
+          "geneId": "ENSG00000100219",
+          "codingSequenceLength": 636,
+          "species": "human",
+          "gcPercent": 52.8,
+          "cpgCount": 13,
+          "wggwCount": 18,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENST00000344347",
+          "ENST00000403532",
+          "ENST00000216037",
+          "ENST00000405219"
+        ],
+        "rows": [
+          [100, 28.9, 44.3, 0.5],
+          [28.9, 100, 98.1, 58.1],
+          [44.3, 98.1, 100, 71.8],
+          [0.5, 58.1, 71.8, 100]
+        ]
+      }
+    }
+  ],
+  "XRCC1": [
+    {
+      "id": "ENSMUSG00000051768",
+      "symbol": "XRCC1",
+      "name": "X-ray Repair Complementing Defective Repair In Chinese Hamster Cells 1",
+      "species": "mouse",
+      "alternateSymbols": ["XRCC-1"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000063249",
+          "geneId": "ENSMUSG00000051768",
+          "codingSequenceLength": 1896,
+          "species": "mouse",
+          "gcPercent": 58.9,
+          "cpgCount": 64,
+          "wggwCount": 52,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000205573",
+          "geneId": "ENSMUSG00000051768",
+          "codingSequenceLength": 1896,
+          "species": "mouse",
+          "gcPercent": 58.9,
+          "cpgCount": 64,
+          "wggwCount": 52,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENSMUST00000063249", "ENSMUST00000205573"],
+        "rows": [
+          [100, 100],
+          [100, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000073050",
+      "symbol": "XRCC1",
+      "name": "X-ray Repair Cross Complementing 1",
+      "species": "human",
+      "alternateSymbols": ["RCC", "SCAR26"],
+      "isoforms": [
+        {
+          "id": "ENST00000262887",
+          "geneId": "ENSG00000073050",
+          "codingSequenceLength": 1902,
+          "species": "human",
+          "gcPercent": 59.1,
+          "cpgCount": 65,
+          "wggwCount": 51,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000543982",
+          "geneId": "ENSG00000073050",
+          "codingSequenceLength": 1809,
+          "species": "human",
+          "gcPercent": 59.5,
+          "cpgCount": 62,
+          "wggwCount": 50,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000598165",
+          "geneId": "ENSG00000073050",
+          "codingSequenceLength": 876,
+          "species": "human",
+          "gcPercent": 57,
+          "cpgCount": 25,
+          "wggwCount": 23,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENST00000262887", "ENST00000543982", "ENST00000598165"],
+        "rows": [
+          [100, 95.1, 0.2],
+          [95.1, 100, 0.2],
+          [0.2, 0.2, 100]
+        ]
+      }
+    }
+  ],
+  "XLR": [
+    {
+      "id": "ENSMUSG00000054626",
+      "symbol": "XLR",
+      "name": "X-linked Lymphocyte-regulated",
+      "species": "mouse",
+      "alternateSymbols": [],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000067763",
+          "geneId": "ENSMUSG00000054626",
+          "codingSequenceLength": 627,
+          "species": "mouse",
+          "gcPercent": 35.6,
+          "cpgCount": 6,
+          "wggwCount": 11,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000067782",
+          "geneId": "ENSMUSG00000054626",
+          "codingSequenceLength": 564,
+          "species": "mouse",
+          "gcPercent": 36.5,
+          "cpgCount": 8,
+          "wggwCount": 11,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000114810",
+          "geneId": "ENSMUSG00000054626",
+          "codingSequenceLength": 627,
+          "species": "mouse",
+          "gcPercent": 35.6,
+          "cpgCount": 6,
+          "wggwCount": 11,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENSMUST00000067763",
+          "ENSMUST00000114810",
+          "ENSMUST00000067782"
+        ],
+        "rows": [
+          [100, 100, 78],
+          [100, 100, 78],
+          [78, 78, 100]
+        ]
+      }
+    }
+  ],
+  "XLR4C": [
+    {
+      "id": "ENSMUSG00000031362",
+      "symbol": "XLR4C",
+      "name": "X-linked Lymphocyte-regulated 4c",
+      "species": "mouse",
+      "alternateSymbols": ["2900036K24RIK"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000068551",
+          "geneId": "ENSMUSG00000031362",
+          "codingSequenceLength": 648,
+          "species": "mouse",
+          "gcPercent": 40.4,
+          "cpgCount": 6,
+          "wggwCount": 19,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000114530",
+          "geneId": "ENSMUSG00000031362",
+          "codingSequenceLength": 648,
+          "species": "mouse",
+          "gcPercent": 40.4,
+          "cpgCount": 6,
+          "wggwCount": 19,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000114531",
+          "geneId": "ENSMUSG00000031362",
+          "codingSequenceLength": 648,
+          "species": "mouse",
+          "gcPercent": 40.4,
+          "cpgCount": 6,
+          "wggwCount": 19,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENSMUST00000068551",
+          "ENSMUST00000114530",
+          "ENSMUST00000114531"
+        ],
+        "rows": [
+          [100, 100, 100],
+          [100, 100, 100],
+          [100, 100, 100]
+        ]
+      }
+    }
+  ],
+  "XLR4B": [
+    {
+      "id": "ENSMUSG00000067768",
+      "symbol": "XLR4B",
+      "name": "X-linked Lymphocyte-regulated 4b",
+      "species": "mouse",
+      "alternateSymbols": ["XLR4"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000069077",
+          "geneId": "ENSMUSG00000067768",
+          "codingSequenceLength": 648,
+          "species": "mouse",
+          "gcPercent": 40.4,
+          "cpgCount": 6,
+          "wggwCount": 19,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000069103",
+          "geneId": "ENSMUSG00000067768",
+          "codingSequenceLength": 648,
+          "species": "mouse",
+          "gcPercent": 40.4,
+          "cpgCount": 6,
+          "wggwCount": 19,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000081827",
+          "geneId": "ENSMUSG00000067768",
+          "codingSequenceLength": 648,
+          "species": "mouse",
+          "gcPercent": 40.4,
+          "cpgCount": 6,
+          "wggwCount": 19,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENSMUST00000069077",
+          "ENSMUST00000069103",
+          "ENSMUST00000081827"
+        ],
+        "rows": [
+          [100, 100, 100],
+          [100, 100, 100],
+          [100, 100, 100]
+        ]
+      }
+    }
+  ],
+  "XRCC6": [
+    {
+      "id": "ENSMUSG00000022471",
+      "symbol": "XRCC6",
+      "name": "X-ray Repair Complementing Defective Repair In Chinese Hamster Cells 6",
+      "species": "mouse",
+      "alternateSymbols": ["70KDA", "G22P1", "KU70"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000069530",
+          "geneId": "ENSMUSG00000022471",
+          "codingSequenceLength": 1827,
+          "species": "mouse",
+          "gcPercent": 49.8,
+          "cpgCount": 49,
+          "wggwCount": 56,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000100399",
+          "geneId": "ENSMUSG00000022471",
+          "codingSequenceLength": 1827,
+          "species": "mouse",
+          "gcPercent": 49.8,
+          "cpgCount": 49,
+          "wggwCount": 56,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000164779",
+          "geneId": "ENSMUSG00000022471",
+          "codingSequenceLength": 291,
+          "species": "mouse",
+          "gcPercent": 54.6,
+          "cpgCount": 11,
+          "wggwCount": 10,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000230729",
+          "geneId": "ENSMUSG00000022471",
+          "codingSequenceLength": 792,
+          "species": "mouse",
+          "gcPercent": 50.6,
+          "cpgCount": 18,
+          "wggwCount": 26,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENSMUST00000069530",
+          "ENSMUST00000100399",
+          "ENSMUST00000230729",
+          "ENSMUST00000164779"
+        ],
+        "rows": [
+          [100, 100, 43.3, 0.3],
+          [100, 100, 43.3, 0.3],
+          [43.3, 43.3, 100, 0.4],
+          [0.3, 0.3, 0.4, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000196419",
+      "symbol": "XRCC6",
+      "name": "X-ray Repair Cross Complementing 6",
+      "species": "human",
+      "alternateSymbols": ["CTC75", "CTCBF", "G22P1", "KU70", "ML8", "TLAA"],
+      "isoforms": [
+        {
+          "id": "ENST00000359308",
+          "geneId": "ENSG00000196419",
+          "codingSequenceLength": 1830,
+          "species": "human",
+          "gcPercent": 47.8,
+          "cpgCount": 33,
+          "wggwCount": 54,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000360079",
+          "geneId": "ENSG00000196419",
+          "codingSequenceLength": 1830,
+          "species": "human",
+          "gcPercent": 47.8,
+          "cpgCount": 33,
+          "wggwCount": 54,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000402580",
+          "geneId": "ENSG00000196419",
+          "codingSequenceLength": 1707,
+          "species": "human",
+          "gcPercent": 48.7,
+          "cpgCount": 30,
+          "wggwCount": 52,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000405506",
+          "geneId": "ENSG00000196419",
+          "codingSequenceLength": 1680,
+          "species": "human",
+          "gcPercent": 48.4,
+          "cpgCount": 31,
+          "wggwCount": 51,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000405878",
+          "geneId": "ENSG00000196419",
+          "codingSequenceLength": 1830,
+          "species": "human",
+          "gcPercent": 47.8,
+          "cpgCount": 33,
+          "wggwCount": 54,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000428575",
+          "geneId": "ENSG00000196419",
+          "codingSequenceLength": 1680,
+          "species": "human",
+          "gcPercent": 48.4,
+          "cpgCount": 31,
+          "wggwCount": 51,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENST00000359308",
+          "ENST00000360079",
+          "ENST00000405878",
+          "ENST00000402580",
+          "ENST00000405506",
+          "ENST00000428575"
+        ],
+        "rows": [
+          [100, 100, 100, 93.3, 89.5, 89.5],
+          [100, 100, 100, 93.3, 89.5, 89.5],
+          [100, 100, 100, 93.3, 89.5, 89.5],
+          [93.3, 93.3, 93.3, 100, 88.9, 88.9],
+          [89.5, 89.5, 89.5, 88.9, 100, 100],
+          [89.5, 89.5, 89.5, 88.9, 100, 100]
+        ]
+      }
+    }
+  ],
+  "XKR4": [
+    {
+      "id": "ENSMUSG00000051951",
+      "symbol": "XKR4",
+      "name": "X-linked Kx Blood Group Related 4",
+      "species": "mouse",
+      "alternateSymbols": ["GM210", "XRG4", "MKIAA1889"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000070533",
+          "geneId": "ENSMUSG00000051951",
+          "codingSequenceLength": 1944,
+          "species": "mouse",
+          "gcPercent": 55.8,
+          "cpgCount": 89,
+          "wggwCount": 38,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENSMUST00000070533"], "rows": [[100]] }
+    },
+    {
+      "id": "ENSG00000206579",
+      "symbol": "XKR4",
+      "name": "Xk Related 4",
+      "species": "human",
+      "alternateSymbols": ["XRG4", "HXKR4"],
+      "isoforms": [
+        {
+          "id": "ENST00000327381",
+          "geneId": "ENSG00000206579",
+          "codingSequenceLength": 1953,
+          "species": "human",
+          "gcPercent": 58,
+          "cpgCount": 123,
+          "wggwCount": 38,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENST00000327381"], "rows": [[100]] }
+    }
+  ],
+  "XLR3A": [
+    {
+      "id": "ENSMUSG00000057836",
+      "symbol": "XLR3A",
+      "name": "X-linked Lymphocyte-regulated 3a",
+      "species": "mouse",
+      "alternateSymbols": ["XLR3"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000074619",
+          "geneId": "ENSMUSG00000057836",
+          "codingSequenceLength": 666,
+          "species": "mouse",
+          "gcPercent": 43.8,
+          "cpgCount": 6,
+          "wggwCount": 25,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000114524",
+          "geneId": "ENSMUSG00000057836",
+          "codingSequenceLength": 681,
+          "species": "mouse",
+          "gcPercent": 44.3,
+          "cpgCount": 7,
+          "wggwCount": 26,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENSMUST00000114524", "ENSMUST00000074619"],
+        "rows": [
+          [100, 97.8],
+          [97.8, 100]
+        ]
+      }
+    }
+  ],
+  "XPNPEP2": [
+    {
+      "id": "ENSMUSG00000037005",
+      "symbol": "XPNPEP2",
+      "name": "X-prolyl Aminopeptidase (aminopeptidase P) 2, Membrane-bound",
+      "species": "mouse",
+      "alternateSymbols": ["9030008G12RIK", "MAPP"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000077775",
+          "geneId": "ENSMUSG00000037005",
+          "codingSequenceLength": 2025,
+          "species": "mouse",
+          "gcPercent": 52,
+          "cpgCount": 44,
+          "wggwCount": 40,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000114998",
+          "geneId": "ENSMUSG00000037005",
+          "codingSequenceLength": 1749,
+          "species": "mouse",
+          "gcPercent": 51.1,
+          "cpgCount": 37,
+          "wggwCount": 34,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000115000",
+          "geneId": "ENSMUSG00000037005",
+          "codingSequenceLength": 2226,
+          "species": "mouse",
+          "gcPercent": 51.8,
+          "cpgCount": 45,
+          "wggwCount": 44,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENSMUST00000115000",
+          "ENSMUST00000077775",
+          "ENSMUST00000114998"
+        ],
+        "rows": [
+          [100, 90.8, 33.3],
+          [90.8, 100, 86.1],
+          [33.3, 86.1, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000122121",
+      "symbol": "XPNPEP2",
+      "name": "X-prolyl Aminopeptidase 2",
+      "species": "human",
+      "alternateSymbols": ["AEACEI", "APP2"],
+      "isoforms": [
+        {
+          "id": "ENST00000371106",
+          "geneId": "ENSG00000122121",
+          "codingSequenceLength": 2025,
+          "species": "human",
+          "gcPercent": 55.4,
+          "cpgCount": 57,
+          "wggwCount": 49,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENST00000371106"], "rows": [[100]] }
+    }
+  ],
+  "XLR5A": [
+    {
+      "id": "ENSMUSG00000058328",
+      "symbol": "XLR5A",
+      "name": "X-linked Lymphocyte-regulated 5a",
+      "species": "mouse",
+      "alternateSymbols": ["XLR5D"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000078574",
+          "geneId": "ENSMUSG00000058328",
+          "codingSequenceLength": 711,
+          "species": "mouse",
+          "gcPercent": 43.2,
+          "cpgCount": 5,
+          "wggwCount": 20,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000114520",
+          "geneId": "ENSMUSG00000058328",
+          "codingSequenceLength": 711,
+          "species": "mouse",
+          "gcPercent": 43.2,
+          "cpgCount": 5,
+          "wggwCount": 20,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000114521",
+          "geneId": "ENSMUSG00000058328",
+          "codingSequenceLength": 612,
+          "species": "mouse",
+          "gcPercent": 44.1,
+          "cpgCount": 3,
+          "wggwCount": 19,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000179600",
+          "geneId": "ENSMUSG00000058328",
+          "codingSequenceLength": 711,
+          "species": "mouse",
+          "gcPercent": 43.2,
+          "cpgCount": 5,
+          "wggwCount": 20,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENSMUST00000078574",
+          "ENSMUST00000114520",
+          "ENSMUST00000179600",
+          "ENSMUST00000114521"
+        ],
+        "rows": [
+          [100, 100, 100, 86.1],
+          [100, 100, 100, 86.1],
+          [100, 100, 100, 86.1],
+          [86.1, 86.1, 86.1, 100]
+        ]
+      }
+    }
+  ],
+  "XLR4A": [
+    {
+      "id": "ENSMUSG00000079845",
+      "symbol": "XLR4A",
+      "name": "X-linked Lymphocyte-regulated 4a",
+      "species": "mouse",
+      "alternateSymbols": [],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000078775",
+          "geneId": "ENSMUSG00000079845",
+          "codingSequenceLength": 648,
+          "species": "mouse",
+          "gcPercent": 40.6,
+          "cpgCount": 7,
+          "wggwCount": 19,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENSMUST00000078775"], "rows": [[100]] }
+    }
+  ],
+  "XLR3C": [
+    {
+      "id": "ENSMUSG00000058147",
+      "symbol": "XLR3C",
+      "name": "X-linked Lymphocyte-regulated 3c",
+      "species": "mouse",
+      "alternateSymbols": ["XLR3B"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000080839",
+          "geneId": "ENSMUSG00000058147",
+          "codingSequenceLength": 681,
+          "species": "mouse",
+          "gcPercent": 43.3,
+          "cpgCount": 8,
+          "wggwCount": 25,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENSMUST00000080839"], "rows": [[100]] }
+    }
+  ],
+  "XNTRPC": [
+    {
+      "id": "ENSMUSG00000070425",
+      "symbol": "XNTRPC",
+      "name": "Xndc1-transient Receptor Potential Cation Channel, Subfamily C, Member 2 Readthrough",
+      "species": "mouse",
+      "alternateSymbols": ["XNDR-TRPC2"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000084843",
+          "geneId": "ENSMUSG00000070425",
+          "codingSequenceLength": 3795,
+          "species": "mouse",
+          "gcPercent": 56.9,
+          "cpgCount": 125,
+          "wggwCount": 96,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000123372",
+          "geneId": "ENSMUSG00000070425",
+          "codingSequenceLength": 1218,
+          "species": "mouse",
+          "gcPercent": 55.6,
+          "cpgCount": 29,
+          "wggwCount": 31,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000139104",
+          "geneId": "ENSMUSG00000070425",
+          "codingSequenceLength": 516,
+          "species": "mouse",
+          "gcPercent": 55.6,
+          "cpgCount": 16,
+          "wggwCount": 9,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENSMUST00000084843",
+          "ENSMUST00000123372",
+          "ENSMUST00000139104"
+        ],
+        "rows": [
+          [100, 28.9, 0.1],
+          [28.9, 100, 0.2],
+          [0.1, 0.2, 100]
+        ]
+      }
+    }
+  ],
+  "XPO5": [
+    {
+      "id": "ENSMUSG00000067150",
+      "symbol": "XPO5",
+      "name": "Exportin 5",
+      "species": "mouse",
+      "alternateSymbols": [
+        "2410004H11RIK",
+        "2700038C24RIK",
+        "EXP5",
+        "RANBP21",
+        "MKIAA1291"
+      ],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000087031",
+          "geneId": "ENSMUSG00000067150",
+          "codingSequenceLength": 3615,
+          "species": "mouse",
+          "gcPercent": 49.4,
+          "cpgCount": 92,
+          "wggwCount": 96,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENSMUST00000087031"], "rows": [[100]] }
+    },
+    {
+      "id": "ENSG00000124571",
+      "symbol": "XPO5",
+      "name": "Exportin 5",
+      "species": "human",
+      "alternateSymbols": ["EXP5"],
+      "isoforms": [
+        {
+          "id": "ENST00000265351",
+          "geneId": "ENSG00000124571",
+          "codingSequenceLength": 3615,
+          "species": "human",
+          "gcPercent": 47.6,
+          "cpgCount": 69,
+          "wggwCount": 92,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000398799",
+          "geneId": "ENSG00000124571",
+          "codingSequenceLength": 231,
+          "species": "human",
+          "gcPercent": 51.5,
+          "cpgCount": 10,
+          "wggwCount": 7,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000496341",
+          "geneId": "ENSG00000124571",
+          "codingSequenceLength": 324,
+          "species": "human",
+          "gcPercent": 46,
+          "cpgCount": 6,
+          "wggwCount": 8,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENST00000265351", "ENST00000496341", "ENST00000398799"],
+        "rows": [
+          [100, 0.1, 6.4],
+          [0.1, 100, 0.9],
+          [6.4, 0.9, 100]
+        ]
+      }
+    }
+  ],
+  "XLR5C": [
+    {
+      "id": "ENSMUSG00000067764",
+      "symbol": "XLR5C",
+      "name": "X-linked Lymphocyte-regulated 5c",
+      "species": "mouse",
+      "alternateSymbols": ["XLR5"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000088450",
+          "geneId": "ENSMUSG00000067764",
+          "codingSequenceLength": 540,
+          "species": "mouse",
+          "gcPercent": 44.1,
+          "cpgCount": 3,
+          "wggwCount": 17,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000114503",
+          "geneId": "ENSMUSG00000067764",
+          "codingSequenceLength": 711,
+          "species": "mouse",
+          "gcPercent": 43.3,
+          "cpgCount": 5,
+          "wggwCount": 22,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENSMUST00000114503", "ENSMUST00000088450"],
+        "rows": [
+          [100, 75.1],
+          [75.1, 100]
+        ]
+      }
+    }
+  ],
+  "XKR9": [
+    {
+      "id": "ENSMUSG00000067813",
+      "symbol": "XKR9",
+      "name": "X-linked Kx Blood Group Related 9",
+      "species": "mouse",
+      "alternateSymbols": ["GM1620", "XRG9"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000088542",
+          "geneId": "ENSMUSG00000067813",
+          "codingSequenceLength": 1122,
+          "species": "mouse",
+          "gcPercent": 39.3,
+          "cpgCount": 10,
+          "wggwCount": 31,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENSMUST00000088542"], "rows": [[100]] }
+    },
+    {
+      "id": "ENSG00000221947",
+      "symbol": "XKR9",
+      "name": "Xk Related 9",
+      "species": "human",
+      "alternateSymbols": ["XRG9", "HXKR9"],
+      "isoforms": [
+        {
+          "id": "ENST00000408926",
+          "geneId": "ENSG00000221947",
+          "codingSequenceLength": 1122,
+          "species": "human",
+          "gcPercent": 34.2,
+          "cpgCount": 6,
+          "wggwCount": 24,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000519350",
+          "geneId": "ENSG00000221947",
+          "codingSequenceLength": 267,
+          "species": "human",
+          "gcPercent": 34.5,
+          "cpgCount": 2,
+          "wggwCount": 6,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000520030",
+          "geneId": "ENSG00000221947",
+          "codingSequenceLength": 1122,
+          "species": "human",
+          "gcPercent": 34.2,
+          "cpgCount": 6,
+          "wggwCount": 24,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000520092",
+          "geneId": "ENSG00000221947",
+          "codingSequenceLength": 378,
+          "species": "human",
+          "gcPercent": 41.5,
+          "cpgCount": 3,
+          "wggwCount": 7,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENST00000408926",
+          "ENST00000520030",
+          "ENST00000520092",
+          "ENST00000519350"
+        ],
+        "rows": [
+          [100, 100, 24.9, 23.8],
+          [100, 100, 24.9, 23.8],
+          [24.9, 24.9, 100, 70.6],
+          [23.8, 23.8, 70.6, 100]
+        ]
+      }
+    }
+  ],
+  "XAF1": [
+    {
+      "id": "ENSMUSG00000040483",
+      "symbol": "XAF1",
+      "name": "Xiap Associated Factor 1",
+      "species": "mouse",
+      "alternateSymbols": ["FBOX39"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000094041",
+          "geneId": "ENSMUSG00000040483",
+          "codingSequenceLength": 228,
+          "species": "mouse",
+          "gcPercent": 48.7,
+          "cpgCount": 3,
+          "wggwCount": 4,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000140842",
+          "geneId": "ENSMUSG00000040483",
+          "codingSequenceLength": 537,
+          "species": "mouse",
+          "gcPercent": 48.2,
+          "cpgCount": 11,
+          "wggwCount": 9,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000146233",
+          "geneId": "ENSMUSG00000040483",
+          "codingSequenceLength": 822,
+          "species": "mouse",
+          "gcPercent": 49,
+          "cpgCount": 15,
+          "wggwCount": 13,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENSMUST00000146233",
+          "ENSMUST00000140842",
+          "ENSMUST00000094041"
+        ],
+        "rows": [
+          [100, 65.3, 20.8],
+          [65.3, 100, 31.8],
+          [20.8, 31.8, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000132530",
+      "symbol": "XAF1",
+      "name": "Xiap Associated Factor 1",
+      "species": "human",
+      "alternateSymbols": ["BIRC4BP", "HSXIAPAF1", "XIAPAF1"],
+      "isoforms": [
+        {
+          "id": "ENST00000346752",
+          "geneId": "ENSG00000132530",
+          "codingSequenceLength": 849,
+          "species": "human",
+          "gcPercent": 48.3,
+          "cpgCount": 14,
+          "wggwCount": 20,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000361842",
+          "geneId": "ENSG00000132530",
+          "codingSequenceLength": 906,
+          "species": "human",
+          "gcPercent": 48.5,
+          "cpgCount": 16,
+          "wggwCount": 22,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000571135",
+          "geneId": "ENSG00000132530",
+          "codingSequenceLength": 387,
+          "species": "human",
+          "gcPercent": 53.5,
+          "cpgCount": 5,
+          "wggwCount": 19,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000571217",
+          "geneId": "ENSG00000132530",
+          "codingSequenceLength": 225,
+          "species": "human",
+          "gcPercent": 51.1,
+          "cpgCount": 3,
+          "wggwCount": 8,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000571673",
+          "geneId": "ENSG00000132530",
+          "codingSequenceLength": 369,
+          "species": "human",
+          "gcPercent": 57.2,
+          "cpgCount": 10,
+          "wggwCount": 11,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000572546",
+          "geneId": "ENSG00000132530",
+          "codingSequenceLength": 438,
+          "species": "human",
+          "gcPercent": 56.2,
+          "cpgCount": 11,
+          "wggwCount": 12,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000574962",
+          "geneId": "ENSG00000132530",
+          "codingSequenceLength": 426,
+          "species": "human",
+          "gcPercent": 56.3,
+          "cpgCount": 12,
+          "wggwCount": 13,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000575369",
+          "geneId": "ENSG00000132530",
+          "codingSequenceLength": 387,
+          "species": "human",
+          "gcPercent": 53.5,
+          "cpgCount": 5,
+          "wggwCount": 19,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000576724",
+          "geneId": "ENSG00000132530",
+          "codingSequenceLength": 495,
+          "species": "human",
+          "gcPercent": 55.6,
+          "cpgCount": 13,
+          "wggwCount": 14,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENST00000361842",
+          "ENST00000346752",
+          "ENST00000576724",
+          "ENST00000572546",
+          "ENST00000574962",
+          "ENST00000571135",
+          "ENST00000575369",
+          "ENST00000571673",
+          "ENST00000571217"
+        ],
+        "rows": [
+          [100, 93.7, 46.7, 18.9, 47, 18.9, 18.9, 18.9, 18.9],
+          [93.7, 100, 20.1, 43.1, 20.1, 20.5, 20.5, 43.5, 20.1],
+          [46.7, 20.1, 100, 88.5, 85.5, 34.5, 34.5, 34.5, 34.5],
+          [18.9, 43.1, 88.5, 100, 39, 39.7, 39.7, 83.6, 39],
+          [47, 20.1, 85.5, 39, 100, 40.1, 40.1, 86.6, 40.1],
+          [18.9, 20.5, 34.5, 39.7, 40.1, 100, 100, 45, 44.2],
+          [18.9, 20.5, 34.5, 39.7, 40.1, 100, 100, 45, 44.2],
+          [18.9, 43.5, 34.5, 83.6, 86.6, 45, 45, 100, 46.3],
+          [18.9, 20.1, 34.5, 39, 40.1, 44.2, 44.2, 46.3, 100]
+        ]
+      }
+    }
+  ],
+  "XNDC1": [
+    {
+      "id": "ENSMUSG00000099481",
+      "symbol": "XNDC1",
+      "name": "Xrcc1 N-terminal Domain Containing 1",
+      "species": "mouse",
+      "alternateSymbols": ["XNDR"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000094130",
+          "geneId": "ENSMUSG00000099481",
+          "codingSequenceLength": 1218,
+          "species": "mouse",
+          "gcPercent": 55.6,
+          "cpgCount": 29,
+          "wggwCount": 31,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000106950",
+          "geneId": "ENSMUSG00000099481",
+          "codingSequenceLength": 1218,
+          "species": "mouse",
+          "gcPercent": 55.6,
+          "cpgCount": 29,
+          "wggwCount": 31,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000142629",
+          "geneId": "ENSMUSG00000099481",
+          "codingSequenceLength": 213,
+          "species": "mouse",
+          "gcPercent": 54.9,
+          "cpgCount": 7,
+          "wggwCount": 6,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENSMUST00000094130",
+          "ENSMUST00000106950",
+          "ENSMUST00000142629"
+        ],
+        "rows": [
+          [100, 100, 0.2],
+          [100, 100, 0.2],
+          [0.2, 0.2, 100]
+        ]
+      }
+    }
+  ],
+  "XLR5B": [
+    {
+      "id": "ENSMUSG00000072479",
+      "symbol": "XLR5B",
+      "name": "X-linked Lymphocyte-regulated 5b",
+      "species": "mouse",
+      "alternateSymbols": [],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000097221",
+          "geneId": "ENSMUSG00000072479",
+          "codingSequenceLength": 711,
+          "species": "mouse",
+          "gcPercent": 43.3,
+          "cpgCount": 5,
+          "wggwCount": 21,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000114518",
+          "geneId": "ENSMUSG00000072479",
+          "codingSequenceLength": 711,
+          "species": "mouse",
+          "gcPercent": 43.3,
+          "cpgCount": 5,
+          "wggwCount": 21,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENSMUST00000097221", "ENSMUST00000114518"],
+        "rows": [
+          [100, 100],
+          [100, 100]
+        ]
+      }
+    }
+  ],
+  "XLR3B": [
+    {
+      "id": "ENSMUSG00000073125",
+      "symbol": "XLR3B",
+      "name": "X-linked Lymphocyte-regulated 3b",
+      "species": "mouse",
+      "alternateSymbols": ["EG574437", "XLR3"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000101486",
+          "geneId": "ENSMUSG00000073125",
+          "codingSequenceLength": 681,
+          "species": "mouse",
+          "gcPercent": 43.5,
+          "cpgCount": 7,
+          "wggwCount": 25,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENSMUST00000101486"], "rows": [[100]] }
+    }
+  ],
+  "XPO1": [
+    {
+      "id": "ENSMUSG00000020290",
+      "symbol": "XPO1",
+      "name": "Exportin 1",
+      "species": "mouse",
+      "alternateSymbols": ["CRM1", "EXP1"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000102869",
+          "geneId": "ENSMUSG00000020290",
+          "codingSequenceLength": 3216,
+          "species": "mouse",
+          "gcPercent": 37.8,
+          "cpgCount": 30,
+          "wggwCount": 75,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000102870",
+          "geneId": "ENSMUSG00000020290",
+          "codingSequenceLength": 3216,
+          "species": "mouse",
+          "gcPercent": 37.8,
+          "cpgCount": 30,
+          "wggwCount": 75,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENSMUST00000102869", "ENSMUST00000102870"],
+        "rows": [
+          [100, 100],
+          [100, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000082898",
+      "symbol": "XPO1",
+      "name": "Exportin 1",
+      "species": "human",
+      "alternateSymbols": ["CRM-1", "CRM1", "EMB", "EXP1"],
+      "isoforms": [
+        {
+          "id": "ENST00000401558",
+          "geneId": "ENSG00000082898",
+          "codingSequenceLength": 3216,
+          "species": "human",
+          "gcPercent": 37.1,
+          "cpgCount": 30,
+          "wggwCount": 74,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000404992",
+          "geneId": "ENSG00000082898",
+          "codingSequenceLength": 3216,
+          "species": "human",
+          "gcPercent": 37.1,
+          "cpgCount": 30,
+          "wggwCount": 74,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000406957",
+          "geneId": "ENSG00000082898",
+          "codingSequenceLength": 3216,
+          "species": "human",
+          "gcPercent": 37.1,
+          "cpgCount": 30,
+          "wggwCount": 74,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000428210",
+          "geneId": "ENSG00000082898",
+          "codingSequenceLength": 249,
+          "species": "human",
+          "gcPercent": 39.8,
+          "cpgCount": 3,
+          "wggwCount": 9,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000451765",
+          "geneId": "ENSG00000082898",
+          "codingSequenceLength": 1356,
+          "species": "human",
+          "gcPercent": 36.9,
+          "cpgCount": 12,
+          "wggwCount": 32,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000676553",
+          "geneId": "ENSG00000082898",
+          "codingSequenceLength": 3216,
+          "species": "human",
+          "gcPercent": 37.1,
+          "cpgCount": 30,
+          "wggwCount": 74,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000676667",
+          "geneId": "ENSG00000082898",
+          "codingSequenceLength": 3216,
+          "species": "human",
+          "gcPercent": 37.1,
+          "cpgCount": 30,
+          "wggwCount": 74,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000676771",
+          "geneId": "ENSG00000082898",
+          "codingSequenceLength": 3171,
+          "species": "human",
+          "gcPercent": 37.2,
+          "cpgCount": 29,
+          "wggwCount": 73,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000676789",
+          "geneId": "ENSG00000082898",
+          "codingSequenceLength": 3024,
+          "species": "human",
+          "gcPercent": 37,
+          "cpgCount": 28,
+          "wggwCount": 72,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000676889",
+          "geneId": "ENSG00000082898",
+          "codingSequenceLength": 2859,
+          "species": "human",
+          "gcPercent": 37.2,
+          "cpgCount": 27,
+          "wggwCount": 67,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000676999",
+          "geneId": "ENSG00000082898",
+          "codingSequenceLength": 3081,
+          "species": "human",
+          "gcPercent": 37,
+          "cpgCount": 29,
+          "wggwCount": 72,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000677150",
+          "geneId": "ENSG00000082898",
+          "codingSequenceLength": 3216,
+          "species": "human",
+          "gcPercent": 37.1,
+          "cpgCount": 30,
+          "wggwCount": 74,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000677239",
+          "geneId": "ENSG00000082898",
+          "codingSequenceLength": 3216,
+          "species": "human",
+          "gcPercent": 37.1,
+          "cpgCount": 30,
+          "wggwCount": 74,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000677417",
+          "geneId": "ENSG00000082898",
+          "codingSequenceLength": 3216,
+          "species": "human",
+          "gcPercent": 37.1,
+          "cpgCount": 30,
+          "wggwCount": 74,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000677422",
+          "geneId": "ENSG00000082898",
+          "codingSequenceLength": 348,
+          "species": "human",
+          "gcPercent": 38.5,
+          "cpgCount": 4,
+          "wggwCount": 12,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000677476",
+          "geneId": "ENSG00000082898",
+          "codingSequenceLength": 2715,
+          "species": "human",
+          "gcPercent": 36.9,
+          "cpgCount": 22,
+          "wggwCount": 58,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000677556",
+          "geneId": "ENSG00000082898",
+          "codingSequenceLength": 2823,
+          "species": "human",
+          "gcPercent": 37,
+          "cpgCount": 23,
+          "wggwCount": 60,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000677803",
+          "geneId": "ENSG00000082898",
+          "codingSequenceLength": 3000,
+          "species": "human",
+          "gcPercent": 36.8,
+          "cpgCount": 28,
+          "wggwCount": 67,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000677813",
+          "geneId": "ENSG00000082898",
+          "codingSequenceLength": 3216,
+          "species": "human",
+          "gcPercent": 37.1,
+          "cpgCount": 30,
+          "wggwCount": 74,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000677814",
+          "geneId": "ENSG00000082898",
+          "codingSequenceLength": 3216,
+          "species": "human",
+          "gcPercent": 37.1,
+          "cpgCount": 30,
+          "wggwCount": 74,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000677850",
+          "geneId": "ENSG00000082898",
+          "codingSequenceLength": 2034,
+          "species": "human",
+          "gcPercent": 37,
+          "cpgCount": 22,
+          "wggwCount": 54,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000677928",
+          "geneId": "ENSG00000082898",
+          "codingSequenceLength": 3216,
+          "species": "human",
+          "gcPercent": 37.1,
+          "cpgCount": 30,
+          "wggwCount": 74,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000677933",
+          "geneId": "ENSG00000082898",
+          "codingSequenceLength": 3216,
+          "species": "human",
+          "gcPercent": 37.1,
+          "cpgCount": 30,
+          "wggwCount": 74,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000678081",
+          "geneId": "ENSG00000082898",
+          "codingSequenceLength": 3081,
+          "species": "human",
+          "gcPercent": 37,
+          "cpgCount": 29,
+          "wggwCount": 72,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000678172",
+          "geneId": "ENSG00000082898",
+          "codingSequenceLength": 2208,
+          "species": "human",
+          "gcPercent": 36.9,
+          "cpgCount": 21,
+          "wggwCount": 57,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000678182",
+          "geneId": "ENSG00000082898",
+          "codingSequenceLength": 3216,
+          "species": "human",
+          "gcPercent": 37.1,
+          "cpgCount": 30,
+          "wggwCount": 74,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000678263",
+          "geneId": "ENSG00000082898",
+          "codingSequenceLength": 348,
+          "species": "human",
+          "gcPercent": 39.1,
+          "cpgCount": 4,
+          "wggwCount": 12,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000678360",
+          "geneId": "ENSG00000082898",
+          "codingSequenceLength": 2067,
+          "species": "human",
+          "gcPercent": 37.3,
+          "cpgCount": 24,
+          "wggwCount": 55,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000678741",
+          "geneId": "ENSG00000082898",
+          "codingSequenceLength": 2826,
+          "species": "human",
+          "gcPercent": 37.1,
+          "cpgCount": 27,
+          "wggwCount": 66,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000678790",
+          "geneId": "ENSG00000082898",
+          "codingSequenceLength": 3216,
+          "species": "human",
+          "gcPercent": 37.1,
+          "cpgCount": 30,
+          "wggwCount": 74,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000678877",
+          "geneId": "ENSG00000082898",
+          "codingSequenceLength": 2940,
+          "species": "human",
+          "gcPercent": 37.3,
+          "cpgCount": 28,
+          "wggwCount": 69,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000679035",
+          "geneId": "ENSG00000082898",
+          "codingSequenceLength": 348,
+          "species": "human",
+          "gcPercent": 42.2,
+          "cpgCount": 5,
+          "wggwCount": 13,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000680228",
+          "geneId": "ENSG00000082898",
+          "codingSequenceLength": 411,
+          "species": "human",
+          "gcPercent": 41.1,
+          "cpgCount": 7,
+          "wggwCount": 13,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENST00000401558",
+          "ENST00000404992",
+          "ENST00000406957",
+          "ENST00000676553",
+          "ENST00000676667",
+          "ENST00000677150",
+          "ENST00000677239",
+          "ENST00000677417",
+          "ENST00000677813",
+          "ENST00000677814",
+          "ENST00000677928",
+          "ENST00000677933",
+          "ENST00000678182",
+          "ENST00000678790",
+          "ENST00000676771",
+          "ENST00000676999"
+        ],
+        "rows": [
+          [
+            100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
+            100, 98.6, 95.8
+          ],
+          [
+            100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
+            100, 98.6, 95.8
+          ],
+          [
+            100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
+            100, 98.6, 95.8
+          ],
+          [
+            100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
+            100, 98.6, 95.8
+          ],
+          [
+            100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
+            100, 98.6, 95.8
+          ],
+          [
+            100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
+            100, 98.6, 95.8
+          ],
+          [
+            100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
+            100, 98.6, 95.8
+          ],
+          [
+            100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
+            100, 98.6, 95.8
+          ],
+          [
+            100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
+            100, 98.6, 95.8
+          ],
+          [
+            100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
+            100, 98.6, 95.8
+          ],
+          [
+            100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
+            100, 98.6, 95.8
+          ],
+          [
+            100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
+            100, 98.6, 95.8
+          ],
+          [
+            100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
+            100, 98.6, 95.8
+          ],
+          [
+            100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100,
+            100, 98.6, 95.8
+          ],
+          [
+            98.6, 98.6, 98.6, 98.6, 98.6, 98.6, 98.6, 98.6, 98.6, 98.6, 98.6,
+            98.6, 98.6, 98.6, 100, 49.1
+          ],
+          [
+            95.8, 95.8, 95.8, 95.8, 95.8, 95.8, 95.8, 95.8, 95.8, 95.8, 95.8,
+            95.8, 95.8, 95.8, 49.1, 100
+          ]
+        ]
+      }
+    }
+  ],
+  "XIRP1": [
+    {
+      "id": "ENSMUSG00000079243",
+      "symbol": "XIRP1",
+      "name": "Xin Actin-binding Repeat Containing 1",
+      "species": "mouse",
+      "alternateSymbols": ["CMYA1"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000111635",
+          "geneId": "ENSMUSG00000079243",
+          "codingSequenceLength": 3399,
+          "species": "mouse",
+          "gcPercent": 57.8,
+          "cpgCount": 85,
+          "wggwCount": 97,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000213113",
+          "geneId": "ENSMUSG00000079243",
+          "codingSequenceLength": 234,
+          "species": "mouse",
+          "gcPercent": 52.6,
+          "cpgCount": 6,
+          "wggwCount": 2,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000238557",
+          "geneId": "ENSMUSG00000079243",
+          "codingSequenceLength": 5442,
+          "species": "mouse",
+          "gcPercent": 57.6,
+          "cpgCount": 114,
+          "wggwCount": 132,
+          "suitability": "dual-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENSMUST00000238557",
+          "ENSMUST00000111635",
+          "ENSMUST00000213113"
+        ],
+        "rows": [
+          [100, 62.3, 0.1],
+          [62.3, 100, 0.1],
+          [0.1, 0.1, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000168334",
+      "symbol": "XIRP1",
+      "name": "Xin Actin Binding Repeat Containing 1",
+      "species": "human",
+      "alternateSymbols": ["CMYA1", "XIN"],
+      "isoforms": [
+        {
+          "id": "ENST00000340369",
+          "geneId": "ENSG00000168334",
+          "codingSequenceLength": 5532,
+          "species": "human",
+          "gcPercent": 60.9,
+          "cpgCount": 129,
+          "wggwCount": 149,
+          "suitability": "dual-aav"
+        },
+        {
+          "id": "ENST00000396251",
+          "geneId": "ENSG00000168334",
+          "codingSequenceLength": 3366,
+          "species": "human",
+          "gcPercent": 61.1,
+          "cpgCount": 98,
+          "wggwCount": 105,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000421646",
+          "geneId": "ENSG00000168334",
+          "codingSequenceLength": 1581,
+          "species": "human",
+          "gcPercent": 59.5,
+          "cpgCount": 23,
+          "wggwCount": 32,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENST00000340369", "ENST00000396251", "ENST00000421646"],
+        "rows": [
+          [100, 60.7, 28.6],
+          [60.7, 100, 0.2],
+          [28.6, 0.2, 100]
+        ]
+      }
+    }
+  ],
+  "XYLT2": [
+    {
+      "id": "ENSMUSG00000020868",
+      "symbol": "XYLT2",
+      "name": "Xylosyltransferase Ii",
+      "species": "mouse",
+      "alternateSymbols": ["E030002B02RIK", "XT-II", "XT2", "XYLT-II"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000116349",
+          "geneId": "ENSMUSG00000020868",
+          "codingSequenceLength": 2598,
+          "species": "mouse",
+          "gcPercent": 60.5,
+          "cpgCount": 116,
+          "wggwCount": 71,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000153485",
+          "geneId": "ENSMUSG00000020868",
+          "codingSequenceLength": 1824,
+          "species": "mouse",
+          "gcPercent": 60.4,
+          "cpgCount": 88,
+          "wggwCount": 53,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENSMUST00000116349", "ENSMUST00000153485"],
+        "rows": [
+          [100, 67.3],
+          [67.3, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000015532",
+      "symbol": "XYLT2",
+      "name": "Xylosyltransferase 2",
+      "species": "human",
+      "alternateSymbols": ["PXYLT2", "SOS", "XT-II", "XT2", "XYLT-II"],
+      "isoforms": [
+        {
+          "id": "ENST00000017003",
+          "geneId": "ENSG00000015532",
+          "codingSequenceLength": 2598,
+          "species": "human",
+          "gcPercent": 63.4,
+          "cpgCount": 128,
+          "wggwCount": 68,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000376550",
+          "geneId": "ENSG00000015532",
+          "codingSequenceLength": 1920,
+          "species": "human",
+          "gcPercent": 63.3,
+          "cpgCount": 98,
+          "wggwCount": 54,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000507602",
+          "geneId": "ENSG00000015532",
+          "codingSequenceLength": 2031,
+          "species": "human",
+          "gcPercent": 63.4,
+          "cpgCount": 102,
+          "wggwCount": 53,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000511654",
+          "geneId": "ENSG00000015532",
+          "codingSequenceLength": 354,
+          "species": "human",
+          "gcPercent": 61.9,
+          "cpgCount": 14,
+          "wggwCount": 8,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENST00000017003",
+          "ENST00000507602",
+          "ENST00000376550",
+          "ENST00000511654"
+        ],
+        "rows": [
+          [100, 74.8, 67.3, 0.1],
+          [74.8, 100, 86.1, 0.1],
+          [67.3, 86.1, 100, 0.2],
+          [0.1, 0.1, 0.2, 100]
+        ]
+      }
+    }
+  ],
+  "XKR6": [
+    {
+      "id": "ENSMUSG00000035067",
+      "symbol": "XKR6",
+      "name": "X-linked Kx Blood Group Related 6",
+      "species": "mouse",
+      "alternateSymbols": ["2700008G24RIK", "XRG6"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000119973",
+          "geneId": "ENSMUSG00000035067",
+          "codingSequenceLength": 1917,
+          "species": "mouse",
+          "gcPercent": 63,
+          "cpgCount": 141,
+          "wggwCount": 37,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000120820",
+          "geneId": "ENSMUSG00000035067",
+          "codingSequenceLength": 1149,
+          "species": "mouse",
+          "gcPercent": 55.6,
+          "cpgCount": 48,
+          "wggwCount": 21,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENSMUST00000119973", "ENSMUST00000120820"],
+        "rows": [
+          [100, 59.9],
+          [59.9, 100]
+        ]
+      }
+    }
+  ],
+  "XPO4": [
+    {
+      "id": "ENSMUSG00000021952",
+      "symbol": "XPO4",
+      "name": "Exportin 4",
+      "species": "mouse",
+      "alternateSymbols": ["B430309A01RIK", "MKIAA1721"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000172524",
+          "geneId": "ENSMUSG00000021952",
+          "codingSequenceLength": 213,
+          "species": "mouse",
+          "gcPercent": 50.7,
+          "cpgCount": 7,
+          "wggwCount": 6,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000174152",
+          "geneId": "ENSMUSG00000021952",
+          "codingSequenceLength": 213,
+          "species": "mouse",
+          "gcPercent": 50.7,
+          "cpgCount": 7,
+          "wggwCount": 6,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000174545",
+          "geneId": "ENSMUSG00000021952",
+          "codingSequenceLength": 3456,
+          "species": "mouse",
+          "gcPercent": 45,
+          "cpgCount": 66,
+          "wggwCount": 73,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENSMUST00000174545",
+          "ENSMUST00000172524",
+          "ENSMUST00000174152"
+        ],
+        "rows": [
+          [100, 5.1, 5.1],
+          [5.1, 100, 100],
+          [5.1, 100, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000132953",
+      "symbol": "XPO4",
+      "name": "Exportin 4",
+      "species": "human",
+      "alternateSymbols": ["EXP4"],
+      "isoforms": [
+        {
+          "id": "ENST00000255305",
+          "geneId": "ENSG00000132953",
+          "codingSequenceLength": 3456,
+          "species": "human",
+          "gcPercent": 42.2,
+          "cpgCount": 45,
+          "wggwCount": 74,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENST00000255305"], "rows": [[100]] }
+    }
+  ],
+  "XPNPEP1": [
+    {
+      "id": "ENSMUSG00000025027",
+      "symbol": "XPNPEP1",
+      "name": "X-prolyl Aminopeptidase (aminopeptidase P) 1, Soluble",
+      "species": "mouse",
+      "alternateSymbols": ["D230045I08RIK", "SAMP"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000182097",
+          "geneId": "ENSMUSG00000025027",
+          "codingSequenceLength": 357,
+          "species": "mouse",
+          "gcPercent": 56,
+          "cpgCount": 14,
+          "wggwCount": 13,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000183108",
+          "geneId": "ENSMUSG00000025027",
+          "codingSequenceLength": 2001,
+          "species": "mouse",
+          "gcPercent": 55.2,
+          "cpgCount": 90,
+          "wggwCount": 59,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000183274",
+          "geneId": "ENSMUSG00000025027",
+          "codingSequenceLength": 1908,
+          "species": "mouse",
+          "gcPercent": 54.8,
+          "cpgCount": 88,
+          "wggwCount": 58,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000236008",
+          "geneId": "ENSMUSG00000025027",
+          "codingSequenceLength": 1764,
+          "species": "mouse",
+          "gcPercent": 55.2,
+          "cpgCount": 82,
+          "wggwCount": 52,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000236058",
+          "geneId": "ENSMUSG00000025027",
+          "codingSequenceLength": 1872,
+          "species": "mouse",
+          "gcPercent": 55.5,
+          "cpgCount": 84,
+          "wggwCount": 54,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000237294",
+          "geneId": "ENSMUSG00000025027",
+          "codingSequenceLength": 1872,
+          "species": "mouse",
+          "gcPercent": 55.5,
+          "cpgCount": 84,
+          "wggwCount": 54,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENSMUST00000183108",
+          "ENSMUST00000183274",
+          "ENSMUST00000236058",
+          "ENSMUST00000237294",
+          "ENSMUST00000236008",
+          "ENSMUST00000182097"
+        ],
+        "rows": [
+          [100, 93.7, 93.6, 93.6, 0.4, 0.3],
+          [93.7, 100, 0.5, 0.5, 0.5, 0.3],
+          [93.6, 0.5, 100, 100, 93.3, 19.1],
+          [93.6, 0.5, 100, 100, 93.3, 19.1],
+          [0.4, 0.5, 93.3, 93.3, 100, 20.2],
+          [0.3, 0.3, 19.1, 19.1, 20.2, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000108039",
+      "symbol": "XPNPEP1",
+      "name": "X-prolyl Aminopeptidase 1",
+      "species": "human",
+      "alternateSymbols": ["APP1", "SAMP", "XPNPEP", "XPNPEPL", "XPNPEPL1"],
+      "isoforms": [
+        {
+          "id": "ENST00000322238",
+          "geneId": "ENSG00000108039",
+          "codingSequenceLength": 1929,
+          "species": "human",
+          "gcPercent": 51.1,
+          "cpgCount": 53,
+          "wggwCount": 56,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000369683",
+          "geneId": "ENSG00000108039",
+          "codingSequenceLength": 1659,
+          "species": "human",
+          "gcPercent": 51.1,
+          "cpgCount": 43,
+          "wggwCount": 52,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000403138",
+          "geneId": "ENSG00000108039",
+          "codingSequenceLength": 909,
+          "species": "human",
+          "gcPercent": 52.9,
+          "cpgCount": 25,
+          "wggwCount": 32,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000502935",
+          "geneId": "ENSG00000108039",
+          "codingSequenceLength": 2001,
+          "species": "human",
+          "gcPercent": 51.1,
+          "cpgCount": 55,
+          "wggwCount": 60,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENST00000502935",
+          "ENST00000322238",
+          "ENST00000369683",
+          "ENST00000403138"
+        ],
+        "rows": [
+          [100, 96.4, 82.9, 0.1],
+          [96.4, 100, 31.7, 0.2],
+          [82.9, 31.7, 100, 0.2],
+          [0.1, 0.2, 0.2, 100]
+        ]
+      }
+    }
+  ],
+  "XCR1": [
+    {
+      "id": "ENSMUSG00000060509",
+      "symbol": "XCR1",
+      "name": "Chemokine (c Motif) Receptor 1",
+      "species": "mouse",
+      "alternateSymbols": ["CCXCR1", "GPR5", "MXCR1"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000182350",
+          "geneId": "ENSMUSG00000060509",
+          "codingSequenceLength": 969,
+          "species": "mouse",
+          "gcPercent": 47.4,
+          "cpgCount": 11,
+          "wggwCount": 15,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENSMUST00000182350"], "rows": [[100]] }
+    },
+    {
+      "id": "ENSG00000173578",
+      "symbol": "XCR1",
+      "name": "X-c Motif Chemokine Receptor 1",
+      "species": "human",
+      "alternateSymbols": ["CCXCR1", "GPR5"],
+      "isoforms": [
+        {
+          "id": "ENST00000309285",
+          "geneId": "ENSG00000173578",
+          "codingSequenceLength": 1002,
+          "species": "human",
+          "gcPercent": 58.2,
+          "cpgCount": 38,
+          "wggwCount": 15,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000395946",
+          "geneId": "ENSG00000173578",
+          "codingSequenceLength": 1002,
+          "species": "human",
+          "gcPercent": 58.2,
+          "cpgCount": 38,
+          "wggwCount": 15,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000683768",
+          "geneId": "ENSG00000173578",
+          "codingSequenceLength": 1002,
+          "species": "human",
+          "gcPercent": 58.2,
+          "cpgCount": 38,
+          "wggwCount": 15,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENST00000309285", "ENST00000395946", "ENST00000683768"],
+        "rows": [
+          [100, 100, 100],
+          [100, 100, 100],
+          [100, 100, 100]
+        ]
+      }
+    }
+  ],
+  "XAGE2": [
+    {
+      "id": "ENSG00000155622",
+      "symbol": "XAGE2",
+      "name": "X Antigen Family Member 2",
+      "species": "human",
+      "alternateSymbols": ["CT12.2", "GAGED3", "XAGE-2", "XAGE2B"],
+      "isoforms": [
+        {
+          "id": "ENST00000286049",
+          "geneId": "ENSG00000155622",
+          "codingSequenceLength": 336,
+          "species": "human",
+          "gcPercent": 47.3,
+          "cpgCount": 3,
+          "wggwCount": 8,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENST00000286049"], "rows": [[100]] }
+    }
+  ],
+  "XKR3": [
+    {
+      "id": "ENSG00000172967",
+      "symbol": "XKR3",
+      "name": "Xk Related 3",
+      "species": "human",
+      "alternateSymbols": ["XRG3", "XTES"],
+      "isoforms": [
+        {
+          "id": "ENST00000331428",
+          "geneId": "ENSG00000172967",
+          "codingSequenceLength": 1380,
+          "species": "human",
+          "gcPercent": 39.8,
+          "cpgCount": 19,
+          "wggwCount": 30,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000684488",
+          "geneId": "ENSG00000172967",
+          "codingSequenceLength": 1380,
+          "species": "human",
+          "gcPercent": 39.8,
+          "cpgCount": 19,
+          "wggwCount": 30,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENST00000331428", "ENST00000684488"],
+        "rows": [
+          [100, 100],
+          [100, 100]
+        ]
+      }
+    }
+  ],
+  "XAGE3": [
+    {
+      "id": "ENSG00000171402",
+      "symbol": "XAGE3",
+      "name": "X Antigen Family Member 3",
+      "species": "human",
+      "alternateSymbols": [
+        "CT12.3A",
+        "CT12.3B",
+        "GAGED4",
+        "PLAC6",
+        "XAGE-3",
+        "PP9012"
+      ],
+      "isoforms": [
+        {
+          "id": "ENST00000346279",
+          "geneId": "ENSG00000171402",
+          "codingSequenceLength": 336,
+          "species": "human",
+          "gcPercent": 51.8,
+          "cpgCount": 4,
+          "wggwCount": 14,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000375491",
+          "geneId": "ENSG00000171402",
+          "codingSequenceLength": 336,
+          "species": "human",
+          "gcPercent": 51.8,
+          "cpgCount": 4,
+          "wggwCount": 14,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENST00000346279", "ENST00000375491"],
+        "rows": [
+          [100, 100],
+          [100, 100]
+        ]
+      }
+    }
+  ],
+  "XCL2": [
+    {
+      "id": "ENSG00000143185",
+      "symbol": "XCL2",
+      "name": "X-c Motif Chemokine Ligand 2",
+      "species": "human",
+      "alternateSymbols": ["SCM-1B", "SCM1B", "SCYC2"],
+      "isoforms": [
+        {
+          "id": "ENST00000367819",
+          "geneId": "ENSG00000143185",
+          "codingSequenceLength": 345,
+          "species": "human",
+          "gcPercent": 50.7,
+          "cpgCount": 6,
+          "wggwCount": 9,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENST00000367819"], "rows": [[100]] }
+    }
+  ],
+  "XAGE5": [
+    {
+      "id": "ENSG00000171405",
+      "symbol": "XAGE5",
+      "name": "X Antigen Family Member 5",
+      "species": "human",
+      "alternateSymbols": ["CT12.5", "GAGED5", "XAGE-5"],
+      "isoforms": [
+        {
+          "id": "ENST00000375501",
+          "geneId": "ENSG00000171405",
+          "codingSequenceLength": 327,
+          "species": "human",
+          "gcPercent": 48.6,
+          "cpgCount": 4,
+          "wggwCount": 7,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000375503",
+          "geneId": "ENSG00000171405",
+          "codingSequenceLength": 228,
+          "species": "human",
+          "gcPercent": 47.8,
+          "cpgCount": 5,
+          "wggwCount": 7,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENST00000375501", "ENST00000375503"],
+        "rows": [
+          [100, 55],
+          [55, 100]
+        ]
+      }
+    }
+  ],
+  "XAGE1A": [
+    {
+      "id": "ENSG00000204379",
+      "symbol": "XAGE1A",
+      "name": "X Antigen Family Member 1a",
+      "species": "human",
+      "alternateSymbols": [
+        "CT12.1",
+        "CT12.1A",
+        "CT12.1B",
+        "CTP9",
+        "GAGED2",
+        "XAGE-1",
+        "XAGE1",
+        "XAGE1B"
+      ],
+      "isoforms": [
+        {
+          "id": "ENST00000375600",
+          "geneId": "ENSG00000204379",
+          "codingSequenceLength": 210,
+          "species": "human",
+          "gcPercent": 51,
+          "cpgCount": 6,
+          "wggwCount": 7,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000375602",
+          "geneId": "ENSG00000204379",
+          "codingSequenceLength": 246,
+          "species": "human",
+          "gcPercent": 48.8,
+          "cpgCount": 6,
+          "wggwCount": 8,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENST00000375602", "ENST00000375600"],
+        "rows": [
+          [100, 40.2],
+          [40.2, 100]
+        ]
+      }
+    }
+  ],
+  "XAGE1B": [
+    {
+      "id": "ENSG00000204382",
+      "symbol": "XAGE1B",
+      "name": "X Antigen Family Member 1b",
+      "species": "human",
+      "alternateSymbols": [
+        "CT12.1",
+        "CT12.1C",
+        "CT12.1D",
+        "CT12.1E",
+        "CT12.1B",
+        "CTP9",
+        "GAGED2",
+        "XAGE-1",
+        "XAGE1",
+        "XAGE1C",
+        "XAGE1D",
+        "XAGE1E"
+      ],
+      "isoforms": [
+        {
+          "id": "ENST00000375613",
+          "geneId": "ENSG00000204382",
+          "codingSequenceLength": 210,
+          "species": "human",
+          "gcPercent": 51,
+          "cpgCount": 6,
+          "wggwCount": 7,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000375616",
+          "geneId": "ENSG00000204382",
+          "codingSequenceLength": 246,
+          "species": "human",
+          "gcPercent": 48.8,
+          "cpgCount": 6,
+          "wggwCount": 8,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000518075",
+          "geneId": "ENSG00000204382",
+          "codingSequenceLength": 246,
+          "species": "human",
+          "gcPercent": 48.8,
+          "cpgCount": 6,
+          "wggwCount": 8,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENST00000375616", "ENST00000518075", "ENST00000375613"],
+        "rows": [
+          [100, 100, 40.2],
+          [100, 100, 40.2],
+          [40.2, 40.2, 100]
+        ]
+      }
+    }
+  ],
+  "XG": [
+    {
+      "id": "ENSG00000124343",
+      "symbol": "XG",
+      "name": "Xg Glycoprotein (xg Blood Group)",
+      "species": "human",
+      "alternateSymbols": ["PBDX"],
+      "isoforms": [
+        {
+          "id": "ENST00000381174",
+          "geneId": "ENSG00000124343",
+          "codingSequenceLength": 543,
+          "species": "human",
+          "gcPercent": 53.4,
+          "cpgCount": 23,
+          "wggwCount": 16,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000419513",
+          "geneId": "ENSG00000124343",
+          "codingSequenceLength": 522,
+          "species": "human",
+          "gcPercent": 53.1,
+          "cpgCount": 24,
+          "wggwCount": 17,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000509484",
+          "geneId": "ENSG00000124343",
+          "codingSequenceLength": 477,
+          "species": "human",
+          "gcPercent": 54.1,
+          "cpgCount": 23,
+          "wggwCount": 15,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000644266",
+          "geneId": "ENSG00000124343",
+          "codingSequenceLength": 588,
+          "species": "human",
+          "gcPercent": 52.6,
+          "cpgCount": 24,
+          "wggwCount": 18,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENST00000644266",
+          "ENST00000381174",
+          "ENST00000419513",
+          "ENST00000509484"
+        ],
+        "rows": [
+          [100, 92.3, 88.8, 39.3],
+          [92.3, 100, 42.5, 87.8],
+          [88.8, 42.5, 100, 91.4],
+          [39.3, 87.8, 91.4, 100]
+        ]
+      }
+    }
+  ],
+  "XNDC1N": [
+    {
+      "id": "ENSG00000254469",
+      "symbol": "XNDC1N",
+      "name": "Xrcc1 N-terminal Domain Containing 1, N-terminal Like",
+      "species": "human",
+      "alternateSymbols": [],
+      "isoforms": [
+        {
+          "id": "ENST00000528511",
+          "geneId": "ENSG00000254469",
+          "codingSequenceLength": 798,
+          "species": "human",
+          "gcPercent": 49.5,
+          "cpgCount": 18,
+          "wggwCount": 11,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000529513",
+          "geneId": "ENSG00000254469",
+          "codingSequenceLength": 405,
+          "species": "human",
+          "gcPercent": 51.9,
+          "cpgCount": 7,
+          "wggwCount": 8,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000529844",
+          "geneId": "ENSG00000254469",
+          "codingSequenceLength": 429,
+          "species": "human",
+          "gcPercent": 49.7,
+          "cpgCount": 6,
+          "wggwCount": 9,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000532852",
+          "geneId": "ENSG00000254469",
+          "codingSequenceLength": 426,
+          "species": "human",
+          "gcPercent": 53.3,
+          "cpgCount": 11,
+          "wggwCount": 7,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000679412",
+          "geneId": "ENSG00000254469",
+          "codingSequenceLength": 705,
+          "species": "human",
+          "gcPercent": 48.7,
+          "cpgCount": 12,
+          "wggwCount": 11,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000679695",
+          "geneId": "ENSG00000254469",
+          "codingSequenceLength": 690,
+          "species": "human",
+          "gcPercent": 52.5,
+          "cpgCount": 13,
+          "wggwCount": 10,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENST00000528511",
+          "ENST00000679412",
+          "ENST00000679695",
+          "ENST00000529844",
+          "ENST00000532852",
+          "ENST00000529513"
+        ],
+        "rows": [
+          [100, 83.1, 0.8, 0.8, 0.8, 0.8],
+          [83.1, 100, 74.5, 48.9, 0.9, 48.9],
+          [0.8, 74.5, 100, 50, 0.4, 50.4],
+          [0.8, 48.9, 50, 100, 0.7, 81.1],
+          [0.8, 0.9, 0.4, 0.7, 100, 0.7],
+          [0.8, 48.9, 50.4, 81.1, 0.7, 100]
+        ]
+      }
+    }
+  ],
+  "XNDC1N-ZNF705EP-ALG1L9P": [
+    {
+      "id": "ENSG00000289716",
+      "symbol": "XNDC1N-ZNF705EP-ALG1L9P",
+      "name": "Xndc1n-znf705ep-alg1l9p Readthrough",
+      "species": "human",
+      "alternateSymbols": [],
+      "isoforms": [
+        {
+          "id": "ENST00000696863",
+          "geneId": "ENSG00000289716",
+          "codingSequenceLength": 810,
+          "species": "human",
+          "gcPercent": 53.7,
+          "cpgCount": 26,
+          "wggwCount": 17,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000696864",
+          "geneId": "ENSG00000289716",
+          "codingSequenceLength": 591,
+          "species": "human",
+          "gcPercent": 51.8,
+          "cpgCount": 12,
+          "wggwCount": 11,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000696865",
+          "geneId": "ENSG00000289716",
+          "codingSequenceLength": 405,
+          "species": "human",
+          "gcPercent": 51.9,
+          "cpgCount": 7,
+          "wggwCount": 8,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENST00000696863", "ENST00000696864", "ENST00000696865"],
+        "rows": [
+          [100, 0.7, 0.7],
+          [0.7, 100, 58.4],
+          [0.7, 58.4, 100]
+        ]
+      }
+    }
+  ]
+}

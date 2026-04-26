@@ -1,0 +1,5084 @@
+{
+  "YKT6": [
+    {
+      "id": "ENSMUSG00000002741",
+      "symbol": "YKT6",
+      "name": "Ykt6 V-snare Homolog (s. Cerevisiae)",
+      "species": "mouse",
+      "alternateSymbols": ["0610042I15RIK", "1810013M05RIK"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000002818",
+          "geneId": "ENSMUSG00000002741",
+          "codingSequenceLength": 597,
+          "species": "mouse",
+          "gcPercent": 49.9,
+          "cpgCount": 22,
+          "wggwCount": 14,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENSMUST00000002818"], "rows": [[100]] }
+    },
+    {
+      "id": "ENSG00000106636",
+      "symbol": "YKT6",
+      "name": "Ykt6 V-snare Homolog",
+      "species": "human",
+      "alternateSymbols": [],
+      "isoforms": [
+        {
+          "id": "ENST00000223369",
+          "geneId": "ENSG00000106636",
+          "codingSequenceLength": 597,
+          "species": "human",
+          "gcPercent": 49.6,
+          "cpgCount": 18,
+          "wggwCount": 16,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000496112",
+          "geneId": "ENSG00000106636",
+          "codingSequenceLength": 495,
+          "species": "human",
+          "gcPercent": 50.1,
+          "cpgCount": 16,
+          "wggwCount": 12,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000677090",
+          "geneId": "ENSG00000106636",
+          "codingSequenceLength": 576,
+          "species": "human",
+          "gcPercent": 48.4,
+          "cpgCount": 17,
+          "wggwCount": 16,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000677851",
+          "geneId": "ENSG00000106636",
+          "codingSequenceLength": 753,
+          "species": "human",
+          "gcPercent": 52.1,
+          "cpgCount": 18,
+          "wggwCount": 18,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000678359",
+          "geneId": "ENSG00000106636",
+          "codingSequenceLength": 576,
+          "species": "human",
+          "gcPercent": 48.4,
+          "cpgCount": 17,
+          "wggwCount": 16,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000678497",
+          "geneId": "ENSG00000106636",
+          "codingSequenceLength": 543,
+          "species": "human",
+          "gcPercent": 50.3,
+          "cpgCount": 15,
+          "wggwCount": 14,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000679020",
+          "geneId": "ENSG00000106636",
+          "codingSequenceLength": 597,
+          "species": "human",
+          "gcPercent": 49.6,
+          "cpgCount": 18,
+          "wggwCount": 16,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000679209",
+          "geneId": "ENSG00000106636",
+          "codingSequenceLength": 216,
+          "species": "human",
+          "gcPercent": 49.1,
+          "cpgCount": 8,
+          "wggwCount": 5,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENST00000677851",
+          "ENST00000223369",
+          "ENST00000679020",
+          "ENST00000677090",
+          "ENST00000678359",
+          "ENST00000678497",
+          "ENST00000496112",
+          "ENST00000679209"
+        ],
+        "rows": [
+          [100, 61.4, 61.4, 61.4, 61.4, 61.4, 61.4, 25.1],
+          [61.4, 100, 100, 94.5, 94.5, 77.4, 82.9, 31.7],
+          [61.4, 100, 100, 94.5, 94.5, 77.4, 82.9, 31.7],
+          [61.4, 94.5, 94.5, 100, 100, 80.2, 80.2, 32.8],
+          [61.4, 94.5, 94.5, 100, 100, 80.2, 80.2, 32.8],
+          [61.4, 77.4, 77.4, 80.2, 80.2, 100, 85.1, 34.8],
+          [61.4, 82.9, 82.9, 80.2, 80.2, 85.1, 100, 38.2],
+          [25.1, 31.7, 31.7, 32.8, 32.8, 34.8, 38.2, 100]
+        ]
+      }
+    }
+  ],
+  "YJU2B": [
+    {
+      "id": "ENSMUSG00000004994",
+      "symbol": "YJU2B",
+      "name": "Yju2 Splicing Factor Homolog B",
+      "species": "mouse",
+      "alternateSymbols": ["4930527D15RIK", "CCDC130"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000005120",
+          "geneId": "ENSMUSG00000004994",
+          "codingSequenceLength": 597,
+          "species": "mouse",
+          "gcPercent": 52.4,
+          "cpgCount": 23,
+          "wggwCount": 16,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000098578",
+          "geneId": "ENSMUSG00000004994",
+          "codingSequenceLength": 1158,
+          "species": "mouse",
+          "gcPercent": 55,
+          "cpgCount": 32,
+          "wggwCount": 31,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000172320",
+          "geneId": "ENSMUSG00000004994",
+          "codingSequenceLength": 210,
+          "species": "mouse",
+          "gcPercent": 52.4,
+          "cpgCount": 9,
+          "wggwCount": 2,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENSMUST00000098578",
+          "ENSMUST00000005120",
+          "ENSMUST00000172320"
+        ],
+        "rows": [
+          [100, 50.3, 17.4],
+          [50.3, 100, 33.7],
+          [17.4, 33.7, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000104957",
+      "symbol": "YJU2B",
+      "name": "Yju2 Splicing Factor Homolog B",
+      "species": "human",
+      "alternateSymbols": ["CCDC130"],
+      "isoforms": [
+        {
+          "id": "ENST00000221554",
+          "geneId": "ENSG00000104957",
+          "codingSequenceLength": 1191,
+          "species": "human",
+          "gcPercent": 61.9,
+          "cpgCount": 77,
+          "wggwCount": 28,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000585844",
+          "geneId": "ENSG00000104957",
+          "codingSequenceLength": 309,
+          "species": "human",
+          "gcPercent": 62.5,
+          "cpgCount": 19,
+          "wggwCount": 12,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000586600",
+          "geneId": "ENSG00000104957",
+          "codingSequenceLength": 1191,
+          "species": "human",
+          "gcPercent": 61.9,
+          "cpgCount": 77,
+          "wggwCount": 28,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENST00000221554", "ENST00000586600", "ENST00000585844"],
+        "rows": [
+          [100, 100, 0.3],
+          [100, 100, 0.3],
+          [0.3, 0.3, 100]
+        ]
+      }
+    }
+  ],
+  "YWHAB": [
+    {
+      "id": "ENSMUSG00000018326",
+      "symbol": "YWHAB",
+      "name": "Tyrosine 3-monooxygenase/tryptophan 5-monooxygenase Activation Protein, Beta Polypeptide",
+      "species": "mouse",
+      "alternateSymbols": ["1300003C17RIK", "14-3-3B"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000018470",
+          "geneId": "ENSMUSG00000018326",
+          "codingSequenceLength": 741,
+          "species": "mouse",
+          "gcPercent": 49.4,
+          "cpgCount": 22,
+          "wggwCount": 15,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000131288",
+          "geneId": "ENSMUSG00000018326",
+          "codingSequenceLength": 477,
+          "species": "mouse",
+          "gcPercent": 48.8,
+          "cpgCount": 15,
+          "wggwCount": 11,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENSMUST00000018470", "ENSMUST00000131288"],
+        "rows": [
+          [100, 64.4],
+          [64.4, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000166913",
+      "symbol": "YWHAB",
+      "name": "Tyrosine 3-monooxygenase/tryptophan 5-monooxygenase Activation Protein Beta",
+      "species": "human",
+      "alternateSymbols": ["GW128", "HEL-S-1", "HS1", "KCIP-1", "YWHAA"],
+      "isoforms": [
+        {
+          "id": "ENST00000353703",
+          "geneId": "ENSG00000166913",
+          "codingSequenceLength": 741,
+          "species": "human",
+          "gcPercent": 45.5,
+          "cpgCount": 15,
+          "wggwCount": 16,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000372839",
+          "geneId": "ENSG00000166913",
+          "codingSequenceLength": 741,
+          "species": "human",
+          "gcPercent": 45.5,
+          "cpgCount": 15,
+          "wggwCount": 16,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000428262",
+          "geneId": "ENSG00000166913",
+          "codingSequenceLength": 300,
+          "species": "human",
+          "gcPercent": 50,
+          "cpgCount": 8,
+          "wggwCount": 5,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000479421",
+          "geneId": "ENSG00000166913",
+          "codingSequenceLength": 450,
+          "species": "human",
+          "gcPercent": 45.8,
+          "cpgCount": 10,
+          "wggwCount": 9,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENST00000353703",
+          "ENST00000372839",
+          "ENST00000479421",
+          "ENST00000428262"
+        ],
+        "rows": [
+          [100, 100, 40.9, 40.5],
+          [100, 100, 40.9, 40.5],
+          [40.9, 40.9, 100, 66.7],
+          [40.5, 40.5, 66.7, 100]
+        ]
+      }
+    }
+  ],
+  "YPEL2": [
+    {
+      "id": "ENSMUSG00000018427",
+      "symbol": "YPEL2",
+      "name": "Yippee Like 2",
+      "species": "mouse",
+      "alternateSymbols": ["6430570G24", "E130113K08RIK"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000018571",
+          "geneId": "ENSMUSG00000018427",
+          "codingSequenceLength": 360,
+          "species": "mouse",
+          "gcPercent": 47.2,
+          "cpgCount": 6,
+          "wggwCount": 5,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000238921",
+          "geneId": "ENSMUSG00000018427",
+          "codingSequenceLength": 459,
+          "species": "mouse",
+          "gcPercent": 51,
+          "cpgCount": 14,
+          "wggwCount": 5,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENSMUST00000238921", "ENSMUST00000018571"],
+        "rows": [
+          [100, 78.4],
+          [78.4, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000175155",
+      "symbol": "YPEL2",
+      "name": "Yippee Like 2",
+      "species": "human",
+      "alternateSymbols": ["FKSG4"],
+      "isoforms": [
+        {
+          "id": "ENST00000312655",
+          "geneId": "ENSG00000175155",
+          "codingSequenceLength": 360,
+          "species": "human",
+          "gcPercent": 46.1,
+          "cpgCount": 6,
+          "wggwCount": 6,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000585166",
+          "geneId": "ENSG00000175155",
+          "codingSequenceLength": 360,
+          "species": "human",
+          "gcPercent": 46.1,
+          "cpgCount": 6,
+          "wggwCount": 6,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000672916",
+          "geneId": "ENSG00000175155",
+          "codingSequenceLength": 459,
+          "species": "human",
+          "gcPercent": 49.7,
+          "cpgCount": 11,
+          "wggwCount": 6,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENST00000672916", "ENST00000312655", "ENST00000585166"],
+        "rows": [
+          [100, 78.4, 78.4],
+          [78.4, 100, 100],
+          [78.4, 100, 100]
+        ]
+      }
+    }
+  ],
+  "YBX2": [
+    {
+      "id": "ENSMUSG00000018554",
+      "symbol": "YBX2",
+      "name": "Y Box Protein 2",
+      "species": "mouse",
+      "alternateSymbols": ["MSY2"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000018698",
+          "geneId": "ENSMUSG00000018554",
+          "codingSequenceLength": 1080,
+          "species": "mouse",
+          "gcPercent": 66,
+          "cpgCount": 77,
+          "wggwCount": 25,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000108601",
+          "geneId": "ENSMUSG00000018554",
+          "codingSequenceLength": 849,
+          "species": "mouse",
+          "gcPercent": 61.5,
+          "cpgCount": 39,
+          "wggwCount": 22,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000149194",
+          "geneId": "ENSMUSG00000018554",
+          "codingSequenceLength": 495,
+          "species": "mouse",
+          "gcPercent": 65.7,
+          "cpgCount": 26,
+          "wggwCount": 9,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENSMUST00000018698",
+          "ENSMUST00000108601",
+          "ENSMUST00000149194"
+        ],
+        "rows": [
+          [100, 75.6, 45.8],
+          [75.6, 100, 58.3],
+          [45.8, 58.3, 100]
+        ]
+      }
+    }
+  ],
+  "YWHAH": [
+    {
+      "id": "ENSMUSG00000018965",
+      "symbol": "YWHAH",
+      "name": "Tyrosine 3-monooxygenase/tryptophan 5-monooxygenase Activation Protein, Eta Polypeptide",
+      "species": "mouse",
+      "alternateSymbols": [],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000019109",
+          "geneId": "ENSMUSG00000018965",
+          "codingSequenceLength": 741,
+          "species": "mouse",
+          "gcPercent": 50.5,
+          "cpgCount": 26,
+          "wggwCount": 15,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENSMUST00000019109"], "rows": [[100]] }
+    },
+    {
+      "id": "ENSG00000128245",
+      "symbol": "YWHAH",
+      "name": "Tyrosine 3-monooxygenase/tryptophan 5-monooxygenase Activation Protein Eta",
+      "species": "human",
+      "alternateSymbols": ["YWHA1"],
+      "isoforms": [
+        {
+          "id": "ENST00000248975",
+          "geneId": "ENSG00000128245",
+          "codingSequenceLength": 741,
+          "species": "human",
+          "gcPercent": 51.8,
+          "cpgCount": 27,
+          "wggwCount": 17,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000397492",
+          "geneId": "ENSG00000128245",
+          "codingSequenceLength": 219,
+          "species": "human",
+          "gcPercent": 62.1,
+          "cpgCount": 13,
+          "wggwCount": 4,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000420430",
+          "geneId": "ENSG00000128245",
+          "codingSequenceLength": 486,
+          "species": "human",
+          "gcPercent": 47.5,
+          "cpgCount": 10,
+          "wggwCount": 14,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENST00000248975", "ENST00000420430", "ENST00000397492"],
+        "rows": [
+          [100, 0.4, 12.6],
+          [0.4, 100, 0.6],
+          [12.6, 0.6, 100]
+        ]
+      }
+    }
+  ],
+  "YEATS4": [
+    {
+      "id": "ENSMUSG00000020171",
+      "symbol": "YEATS4",
+      "name": "Yeats Domain Containing 4",
+      "species": "mouse",
+      "alternateSymbols": ["4930573H17RIK", "B230215M10RIK", "GAS41", "NUBI-1"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000020382",
+          "geneId": "ENSMUSG00000020171",
+          "codingSequenceLength": 684,
+          "species": "mouse",
+          "gcPercent": 43.6,
+          "cpgCount": 22,
+          "wggwCount": 9,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000218887",
+          "geneId": "ENSMUSG00000020171",
+          "codingSequenceLength": 288,
+          "species": "mouse",
+          "gcPercent": 47.6,
+          "cpgCount": 12,
+          "wggwCount": 5,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENSMUST00000020382", "ENSMUST00000218887"],
+        "rows": [
+          [100, 36.4],
+          [36.4, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000127337",
+      "symbol": "YEATS4",
+      "name": "Yeats Domain Containing 4",
+      "species": "human",
+      "alternateSymbols": [
+        "4930573H17RIK",
+        "B230215M10RIK",
+        "GAS41",
+        "NUBI-1",
+        "YAF9"
+      ],
+      "isoforms": [
+        {
+          "id": "ENST00000247843",
+          "geneId": "ENSG00000127337",
+          "codingSequenceLength": 684,
+          "species": "human",
+          "gcPercent": 36.1,
+          "cpgCount": 9,
+          "wggwCount": 7,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000548020",
+          "geneId": "ENSG00000127337",
+          "codingSequenceLength": 522,
+          "species": "human",
+          "gcPercent": 37.4,
+          "cpgCount": 8,
+          "wggwCount": 6,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000552955",
+          "geneId": "ENSG00000127337",
+          "codingSequenceLength": 633,
+          "species": "human",
+          "gcPercent": 39.8,
+          "cpgCount": 10,
+          "wggwCount": 8,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENST00000247843", "ENST00000552955", "ENST00000548020"],
+        "rows": [
+          [100, 25, 76.3],
+          [25, 100, 27],
+          [76.3, 27, 100]
+        ]
+      }
+    }
+  ],
+  "YLPM1": [
+    {
+      "id": "ENSMUSG00000021244",
+      "symbol": "YLPM1",
+      "name": "Ylp Motif Containing 1",
+      "species": "mouse",
+      "alternateSymbols": ["A930013E17RIK", "ZAP", "ZAP3"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000021670",
+          "geneId": "ENSMUSG00000021244",
+          "codingSequenceLength": 6420,
+          "species": "mouse",
+          "gcPercent": 50.8,
+          "cpgCount": 159,
+          "wggwCount": 138,
+          "suitability": "dual-aav"
+        },
+        {
+          "id": "ENSMUST00000101202",
+          "geneId": "ENSMUSG00000021244",
+          "codingSequenceLength": 4161,
+          "species": "mouse",
+          "gcPercent": 52,
+          "cpgCount": 108,
+          "wggwCount": 73,
+          "suitability": "dual-aav"
+        },
+        {
+          "id": "ENSMUST00000164558",
+          "geneId": "ENSMUSG00000021244",
+          "codingSequenceLength": 4734,
+          "species": "mouse",
+          "gcPercent": 48.7,
+          "cpgCount": 98,
+          "wggwCount": 110,
+          "suitability": "dual-aav"
+        },
+        {
+          "id": "ENSMUST00000168977",
+          "geneId": "ENSMUSG00000021244",
+          "codingSequenceLength": 4302,
+          "species": "mouse",
+          "gcPercent": 52.1,
+          "cpgCount": 111,
+          "wggwCount": 73,
+          "suitability": "dual-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENSMUST00000021670",
+          "ENSMUST00000164558",
+          "ENSMUST00000168977",
+          "ENSMUST00000101202"
+        ],
+        "rows": [
+          [100, 0, 67, 40.6],
+          [0, 100, 0.1, 0.1],
+          [67, 0.1, 100, 96.7],
+          [40.6, 0.1, 96.7, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000119596",
+      "symbol": "YLPM1",
+      "name": "Ylp Motif Containing 1",
+      "species": "human",
+      "alternateSymbols": ["C14ORF170", "PPP1R169", "ZAP113", "ZAP3"],
+      "isoforms": [
+        {
+          "id": "ENST00000325680",
+          "geneId": "ENSG00000119596",
+          "codingSequenceLength": 6441,
+          "species": "human",
+          "gcPercent": 50.6,
+          "cpgCount": 152,
+          "wggwCount": 138,
+          "suitability": "dual-aav"
+        },
+        {
+          "id": "ENST00000547879",
+          "geneId": "ENSG00000119596",
+          "codingSequenceLength": 1401,
+          "species": "human",
+          "gcPercent": 43.8,
+          "cpgCount": 33,
+          "wggwCount": 33,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000549293",
+          "geneId": "ENSG00000119596",
+          "codingSequenceLength": 4788,
+          "species": "human",
+          "gcPercent": 48.4,
+          "cpgCount": 92,
+          "wggwCount": 109,
+          "suitability": "dual-aav"
+        },
+        {
+          "id": "ENST00000552421",
+          "geneId": "ENSG00000119596",
+          "codingSequenceLength": 4323,
+          "species": "human",
+          "gcPercent": 51.3,
+          "cpgCount": 101,
+          "wggwCount": 77,
+          "suitability": "dual-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENST00000325680",
+          "ENST00000549293",
+          "ENST00000552421",
+          "ENST00000547879"
+        ],
+        "rows": [
+          [100, 0, 67.1, 0],
+          [0, 100, 0.1, 0.1],
+          [67.1, 0.1, 100, 0.1],
+          [0, 0.1, 0.1, 100]
+        ]
+      }
+    }
+  ],
+  "YY1": [
+    {
+      "id": "ENSMUSG00000021264",
+      "symbol": "YY1",
+      "name": "Yy1 Transcription Factor",
+      "species": "mouse",
+      "alternateSymbols": ["NF-E1", "YY-1"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000021692",
+          "geneId": "ENSMUSG00000021264",
+          "codingSequenceLength": 1245,
+          "species": "mouse",
+          "gcPercent": 59.8,
+          "cpgCount": 106,
+          "wggwCount": 30,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENSMUST00000021692"], "rows": [[100]] }
+    },
+    {
+      "id": "ENSG00000100811",
+      "symbol": "YY1",
+      "name": "Yy1 Transcription Factor",
+      "species": "human",
+      "alternateSymbols": [
+        "DELTA",
+        "GADEVS",
+        "INO80S",
+        "NF-E1",
+        "UCRBP",
+        "YIN-YANG-1"
+      ],
+      "isoforms": [
+        {
+          "id": "ENST00000262238",
+          "geneId": "ENSG00000100811",
+          "codingSequenceLength": 1245,
+          "species": "human",
+          "gcPercent": 58.4,
+          "cpgCount": 101,
+          "wggwCount": 34,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000651219",
+          "geneId": "ENSG00000100811",
+          "codingSequenceLength": 354,
+          "species": "human",
+          "gcPercent": 43.8,
+          "cpgCount": 3,
+          "wggwCount": 9,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000704485",
+          "geneId": "ENSG00000100811",
+          "codingSequenceLength": 483,
+          "species": "human",
+          "gcPercent": 45.5,
+          "cpgCount": 11,
+          "wggwCount": 7,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENST00000262238", "ENST00000704485", "ENST00000651219"],
+        "rows": [
+          [100, 38.8, 0.2],
+          [38.8, 100, 0.6],
+          [0.2, 0.6, 100]
+        ]
+      }
+    }
+  ],
+  "YWHAZ": [
+    {
+      "id": "ENSMUSG00000022285",
+      "symbol": "YWHAZ",
+      "name": "Tyrosine 3-monooxygenase/tryptophan 5-monooxygenase Activation Protein, Zeta Polypeptide",
+      "species": "mouse",
+      "alternateSymbols": ["1110013I11RIK", "14-3-3ZETA"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000022894",
+          "geneId": "ENSMUSG00000022285",
+          "codingSequenceLength": 738,
+          "species": "mouse",
+          "gcPercent": 47.3,
+          "cpgCount": 22,
+          "wggwCount": 17,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000110361",
+          "geneId": "ENSMUSG00000022285",
+          "codingSequenceLength": 738,
+          "species": "mouse",
+          "gcPercent": 47.3,
+          "cpgCount": 22,
+          "wggwCount": 17,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000110362",
+          "geneId": "ENSMUSG00000022285",
+          "codingSequenceLength": 738,
+          "species": "mouse",
+          "gcPercent": 47.3,
+          "cpgCount": 22,
+          "wggwCount": 17,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000226851",
+          "geneId": "ENSMUSG00000022285",
+          "codingSequenceLength": 498,
+          "species": "mouse",
+          "gcPercent": 48.6,
+          "cpgCount": 17,
+          "wggwCount": 13,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENSMUST00000022894",
+          "ENSMUST00000110361",
+          "ENSMUST00000110362",
+          "ENSMUST00000226851"
+        ],
+        "rows": [
+          [100, 100, 100, 67.5],
+          [100, 100, 100, 67.5],
+          [100, 100, 100, 67.5],
+          [67.5, 67.5, 67.5, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000164924",
+      "symbol": "YWHAZ",
+      "name": "Tyrosine 3-monooxygenase/tryptophan 5-monooxygenase Activation Protein Zeta",
+      "species": "human",
+      "alternateSymbols": [
+        "14-3-3-ZETA",
+        "HEL-S-3",
+        "HEL-S-93",
+        "HEL4",
+        "KCIP-1",
+        "POPCHAS",
+        "YWHAD"
+      ],
+      "isoforms": [
+        {
+          "id": "ENST00000353245",
+          "geneId": "ENSG00000164924",
+          "codingSequenceLength": 738,
+          "species": "human",
+          "gcPercent": 43.4,
+          "cpgCount": 13,
+          "wggwCount": 18,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000395948",
+          "geneId": "ENSG00000164924",
+          "codingSequenceLength": 507,
+          "species": "human",
+          "gcPercent": 42.2,
+          "cpgCount": 8,
+          "wggwCount": 9,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000395951",
+          "geneId": "ENSG00000164924",
+          "codingSequenceLength": 738,
+          "species": "human",
+          "gcPercent": 43.4,
+          "cpgCount": 13,
+          "wggwCount": 18,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000395953",
+          "geneId": "ENSG00000164924",
+          "codingSequenceLength": 738,
+          "species": "human",
+          "gcPercent": 43.4,
+          "cpgCount": 13,
+          "wggwCount": 18,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000395956",
+          "geneId": "ENSG00000164924",
+          "codingSequenceLength": 738,
+          "species": "human",
+          "gcPercent": 43.4,
+          "cpgCount": 13,
+          "wggwCount": 18,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000395957",
+          "geneId": "ENSG00000164924",
+          "codingSequenceLength": 738,
+          "species": "human",
+          "gcPercent": 43.4,
+          "cpgCount": 13,
+          "wggwCount": 18,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000395958",
+          "geneId": "ENSG00000164924",
+          "codingSequenceLength": 738,
+          "species": "human",
+          "gcPercent": 43.4,
+          "cpgCount": 13,
+          "wggwCount": 18,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000418997",
+          "geneId": "ENSG00000164924",
+          "codingSequenceLength": 294,
+          "species": "human",
+          "gcPercent": 44.9,
+          "cpgCount": 7,
+          "wggwCount": 9,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000419477",
+          "geneId": "ENSG00000164924",
+          "codingSequenceLength": 738,
+          "species": "human",
+          "gcPercent": 43.4,
+          "cpgCount": 13,
+          "wggwCount": 18,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000437293",
+          "geneId": "ENSG00000164924",
+          "codingSequenceLength": 276,
+          "species": "human",
+          "gcPercent": 45.3,
+          "cpgCount": 7,
+          "wggwCount": 9,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000457309",
+          "geneId": "ENSG00000164924",
+          "codingSequenceLength": 738,
+          "species": "human",
+          "gcPercent": 43.4,
+          "cpgCount": 13,
+          "wggwCount": 18,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000521309",
+          "geneId": "ENSG00000164924",
+          "codingSequenceLength": 378,
+          "species": "human",
+          "gcPercent": 43.1,
+          "cpgCount": 6,
+          "wggwCount": 8,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000522542",
+          "geneId": "ENSG00000164924",
+          "codingSequenceLength": 513,
+          "species": "human",
+          "gcPercent": 42.3,
+          "cpgCount": 7,
+          "wggwCount": 9,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000522819",
+          "geneId": "ENSG00000164924",
+          "codingSequenceLength": 378,
+          "species": "human",
+          "gcPercent": 43.1,
+          "cpgCount": 6,
+          "wggwCount": 8,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000523848",
+          "geneId": "ENSG00000164924",
+          "codingSequenceLength": 393,
+          "species": "human",
+          "gcPercent": 42.5,
+          "cpgCount": 6,
+          "wggwCount": 8,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENST00000353245",
+          "ENST00000395951",
+          "ENST00000395953",
+          "ENST00000395956",
+          "ENST00000395957",
+          "ENST00000395958",
+          "ENST00000419477",
+          "ENST00000457309",
+          "ENST00000522542",
+          "ENST00000395948",
+          "ENST00000523848",
+          "ENST00000521309",
+          "ENST00000522819",
+          "ENST00000418997",
+          "ENST00000437293"
+        ],
+        "rows": [
+          [
+            100, 100, 100, 100, 100, 100, 100, 100, 60.6, 68.7, 53.3, 51.2,
+            51.2, 39.8, 37.4
+          ],
+          [
+            100, 100, 100, 100, 100, 100, 100, 100, 60.6, 68.7, 53.3, 51.2,
+            51.2, 39.8, 37.4
+          ],
+          [
+            100, 100, 100, 100, 100, 100, 100, 100, 60.6, 68.7, 53.3, 51.2,
+            51.2, 39.8, 37.4
+          ],
+          [
+            100, 100, 100, 100, 100, 100, 100, 100, 60.6, 68.7, 53.3, 51.2,
+            51.2, 39.8, 37.4
+          ],
+          [
+            100, 100, 100, 100, 100, 100, 100, 100, 60.6, 68.7, 53.3, 51.2,
+            51.2, 39.8, 37.4
+          ],
+          [
+            100, 100, 100, 100, 100, 100, 100, 100, 60.6, 68.7, 53.3, 51.2,
+            51.2, 39.8, 37.4
+          ],
+          [
+            100, 100, 100, 100, 100, 100, 100, 100, 60.6, 68.7, 53.3, 51.2,
+            51.2, 39.8, 37.4
+          ],
+          [
+            100, 100, 100, 100, 100, 100, 100, 100, 60.6, 68.7, 53.3, 51.2,
+            51.2, 39.8, 37.4
+          ],
+          [
+            60.6, 60.6, 60.6, 60.6, 60.6, 60.6, 60.6, 60.6, 100, 87.1, 76.6,
+            73.7, 73.7, 0.6, 0.6
+          ],
+          [
+            68.7, 68.7, 68.7, 68.7, 68.7, 68.7, 68.7, 68.7, 87.1, 100, 77.5,
+            74.6, 74.6, 0.6, 0.6
+          ],
+          [
+            53.3, 53.3, 53.3, 53.3, 53.3, 53.3, 53.3, 53.3, 76.6, 77.5, 100,
+            96.2, 96.2, 0, 0
+          ],
+          [
+            51.2, 51.2, 51.2, 51.2, 51.2, 51.2, 51.2, 51.2, 73.7, 74.6, 96.2,
+            100, 100, 0.8, 0.8
+          ],
+          [
+            51.2, 51.2, 51.2, 51.2, 51.2, 51.2, 51.2, 51.2, 73.7, 74.6, 96.2,
+            100, 100, 0.8, 0.8
+          ],
+          [
+            39.8, 39.8, 39.8, 39.8, 39.8, 39.8, 39.8, 39.8, 0.6, 0.6, 0, 0.8,
+            0.8, 100, 93.9
+          ],
+          [
+            37.4, 37.4, 37.4, 37.4, 37.4, 37.4, 37.4, 37.4, 0.6, 0.6, 0, 0.8,
+            0.8, 93.9, 100
+          ]
+        ]
+      }
+    }
+  ],
+  "YIPF4": [
+    {
+      "id": "ENSMUSG00000024072",
+      "symbol": "YIPF4",
+      "name": "Yip1 Domain Family, Member 4",
+      "species": "mouse",
+      "alternateSymbols": ["2310034L04RIK"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000024873",
+          "geneId": "ENSMUSG00000024072",
+          "codingSequenceLength": 741,
+          "species": "mouse",
+          "gcPercent": 43.5,
+          "cpgCount": 16,
+          "wggwCount": 23,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENSMUST00000024873"], "rows": [[100]] }
+    },
+    {
+      "id": "ENSG00000119820",
+      "symbol": "YIPF4",
+      "name": "Yip1 Domain Family Member 4",
+      "species": "human",
+      "alternateSymbols": ["FINGER4", "NBLA11189", "YIPFALPHA2"],
+      "isoforms": [
+        {
+          "id": "ENST00000238831",
+          "geneId": "ENSG00000119820",
+          "codingSequenceLength": 735,
+          "species": "human",
+          "gcPercent": 41.1,
+          "cpgCount": 8,
+          "wggwCount": 25,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENST00000238831"], "rows": [[100]] }
+    }
+  ],
+  "YIPF5": [
+    {
+      "id": "ENSMUSG00000024487",
+      "symbol": "YIPF5",
+      "name": "Yip1 Domain Family, Member 5",
+      "species": "mouse",
+      "alternateSymbols": ["2610311I19RIK", "YIP1A"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000025364",
+          "geneId": "ENSMUSG00000024487",
+          "codingSequenceLength": 774,
+          "species": "mouse",
+          "gcPercent": 46.8,
+          "cpgCount": 12,
+          "wggwCount": 20,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENSMUST00000025364"], "rows": [[100]] }
+    },
+    {
+      "id": "ENSG00000145817",
+      "symbol": "YIPF5",
+      "name": "Yip1 Domain Family Member 5",
+      "species": "human",
+      "alternateSymbols": [
+        "FINGER5",
+        "MEDS2",
+        "SB140",
+        "SMAP-5",
+        "SMAP5",
+        "YIP1A",
+        "YIPFALPHA1A"
+      ],
+      "isoforms": [
+        {
+          "id": "ENST00000274496",
+          "geneId": "ENSG00000145817",
+          "codingSequenceLength": 774,
+          "species": "human",
+          "gcPercent": 41.9,
+          "cpgCount": 8,
+          "wggwCount": 23,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000448443",
+          "geneId": "ENSG00000145817",
+          "codingSequenceLength": 774,
+          "species": "human",
+          "gcPercent": 41.9,
+          "cpgCount": 8,
+          "wggwCount": 23,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000513112",
+          "geneId": "ENSG00000145817",
+          "codingSequenceLength": 612,
+          "species": "human",
+          "gcPercent": 41,
+          "cpgCount": 5,
+          "wggwCount": 19,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000519064",
+          "geneId": "ENSG00000145817",
+          "codingSequenceLength": 531,
+          "species": "human",
+          "gcPercent": 40.7,
+          "cpgCount": 3,
+          "wggwCount": 16,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENST00000274496",
+          "ENST00000448443",
+          "ENST00000513112",
+          "ENST00000519064"
+        ],
+        "rows": [
+          [100, 100, 79.1, 0.4],
+          [100, 100, 79.1, 0.4],
+          [79.1, 79.1, 100, 86.8],
+          [0.4, 0.4, 86.8, 100]
+        ]
+      }
+    }
+  ],
+  "YIF1A": [
+    {
+      "id": "ENSMUSG00000024875",
+      "symbol": "YIF1A",
+      "name": "Yip1 Interacting Factor Homolog A (s. Cerevisiae)",
+      "species": "mouse",
+      "alternateSymbols": ["5330422J23RIK", "54TM", "YIF1", "YIF1P"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000025811",
+          "geneId": "ENSMUSG00000024875",
+          "codingSequenceLength": 882,
+          "species": "mouse",
+          "gcPercent": 55.1,
+          "cpgCount": 24,
+          "wggwCount": 18,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000236687",
+          "geneId": "ENSMUSG00000024875",
+          "codingSequenceLength": 855,
+          "species": "mouse",
+          "gcPercent": 55.2,
+          "cpgCount": 22,
+          "wggwCount": 17,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000237025",
+          "geneId": "ENSMUSG00000024875",
+          "codingSequenceLength": 726,
+          "species": "mouse",
+          "gcPercent": 54.8,
+          "cpgCount": 21,
+          "wggwCount": 14,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000237603",
+          "geneId": "ENSMUSG00000024875",
+          "codingSequenceLength": 393,
+          "species": "mouse",
+          "gcPercent": 52.7,
+          "cpgCount": 10,
+          "wggwCount": 10,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000238093",
+          "geneId": "ENSMUSG00000024875",
+          "codingSequenceLength": 723,
+          "species": "mouse",
+          "gcPercent": 54.6,
+          "cpgCount": 19,
+          "wggwCount": 16,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENSMUST00000025811",
+          "ENSMUST00000236687",
+          "ENSMUST00000237025",
+          "ENSMUST00000238093",
+          "ENSMUST00000237603"
+        ],
+        "rows": [
+          [100, 96.9, 82.3, 73.1, 40.1],
+          [96.9, 100, 28.4, 0.7, 1.1],
+          [82.3, 28.4, 100, 67.4, 48.8],
+          [73.1, 0.7, 67.4, 100, 48.5],
+          [40.1, 1.1, 48.8, 48.5, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000174851",
+      "symbol": "YIF1A",
+      "name": "Yip1 Interacting Factor Homolog A, Membrane Trafficking Protein",
+      "species": "human",
+      "alternateSymbols": ["54TM", "FINGER7", "YIF1", "YIF1P"],
+      "isoforms": [
+        {
+          "id": "ENST00000359461",
+          "geneId": "ENSG00000174851",
+          "codingSequenceLength": 726,
+          "species": "human",
+          "gcPercent": 59.9,
+          "cpgCount": 31,
+          "wggwCount": 9,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000376901",
+          "geneId": "ENSG00000174851",
+          "codingSequenceLength": 882,
+          "species": "human",
+          "gcPercent": 60.7,
+          "cpgCount": 36,
+          "wggwCount": 15,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000431556",
+          "geneId": "ENSG00000174851",
+          "codingSequenceLength": 597,
+          "species": "human",
+          "gcPercent": 60,
+          "cpgCount": 20,
+          "wggwCount": 14,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000471387",
+          "geneId": "ENSG00000174851",
+          "codingSequenceLength": 477,
+          "species": "human",
+          "gcPercent": 62.3,
+          "cpgCount": 19,
+          "wggwCount": 9,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000496746",
+          "geneId": "ENSG00000174851",
+          "codingSequenceLength": 240,
+          "species": "human",
+          "gcPercent": 63.3,
+          "cpgCount": 14,
+          "wggwCount": 2,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000528575",
+          "geneId": "ENSG00000174851",
+          "codingSequenceLength": 480,
+          "species": "human",
+          "gcPercent": 60,
+          "cpgCount": 17,
+          "wggwCount": 9,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENST00000376901",
+          "ENST00000359461",
+          "ENST00000431556",
+          "ENST00000528575",
+          "ENST00000471387",
+          "ENST00000496746"
+        ],
+        "rows": [
+          [100, 82.3, 55.1, 48.3, 1, 27.2],
+          [82.3, 100, 67.4, 58.7, 1.2, 33.1],
+          [55.1, 67.4, 100, 71.4, 1, 0.5],
+          [48.3, 58.7, 71.4, 100, 1.3, 0.6],
+          [1, 1.2, 1, 1.3, 100, 1.3],
+          [27.2, 33.1, 0.5, 0.6, 1.3, 100]
+        ]
+      }
+    }
+  ],
+  "YME1L1": [
+    {
+      "id": "ENSMUSG00000026775",
+      "symbol": "YME1L1",
+      "name": "Yme1-like 1 (s. Cerevisiae)",
+      "species": "mouse",
+      "alternateSymbols": ["FTSH1", "FTSH"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000028117",
+          "geneId": "ENSMUSG00000026775",
+          "codingSequenceLength": 2148,
+          "species": "mouse",
+          "gcPercent": 40.1,
+          "cpgCount": 32,
+          "wggwCount": 54,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENSMUST00000028117"], "rows": [[100]] }
+    },
+    {
+      "id": "ENSG00000136758",
+      "symbol": "YME1L1",
+      "name": "Yme1 Like 1 Atpase",
+      "species": "human",
+      "alternateSymbols": ["FTSH", "MEG4", "OPA11", "PAMP", "YME1L"],
+      "isoforms": [
+        {
+          "id": "ENST00000326799",
+          "geneId": "ENSG00000136758",
+          "codingSequenceLength": 2322,
+          "species": "human",
+          "gcPercent": 41.1,
+          "cpgCount": 40,
+          "wggwCount": 55,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000376016",
+          "geneId": "ENSG00000136758",
+          "codingSequenceLength": 2151,
+          "species": "human",
+          "gcPercent": 40.8,
+          "cpgCount": 36,
+          "wggwCount": 51,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000427324",
+          "geneId": "ENSG00000136758",
+          "codingSequenceLength": 759,
+          "species": "human",
+          "gcPercent": 42.2,
+          "cpgCount": 17,
+          "wggwCount": 12,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000477432",
+          "geneId": "ENSG00000136758",
+          "codingSequenceLength": 411,
+          "species": "human",
+          "gcPercent": 45.5,
+          "cpgCount": 10,
+          "wggwCount": 6,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENST00000326799",
+          "ENST00000376016",
+          "ENST00000427324",
+          "ENST00000477432"
+        ],
+        "rows": [
+          [100, 92.6, 7.2, 14.7],
+          [92.6, 100, 15.3, 7.9],
+          [7.2, 15.3, 100, 22.1],
+          [14.7, 7.9, 22.1, 100]
+        ]
+      }
+    }
+  ],
+  "YIPF7": [
+    {
+      "id": "ENSMUSG00000029158",
+      "symbol": "YIPF7",
+      "name": "Yip1 Domain Family, Member 7",
+      "species": "mouse",
+      "alternateSymbols": ["2310016N21RIK", "YIP1B"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000031045",
+          "geneId": "ENSMUSG00000029158",
+          "codingSequenceLength": 765,
+          "species": "mouse",
+          "gcPercent": 48,
+          "cpgCount": 10,
+          "wggwCount": 15,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENSMUST00000031045"], "rows": [[100]] }
+    },
+    {
+      "id": "ENSG00000177752",
+      "symbol": "YIPF7",
+      "name": "Yip1 Domain Family Member 7",
+      "species": "human",
+      "alternateSymbols": ["FINGER9", "YIPFALPHA1B", "YIP1B"],
+      "isoforms": [
+        {
+          "id": "ENST00000415895",
+          "geneId": "ENSG00000177752",
+          "codingSequenceLength": 771,
+          "species": "human",
+          "gcPercent": 45.3,
+          "cpgCount": 8,
+          "wggwCount": 18,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENST00000415895"], "rows": [[100]] }
+    }
+  ],
+  "YBX3": [
+    {
+      "id": "ENSMUSG00000030189",
+      "symbol": "YBX3",
+      "name": "Y Box Protein 3",
+      "species": "mouse",
+      "alternateSymbols": [
+        "CSDA",
+        "DPBA",
+        "MSY3",
+        "MSY4",
+        "YB2",
+        "DBPA",
+        "OXYR"
+      ],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000032309",
+          "geneId": "ENSMUSG00000030189",
+          "codingSequenceLength": 1086,
+          "species": "mouse",
+          "gcPercent": 63,
+          "cpgCount": 94,
+          "wggwCount": 22,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000087865",
+          "geneId": "ENSMUSG00000030189",
+          "codingSequenceLength": 879,
+          "species": "mouse",
+          "gcPercent": 62.8,
+          "cpgCount": 80,
+          "wggwCount": 16,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENSMUST00000032309", "ENSMUST00000087865"],
+        "rows": [
+          [100, 80.9],
+          [80.9, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000060138",
+      "symbol": "YBX3",
+      "name": "Y-box Binding Protein 3",
+      "species": "human",
+      "alternateSymbols": ["CSDA", "CSDA1", "DBPA", "ZONAB"],
+      "isoforms": [
+        {
+          "id": "ENST00000228251",
+          "geneId": "ENSG00000060138",
+          "codingSequenceLength": 1119,
+          "species": "human",
+          "gcPercent": 61,
+          "cpgCount": 83,
+          "wggwCount": 26,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000279550",
+          "geneId": "ENSG00000060138",
+          "codingSequenceLength": 912,
+          "species": "human",
+          "gcPercent": 60.5,
+          "cpgCount": 69,
+          "wggwCount": 21,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENST00000228251", "ENST00000279550"],
+        "rows": [
+          [100, 81.5],
+          [81.5, 100]
+        ]
+      }
+    }
+  ],
+  "YIF1B": [
+    {
+      "id": "ENSMUSG00000030588",
+      "symbol": "YIF1B",
+      "name": "Yip1 Interacting Factor Homolog B (s. Cerevisiae)",
+      "species": "mouse",
+      "alternateSymbols": ["9430029K10RIK", "YIP1B"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000032809",
+          "geneId": "ENSMUSG00000030588",
+          "codingSequenceLength": 936,
+          "species": "mouse",
+          "gcPercent": 59.7,
+          "cpgCount": 43,
+          "wggwCount": 22,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000108237",
+          "geneId": "ENSMUSG00000030588",
+          "codingSequenceLength": 756,
+          "species": "mouse",
+          "gcPercent": 59.5,
+          "cpgCount": 35,
+          "wggwCount": 18,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000108238",
+          "geneId": "ENSMUSG00000030588",
+          "codingSequenceLength": 927,
+          "species": "mouse",
+          "gcPercent": 59.8,
+          "cpgCount": 42,
+          "wggwCount": 22,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000138128",
+          "geneId": "ENSMUSG00000030588",
+          "codingSequenceLength": 816,
+          "species": "mouse",
+          "gcPercent": 59.2,
+          "cpgCount": 34,
+          "wggwCount": 24,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000142519",
+          "geneId": "ENSMUSG00000030588",
+          "codingSequenceLength": 948,
+          "species": "mouse",
+          "gcPercent": 59.1,
+          "cpgCount": 38,
+          "wggwCount": 24,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENSMUST00000142519",
+          "ENSMUST00000032809",
+          "ENSMUST00000108238",
+          "ENSMUST00000138128",
+          "ENSMUST00000108237"
+        ],
+        "rows": [
+          [100, 92.7, 92.7, 0, 26.3],
+          [92.7, 100, 99, 0, 26.9],
+          [92.7, 99, 100, 0, 27.2],
+          [0, 0, 0, 100, 0],
+          [26.3, 26.9, 27.2, 0, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000167645",
+      "symbol": "YIF1B",
+      "name": "Yip1 Interacting Factor Homolog B, Membrane Trafficking Protein",
+      "species": "human",
+      "alternateSymbols": ["FINGER8", "KABAMAS"],
+      "isoforms": [
+        {
+          "id": "ENST00000329420",
+          "geneId": "ENSG00000167645",
+          "codingSequenceLength": 900,
+          "species": "human",
+          "gcPercent": 61.7,
+          "cpgCount": 40,
+          "wggwCount": 20,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000337679",
+          "geneId": "ENSG00000167645",
+          "codingSequenceLength": 876,
+          "species": "human",
+          "gcPercent": 62.1,
+          "cpgCount": 43,
+          "wggwCount": 18,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000339413",
+          "geneId": "ENSG00000167645",
+          "codingSequenceLength": 945,
+          "species": "human",
+          "gcPercent": 62.6,
+          "cpgCount": 47,
+          "wggwCount": 19,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000392124",
+          "geneId": "ENSG00000167645",
+          "codingSequenceLength": 852,
+          "species": "human",
+          "gcPercent": 61.3,
+          "cpgCount": 36,
+          "wggwCount": 18,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000587039",
+          "geneId": "ENSG00000167645",
+          "codingSequenceLength": 309,
+          "species": "human",
+          "gcPercent": 60.5,
+          "cpgCount": 10,
+          "wggwCount": 5,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000591755",
+          "geneId": "ENSG00000167645",
+          "codingSequenceLength": 885,
+          "species": "human",
+          "gcPercent": 61.6,
+          "cpgCount": 40,
+          "wggwCount": 20,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000591784",
+          "geneId": "ENSG00000167645",
+          "codingSequenceLength": 852,
+          "species": "human",
+          "gcPercent": 61.3,
+          "cpgCount": 36,
+          "wggwCount": 18,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000592246",
+          "geneId": "ENSG00000167645",
+          "codingSequenceLength": 747,
+          "species": "human",
+          "gcPercent": 62.5,
+          "cpgCount": 35,
+          "wggwCount": 16,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000592694",
+          "geneId": "ENSG00000167645",
+          "codingSequenceLength": 852,
+          "species": "human",
+          "gcPercent": 61.3,
+          "cpgCount": 36,
+          "wggwCount": 18,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENST00000339413",
+          "ENST00000329420",
+          "ENST00000591755",
+          "ENST00000337679",
+          "ENST00000392124",
+          "ENST00000591784",
+          "ENST00000592694",
+          "ENST00000592246",
+          "ENST00000587039"
+        ],
+        "rows": [
+          [100, 94, 5.4, 5.4, 90.2, 90.2, 90.2, 57.8, 0.3],
+          [94, 100, 0.7, 0.7, 94.7, 94.7, 94.7, 60.7, 0.3],
+          [5.4, 0.7, 100, 98.3, 0.7, 0.7, 0.7, 0.7, 0.3],
+          [5.4, 0.7, 98.3, 100, 0.7, 0.7, 0.7, 0.7, 0.3],
+          [90.2, 94.7, 0.7, 0.7, 100, 100, 100, 87.7, 36.3],
+          [90.2, 94.7, 0.7, 0.7, 100, 100, 100, 87.7, 36.3],
+          [90.2, 94.7, 0.7, 0.7, 100, 100, 100, 87.7, 36.3],
+          [57.8, 60.7, 0.7, 0.7, 87.7, 87.7, 87.7, 100, 27.3],
+          [0.3, 0.3, 0.3, 0.3, 36.3, 36.3, 36.3, 27.3, 100]
+        ]
+      }
+    }
+  ],
+  "YIPF2": [
+    {
+      "id": "ENSMUSG00000032182",
+      "symbol": "YIPF2",
+      "name": "Yip1 Domain Family, Member 2",
+      "species": "mouse",
+      "alternateSymbols": ["1300010K09RIK"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000034700",
+          "geneId": "ENSMUSG00000032182",
+          "codingSequenceLength": 939,
+          "species": "mouse",
+          "gcPercent": 56.1,
+          "cpgCount": 23,
+          "wggwCount": 24,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000078572",
+          "geneId": "ENSMUSG00000032182",
+          "codingSequenceLength": 939,
+          "species": "mouse",
+          "gcPercent": 56.1,
+          "cpgCount": 23,
+          "wggwCount": 24,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000180365",
+          "geneId": "ENSMUSG00000032182",
+          "codingSequenceLength": 939,
+          "species": "mouse",
+          "gcPercent": 56.1,
+          "cpgCount": 23,
+          "wggwCount": 24,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000213809",
+          "geneId": "ENSMUSG00000032182",
+          "codingSequenceLength": 369,
+          "species": "mouse",
+          "gcPercent": 57.2,
+          "cpgCount": 7,
+          "wggwCount": 10,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENSMUST00000034700",
+          "ENSMUST00000078572",
+          "ENSMUST00000180365",
+          "ENSMUST00000213809"
+        ],
+        "rows": [
+          [100, 100, 100, 39.3],
+          [100, 100, 100, 39.3],
+          [100, 100, 100, 39.3],
+          [39.3, 39.3, 39.3, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000130733",
+      "symbol": "YIPF2",
+      "name": "Yip1 Domain Family Member 2",
+      "species": "human",
+      "alternateSymbols": ["FINGER2", "YIPFBETA3B", "YIP5C"],
+      "isoforms": [
+        {
+          "id": "ENST00000253031",
+          "geneId": "ENSG00000130733",
+          "codingSequenceLength": 951,
+          "species": "human",
+          "gcPercent": 62.9,
+          "cpgCount": 41,
+          "wggwCount": 27,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000586748",
+          "geneId": "ENSG00000130733",
+          "codingSequenceLength": 951,
+          "species": "human",
+          "gcPercent": 62.9,
+          "cpgCount": 41,
+          "wggwCount": 27,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000588347",
+          "geneId": "ENSG00000130733",
+          "codingSequenceLength": 651,
+          "species": "human",
+          "gcPercent": 61.9,
+          "cpgCount": 27,
+          "wggwCount": 21,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000590329",
+          "geneId": "ENSG00000130733",
+          "codingSequenceLength": 834,
+          "species": "human",
+          "gcPercent": 62.7,
+          "cpgCount": 38,
+          "wggwCount": 23,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000591872",
+          "geneId": "ENSG00000130733",
+          "codingSequenceLength": 240,
+          "species": "human",
+          "gcPercent": 64.2,
+          "cpgCount": 13,
+          "wggwCount": 5,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENST00000253031",
+          "ENST00000586748",
+          "ENST00000590329",
+          "ENST00000588347",
+          "ENST00000591872"
+        ],
+        "rows": [
+          [100, 100, 87.7, 68.5, 25.2],
+          [100, 100, 87.7, 68.5, 25.2],
+          [87.7, 87.7, 100, 43.9, 28.8],
+          [68.5, 68.5, 43.9, 100, 0],
+          [25.2, 25.2, 28.8, 0, 100]
+        ]
+      }
+    }
+  ],
+  "YPEL1": [
+    {
+      "id": "ENSMUSG00000022773",
+      "symbol": "YPEL1",
+      "name": "Yippee Like 1",
+      "species": "mouse",
+      "alternateSymbols": [
+        "0610009L05RIK",
+        "1700016N17RIK",
+        "1700019O22RIK",
+        "4921520K19RIK",
+        "4930511F14RIK",
+        "DGL-1",
+        "DGL1",
+        "PPIL2",
+        "MDGL-1"
+      ],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000035682",
+          "geneId": "ENSMUSG00000022773",
+          "codingSequenceLength": 357,
+          "species": "mouse",
+          "gcPercent": 49.9,
+          "cpgCount": 9,
+          "wggwCount": 7,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000231394",
+          "geneId": "ENSMUSG00000022773",
+          "codingSequenceLength": 357,
+          "species": "mouse",
+          "gcPercent": 49.9,
+          "cpgCount": 9,
+          "wggwCount": 7,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000231514",
+          "geneId": "ENSMUSG00000022773",
+          "codingSequenceLength": 270,
+          "species": "mouse",
+          "gcPercent": 53.3,
+          "cpgCount": 7,
+          "wggwCount": 4,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000232574",
+          "geneId": "ENSMUSG00000022773",
+          "codingSequenceLength": 393,
+          "species": "mouse",
+          "gcPercent": 54.2,
+          "cpgCount": 9,
+          "wggwCount": 5,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000239090",
+          "geneId": "ENSMUSG00000022773",
+          "codingSequenceLength": 459,
+          "species": "mouse",
+          "gcPercent": 51.2,
+          "cpgCount": 13,
+          "wggwCount": 7,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENSMUST00000239090",
+          "ENSMUST00000232574",
+          "ENSMUST00000035682",
+          "ENSMUST00000231394",
+          "ENSMUST00000231514"
+        ],
+        "rows": [
+          [100, 0.7, 77.8, 77.8, 0],
+          [0.7, 100, 69.5, 69.5, 68.7],
+          [77.8, 69.5, 100, 100, 75.6],
+          [77.8, 69.5, 100, 100, 75.6],
+          [0, 68.7, 75.6, 75.6, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000100027",
+      "symbol": "YPEL1",
+      "name": "Yippee Like 1",
+      "species": "human",
+      "alternateSymbols": ["FKSG3"],
+      "isoforms": [
+        {
+          "id": "ENST00000339468",
+          "geneId": "ENSG00000100027",
+          "codingSequenceLength": 360,
+          "species": "human",
+          "gcPercent": 51.9,
+          "cpgCount": 17,
+          "wggwCount": 6,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000672036",
+          "geneId": "ENSG00000100027",
+          "codingSequenceLength": 465,
+          "species": "human",
+          "gcPercent": 53.1,
+          "cpgCount": 20,
+          "wggwCount": 8,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENST00000672036", "ENST00000339468"],
+        "rows": [
+          [100, 77.4],
+          [77.4, 100]
+        ]
+      }
+    }
+  ],
+  "YTHDF1": [
+    {
+      "id": "ENSMUSG00000038848",
+      "symbol": "YTHDF1",
+      "name": "Yth N6-methyladenosine Rna Binding Protein 1",
+      "species": "mouse",
+      "alternateSymbols": ["2210410K23RIK", "8030473O16"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000037299",
+          "geneId": "ENSMUSG00000038848",
+          "codingSequenceLength": 1680,
+          "species": "mouse",
+          "gcPercent": 51.7,
+          "cpgCount": 31,
+          "wggwCount": 44,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000108876",
+          "geneId": "ENSMUSG00000038848",
+          "codingSequenceLength": 1761,
+          "species": "mouse",
+          "gcPercent": 52,
+          "cpgCount": 32,
+          "wggwCount": 49,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENSMUST00000108876", "ENSMUST00000037299"],
+        "rows": [
+          [100, 95.2],
+          [95.2, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000149658",
+      "symbol": "YTHDF1",
+      "name": "Yth N6-methyladenosine Rna Binding Protein F1",
+      "species": "human",
+      "alternateSymbols": ["C20ORF21", "DF1"],
+      "isoforms": [
+        {
+          "id": "ENST00000370339",
+          "geneId": "ENSG00000149658",
+          "codingSequenceLength": 1680,
+          "species": "human",
+          "gcPercent": 56.3,
+          "cpgCount": 67,
+          "wggwCount": 36,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENST00000370339"], "rows": [[100]] }
+    }
+  ],
+  "YTHDC2": [
+    {
+      "id": "ENSMUSG00000034653",
+      "symbol": "YTHDC2",
+      "name": "Yth Domain Containing 2",
+      "species": "mouse",
+      "alternateSymbols": ["3010002F02RIK", "MYTHDC2"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000037763",
+          "geneId": "ENSMUSG00000034653",
+          "codingSequenceLength": 4338,
+          "species": "mouse",
+          "gcPercent": 44.3,
+          "cpgCount": 96,
+          "wggwCount": 100,
+          "suitability": "dual-aav"
+        },
+        {
+          "id": "ENSMUST00000201507",
+          "geneId": "ENSMUSG00000034653",
+          "codingSequenceLength": 1758,
+          "species": "mouse",
+          "gcPercent": 44.7,
+          "cpgCount": 37,
+          "wggwCount": 37,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENSMUST00000037763", "ENSMUST00000201507"],
+        "rows": [
+          [100, 0.1],
+          [0.1, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000047188",
+      "symbol": "YTHDC2",
+      "name": "Yth N6-methyladenosine Rna Binding Protein C2",
+      "species": "human",
+      "alternateSymbols": ["CAHL", "HYTHDC2"],
+      "isoforms": [
+        {
+          "id": "ENST00000161863",
+          "geneId": "ENSG00000047188",
+          "codingSequenceLength": 4293,
+          "species": "human",
+          "gcPercent": 42.2,
+          "cpgCount": 70,
+          "wggwCount": 105,
+          "suitability": "dual-aav"
+        },
+        {
+          "id": "ENST00000503857",
+          "geneId": "ENSG00000047188",
+          "codingSequenceLength": 297,
+          "species": "human",
+          "gcPercent": 57.9,
+          "cpgCount": 21,
+          "wggwCount": 8,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000515883",
+          "geneId": "ENSG00000047188",
+          "codingSequenceLength": 2220,
+          "species": "human",
+          "gcPercent": 40.9,
+          "cpgCount": 44,
+          "wggwCount": 54,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENST00000161863", "ENST00000515883", "ENST00000503857"],
+        "rows": [
+          [100, 51.7, 6.6],
+          [51.7, 100, 12.7],
+          [6.6, 12.7, 100]
+        ]
+      }
+    }
+  ],
+  "YTHDC1": [
+    {
+      "id": "ENSMUSG00000035851",
+      "symbol": "YTHDC1",
+      "name": "Yth Domain Containing 1",
+      "species": "mouse",
+      "alternateSymbols": ["A730098D12RIK", "MKIAA1966"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000038384",
+          "geneId": "ENSMUSG00000035851",
+          "codingSequenceLength": 2211,
+          "species": "mouse",
+          "gcPercent": 44.1,
+          "cpgCount": 54,
+          "wggwCount": 66,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000119339",
+          "geneId": "ENSMUSG00000035851",
+          "codingSequenceLength": 2133,
+          "species": "mouse",
+          "gcPercent": 44.4,
+          "cpgCount": 51,
+          "wggwCount": 65,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000120498",
+          "geneId": "ENSMUSG00000035851",
+          "codingSequenceLength": 2187,
+          "species": "mouse",
+          "gcPercent": 44.3,
+          "cpgCount": 54,
+          "wggwCount": 66,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000156363",
+          "geneId": "ENSMUSG00000035851",
+          "codingSequenceLength": 1638,
+          "species": "mouse",
+          "gcPercent": 42.3,
+          "cpgCount": 26,
+          "wggwCount": 57,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENSMUST00000038384",
+          "ENSMUST00000120498",
+          "ENSMUST00000119339",
+          "ENSMUST00000156363"
+        ],
+        "rows": [
+          [100, 98.9, 65.1, 1.4],
+          [98.9, 100, 97.5, 1.4],
+          [65.1, 97.5, 100, 1.4],
+          [1.4, 1.4, 1.4, 100]
+        ]
+      }
+    }
+  ],
+  "YPEL3": [
+    {
+      "id": "ENSMUSG00000042675",
+      "symbol": "YPEL3",
+      "name": "Yippee Like 3",
+      "species": "mouse",
+      "alternateSymbols": ["0610043B10RIK", "1190001G19RIK", "SUAP"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000038614",
+          "geneId": "ENSMUSG00000042675",
+          "codingSequenceLength": 360,
+          "species": "mouse",
+          "gcPercent": 53.6,
+          "cpgCount": 11,
+          "wggwCount": 5,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000106356",
+          "geneId": "ENSMUSG00000042675",
+          "codingSequenceLength": 360,
+          "species": "mouse",
+          "gcPercent": 53.6,
+          "cpgCount": 11,
+          "wggwCount": 5,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000106357",
+          "geneId": "ENSMUSG00000042675",
+          "codingSequenceLength": 360,
+          "species": "mouse",
+          "gcPercent": 53.6,
+          "cpgCount": 11,
+          "wggwCount": 5,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000106359",
+          "geneId": "ENSMUSG00000042675",
+          "codingSequenceLength": 252,
+          "species": "mouse",
+          "gcPercent": 62.7,
+          "cpgCount": 12,
+          "wggwCount": 3,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000145762",
+          "geneId": "ENSMUSG00000042675",
+          "codingSequenceLength": 309,
+          "species": "mouse",
+          "gcPercent": 55.7,
+          "cpgCount": 10,
+          "wggwCount": 5,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000170882",
+          "geneId": "ENSMUSG00000042675",
+          "codingSequenceLength": 360,
+          "species": "mouse",
+          "gcPercent": 53.6,
+          "cpgCount": 11,
+          "wggwCount": 5,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENSMUST00000038614",
+          "ENSMUST00000106356",
+          "ENSMUST00000106357",
+          "ENSMUST00000170882",
+          "ENSMUST00000145762",
+          "ENSMUST00000106359"
+        ],
+        "rows": [
+          [100, 100, 100, 100, 85.8, 1.7],
+          [100, 100, 100, 100, 85.8, 1.7],
+          [100, 100, 100, 100, 85.8, 1.7],
+          [100, 100, 100, 100, 85.8, 1.7],
+          [85.8, 85.8, 85.8, 85.8, 100, 1],
+          [1.7, 1.7, 1.7, 1.7, 1, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000090238",
+      "symbol": "YPEL3",
+      "name": "Yippee Like 3",
+      "species": "human",
+      "alternateSymbols": [],
+      "isoforms": [
+        {
+          "id": "ENST00000398838",
+          "geneId": "ENSG00000090238",
+          "codingSequenceLength": 360,
+          "species": "human",
+          "gcPercent": 56.7,
+          "cpgCount": 17,
+          "wggwCount": 6,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000398841",
+          "geneId": "ENSG00000090238",
+          "codingSequenceLength": 474,
+          "species": "human",
+          "gcPercent": 61.4,
+          "cpgCount": 24,
+          "wggwCount": 7,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000562641",
+          "geneId": "ENSG00000090238",
+          "codingSequenceLength": 414,
+          "species": "human",
+          "gcPercent": 64.5,
+          "cpgCount": 23,
+          "wggwCount": 7,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000563788",
+          "geneId": "ENSG00000090238",
+          "codingSequenceLength": 360,
+          "species": "human",
+          "gcPercent": 56.7,
+          "cpgCount": 17,
+          "wggwCount": 6,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000565110",
+          "geneId": "ENSG00000090238",
+          "codingSequenceLength": 309,
+          "species": "human",
+          "gcPercent": 58.9,
+          "cpgCount": 16,
+          "wggwCount": 6,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000566134",
+          "geneId": "ENSG00000090238",
+          "codingSequenceLength": 228,
+          "species": "human",
+          "gcPercent": 53.9,
+          "cpgCount": 8,
+          "wggwCount": 3,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000566595",
+          "geneId": "ENSG00000090238",
+          "codingSequenceLength": 360,
+          "species": "human",
+          "gcPercent": 56.7,
+          "cpgCount": 17,
+          "wggwCount": 6,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENST00000398841",
+          "ENST00000562641",
+          "ENST00000398838",
+          "ENST00000563788",
+          "ENST00000566595",
+          "ENST00000565110",
+          "ENST00000566134"
+        ],
+        "rows": [
+          [100, 81.6, 75.9, 75.9, 75.9, 0.6, 1.3],
+          [81.6, 100, 1.4, 1.4, 1.4, 0.7, 1.4],
+          [75.9, 1.4, 100, 100, 100, 85.8, 45.8],
+          [75.9, 1.4, 100, 100, 100, 85.8, 45.8],
+          [75.9, 1.4, 100, 100, 100, 85.8, 45.8],
+          [0.6, 0.7, 85.8, 85.8, 85.8, 100, 52.4],
+          [1.3, 1.4, 45.8, 45.8, 45.8, 52.4, 100]
+        ]
+      }
+    }
+  ],
+  "YPEL5": [
+    {
+      "id": "ENSMUSG00000039770",
+      "symbol": "YPEL5",
+      "name": "Yippee Like 5",
+      "species": "mouse",
+      "alternateSymbols": ["2310076K21RIK", "CGI-127"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000045174",
+          "geneId": "ENSMUSG00000039770",
+          "codingSequenceLength": 366,
+          "species": "mouse",
+          "gcPercent": 46.4,
+          "cpgCount": 12,
+          "wggwCount": 7,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000233210",
+          "geneId": "ENSMUSG00000039770",
+          "codingSequenceLength": 366,
+          "species": "mouse",
+          "gcPercent": 46.4,
+          "cpgCount": 12,
+          "wggwCount": 7,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000233886",
+          "geneId": "ENSMUSG00000039770",
+          "codingSequenceLength": 366,
+          "species": "mouse",
+          "gcPercent": 46.4,
+          "cpgCount": 12,
+          "wggwCount": 7,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENSMUST00000045174",
+          "ENSMUST00000233210",
+          "ENSMUST00000233886"
+        ],
+        "rows": [
+          [100, 100, 100],
+          [100, 100, 100],
+          [100, 100, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000119801",
+      "symbol": "YPEL5",
+      "name": "Yippee Like 5",
+      "species": "human",
+      "alternateSymbols": ["CGI-127"],
+      "isoforms": [
+        {
+          "id": "ENST00000261353",
+          "geneId": "ENSG00000119801",
+          "codingSequenceLength": 366,
+          "species": "human",
+          "gcPercent": 48.4,
+          "cpgCount": 14,
+          "wggwCount": 7,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000379519",
+          "geneId": "ENSG00000119801",
+          "codingSequenceLength": 366,
+          "species": "human",
+          "gcPercent": 48.4,
+          "cpgCount": 14,
+          "wggwCount": 7,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000379520",
+          "geneId": "ENSG00000119801",
+          "codingSequenceLength": 366,
+          "species": "human",
+          "gcPercent": 48.4,
+          "cpgCount": 14,
+          "wggwCount": 7,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000402003",
+          "geneId": "ENSG00000119801",
+          "codingSequenceLength": 366,
+          "species": "human",
+          "gcPercent": 48.4,
+          "cpgCount": 14,
+          "wggwCount": 7,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000402708",
+          "geneId": "ENSG00000119801",
+          "codingSequenceLength": 366,
+          "species": "human",
+          "gcPercent": 48.4,
+          "cpgCount": 14,
+          "wggwCount": 7,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENST00000261353",
+          "ENST00000379519",
+          "ENST00000379520",
+          "ENST00000402003",
+          "ENST00000402708"
+        ],
+        "rows": [
+          [100, 100, 100, 100, 100],
+          [100, 100, 100, 100, 100],
+          [100, 100, 100, 100, 100],
+          [100, 100, 100, 100, 100],
+          [100, 100, 100, 100, 100]
+        ]
+      }
+    }
+  ],
+  "YBEY": [
+    {
+      "id": "ENSMUSG00000033126",
+      "symbol": "YBEY",
+      "name": "Ybey Metallopeptidase",
+      "species": "mouse",
+      "alternateSymbols": [
+        "1110068N23RIK",
+        "A130042E20RIK",
+        "C21ORF57",
+        "ORF57",
+        "ORF66"
+      ],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000049185",
+          "geneId": "ENSMUSG00000033126",
+          "codingSequenceLength": 495,
+          "species": "mouse",
+          "gcPercent": 48.5,
+          "cpgCount": 9,
+          "wggwCount": 15,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENSMUST00000049185"], "rows": [[100]] }
+    },
+    {
+      "id": "ENSG00000182362",
+      "symbol": "YBEY",
+      "name": "Ybey Metalloendoribonuclease",
+      "species": "human",
+      "alternateSymbols": ["C21ORF57"],
+      "isoforms": [
+        {
+          "id": "ENST00000329319",
+          "geneId": "ENSG00000182362",
+          "codingSequenceLength": 504,
+          "species": "human",
+          "gcPercent": 49.8,
+          "cpgCount": 18,
+          "wggwCount": 10,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000339195",
+          "geneId": "ENSG00000182362",
+          "codingSequenceLength": 375,
+          "species": "human",
+          "gcPercent": 53.1,
+          "cpgCount": 17,
+          "wggwCount": 8,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000397691",
+          "geneId": "ENSG00000182362",
+          "codingSequenceLength": 504,
+          "species": "human",
+          "gcPercent": 49.8,
+          "cpgCount": 18,
+          "wggwCount": 10,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000397692",
+          "geneId": "ENSG00000182362",
+          "codingSequenceLength": 240,
+          "species": "human",
+          "gcPercent": 61.3,
+          "cpgCount": 16,
+          "wggwCount": 4,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000397694",
+          "geneId": "ENSG00000182362",
+          "codingSequenceLength": 369,
+          "species": "human",
+          "gcPercent": 53.9,
+          "cpgCount": 17,
+          "wggwCount": 7,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000397701",
+          "geneId": "ENSG00000182362",
+          "codingSequenceLength": 504,
+          "species": "human",
+          "gcPercent": 49.8,
+          "cpgCount": 18,
+          "wggwCount": 10,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENST00000329319",
+          "ENST00000397691",
+          "ENST00000397701",
+          "ENST00000339195",
+          "ENST00000397694",
+          "ENST00000397692"
+        ],
+        "rows": [
+          [100, 100, 100, 74.4, 73.2, 47.6],
+          [100, 100, 100, 74.4, 73.2, 47.6],
+          [100, 100, 100, 74.4, 73.2, 47.6],
+          [74.4, 74.4, 74.4, 100, 64, 64],
+          [73.2, 73.2, 73.2, 64, 100, 65],
+          [47.6, 47.6, 47.6, 64, 65, 100]
+        ]
+      }
+    }
+  ],
+  "YOD1": [
+    {
+      "id": "ENSMUSG00000046404",
+      "symbol": "YOD1",
+      "name": "Yod1 Deubiquitinase",
+      "species": "mouse",
+      "alternateSymbols": ["6330564D18RIK", "9930028C20RIK", "HSHIN7"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000049813",
+          "geneId": "ENSMUSG00000046404",
+          "codingSequenceLength": 1032,
+          "species": "mouse",
+          "gcPercent": 52.9,
+          "cpgCount": 40,
+          "wggwCount": 14,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENSMUST00000049813"], "rows": [[100]] }
+    },
+    {
+      "id": "ENSG00000180667",
+      "symbol": "YOD1",
+      "name": "Yod1 Deubiquitinase",
+      "species": "human",
+      "alternateSymbols": ["DUBA8", "OTUD2", "PRO0907"],
+      "isoforms": [
+        {
+          "id": "ENST00000315927",
+          "geneId": "ENSG00000180667",
+          "codingSequenceLength": 1047,
+          "species": "human",
+          "gcPercent": 51.4,
+          "cpgCount": 39,
+          "wggwCount": 22,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000367084",
+          "geneId": "ENSG00000180667",
+          "codingSequenceLength": 915,
+          "species": "human",
+          "gcPercent": 46.9,
+          "cpgCount": 23,
+          "wggwCount": 20,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENST00000315927", "ENST00000367084"],
+        "rows": [
+          [100, 82.8],
+          [82.8, 100]
+        ]
+      }
+    }
+  ],
+  "YIPF6": [
+    {
+      "id": "ENSMUSG00000047694",
+      "symbol": "YIPF6",
+      "name": "Yip1 Domain Family, Member 6",
+      "species": "mouse",
+      "alternateSymbols": ["A430107J06RIK"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000054697",
+          "geneId": "ENSMUSG00000047694",
+          "codingSequenceLength": 711,
+          "species": "mouse",
+          "gcPercent": 46.6,
+          "cpgCount": 19,
+          "wggwCount": 11,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000113811",
+          "geneId": "ENSMUSG00000047694",
+          "codingSequenceLength": 711,
+          "species": "mouse",
+          "gcPercent": 46.6,
+          "cpgCount": 19,
+          "wggwCount": 11,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENSMUST00000054697", "ENSMUST00000113811"],
+        "rows": [
+          [100, 100],
+          [100, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000181704",
+      "symbol": "YIPF6",
+      "name": "Yip1 Domain Family Member 6",
+      "species": "human",
+      "alternateSymbols": ["FINGER6", "YIPFALPHA3", "YIP4"],
+      "isoforms": [
+        {
+          "id": "ENST00000374622",
+          "geneId": "ENSG00000181704",
+          "codingSequenceLength": 582,
+          "species": "human",
+          "gcPercent": 46.7,
+          "cpgCount": 9,
+          "wggwCount": 14,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000462683",
+          "geneId": "ENSG00000181704",
+          "codingSequenceLength": 711,
+          "species": "human",
+          "gcPercent": 46.3,
+          "cpgCount": 13,
+          "wggwCount": 15,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENST00000462683", "ENST00000374622"],
+        "rows": [
+          [100, 81.9],
+          [81.9, 100]
+        ]
+      }
+    }
+  ],
+  "YWHAG": [
+    {
+      "id": "ENSMUSG00000051391",
+      "symbol": "YWHAG",
+      "name": "Tyrosine 3-monooxygenase/tryptophan 5-monooxygenase Activation Protein, Gamma Polypeptide",
+      "species": "mouse",
+      "alternateSymbols": ["14-3-3GAMMA", "D7BWG1348E"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000055808",
+          "geneId": "ENSMUSG00000051391",
+          "codingSequenceLength": 744,
+          "species": "mouse",
+          "gcPercent": 60.3,
+          "cpgCount": 60,
+          "wggwCount": 18,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000198270",
+          "geneId": "ENSMUSG00000051391",
+          "codingSequenceLength": 744,
+          "species": "mouse",
+          "gcPercent": 60.3,
+          "cpgCount": 60,
+          "wggwCount": 18,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENSMUST00000055808", "ENSMUST00000198270"],
+        "rows": [
+          [100, 100],
+          [100, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000170027",
+      "symbol": "YWHAG",
+      "name": "Tyrosine 3-monooxygenase/tryptophan 5-monooxygenase Activation Protein Gamma",
+      "species": "human",
+      "alternateSymbols": ["14-3-3GAMMA", "DEE56", "EIEE56", "PPP1R170"],
+      "isoforms": [
+        {
+          "id": "ENST00000307630",
+          "geneId": "ENSG00000170027",
+          "codingSequenceLength": 744,
+          "species": "human",
+          "gcPercent": 57.4,
+          "cpgCount": 51,
+          "wggwCount": 16,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENST00000307630"], "rows": [[100]] }
+    }
+  ],
+  "YARS2": [
+    {
+      "id": "ENSMUSG00000022792",
+      "symbol": "YARS2",
+      "name": "Tyrosyl-trna Synthetase 2 (mitochondrial)",
+      "species": "mouse",
+      "alternateSymbols": ["2210023C10RIK", "TYRRS"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000059955",
+          "geneId": "ENSMUSG00000022792",
+          "codingSequenceLength": 1419,
+          "species": "mouse",
+          "gcPercent": 55.8,
+          "cpgCount": 89,
+          "wggwCount": 28,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000159683",
+          "geneId": "ENSMUSG00000022792",
+          "codingSequenceLength": 1050,
+          "species": "mouse",
+          "gcPercent": 61.3,
+          "cpgCount": 85,
+          "wggwCount": 16,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000159962",
+          "geneId": "ENSMUSG00000022792",
+          "codingSequenceLength": 1050,
+          "species": "mouse",
+          "gcPercent": 61.3,
+          "cpgCount": 85,
+          "wggwCount": 16,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENSMUST00000059955",
+          "ENSMUST00000159683",
+          "ENSMUST00000159962"
+        ],
+        "rows": [
+          [100, 66, 66],
+          [66, 100, 100],
+          [66, 100, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000139131",
+      "symbol": "YARS2",
+      "name": "Tyrosyl-trna Synthetase 2",
+      "species": "human",
+      "alternateSymbols": ["CGI-04", "MLASA2", "MT-TYRRS", "TYRRS"],
+      "isoforms": [
+        {
+          "id": "ENST00000324868",
+          "geneId": "ENSG00000139131",
+          "codingSequenceLength": 1434,
+          "species": "human",
+          "gcPercent": 52.5,
+          "cpgCount": 68,
+          "wggwCount": 30,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000548490",
+          "geneId": "ENSG00000139131",
+          "codingSequenceLength": 876,
+          "species": "human",
+          "gcPercent": 57.9,
+          "cpgCount": 56,
+          "wggwCount": 15,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENST00000324868", "ENST00000548490"],
+        "rows": [
+          [100, 0.2],
+          [0.2, 100]
+        ]
+      }
+    }
+  ],
+  "YAP1": [
+    {
+      "id": "ENSMUSG00000053110",
+      "symbol": "YAP1",
+      "name": "Yes-associated Protein 1",
+      "species": "mouse",
+      "alternateSymbols": ["YAP", "YAP65", "YKI", "YORKIE"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000065353",
+          "geneId": "ENSMUSG00000053110",
+          "codingSequenceLength": 1467,
+          "species": "mouse",
+          "gcPercent": 58.2,
+          "cpgCount": 68,
+          "wggwCount": 34,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000086580",
+          "geneId": "ENSMUSG00000053110",
+          "codingSequenceLength": 1419,
+          "species": "mouse",
+          "gcPercent": 58.7,
+          "cpgCount": 67,
+          "wggwCount": 34,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000173085",
+          "geneId": "ENSMUSG00000053110",
+          "codingSequenceLength": 1062,
+          "species": "mouse",
+          "gcPercent": 60.1,
+          "cpgCount": 55,
+          "wggwCount": 22,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000173264",
+          "geneId": "ENSMUSG00000053110",
+          "codingSequenceLength": 1110,
+          "species": "mouse",
+          "gcPercent": 59.4,
+          "cpgCount": 56,
+          "wggwCount": 22,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000174577",
+          "geneId": "ENSMUSG00000053110",
+          "codingSequenceLength": 1074,
+          "species": "mouse",
+          "gcPercent": 60,
+          "cpgCount": 55,
+          "wggwCount": 23,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENSMUST00000065353",
+          "ENSMUST00000086580",
+          "ENSMUST00000173264",
+          "ENSMUST00000174577",
+          "ENSMUST00000173085"
+        ],
+        "rows": [
+          [100, 96.7, 67.5, 64.2, 64.2],
+          [96.7, 100, 66.4, 66.6, 66.4],
+          [67.5, 66.4, 100, 95.7, 95.7],
+          [64.2, 66.6, 95.7, 100, 98.9],
+          [64.2, 66.4, 95.7, 98.9, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000137693",
+      "symbol": "YAP1",
+      "name": "Yes1 Associated Transcriptional Regulator",
+      "species": "human",
+      "alternateSymbols": ["COB1", "YAP", "YAP-1", "YAP2", "YAP65", "YKI"],
+      "isoforms": [
+        {
+          "id": "ENST00000282441",
+          "geneId": "ENSG00000137693",
+          "codingSequenceLength": 1515,
+          "species": "human",
+          "gcPercent": 55.8,
+          "cpgCount": 54,
+          "wggwCount": 33,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000345877",
+          "geneId": "ENSG00000137693",
+          "codingSequenceLength": 1413,
+          "species": "human",
+          "gcPercent": 56.8,
+          "cpgCount": 53,
+          "wggwCount": 30,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000524575",
+          "geneId": "ENSG00000137693",
+          "codingSequenceLength": 981,
+          "species": "human",
+          "gcPercent": 50.1,
+          "cpgCount": 15,
+          "wggwCount": 28,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000526343",
+          "geneId": "ENSG00000137693",
+          "codingSequenceLength": 1353,
+          "species": "human",
+          "gcPercent": 57.1,
+          "cpgCount": 52,
+          "wggwCount": 29,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000531439",
+          "geneId": "ENSG00000137693",
+          "codingSequenceLength": 1467,
+          "species": "human",
+          "gcPercent": 56.2,
+          "cpgCount": 53,
+          "wggwCount": 33,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000537274",
+          "geneId": "ENSG00000137693",
+          "codingSequenceLength": 1479,
+          "species": "human",
+          "gcPercent": 56.3,
+          "cpgCount": 53,
+          "wggwCount": 34,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000615667",
+          "geneId": "ENSG00000137693",
+          "codingSequenceLength": 1527,
+          "species": "human",
+          "gcPercent": 55.9,
+          "cpgCount": 54,
+          "wggwCount": 34,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000629586",
+          "geneId": "ENSG00000137693",
+          "codingSequenceLength": 1365,
+          "species": "human",
+          "gcPercent": 57.2,
+          "cpgCount": 52,
+          "wggwCount": 30,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENST00000615667",
+          "ENST00000282441",
+          "ENST00000537274",
+          "ENST00000531439",
+          "ENST00000345877",
+          "ENST00000629586",
+          "ENST00000526343",
+          "ENST00000524575"
+        ],
+        "rows": [
+          [100, 99.2, 96.9, 96.1, 92.5, 76.8, 76.8, 35.2],
+          [99.2, 100, 97, 96.8, 80.6, 77.4, 77.4, 64.8],
+          [96.9, 97, 100, 99.2, 79.3, 92.3, 79.3, 33.1],
+          [96.1, 96.8, 99.2, 100, 80, 80, 92.2, 33.3],
+          [92.5, 80.6, 79.3, 80, 100, 96.6, 95.8, 38],
+          [76.8, 77.4, 92.3, 80, 96.6, 100, 99.1, 35.8],
+          [76.8, 77.4, 79.3, 92.2, 95.8, 99.1, 100, 36.1],
+          [35.2, 64.8, 33.1, 33.3, 38, 35.8, 36.1, 100]
+        ]
+      }
+    }
+  ],
+  "YY2": [
+    {
+      "id": "ENSMUSG00000091736",
+      "symbol": "YY2",
+      "name": "Yy2 Transcription Factor",
+      "species": "mouse",
+      "alternateSymbols": [],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000065806",
+          "geneId": "ENSMUSG00000091736",
+          "codingSequenceLength": 1137,
+          "species": "mouse",
+          "gcPercent": 47.2,
+          "cpgCount": 32,
+          "wggwCount": 23,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENSMUST00000065806"], "rows": [[100]] }
+    },
+    {
+      "id": "ENSG00000230797",
+      "symbol": "YY2",
+      "name": "Yy2 Transcription Factor",
+      "species": "human",
+      "alternateSymbols": ["ZNF631"],
+      "isoforms": [
+        {
+          "id": "ENST00000429584",
+          "geneId": "ENSG00000230797",
+          "codingSequenceLength": 1119,
+          "species": "human",
+          "gcPercent": 53.5,
+          "cpgCount": 51,
+          "wggwCount": 22,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENST00000429584"], "rows": [[100]] }
+    }
+  ],
+  "YWHAE": [
+    {
+      "id": "ENSMUSG00000020849",
+      "symbol": "YWHAE",
+      "name": "Tyrosine 3-monooxygenase/tryptophan 5-monooxygenase Activation Protein, Epsilon Polypeptide",
+      "species": "mouse",
+      "alternateSymbols": [],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000067664",
+          "geneId": "ENSMUSG00000020849",
+          "codingSequenceLength": 768,
+          "species": "mouse",
+          "gcPercent": 47,
+          "cpgCount": 24,
+          "wggwCount": 28,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000134745",
+          "geneId": "ENSMUSG00000020849",
+          "codingSequenceLength": 393,
+          "species": "mouse",
+          "gcPercent": 46.1,
+          "cpgCount": 12,
+          "wggwCount": 17,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENSMUST00000067664", "ENSMUST00000134745"],
+        "rows": [
+          [100, 45.3],
+          [45.3, 100]
+        ]
+      }
+    }
+  ],
+  "YDJC": [
+    {
+      "id": "ENSMUSG00000041774",
+      "symbol": "YDJC",
+      "name": "Ydjc Homolog (bacterial)",
+      "species": "mouse",
+      "alternateSymbols": ["1810015A11RIK", "4930521M19RIK"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000069064",
+          "geneId": "ENSMUSG00000041774",
+          "codingSequenceLength": 933,
+          "species": "mouse",
+          "gcPercent": 65.2,
+          "cpgCount": 77,
+          "wggwCount": 15,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000231493",
+          "geneId": "ENSMUSG00000041774",
+          "codingSequenceLength": 399,
+          "species": "mouse",
+          "gcPercent": 62.7,
+          "cpgCount": 32,
+          "wggwCount": 7,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000231708",
+          "geneId": "ENSMUSG00000041774",
+          "codingSequenceLength": 399,
+          "species": "mouse",
+          "gcPercent": 62.7,
+          "cpgCount": 32,
+          "wggwCount": 7,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000231726",
+          "geneId": "ENSMUSG00000041774",
+          "codingSequenceLength": 816,
+          "species": "mouse",
+          "gcPercent": 62.9,
+          "cpgCount": 66,
+          "wggwCount": 18,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000232344",
+          "geneId": "ENSMUSG00000041774",
+          "codingSequenceLength": 477,
+          "species": "mouse",
+          "gcPercent": 64.2,
+          "cpgCount": 39,
+          "wggwCount": 10,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000232479",
+          "geneId": "ENSMUSG00000041774",
+          "codingSequenceLength": 858,
+          "species": "mouse",
+          "gcPercent": 62.4,
+          "cpgCount": 68,
+          "wggwCount": 20,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENSMUST00000069064",
+          "ENSMUST00000232479",
+          "ENSMUST00000231726",
+          "ENSMUST00000232344",
+          "ENSMUST00000231493",
+          "ENSMUST00000231708"
+        ],
+        "rows": [
+          [100, 65, 65, 46, 35.7, 35.7],
+          [65, 100, 90.6, 50, 38.8, 38.8],
+          [65, 90.6, 100, 52.6, 40.8, 40.8],
+          [46, 50, 52.6, 100, 69.8, 69.8],
+          [35.7, 38.8, 40.8, 69.8, 100, 100],
+          [35.7, 38.8, 40.8, 69.8, 100, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000161179",
+      "symbol": "YDJC",
+      "name": "Ydjc Chitooligosaccharide Deacetylase Homolog",
+      "species": "human",
+      "alternateSymbols": [],
+      "isoforms": [
+        {
+          "id": "ENST00000292778",
+          "geneId": "ENSG00000161179",
+          "codingSequenceLength": 972,
+          "species": "human",
+          "gcPercent": 71.1,
+          "cpgCount": 101,
+          "wggwCount": 21,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000398873",
+          "geneId": "ENSG00000161179",
+          "codingSequenceLength": 450,
+          "species": "human",
+          "gcPercent": 70.4,
+          "cpgCount": 48,
+          "wggwCount": 10,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000415762",
+          "geneId": "ENSG00000161179",
+          "codingSequenceLength": 411,
+          "species": "human",
+          "gcPercent": 70.3,
+          "cpgCount": 45,
+          "wggwCount": 11,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENST00000292778", "ENST00000398873", "ENST00000415762"],
+        "rows": [
+          [100, 44.1, 34.3],
+          [44.1, 100, 74],
+          [34.3, 74, 100]
+        ]
+      }
+    }
+  ],
+  "YES1": [
+    {
+      "id": "ENSMUSG00000014932",
+      "symbol": "YES1",
+      "name": "Yes Proto-oncogene 1, Src Family Tyrosine Kinase",
+      "species": "mouse",
+      "alternateSymbols": ["YES", "P61-YES"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000072311",
+          "geneId": "ENSMUSG00000014932",
+          "codingSequenceLength": 1626,
+          "species": "mouse",
+          "gcPercent": 42.5,
+          "cpgCount": 24,
+          "wggwCount": 46,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000168707",
+          "geneId": "ENSMUSG00000014932",
+          "codingSequenceLength": 1626,
+          "species": "mouse",
+          "gcPercent": 42.5,
+          "cpgCount": 24,
+          "wggwCount": 46,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000202543",
+          "geneId": "ENSMUSG00000014932",
+          "codingSequenceLength": 1626,
+          "species": "mouse",
+          "gcPercent": 42.5,
+          "cpgCount": 24,
+          "wggwCount": 46,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENSMUST00000072311",
+          "ENSMUST00000168707",
+          "ENSMUST00000202543"
+        ],
+        "rows": [
+          [100, 100, 100],
+          [100, 100, 100],
+          [100, 100, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000176105",
+      "symbol": "YES1",
+      "name": "Yes Proto-oncogene 1, Src Family Tyrosine Kinase",
+      "species": "human",
+      "alternateSymbols": ["HST441", "P61-YES", "YES", "C-YES"],
+      "isoforms": [
+        {
+          "id": "ENST00000314574",
+          "geneId": "ENSG00000176105",
+          "codingSequenceLength": 1632,
+          "species": "human",
+          "gcPercent": 40.7,
+          "cpgCount": 20,
+          "wggwCount": 53,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000577961",
+          "geneId": "ENSG00000176105",
+          "codingSequenceLength": 1647,
+          "species": "human",
+          "gcPercent": 40.5,
+          "cpgCount": 20,
+          "wggwCount": 53,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000584307",
+          "geneId": "ENSG00000176105",
+          "codingSequenceLength": 1632,
+          "species": "human",
+          "gcPercent": 40.7,
+          "cpgCount": 20,
+          "wggwCount": 53,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENST00000577961", "ENST00000314574", "ENST00000584307"],
+        "rows": [
+          [100, 99.1, 99.1],
+          [99.1, 100, 100],
+          [99.1, 100, 100]
+        ]
+      }
+    }
+  ],
+  "YIPF1": [
+    {
+      "id": "ENSMUSG00000057375",
+      "symbol": "YIPF1",
+      "name": "Yip1 Domain Family, Member 1",
+      "species": "mouse",
+      "alternateSymbols": ["C030002N13RIK"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000075693",
+          "geneId": "ENSMUSG00000057375",
+          "codingSequenceLength": 921,
+          "species": "mouse",
+          "gcPercent": 51.1,
+          "cpgCount": 28,
+          "wggwCount": 20,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENSMUST00000075693"], "rows": [[100]] }
+    },
+    {
+      "id": "ENSG00000058799",
+      "symbol": "YIPF1",
+      "name": "Yip1 Domain Family Member 1",
+      "species": "human",
+      "alternateSymbols": ["DJ167A19.1", "FINGER1", "YIPFBETA3A", "YIP5A"],
+      "isoforms": [
+        {
+          "id": "ENST00000072644",
+          "geneId": "ENSG00000058799",
+          "codingSequenceLength": 921,
+          "species": "human",
+          "gcPercent": 45.7,
+          "cpgCount": 13,
+          "wggwCount": 21,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000371399",
+          "geneId": "ENSG00000058799",
+          "codingSequenceLength": 372,
+          "species": "human",
+          "gcPercent": 46,
+          "cpgCount": 7,
+          "wggwCount": 8,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000464950",
+          "geneId": "ENSG00000058799",
+          "codingSequenceLength": 921,
+          "species": "human",
+          "gcPercent": 45.7,
+          "cpgCount": 13,
+          "wggwCount": 21,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENST00000072644", "ENST00000464950", "ENST00000371399"],
+        "rows": [
+          [100, 100, 40.4],
+          [100, 100, 40.4],
+          [40.4, 40.4, 100]
+        ]
+      }
+    }
+  ],
+  "YBX1": [
+    {
+      "id": "ENSMUSG00000028639",
+      "symbol": "YBX1",
+      "name": "Y Box Protein 1",
+      "species": "mouse",
+      "alternateSymbols": [
+        "1700102N10RIK",
+        "EF1A",
+        "MSY1",
+        "NSEP1",
+        "YB-1",
+        "DBPB",
+        "MYB-1A"
+      ],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000079644",
+          "geneId": "ENSMUSG00000028639",
+          "codingSequenceLength": 969,
+          "species": "mouse",
+          "gcPercent": 56.8,
+          "cpgCount": 65,
+          "wggwCount": 21,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000127737",
+          "geneId": "ENSMUSG00000028639",
+          "codingSequenceLength": 645,
+          "species": "mouse",
+          "gcPercent": 54.3,
+          "cpgCount": 34,
+          "wggwCount": 12,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENSMUST00000079644", "ENSMUST00000127737"],
+        "rows": [
+          [100, 24.5],
+          [24.5, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000065978",
+      "symbol": "YBX1",
+      "name": "Y-box Binding Protein 1",
+      "species": "human",
+      "alternateSymbols": [
+        "BP-8",
+        "CBF-A",
+        "CSDA2",
+        "CSDB",
+        "DBPB",
+        "EFI-A",
+        "MDR-NF1",
+        "NSEP-1",
+        "NSEP1",
+        "YB-1",
+        "YB1"
+      ],
+      "isoforms": [
+        {
+          "id": "ENST00000321358",
+          "geneId": "ENSG00000065978",
+          "codingSequenceLength": 975,
+          "species": "human",
+          "gcPercent": 56.5,
+          "cpgCount": 60,
+          "wggwCount": 22,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENST00000321358"], "rows": [[100]] }
+    }
+  ],
+  "YAF2": [
+    {
+      "id": "ENSMUSG00000022634",
+      "symbol": "YAF2",
+      "name": "Yy1 Associated Factor 2",
+      "species": "mouse",
+      "alternateSymbols": ["2810021M11RIK"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000080299",
+          "geneId": "ENSMUSG00000022634",
+          "codingSequenceLength": 540,
+          "species": "mouse",
+          "gcPercent": 57.8,
+          "cpgCount": 30,
+          "wggwCount": 9,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000133736",
+          "geneId": "ENSMUSG00000022634",
+          "codingSequenceLength": 207,
+          "species": "mouse",
+          "gcPercent": 60.9,
+          "cpgCount": 14,
+          "wggwCount": 1,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENSMUST00000080299", "ENSMUST00000133736"],
+        "rows": [
+          [100, 28.9],
+          [28.9, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000015153",
+      "symbol": "YAF2",
+      "name": "Yy1 Associated Factor 2",
+      "species": "human",
+      "alternateSymbols": [],
+      "isoforms": [
+        {
+          "id": "ENST00000327791",
+          "geneId": "ENSG00000015153",
+          "codingSequenceLength": 615,
+          "species": "human",
+          "gcPercent": 47.3,
+          "cpgCount": 18,
+          "wggwCount": 15,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000380790",
+          "geneId": "ENSG00000015153",
+          "codingSequenceLength": 417,
+          "species": "human",
+          "gcPercent": 43.2,
+          "cpgCount": 4,
+          "wggwCount": 12,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000534854",
+          "geneId": "ENSG00000015153",
+          "codingSequenceLength": 543,
+          "species": "human",
+          "gcPercent": 48.1,
+          "cpgCount": 16,
+          "wggwCount": 11,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000546726",
+          "geneId": "ENSG00000015153",
+          "codingSequenceLength": 204,
+          "species": "human",
+          "gcPercent": 57.4,
+          "cpgCount": 12,
+          "wggwCount": 2,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000547254",
+          "geneId": "ENSG00000015153",
+          "codingSequenceLength": 204,
+          "species": "human",
+          "gcPercent": 57.4,
+          "cpgCount": 12,
+          "wggwCount": 2,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000547351",
+          "geneId": "ENSG00000015153",
+          "codingSequenceLength": 291,
+          "species": "human",
+          "gcPercent": 55,
+          "cpgCount": 14,
+          "wggwCount": 7,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000552109",
+          "geneId": "ENSG00000015153",
+          "codingSequenceLength": 219,
+          "species": "human",
+          "gcPercent": 59.4,
+          "cpgCount": 12,
+          "wggwCount": 4,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000552928",
+          "geneId": "ENSG00000015153",
+          "codingSequenceLength": 363,
+          "species": "human",
+          "gcPercent": 50.4,
+          "cpgCount": 14,
+          "wggwCount": 9,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000555248",
+          "geneId": "ENSG00000015153",
+          "codingSequenceLength": 354,
+          "species": "human",
+          "gcPercent": 56.8,
+          "cpgCount": 12,
+          "wggwCount": 8,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENST00000327791",
+          "ENST00000534854",
+          "ENST00000380790",
+          "ENST00000552928",
+          "ENST00000555248",
+          "ENST00000547351",
+          "ENST00000552109",
+          "ENST00000546726",
+          "ENST00000547254"
+        ],
+        "rows": [
+          [100, 88.3, 67.8, 25.4, 25.4, 37.1, 25.4, 25.4, 25.4],
+          [88.3, 100, 76.8, 28.7, 28.7, 28.7, 28.7, 28.7, 28.7],
+          [67.8, 76.8, 100, 7.2, 7.2, 7.2, 7.2, 7.2, 7.2],
+          [25.4, 28.7, 7.2, 100, 43, 43, 43, 43, 43],
+          [25.4, 28.7, 7.2, 43, 100, 44.9, 45.8, 44.1, 44.1],
+          [37.1, 28.7, 7.2, 43, 44.9, 100, 75.3, 53.6, 53.6],
+          [25.4, 28.7, 7.2, 43, 45.8, 75.3, 100, 71.2, 71.2],
+          [25.4, 28.7, 7.2, 43, 44.1, 53.6, 71.2, 100, 100],
+          [25.4, 28.7, 7.2, 43, 44.1, 53.6, 71.2, 100, 100]
+        ]
+      }
+    }
+  ],
+  "YJU2": [
+    {
+      "id": "ENSMUSG00000003208",
+      "symbol": "YJU2",
+      "name": "Yju2 Splicing Factor",
+      "species": "mouse",
+      "alternateSymbols": ["2900016D05RIK", "CCDC94"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000086869",
+          "geneId": "ENSMUSG00000003208",
+          "codingSequenceLength": 945,
+          "species": "mouse",
+          "gcPercent": 58,
+          "cpgCount": 47,
+          "wggwCount": 35,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000233661",
+          "geneId": "ENSMUSG00000003208",
+          "codingSequenceLength": 771,
+          "species": "mouse",
+          "gcPercent": 57.5,
+          "cpgCount": 39,
+          "wggwCount": 30,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENSMUST00000086869", "ENSMUST00000233661"],
+        "rows": [
+          [100, 75.9],
+          [75.9, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000105248",
+      "symbol": "YJU2",
+      "name": "Yju2 Splicing Factor Homolog",
+      "species": "human",
+      "alternateSymbols": ["CCDC94"],
+      "isoforms": [
+        {
+          "id": "ENST00000262962",
+          "geneId": "ENSG00000105248",
+          "codingSequenceLength": 972,
+          "species": "human",
+          "gcPercent": 61.1,
+          "cpgCount": 51,
+          "wggwCount": 44,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENST00000262962"], "rows": [[100]] }
+    }
+  ],
+  "YEATS2": [
+    {
+      "id": "ENSMUSG00000041215",
+      "symbol": "YEATS2",
+      "name": "Yeats Domain Containing 2",
+      "species": "mouse",
+      "alternateSymbols": ["MKIAA1197"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000090052",
+          "geneId": "ENSMUSG00000041215",
+          "codingSequenceLength": 4065,
+          "species": "mouse",
+          "gcPercent": 51.3,
+          "cpgCount": 78,
+          "wggwCount": 103,
+          "suitability": "dual-aav"
+        },
+        {
+          "id": "ENSMUST00000115560",
+          "geneId": "ENSMUSG00000041215",
+          "codingSequenceLength": 4224,
+          "species": "mouse",
+          "gcPercent": 51,
+          "cpgCount": 82,
+          "wggwCount": 106,
+          "suitability": "dual-aav"
+        },
+        {
+          "id": "ENSMUST00000232019",
+          "geneId": "ENSMUSG00000041215",
+          "codingSequenceLength": 4110,
+          "species": "mouse",
+          "gcPercent": 51.1,
+          "cpgCount": 79,
+          "wggwCount": 104,
+          "suitability": "dual-aav"
+        },
+        {
+          "id": "ENSMUST00000232338",
+          "geneId": "ENSMUSG00000041215",
+          "codingSequenceLength": 2535,
+          "species": "mouse",
+          "gcPercent": 50.9,
+          "cpgCount": 56,
+          "wggwCount": 61,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENSMUST00000115560",
+          "ENSMUST00000232019",
+          "ENSMUST00000090052",
+          "ENSMUST00000232338"
+        ],
+        "rows": [
+          [100, 60.9, 96.2, 0.1],
+          [60.9, 100, 62.6, 0.1],
+          [96.2, 62.6, 100, 9.2],
+          [0.1, 0.1, 9.2, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000163872",
+      "symbol": "YEATS2",
+      "name": "Yeats Domain Containing 2",
+      "species": "human",
+      "alternateSymbols": ["FAME4"],
+      "isoforms": [
+        {
+          "id": "ENST00000305135",
+          "geneId": "ENSG00000163872",
+          "codingSequenceLength": 4269,
+          "species": "human",
+          "gcPercent": 49.2,
+          "cpgCount": 81,
+          "wggwCount": 122,
+          "suitability": "dual-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENST00000305135"], "rows": [[100]] },
+      "association": {
+        "symbol": "YEATS2",
+        "name": "YEATS domain-containing protein 2",
+        "ensemblGeneId": "ENSG00000163872",
+        "inheritance": ["Autosomal dominant"],
+        "phenotypes": [
+          {
+            "name": "Epilepsy, myoclonic, familial adult, 4",
+            "mim": 615127,
+            "mappingKey": 3,
+            "inheritance": "Autosomal dominant",
+            "status": "provisional"
+          }
+        ],
+        "largestCds": 4269
+      }
+    }
+  ],
+  "YPEL4": [
+    {
+      "id": "ENSMUSG00000034059",
+      "symbol": "YPEL4",
+      "name": "Yippee Like 4",
+      "species": "mouse",
+      "alternateSymbols": [],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000090729",
+          "geneId": "ENSMUSG00000034059",
+          "codingSequenceLength": 384,
+          "species": "mouse",
+          "gcPercent": 54.4,
+          "cpgCount": 15,
+          "wggwCount": 5,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000238573",
+          "geneId": "ENSMUSG00000034059",
+          "codingSequenceLength": 477,
+          "species": "mouse",
+          "gcPercent": 56.8,
+          "cpgCount": 22,
+          "wggwCount": 5,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENSMUST00000238573", "ENSMUST00000090729"],
+        "rows": [
+          [100, 80.5],
+          [80.5, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000166793",
+      "symbol": "YPEL4",
+      "name": "Yippee Like 4",
+      "species": "human",
+      "alternateSymbols": [],
+      "isoforms": [
+        {
+          "id": "ENST00000300022",
+          "geneId": "ENSG00000166793",
+          "codingSequenceLength": 384,
+          "species": "human",
+          "gcPercent": 56.3,
+          "cpgCount": 16,
+          "wggwCount": 5,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000524669",
+          "geneId": "ENSG00000166793",
+          "codingSequenceLength": 384,
+          "species": "human",
+          "gcPercent": 56.3,
+          "cpgCount": 16,
+          "wggwCount": 5,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000534711",
+          "geneId": "ENSG00000166793",
+          "codingSequenceLength": 384,
+          "species": "human",
+          "gcPercent": 56.3,
+          "cpgCount": 16,
+          "wggwCount": 5,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000534810",
+          "geneId": "ENSG00000166793",
+          "codingSequenceLength": 477,
+          "species": "human",
+          "gcPercent": 59.1,
+          "cpgCount": 23,
+          "wggwCount": 5,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENST00000534810",
+          "ENST00000300022",
+          "ENST00000524669",
+          "ENST00000534711"
+        ],
+        "rows": [
+          [100, 80.5, 80.5, 80.5],
+          [80.5, 100, 100, 100],
+          [80.5, 100, 100, 100],
+          [80.5, 100, 100, 100]
+        ]
+      }
+    }
+  ],
+  "YIPF3": [
+    {
+      "id": "ENSMUSG00000071074",
+      "symbol": "YIPF3",
+      "name": "Yip1 Domain Family, Member 3",
+      "species": "mouse",
+      "alternateSymbols": ["C6ORF109", "D17WSU94E", "KLIP1"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000095263",
+          "geneId": "ENSMUSG00000071074",
+          "codingSequenceLength": 1044,
+          "species": "mouse",
+          "gcPercent": 58,
+          "cpgCount": 37,
+          "wggwCount": 23,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENSMUST00000095263"], "rows": [[100]] }
+    },
+    {
+      "id": "ENSG00000137207",
+      "symbol": "YIPF3",
+      "name": "Yip1 Domain Family Member 3",
+      "species": "human",
+      "alternateSymbols": [
+        "C6ORF109",
+        "FINGER3",
+        "KLIP1",
+        "YIPFBETA2",
+        "YIP5B",
+        "DJ337H4.3"
+      ],
+      "isoforms": [
+        {
+          "id": "ENST00000372422",
+          "geneId": "ENSG00000137207",
+          "codingSequenceLength": 1053,
+          "species": "human",
+          "gcPercent": 57.4,
+          "cpgCount": 33,
+          "wggwCount": 24,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000506469",
+          "geneId": "ENSG00000137207",
+          "codingSequenceLength": 1071,
+          "species": "human",
+          "gcPercent": 57.2,
+          "cpgCount": 33,
+          "wggwCount": 25,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENST00000506469", "ENST00000372422"],
+        "rows": [
+          [100, 98.3],
+          [98.3, 100]
+        ]
+      }
+    }
+  ],
+  "YAE1D1": [
+    {
+      "id": "ENSMUSG00000075054",
+      "symbol": "YAE1D1",
+      "name": "Yae1 Domain Containing 1",
+      "species": "mouse",
+      "alternateSymbols": ["1600012F09RIK"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000099735",
+          "geneId": "ENSMUSG00000075054",
+          "codingSequenceLength": 651,
+          "species": "mouse",
+          "gcPercent": 48.8,
+          "cpgCount": 28,
+          "wggwCount": 16,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000222796",
+          "geneId": "ENSMUSG00000075054",
+          "codingSequenceLength": 237,
+          "species": "mouse",
+          "gcPercent": 45.6,
+          "cpgCount": 6,
+          "wggwCount": 5,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENSMUST00000099735", "ENSMUST00000222796"],
+        "rows": [
+          [100, 36.4],
+          [36.4, 100]
+        ]
+      }
+    }
+  ],
+  "YRDC": [
+    {
+      "id": "ENSMUSG00000028889",
+      "symbol": "YRDC",
+      "name": "Yrdc Domain Containing (e.coli)",
+      "species": "mouse",
+      "alternateSymbols": ["IRIP", "ITIP"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000102628",
+          "geneId": "ENSMUSG00000028889",
+          "codingSequenceLength": 843,
+          "species": "mouse",
+          "gcPercent": 65.2,
+          "cpgCount": 69,
+          "wggwCount": 14,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000144851",
+          "geneId": "ENSMUSG00000028889",
+          "codingSequenceLength": 315,
+          "species": "mouse",
+          "gcPercent": 54.9,
+          "cpgCount": 7,
+          "wggwCount": 6,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENSMUST00000102628", "ENSMUST00000144851"],
+        "rows": [
+          [100, 0.4],
+          [0.4, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000196449",
+      "symbol": "YRDC",
+      "name": "Yrdc N6-threonylcarbamoyltransferase Domain Containing",
+      "species": "human",
+      "alternateSymbols": ["DRIP3", "GAMOS10", "IRIP", "SUA5"],
+      "isoforms": [
+        {
+          "id": "ENST00000373044",
+          "geneId": "ENSG00000196449",
+          "codingSequenceLength": 840,
+          "species": "human",
+          "gcPercent": 65,
+          "cpgCount": 74,
+          "wggwCount": 12,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENST00000373044"], "rows": [[100]] }
+    }
+  ],
+  "YWHAQ": [
+    {
+      "id": "ENSMUSG00000076432",
+      "symbol": "YWHAQ",
+      "name": "Tyrosine 3-monooxygenase/tryptophan 5-monooxygenase Activation Protein Theta",
+      "species": "mouse",
+      "alternateSymbols": ["2700028P07RIK"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000103002",
+          "geneId": "ENSMUSG00000076432",
+          "codingSequenceLength": 738,
+          "species": "mouse",
+          "gcPercent": 50.4,
+          "cpgCount": 31,
+          "wggwCount": 15,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000135088",
+          "geneId": "ENSMUSG00000076432",
+          "codingSequenceLength": 738,
+          "species": "mouse",
+          "gcPercent": 50.4,
+          "cpgCount": 31,
+          "wggwCount": 15,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000155480",
+          "geneId": "ENSMUSG00000076432",
+          "codingSequenceLength": 732,
+          "species": "mouse",
+          "gcPercent": 49.6,
+          "cpgCount": 30,
+          "wggwCount": 15,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENSMUST00000103002",
+          "ENSMUST00000135088",
+          "ENSMUST00000155480"
+        ],
+        "rows": [
+          [100, 100, 92.3],
+          [100, 100, 92.3],
+          [92.3, 92.3, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000134308",
+      "symbol": "YWHAQ",
+      "name": "Tyrosine 3-monooxygenase/tryptophan 5-monooxygenase Activation Protein Theta",
+      "species": "human",
+      "alternateSymbols": ["14-3-3", "1C5", "HS1"],
+      "isoforms": [
+        {
+          "id": "ENST00000238081",
+          "geneId": "ENSG00000134308",
+          "codingSequenceLength": 738,
+          "species": "human",
+          "gcPercent": 49.9,
+          "cpgCount": 29,
+          "wggwCount": 14,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000381844",
+          "geneId": "ENSG00000134308",
+          "codingSequenceLength": 738,
+          "species": "human",
+          "gcPercent": 49.9,
+          "cpgCount": 29,
+          "wggwCount": 14,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENST00000238081", "ENST00000381844"],
+        "rows": [
+          [100, 100],
+          [100, 100]
+        ]
+      }
+    }
+  ],
+  "YARS1": [
+    {
+      "id": "ENSMUSG00000028811",
+      "symbol": "YARS1",
+      "name": "Tyrosyl-trna Synthetase 1",
+      "species": "mouse",
+      "alternateSymbols": ["YARS"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000106054",
+          "geneId": "ENSMUSG00000028811",
+          "codingSequenceLength": 1587,
+          "species": "mouse",
+          "gcPercent": 52.3,
+          "cpgCount": 41,
+          "wggwCount": 45,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENSMUST00000106054"], "rows": [[100]] }
+    },
+    {
+      "id": "ENSG00000134684",
+      "symbol": "YARS1",
+      "name": "Tyrosyl-trna Synthetase 1",
+      "species": "human",
+      "alternateSymbols": ["CMTDIC", "IMNEPD2", "TYRRS", "YARS", "YRS", "YTS"],
+      "isoforms": [
+        {
+          "id": "ENST00000373477",
+          "geneId": "ENSG00000134684",
+          "codingSequenceLength": 1587,
+          "species": "human",
+          "gcPercent": 50.1,
+          "cpgCount": 32,
+          "wggwCount": 49,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000481895",
+          "geneId": "ENSG00000134684",
+          "codingSequenceLength": 741,
+          "species": "human",
+          "gcPercent": 47.4,
+          "cpgCount": 11,
+          "wggwCount": 21,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000616261",
+          "geneId": "ENSG00000134684",
+          "codingSequenceLength": 678,
+          "species": "human",
+          "gcPercent": 48.4,
+          "cpgCount": 12,
+          "wggwCount": 18,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000674654",
+          "geneId": "ENSG00000134684",
+          "codingSequenceLength": 402,
+          "species": "human",
+          "gcPercent": 48.8,
+          "cpgCount": 8,
+          "wggwCount": 10,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000675785",
+          "geneId": "ENSG00000134684",
+          "codingSequenceLength": 1440,
+          "species": "human",
+          "gcPercent": 50.1,
+          "cpgCount": 29,
+          "wggwCount": 45,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000676297",
+          "geneId": "ENSG00000134684",
+          "codingSequenceLength": 657,
+          "species": "human",
+          "gcPercent": 54.5,
+          "cpgCount": 18,
+          "wggwCount": 18,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENST00000373477",
+          "ENST00000675785",
+          "ENST00000481895",
+          "ENST00000616261",
+          "ENST00000676297",
+          "ENST00000674654"
+        ],
+        "rows": [
+          [100, 90.7, 37.4, 37.4, 32.3, 24.2],
+          [90.7, 100, 4.2, 4.2, 4.2, 4.2],
+          [37.4, 4.2, 100, 80.2, 69.2, 51.8],
+          [37.4, 4.2, 80.2, 100, 75.7, 57.5],
+          [32.3, 4.2, 69.2, 75.7, 100, 58.4],
+          [24.2, 4.2, 51.8, 57.5, 58.4, 100]
+        ]
+      }
+    }
+  ],
+  "YTHDF3": [
+    {
+      "id": "ENSMUSG00000047213",
+      "symbol": "YTHDF3",
+      "name": "Yth N6-methyladenosine Rna Binding Protein 3",
+      "species": "mouse",
+      "alternateSymbols": ["9130022A11RIK"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000108345",
+          "geneId": "ENSMUSG00000047213",
+          "codingSequenceLength": 1758,
+          "species": "mouse",
+          "gcPercent": 44,
+          "cpgCount": 21,
+          "wggwCount": 46,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000108346",
+          "geneId": "ENSMUSG00000047213",
+          "codingSequenceLength": 1791,
+          "species": "mouse",
+          "gcPercent": 43.8,
+          "cpgCount": 21,
+          "wggwCount": 47,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000191774",
+          "geneId": "ENSMUSG00000047213",
+          "codingSequenceLength": 1770,
+          "species": "mouse",
+          "gcPercent": 43.8,
+          "cpgCount": 21,
+          "wggwCount": 45,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENSMUST00000108346",
+          "ENSMUST00000191774",
+          "ENSMUST00000108345"
+        ],
+        "rows": [
+          [100, 90.8, 98.2],
+          [90.8, 100, 96.6],
+          [98.2, 96.6, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000185728",
+      "symbol": "YTHDF3",
+      "name": "Yth N6-methyladenosine Rna Binding Protein F3",
+      "species": "human",
+      "alternateSymbols": ["DF3"],
+      "isoforms": [
+        {
+          "id": "ENST00000539294",
+          "geneId": "ENSG00000185728",
+          "codingSequenceLength": 1758,
+          "species": "human",
+          "gcPercent": 44.7,
+          "cpgCount": 19,
+          "wggwCount": 46,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000617200",
+          "geneId": "ENSG00000185728",
+          "codingSequenceLength": 1605,
+          "species": "human",
+          "gcPercent": 45.1,
+          "cpgCount": 16,
+          "wggwCount": 44,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000621413",
+          "geneId": "ENSG00000185728",
+          "codingSequenceLength": 1767,
+          "species": "human",
+          "gcPercent": 44.4,
+          "cpgCount": 19,
+          "wggwCount": 45,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000621820",
+          "geneId": "ENSG00000185728",
+          "codingSequenceLength": 1767,
+          "species": "human",
+          "gcPercent": 44.4,
+          "cpgCount": 19,
+          "wggwCount": 45,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000621890",
+          "geneId": "ENSG00000185728",
+          "codingSequenceLength": 1605,
+          "species": "human",
+          "gcPercent": 45.1,
+          "cpgCount": 16,
+          "wggwCount": 44,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000621957",
+          "geneId": "ENSG00000185728",
+          "codingSequenceLength": 1752,
+          "species": "human",
+          "gcPercent": 44.7,
+          "cpgCount": 19,
+          "wggwCount": 46,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000623280",
+          "geneId": "ENSG00000185728",
+          "codingSequenceLength": 1605,
+          "species": "human",
+          "gcPercent": 45.1,
+          "cpgCount": 16,
+          "wggwCount": 44,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENST00000621413",
+          "ENST00000621820",
+          "ENST00000539294",
+          "ENST00000621957",
+          "ENST00000617200",
+          "ENST00000621890",
+          "ENST00000623280"
+        ],
+        "rows": [
+          [100, 100, 96.8, 96.6, 90.8, 90.8, 90.8],
+          [100, 100, 96.8, 96.6, 90.8, 90.8, 90.8],
+          [96.8, 96.8, 100, 99.7, 91.3, 91.3, 91.3],
+          [96.6, 96.6, 99.7, 100, 91.6, 91.6, 91.6],
+          [90.8, 90.8, 91.3, 91.6, 100, 100, 100],
+          [90.8, 90.8, 91.3, 91.6, 100, 100, 100],
+          [90.8, 90.8, 91.3, 91.6, 100, 100, 100]
+        ]
+      }
+    }
+  ],
+  "YTHDF2": [
+    {
+      "id": "ENSMUSG00000040025",
+      "symbol": "YTHDF2",
+      "name": "Yth N6-methyladenosine Rna Binding Protein 2",
+      "species": "mouse",
+      "alternateSymbols": ["9430020E02RIK", "HGRG8", "NY-REN-2"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000152796",
+          "geneId": "ENSMUSG00000040025",
+          "codingSequenceLength": 1740,
+          "species": "mouse",
+          "gcPercent": 48.1,
+          "cpgCount": 30,
+          "wggwCount": 52,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENSMUST00000152796"], "rows": [[100]] }
+    },
+    {
+      "id": "ENSG00000198492",
+      "symbol": "YTHDF2",
+      "name": "Yth N6-methyladenosine Rna Binding Protein F2",
+      "species": "human",
+      "alternateSymbols": ["CAHL", "DF2", "HGRG8", "NY-REN-2"],
+      "isoforms": [
+        {
+          "id": "ENST00000373812",
+          "geneId": "ENSG00000198492",
+          "codingSequenceLength": 1740,
+          "species": "human",
+          "gcPercent": 48.3,
+          "cpgCount": 30,
+          "wggwCount": 50,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000496288",
+          "geneId": "ENSG00000198492",
+          "codingSequenceLength": 723,
+          "species": "human",
+          "gcPercent": 46.7,
+          "cpgCount": 6,
+          "wggwCount": 18,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000541996",
+          "geneId": "ENSG00000198492",
+          "codingSequenceLength": 1590,
+          "species": "human",
+          "gcPercent": 48.7,
+          "cpgCount": 28,
+          "wggwCount": 44,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000542507",
+          "geneId": "ENSG00000198492",
+          "codingSequenceLength": 1740,
+          "species": "human",
+          "gcPercent": 48.3,
+          "cpgCount": 30,
+          "wggwCount": 50,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENST00000373812",
+          "ENST00000542507",
+          "ENST00000541996",
+          "ENST00000496288"
+        ],
+        "rows": [
+          [100, 100, 91.4, 7.1],
+          [100, 100, 91.4, 7.1],
+          [91.4, 91.4, 100, 0.4],
+          [7.1, 7.1, 0.4, 100]
+        ]
+      }
+    }
+  ],
+  "YJEFN3": [
+    {
+      "id": "ENSMUSG00000048967",
+      "symbol": "YJEFN3",
+      "name": "Yjef N-terminal Domain Containing 3",
+      "species": "mouse",
+      "alternateSymbols": ["GM175", "YJEF_N3", "HYJEF_N3"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000152938",
+          "geneId": "ENSMUSG00000048967",
+          "codingSequenceLength": 756,
+          "species": "mouse",
+          "gcPercent": 66.1,
+          "cpgCount": 70,
+          "wggwCount": 17,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000180068",
+          "geneId": "ENSMUSG00000048967",
+          "codingSequenceLength": 600,
+          "species": "mouse",
+          "gcPercent": 66.5,
+          "cpgCount": 61,
+          "wggwCount": 11,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENSMUST00000152938", "ENSMUST00000180068"],
+        "rows": [
+          [100, 27],
+          [27, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000250067",
+      "symbol": "YJEFN3",
+      "name": "Yjef N-terminal Domain Containing 3",
+      "species": "human",
+      "alternateSymbols": [],
+      "isoforms": [
+        {
+          "id": "ENST00000436027",
+          "geneId": "ENSG00000250067",
+          "codingSequenceLength": 750,
+          "species": "human",
+          "gcPercent": 68.1,
+          "cpgCount": 72,
+          "wggwCount": 19,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000458210",
+          "geneId": "ENSG00000250067",
+          "codingSequenceLength": 297,
+          "species": "human",
+          "gcPercent": 66,
+          "cpgCount": 18,
+          "wggwCount": 11,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000514277",
+          "geneId": "ENSG00000250067",
+          "codingSequenceLength": 900,
+          "species": "human",
+          "gcPercent": 66.7,
+          "cpgCount": 75,
+          "wggwCount": 23,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENST00000514277", "ENST00000436027", "ENST00000458210"],
+        "rows": [
+          [100, 83.3, 6.7],
+          [83.3, 100, 22.8],
+          [6.7, 22.8, 100]
+        ]
+      }
+    }
+  ],
+  "YAE1": [
+    {
+      "id": "ENSG00000241127",
+      "symbol": "YAE1",
+      "name": "Yae1 Maturation Factor Of Abce1",
+      "species": "human",
+      "alternateSymbols": ["C7ORF36", "CIAB2", "GK003", "YAE1D1"],
+      "isoforms": [
+        {
+          "id": "ENST00000223273",
+          "geneId": "ENSG00000241127",
+          "codingSequenceLength": 681,
+          "species": "human",
+          "gcPercent": 42.3,
+          "cpgCount": 11,
+          "wggwCount": 15,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000432096",
+          "geneId": "ENSG00000241127",
+          "codingSequenceLength": 621,
+          "species": "human",
+          "gcPercent": 58.9,
+          "cpgCount": 44,
+          "wggwCount": 14,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000448268",
+          "geneId": "ENSG00000241127",
+          "codingSequenceLength": 264,
+          "species": "human",
+          "gcPercent": 48.9,
+          "cpgCount": 10,
+          "wggwCount": 7,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENST00000223273", "ENST00000432096", "ENST00000448268"],
+        "rows": [
+          [100, 37, 37.4],
+          [37, 100, 40.6],
+          [37.4, 40.6, 100]
+        ]
+      }
+    }
+  ],
+  "YY1AP1": [
+    {
+      "id": "ENSG00000163374",
+      "symbol": "YY1AP1",
+      "name": "Yy1 Associated Protein 1",
+      "species": "human",
+      "alternateSymbols": ["GRNG", "HCCA1", "HCCA2", "YY1AP"],
+      "isoforms": [
+        {
+          "id": "ENST00000295566",
+          "geneId": "ENSG00000163374",
+          "codingSequenceLength": 2391,
+          "species": "human",
+          "gcPercent": 51.8,
+          "cpgCount": 43,
+          "wggwCount": 51,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000311573",
+          "geneId": "ENSG00000163374",
+          "codingSequenceLength": 2160,
+          "species": "human",
+          "gcPercent": 50.6,
+          "cpgCount": 24,
+          "wggwCount": 44,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000347088",
+          "geneId": "ENSG00000163374",
+          "codingSequenceLength": 2253,
+          "species": "human",
+          "gcPercent": 50.1,
+          "cpgCount": 24,
+          "wggwCount": 46,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000354691",
+          "geneId": "ENSG00000163374",
+          "codingSequenceLength": 591,
+          "species": "human",
+          "gcPercent": 47.5,
+          "cpgCount": 5,
+          "wggwCount": 13,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000355499",
+          "geneId": "ENSG00000163374",
+          "codingSequenceLength": 2253,
+          "species": "human",
+          "gcPercent": 50.1,
+          "cpgCount": 24,
+          "wggwCount": 46,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000359205",
+          "geneId": "ENSG00000163374",
+          "codingSequenceLength": 2220,
+          "species": "human",
+          "gcPercent": 50.3,
+          "cpgCount": 24,
+          "wggwCount": 45,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000361140",
+          "geneId": "ENSG00000163374",
+          "codingSequenceLength": 498,
+          "species": "human",
+          "gcPercent": 48.2,
+          "cpgCount": 5,
+          "wggwCount": 13,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000361831",
+          "geneId": "ENSG00000163374",
+          "codingSequenceLength": 2220,
+          "species": "human",
+          "gcPercent": 50.3,
+          "cpgCount": 24,
+          "wggwCount": 45,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000368330",
+          "geneId": "ENSG00000163374",
+          "codingSequenceLength": 2253,
+          "species": "human",
+          "gcPercent": 50.1,
+          "cpgCount": 24,
+          "wggwCount": 46,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000368339",
+          "geneId": "ENSG00000163374",
+          "codingSequenceLength": 2667,
+          "species": "human",
+          "gcPercent": 52.5,
+          "cpgCount": 59,
+          "wggwCount": 54,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000368340",
+          "geneId": "ENSG00000163374",
+          "codingSequenceLength": 2607,
+          "species": "human",
+          "gcPercent": 52.8,
+          "cpgCount": 59,
+          "wggwCount": 53,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000404643",
+          "geneId": "ENSG00000163374",
+          "codingSequenceLength": 2193,
+          "species": "human",
+          "gcPercent": 50.4,
+          "cpgCount": 24,
+          "wggwCount": 45,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000405763",
+          "geneId": "ENSG00000163374",
+          "codingSequenceLength": 1488,
+          "species": "human",
+          "gcPercent": 52,
+          "cpgCount": 43,
+          "wggwCount": 33,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000407221",
+          "geneId": "ENSG00000163374",
+          "codingSequenceLength": 2160,
+          "species": "human",
+          "gcPercent": 50.6,
+          "cpgCount": 24,
+          "wggwCount": 44,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000443231",
+          "geneId": "ENSG00000163374",
+          "codingSequenceLength": 618,
+          "species": "human",
+          "gcPercent": 48.2,
+          "cpgCount": 5,
+          "wggwCount": 14,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENST00000368339",
+          "ENST00000368340",
+          "ENST00000295566",
+          "ENST00000347088",
+          "ENST00000355499",
+          "ENST00000368330",
+          "ENST00000359205",
+          "ENST00000361831",
+          "ENST00000404643",
+          "ENST00000311573",
+          "ENST00000407221",
+          "ENST00000405763",
+          "ENST00000443231",
+          "ENST00000354691",
+          "ENST00000361140"
+        ],
+        "rows": [
+          [
+            100, 97.8, 55, 84.5, 84.5, 84.5, 83.2, 83.2, 55, 55, 55, 53, 0.1,
+            0.2, 0.2
+          ],
+          [
+            97.8, 100, 90.1, 56.3, 56.3, 56.3, 56.3, 56.3, 84.1, 82.9, 82.9, 44,
+            0.1, 0.2, 0.2
+          ],
+          [
+            55, 90.1, 100, 61.5, 61.5, 61.5, 61.4, 61.4, 91.7, 90.3, 90.3, 0.3,
+            0.1, 0.4, 0.4
+          ],
+          [
+            84.5, 56.3, 61.5, 100, 100, 100, 98.5, 98.5, 97.3, 65.1, 65.1, 0.3,
+            0.1, 26, 18.4
+          ],
+          [
+            84.5, 56.3, 61.5, 100, 100, 100, 98.5, 98.5, 97.3, 65.1, 65.1, 0.3,
+            0.1, 26, 18.4
+          ],
+          [
+            84.5, 56.3, 61.5, 100, 100, 100, 98.5, 98.5, 97.3, 65.1, 65.1, 0.3,
+            0.1, 26, 18.4
+          ],
+          [
+            83.2, 56.3, 61.4, 98.5, 98.5, 98.5, 100, 100, 66.1, 97.3, 97.3, 0.3,
+            27.8, 0.3, 0.3
+          ],
+          [
+            83.2, 56.3, 61.4, 98.5, 98.5, 98.5, 100, 100, 66.1, 97.3, 97.3, 0.3,
+            27.8, 0.3, 0.3
+          ],
+          [
+            55, 84.1, 91.7, 97.3, 97.3, 97.3, 66.1, 66.1, 100, 98.5, 98.5, 0.3,
+            0.1, 26.7, 18.9
+          ],
+          [
+            55, 82.9, 90.3, 65.1, 65.1, 65.1, 97.3, 97.3, 98.5, 100, 100, 0.3,
+            28.6, 0.3, 0.3
+          ],
+          [
+            55, 82.9, 90.3, 65.1, 65.1, 65.1, 97.3, 97.3, 98.5, 100, 100, 0.3,
+            28.6, 0.3, 0.3
+          ],
+          [
+            53, 44, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 100, 0.2, 0.4,
+            0.4
+          ],
+          [
+            0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 27.8, 27.8, 0.1, 28.6, 28.6, 0.2, 100,
+            0.5, 0.5
+          ],
+          [
+            0.2, 0.2, 0.4, 26, 26, 26, 0.3, 0.3, 26.7, 0.3, 0.3, 0.4, 0.5, 100,
+            70.1
+          ],
+          [
+            0.2, 0.2, 0.4, 18.4, 18.4, 18.4, 0.3, 0.3, 18.9, 0.3, 0.3, 0.4, 0.5,
+            70.1, 100
+          ]
+        ]
+      }
+    }
+  ]
+}

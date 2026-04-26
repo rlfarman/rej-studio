@@ -1,0 +1,2132 @@
+{
+  "QTRT1": [
+    {
+      "id": "ENSMUSG00000002825",
+      "symbol": "QTRT1",
+      "name": "Queuine Trna-ribosyltransferase Catalytic Subunit 1",
+      "species": "mouse",
+      "alternateSymbols": ["2610028E17RIK", "TGT"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000002902",
+          "geneId": "ENSMUSG00000002825",
+          "codingSequenceLength": 1212,
+          "species": "mouse",
+          "gcPercent": 58.3,
+          "cpgCount": 56,
+          "wggwCount": 29,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENSMUST00000002902"], "rows": [[100]] }
+    },
+    {
+      "id": "ENSG00000213339",
+      "symbol": "QTRT1",
+      "name": "Queuine Trna-ribosyltransferase Catalytic Subunit 1",
+      "species": "human",
+      "alternateSymbols": ["FP3235", "TGT", "TGUT"],
+      "isoforms": [
+        {
+          "id": "ENST00000250237",
+          "geneId": "ENSG00000213339",
+          "codingSequenceLength": 1212,
+          "species": "human",
+          "gcPercent": 62.9,
+          "cpgCount": 82,
+          "wggwCount": 23,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000421333",
+          "geneId": "ENSG00000213339",
+          "codingSequenceLength": 678,
+          "species": "human",
+          "gcPercent": 63.3,
+          "cpgCount": 43,
+          "wggwCount": 14,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000592376",
+          "geneId": "ENSG00000213339",
+          "codingSequenceLength": 411,
+          "species": "human",
+          "gcPercent": 62.5,
+          "cpgCount": 28,
+          "wggwCount": 7,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENST00000250237", "ENST00000421333", "ENST00000592376"],
+        "rows": [
+          [100, 44.1, 12.4],
+          [44.1, 100, 0.4],
+          [12.4, 0.4, 100]
+        ]
+      }
+    }
+  ],
+  "QARS1": [
+    {
+      "id": "ENSMUSG00000032604",
+      "symbol": "QARS1",
+      "name": "Glutaminyl-trna Synthetase 1",
+      "species": "mouse",
+      "alternateSymbols": ["1110018N24RIK", "1200016L19RIK", "GLNRS", "QARS"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000006838",
+          "geneId": "ENSMUSG00000032604",
+          "codingSequenceLength": 2328,
+          "species": "mouse",
+          "gcPercent": 52.1,
+          "cpgCount": 74,
+          "wggwCount": 60,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000134939",
+          "geneId": "ENSMUSG00000032604",
+          "codingSequenceLength": 2256,
+          "species": "mouse",
+          "gcPercent": 51.9,
+          "cpgCount": 73,
+          "wggwCount": 58,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000194045",
+          "geneId": "ENSMUSG00000032604",
+          "codingSequenceLength": 459,
+          "species": "mouse",
+          "gcPercent": 52.9,
+          "cpgCount": 9,
+          "wggwCount": 12,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000207790",
+          "geneId": "ENSMUSG00000032604",
+          "codingSequenceLength": 366,
+          "species": "mouse",
+          "gcPercent": 51.9,
+          "cpgCount": 7,
+          "wggwCount": 9,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000207947",
+          "geneId": "ENSMUSG00000032604",
+          "codingSequenceLength": 822,
+          "species": "mouse",
+          "gcPercent": 54.4,
+          "cpgCount": 39,
+          "wggwCount": 24,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000208162",
+          "geneId": "ENSMUSG00000032604",
+          "codingSequenceLength": 204,
+          "species": "mouse",
+          "gcPercent": 59.3,
+          "cpgCount": 16,
+          "wggwCount": 5,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000208177",
+          "geneId": "ENSMUSG00000032604",
+          "codingSequenceLength": 462,
+          "species": "mouse",
+          "gcPercent": 51.1,
+          "cpgCount": 10,
+          "wggwCount": 12,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000208214",
+          "geneId": "ENSMUSG00000032604",
+          "codingSequenceLength": 303,
+          "species": "mouse",
+          "gcPercent": 57.4,
+          "cpgCount": 21,
+          "wggwCount": 6,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENSMUST00000006838",
+          "ENSMUST00000134939",
+          "ENSMUST00000207947",
+          "ENSMUST00000208177",
+          "ENSMUST00000194045",
+          "ENSMUST00000207790",
+          "ENSMUST00000208214",
+          "ENSMUST00000208162"
+        ],
+        "rows": [
+          [100, 96.9, 30.4, 2.2, 0.1, 0.1, 9.4, 5.2],
+          [96.9, 100, 28.3, 2.3, 0.1, 0.1, 9.7, 5.3],
+          [30.4, 28.3, 100, 0.4, 0.4, 0.4, 26.6, 14.6],
+          [2.2, 2.3, 0.4, 100, 0.6, 0.6, 0.6, 0.6],
+          [0.1, 0.1, 0.4, 0.6, 100, 7.2, 0.7, 0.7],
+          [0.1, 0.1, 0.4, 0.6, 7.2, 100, 0.8, 0.8],
+          [9.4, 9.7, 26.6, 0.6, 0.7, 0.8, 100, 67.3],
+          [5.2, 5.3, 14.6, 0.6, 0.7, 0.8, 67.3, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000172053",
+      "symbol": "QARS1",
+      "name": "Glutaminyl-trna Synthetase 1",
+      "species": "human",
+      "alternateSymbols": ["GLNRS", "MSCCA", "PRO2195", "QARS"],
+      "isoforms": [
+        {
+          "id": "ENST00000306125",
+          "geneId": "ENSG00000172053",
+          "codingSequenceLength": 2328,
+          "species": "human",
+          "gcPercent": 55.1,
+          "cpgCount": 72,
+          "wggwCount": 66,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000414533",
+          "geneId": "ENSG00000172053",
+          "codingSequenceLength": 2295,
+          "species": "human",
+          "gcPercent": 55.1,
+          "cpgCount": 71,
+          "wggwCount": 66,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000418549",
+          "geneId": "ENSG00000172053",
+          "codingSequenceLength": 303,
+          "species": "human",
+          "gcPercent": 61.1,
+          "cpgCount": 22,
+          "wggwCount": 2,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000430182",
+          "geneId": "ENSG00000172053",
+          "codingSequenceLength": 303,
+          "species": "human",
+          "gcPercent": 61.1,
+          "cpgCount": 22,
+          "wggwCount": 2,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000452739",
+          "geneId": "ENSG00000172053",
+          "codingSequenceLength": 1017,
+          "species": "human",
+          "gcPercent": 56,
+          "cpgCount": 35,
+          "wggwCount": 29,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000453392",
+          "geneId": "ENSG00000172053",
+          "codingSequenceLength": 762,
+          "species": "human",
+          "gcPercent": 55,
+          "cpgCount": 17,
+          "wggwCount": 22,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000464962",
+          "geneId": "ENSG00000172053",
+          "codingSequenceLength": 1893,
+          "species": "human",
+          "gcPercent": 54.1,
+          "cpgCount": 47,
+          "wggwCount": 60,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000466179",
+          "geneId": "ENSG00000172053",
+          "codingSequenceLength": 276,
+          "species": "human",
+          "gcPercent": 55.1,
+          "cpgCount": 3,
+          "wggwCount": 8,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000487495",
+          "geneId": "ENSG00000172053",
+          "codingSequenceLength": 228,
+          "species": "human",
+          "gcPercent": 52.6,
+          "cpgCount": 5,
+          "wggwCount": 7,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000494767",
+          "geneId": "ENSG00000172053",
+          "codingSequenceLength": 525,
+          "species": "human",
+          "gcPercent": 58.3,
+          "cpgCount": 26,
+          "wggwCount": 7,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000634473",
+          "geneId": "ENSG00000172053",
+          "codingSequenceLength": 405,
+          "species": "human",
+          "gcPercent": 53.8,
+          "cpgCount": 5,
+          "wggwCount": 15,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000634527",
+          "geneId": "ENSG00000172053",
+          "codingSequenceLength": 288,
+          "species": "human",
+          "gcPercent": 56.3,
+          "cpgCount": 6,
+          "wggwCount": 11,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000634802",
+          "geneId": "ENSG00000172053",
+          "codingSequenceLength": 204,
+          "species": "human",
+          "gcPercent": 62.7,
+          "cpgCount": 18,
+          "wggwCount": 2,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000635052",
+          "geneId": "ENSG00000172053",
+          "codingSequenceLength": 303,
+          "species": "human",
+          "gcPercent": 61.1,
+          "cpgCount": 22,
+          "wggwCount": 2,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000635443",
+          "geneId": "ENSG00000172053",
+          "codingSequenceLength": 1026,
+          "species": "human",
+          "gcPercent": 56,
+          "cpgCount": 37,
+          "wggwCount": 26,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000635494",
+          "geneId": "ENSG00000172053",
+          "codingSequenceLength": 303,
+          "species": "human",
+          "gcPercent": 61.1,
+          "cpgCount": 22,
+          "wggwCount": 2,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000636669",
+          "geneId": "ENSG00000172053",
+          "codingSequenceLength": 2211,
+          "species": "human",
+          "gcPercent": 54.6,
+          "cpgCount": 58,
+          "wggwCount": 65,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENST00000306125",
+          "ENST00000414533",
+          "ENST00000636669",
+          "ENST00000464962",
+          "ENST00000635443",
+          "ENST00000452739",
+          "ENST00000453392",
+          "ENST00000494767",
+          "ENST00000634473",
+          "ENST00000418549",
+          "ENST00000430182",
+          "ENST00000635052",
+          "ENST00000635494",
+          "ENST00000634527",
+          "ENST00000466179",
+          "ENST00000487495"
+        ],
+        "rows": [
+          [
+            100, 98.5, 0.1, 81.3, 33.9, 11.3, 2.2, 19.5, 0.1, 9.4, 9.4, 9.4,
+            9.4, 0.1, 0.1, 0.1
+          ],
+          [
+            98.5, 100, 0.1, 82.5, 10.1, 10.1, 2.2, 10.2, 0.1, 9.5, 9.5, 9.5,
+            9.5, 0.1, 0.1, 0.1
+          ],
+          [
+            0.1, 0.1, 100, 0.1, 0, 0, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0, 0.1,
+            10.3
+          ],
+          [
+            81.3, 82.5, 0.1, 100, 0.2, 0.2, 2.7, 0.3, 0.2, 0.3, 0.3, 0.3, 0.3,
+            15.2, 0.2, 0.2
+          ],
+          [
+            33.9, 10.1, 0, 0.2, 100, 25.7, 0, 43.9, 0, 21.1, 21.1, 21.1, 21.1,
+            0.3, 0, 0
+          ],
+          [
+            11.3, 10.1, 0, 0.2, 25.7, 100, 0, 26, 0, 21.2, 21.2, 21.2, 21.2,
+            0.3, 0, 0
+          ],
+          [
+            2.2, 2.2, 0.1, 2.7, 0, 0, 100, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0, 0.4,
+            0.4
+          ],
+          [
+            19.5, 10.2, 0.1, 0.3, 43.9, 26, 0.4, 100, 0.6, 41.7, 41.7, 41.7,
+            41.7, 0.6, 0.6, 0.6
+          ],
+          [
+            0.1, 0.1, 0.1, 0.2, 0, 0, 0.4, 0.6, 100, 0.7, 0.7, 0.7, 0.7, 0, 1.5,
+            1.5
+          ],
+          [
+            9.4, 9.5, 0.1, 0.3, 21.1, 21.2, 0.4, 41.7, 0.7, 100, 100, 100, 100,
+            1, 1, 1
+          ],
+          [
+            9.4, 9.5, 0.1, 0.3, 21.1, 21.2, 0.4, 41.7, 0.7, 100, 100, 100, 100,
+            1, 1, 1
+          ],
+          [
+            9.4, 9.5, 0.1, 0.3, 21.1, 21.2, 0.4, 41.7, 0.7, 100, 100, 100, 100,
+            1, 1, 1
+          ],
+          [
+            9.4, 9.5, 0.1, 0.3, 21.1, 21.2, 0.4, 41.7, 0.7, 100, 100, 100, 100,
+            1, 1, 1
+          ],
+          [0.1, 0.1, 0, 15.2, 0.3, 0.3, 0, 0.6, 0, 1, 1, 1, 1, 100, 0, 0],
+          [0.1, 0.1, 0.1, 0.2, 0, 0, 0.4, 0.6, 1.5, 1, 1, 1, 1, 0, 100, 1.1],
+          [0.1, 0.1, 10.3, 0.2, 0, 0, 0.4, 0.6, 1.5, 1, 1, 1, 1, 0, 1.1, 100]
+        ]
+      }
+    }
+  ],
+  "QRICH1": [
+    {
+      "id": "ENSMUSG00000006673",
+      "symbol": "QRICH1",
+      "name": "Glutamine-rich 1",
+      "species": "mouse",
+      "alternateSymbols": ["2610028H07RIK", "B2B2404CLO"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000006851",
+          "geneId": "ENSMUSG00000006673",
+          "codingSequenceLength": 2334,
+          "species": "mouse",
+          "gcPercent": 51.4,
+          "cpgCount": 35,
+          "wggwCount": 40,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000112155",
+          "geneId": "ENSMUSG00000006673",
+          "codingSequenceLength": 2334,
+          "species": "mouse",
+          "gcPercent": 51.4,
+          "cpgCount": 35,
+          "wggwCount": 40,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000193258",
+          "geneId": "ENSMUSG00000006673",
+          "codingSequenceLength": 1812,
+          "species": "mouse",
+          "gcPercent": 51.7,
+          "cpgCount": 24,
+          "wggwCount": 36,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000194385",
+          "geneId": "ENSMUSG00000006673",
+          "codingSequenceLength": 780,
+          "species": "mouse",
+          "gcPercent": 46.2,
+          "cpgCount": 10,
+          "wggwCount": 17,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000195513",
+          "geneId": "ENSMUSG00000006673",
+          "codingSequenceLength": 264,
+          "species": "mouse",
+          "gcPercent": 48.5,
+          "cpgCount": 3,
+          "wggwCount": 6,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENSMUST00000006851",
+          "ENSMUST00000112155",
+          "ENSMUST00000193258",
+          "ENSMUST00000194385",
+          "ENSMUST00000195513"
+        ],
+        "rows": [
+          [100, 100, 76.9, 13.4, 11.3],
+          [100, 100, 76.9, 13.4, 11.3],
+          [76.9, 76.9, 100, 43, 14.6],
+          [13.4, 13.4, 43, 100, 33.8],
+          [11.3, 11.3, 14.6, 33.8, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000198218",
+      "symbol": "QRICH1",
+      "name": "Glutamine Rich 1",
+      "species": "human",
+      "alternateSymbols": ["AB-DIP", "VERBRAS"],
+      "isoforms": [
+        {
+          "id": "ENST00000357496",
+          "geneId": "ENSG00000198218",
+          "codingSequenceLength": 2331,
+          "species": "human",
+          "gcPercent": 53.7,
+          "cpgCount": 43,
+          "wggwCount": 45,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000395443",
+          "geneId": "ENSG00000198218",
+          "codingSequenceLength": 2331,
+          "species": "human",
+          "gcPercent": 53.7,
+          "cpgCount": 43,
+          "wggwCount": 45,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000411682",
+          "geneId": "ENSG00000198218",
+          "codingSequenceLength": 2331,
+          "species": "human",
+          "gcPercent": 53.7,
+          "cpgCount": 43,
+          "wggwCount": 45,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000424300",
+          "geneId": "ENSG00000198218",
+          "codingSequenceLength": 2331,
+          "species": "human",
+          "gcPercent": 53.7,
+          "cpgCount": 43,
+          "wggwCount": 45,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000703871",
+          "geneId": "ENSG00000198218",
+          "codingSequenceLength": 2331,
+          "species": "human",
+          "gcPercent": 53.7,
+          "cpgCount": 43,
+          "wggwCount": 45,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000703872",
+          "geneId": "ENSG00000198218",
+          "codingSequenceLength": 420,
+          "species": "human",
+          "gcPercent": 54,
+          "cpgCount": 7,
+          "wggwCount": 12,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000703873",
+          "geneId": "ENSG00000198218",
+          "codingSequenceLength": 1302,
+          "species": "human",
+          "gcPercent": 49.9,
+          "cpgCount": 21,
+          "wggwCount": 24,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000703938",
+          "geneId": "ENSG00000198218",
+          "codingSequenceLength": 1899,
+          "species": "human",
+          "gcPercent": 54.5,
+          "cpgCount": 35,
+          "wggwCount": 37,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000703939",
+          "geneId": "ENSG00000198218",
+          "codingSequenceLength": 1620,
+          "species": "human",
+          "gcPercent": 55.9,
+          "cpgCount": 29,
+          "wggwCount": 34,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000703940",
+          "geneId": "ENSG00000198218",
+          "codingSequenceLength": 1902,
+          "species": "human",
+          "gcPercent": 54.3,
+          "cpgCount": 34,
+          "wggwCount": 38,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000703941",
+          "geneId": "ENSG00000198218",
+          "codingSequenceLength": 1842,
+          "species": "human",
+          "gcPercent": 54.5,
+          "cpgCount": 36,
+          "wggwCount": 38,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000703942",
+          "geneId": "ENSG00000198218",
+          "codingSequenceLength": 2331,
+          "species": "human",
+          "gcPercent": 53.7,
+          "cpgCount": 43,
+          "wggwCount": 45,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000703943",
+          "geneId": "ENSG00000198218",
+          "codingSequenceLength": 1410,
+          "species": "human",
+          "gcPercent": 56.4,
+          "cpgCount": 27,
+          "wggwCount": 31,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENST00000357496",
+          "ENST00000395443",
+          "ENST00000411682",
+          "ENST00000424300",
+          "ENST00000703871",
+          "ENST00000703942",
+          "ENST00000703940",
+          "ENST00000703938",
+          "ENST00000703941",
+          "ENST00000703939",
+          "ENST00000703943",
+          "ENST00000703873",
+          "ENST00000703872"
+        ],
+        "rows": [
+          [
+            100, 100, 100, 100, 100, 100, 76.8, 81.5, 76.7, 65.1, 57.5, 55.9,
+            17.6
+          ],
+          [
+            100, 100, 100, 100, 100, 100, 76.8, 81.5, 76.7, 65.1, 57.5, 55.9,
+            17.6
+          ],
+          [
+            100, 100, 100, 100, 100, 100, 76.8, 81.5, 76.7, 65.1, 57.5, 55.9,
+            17.6
+          ],
+          [
+            100, 100, 100, 100, 100, 100, 76.8, 81.5, 76.7, 65.1, 57.5, 55.9,
+            17.6
+          ],
+          [
+            100, 100, 100, 100, 100, 100, 76.8, 81.5, 76.7, 65.1, 57.5, 55.9,
+            17.6
+          ],
+          [
+            100, 100, 100, 100, 100, 100, 76.8, 81.5, 76.7, 65.1, 57.5, 55.9,
+            17.6
+          ],
+          [
+            76.8, 76.8, 76.8, 76.8, 76.8, 76.8, 100, 94.2, 94, 79.8, 70.5, 16.4,
+            21.6
+          ],
+          [
+            81.5, 81.5, 81.5, 81.5, 81.5, 81.5, 94.2, 100, 94.2, 79.9, 70.6,
+            16.4, 21.6
+          ],
+          [
+            76.7, 76.7, 76.7, 76.7, 76.7, 76.7, 94, 94.2, 100, 82.6, 72.8, 16.9,
+            22.5
+          ],
+          [
+            65.1, 65.1, 65.1, 65.1, 65.1, 65.1, 79.8, 79.9, 82.6, 100, 82.8,
+            19.3, 25.6
+          ],
+          [
+            57.5, 57.5, 57.5, 57.5, 57.5, 57.5, 70.5, 70.6, 72.8, 82.8, 100,
+            22.1, 29.1
+          ],
+          [
+            55.9, 55.9, 55.9, 55.9, 55.9, 55.9, 16.4, 16.4, 16.9, 19.3, 22.1,
+            100, 24
+          ],
+          [
+            17.6, 17.6, 17.6, 17.6, 17.6, 17.6, 21.6, 21.6, 22.5, 25.6, 29.1,
+            24, 100
+          ]
+        ]
+      }
+    }
+  ],
+  "QDPR": [
+    {
+      "id": "ENSMUSG00000015806",
+      "symbol": "QDPR",
+      "name": "Quinoid Dihydropteridine Reductase",
+      "species": "mouse",
+      "alternateSymbols": ["2610008L04RIK", "D5ERTD371E", "DHPR", "PKU2"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000015950",
+          "geneId": "ENSMUSG00000015806",
+          "codingSequenceLength": 726,
+          "species": "mouse",
+          "gcPercent": 57.2,
+          "cpgCount": 23,
+          "wggwCount": 26,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000117425",
+          "geneId": "ENSMUSG00000015806",
+          "codingSequenceLength": 570,
+          "species": "mouse",
+          "gcPercent": 54.2,
+          "cpgCount": 7,
+          "wggwCount": 21,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000118097",
+          "geneId": "ENSMUSG00000015806",
+          "codingSequenceLength": 570,
+          "species": "mouse",
+          "gcPercent": 54.2,
+          "cpgCount": 7,
+          "wggwCount": 21,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000120867",
+          "geneId": "ENSMUSG00000015806",
+          "codingSequenceLength": 570,
+          "species": "mouse",
+          "gcPercent": 54.2,
+          "cpgCount": 7,
+          "wggwCount": 21,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000197946",
+          "geneId": "ENSMUSG00000015806",
+          "codingSequenceLength": 642,
+          "species": "mouse",
+          "gcPercent": 57.6,
+          "cpgCount": 21,
+          "wggwCount": 21,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000198258",
+          "geneId": "ENSMUSG00000015806",
+          "codingSequenceLength": 420,
+          "species": "mouse",
+          "gcPercent": 55.5,
+          "cpgCount": 5,
+          "wggwCount": 14,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENSMUST00000015950",
+          "ENSMUST00000197946",
+          "ENSMUST00000117425",
+          "ENSMUST00000118097",
+          "ENSMUST00000120867",
+          "ENSMUST00000198258"
+        ],
+        "rows": [
+          [100, 88.4, 78.5, 78.5, 78.5, 57.9],
+          [88.4, 100, 16.8, 16.8, 16.8, 16.8],
+          [78.5, 16.8, 100, 100, 100, 73.7],
+          [78.5, 16.8, 100, 100, 100, 73.7],
+          [78.5, 16.8, 100, 100, 100, 73.7],
+          [57.9, 16.8, 73.7, 73.7, 73.7, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000151552",
+      "symbol": "QDPR",
+      "name": "Quinoid Dihydropteridine Reductase",
+      "species": "human",
+      "alternateSymbols": ["DHPR", "HDHPR", "PKU2", "SDR33C1"],
+      "isoforms": [
+        {
+          "id": "ENST00000281243",
+          "geneId": "ENSG00000151552",
+          "codingSequenceLength": 735,
+          "species": "human",
+          "gcPercent": 57.6,
+          "cpgCount": 34,
+          "wggwCount": 26,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000428702",
+          "geneId": "ENSG00000151552",
+          "codingSequenceLength": 642,
+          "species": "human",
+          "gcPercent": 58.4,
+          "cpgCount": 31,
+          "wggwCount": 22,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000507439",
+          "geneId": "ENSG00000151552",
+          "codingSequenceLength": 459,
+          "species": "human",
+          "gcPercent": 58.6,
+          "cpgCount": 23,
+          "wggwCount": 17,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000508623",
+          "geneId": "ENSG00000151552",
+          "codingSequenceLength": 489,
+          "species": "human",
+          "gcPercent": 57.7,
+          "cpgCount": 24,
+          "wggwCount": 18,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000513615",
+          "geneId": "ENSG00000151552",
+          "codingSequenceLength": 459,
+          "species": "human",
+          "gcPercent": 58.6,
+          "cpgCount": 23,
+          "wggwCount": 17,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENST00000281243",
+          "ENST00000428702",
+          "ENST00000508623",
+          "ENST00000507439",
+          "ENST00000513615"
+        ],
+        "rows": [
+          [100, 87.3, 59.6, 60, 60],
+          [87.3, 100, 16.8, 16.8, 16.8],
+          [59.6, 16.8, 100, 89.6, 89.6],
+          [60, 16.8, 89.6, 100, 100],
+          [60, 16.8, 89.6, 100, 100]
+        ]
+      }
+    }
+  ],
+  "QRSL1": [
+    {
+      "id": "ENSMUSG00000019863",
+      "symbol": "QRSL1",
+      "name": "Glutaminyl-trna Synthase (glutamine-hydrolyzing)-like 1",
+      "species": "mouse",
+      "alternateSymbols": ["2700038P16RIK", "GATA"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000020012",
+          "geneId": "ENSMUSG00000019863",
+          "codingSequenceLength": 1578,
+          "species": "mouse",
+          "gcPercent": 49.1,
+          "cpgCount": 37,
+          "wggwCount": 47,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENSMUST00000020012"], "rows": [[100]] }
+    },
+    {
+      "id": "ENSG00000130348",
+      "symbol": "QRSL1",
+      "name": "Glutaminyl-trna Amidotransferase Subunit Qrsl1",
+      "species": "human",
+      "alternateSymbols": ["COXPD40", "GATA"],
+      "isoforms": [
+        {
+          "id": "ENST00000369044",
+          "geneId": "ENSG00000130348",
+          "codingSequenceLength": 960,
+          "species": "human",
+          "gcPercent": 44.1,
+          "cpgCount": 13,
+          "wggwCount": 23,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000369046",
+          "geneId": "ENSG00000130348",
+          "codingSequenceLength": 1587,
+          "species": "human",
+          "gcPercent": 43,
+          "cpgCount": 19,
+          "wggwCount": 37,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENST00000369046", "ENST00000369044"],
+        "rows": [
+          [100, 53.7],
+          [53.7, 100]
+        ]
+      }
+    }
+  ],
+  "QNG1": [
+    {
+      "id": "ENSMUSG00000021550",
+      "symbol": "QNG1",
+      "name": "Q-nucleotide N-glycosylase 1",
+      "species": "mouse",
+      "alternateSymbols": ["2210016F16RIK"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000022032",
+          "geneId": "ENSMUSG00000021550",
+          "codingSequenceLength": 1017,
+          "species": "mouse",
+          "gcPercent": 56.9,
+          "cpgCount": 70,
+          "wggwCount": 24,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENSMUST00000022032"], "rows": [[100]] }
+    },
+    {
+      "id": "ENSG00000165118",
+      "symbol": "QNG1",
+      "name": "Q-nucleotide N-glycosylase 1",
+      "species": "human",
+      "alternateSymbols": ["C9ORF64"],
+      "isoforms": [
+        {
+          "id": "ENST00000314700",
+          "geneId": "ENSG00000165118",
+          "codingSequenceLength": 603,
+          "species": "human",
+          "gcPercent": 43,
+          "cpgCount": 12,
+          "wggwCount": 20,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000376344",
+          "geneId": "ENSG00000165118",
+          "codingSequenceLength": 1026,
+          "species": "human",
+          "gcPercent": 48.9,
+          "cpgCount": 41,
+          "wggwCount": 30,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENST00000376344", "ENST00000314700"],
+        "rows": [
+          [100, 58.8],
+          [58.8, 100]
+        ]
+      }
+    }
+  ],
+  "QTRT2": [
+    {
+      "id": "ENSMUSG00000022704",
+      "symbol": "QTRT2",
+      "name": "Queuine Trna-ribosyltransferase Accessory Subunit 2",
+      "species": "mouse",
+      "alternateSymbols": ["3110012M05RIK", "4930470H18RIK", "QRTR2", "QTRTD1"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000023387",
+          "geneId": "ENSMUSG00000022704",
+          "codingSequenceLength": 1038,
+          "species": "mouse",
+          "gcPercent": 49.3,
+          "cpgCount": 27,
+          "wggwCount": 23,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000131360",
+          "geneId": "ENSMUSG00000022704",
+          "codingSequenceLength": 207,
+          "species": "mouse",
+          "gcPercent": 54.1,
+          "cpgCount": 7,
+          "wggwCount": 3,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000146343",
+          "geneId": "ENSMUSG00000022704",
+          "codingSequenceLength": 207,
+          "species": "mouse",
+          "gcPercent": 54.1,
+          "cpgCount": 7,
+          "wggwCount": 3,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000156568",
+          "geneId": "ENSMUSG00000022704",
+          "codingSequenceLength": 816,
+          "species": "mouse",
+          "gcPercent": 53.9,
+          "cpgCount": 24,
+          "wggwCount": 27,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000239112",
+          "geneId": "ENSMUSG00000022704",
+          "codingSequenceLength": 1251,
+          "species": "mouse",
+          "gcPercent": 50,
+          "cpgCount": 34,
+          "wggwCount": 33,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENSMUST00000239112",
+          "ENSMUST00000023387",
+          "ENSMUST00000156568",
+          "ENSMUST00000131360",
+          "ENSMUST00000146343"
+        ],
+        "rows": [
+          [100, 83, 60.2, 16.5, 16.5],
+          [83, 100, 32.7, 19.9, 19.9],
+          [60.2, 32.7, 100, 25.4, 25.4],
+          [16.5, 19.9, 25.4, 100, 100],
+          [16.5, 19.9, 25.4, 100, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000151576",
+      "symbol": "QTRT2",
+      "name": "Queuine Trna-ribosyltransferase Accessory Subunit 2",
+      "species": "human",
+      "alternateSymbols": ["QTRTD1"],
+      "isoforms": [
+        {
+          "id": "ENST00000281273",
+          "geneId": "ENSG00000151576",
+          "codingSequenceLength": 1248,
+          "species": "human",
+          "gcPercent": 46.9,
+          "cpgCount": 23,
+          "wggwCount": 38,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000472599",
+          "geneId": "ENSG00000151576",
+          "codingSequenceLength": 501,
+          "species": "human",
+          "gcPercent": 48.3,
+          "cpgCount": 9,
+          "wggwCount": 14,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000479882",
+          "geneId": "ENSG00000151576",
+          "codingSequenceLength": 879,
+          "species": "human",
+          "gcPercent": 45.7,
+          "cpgCount": 15,
+          "wggwCount": 29,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000482307",
+          "geneId": "ENSG00000151576",
+          "codingSequenceLength": 435,
+          "species": "human",
+          "gcPercent": 50.3,
+          "cpgCount": 9,
+          "wggwCount": 12,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000485050",
+          "geneId": "ENSG00000151576",
+          "codingSequenceLength": 1284,
+          "species": "human",
+          "gcPercent": 46.9,
+          "cpgCount": 23,
+          "wggwCount": 41,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000493014",
+          "geneId": "ENSG00000151576",
+          "codingSequenceLength": 930,
+          "species": "human",
+          "gcPercent": 46,
+          "cpgCount": 16,
+          "wggwCount": 33,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENST00000485050",
+          "ENST00000281273",
+          "ENST00000493014",
+          "ENST00000479882",
+          "ENST00000472599",
+          "ENST00000482307"
+        ],
+        "rows": [
+          [100, 97.2, 72.4, 68.5, 0.2, 0.2],
+          [97.2, 100, 73.6, 70.4, 0.5, 26.7],
+          [72.4, 73.6, 100, 94.5, 0.3, 0.3],
+          [68.5, 70.4, 94.5, 100, 0.3, 0.3],
+          [0.2, 0.5, 0.3, 0.3, 100, 1.2],
+          [0.2, 26.7, 0.3, 0.3, 1.2, 100]
+        ]
+      }
+    }
+  ],
+  "QPCTL": [
+    {
+      "id": "ENSMUSG00000030407",
+      "symbol": "QPCTL",
+      "name": "Glutaminyl-peptide Cyclotransferase-like",
+      "species": "mouse",
+      "alternateSymbols": ["1810019P04RIK", "GQC"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000032566",
+          "geneId": "ENSMUSG00000030407",
+          "codingSequenceLength": 1152,
+          "species": "mouse",
+          "gcPercent": 61.3,
+          "cpgCount": 50,
+          "wggwCount": 23,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENSMUST00000032566"], "rows": [[100]] }
+    },
+    {
+      "id": "ENSG00000011478",
+      "symbol": "QPCTL",
+      "name": "Glutaminyl-peptide Cyclotransferase Like",
+      "species": "human",
+      "alternateSymbols": ["GQC"],
+      "isoforms": [
+        {
+          "id": "ENST00000012049",
+          "geneId": "ENSG00000011478",
+          "codingSequenceLength": 1149,
+          "species": "human",
+          "gcPercent": 63.4,
+          "cpgCount": 63,
+          "wggwCount": 28,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000366382",
+          "geneId": "ENSG00000011478",
+          "codingSequenceLength": 867,
+          "species": "human",
+          "gcPercent": 63.6,
+          "cpgCount": 54,
+          "wggwCount": 19,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000591606",
+          "geneId": "ENSG00000011478",
+          "codingSequenceLength": 366,
+          "species": "human",
+          "gcPercent": 66.7,
+          "cpgCount": 27,
+          "wggwCount": 10,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000677024",
+          "geneId": "ENSG00000011478",
+          "codingSequenceLength": 336,
+          "species": "human",
+          "gcPercent": 69.9,
+          "cpgCount": 36,
+          "wggwCount": 4,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000677542",
+          "geneId": "ENSG00000011478",
+          "codingSequenceLength": 336,
+          "species": "human",
+          "gcPercent": 69.9,
+          "cpgCount": 36,
+          "wggwCount": 4,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000678102",
+          "geneId": "ENSG00000011478",
+          "codingSequenceLength": 336,
+          "species": "human",
+          "gcPercent": 69.9,
+          "cpgCount": 36,
+          "wggwCount": 4,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000678862",
+          "geneId": "ENSG00000011478",
+          "codingSequenceLength": 807,
+          "species": "human",
+          "gcPercent": 64.9,
+          "cpgCount": 49,
+          "wggwCount": 23,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENST00000012049",
+          "ENST00000366382",
+          "ENST00000678862",
+          "ENST00000591606",
+          "ENST00000677024",
+          "ENST00000677542",
+          "ENST00000678102"
+        ],
+        "rows": [
+          [100, 75.5, 68.7, 0.5, 18.5, 18.5, 18.5],
+          [75.5, 100, 40.8, 0.7, 24.6, 24.6, 24.6],
+          [68.7, 40.8, 100, 0.7, 26.4, 26.4, 26.4],
+          [0.5, 0.7, 0.7, 100, 1.6, 1.6, 1.6],
+          [18.5, 24.6, 26.4, 1.6, 100, 100, 100],
+          [18.5, 24.6, 26.4, 1.6, 100, 100, 100],
+          [18.5, 24.6, 26.4, 1.6, 100, 100, 100]
+        ]
+      }
+    }
+  ],
+  "QPRT": [
+    {
+      "id": "ENSMUSG00000030674",
+      "symbol": "QPRT",
+      "name": "Quinolinate Phosphoribosyltransferase",
+      "species": "mouse",
+      "alternateSymbols": ["2410027J01RIK", "QPRTASE"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000032912",
+          "geneId": "ENSMUSG00000030674",
+          "codingSequenceLength": 900,
+          "species": "mouse",
+          "gcPercent": 60.8,
+          "cpgCount": 36,
+          "wggwCount": 31,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENSMUST00000032912"], "rows": [[100]] }
+    },
+    {
+      "id": "ENSG00000103485",
+      "symbol": "QPRT",
+      "name": "Quinolinate Phosphoribosyltransferase",
+      "species": "human",
+      "alternateSymbols": ["HEL-S-90N", "QPRTASE"],
+      "isoforms": [
+        {
+          "id": "ENST00000395384",
+          "geneId": "ENSG00000103485",
+          "codingSequenceLength": 894,
+          "species": "human",
+          "gcPercent": 66.6,
+          "cpgCount": 48,
+          "wggwCount": 29,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000449759",
+          "geneId": "ENSG00000103485",
+          "codingSequenceLength": 894,
+          "species": "human",
+          "gcPercent": 66.6,
+          "cpgCount": 48,
+          "wggwCount": 29,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000562473",
+          "geneId": "ENSG00000103485",
+          "codingSequenceLength": 450,
+          "species": "human",
+          "gcPercent": 64.4,
+          "cpgCount": 19,
+          "wggwCount": 14,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENST00000395384", "ENST00000449759", "ENST00000562473"],
+        "rows": [
+          [100, 100, 50.3],
+          [100, 100, 50.3],
+          [50.3, 50.3, 100]
+        ]
+      }
+    }
+  ],
+  "QSOX1": [
+    {
+      "id": "ENSMUSG00000033684",
+      "symbol": "QSOX1",
+      "name": "Quiescin Q6 Sulfhydryl Oxidase 1",
+      "species": "mouse",
+      "alternateSymbols": [
+        "1300003H02RIK",
+        "QSOX",
+        "QSCN6",
+        "SOX",
+        "B2B2673CLO"
+      ],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000035325",
+          "geneId": "ENSMUSG00000033684",
+          "codingSequenceLength": 2247,
+          "species": "mouse",
+          "gcPercent": 56.9,
+          "cpgCount": 69,
+          "wggwCount": 56,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000111764",
+          "geneId": "ENSMUSG00000033684",
+          "codingSequenceLength": 1986,
+          "species": "mouse",
+          "gcPercent": 56.5,
+          "cpgCount": 65,
+          "wggwCount": 51,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000194632",
+          "geneId": "ENSMUSG00000033684",
+          "codingSequenceLength": 1707,
+          "species": "mouse",
+          "gcPercent": 56.8,
+          "cpgCount": 63,
+          "wggwCount": 44,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENSMUST00000035325",
+          "ENSMUST00000111764",
+          "ENSMUST00000194632"
+        ],
+        "rows": [
+          [100, 88.1, 75.7],
+          [88.1, 100, 86],
+          [75.7, 86, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000116260",
+      "symbol": "QSOX1",
+      "name": "Quiescin Sulfhydryl Oxidase 1",
+      "species": "human",
+      "alternateSymbols": ["Q6", "QSCN6"],
+      "isoforms": [
+        {
+          "id": "ENST00000367600",
+          "geneId": "ENSG00000116260",
+          "codingSequenceLength": 1815,
+          "species": "human",
+          "gcPercent": 60.3,
+          "cpgCount": 89,
+          "wggwCount": 43,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000367602",
+          "geneId": "ENSG00000116260",
+          "codingSequenceLength": 2244,
+          "species": "human",
+          "gcPercent": 61.3,
+          "cpgCount": 101,
+          "wggwCount": 53,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000392029",
+          "geneId": "ENSG00000116260",
+          "codingSequenceLength": 468,
+          "species": "human",
+          "gcPercent": 65,
+          "cpgCount": 46,
+          "wggwCount": 12,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENST00000367602", "ENST00000367600", "ENST00000392029"],
+        "rows": [
+          [100, 80.6, 18.4],
+          [80.6, 100, 22.8],
+          [18.4, 22.8, 100]
+        ]
+      }
+    }
+  ],
+  "QSOX2": [
+    {
+      "id": "ENSMUSG00000036327",
+      "symbol": "QSOX2",
+      "name": "Quiescin Q6 Sulfhydryl Oxidase 2",
+      "species": "mouse",
+      "alternateSymbols": ["QSCN6L1", "SOXN"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000036187",
+          "geneId": "ENSMUSG00000036327",
+          "codingSequenceLength": 1920,
+          "species": "mouse",
+          "gcPercent": 53.9,
+          "cpgCount": 65,
+          "wggwCount": 60,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000091263",
+          "geneId": "ENSMUSG00000036327",
+          "codingSequenceLength": 1584,
+          "species": "mouse",
+          "gcPercent": 51.8,
+          "cpgCount": 22,
+          "wggwCount": 51,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENSMUST00000036187", "ENSMUST00000091263"],
+        "rows": [
+          [100, 0.3],
+          [0.3, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000165661",
+      "symbol": "QSOX2",
+      "name": "Quiescin Sulfhydryl Oxidase 2",
+      "species": "human",
+      "alternateSymbols": ["QSCN6L1", "SOXN"],
+      "isoforms": [
+        {
+          "id": "ENST00000358701",
+          "geneId": "ENSG00000165661",
+          "codingSequenceLength": 2097,
+          "species": "human",
+          "gcPercent": 58.7,
+          "cpgCount": 122,
+          "wggwCount": 60,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENST00000358701"], "rows": [[100]] }
+    }
+  ],
+  "QPCT": [
+    {
+      "id": "ENSMUSG00000024084",
+      "symbol": "QPCT",
+      "name": "Glutaminyl-peptide Cyclotransferase (glutaminyl Cyclase)",
+      "species": "mouse",
+      "alternateSymbols": ["5730422A13RIK"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000040789",
+          "geneId": "ENSMUSG00000024084",
+          "codingSequenceLength": 1089,
+          "species": "mouse",
+          "gcPercent": 46.9,
+          "cpgCount": 26,
+          "wggwCount": 27,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000233916",
+          "geneId": "ENSMUSG00000024084",
+          "codingSequenceLength": 942,
+          "species": "mouse",
+          "gcPercent": 46.9,
+          "cpgCount": 21,
+          "wggwCount": 26,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENSMUST00000040789", "ENSMUST00000233916"],
+        "rows": [
+          [100, 86.5],
+          [86.5, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000115828",
+      "symbol": "QPCT",
+      "name": "Glutaminyl-peptide Cyclotransferase",
+      "species": "human",
+      "alternateSymbols": ["GCT", "QC", "SQC"],
+      "isoforms": [
+        {
+          "id": "ENST00000338415",
+          "geneId": "ENSG00000115828",
+          "codingSequenceLength": 1086,
+          "species": "human",
+          "gcPercent": 48.3,
+          "cpgCount": 26,
+          "wggwCount": 26,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENST00000338415"], "rows": [[100]] }
+    }
+  ],
+  "QKI": [
+    {
+      "id": "ENSMUSG00000062078",
+      "symbol": "QKI",
+      "name": "Quaking, Kh Domain Containing Rna Binding",
+      "species": "mouse",
+      "alternateSymbols": [
+        "1110003F05RIK",
+        "1500005P18",
+        "QK",
+        "L(17)-1WIS",
+        "L17WIS1"
+      ],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000042296",
+          "geneId": "ENSMUSG00000062078",
+          "codingSequenceLength": 978,
+          "species": "mouse",
+          "gcPercent": 48.2,
+          "cpgCount": 22,
+          "wggwCount": 16,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000097414",
+          "geneId": "ENSMUSG00000062078",
+          "codingSequenceLength": 960,
+          "species": "mouse",
+          "gcPercent": 48.3,
+          "cpgCount": 23,
+          "wggwCount": 16,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000233645",
+          "geneId": "ENSMUSG00000062078",
+          "codingSequenceLength": 1026,
+          "species": "mouse",
+          "gcPercent": 49,
+          "cpgCount": 30,
+          "wggwCount": 17,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000233828",
+          "geneId": "ENSMUSG00000062078",
+          "codingSequenceLength": 960,
+          "species": "mouse",
+          "gcPercent": 48.3,
+          "cpgCount": 23,
+          "wggwCount": 16,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENSMUST00000233645",
+          "ENSMUST00000042296",
+          "ENSMUST00000097414",
+          "ENSMUST00000233828"
+        ],
+        "rows": [
+          [100, 91.2, 91.5, 91.5],
+          [91.2, 100, 95.7, 95.7],
+          [91.5, 95.7, 100, 100],
+          [91.5, 95.7, 100, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000112531",
+      "symbol": "QKI",
+      "name": "Qki, Kh Domain Containing Rna Binding",
+      "species": "human",
+      "alternateSymbols": ["HQK", "QK", "QK1", "QK3", "HQKI"],
+      "isoforms": [
+        {
+          "id": "ENST00000275262",
+          "geneId": "ENSG00000112531",
+          "codingSequenceLength": 978,
+          "species": "human",
+          "gcPercent": 47,
+          "cpgCount": 19,
+          "wggwCount": 18,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000361195",
+          "geneId": "ENSG00000112531",
+          "codingSequenceLength": 1002,
+          "species": "human",
+          "gcPercent": 47.8,
+          "cpgCount": 27,
+          "wggwCount": 19,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000361752",
+          "geneId": "ENSG00000112531",
+          "codingSequenceLength": 1026,
+          "species": "human",
+          "gcPercent": 48,
+          "cpgCount": 27,
+          "wggwCount": 19,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000361758",
+          "geneId": "ENSG00000112531",
+          "codingSequenceLength": 960,
+          "species": "human",
+          "gcPercent": 47.2,
+          "cpgCount": 20,
+          "wggwCount": 18,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000392127",
+          "geneId": "ENSG00000112531",
+          "codingSequenceLength": 960,
+          "species": "human",
+          "gcPercent": 47.2,
+          "cpgCount": 19,
+          "wggwCount": 18,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000424802",
+          "geneId": "ENSG00000112531",
+          "codingSequenceLength": 954,
+          "species": "human",
+          "gcPercent": 46.9,
+          "cpgCount": 19,
+          "wggwCount": 18,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000453779",
+          "geneId": "ENSG00000112531",
+          "codingSequenceLength": 960,
+          "species": "human",
+          "gcPercent": 47.2,
+          "cpgCount": 20,
+          "wggwCount": 18,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000537041",
+          "geneId": "ENSG00000112531",
+          "codingSequenceLength": 480,
+          "species": "human",
+          "gcPercent": 41.9,
+          "cpgCount": 3,
+          "wggwCount": 10,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000544436",
+          "geneId": "ENSG00000112531",
+          "codingSequenceLength": 300,
+          "species": "human",
+          "gcPercent": 40,
+          "cpgCount": 2,
+          "wggwCount": 6,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENST00000361752",
+          "ENST00000361195",
+          "ENST00000275262",
+          "ENST00000361758",
+          "ENST00000392127",
+          "ENST00000453779",
+          "ENST00000424802",
+          "ENST00000537041",
+          "ENST00000544436"
+        ],
+        "rows": [
+          [100, 97.7, 91.2, 91.5, 91.5, 91.5, 62.3, 0.3, 0.3],
+          [97.7, 100, 63.8, 63.8, 63.8, 63.8, 91, 0.3, 0.3],
+          [91.2, 63.8, 100, 95.7, 95.7, 95.7, 97.5, 0.3, 0.3],
+          [91.5, 63.8, 95.7, 100, 98.1, 100, 66.6, 0.3, 0.3],
+          [91.5, 63.8, 95.7, 98.1, 100, 98.1, 66.6, 0.3, 0.3],
+          [91.5, 63.8, 95.7, 100, 98.1, 100, 66.6, 0.3, 0.3],
+          [62.3, 91, 97.5, 66.6, 66.6, 66.6, 100, 0.3, 0.3],
+          [0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 100, 62.5],
+          [0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 62.5, 100]
+        ]
+      }
+    }
+  ],
+  "QRFP": [
+    {
+      "id": "ENSMUSG00000043102",
+      "symbol": "QRFP",
+      "name": "Pyroglutamylated Rfamide Peptide",
+      "species": "mouse",
+      "alternateSymbols": ["P518"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000057407",
+          "geneId": "ENSMUSG00000043102",
+          "codingSequenceLength": 375,
+          "species": "mouse",
+          "gcPercent": 63.7,
+          "cpgCount": 15,
+          "wggwCount": 6,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENSMUST00000057407"], "rows": [[100]] }
+    },
+    {
+      "id": "ENSG00000188710",
+      "symbol": "QRFP",
+      "name": "Pyroglutamylated Rfamide Peptide",
+      "species": "human",
+      "alternateSymbols": ["26RFA", "P518"],
+      "isoforms": [
+        {
+          "id": "ENST00000343079",
+          "geneId": "ENSG00000188710",
+          "codingSequenceLength": 411,
+          "species": "human",
+          "gcPercent": 64.5,
+          "cpgCount": 22,
+          "wggwCount": 6,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000623824",
+          "geneId": "ENSG00000188710",
+          "codingSequenceLength": 411,
+          "species": "human",
+          "gcPercent": 64.5,
+          "cpgCount": 22,
+          "wggwCount": 6,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENST00000343079", "ENST00000623824"],
+        "rows": [
+          [100, 100],
+          [100, 100]
+        ]
+      }
+    }
+  ],
+  "QRFPR": [
+    {
+      "id": "ENSMUSG00000058400",
+      "symbol": "QRFPR",
+      "name": "Pyroglutamylated Rfamide Peptide Receptor",
+      "species": "mouse",
+      "alternateSymbols": ["AQ27", "GPR103", "GPR103A", "SP9155"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000091227",
+          "geneId": "ENSMUSG00000058400",
+          "codingSequenceLength": 1302,
+          "species": "mouse",
+          "gcPercent": 49.5,
+          "cpgCount": 46,
+          "wggwCount": 23,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000197447",
+          "geneId": "ENSMUSG00000058400",
+          "codingSequenceLength": 777,
+          "species": "mouse",
+          "gcPercent": 54.8,
+          "cpgCount": 37,
+          "wggwCount": 15,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENSMUST00000091227", "ENSMUST00000197447"],
+        "rows": [
+          [100, 52.8],
+          [52.8, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000186867",
+      "symbol": "QRFPR",
+      "name": "Pyroglutamylated Rfamide Peptide Receptor",
+      "species": "human",
+      "alternateSymbols": ["AQ27", "GPR103", "SP9155"],
+      "isoforms": [
+        {
+          "id": "ENST00000334383",
+          "geneId": "ENSG00000186867",
+          "codingSequenceLength": 777,
+          "species": "human",
+          "gcPercent": 53.5,
+          "cpgCount": 31,
+          "wggwCount": 13,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000394427",
+          "geneId": "ENSG00000186867",
+          "codingSequenceLength": 1296,
+          "species": "human",
+          "gcPercent": 46.8,
+          "cpgCount": 35,
+          "wggwCount": 27,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000507331",
+          "geneId": "ENSG00000186867",
+          "codingSequenceLength": 573,
+          "species": "human",
+          "gcPercent": 56.4,
+          "cpgCount": 30,
+          "wggwCount": 8,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENST00000394427", "ENST00000334383", "ENST00000507331"],
+        "rows": [
+          [100, 53, 43.5],
+          [53, 100, 72.6],
+          [43.5, 72.6, 100]
+        ]
+      }
+    }
+  ],
+  "QRICH2": [
+    {
+      "id": "ENSMUSG00000070331",
+      "symbol": "QRICH2",
+      "name": "Glutamine Rich 2",
+      "species": "mouse",
+      "alternateSymbols": ["GM66"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000093909",
+          "geneId": "ENSMUSG00000070331",
+          "codingSequenceLength": 1779,
+          "species": "mouse",
+          "gcPercent": 58.2,
+          "cpgCount": 64,
+          "wggwCount": 39,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000208602",
+          "geneId": "ENSMUSG00000070331",
+          "codingSequenceLength": 7014,
+          "species": "mouse",
+          "gcPercent": 55.3,
+          "cpgCount": 174,
+          "wggwCount": 240,
+          "suitability": "dual-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENSMUST00000208602", "ENSMUST00000093909"],
+        "rows": [
+          [100, 25.4],
+          [25.4, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000129646",
+      "symbol": "QRICH2",
+      "name": "Glutamine Rich 2",
+      "species": "human",
+      "alternateSymbols": ["SPGF35"],
+      "isoforms": [
+        {
+          "id": "ENST00000262765",
+          "geneId": "ENSG00000129646",
+          "codingSequenceLength": 4992,
+          "species": "human",
+          "gcPercent": 55.2,
+          "cpgCount": 136,
+          "wggwCount": 218,
+          "suitability": "dual-aav"
+        },
+        {
+          "id": "ENST00000447564",
+          "geneId": "ENSG00000129646",
+          "codingSequenceLength": 1488,
+          "species": "human",
+          "gcPercent": 58.5,
+          "cpgCount": 56,
+          "wggwCount": 43,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000636395",
+          "geneId": "ENSG00000129646",
+          "codingSequenceLength": 5490,
+          "species": "human",
+          "gcPercent": 56.5,
+          "cpgCount": 185,
+          "wggwCount": 231,
+          "suitability": "dual-aav"
+        },
+        {
+          "id": "ENST00000680821",
+          "geneId": "ENSG00000129646",
+          "codingSequenceLength": 5664,
+          "species": "human",
+          "gcPercent": 56.9,
+          "cpgCount": 200,
+          "wggwCount": 234,
+          "suitability": "dual-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENST00000680821",
+          "ENST00000636395",
+          "ENST00000262765",
+          "ENST00000447564"
+        ],
+        "rows": [
+          [100, 96.8, 0.1, 0.1],
+          [96.8, 100, 90.9, 0.1],
+          [0.1, 90.9, 100, 0.1],
+          [0.1, 0.1, 0.1, 100]
+        ]
+      },
+      "association": {
+        "symbol": "QRICH2",
+        "name": "Glutamine-rich protein 2",
+        "ensemblGeneId": "ENSG00000129646",
+        "inheritance": ["Autosomal recessive"],
+        "phenotypes": [
+          {
+            "name": "Spermatogenic failure 35",
+            "mim": 618341,
+            "mappingKey": 3,
+            "inheritance": "Autosomal recessive",
+            "status": "confirmed"
+          }
+        ],
+        "largestCds": 5664
+      }
+    }
+  ],
+  "QSER1": [
+    {
+      "id": "ENSMUSG00000074994",
+      "symbol": "QSER1",
+      "name": "Glutamine And Serine Rich 1",
+      "species": "mouse",
+      "alternateSymbols": ["4732486I23RIK"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000117237",
+          "geneId": "ENSMUSG00000074994",
+          "codingSequenceLength": 5097,
+          "species": "mouse",
+          "gcPercent": 42,
+          "cpgCount": 42,
+          "wggwCount": 95,
+          "suitability": "dual-aav"
+        },
+        {
+          "id": "ENSMUST00000231375",
+          "geneId": "ENSMUSG00000074994",
+          "codingSequenceLength": 5367,
+          "species": "mouse",
+          "gcPercent": 43.2,
+          "cpgCount": 64,
+          "wggwCount": 98,
+          "suitability": "dual-aav"
+        },
+        {
+          "id": "ENSMUST00000238887",
+          "geneId": "ENSMUSG00000074994",
+          "codingSequenceLength": 357,
+          "species": "mouse",
+          "gcPercent": 59.1,
+          "cpgCount": 23,
+          "wggwCount": 5,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENSMUST00000231375",
+          "ENSMUST00000117237",
+          "ENSMUST00000238887"
+        ],
+        "rows": [
+          [100, 95, 5.1],
+          [95, 100, 0.1],
+          [5.1, 0.1, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000060749",
+      "symbol": "QSER1",
+      "name": "Glutamine And Serine Rich 1",
+      "species": "human",
+      "alternateSymbols": [],
+      "isoforms": [
+        {
+          "id": "ENST00000650167",
+          "geneId": "ENSG00000060749",
+          "codingSequenceLength": 5595,
+          "species": "human",
+          "gcPercent": 41.9,
+          "cpgCount": 67,
+          "wggwCount": 102,
+          "suitability": "dual-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENST00000650167"], "rows": [[100]] }
+    }
+  ],
+  "QRFPRL": [
+    {
+      "id": "ENSMUSG00000029917",
+      "symbol": "QRFPRL",
+      "name": "Pyroglutamylated Rfamide Peptide Receptor Like",
+      "species": "mouse",
+      "alternateSymbols": ["C130060K24RIK", "GPR103B"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000170608",
+          "geneId": "ENSMUSG00000029917",
+          "codingSequenceLength": 1251,
+          "species": "mouse",
+          "gcPercent": 49.5,
+          "cpgCount": 42,
+          "wggwCount": 27,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENSMUST00000170608"], "rows": [[100]] }
+    }
+  ]
+}

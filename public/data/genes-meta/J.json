@@ -1,0 +1,4911 @@
+{
+  "JUP": [
+    {
+      "id": "ENSMUSG00000001552",
+      "symbol": "JUP",
+      "name": "Junction Plakoglobin",
+      "species": "mouse",
+      "alternateSymbols": ["CTNNG", "D930025P04RIK", "PG"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000001592",
+          "geneId": "ENSMUSG00000001552",
+          "codingSequenceLength": 2238,
+          "species": "mouse",
+          "gcPercent": 59.5,
+          "cpgCount": 90,
+          "wggwCount": 57,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000107403",
+          "geneId": "ENSMUSG00000001552",
+          "codingSequenceLength": 2238,
+          "species": "mouse",
+          "gcPercent": 59.5,
+          "cpgCount": 90,
+          "wggwCount": 57,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENSMUST00000001592", "ENSMUST00000107403"],
+        "rows": [
+          [100, 100],
+          [100, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000173801",
+      "symbol": "JUP",
+      "name": "Junction Plakoglobin",
+      "species": "human",
+      "alternateSymbols": ["CTNNG", "DP3", "DPIII", "PDGB", "PG", "PKGB"],
+      "isoforms": [
+        {
+          "id": "ENST00000310706",
+          "geneId": "ENSG00000173801",
+          "codingSequenceLength": 2238,
+          "species": "human",
+          "gcPercent": 62.2,
+          "cpgCount": 111,
+          "wggwCount": 63,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000393930",
+          "geneId": "ENSG00000173801",
+          "codingSequenceLength": 2238,
+          "species": "human",
+          "gcPercent": 62.2,
+          "cpgCount": 111,
+          "wggwCount": 63,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000393931",
+          "geneId": "ENSG00000173801",
+          "codingSequenceLength": 2238,
+          "species": "human",
+          "gcPercent": 62.2,
+          "cpgCount": 111,
+          "wggwCount": 63,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000591690",
+          "geneId": "ENSG00000173801",
+          "codingSequenceLength": 312,
+          "species": "human",
+          "gcPercent": 61.5,
+          "cpgCount": 13,
+          "wggwCount": 11,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENST00000310706",
+          "ENST00000393930",
+          "ENST00000393931",
+          "ENST00000591690"
+        ],
+        "rows": [
+          [100, 100, 100, 13.9],
+          [100, 100, 100, 13.9],
+          [100, 100, 100, 13.9],
+          [13.9, 13.9, 13.9, 100]
+        ]
+      }
+    }
+  ],
+  "JPH2": [
+    {
+      "id": "ENSMUSG00000017817",
+      "symbol": "JPH2",
+      "name": "Junctophilin 2",
+      "species": "mouse",
+      "alternateSymbols": ["1110002E14RIK", "JP-2", "JP2"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000017961",
+          "geneId": "ENSMUSG00000017817",
+          "codingSequenceLength": 2091,
+          "species": "mouse",
+          "gcPercent": 67.1,
+          "cpgCount": 193,
+          "wggwCount": 47,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000109425",
+          "geneId": "ENSMUSG00000017817",
+          "codingSequenceLength": 2091,
+          "species": "mouse",
+          "gcPercent": 67.1,
+          "cpgCount": 193,
+          "wggwCount": 47,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENSMUST00000017961", "ENSMUST00000109425"],
+        "rows": [
+          [100, 100],
+          [100, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000149596",
+      "symbol": "JPH2",
+      "name": "Junctophilin 2",
+      "species": "human",
+      "alternateSymbols": ["CMD2E", "CMH17", "JP-2", "JP2"],
+      "isoforms": [
+        {
+          "id": "ENST00000342272",
+          "geneId": "ENSG00000149596",
+          "codingSequenceLength": 390,
+          "species": "human",
+          "gcPercent": 60.5,
+          "cpgCount": 15,
+          "wggwCount": 9,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000372980",
+          "geneId": "ENSG00000149596",
+          "codingSequenceLength": 2091,
+          "species": "human",
+          "gcPercent": 69.4,
+          "cpgCount": 204,
+          "wggwCount": 38,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENST00000372980", "ENST00000342272"],
+        "rows": [
+          [100, 18.4],
+          [18.4, 100]
+        ]
+      }
+    }
+  ],
+  "JSRP1": [
+    {
+      "id": "ENSMUSG00000020216",
+      "symbol": "JSRP1",
+      "name": "Junctional Sarcoplasmic Reticulum Protein 1",
+      "species": "mouse",
+      "alternateSymbols": ["2300003C06RIK", "2310032K21RIK", "JP-45", "JP45"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000020435",
+          "geneId": "ENSMUSG00000020216",
+          "codingSequenceLength": 879,
+          "species": "mouse",
+          "gcPercent": 65.1,
+          "cpgCount": 52,
+          "wggwCount": 19,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000180438",
+          "geneId": "ENSMUSG00000020216",
+          "codingSequenceLength": 234,
+          "species": "mouse",
+          "gcPercent": 66.7,
+          "cpgCount": 15,
+          "wggwCount": 6,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000181039",
+          "geneId": "ENSMUSG00000020216",
+          "codingSequenceLength": 999,
+          "species": "mouse",
+          "gcPercent": 65.3,
+          "cpgCount": 57,
+          "wggwCount": 25,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000181945",
+          "geneId": "ENSMUSG00000020216",
+          "codingSequenceLength": 282,
+          "species": "mouse",
+          "gcPercent": 54.6,
+          "cpgCount": 5,
+          "wggwCount": 7,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENSMUST00000181039",
+          "ENSMUST00000020435",
+          "ENSMUST00000181945",
+          "ENSMUST00000180438"
+        ],
+        "rows": [
+          [100, 84.7, 16.2, 0.3],
+          [84.7, 100, 0.7, 0.3],
+          [16.2, 0.7, 100, 1.1],
+          [0.3, 0.3, 1.1, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000167476",
+      "symbol": "JSRP1",
+      "name": "Junctional Sarcoplasmic Reticulum Protein 1",
+      "species": "human",
+      "alternateSymbols": ["JP-45", "JP45"],
+      "isoforms": [
+        {
+          "id": "ENST00000300961",
+          "geneId": "ENSG00000167476",
+          "codingSequenceLength": 996,
+          "species": "human",
+          "gcPercent": 71,
+          "cpgCount": 88,
+          "wggwCount": 24,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENST00000300961"], "rows": [[100]] }
+    }
+  ],
+  "JADE2": [
+    {
+      "id": "ENSMUSG00000020387",
+      "symbol": "JADE2",
+      "name": "Jade Family Phd Finger 2",
+      "species": "mouse",
+      "alternateSymbols": ["1200017K05RIK", "PHF15", "MKIAA0239"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000020655",
+          "geneId": "ENSMUSG00000020387",
+          "codingSequenceLength": 2490,
+          "species": "mouse",
+          "gcPercent": 57.7,
+          "cpgCount": 94,
+          "wggwCount": 74,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000109090",
+          "geneId": "ENSMUSG00000020387",
+          "codingSequenceLength": 1731,
+          "species": "mouse",
+          "gcPercent": 56.5,
+          "cpgCount": 63,
+          "wggwCount": 53,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000109091",
+          "geneId": "ENSMUSG00000020387",
+          "codingSequenceLength": 2490,
+          "species": "mouse",
+          "gcPercent": 57.7,
+          "cpgCount": 94,
+          "wggwCount": 74,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENSMUST00000020655",
+          "ENSMUST00000109091",
+          "ENSMUST00000109090"
+        ],
+        "rows": [
+          [100, 100, 67.7],
+          [100, 100, 67.7],
+          [67.7, 67.7, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000043143",
+      "symbol": "JADE2",
+      "name": "Jade Family Phd Finger 2",
+      "species": "human",
+      "alternateSymbols": ["JADE-2", "PHF15"],
+      "isoforms": [
+        {
+          "id": "ENST00000282605",
+          "geneId": "ENSG00000043143",
+          "codingSequenceLength": 2505,
+          "species": "human",
+          "gcPercent": 60.7,
+          "cpgCount": 106,
+          "wggwCount": 69,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000361895",
+          "geneId": "ENSG00000043143",
+          "codingSequenceLength": 2376,
+          "species": "human",
+          "gcPercent": 60.7,
+          "cpgCount": 102,
+          "wggwCount": 67,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000395003",
+          "geneId": "ENSG00000043143",
+          "codingSequenceLength": 2373,
+          "species": "human",
+          "gcPercent": 60.7,
+          "cpgCount": 102,
+          "wggwCount": 67,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000402835",
+          "geneId": "ENSG00000043143",
+          "codingSequenceLength": 1530,
+          "species": "human",
+          "gcPercent": 59.6,
+          "cpgCount": 64,
+          "wggwCount": 51,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000430087",
+          "geneId": "ENSG00000043143",
+          "codingSequenceLength": 1689,
+          "species": "human",
+          "gcPercent": 59,
+          "cpgCount": 70,
+          "wggwCount": 53,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000431355",
+          "geneId": "ENSG00000043143",
+          "codingSequenceLength": 1434,
+          "species": "human",
+          "gcPercent": 59.8,
+          "cpgCount": 61,
+          "wggwCount": 48,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000512386",
+          "geneId": "ENSG00000043143",
+          "codingSequenceLength": 2505,
+          "species": "human",
+          "gcPercent": 60.7,
+          "cpgCount": 106,
+          "wggwCount": 69,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000612830",
+          "geneId": "ENSG00000043143",
+          "codingSequenceLength": 2502,
+          "species": "human",
+          "gcPercent": 60.7,
+          "cpgCount": 106,
+          "wggwCount": 69,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000680418",
+          "geneId": "ENSG00000043143",
+          "codingSequenceLength": 321,
+          "species": "human",
+          "gcPercent": 56.7,
+          "cpgCount": 13,
+          "wggwCount": 7,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000681498",
+          "geneId": "ENSG00000043143",
+          "codingSequenceLength": 1737,
+          "species": "human",
+          "gcPercent": 59.6,
+          "cpgCount": 72,
+          "wggwCount": 56,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000681547",
+          "geneId": "ENSG00000043143",
+          "codingSequenceLength": 2505,
+          "species": "human",
+          "gcPercent": 60.7,
+          "cpgCount": 106,
+          "wggwCount": 69,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000681820",
+          "geneId": "ENSG00000043143",
+          "codingSequenceLength": 1737,
+          "species": "human",
+          "gcPercent": 59.6,
+          "cpgCount": 72,
+          "wggwCount": 56,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENST00000282605",
+          "ENST00000512386",
+          "ENST00000681547",
+          "ENST00000612830",
+          "ENST00000361895",
+          "ENST00000395003",
+          "ENST00000681498",
+          "ENST00000681820",
+          "ENST00000430087",
+          "ENST00000402835",
+          "ENST00000431355",
+          "ENST00000680418"
+        ],
+        "rows": [
+          [100, 100, 100, 99.9, 94.9, 94.7, 62.2, 62.2, 67.2, 57.4, 57.2, 12.6],
+          [100, 100, 100, 99.9, 94.9, 94.7, 62.2, 62.2, 67.2, 57.4, 57.2, 12.6],
+          [100, 100, 100, 99.9, 94.9, 94.7, 62.2, 62.2, 67.2, 57.4, 57.2, 12.6],
+          [
+            99.9, 99.9, 99.9, 100, 94.8, 94.8, 62.2, 62.2, 67.4, 57.4, 57.3,
+            12.6
+          ],
+          [
+            94.9, 94.9, 94.9, 94.8, 100, 99.9, 65.5, 65.5, 65.4, 60.5, 60.4,
+            13.3
+          ],
+          [
+            94.7, 94.7, 94.7, 94.8, 99.9, 100, 65.7, 65.7, 65.5, 60.6, 60.4,
+            13.3
+          ],
+          [
+            62.2, 62.2, 62.2, 62.2, 65.5, 65.7, 100, 100, 89.5, 82.7, 82.6, 18.1
+          ],
+          [
+            62.2, 62.2, 62.2, 62.2, 65.5, 65.7, 100, 100, 89.5, 82.7, 82.6, 18.1
+          ],
+          [
+            67.2, 67.2, 67.2, 67.4, 65.4, 65.5, 89.5, 89.5, 100, 85.1, 84.9,
+            18.8
+          ],
+          [
+            57.4, 57.4, 57.4, 57.4, 60.5, 60.6, 82.7, 82.7, 85.1, 100, 93.7,
+            20.6
+          ],
+          [
+            57.2, 57.2, 57.2, 57.3, 60.4, 60.4, 82.6, 82.6, 84.9, 93.7, 100,
+            21.8
+          ],
+          [
+            12.6, 12.6, 12.6, 12.6, 13.3, 13.3, 18.1, 18.1, 18.8, 20.6, 21.8,
+            100
+          ]
+        ]
+      }
+    }
+  ],
+  "JPT1": [
+    {
+      "id": "ENSMUSG00000020737",
+      "symbol": "JPT1",
+      "name": "Jupiter Microtubule Associated Homolog 1",
+      "species": "mouse",
+      "alternateSymbols": ["HN1"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000021083",
+          "geneId": "ENSMUSG00000020737",
+          "codingSequenceLength": 465,
+          "species": "mouse",
+          "gcPercent": 54.8,
+          "cpgCount": 8,
+          "wggwCount": 15,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENSMUST00000021083"], "rows": [[100]] }
+    },
+    {
+      "id": "ENSG00000189159",
+      "symbol": "JPT1",
+      "name": "Jupiter Microtubule Associated Homolog 1",
+      "species": "human",
+      "alternateSymbols": ["ARM2", "HN1", "HN1A"],
+      "isoforms": [
+        {
+          "id": "ENST00000356033",
+          "geneId": "ENSG00000189159",
+          "codingSequenceLength": 546,
+          "species": "human",
+          "gcPercent": 52.6,
+          "cpgCount": 12,
+          "wggwCount": 13,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000409753",
+          "geneId": "ENSG00000189159",
+          "codingSequenceLength": 465,
+          "species": "human",
+          "gcPercent": 53.8,
+          "cpgCount": 10,
+          "wggwCount": 13,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000470924",
+          "geneId": "ENSG00000189159",
+          "codingSequenceLength": 327,
+          "species": "human",
+          "gcPercent": 56,
+          "cpgCount": 7,
+          "wggwCount": 7,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000476258",
+          "geneId": "ENSG00000189159",
+          "codingSequenceLength": 327,
+          "species": "human",
+          "gcPercent": 56,
+          "cpgCount": 7,
+          "wggwCount": 7,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000481647",
+          "geneId": "ENSG00000189159",
+          "codingSequenceLength": 327,
+          "species": "human",
+          "gcPercent": 56,
+          "cpgCount": 7,
+          "wggwCount": 7,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000482348",
+          "geneId": "ENSG00000189159",
+          "codingSequenceLength": 327,
+          "species": "human",
+          "gcPercent": 56,
+          "cpgCount": 7,
+          "wggwCount": 7,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000581874",
+          "geneId": "ENSG00000189159",
+          "codingSequenceLength": 315,
+          "species": "human",
+          "gcPercent": 49.2,
+          "cpgCount": 4,
+          "wggwCount": 12,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENST00000356033",
+          "ENST00000409753",
+          "ENST00000470924",
+          "ENST00000476258",
+          "ENST00000481647",
+          "ENST00000482348",
+          "ENST00000581874"
+        ],
+        "rows": [
+          [100, 54.9, 1.1, 1.1, 1.1, 1.1, 54.9],
+          [54.9, 100, 70.3, 70.3, 70.3, 70.3, 64.5],
+          [1.1, 70.3, 100, 100, 100, 100, 1.8],
+          [1.1, 70.3, 100, 100, 100, 100, 1.8],
+          [1.1, 70.3, 100, 100, 100, 100, 1.8],
+          [1.1, 70.3, 100, 100, 100, 100, 1.8],
+          [54.9, 64.5, 1.8, 1.8, 1.8, 1.8, 100]
+        ]
+      }
+    }
+  ],
+  "JPH4": [
+    {
+      "id": "ENSMUSG00000022208",
+      "symbol": "JPH4",
+      "name": "Junctophilin 4",
+      "species": "mouse",
+      "alternateSymbols": ["9330157P13RIK", "JP-4", "JPHL1"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000022819",
+          "geneId": "ENSMUSG00000022208",
+          "codingSequenceLength": 1887,
+          "species": "mouse",
+          "gcPercent": 67.3,
+          "cpgCount": 130,
+          "wggwCount": 46,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000124493",
+          "geneId": "ENSMUSG00000022208",
+          "codingSequenceLength": 1887,
+          "species": "mouse",
+          "gcPercent": 67.3,
+          "cpgCount": 130,
+          "wggwCount": 46,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENSMUST00000022819", "ENSMUST00000124493"],
+        "rows": [
+          [100, 100],
+          [100, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000092051",
+      "symbol": "JPH4",
+      "name": "Junctophilin 4",
+      "species": "human",
+      "alternateSymbols": ["JP4", "JPHL1"],
+      "isoforms": [
+        {
+          "id": "ENST00000356300",
+          "geneId": "ENSG00000092051",
+          "codingSequenceLength": 1887,
+          "species": "human",
+          "gcPercent": 71.3,
+          "cpgCount": 175,
+          "wggwCount": 34,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000397118",
+          "geneId": "ENSG00000092051",
+          "codingSequenceLength": 1887,
+          "species": "human",
+          "gcPercent": 71.3,
+          "cpgCount": 175,
+          "wggwCount": 34,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000544177",
+          "geneId": "ENSG00000092051",
+          "codingSequenceLength": 882,
+          "species": "human",
+          "gcPercent": 64.3,
+          "cpgCount": 27,
+          "wggwCount": 21,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENST00000356300", "ENST00000397118", "ENST00000544177"],
+        "rows": [
+          [100, 100, 39.3],
+          [100, 100, 39.3],
+          [39.3, 39.3, 100]
+        ]
+      }
+    }
+  ],
+  "JOSD1": [
+    {
+      "id": "ENSMUSG00000022426",
+      "symbol": "JOSD1",
+      "name": "Josephin Domain Containing 1",
+      "species": "mouse",
+      "alternateSymbols": ["1300006C06RIK", "MKIAA0063"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000023061",
+          "geneId": "ENSMUSG00000022426",
+          "codingSequenceLength": 609,
+          "species": "mouse",
+          "gcPercent": 52.4,
+          "cpgCount": 19,
+          "wggwCount": 15,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENSMUST00000023061"], "rows": [[100]] }
+    },
+    {
+      "id": "ENSG00000100221",
+      "symbol": "JOSD1",
+      "name": "Josephin Domain Containing 1",
+      "species": "human",
+      "alternateSymbols": ["DJ508I15.2"],
+      "isoforms": [
+        {
+          "id": "ENST00000216039",
+          "geneId": "ENSG00000100221",
+          "codingSequenceLength": 609,
+          "species": "human",
+          "gcPercent": 52.2,
+          "cpgCount": 16,
+          "wggwCount": 18,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000683374",
+          "geneId": "ENSG00000100221",
+          "codingSequenceLength": 609,
+          "species": "human",
+          "gcPercent": 52.2,
+          "cpgCount": 16,
+          "wggwCount": 18,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENST00000216039", "ENST00000683374"],
+        "rows": [
+          [100, 100],
+          [100, 100]
+        ]
+      }
+    }
+  ],
+  "JPT2": [
+    {
+      "id": "ENSMUSG00000024165",
+      "symbol": "JPT2",
+      "name": "Jupiter Microtubule Associated Homolog 2",
+      "species": "mouse",
+      "alternateSymbols": ["2810430B18RIK", "C16ORF34", "D17ERTD441E", "HN1L"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000024981",
+          "geneId": "ENSMUSG00000024165",
+          "codingSequenceLength": 573,
+          "species": "mouse",
+          "gcPercent": 51.3,
+          "cpgCount": 15,
+          "wggwCount": 12,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000233067",
+          "geneId": "ENSMUSG00000024165",
+          "codingSequenceLength": 573,
+          "species": "mouse",
+          "gcPercent": 51.3,
+          "cpgCount": 15,
+          "wggwCount": 12,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENSMUST00000024981", "ENSMUST00000233067"],
+        "rows": [
+          [100, 100],
+          [100, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000206053",
+      "symbol": "JPT2",
+      "name": "Jupiter Microtubule Associated Homolog 2",
+      "species": "human",
+      "alternateSymbols": ["C16ORF34", "HN1L", "L11"],
+      "isoforms": [
+        {
+          "id": "ENST00000248098",
+          "geneId": "ENSG00000206053",
+          "codingSequenceLength": 573,
+          "species": "human",
+          "gcPercent": 55.8,
+          "cpgCount": 23,
+          "wggwCount": 18,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000382710",
+          "geneId": "ENSG00000206053",
+          "codingSequenceLength": 537,
+          "species": "human",
+          "gcPercent": 54.2,
+          "cpgCount": 17,
+          "wggwCount": 17,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000382711",
+          "geneId": "ENSG00000206053",
+          "codingSequenceLength": 525,
+          "species": "human",
+          "gcPercent": 54.1,
+          "cpgCount": 17,
+          "wggwCount": 17,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000561516",
+          "geneId": "ENSG00000206053",
+          "codingSequenceLength": 213,
+          "species": "human",
+          "gcPercent": 51.6,
+          "cpgCount": 7,
+          "wggwCount": 8,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000562569",
+          "geneId": "ENSG00000206053",
+          "codingSequenceLength": 351,
+          "species": "human",
+          "gcPercent": 49.9,
+          "cpgCount": 8,
+          "wggwCount": 11,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000562684",
+          "geneId": "ENSG00000206053",
+          "codingSequenceLength": 657,
+          "species": "human",
+          "gcPercent": 56.5,
+          "cpgCount": 23,
+          "wggwCount": 21,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000566742",
+          "geneId": "ENSG00000206053",
+          "codingSequenceLength": 570,
+          "species": "human",
+          "gcPercent": 50.7,
+          "cpgCount": 15,
+          "wggwCount": 20,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000566925",
+          "geneId": "ENSG00000206053",
+          "codingSequenceLength": 234,
+          "species": "human",
+          "gcPercent": 60.7,
+          "cpgCount": 9,
+          "wggwCount": 9,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000569765",
+          "geneId": "ENSG00000206053",
+          "codingSequenceLength": 297,
+          "species": "human",
+          "gcPercent": 54.2,
+          "cpgCount": 7,
+          "wggwCount": 11,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENST00000562684",
+          "ENST00000248098",
+          "ENST00000566742",
+          "ENST00000382710",
+          "ENST00000382711",
+          "ENST00000562569",
+          "ENST00000569765",
+          "ENST00000566925",
+          "ENST00000561516"
+        ],
+        "rows": [
+          [100, 87.2, 6.8, 81.3, 79.9, 0.5, 42.9, 20.1, 7.3],
+          [87.2, 100, 72.8, 93.2, 91.6, 0.5, 8.4, 8.4, 34.6],
+          [6.8, 72.8, 100, 0.5, 0.5, 0, 7.9, 7.9, 34.2],
+          [81.3, 93.2, 0.5, 100, 97.8, 0.6, 1.1, 1.1, 1.1],
+          [79.9, 91.6, 0.5, 97.8, 100, 0.6, 1.1, 1.1, 1.1],
+          [0.5, 0.5, 0, 0.6, 0.6, 100, 0.9, 0.9, 0.9],
+          [42.9, 8.4, 7.9, 1.1, 1.1, 0.9, 100, 44.4, 71.7],
+          [20.1, 8.4, 7.9, 1.1, 1.1, 0.9, 44.4, 100, 20.5],
+          [7.3, 34.6, 34.2, 1.1, 1.1, 0.9, 71.7, 20.5, 100]
+        ]
+      }
+    }
+  ],
+  "JAK2": [
+    {
+      "id": "ENSMUSG00000024789",
+      "symbol": "JAK2",
+      "name": "Janus Kinase 2",
+      "species": "mouse",
+      "alternateSymbols": ["FD17"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000025705",
+          "geneId": "ENSMUSG00000024789",
+          "codingSequenceLength": 3399,
+          "species": "mouse",
+          "gcPercent": 43,
+          "cpgCount": 62,
+          "wggwCount": 88,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000065796",
+          "geneId": "ENSMUSG00000024789",
+          "codingSequenceLength": 3399,
+          "species": "mouse",
+          "gcPercent": 43,
+          "cpgCount": 62,
+          "wggwCount": 88,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000236990",
+          "geneId": "ENSMUSG00000024789",
+          "codingSequenceLength": 1914,
+          "species": "mouse",
+          "gcPercent": 41.7,
+          "cpgCount": 32,
+          "wggwCount": 51,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000238009",
+          "geneId": "ENSMUSG00000024789",
+          "codingSequenceLength": 3399,
+          "species": "mouse",
+          "gcPercent": 43,
+          "cpgCount": 62,
+          "wggwCount": 88,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENSMUST00000025705",
+          "ENSMUST00000065796",
+          "ENSMUST00000238009",
+          "ENSMUST00000236990"
+        ],
+        "rows": [
+          [100, 100, 100, 56.3],
+          [100, 100, 100, 56.3],
+          [100, 100, 100, 56.3],
+          [56.3, 56.3, 56.3, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000096968",
+      "symbol": "JAK2",
+      "name": "Janus Kinase 2",
+      "species": "human",
+      "alternateSymbols": ["JTK10"],
+      "isoforms": [
+        {
+          "id": "ENST00000381652",
+          "geneId": "ENSG00000096968",
+          "codingSequenceLength": 3399,
+          "species": "human",
+          "gcPercent": 38.7,
+          "cpgCount": 40,
+          "wggwCount": 79,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENST00000381652"], "rows": [[100]] }
+    }
+  ],
+  "JPH3": [
+    {
+      "id": "ENSMUSG00000025318",
+      "symbol": "JPH3",
+      "name": "Junctophilin 3",
+      "species": "mouse",
+      "alternateSymbols": ["JP-3", "JP3"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000026357",
+          "geneId": "ENSMUSG00000025318",
+          "codingSequenceLength": 2235,
+          "species": "mouse",
+          "gcPercent": 63.6,
+          "cpgCount": 152,
+          "wggwCount": 47,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000167439",
+          "geneId": "ENSMUSG00000025318",
+          "codingSequenceLength": 2235,
+          "species": "mouse",
+          "gcPercent": 63.6,
+          "cpgCount": 152,
+          "wggwCount": 47,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENSMUST00000026357", "ENSMUST00000167439"],
+        "rows": [
+          [100, 100],
+          [100, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000154118",
+      "symbol": "JPH3",
+      "name": "Junctophilin 3",
+      "species": "human",
+      "alternateSymbols": ["CAGL237", "HDL2", "JP-3", "JP3", "TNRC22"],
+      "isoforms": [
+        {
+          "id": "ENST00000284262",
+          "geneId": "ENSG00000154118",
+          "codingSequenceLength": 2247,
+          "species": "human",
+          "gcPercent": 67.3,
+          "cpgCount": 204,
+          "wggwCount": 45,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENST00000284262"], "rows": [[100]] }
+    }
+  ],
+  "JMJD8": [
+    {
+      "id": "ENSMUSG00000025736",
+      "symbol": "JMJD8",
+      "name": "Jumonji Domain Containing 8",
+      "species": "mouse",
+      "alternateSymbols": ["2610003J06RIK"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000026832",
+          "geneId": "ENSMUSG00000025736",
+          "codingSequenceLength": 816,
+          "species": "mouse",
+          "gcPercent": 54.4,
+          "cpgCount": 25,
+          "wggwCount": 24,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000133595",
+          "geneId": "ENSMUSG00000025736",
+          "codingSequenceLength": 810,
+          "species": "mouse",
+          "gcPercent": 54.6,
+          "cpgCount": 25,
+          "wggwCount": 24,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000152434",
+          "geneId": "ENSMUSG00000025736",
+          "codingSequenceLength": 561,
+          "species": "mouse",
+          "gcPercent": 56.5,
+          "cpgCount": 23,
+          "wggwCount": 19,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENSMUST00000026832",
+          "ENSMUST00000133595",
+          "ENSMUST00000152434"
+        ],
+        "rows": [
+          [100, 99.3, 0.7],
+          [99.3, 100, 50.4],
+          [0.7, 50.4, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000161999",
+      "symbol": "JMJD8",
+      "name": "Jumonji Domain Containing 8",
+      "species": "human",
+      "alternateSymbols": ["C16ORF20", "PP14397"],
+      "isoforms": [
+        {
+          "id": "ENST00000562111",
+          "geneId": "ENSG00000161999",
+          "codingSequenceLength": 660,
+          "species": "human",
+          "gcPercent": 65.6,
+          "cpgCount": 54,
+          "wggwCount": 15,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000562824",
+          "geneId": "ENSG00000161999",
+          "codingSequenceLength": 705,
+          "species": "human",
+          "gcPercent": 63.8,
+          "cpgCount": 47,
+          "wggwCount": 16,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000609261",
+          "geneId": "ENSG00000161999",
+          "codingSequenceLength": 795,
+          "species": "human",
+          "gcPercent": 65.4,
+          "cpgCount": 61,
+          "wggwCount": 18,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENST00000609261", "ENST00000562824", "ENST00000562111"],
+        "rows": [
+          [100, 88.7, 83],
+          [88.7, 100, 23.8],
+          [83, 23.8, 100]
+        ]
+      }
+    }
+  ],
+  "JADE1": [
+    {
+      "id": "ENSMUSG00000025764",
+      "symbol": "JADE1",
+      "name": "Jade Family Phd Finger 1",
+      "species": "mouse",
+      "alternateSymbols": ["D530048A03RIK", "PHF17", "MKIAA1807"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000026865",
+          "geneId": "ENSMUSG00000025764",
+          "codingSequenceLength": 2505,
+          "species": "mouse",
+          "gcPercent": 53.3,
+          "cpgCount": 70,
+          "wggwCount": 71,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000163764",
+          "geneId": "ENSMUSG00000025764",
+          "codingSequenceLength": 2505,
+          "species": "mouse",
+          "gcPercent": 53.3,
+          "cpgCount": 70,
+          "wggwCount": 71,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000168086",
+          "geneId": "ENSMUSG00000025764",
+          "codingSequenceLength": 2505,
+          "species": "mouse",
+          "gcPercent": 53.3,
+          "cpgCount": 70,
+          "wggwCount": 71,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000170711",
+          "geneId": "ENSMUSG00000025764",
+          "codingSequenceLength": 2505,
+          "species": "mouse",
+          "gcPercent": 53.3,
+          "cpgCount": 70,
+          "wggwCount": 71,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000191952",
+          "geneId": "ENSMUSG00000025764",
+          "codingSequenceLength": 1533,
+          "species": "mouse",
+          "gcPercent": 54.7,
+          "cpgCount": 54,
+          "wggwCount": 44,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENSMUST00000026865",
+          "ENSMUST00000163764",
+          "ENSMUST00000168086",
+          "ENSMUST00000170711",
+          "ENSMUST00000191952"
+        ],
+        "rows": [
+          [100, 100, 100, 100, 60.4],
+          [100, 100, 100, 100, 60.4],
+          [100, 100, 100, 100, 60.4],
+          [100, 100, 100, 100, 60.4],
+          [60.4, 60.4, 60.4, 60.4, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000077684",
+      "symbol": "JADE1",
+      "name": "Jade Family Phd Finger 1",
+      "species": "human",
+      "alternateSymbols": ["PHF17"],
+      "isoforms": [
+        {
+          "id": "ENST00000226319",
+          "geneId": "ENSG00000077684",
+          "codingSequenceLength": 2529,
+          "species": "human",
+          "gcPercent": 51.8,
+          "cpgCount": 51,
+          "wggwCount": 70,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000413543",
+          "geneId": "ENSG00000077684",
+          "codingSequenceLength": 1530,
+          "species": "human",
+          "gcPercent": 53.9,
+          "cpgCount": 37,
+          "wggwCount": 45,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000452328",
+          "geneId": "ENSG00000077684",
+          "codingSequenceLength": 2493,
+          "species": "human",
+          "gcPercent": 51.9,
+          "cpgCount": 51,
+          "wggwCount": 70,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000508997",
+          "geneId": "ENSG00000077684",
+          "codingSequenceLength": 357,
+          "species": "human",
+          "gcPercent": 53.2,
+          "cpgCount": 8,
+          "wggwCount": 9,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000510308",
+          "geneId": "ENSG00000077684",
+          "codingSequenceLength": 429,
+          "species": "human",
+          "gcPercent": 54.8,
+          "cpgCount": 13,
+          "wggwCount": 10,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000511647",
+          "geneId": "ENSG00000077684",
+          "codingSequenceLength": 1530,
+          "species": "human",
+          "gcPercent": 53.9,
+          "cpgCount": 37,
+          "wggwCount": 45,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000512960",
+          "geneId": "ENSG00000077684",
+          "codingSequenceLength": 2529,
+          "species": "human",
+          "gcPercent": 51.8,
+          "cpgCount": 51,
+          "wggwCount": 70,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000610919",
+          "geneId": "ENSG00000077684",
+          "codingSequenceLength": 2529,
+          "species": "human",
+          "gcPercent": 51.8,
+          "cpgCount": 51,
+          "wggwCount": 70,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000611140",
+          "geneId": "ENSG00000077684",
+          "codingSequenceLength": 2529,
+          "species": "human",
+          "gcPercent": 51.8,
+          "cpgCount": 51,
+          "wggwCount": 70,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENST00000226319",
+          "ENST00000512960",
+          "ENST00000610919",
+          "ENST00000611140",
+          "ENST00000452328",
+          "ENST00000413543",
+          "ENST00000511647",
+          "ENST00000510308",
+          "ENST00000508997"
+        ],
+        "rows": [
+          [100, 100, 100, 100, 98.6, 59.7, 59.7, 17, 14.1],
+          [100, 100, 100, 100, 98.6, 59.7, 59.7, 17, 14.1],
+          [100, 100, 100, 100, 98.6, 59.7, 59.7, 17, 14.1],
+          [100, 100, 100, 100, 98.6, 59.7, 59.7, 17, 14.1],
+          [98.6, 98.6, 98.6, 98.6, 100, 12, 12, 11.9, 11.9],
+          [59.7, 59.7, 59.7, 59.7, 12, 100, 100, 28, 23.3],
+          [59.7, 59.7, 59.7, 59.7, 12, 100, 100, 28, 23.3],
+          [17, 17, 17, 17, 11.9, 28, 28, 100, 83.2],
+          [14.1, 14.1, 14.1, 14.1, 11.9, 23.3, 23.3, 83.2, 100]
+        ]
+      }
+    }
+  ],
+  "JAG1": [
+    {
+      "id": "ENSMUSG00000027276",
+      "symbol": "JAG1",
+      "name": "Jagged 1",
+      "species": "mouse",
+      "alternateSymbols": ["ABE2", "GENA228", "GSFABE2", "HTU", "OZZ", "SER-1"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000028735",
+          "geneId": "ENSMUSG00000027276",
+          "codingSequenceLength": 3657,
+          "species": "mouse",
+          "gcPercent": 52.9,
+          "cpgCount": 127,
+          "wggwCount": 74,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENSMUST00000028735"], "rows": [[100]] }
+    },
+    {
+      "id": "ENSG00000101384",
+      "symbol": "JAG1",
+      "name": "Jagged Canonical Notch Ligand 1",
+      "species": "human",
+      "alternateSymbols": [
+        "AGS",
+        "AGS1",
+        "AHD",
+        "AWS",
+        "CD339",
+        "CMT2HH",
+        "DCHE",
+        "HJ1",
+        "JAGL1"
+      ],
+      "isoforms": [
+        {
+          "id": "ENST00000254958",
+          "geneId": "ENSG00000101384",
+          "codingSequenceLength": 3657,
+          "species": "human",
+          "gcPercent": 54,
+          "cpgCount": 147,
+          "wggwCount": 62,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENST00000254958"], "rows": [[100]] }
+    }
+  ],
+  "JTB": [
+    {
+      "id": "ENSMUSG00000027937",
+      "symbol": "JTB",
+      "name": "Jumping Translocation Breakpoint",
+      "species": "mouse",
+      "alternateSymbols": ["GM622"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000029546",
+          "geneId": "ENSMUSG00000027937",
+          "codingSequenceLength": 441,
+          "species": "mouse",
+          "gcPercent": 51,
+          "cpgCount": 21,
+          "wggwCount": 11,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000119304",
+          "geneId": "ENSMUSG00000027937",
+          "codingSequenceLength": 288,
+          "species": "mouse",
+          "gcPercent": 52.8,
+          "cpgCount": 14,
+          "wggwCount": 6,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENSMUST00000029546", "ENSMUST00000119304"],
+        "rows": [
+          [100, 64.6],
+          [64.6, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000143543",
+      "symbol": "JTB",
+      "name": "Jumping Translocation Breakpoint",
+      "species": "human",
+      "alternateSymbols": ["HJTB", "HSPC222", "PAR", "HJT"],
+      "isoforms": [
+        {
+          "id": "ENST00000271843",
+          "geneId": "ENSG00000143543",
+          "codingSequenceLength": 441,
+          "species": "human",
+          "gcPercent": 52.2,
+          "cpgCount": 14,
+          "wggwCount": 12,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000356648",
+          "geneId": "ENSG00000143543",
+          "codingSequenceLength": 354,
+          "species": "human",
+          "gcPercent": 48,
+          "cpgCount": 10,
+          "wggwCount": 10,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000368589",
+          "geneId": "ENSG00000143543",
+          "codingSequenceLength": 354,
+          "species": "human",
+          "gcPercent": 48,
+          "cpgCount": 10,
+          "wggwCount": 10,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000428469",
+          "geneId": "ENSG00000143543",
+          "codingSequenceLength": 351,
+          "species": "human",
+          "gcPercent": 48.1,
+          "cpgCount": 10,
+          "wggwCount": 10,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENST00000271843",
+          "ENST00000356648",
+          "ENST00000368589",
+          "ENST00000428469"
+        ],
+        "rows": [
+          [100, 74.8, 74.8, 0.7],
+          [74.8, 100, 100, 99.2],
+          [74.8, 100, 100, 99.2],
+          [0.7, 99.2, 99.2, 100]
+        ]
+      }
+    }
+  ],
+  "JAM3": [
+    {
+      "id": "ENSMUSG00000031990",
+      "symbol": "JAM3",
+      "name": "Junction Adhesion Molecule 3",
+      "species": "mouse",
+      "alternateSymbols": ["1110002N23RIK", "JAM-3", "JAM-C", "JCAM3"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000034472",
+          "geneId": "ENSMUSG00000031990",
+          "codingSequenceLength": 933,
+          "species": "mouse",
+          "gcPercent": 49.9,
+          "cpgCount": 31,
+          "wggwCount": 20,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENSMUST00000034472"], "rows": [[100]] }
+    },
+    {
+      "id": "ENSG00000166086",
+      "symbol": "JAM3",
+      "name": "Junctional Adhesion Molecule 3",
+      "species": "human",
+      "alternateSymbols": ["JAM-2", "JAM-3", "JAM-C", "JAMC"],
+      "isoforms": [
+        {
+          "id": "ENST00000299106",
+          "geneId": "ENSG00000166086",
+          "codingSequenceLength": 933,
+          "species": "human",
+          "gcPercent": 51,
+          "cpgCount": 33,
+          "wggwCount": 21,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000441717",
+          "geneId": "ENSG00000166086",
+          "codingSequenceLength": 780,
+          "species": "human",
+          "gcPercent": 51.3,
+          "cpgCount": 25,
+          "wggwCount": 19,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000534549",
+          "geneId": "ENSG00000166086",
+          "codingSequenceLength": 372,
+          "species": "human",
+          "gcPercent": 56.7,
+          "cpgCount": 19,
+          "wggwCount": 5,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENST00000299106", "ENST00000441717", "ENST00000534549"],
+        "rows": [
+          [100, 83.6, 8.4],
+          [83.6, 100, 10],
+          [8.4, 10, 100]
+        ]
+      }
+    }
+  ],
+  "JHY": [
+    {
+      "id": "ENSMUSG00000032023",
+      "symbol": "JHY",
+      "name": "Junctional Cadherin Complex Regulator",
+      "species": "mouse",
+      "alternateSymbols": ["4931429I11RIK"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000034521",
+          "geneId": "ENSMUSG00000032023",
+          "codingSequenceLength": 2313,
+          "species": "mouse",
+          "gcPercent": 48.8,
+          "cpgCount": 63,
+          "wggwCount": 42,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENSMUST00000034521"], "rows": [[100]] }
+    },
+    {
+      "id": "ENSG00000109944",
+      "symbol": "JHY",
+      "name": "Junctional Cadherin Complex Regulator",
+      "species": "human",
+      "alternateSymbols": ["C11ORF63"],
+      "isoforms": [
+        {
+          "id": "ENST00000227349",
+          "geneId": "ENSG00000109944",
+          "codingSequenceLength": 2337,
+          "species": "human",
+          "gcPercent": 45,
+          "cpgCount": 55,
+          "wggwCount": 43,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000307257",
+          "geneId": "ENSG00000109944",
+          "codingSequenceLength": 924,
+          "species": "human",
+          "gcPercent": 48.6,
+          "cpgCount": 36,
+          "wggwCount": 23,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000531316",
+          "geneId": "ENSG00000109944",
+          "codingSequenceLength": 2337,
+          "species": "human",
+          "gcPercent": 45,
+          "cpgCount": 55,
+          "wggwCount": 43,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENST00000227349", "ENST00000531316", "ENST00000307257"],
+        "rows": [
+          [100, 100, 37.1],
+          [100, 100, 37.1],
+          [37.1, 37.1, 100]
+        ]
+      }
+    }
+  ],
+  "JOSD2": [
+    {
+      "id": "ENSMUSG00000038695",
+      "symbol": "JOSD2",
+      "name": "Josephin Domain Containing 2",
+      "species": "mouse",
+      "alternateSymbols": ["1110007C05RIK"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000035844",
+          "geneId": "ENSMUSG00000038695",
+          "codingSequenceLength": 567,
+          "species": "mouse",
+          "gcPercent": 61.9,
+          "cpgCount": 21,
+          "wggwCount": 17,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000117324",
+          "geneId": "ENSMUSG00000038695",
+          "codingSequenceLength": 567,
+          "species": "mouse",
+          "gcPercent": 61.9,
+          "cpgCount": 21,
+          "wggwCount": 17,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000118493",
+          "geneId": "ENSMUSG00000038695",
+          "codingSequenceLength": 567,
+          "species": "mouse",
+          "gcPercent": 61.9,
+          "cpgCount": 21,
+          "wggwCount": 17,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000118628",
+          "geneId": "ENSMUSG00000038695",
+          "codingSequenceLength": 567,
+          "species": "mouse",
+          "gcPercent": 61.9,
+          "cpgCount": 21,
+          "wggwCount": 17,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000120852",
+          "geneId": "ENSMUSG00000038695",
+          "codingSequenceLength": 567,
+          "species": "mouse",
+          "gcPercent": 61.9,
+          "cpgCount": 21,
+          "wggwCount": 17,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000121922",
+          "geneId": "ENSMUSG00000038695",
+          "codingSequenceLength": 441,
+          "species": "mouse",
+          "gcPercent": 61.2,
+          "cpgCount": 16,
+          "wggwCount": 14,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000134398",
+          "geneId": "ENSMUSG00000038695",
+          "codingSequenceLength": 246,
+          "species": "mouse",
+          "gcPercent": 59.3,
+          "cpgCount": 9,
+          "wggwCount": 9,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000136609",
+          "geneId": "ENSMUSG00000038695",
+          "codingSequenceLength": 294,
+          "species": "mouse",
+          "gcPercent": 59.5,
+          "cpgCount": 13,
+          "wggwCount": 4,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000136679",
+          "geneId": "ENSMUSG00000038695",
+          "codingSequenceLength": 204,
+          "species": "mouse",
+          "gcPercent": 55.4,
+          "cpgCount": 7,
+          "wggwCount": 1,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000206887",
+          "geneId": "ENSMUSG00000038695",
+          "codingSequenceLength": 372,
+          "species": "mouse",
+          "gcPercent": 61,
+          "cpgCount": 14,
+          "wggwCount": 12,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENSMUST00000035844",
+          "ENSMUST00000117324",
+          "ENSMUST00000118493",
+          "ENSMUST00000118628",
+          "ENSMUST00000120852",
+          "ENSMUST00000121922",
+          "ENSMUST00000206887",
+          "ENSMUST00000136609",
+          "ENSMUST00000134398",
+          "ENSMUST00000136679"
+        ],
+        "rows": [
+          [100, 100, 100, 100, 100, 77.8, 65.6, 48.7, 43.4, 26.5],
+          [100, 100, 100, 100, 100, 77.8, 65.6, 48.7, 43.4, 26.5],
+          [100, 100, 100, 100, 100, 77.8, 65.6, 48.7, 43.4, 26.5],
+          [100, 100, 100, 100, 100, 77.8, 65.6, 48.7, 43.4, 26.5],
+          [100, 100, 100, 100, 100, 77.8, 65.6, 48.7, 43.4, 26.5],
+          [77.8, 77.8, 77.8, 77.8, 77.8, 100, 56.5, 34, 55.8, 34],
+          [65.6, 65.6, 65.6, 65.6, 65.6, 56.5, 100, 74.2, 66.1, 40.3],
+          [48.7, 48.7, 48.7, 48.7, 48.7, 34, 74.2, 100, 51, 52],
+          [43.4, 43.4, 43.4, 43.4, 43.4, 55.8, 66.1, 51, 100, 61],
+          [26.5, 26.5, 26.5, 26.5, 26.5, 34, 40.3, 52, 61, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000161677",
+      "symbol": "JOSD2",
+      "name": "Josephin Domain Containing 2",
+      "species": "human",
+      "alternateSymbols": ["SBBI54"],
+      "isoforms": [
+        {
+          "id": "ENST00000594350",
+          "geneId": "ENSG00000161677",
+          "codingSequenceLength": 483,
+          "species": "human",
+          "gcPercent": 67.7,
+          "cpgCount": 29,
+          "wggwCount": 11,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000595669",
+          "geneId": "ENSG00000161677",
+          "codingSequenceLength": 441,
+          "species": "human",
+          "gcPercent": 68,
+          "cpgCount": 26,
+          "wggwCount": 13,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000598418",
+          "geneId": "ENSG00000161677",
+          "codingSequenceLength": 567,
+          "species": "human",
+          "gcPercent": 67.5,
+          "cpgCount": 32,
+          "wggwCount": 17,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000601423",
+          "geneId": "ENSG00000161677",
+          "codingSequenceLength": 567,
+          "species": "human",
+          "gcPercent": 67.5,
+          "cpgCount": 32,
+          "wggwCount": 17,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENST00000598418",
+          "ENST00000601423",
+          "ENST00000594350",
+          "ENST00000595669"
+        ],
+        "rows": [
+          [100, 100, 85.2, 77.8],
+          [100, 100, 85.2, 77.8],
+          [85.2, 85.2, 100, 30.4],
+          [77.8, 77.8, 30.4, 100]
+        ]
+      }
+    }
+  ],
+  "JCAD": [
+    {
+      "id": "ENSMUSG00000033960",
+      "symbol": "JCAD",
+      "name": "Junctional Cadherin 5 Associated",
+      "species": "mouse",
+      "alternateSymbols": [
+        "1110056P05RIK",
+        "9430020K01RIK",
+        "GM328",
+        "MKIAA1462"
+      ],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000037029",
+          "geneId": "ENSMUSG00000033960",
+          "codingSequenceLength": 3963,
+          "species": "mouse",
+          "gcPercent": 52.3,
+          "cpgCount": 56,
+          "wggwCount": 99,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000234153",
+          "geneId": "ENSMUSG00000033960",
+          "codingSequenceLength": 3963,
+          "species": "mouse",
+          "gcPercent": 52.3,
+          "cpgCount": 56,
+          "wggwCount": 99,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENSMUST00000037029", "ENSMUST00000234153"],
+        "rows": [
+          [100, 100],
+          [100, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000165757",
+      "symbol": "JCAD",
+      "name": "Junctional Cadherin 5 Associated",
+      "species": "human",
+      "alternateSymbols": ["KIAA1462"],
+      "isoforms": [
+        {
+          "id": "ENST00000375377",
+          "geneId": "ENSG00000165757",
+          "codingSequenceLength": 4080,
+          "species": "human",
+          "gcPercent": 56.7,
+          "cpgCount": 139,
+          "wggwCount": 97,
+          "suitability": "dual-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENST00000375377"], "rows": [[100]] }
+    }
+  ],
+  "JPH1": [
+    {
+      "id": "ENSMUSG00000042686",
+      "symbol": "JPH1",
+      "name": "Junctophilin 1",
+      "species": "mouse",
+      "alternateSymbols": ["JP-1", "JP1"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000038382",
+          "geneId": "ENSMUSG00000042686",
+          "codingSequenceLength": 1983,
+          "species": "mouse",
+          "gcPercent": 55.4,
+          "cpgCount": 83,
+          "wggwCount": 40,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENSMUST00000038382"], "rows": [[100]] }
+    },
+    {
+      "id": "ENSG00000104369",
+      "symbol": "JPH1",
+      "name": "Junctophilin 1",
+      "species": "human",
+      "alternateSymbols": ["CMT2K", "CMYO25", "JP-1", "JP1"],
+      "isoforms": [
+        {
+          "id": "ENST00000342232",
+          "geneId": "ENSG00000104369",
+          "codingSequenceLength": 1986,
+          "species": "human",
+          "gcPercent": 57.8,
+          "cpgCount": 124,
+          "wggwCount": 38,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000519947",
+          "geneId": "ENSG00000104369",
+          "codingSequenceLength": 240,
+          "species": "human",
+          "gcPercent": 70.8,
+          "cpgCount": 32,
+          "wggwCount": 1,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENST00000342232", "ENST00000519947"],
+        "rows": [
+          [100, 0.9],
+          [0.9, 100]
+        ]
+      }
+    }
+  ],
+  "JADE3": [
+    {
+      "id": "ENSMUSG00000037315",
+      "symbol": "JADE3",
+      "name": "Jade Family Phd Finger 3",
+      "species": "mouse",
+      "alternateSymbols": ["5730598B06", "PHF16", "MKIAA0215"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000043693",
+          "geneId": "ENSMUSG00000037315",
+          "codingSequenceLength": 2472,
+          "species": "mouse",
+          "gcPercent": 46.3,
+          "cpgCount": 35,
+          "wggwCount": 52,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000115384",
+          "geneId": "ENSMUSG00000037315",
+          "codingSequenceLength": 2472,
+          "species": "mouse",
+          "gcPercent": 46.3,
+          "cpgCount": 35,
+          "wggwCount": 52,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000224892",
+          "geneId": "ENSMUSG00000037315",
+          "codingSequenceLength": 366,
+          "species": "mouse",
+          "gcPercent": 45.1,
+          "cpgCount": 5,
+          "wggwCount": 7,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENSMUST00000043693",
+          "ENSMUST00000115384",
+          "ENSMUST00000224892"
+        ],
+        "rows": [
+          [100, 100, 11.8],
+          [100, 100, 11.8],
+          [11.8, 11.8, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000102221",
+      "symbol": "JADE3",
+      "name": "Jade Family Phd Finger 3",
+      "species": "human",
+      "alternateSymbols": ["JADE-3", "PHF16"],
+      "isoforms": [
+        {
+          "id": "ENST00000611250",
+          "geneId": "ENSG00000102221",
+          "codingSequenceLength": 2472,
+          "species": "human",
+          "gcPercent": 48.8,
+          "cpgCount": 40,
+          "wggwCount": 60,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000614628",
+          "geneId": "ENSG00000102221",
+          "codingSequenceLength": 2472,
+          "species": "human",
+          "gcPercent": 48.8,
+          "cpgCount": 40,
+          "wggwCount": 60,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENST00000611250", "ENST00000614628"],
+        "rows": [
+          [100, 100],
+          [100, 100]
+        ]
+      }
+    }
+  ],
+  "JAKMIP1": [
+    {
+      "id": "ENSMUSG00000063646",
+      "symbol": "JAKMIP1",
+      "name": "Janus Kinase And Microtubule Interacting Protein 1",
+      "species": "mouse",
+      "alternateSymbols": [
+        "5830437M04RIK",
+        "C330021K24RIK",
+        "GABABRBP",
+        "MARLIN-1"
+      ],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000043794",
+          "geneId": "ENSMUSG00000063646",
+          "codingSequenceLength": 1881,
+          "species": "mouse",
+          "gcPercent": 57.8,
+          "cpgCount": 100,
+          "wggwCount": 67,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000121010",
+          "geneId": "ENSMUSG00000063646",
+          "codingSequenceLength": 2496,
+          "species": "mouse",
+          "gcPercent": 57.4,
+          "cpgCount": 116,
+          "wggwCount": 90,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000137019",
+          "geneId": "ENSMUSG00000063646",
+          "codingSequenceLength": 1017,
+          "species": "mouse",
+          "gcPercent": 61,
+          "cpgCount": 71,
+          "wggwCount": 35,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000172917",
+          "geneId": "ENSMUSG00000063646",
+          "codingSequenceLength": 546,
+          "species": "mouse",
+          "gcPercent": 63.6,
+          "cpgCount": 46,
+          "wggwCount": 14,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000173836",
+          "geneId": "ENSMUSG00000063646",
+          "codingSequenceLength": 450,
+          "species": "mouse",
+          "gcPercent": 64,
+          "cpgCount": 41,
+          "wggwCount": 12,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000174629",
+          "geneId": "ENSMUSG00000063646",
+          "codingSequenceLength": 1941,
+          "species": "mouse",
+          "gcPercent": 55.1,
+          "cpgCount": 64,
+          "wggwCount": 74,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000208852",
+          "geneId": "ENSMUSG00000063646",
+          "codingSequenceLength": 294,
+          "species": "mouse",
+          "gcPercent": 56.8,
+          "cpgCount": 9,
+          "wggwCount": 8,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000212047",
+          "geneId": "ENSMUSG00000063646",
+          "codingSequenceLength": 585,
+          "species": "mouse",
+          "gcPercent": 52.8,
+          "cpgCount": 18,
+          "wggwCount": 23,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENSMUST00000121010",
+          "ENSMUST00000174629",
+          "ENSMUST00000043794",
+          "ENSMUST00000137019",
+          "ENSMUST00000212047",
+          "ENSMUST00000172917",
+          "ENSMUST00000173836",
+          "ENSMUST00000208852"
+        ],
+        "rows": [
+          [100, 53, 72.5, 40.7, 0.2, 21.9, 18, 11.8],
+          [53, 100, 6.8, 6.6, 0.3, 6.6, 6.6, 15.1],
+          [72.5, 6.8, 100, 54.1, 31.1, 29, 23.9, 0.2],
+          [40.7, 6.6, 54.1, 100, 0.3, 53.7, 44.2, 0],
+          [0.2, 0.3, 31.1, 0.3, 100, 0.5, 0.5, 0.5],
+          [21.9, 6.6, 29, 53.7, 0.5, 100, 82.4, 0],
+          [18, 6.6, 23.9, 44.2, 0.5, 82.4, 100, 0],
+          [11.8, 15.1, 0.2, 0, 0.5, 0, 0, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000152969",
+      "symbol": "JAKMIP1",
+      "name": "Janus Kinase And Microtubule Interacting Protein 1",
+      "species": "human",
+      "alternateSymbols": ["GABABRBP", "JAMIP1", "MARLIN1"],
+      "isoforms": [
+        {
+          "id": "ENST00000282924",
+          "geneId": "ENSG00000152969",
+          "codingSequenceLength": 1881,
+          "species": "human",
+          "gcPercent": 57,
+          "cpgCount": 116,
+          "wggwCount": 62,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000409021",
+          "geneId": "ENSG00000152969",
+          "codingSequenceLength": 2496,
+          "species": "human",
+          "gcPercent": 56.9,
+          "cpgCount": 139,
+          "wggwCount": 86,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000409371",
+          "geneId": "ENSG00000152969",
+          "codingSequenceLength": 1941,
+          "species": "human",
+          "gcPercent": 54,
+          "cpgCount": 80,
+          "wggwCount": 70,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000409831",
+          "geneId": "ENSG00000152969",
+          "codingSequenceLength": 1881,
+          "species": "human",
+          "gcPercent": 57,
+          "cpgCount": 116,
+          "wggwCount": 62,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000410077",
+          "geneId": "ENSG00000152969",
+          "codingSequenceLength": 1386,
+          "species": "human",
+          "gcPercent": 53,
+          "cpgCount": 61,
+          "wggwCount": 47,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000473053",
+          "geneId": "ENSG00000152969",
+          "codingSequenceLength": 1710,
+          "species": "human",
+          "gcPercent": 58.7,
+          "cpgCount": 112,
+          "wggwCount": 59,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000637373",
+          "geneId": "ENSG00000152969",
+          "codingSequenceLength": 1200,
+          "species": "human",
+          "gcPercent": 53.8,
+          "cpgCount": 43,
+          "wggwCount": 43,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000700569",
+          "geneId": "ENSG00000152969",
+          "codingSequenceLength": 1842,
+          "species": "human",
+          "gcPercent": 57,
+          "cpgCount": 114,
+          "wggwCount": 60,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000700570",
+          "geneId": "ENSG00000152969",
+          "codingSequenceLength": 1878,
+          "species": "human",
+          "gcPercent": 57.1,
+          "cpgCount": 116,
+          "wggwCount": 62,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000700571",
+          "geneId": "ENSG00000152969",
+          "codingSequenceLength": 1752,
+          "species": "human",
+          "gcPercent": 57.6,
+          "cpgCount": 111,
+          "wggwCount": 55,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000700572",
+          "geneId": "ENSG00000152969",
+          "codingSequenceLength": 1821,
+          "species": "human",
+          "gcPercent": 57.1,
+          "cpgCount": 112,
+          "wggwCount": 61,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000700573",
+          "geneId": "ENSG00000152969",
+          "codingSequenceLength": 1842,
+          "species": "human",
+          "gcPercent": 57,
+          "cpgCount": 114,
+          "wggwCount": 60,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000700575",
+          "geneId": "ENSG00000152969",
+          "codingSequenceLength": 1740,
+          "species": "human",
+          "gcPercent": 58.4,
+          "cpgCount": 112,
+          "wggwCount": 61,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENST00000409021",
+          "ENST00000409371",
+          "ENST00000282924",
+          "ENST00000409831",
+          "ENST00000700570",
+          "ENST00000700569",
+          "ENST00000700573",
+          "ENST00000700572",
+          "ENST00000700571",
+          "ENST00000700575",
+          "ENST00000473053",
+          "ENST00000410077",
+          "ENST00000637373"
+        ],
+        "rows": [
+          [
+            100, 53, 72.5, 72.5, 52.3, 48.3, 48.3, 49.9, 52.3, 68.5, 68.5, 5.3,
+            48.1
+          ],
+          [53, 100, 6.8, 6.8, 6.8, 6.8, 6.8, 6.8, 6.8, 6.8, 6.8, 38.6, 61.7],
+          [
+            72.5, 6.8, 100, 100, 99.8, 97.9, 97.9, 96.8, 93.1, 90.9, 90.9, 73.7,
+            0.3
+          ],
+          [
+            72.5, 6.8, 100, 100, 99.8, 97.9, 97.9, 96.8, 93.1, 90.9, 90.9, 73.7,
+            0.3
+          ],
+          [
+            52.3, 6.8, 99.8, 99.8, 100, 94.9, 94.9, 97, 93.3, 69.5, 69.5, 37.7,
+            0.3
+          ],
+          [
+            48.3, 6.8, 97.9, 97.9, 94.9, 100, 100, 96.7, 89.7, 65.5, 65.5, 41.7,
+            0.3
+          ],
+          [
+            48.3, 6.8, 97.9, 97.9, 94.9, 100, 100, 96.7, 89.7, 65.5, 65.5, 41.7,
+            0.3
+          ],
+          [
+            49.9, 6.8, 96.8, 96.8, 97, 96.7, 96.7, 100, 92.9, 68.4, 68.4, 38.9,
+            0.3
+          ],
+          [
+            52.3, 6.8, 93.1, 93.1, 93.3, 89.7, 89.7, 92.9, 100, 74.5, 74.5, 33,
+            0.3
+          ],
+          [
+            68.5, 6.8, 90.9, 90.9, 69.5, 65.5, 65.5, 68.4, 74.5, 100, 98.3, 7.6,
+            0.3
+          ],
+          [
+            68.5, 6.8, 90.9, 90.9, 69.5, 65.5, 65.5, 68.4, 74.5, 98.3, 100, 7.7,
+            0.4
+          ],
+          [
+            5.3, 38.6, 73.7, 73.7, 37.7, 41.7, 41.7, 38.9, 33, 7.6, 7.7, 100,
+            0.4
+          ],
+          [48.1, 61.7, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.4, 0.4, 100]
+        ]
+      }
+    }
+  ],
+  "JARID2": [
+    {
+      "id": "ENSMUSG00000038518",
+      "symbol": "JARID2",
+      "name": "Jumonji And At-rich Interaction Domain Containing 2",
+      "species": "mouse",
+      "alternateSymbols": ["JMJ", "JUMONJI"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000044608",
+          "geneId": "ENSMUSG00000038518",
+          "codingSequenceLength": 3705,
+          "species": "mouse",
+          "gcPercent": 54.1,
+          "cpgCount": 125,
+          "wggwCount": 108,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000172977",
+          "geneId": "ENSMUSG00000038518",
+          "codingSequenceLength": 249,
+          "species": "mouse",
+          "gcPercent": 49,
+          "cpgCount": 7,
+          "wggwCount": 5,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000173246",
+          "geneId": "ENSMUSG00000038518",
+          "codingSequenceLength": 3705,
+          "species": "mouse",
+          "gcPercent": 54.1,
+          "cpgCount": 125,
+          "wggwCount": 108,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000173704",
+          "geneId": "ENSMUSG00000038518",
+          "codingSequenceLength": 3705,
+          "species": "mouse",
+          "gcPercent": 54.1,
+          "cpgCount": 125,
+          "wggwCount": 108,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENSMUST00000044608",
+          "ENSMUST00000173246",
+          "ENSMUST00000173704",
+          "ENSMUST00000172977"
+        ],
+        "rows": [
+          [100, 100, 100, 5],
+          [100, 100, 100, 5],
+          [100, 100, 100, 5],
+          [5, 5, 5, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000008083",
+      "symbol": "JARID2",
+      "name": "Jumonji And At-rich Interaction Domain Containing 2",
+      "species": "human",
+      "alternateSymbols": ["DIDDF", "JMJ"],
+      "isoforms": [
+        {
+          "id": "ENST00000341776",
+          "geneId": "ENSG00000008083",
+          "codingSequenceLength": 3741,
+          "species": "human",
+          "gcPercent": 56.1,
+          "cpgCount": 169,
+          "wggwCount": 111,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000397311",
+          "geneId": "ENSG00000008083",
+          "codingSequenceLength": 3225,
+          "species": "human",
+          "gcPercent": 57.3,
+          "cpgCount": 157,
+          "wggwCount": 98,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENST00000341776", "ENST00000397311"],
+        "rows": [
+          [100, 86.2],
+          [86.2, 100]
+        ]
+      }
+    }
+  ],
+  "JMJD7": [
+    {
+      "id": "ENSMUSG00000098789",
+      "symbol": "JMJD7",
+      "name": "Jumonji Domain Containing 7",
+      "species": "mouse",
+      "alternateSymbols": [],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000044675",
+          "geneId": "ENSMUSG00000098789",
+          "codingSequenceLength": 951,
+          "species": "mouse",
+          "gcPercent": 57.9,
+          "cpgCount": 31,
+          "wggwCount": 21,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENSMUST00000044675"], "rows": [[100]] }
+    },
+    {
+      "id": "ENSG00000243789",
+      "symbol": "JMJD7",
+      "name": "Jumonji Domain Containing 7",
+      "species": "human",
+      "alternateSymbols": [],
+      "isoforms": [
+        {
+          "id": "ENST00000397299",
+          "geneId": "ENSG00000243789",
+          "codingSequenceLength": 951,
+          "species": "human",
+          "gcPercent": 61,
+          "cpgCount": 45,
+          "wggwCount": 22,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000408047",
+          "geneId": "ENSG00000243789",
+          "codingSequenceLength": 654,
+          "species": "human",
+          "gcPercent": 59.9,
+          "cpgCount": 25,
+          "wggwCount": 17,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000431823",
+          "geneId": "ENSG00000243789",
+          "codingSequenceLength": 405,
+          "species": "human",
+          "gcPercent": 60.5,
+          "cpgCount": 14,
+          "wggwCount": 11,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENST00000397299", "ENST00000408047", "ENST00000431823"],
+        "rows": [
+          [100, 68.8, 0.3],
+          [68.8, 100, 61.9],
+          [0.3, 61.9, 100]
+        ]
+      }
+    }
+  ],
+  "JMJD4": [
+    {
+      "id": "ENSMUSG00000036819",
+      "symbol": "JMJD4",
+      "name": "Jumonji Domain Containing 4",
+      "species": "mouse",
+      "alternateSymbols": ["6430559I23"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000045279",
+          "geneId": "ENSMUSG00000036819",
+          "codingSequenceLength": 1248,
+          "species": "mouse",
+          "gcPercent": 55.9,
+          "cpgCount": 44,
+          "wggwCount": 30,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000108777",
+          "geneId": "ENSMUSG00000036819",
+          "codingSequenceLength": 1284,
+          "species": "mouse",
+          "gcPercent": 55.9,
+          "cpgCount": 45,
+          "wggwCount": 31,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000147163",
+          "geneId": "ENSMUSG00000036819",
+          "codingSequenceLength": 603,
+          "species": "mouse",
+          "gcPercent": 58,
+          "cpgCount": 35,
+          "wggwCount": 13,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENSMUST00000108777",
+          "ENSMUST00000045279",
+          "ENSMUST00000147163"
+        ],
+        "rows": [
+          [100, 97, 44.6],
+          [97, 100, 45.7],
+          [44.6, 45.7, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000081692",
+      "symbol": "JMJD4",
+      "name": "Jumonji Domain Containing 4",
+      "species": "human",
+      "alternateSymbols": [],
+      "isoforms": [
+        {
+          "id": "ENST00000438896",
+          "geneId": "ENSG00000081692",
+          "codingSequenceLength": 1206,
+          "species": "human",
+          "gcPercent": 61.7,
+          "cpgCount": 71,
+          "wggwCount": 28,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000620518",
+          "geneId": "ENSG00000081692",
+          "codingSequenceLength": 1254,
+          "species": "human",
+          "gcPercent": 61.9,
+          "cpgCount": 73,
+          "wggwCount": 30,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENST00000620518", "ENST00000438896"],
+        "rows": [
+          [100, 96.2],
+          [96.2, 100]
+        ]
+      }
+    }
+  ],
+  "JMJD6": [
+    {
+      "id": "ENSMUSG00000056962",
+      "symbol": "JMJD6",
+      "name": "Jumonji Domain Containing 6",
+      "species": "mouse",
+      "alternateSymbols": [
+        "5730436I23RIK",
+        "D11ERTD195E",
+        "PSR",
+        "PTDSERR",
+        "PTDSR",
+        "MKIAA0585"
+      ],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000047616",
+          "geneId": "ENSMUSG00000056962",
+          "codingSequenceLength": 1212,
+          "species": "mouse",
+          "gcPercent": 54.2,
+          "cpgCount": 52,
+          "wggwCount": 38,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000140349",
+          "geneId": "ENSMUSG00000056962",
+          "codingSequenceLength": 864,
+          "species": "mouse",
+          "gcPercent": 52.8,
+          "cpgCount": 30,
+          "wggwCount": 26,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000140513",
+          "geneId": "ENSMUSG00000056962",
+          "codingSequenceLength": 930,
+          "species": "mouse",
+          "gcPercent": 53,
+          "cpgCount": 32,
+          "wggwCount": 29,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000142495",
+          "geneId": "ENSMUSG00000056962",
+          "codingSequenceLength": 813,
+          "species": "mouse",
+          "gcPercent": 53.4,
+          "cpgCount": 43,
+          "wggwCount": 27,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENSMUST00000047616",
+          "ENSMUST00000140513",
+          "ENSMUST00000140349",
+          "ENSMUST00000142495"
+        ],
+        "rows": [
+          [100, 0.2, 0.2, 66.8],
+          [0.2, 100, 0.6, 0.3],
+          [0.2, 0.6, 100, 0.3],
+          [66.8, 0.3, 0.3, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000070495",
+      "symbol": "JMJD6",
+      "name": "Jumonji Domain Containing 6, Arginine Demethylase And Lysine Hydroxylase",
+      "species": "human",
+      "alternateSymbols": ["PSR", "PTDSR", "PTDSR1"],
+      "isoforms": [
+        {
+          "id": "ENST00000303996",
+          "geneId": "ENSG00000070495",
+          "codingSequenceLength": 1008,
+          "species": "human",
+          "gcPercent": 52.3,
+          "cpgCount": 40,
+          "wggwCount": 32,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000397625",
+          "geneId": "ENSG00000070495",
+          "codingSequenceLength": 1212,
+          "species": "human",
+          "gcPercent": 53.2,
+          "cpgCount": 52,
+          "wggwCount": 41,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000445478",
+          "geneId": "ENSG00000070495",
+          "codingSequenceLength": 1245,
+          "species": "human",
+          "gcPercent": 53.5,
+          "cpgCount": 53,
+          "wggwCount": 42,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000542934",
+          "geneId": "ENSG00000070495",
+          "codingSequenceLength": 1086,
+          "species": "human",
+          "gcPercent": 52.8,
+          "cpgCount": 44,
+          "wggwCount": 33,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000585429",
+          "geneId": "ENSG00000070495",
+          "codingSequenceLength": 1188,
+          "species": "human",
+          "gcPercent": 53.7,
+          "cpgCount": 48,
+          "wggwCount": 41,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000617192",
+          "geneId": "ENSG00000070495",
+          "codingSequenceLength": 1086,
+          "species": "human",
+          "gcPercent": 52.8,
+          "cpgCount": 44,
+          "wggwCount": 33,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENST00000445478",
+          "ENST00000397625",
+          "ENST00000585429",
+          "ENST00000542934",
+          "ENST00000617192",
+          "ENST00000303996"
+        ],
+        "rows": [
+          [100, 97.3, 75.7, 75.9, 75.9, 76.1],
+          [97.3, 100, 77.7, 78, 78, 78],
+          [75.7, 77.7, 100, 79.3, 79.3, 79.3],
+          [75.9, 78, 79.3, 100, 100, 87],
+          [75.9, 78, 79.3, 100, 100, 87],
+          [76.1, 78, 79.3, 87, 87, 100]
+        ]
+      }
+    }
+  ],
+  "JAML": [
+    {
+      "id": "ENSMUSG00000048534",
+      "symbol": "JAML",
+      "name": "Junction Adhesion Molecule Like",
+      "species": "mouse",
+      "alternateSymbols": ["AMICA", "AMICA1", "CREA7", "GM638"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000050020",
+          "geneId": "ENSMUSG00000048534",
+          "codingSequenceLength": 1140,
+          "species": "mouse",
+          "gcPercent": 48.7,
+          "cpgCount": 26,
+          "wggwCount": 29,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000215880",
+          "geneId": "ENSMUSG00000048534",
+          "codingSequenceLength": 1140,
+          "species": "mouse",
+          "gcPercent": 48.7,
+          "cpgCount": 26,
+          "wggwCount": 29,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENSMUST00000050020", "ENSMUST00000215880"],
+        "rows": [
+          [100, 100],
+          [100, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000160593",
+      "symbol": "JAML",
+      "name": "Junction Adhesion Molecule Like",
+      "species": "human",
+      "alternateSymbols": ["AMICA", "AMICA1", "CREA7-1", "CREA7-4", "GM638"],
+      "isoforms": [
+        {
+          "id": "ENST00000292067",
+          "geneId": "ENSG00000160593",
+          "codingSequenceLength": 1155,
+          "species": "human",
+          "gcPercent": 48.6,
+          "cpgCount": 24,
+          "wggwCount": 32,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000356289",
+          "geneId": "ENSG00000160593",
+          "codingSequenceLength": 1185,
+          "species": "human",
+          "gcPercent": 48.6,
+          "cpgCount": 24,
+          "wggwCount": 31,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000525565",
+          "geneId": "ENSG00000160593",
+          "codingSequenceLength": 465,
+          "species": "human",
+          "gcPercent": 49.5,
+          "cpgCount": 8,
+          "wggwCount": 9,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000526595",
+          "geneId": "ENSG00000160593",
+          "codingSequenceLength": 918,
+          "species": "human",
+          "gcPercent": 49,
+          "cpgCount": 21,
+          "wggwCount": 27,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000526620",
+          "geneId": "ENSG00000160593",
+          "codingSequenceLength": 1068,
+          "species": "human",
+          "gcPercent": 48.6,
+          "cpgCount": 23,
+          "wggwCount": 30,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000527877",
+          "geneId": "ENSG00000160593",
+          "codingSequenceLength": 201,
+          "species": "human",
+          "gcPercent": 46.8,
+          "cpgCount": 5,
+          "wggwCount": 4,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000533261",
+          "geneId": "ENSG00000160593",
+          "codingSequenceLength": 1152,
+          "species": "human",
+          "gcPercent": 48.6,
+          "cpgCount": 21,
+          "wggwCount": 28,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENST00000356289",
+          "ENST00000292067",
+          "ENST00000533261",
+          "ENST00000526620",
+          "ENST00000526595",
+          "ENST00000525565",
+          "ENST00000527877"
+        ],
+        "rows": [
+          [100, 96.7, 97.2, 90.1, 0.5, 39.2, 3.8],
+          [96.7, 100, 56.9, 92.5, 0.5, 0.3, 0.5],
+          [97.2, 56.9, 100, 57, 0.5, 40.4, 3.9],
+          [90.1, 92.5, 57, 100, 83.4, 0.3, 0.6],
+          [0.5, 0.5, 0.5, 83.4, 100, 0.3, 0.7],
+          [39.2, 0.3, 40.4, 0.3, 0.3, 100, 9],
+          [3.8, 0.5, 3.9, 0.6, 0.7, 9, 100]
+        ]
+      }
+    }
+  ],
+  "JRK": [
+    {
+      "id": "ENSMUSG00000046380",
+      "symbol": "JRK",
+      "name": "Jerky",
+      "species": "mouse",
+      "alternateSymbols": [],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000050234",
+          "geneId": "ENSMUSG00000046380",
+          "codingSequenceLength": 1674,
+          "species": "mouse",
+          "gcPercent": 57.3,
+          "cpgCount": 46,
+          "wggwCount": 34,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENSMUST00000050234"], "rows": [[100]] }
+    },
+    {
+      "id": "ENSG00000234616",
+      "symbol": "JRK",
+      "name": "Jrk Helix-turn-helix Protein",
+      "species": "human",
+      "alternateSymbols": ["JH8", "JERKY"],
+      "isoforms": [
+        {
+          "id": "ENST00000571961",
+          "geneId": "ENSG00000234616",
+          "codingSequenceLength": 1671,
+          "species": "human",
+          "gcPercent": 62.1,
+          "cpgCount": 96,
+          "wggwCount": 43,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000612905",
+          "geneId": "ENSG00000234616",
+          "codingSequenceLength": 1707,
+          "species": "human",
+          "gcPercent": 62.8,
+          "cpgCount": 99,
+          "wggwCount": 46,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000614134",
+          "geneId": "ENSG00000234616",
+          "codingSequenceLength": 1707,
+          "species": "human",
+          "gcPercent": 62.8,
+          "cpgCount": 99,
+          "wggwCount": 46,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000615982",
+          "geneId": "ENSG00000234616",
+          "codingSequenceLength": 1671,
+          "species": "human",
+          "gcPercent": 62.1,
+          "cpgCount": 96,
+          "wggwCount": 43,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENST00000612905",
+          "ENST00000614134",
+          "ENST00000571961",
+          "ENST00000615982"
+        ],
+        "rows": [
+          [100, 100, 92.8, 92.8],
+          [100, 100, 92.8, 92.8],
+          [92.8, 92.8, 100, 100],
+          [92.8, 92.8, 100, 100]
+        ]
+      }
+    }
+  ],
+  "JDP2": [
+    {
+      "id": "ENSMUSG00000034271",
+      "symbol": "JDP2",
+      "name": "Jun Dimerization Protein 2",
+      "species": "mouse",
+      "alternateSymbols": ["JUNDM2", "JUNDP2", "TIF"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000050687",
+          "geneId": "ENSMUSG00000034271",
+          "codingSequenceLength": 492,
+          "species": "mouse",
+          "gcPercent": 58.9,
+          "cpgCount": 27,
+          "wggwCount": 12,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000171754",
+          "geneId": "ENSMUSG00000034271",
+          "codingSequenceLength": 492,
+          "species": "mouse",
+          "gcPercent": 58.9,
+          "cpgCount": 27,
+          "wggwCount": 12,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000177587",
+          "geneId": "ENSMUSG00000034271",
+          "codingSequenceLength": 492,
+          "species": "mouse",
+          "gcPercent": 58.9,
+          "cpgCount": 27,
+          "wggwCount": 12,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENSMUST00000050687",
+          "ENSMUST00000171754",
+          "ENSMUST00000177587"
+        ],
+        "rows": [
+          [100, 100, 100],
+          [100, 100, 100],
+          [100, 100, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000140044",
+      "symbol": "JDP2",
+      "name": "Jun Dimerization Protein 2",
+      "species": "human",
+      "alternateSymbols": ["JUNDM2"],
+      "isoforms": [
+        {
+          "id": "ENST00000267569",
+          "geneId": "ENSG00000140044",
+          "codingSequenceLength": 525,
+          "species": "human",
+          "gcPercent": 61.1,
+          "cpgCount": 29,
+          "wggwCount": 12,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000419727",
+          "geneId": "ENSG00000140044",
+          "codingSequenceLength": 492,
+          "species": "human",
+          "gcPercent": 61,
+          "cpgCount": 29,
+          "wggwCount": 11,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000435893",
+          "geneId": "ENSG00000140044",
+          "codingSequenceLength": 492,
+          "species": "human",
+          "gcPercent": 61,
+          "cpgCount": 29,
+          "wggwCount": 11,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000437176",
+          "geneId": "ENSG00000140044",
+          "codingSequenceLength": 492,
+          "species": "human",
+          "gcPercent": 61,
+          "cpgCount": 29,
+          "wggwCount": 11,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000651602",
+          "geneId": "ENSG00000140044",
+          "codingSequenceLength": 492,
+          "species": "human",
+          "gcPercent": 61,
+          "cpgCount": 29,
+          "wggwCount": 11,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENST00000267569",
+          "ENST00000419727",
+          "ENST00000435893",
+          "ENST00000437176",
+          "ENST00000651602"
+        ],
+        "rows": [
+          [100, 93.7, 93.7, 93.7, 93.7],
+          [93.7, 100, 100, 100, 100],
+          [93.7, 100, 100, 100, 100],
+          [93.7, 100, 100, 100, 100],
+          [93.7, 100, 100, 100, 100]
+        ]
+      }
+    }
+  ],
+  "JMJD1C": [
+    {
+      "id": "ENSMUSG00000037876",
+      "symbol": "JMJD1C",
+      "name": "Jumonji Domain Containing 1c",
+      "species": "mouse",
+      "alternateSymbols": ["5430433L24RIK", "D630035I23RIK", "JMJDIC", "TRIP8"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000051446",
+          "geneId": "ENSMUSG00000037876",
+          "codingSequenceLength": 7593,
+          "species": "mouse",
+          "gcPercent": 45.1,
+          "cpgCount": 153,
+          "wggwCount": 157,
+          "suitability": "dual-aav"
+        },
+        {
+          "id": "ENSMUST00000173689",
+          "geneId": "ENSMUSG00000037876",
+          "codingSequenceLength": 7053,
+          "species": "mouse",
+          "gcPercent": 44.4,
+          "cpgCount": 119,
+          "wggwCount": 143,
+          "suitability": "dual-aav"
+        },
+        {
+          "id": "ENSMUST00000174317",
+          "geneId": "ENSMUSG00000037876",
+          "codingSequenceLength": 2232,
+          "species": "mouse",
+          "gcPercent": 45.9,
+          "cpgCount": 38,
+          "wggwCount": 50,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000174408",
+          "geneId": "ENSMUSG00000037876",
+          "codingSequenceLength": 7596,
+          "species": "mouse",
+          "gcPercent": 45.2,
+          "cpgCount": 154,
+          "wggwCount": 157,
+          "suitability": "dual-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENSMUST00000174408",
+          "ENSMUST00000051446",
+          "ENSMUST00000173689",
+          "ENSMUST00000174317"
+        ],
+        "rows": [
+          [100, 99.9, 92.9, 0],
+          [99.9, 100, 33.5, 0],
+          [92.9, 33.5, 100, 0],
+          [0, 0, 0, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000171988",
+      "symbol": "JMJD1C",
+      "name": "Jumonji Domain Containing 1c",
+      "species": "human",
+      "alternateSymbols": ["KDM3C", "TRIP-8", "TRIP8"],
+      "isoforms": [
+        {
+          "id": "ENST00000399262",
+          "geneId": "ENSG00000171988",
+          "codingSequenceLength": 7623,
+          "species": "human",
+          "gcPercent": 40.3,
+          "cpgCount": 81,
+          "wggwCount": 153,
+          "suitability": "dual-aav"
+        },
+        {
+          "id": "ENST00000542921",
+          "geneId": "ENSG00000171988",
+          "codingSequenceLength": 7077,
+          "species": "human",
+          "gcPercent": 39.6,
+          "cpgCount": 56,
+          "wggwCount": 141,
+          "suitability": "dual-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENST00000399262", "ENST00000542921"],
+        "rows": [
+          [100, 92.8],
+          [92.8, 100]
+        ]
+      }
+    }
+  ],
+  "JAK3": [
+    {
+      "id": "ENSMUSG00000031805",
+      "symbol": "JAK3",
+      "name": "Janus Kinase 3",
+      "species": "mouse",
+      "alternateSymbols": ["FAE", "WIL"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000051995",
+          "geneId": "ENSMUSG00000031805",
+          "codingSequenceLength": 3303,
+          "species": "mouse",
+          "gcPercent": 61.1,
+          "cpgCount": 180,
+          "wggwCount": 90,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000110012",
+          "geneId": "ENSMUSG00000031805",
+          "codingSequenceLength": 3303,
+          "species": "mouse",
+          "gcPercent": 61.1,
+          "cpgCount": 180,
+          "wggwCount": 90,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000110013",
+          "geneId": "ENSMUSG00000031805",
+          "codingSequenceLength": 3303,
+          "species": "mouse",
+          "gcPercent": 61.1,
+          "cpgCount": 180,
+          "wggwCount": 90,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENSMUST00000051995",
+          "ENSMUST00000110012",
+          "ENSMUST00000110013"
+        ],
+        "rows": [
+          [100, 100, 100],
+          [100, 100, 100],
+          [100, 100, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000105639",
+      "symbol": "JAK3",
+      "name": "Janus Kinase 3",
+      "species": "human",
+      "alternateSymbols": ["JAK-3", "JAK3_HUMAN", "JAKL", "L-JAK", "LJAK"],
+      "isoforms": [
+        {
+          "id": "ENST00000458235",
+          "geneId": "ENSG00000105639",
+          "codingSequenceLength": 3375,
+          "species": "human",
+          "gcPercent": 62.2,
+          "cpgCount": 174,
+          "wggwCount": 85,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000526008",
+          "geneId": "ENSG00000105639",
+          "codingSequenceLength": 1557,
+          "species": "human",
+          "gcPercent": 63.3,
+          "cpgCount": 81,
+          "wggwCount": 36,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000527670",
+          "geneId": "ENSG00000105639",
+          "codingSequenceLength": 3375,
+          "species": "human",
+          "gcPercent": 62.2,
+          "cpgCount": 174,
+          "wggwCount": 85,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000534444",
+          "geneId": "ENSG00000105639",
+          "codingSequenceLength": 3285,
+          "species": "human",
+          "gcPercent": 62.3,
+          "cpgCount": 174,
+          "wggwCount": 82,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENST00000458235",
+          "ENST00000527670",
+          "ENST00000534444",
+          "ENST00000526008"
+        ],
+        "rows": [
+          [100, 100, 95.2, 42.8],
+          [100, 100, 95.2, 42.8],
+          [95.2, 95.2, 100, 43.9],
+          [42.8, 42.8, 43.9, 100]
+        ]
+      }
+    }
+  ],
+  "JKAMP": [
+    {
+      "id": "ENSMUSG00000005078",
+      "symbol": "JKAMP",
+      "name": "Jnk1/mapk8-associated Membrane Protein",
+      "species": "mouse",
+      "alternateSymbols": ["1200003C05RIK", "2310047L11RIK", "JAMP"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000057257",
+          "geneId": "ENSMUSG00000005078",
+          "codingSequenceLength": 936,
+          "species": "mouse",
+          "gcPercent": 49,
+          "cpgCount": 37,
+          "wggwCount": 16,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000117449",
+          "geneId": "ENSMUSG00000005078",
+          "codingSequenceLength": 918,
+          "species": "mouse",
+          "gcPercent": 49.1,
+          "cpgCount": 36,
+          "wggwCount": 16,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENSMUST00000057257", "ENSMUST00000117449"],
+        "rows": [
+          [100, 98.1],
+          [98.1, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000050130",
+      "symbol": "JKAMP",
+      "name": "Jnk1/mapk8 Associated Membrane Protein",
+      "species": "human",
+      "alternateSymbols": [
+        "C14ORF100",
+        "C24ORF100",
+        "CDA06",
+        "HSPC213",
+        "HSPC327",
+        "JAMP"
+      ],
+      "isoforms": [
+        {
+          "id": "ENST00000356057",
+          "geneId": "ENSG00000050130",
+          "codingSequenceLength": 960,
+          "species": "human",
+          "gcPercent": 40.9,
+          "cpgCount": 15,
+          "wggwCount": 24,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000425728",
+          "geneId": "ENSG00000050130",
+          "codingSequenceLength": 918,
+          "species": "human",
+          "gcPercent": 40.8,
+          "cpgCount": 14,
+          "wggwCount": 22,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000554271",
+          "geneId": "ENSG00000050130",
+          "codingSequenceLength": 978,
+          "species": "human",
+          "gcPercent": 41,
+          "cpgCount": 16,
+          "wggwCount": 24,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000554795",
+          "geneId": "ENSG00000050130",
+          "codingSequenceLength": 741,
+          "species": "human",
+          "gcPercent": 40.8,
+          "cpgCount": 14,
+          "wggwCount": 16,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000555491",
+          "geneId": "ENSG00000050130",
+          "codingSequenceLength": 423,
+          "species": "human",
+          "gcPercent": 40.7,
+          "cpgCount": 6,
+          "wggwCount": 9,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000556985",
+          "geneId": "ENSG00000050130",
+          "codingSequenceLength": 462,
+          "species": "human",
+          "gcPercent": 41.8,
+          "cpgCount": 9,
+          "wggwCount": 9,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000616435",
+          "geneId": "ENSG00000050130",
+          "codingSequenceLength": 936,
+          "species": "human",
+          "gcPercent": 40.9,
+          "cpgCount": 15,
+          "wggwCount": 22,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENST00000554271",
+          "ENST00000356057",
+          "ENST00000616435",
+          "ENST00000425728",
+          "ENST00000554795",
+          "ENST00000556985",
+          "ENST00000555491"
+        ],
+        "rows": [
+          [100, 98.2, 95.4, 93.9, 4.9, 0.6, 0.6],
+          [98.2, 100, 95.3, 95.3, 77.2, 0.6, 0.6],
+          [95.4, 95.3, 100, 98.1, 0.3, 49.4, 34.6],
+          [93.9, 95.3, 98.1, 100, 0.3, 1, 1],
+          [4.9, 77.2, 0.3, 0.3, 100, 0.4, 0.4],
+          [0.6, 0.6, 49.4, 1, 0.4, 100, 70.1],
+          [0.6, 0.6, 34.6, 1, 0.4, 70.1, 100]
+        ]
+      }
+    }
+  ],
+  "JUNB": [
+    {
+      "id": "ENSMUSG00000052837",
+      "symbol": "JUNB",
+      "name": "Jun B Proto-oncogene",
+      "species": "mouse",
+      "alternateSymbols": [],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000064922",
+          "geneId": "ENSMUSG00000052837",
+          "codingSequenceLength": 1035,
+          "species": "mouse",
+          "gcPercent": 64.7,
+          "cpgCount": 86,
+          "wggwCount": 18,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENSMUST00000064922"], "rows": [[100]] }
+    },
+    {
+      "id": "ENSG00000171223",
+      "symbol": "JUNB",
+      "name": "Junb Proto-oncogene, Ap-1 Transcription Factor Subunit",
+      "species": "human",
+      "alternateSymbols": ["AP-1"],
+      "isoforms": [
+        {
+          "id": "ENST00000302754",
+          "geneId": "ENSG00000171223",
+          "codingSequenceLength": 1044,
+          "species": "human",
+          "gcPercent": 67.8,
+          "cpgCount": 105,
+          "wggwCount": 19,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENST00000302754"], "rows": [[100]] }
+    }
+  ],
+  "JMY": [
+    {
+      "id": "ENSMUSG00000021690",
+      "symbol": "JMY",
+      "name": "Junction-mediating And Regulatory Protein",
+      "species": "mouse",
+      "alternateSymbols": [],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000065537",
+          "geneId": "ENSMUSG00000021690",
+          "codingSequenceLength": 2952,
+          "species": "mouse",
+          "gcPercent": 54.6,
+          "cpgCount": 142,
+          "wggwCount": 68,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000220513",
+          "geneId": "ENSMUSG00000021690",
+          "codingSequenceLength": 1341,
+          "species": "mouse",
+          "gcPercent": 61.3,
+          "cpgCount": 109,
+          "wggwCount": 31,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENSMUST00000065537", "ENSMUST00000220513"],
+        "rows": [
+          [100, 45.2],
+          [45.2, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000152409",
+      "symbol": "JMY",
+      "name": "Junction Mediating And Regulatory Protein, P53 Cofactor",
+      "species": "human",
+      "alternateSymbols": ["WHAMM2", "WHDC1L3"],
+      "isoforms": [
+        {
+          "id": "ENST00000396137",
+          "geneId": "ENSG00000152409",
+          "codingSequenceLength": 2967,
+          "species": "human",
+          "gcPercent": 52.6,
+          "cpgCount": 128,
+          "wggwCount": 73,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENST00000396137"], "rows": [[100]] }
+    }
+  ],
+  "JAZF1": [
+    {
+      "id": "ENSMUSG00000063568",
+      "symbol": "JAZF1",
+      "name": "Jazf Zinc Finger 1",
+      "species": "mouse",
+      "alternateSymbols": ["C820002C15", "JAZ1", "TIP27"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000074541",
+          "geneId": "ENSMUSG00000063568",
+          "codingSequenceLength": 732,
+          "species": "mouse",
+          "gcPercent": 54.5,
+          "cpgCount": 32,
+          "wggwCount": 11,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENSMUST00000074541"], "rows": [[100]] }
+    },
+    {
+      "id": "ENSG00000153814",
+      "symbol": "JAZF1",
+      "name": "Jazf Zinc Finger 1",
+      "species": "human",
+      "alternateSymbols": ["TIP27", "ZNF802"],
+      "isoforms": [
+        {
+          "id": "ENST00000283928",
+          "geneId": "ENSG00000153814",
+          "codingSequenceLength": 732,
+          "species": "human",
+          "gcPercent": 53.8,
+          "cpgCount": 32,
+          "wggwCount": 13,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000452993",
+          "geneId": "ENSG00000153814",
+          "codingSequenceLength": 243,
+          "species": "human",
+          "gcPercent": 52.7,
+          "cpgCount": 12,
+          "wggwCount": 2,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENST00000283928", "ENST00000452993"],
+        "rows": [
+          [100, 26.2],
+          [26.2, 100]
+        ]
+      }
+    }
+  ],
+  "JAG2": [
+    {
+      "id": "ENSMUSG00000002799",
+      "symbol": "JAG2",
+      "name": "Jagged 2",
+      "species": "mouse",
+      "alternateSymbols": ["D12GGC2E", "SERH", "MJAGGED2-1", "SM"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000075827",
+          "geneId": "ENSMUSG00000002799",
+          "codingSequenceLength": 3744,
+          "species": "mouse",
+          "gcPercent": 62.3,
+          "cpgCount": 223,
+          "wggwCount": 79,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENSMUST00000075827"], "rows": [[100]] }
+    },
+    {
+      "id": "ENSG00000184916",
+      "symbol": "JAG2",
+      "name": "Jagged Canonical Notch Ligand 2",
+      "species": "human",
+      "alternateSymbols": ["HJ2", "LGMDR27", "SER2"],
+      "isoforms": [
+        {
+          "id": "ENST00000331782",
+          "geneId": "ENSG00000184916",
+          "codingSequenceLength": 3717,
+          "species": "human",
+          "gcPercent": 66.5,
+          "cpgCount": 297,
+          "wggwCount": 77,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000347004",
+          "geneId": "ENSG00000184916",
+          "codingSequenceLength": 3603,
+          "species": "human",
+          "gcPercent": 67,
+          "cpgCount": 293,
+          "wggwCount": 76,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENST00000331782", "ENST00000347004"],
+        "rows": [
+          [100, 96.9],
+          [96.9, 100]
+        ]
+      }
+    }
+  ],
+  "JAKMIP2": [
+    {
+      "id": "ENSMUSG00000024502",
+      "symbol": "JAKMIP2",
+      "name": "Janus Kinase And Microtubule Interacting Protein 2",
+      "species": "mouse",
+      "alternateSymbols": ["6430702L21RIK", "D930046L20RIK"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000082254",
+          "geneId": "ENSMUSG00000024502",
+          "codingSequenceLength": 2463,
+          "species": "mouse",
+          "gcPercent": 48.6,
+          "cpgCount": 68,
+          "wggwCount": 72,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENSMUST00000082254"], "rows": [[100]] }
+    },
+    {
+      "id": "ENSG00000176049",
+      "symbol": "JAKMIP2",
+      "name": "Janus Kinase And Microtubule Interacting Protein 2",
+      "species": "human",
+      "alternateSymbols": ["JAMIP2", "NECC1"],
+      "isoforms": [
+        {
+          "id": "ENST00000265272",
+          "geneId": "ENSG00000176049",
+          "codingSequenceLength": 2433,
+          "species": "human",
+          "gcPercent": 45.7,
+          "cpgCount": 56,
+          "wggwCount": 68,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000333010",
+          "geneId": "ENSG00000176049",
+          "codingSequenceLength": 2337,
+          "species": "human",
+          "gcPercent": 45.3,
+          "cpgCount": 52,
+          "wggwCount": 66,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000507386",
+          "geneId": "ENSG00000176049",
+          "codingSequenceLength": 2400,
+          "species": "human",
+          "gcPercent": 45.8,
+          "cpgCount": 55,
+          "wggwCount": 65,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000616793",
+          "geneId": "ENSG00000176049",
+          "codingSequenceLength": 2463,
+          "species": "human",
+          "gcPercent": 45.6,
+          "cpgCount": 55,
+          "wggwCount": 67,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENST00000616793",
+          "ENST00000265272",
+          "ENST00000507386",
+          "ENST00000333010"
+        ],
+        "rows": [
+          [100, 98.1, 97.4, 94.9],
+          [98.1, 100, 66.5, 0.2],
+          [97.4, 66.5, 100, 32.9],
+          [94.9, 0.2, 32.9, 100]
+        ]
+      }
+    }
+  ],
+  "JCHAIN": [
+    {
+      "id": "ENSMUSG00000067149",
+      "symbol": "JCHAIN",
+      "name": "Immunoglobulin Joining Chain",
+      "species": "mouse",
+      "alternateSymbols": ["9530090F24RIK", "IGJ", "JCH"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000087033",
+          "geneId": "ENSMUSG00000067149",
+          "codingSequenceLength": 480,
+          "species": "mouse",
+          "gcPercent": 47.9,
+          "cpgCount": 10,
+          "wggwCount": 15,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENSMUST00000087033"], "rows": [[100]] }
+    },
+    {
+      "id": "ENSG00000132465",
+      "symbol": "JCHAIN",
+      "name": "Joining Chain Of Multimeric Iga And Igm",
+      "species": "human",
+      "alternateSymbols": ["IGCJ", "IGJ", "JCH"],
+      "isoforms": [
+        {
+          "id": "ENST00000254801",
+          "geneId": "ENSG00000132465",
+          "codingSequenceLength": 480,
+          "species": "human",
+          "gcPercent": 43.8,
+          "cpgCount": 6,
+          "wggwCount": 11,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000510437",
+          "geneId": "ENSG00000132465",
+          "codingSequenceLength": 480,
+          "species": "human",
+          "gcPercent": 43.8,
+          "cpgCount": 6,
+          "wggwCount": 11,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENST00000254801", "ENST00000510437"],
+        "rows": [
+          [100, 100],
+          [100, 100]
+        ]
+      }
+    }
+  ],
+  "JUND": [
+    {
+      "id": "ENSMUSG00000071076",
+      "symbol": "JUND",
+      "name": "Jun D Proto-oncogene",
+      "species": "mouse",
+      "alternateSymbols": ["JUND1"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000095267",
+          "geneId": "ENSMUSG00000071076",
+          "codingSequenceLength": 1026,
+          "species": "mouse",
+          "gcPercent": 70.6,
+          "cpgCount": 119,
+          "wggwCount": 18,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENSMUST00000095267"], "rows": [[100]] }
+    },
+    {
+      "id": "ENSG00000130522",
+      "symbol": "JUND",
+      "name": "Jund Proto-oncogene, Ap-1 Transcription Factor Subunit",
+      "species": "human",
+      "alternateSymbols": ["AP-1"],
+      "isoforms": [
+        {
+          "id": "ENST00000252818",
+          "geneId": "ENSG00000130522",
+          "codingSequenceLength": 1044,
+          "species": "human",
+          "gcPercent": 73.3,
+          "cpgCount": 140,
+          "wggwCount": 16,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENST00000252818"], "rows": [[100]] }
+    }
+  ],
+  "JAM2": [
+    {
+      "id": "ENSMUSG00000053062",
+      "symbol": "JAM2",
+      "name": "Junction Adhesion Molecule 2",
+      "species": "mouse",
+      "alternateSymbols": [
+        "1110002N23RIK",
+        "2410030G21RIK",
+        "2410167M24RIK",
+        "JAM-2",
+        "JAM-B",
+        "JCAM2",
+        "VE-JAM"
+      ],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000098407",
+          "geneId": "ENSMUSG00000053062",
+          "codingSequenceLength": 546,
+          "species": "mouse",
+          "gcPercent": 48.5,
+          "cpgCount": 14,
+          "wggwCount": 12,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000114195",
+          "geneId": "ENSMUSG00000053062",
+          "codingSequenceLength": 897,
+          "species": "mouse",
+          "gcPercent": 47.6,
+          "cpgCount": 24,
+          "wggwCount": 22,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000231910",
+          "geneId": "ENSMUSG00000053062",
+          "codingSequenceLength": 969,
+          "species": "mouse",
+          "gcPercent": 47.4,
+          "cpgCount": 26,
+          "wggwCount": 23,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENSMUST00000231910",
+          "ENSMUST00000114195",
+          "ENSMUST00000098407"
+        ],
+        "rows": [
+          [100, 86.1, 0.9],
+          [86.1, 100, 44.5],
+          [0.9, 44.5, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000154721",
+      "symbol": "JAM2",
+      "name": "Junctional Adhesion Molecule 2",
+      "species": "human",
+      "alternateSymbols": [
+        "C21ORF43",
+        "CD322",
+        "IBGC8",
+        "JAM-B",
+        "JAMB",
+        "PRO245",
+        "VE-JAM",
+        "VEJAM"
+      ],
+      "isoforms": [
+        {
+          "id": "ENST00000312957",
+          "geneId": "ENSG00000154721",
+          "codingSequenceLength": 789,
+          "species": "human",
+          "gcPercent": 45.2,
+          "cpgCount": 17,
+          "wggwCount": 19,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000400532",
+          "geneId": "ENSG00000154721",
+          "codingSequenceLength": 939,
+          "species": "human",
+          "gcPercent": 47.3,
+          "cpgCount": 24,
+          "wggwCount": 23,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000480456",
+          "geneId": "ENSG00000154721",
+          "codingSequenceLength": 897,
+          "species": "human",
+          "gcPercent": 45.2,
+          "cpgCount": 18,
+          "wggwCount": 20,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENST00000400532", "ENST00000480456", "ENST00000312957"],
+        "rows": [
+          [100, 92.3, 14.4],
+          [92.3, 100, 88],
+          [14.4, 88, 100]
+        ]
+      }
+    }
+  ],
+  "JAGN1": [
+    {
+      "id": "ENSMUSG00000051256",
+      "symbol": "JAGN1",
+      "name": "Jagunal Homolog 1",
+      "species": "mouse",
+      "alternateSymbols": ["5830427H10RIK"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000101070",
+          "geneId": "ENSMUSG00000051256",
+          "codingSequenceLength": 552,
+          "species": "mouse",
+          "gcPercent": 54.3,
+          "cpgCount": 24,
+          "wggwCount": 9,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000204254",
+          "geneId": "ENSMUSG00000051256",
+          "codingSequenceLength": 204,
+          "species": "mouse",
+          "gcPercent": 59.8,
+          "cpgCount": 18,
+          "wggwCount": 2,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENSMUST00000101070", "ENSMUST00000204254"],
+        "rows": [
+          [100, 16.3],
+          [16.3, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000171135",
+      "symbol": "JAGN1",
+      "name": "Jagunal Homolog 1",
+      "species": "human",
+      "alternateSymbols": ["GL009", "SCN6"],
+      "isoforms": [
+        {
+          "id": "ENST00000647897",
+          "geneId": "ENSG00000171135",
+          "codingSequenceLength": 552,
+          "species": "human",
+          "gcPercent": 53.4,
+          "cpgCount": 21,
+          "wggwCount": 10,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENST00000647897"], "rows": [[100]] }
+    }
+  ],
+  "JAK1": [
+    {
+      "id": "ENSMUSG00000028530",
+      "symbol": "JAK1",
+      "name": "Janus Kinase 1",
+      "species": "mouse",
+      "alternateSymbols": ["BAP004", "C130039L05RIK"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000102781",
+          "geneId": "ENSMUSG00000028530",
+          "codingSequenceLength": 3462,
+          "species": "mouse",
+          "gcPercent": 47.9,
+          "cpgCount": 80,
+          "wggwCount": 89,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENSMUST00000102781"], "rows": [[100]] }
+    },
+    {
+      "id": "ENSG00000162434",
+      "symbol": "JAK1",
+      "name": "Janus Kinase 1",
+      "species": "human",
+      "alternateSymbols": ["AIIDE", "JAK1A", "JAK1B", "JTK3"],
+      "isoforms": [
+        {
+          "id": "ENST00000342505",
+          "geneId": "ENSG00000162434",
+          "codingSequenceLength": 3465,
+          "species": "human",
+          "gcPercent": 47.8,
+          "cpgCount": 90,
+          "wggwCount": 92,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000671746",
+          "geneId": "ENSG00000162434",
+          "codingSequenceLength": 264,
+          "species": "human",
+          "gcPercent": 52.3,
+          "cpgCount": 4,
+          "wggwCount": 7,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000671929",
+          "geneId": "ENSG00000162434",
+          "codingSequenceLength": 3465,
+          "species": "human",
+          "gcPercent": 47.8,
+          "cpgCount": 90,
+          "wggwCount": 92,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000671954",
+          "geneId": "ENSG00000162434",
+          "codingSequenceLength": 3465,
+          "species": "human",
+          "gcPercent": 47.8,
+          "cpgCount": 90,
+          "wggwCount": 92,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000672179",
+          "geneId": "ENSG00000162434",
+          "codingSequenceLength": 3465,
+          "species": "human",
+          "gcPercent": 47.8,
+          "cpgCount": 90,
+          "wggwCount": 92,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000672247",
+          "geneId": "ENSG00000162434",
+          "codingSequenceLength": 3465,
+          "species": "human",
+          "gcPercent": 47.8,
+          "cpgCount": 90,
+          "wggwCount": 92,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000672434",
+          "geneId": "ENSG00000162434",
+          "codingSequenceLength": 3465,
+          "species": "human",
+          "gcPercent": 47.8,
+          "cpgCount": 90,
+          "wggwCount": 92,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000672574",
+          "geneId": "ENSG00000162434",
+          "codingSequenceLength": 3360,
+          "species": "human",
+          "gcPercent": 47.8,
+          "cpgCount": 88,
+          "wggwCount": 91,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000672751",
+          "geneId": "ENSG00000162434",
+          "codingSequenceLength": 3465,
+          "species": "human",
+          "gcPercent": 47.8,
+          "cpgCount": 90,
+          "wggwCount": 92,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000673046",
+          "geneId": "ENSG00000162434",
+          "codingSequenceLength": 3459,
+          "species": "human",
+          "gcPercent": 47.8,
+          "cpgCount": 90,
+          "wggwCount": 92,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000673220",
+          "geneId": "ENSG00000162434",
+          "codingSequenceLength": 390,
+          "species": "human",
+          "gcPercent": 52.3,
+          "cpgCount": 8,
+          "wggwCount": 10,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000673246",
+          "geneId": "ENSG00000162434",
+          "codingSequenceLength": 3336,
+          "species": "human",
+          "gcPercent": 48.2,
+          "cpgCount": 88,
+          "wggwCount": 88,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000673254",
+          "geneId": "ENSG00000162434",
+          "codingSequenceLength": 3333,
+          "species": "human",
+          "gcPercent": 48.2,
+          "cpgCount": 88,
+          "wggwCount": 88,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000699259",
+          "geneId": "ENSG00000162434",
+          "codingSequenceLength": 3462,
+          "species": "human",
+          "gcPercent": 47.8,
+          "cpgCount": 90,
+          "wggwCount": 92,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000699260",
+          "geneId": "ENSG00000162434",
+          "codingSequenceLength": 3462,
+          "species": "human",
+          "gcPercent": 47.8,
+          "cpgCount": 90,
+          "wggwCount": 92,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000699261",
+          "geneId": "ENSG00000162434",
+          "codingSequenceLength": 2472,
+          "species": "human",
+          "gcPercent": 49.1,
+          "cpgCount": 69,
+          "wggwCount": 67,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000699262",
+          "geneId": "ENSG00000162434",
+          "codingSequenceLength": 3465,
+          "species": "human",
+          "gcPercent": 47.8,
+          "cpgCount": 90,
+          "wggwCount": 92,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000699263",
+          "geneId": "ENSG00000162434",
+          "codingSequenceLength": 549,
+          "species": "human",
+          "gcPercent": 50.8,
+          "cpgCount": 13,
+          "wggwCount": 14,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000699310",
+          "geneId": "ENSG00000162434",
+          "codingSequenceLength": 3459,
+          "species": "human",
+          "gcPercent": 47.8,
+          "cpgCount": 90,
+          "wggwCount": 92,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000699311",
+          "geneId": "ENSG00000162434",
+          "codingSequenceLength": 1335,
+          "species": "human",
+          "gcPercent": 46.4,
+          "cpgCount": 31,
+          "wggwCount": 38,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000699312",
+          "geneId": "ENSG00000162434",
+          "codingSequenceLength": 3465,
+          "species": "human",
+          "gcPercent": 47.8,
+          "cpgCount": 90,
+          "wggwCount": 92,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000699313",
+          "geneId": "ENSG00000162434",
+          "codingSequenceLength": 1335,
+          "species": "human",
+          "gcPercent": 46.4,
+          "cpgCount": 31,
+          "wggwCount": 38,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENST00000342505",
+          "ENST00000671929",
+          "ENST00000671954",
+          "ENST00000672179",
+          "ENST00000672247",
+          "ENST00000672434",
+          "ENST00000672751",
+          "ENST00000699262",
+          "ENST00000699312",
+          "ENST00000699259",
+          "ENST00000699260",
+          "ENST00000673046",
+          "ENST00000699310",
+          "ENST00000672574",
+          "ENST00000673246",
+          "ENST00000673254"
+        ],
+        "rows": [
+          [
+            100, 100, 100, 100, 100, 100, 100, 100, 100, 99.9, 99.9, 99.8, 99.8,
+            96.9, 96.3, 96.2
+          ],
+          [
+            100, 100, 100, 100, 100, 100, 100, 100, 100, 99.9, 99.9, 99.8, 99.8,
+            96.9, 96.3, 96.2
+          ],
+          [
+            100, 100, 100, 100, 100, 100, 100, 100, 100, 99.9, 99.9, 99.8, 99.8,
+            96.9, 96.3, 96.2
+          ],
+          [
+            100, 100, 100, 100, 100, 100, 100, 100, 100, 99.9, 99.9, 99.8, 99.8,
+            96.9, 96.3, 96.2
+          ],
+          [
+            100, 100, 100, 100, 100, 100, 100, 100, 100, 99.9, 99.9, 99.8, 99.8,
+            96.9, 96.3, 96.2
+          ],
+          [
+            100, 100, 100, 100, 100, 100, 100, 100, 100, 99.9, 99.9, 99.8, 99.8,
+            96.9, 96.3, 96.2
+          ],
+          [
+            100, 100, 100, 100, 100, 100, 100, 100, 100, 99.9, 99.9, 99.8, 99.8,
+            96.9, 96.3, 96.2
+          ],
+          [
+            100, 100, 100, 100, 100, 100, 100, 100, 100, 99.9, 99.9, 99.8, 99.8,
+            96.9, 96.3, 96.2
+          ],
+          [
+            100, 100, 100, 100, 100, 100, 100, 100, 100, 99.9, 99.9, 99.8, 99.8,
+            96.9, 96.3, 96.2
+          ],
+          [
+            99.9, 99.9, 99.9, 99.9, 99.9, 99.9, 99.9, 99.9, 99.9, 100, 100,
+            68.2, 71.8, 68.4, 76.6, 76.6
+          ],
+          [
+            99.9, 99.9, 99.9, 99.9, 99.9, 99.9, 99.9, 99.9, 99.9, 100, 100,
+            68.2, 71.8, 68.4, 76.6, 76.6
+          ],
+          [
+            99.8, 99.8, 99.8, 99.8, 99.8, 99.8, 99.8, 99.8, 99.8, 68.2, 68.2,
+            100, 40.1, 96.9, 44.8, 44.8
+          ],
+          [
+            99.8, 99.8, 99.8, 99.8, 99.8, 99.8, 99.8, 99.8, 99.8, 71.8, 71.8,
+            40.1, 100, 40.2, 91.8, 91.7
+          ],
+          [
+            96.9, 96.9, 96.9, 96.9, 96.9, 96.9, 96.9, 96.9, 96.9, 68.4, 68.4,
+            96.9, 40.2, 100, 46.3, 46.3
+          ],
+          [
+            96.3, 96.3, 96.3, 96.3, 96.3, 96.3, 96.3, 96.3, 96.3, 76.6, 76.6,
+            44.8, 91.8, 46.3, 100, 99.9
+          ],
+          [
+            96.2, 96.2, 96.2, 96.2, 96.2, 96.2, 96.2, 96.2, 96.2, 76.6, 76.6,
+            44.8, 91.7, 46.3, 99.9, 100
+          ]
+        ]
+      }
+    }
+  ],
+  "JAKMIP3": [
+    {
+      "id": "ENSMUSG00000056856",
+      "symbol": "JAKMIP3",
+      "name": "Janus Kinase And Microtubule Interacting Protein 3",
+      "species": "mouse",
+      "alternateSymbols": ["6330417G02RIK", "MKIAA4091"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000106111",
+          "geneId": "ENSMUSG00000056856",
+          "codingSequenceLength": 2319,
+          "species": "mouse",
+          "gcPercent": 53.3,
+          "cpgCount": 89,
+          "wggwCount": 84,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENSMUST00000166163",
+          "geneId": "ENSMUSG00000056856",
+          "codingSequenceLength": 2535,
+          "species": "mouse",
+          "gcPercent": 53.6,
+          "cpgCount": 96,
+          "wggwCount": 88,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENSMUST00000166163", "ENSMUST00000106111"],
+        "rows": [
+          [100, 91.5],
+          [91.5, 100]
+        ]
+      }
+    },
+    {
+      "id": "ENSG00000188385",
+      "symbol": "JAKMIP3",
+      "name": "Janus Kinase And Microtubule Interacting Protein 3",
+      "species": "human",
+      "alternateSymbols": [
+        "C10ORF14",
+        "C10ORF39",
+        "JAMIP3",
+        "NECC2",
+        "BA140A10.5"
+      ],
+      "isoforms": [
+        {
+          "id": "ENST00000298622",
+          "geneId": "ENSG00000188385",
+          "codingSequenceLength": 2535,
+          "species": "human",
+          "gcPercent": 56.3,
+          "cpgCount": 128,
+          "wggwCount": 101,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000653512",
+          "geneId": "ENSG00000188385",
+          "codingSequenceLength": 2493,
+          "species": "human",
+          "gcPercent": 56.3,
+          "cpgCount": 129,
+          "wggwCount": 99,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000653623",
+          "geneId": "ENSG00000188385",
+          "codingSequenceLength": 2313,
+          "species": "human",
+          "gcPercent": 56.2,
+          "cpgCount": 119,
+          "wggwCount": 95,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000657318",
+          "geneId": "ENSG00000188385",
+          "codingSequenceLength": 2313,
+          "species": "human",
+          "gcPercent": 56.2,
+          "cpgCount": 119,
+          "wggwCount": 96,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000657785",
+          "geneId": "ENSG00000188385",
+          "codingSequenceLength": 2541,
+          "species": "human",
+          "gcPercent": 56.3,
+          "cpgCount": 129,
+          "wggwCount": 101,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000657994",
+          "geneId": "ENSG00000188385",
+          "codingSequenceLength": 2007,
+          "species": "human",
+          "gcPercent": 55.4,
+          "cpgCount": 99,
+          "wggwCount": 88,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000658847",
+          "geneId": "ENSG00000188385",
+          "codingSequenceLength": 2286,
+          "species": "human",
+          "gcPercent": 55.8,
+          "cpgCount": 111,
+          "wggwCount": 94,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000659050",
+          "geneId": "ENSG00000188385",
+          "codingSequenceLength": 2319,
+          "species": "human",
+          "gcPercent": 56.2,
+          "cpgCount": 119,
+          "wggwCount": 96,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000660144",
+          "geneId": "ENSG00000188385",
+          "codingSequenceLength": 2532,
+          "species": "human",
+          "gcPercent": 56.9,
+          "cpgCount": 131,
+          "wggwCount": 100,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000661339",
+          "geneId": "ENSG00000188385",
+          "codingSequenceLength": 2286,
+          "species": "human",
+          "gcPercent": 55.8,
+          "cpgCount": 111,
+          "wggwCount": 94,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000664697",
+          "geneId": "ENSG00000188385",
+          "codingSequenceLength": 2535,
+          "species": "human",
+          "gcPercent": 56.3,
+          "cpgCount": 128,
+          "wggwCount": 101,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000666210",
+          "geneId": "ENSG00000188385",
+          "codingSequenceLength": 2973,
+          "species": "human",
+          "gcPercent": 57.3,
+          "cpgCount": 149,
+          "wggwCount": 110,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000666974",
+          "geneId": "ENSG00000188385",
+          "codingSequenceLength": 2541,
+          "species": "human",
+          "gcPercent": 56.3,
+          "cpgCount": 129,
+          "wggwCount": 101,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000668452",
+          "geneId": "ENSG00000188385",
+          "codingSequenceLength": 2535,
+          "species": "human",
+          "gcPercent": 56.3,
+          "cpgCount": 128,
+          "wggwCount": 101,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000669493",
+          "geneId": "ENSG00000188385",
+          "codingSequenceLength": 2247,
+          "species": "human",
+          "gcPercent": 56.3,
+          "cpgCount": 118,
+          "wggwCount": 91,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000670120",
+          "geneId": "ENSG00000188385",
+          "codingSequenceLength": 2313,
+          "species": "human",
+          "gcPercent": 56.2,
+          "cpgCount": 119,
+          "wggwCount": 95,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000670443",
+          "geneId": "ENSG00000188385",
+          "codingSequenceLength": 2064,
+          "species": "human",
+          "gcPercent": 55.6,
+          "cpgCount": 102,
+          "wggwCount": 88,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000684848",
+          "geneId": "ENSG00000188385",
+          "codingSequenceLength": 2541,
+          "species": "human",
+          "gcPercent": 56.3,
+          "cpgCount": 129,
+          "wggwCount": 101,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": [
+          "ENST00000666210",
+          "ENST00000657785",
+          "ENST00000666974",
+          "ENST00000684848",
+          "ENST00000298622",
+          "ENST00000664697",
+          "ENST00000668452",
+          "ENST00000660144",
+          "ENST00000653512",
+          "ENST00000659050",
+          "ENST00000653623",
+          "ENST00000657318",
+          "ENST00000670120",
+          "ENST00000658847",
+          "ENST00000661339",
+          "ENST00000669493"
+        ],
+        "rows": [
+          [
+            100, 83.9, 83.9, 83.9, 67.4, 67.4, 67.4, 67.4, 28.7, 21.4, 21.4,
+            21.4, 21.4, 0.2, 0.2, 21.4
+          ],
+          [
+            83.9, 100, 100, 100, 99.8, 99.8, 99.8, 79, 44.4, 45.9, 45.9, 45.9,
+            45.9, 21.1, 21.1, 43.3
+          ],
+          [
+            83.9, 100, 100, 100, 99.8, 99.8, 99.8, 79, 44.4, 45.9, 45.9, 45.9,
+            45.9, 21.1, 21.1, 43.3
+          ],
+          [
+            83.9, 100, 100, 100, 99.8, 99.8, 99.8, 79, 44.4, 45.9, 45.9, 45.9,
+            45.9, 21.1, 21.1, 43.3
+          ],
+          [
+            67.4, 99.8, 99.8, 99.8, 100, 100, 100, 98.2, 44.5, 91.5, 91.2, 61.8,
+            91.2, 90.2, 90.2, 43.4
+          ],
+          [
+            67.4, 99.8, 99.8, 99.8, 100, 100, 100, 98.2, 44.5, 91.5, 91.2, 61.8,
+            91.2, 90.2, 90.2, 43.4
+          ],
+          [
+            67.4, 99.8, 99.8, 99.8, 100, 100, 100, 98.2, 44.5, 91.5, 91.2, 61.8,
+            91.2, 90.2, 90.2, 43.4
+          ],
+          [
+            67.4, 79, 79, 79, 98.2, 98.2, 98.2, 100, 33.8, 25.2, 25.2, 25.2,
+            25.2, 0.4, 0.4, 25.2
+          ],
+          [
+            28.7, 44.4, 44.4, 44.4, 44.5, 44.5, 44.5, 33.8, 100, 36.6, 36.6,
+            36.6, 36.6, 11.3, 11.3, 36.6
+          ],
+          [
+            21.4, 45.9, 45.9, 45.9, 91.5, 91.5, 91.5, 25.2, 36.6, 100, 99.7,
+            99.7, 99.7, 72.8, 72.8, 47.5
+          ],
+          [
+            21.4, 45.9, 45.9, 45.9, 91.2, 91.2, 91.2, 25.2, 36.6, 99.7, 100,
+            67.7, 100, 72.8, 72.8, 97.1
+          ],
+          [
+            21.4, 45.9, 45.9, 45.9, 61.8, 61.8, 61.8, 25.2, 36.6, 99.7, 67.7,
+            100, 67.7, 40.5, 40.5, 47.6
+          ],
+          [
+            21.4, 45.9, 45.9, 45.9, 91.2, 91.2, 91.2, 25.2, 36.6, 99.7, 100,
+            67.7, 100, 72.8, 72.8, 97.1
+          ],
+          [
+            0.2, 21.1, 21.1, 21.1, 90.2, 90.2, 90.2, 0.4, 11.3, 72.8, 72.8,
+            40.5, 72.8, 100, 100, 20.6
+          ],
+          [
+            0.2, 21.1, 21.1, 21.1, 90.2, 90.2, 90.2, 0.4, 11.3, 72.8, 72.8,
+            40.5, 72.8, 100, 100, 20.6
+          ],
+          [
+            21.4, 43.3, 43.3, 43.3, 43.4, 43.4, 43.4, 25.2, 36.6, 47.5, 97.1,
+            47.6, 97.1, 20.6, 20.6, 100
+          ]
+        ]
+      }
+    }
+  ],
+  "JUN": [
+    {
+      "id": "ENSMUSG00000052684",
+      "symbol": "JUN",
+      "name": "Jun Proto-oncogene",
+      "species": "mouse",
+      "alternateSymbols": ["AP-1", "JUNC", "C-JUN"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000107094",
+          "geneId": "ENSMUSG00000052684",
+          "codingSequenceLength": 1005,
+          "species": "mouse",
+          "gcPercent": 63.1,
+          "cpgCount": 83,
+          "wggwCount": 14,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENSMUST00000107094"], "rows": [[100]] }
+    },
+    {
+      "id": "ENSG00000177606",
+      "symbol": "JUN",
+      "name": "Jun Proto-oncogene, Ap-1 Transcription Factor Subunit",
+      "species": "human",
+      "alternateSymbols": ["AP-1", "AP1", "C-JUN", "CJUN", "P39"],
+      "isoforms": [
+        {
+          "id": "ENST00000371222",
+          "geneId": "ENSG00000177606",
+          "codingSequenceLength": 996,
+          "species": "human",
+          "gcPercent": 64.4,
+          "cpgCount": 83,
+          "wggwCount": 15,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000678696",
+          "geneId": "ENSG00000177606",
+          "codingSequenceLength": 996,
+          "species": "human",
+          "gcPercent": 64.4,
+          "cpgCount": 83,
+          "wggwCount": 15,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENST00000371222", "ENST00000678696"],
+        "rows": [
+          [100, 100],
+          [100, 100]
+        ]
+      }
+    }
+  ],
+  "JRKL": [
+    {
+      "id": "ENSMUSG00000079083",
+      "symbol": "JRKL",
+      "name": "Jrk-like",
+      "species": "mouse",
+      "alternateSymbols": ["C030035D04RIK", "HHMJG"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000110582",
+          "geneId": "ENSMUSG00000079083",
+          "codingSequenceLength": 1572,
+          "species": "mouse",
+          "gcPercent": 40.3,
+          "cpgCount": 17,
+          "wggwCount": 47,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENSMUST00000110582"], "rows": [[100]] }
+    },
+    {
+      "id": "ENSG00000183340",
+      "symbol": "JRKL",
+      "name": "Jrk Like",
+      "species": "human",
+      "alternateSymbols": ["HHMJG"],
+      "isoforms": [
+        {
+          "id": "ENST00000332349",
+          "geneId": "ENSG00000183340",
+          "codingSequenceLength": 1575,
+          "species": "human",
+          "gcPercent": 39.7,
+          "cpgCount": 19,
+          "wggwCount": 46,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENST00000332349"], "rows": [[100]] }
+    }
+  ],
+  "JKAMPL": [
+    {
+      "id": "ENSMUSG00000056197",
+      "symbol": "JKAMPL",
+      "name": "Jnk1/mapk8 Associated Membrane Protein Like",
+      "species": "mouse",
+      "alternateSymbols": ["4931417E11RIK"],
+      "isoforms": [
+        {
+          "id": "ENSMUST00000204006",
+          "geneId": "ENSMUSG00000056197",
+          "codingSequenceLength": 918,
+          "species": "mouse",
+          "gcPercent": 46.6,
+          "cpgCount": 22,
+          "wggwCount": 17,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": { "ids": ["ENSMUST00000204006"], "rows": [[100]] }
+    }
+  ],
+  "JMJD7-PLA2G4B": [
+    {
+      "id": "ENSG00000168970",
+      "symbol": "JMJD7-PLA2G4B",
+      "name": "Jmjd7-pla2g4b Readthrough",
+      "species": "human",
+      "alternateSymbols": ["HST16992", "CPLA2-BETA"],
+      "isoforms": [
+        {
+          "id": "ENST00000342159",
+          "geneId": "ENSG00000168970",
+          "codingSequenceLength": 2682,
+          "species": "human",
+          "gcPercent": 60.8,
+          "cpgCount": 99,
+          "wggwCount": 74,
+          "suitability": "single-aav"
+        },
+        {
+          "id": "ENST00000382448",
+          "geneId": "ENSG00000168970",
+          "codingSequenceLength": 3039,
+          "species": "human",
+          "gcPercent": 61.3,
+          "cpgCount": 117,
+          "wggwCount": 82,
+          "suitability": "single-aav"
+        }
+      ],
+      "identityMatrix": {
+        "ids": ["ENST00000382448", "ENST00000342159"],
+        "rows": [
+          [100, 87],
+          [87, 100]
+        ]
+      }
+    }
+  ]
+}
