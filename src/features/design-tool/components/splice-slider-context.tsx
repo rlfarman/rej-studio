@@ -690,7 +690,7 @@ export function SpliceSliderContext({
       />
 
       <div className="space-y-2">
-        <div className="flex min-w-0 flex-col gap-2">
+        <div className="flex min-w-0 flex-col gap-1">
           <div className="relative h-7">
             {positions.map((pos, idx) => {
               const tone = spliceTone(idx)
@@ -988,7 +988,7 @@ export function SpliceSliderContext({
         <div
           className={cn(
             'grid min-w-0 gap-3',
-            positions.length > 1 && '2xl:grid-cols-2',
+            positions.length > 1 && 'md:grid-cols-2',
           )}
         >
           {positions.map((_pos, idx) => (
@@ -1326,7 +1326,7 @@ function LocalSequenceView({
       ref={stripRef}
       role="group"
       aria-label="Sequence context around WGGW split site"
-      className="bg-muted/40 overflow-x-auto rounded-lg border px-2 py-2 font-mono text-[11px] leading-none sm:py-3"
+      className="bg-muted/40 overflow-x-auto rounded-lg border px-2 py-2 font-mono text-[11px] leading-none [scrollbar-width:none] sm:py-3 [&::-webkit-scrollbar]:hidden"
     >
       <div className="flex items-stretch">
         {ctx.codons.map((codon, codonIdx) => (
