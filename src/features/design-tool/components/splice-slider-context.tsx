@@ -1156,12 +1156,6 @@ function LocalSequenceView({
   stripRef: React.RefObject<HTMLDivElement | null>
   onSelectSite: (site: WggwSiteCandidate) => void
 }) {
-  const siteByMotifStart = useMemo(() => {
-    const map = new Map<number, WggwSiteCandidate>()
-    for (const site of sites) map.set(site.motifStart, site)
-    return map
-  }, [sites])
-
   // For each base position, which selected splice index (if any) covers it.
   // Selected sites win over unselected; among selected, lower splice index
   // wins (splice 1 takes priority on overlapping bases).
@@ -1271,7 +1265,6 @@ function LocalSequenceView({
             <CodonCard
               key={codon.idx}
               codon={codon}
-              site={siteByMotifStart.get(codon.start) ?? null}
               selectedCoverByBase={selectedCoverByBase}
               otherSiteCoverByBase={otherSiteCoverByBase}
               changedBases={changedBases}
@@ -1289,7 +1282,6 @@ function LocalSequenceView({
 
 function CodonCard({
   codon,
-  site,
   selectedCoverByBase,
   otherSiteCoverByBase,
   changedBases,
@@ -1299,7 +1291,6 @@ function CodonCard({
   onSelectSite,
 }: {
   codon: SequenceContext['codons'][number]
-  site: WggwSiteCandidate | null
   selectedCoverByBase: Map<
     number,
     { spliceIndex: number; site: WggwSiteCandidate }
@@ -1312,13 +1303,6 @@ function CodonCard({
   onSelectSite: (site: WggwSiteCandidate) => void
 }) {
   const roleStyles = roleStylesFor(codon.role)
-  const startCover = site
-    ? [...selectedCoverByBase.values()].find(
-        (c) => c.site.position === site.position,
-      )
-    : undefined
-  const siteIsSelected = !!startCover
-  const siteSpliceTone = startCover ? spliceTone(startCover.spliceIndex) : null
 
   return (
     <div
@@ -1330,35 +1314,8 @@ function CodonCard({
       <div className="text-muted-foreground/75 text-[9px] leading-3 tabular-nums">
         {codon.start.toLocaleString()}
       </div>
-      <div className="flex h-3 items-center justify-center">
-        {site ? (
-          <button
-            type="button"
-            onClick={() => onSelectSite(site)}
-            aria-pressed={!!siteIsSelected}
-            title={`WGGW ${site.motif} · bp ${site.position.toLocaleString()} · ${site.baseChanges} bp change${site.baseChanges === 1 ? '' : 's'}`}
-            aria-label={`Select WGGW site at bp ${site.position}`}
-            className="flex h-full w-full items-center justify-center"
-          >
-            <span
-              className={cn(
-                'rounded-full transition-all',
-                siteIsSelected && siteSpliceTone
-                  ? cn(siteSpliceTone.tickBg, 'h-3 w-2')
-                  : cn(costToneFor(site.baseChanges).tickBg, 'h-2 w-2'),
-              )}
-            />
-          </button>
-        ) : null}
-      </div>
       <div
-        className={cn(
-          'text-[10px] leading-4 tabular-nums',
-          roleStyles.aa,
-          siteIsSelected &&
-            siteSpliceTone &&
-            cn(siteSpliceTone.text, 'font-semibold'),
-        )}
+        className={cn('text-[10px] leading-4 tabular-nums', roleStyles.aa)}
         title={`Codon ${codon.idx + 1}: ${codon.codon}`}
       >
         {codon.aa ?? '·'}
@@ -1680,26 +1637,29 @@ function Inspector({
               })
               .map(({ option, originalIndex, score }) => {
                 const active = originalIndex === selectedRewriteIndex
-                const optionTone = costToneFor(option.baseChanges)
-                const scoreLabel =
+                const isNative = option.baseChanges === 0
+                const nativeTone = costToneFor(0)
+                // Order alone tells the recommendation story (sorted
+                // best-first by codon preference). The Native badge is
+                // the only marker we keep, since it's a categorical
+                // distinction (no swaps needed) rather than a relative
+                // ranking. Hover title still surfaces the precise
+                // score for users who want it.
+                const titleParts = [
+                  isNative
+                    ? 'Native motif — no synonymous swaps required'
+                    : `${option.baseChanges} bp synonymous change${option.baseChanges === 1 ? '' : 's'} required`,
                   score !== null
-                    ? `${Math.round(score * 100)}%`
-                    : option.baseChanges === 0
-                      ? 'Native'
-                      : `${option.baseChanges} BP`
+                    ? `codon preference ${score.toFixed(2)} (${species})`
+                    : null,
+                ].filter(Boolean)
                 return (
                   <button
                     type="button"
                     key={`${option.newHexamer}-${originalIndex}`}
                     onClick={() => onSelectRewrite(originalIndex)}
                     aria-pressed={active}
-                    title={
-                      score !== null
-                        ? `Codon-preference score: ${scoreLabel} (${species})`
-                        : option.baseChanges === 0
-                          ? 'Native motif — no synonymous swaps required'
-                          : `${option.baseChanges} bp synonymous change${option.baseChanges === 1 ? '' : 's'} required`
-                    }
+                    title={titleParts.join(' · ')}
                     className={cn(
                       'inline-flex shrink-0 items-center gap-2 rounded-md border px-2.5 py-1.5 font-mono text-[12px] transition-colors',
                       active
@@ -1731,16 +1691,18 @@ function Inspector({
                         </span>
                       </span>
                     </span>
-                    <span
-                      className={cn(
-                        'rounded border px-1 py-px text-[9px] font-medium tracking-[0.04em] uppercase',
-                        optionTone.badgeBorder,
-                        optionTone.badgeBg,
-                        optionTone.text,
-                      )}
-                    >
-                      {scoreLabel}
-                    </span>
+                    {isNative && (
+                      <span
+                        className={cn(
+                          'rounded border px-1 py-px text-[9px] font-medium tracking-[0.04em] uppercase',
+                          nativeTone.badgeBorder,
+                          nativeTone.badgeBg,
+                          nativeTone.text,
+                        )}
+                      >
+                        Native
+                      </span>
+                    )}
                   </button>
                 )
               })}
