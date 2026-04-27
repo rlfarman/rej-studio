@@ -1,9 +1,27 @@
+import { getRelativePreference } from '@/lib/bio/codon-usage'
 import { translateCodon } from '@/lib/bio/genetic-code'
+import type { Species } from '@/lib/bio/species'
 import type {
   RankedInducibleWggwCandidate,
   WggwRecodingOption,
 } from '@/lib/bio/sequence-utils'
 import type { CodonRole, SequenceContext, WggwSiteCandidate } from './types'
+
+// Score a rewrite option as the product of its codons' relative
+// preferences in the host's codon-usage table. Result in [0, 1] where
+// 1 = both codons are the most-preferred synonyms for their AA. Returns
+// null when the host isn't picked (species === 'none' or unknown) or
+// the codons aren't in the table.
+export function scoreRewriteOption(
+  option: WggwRecodingOption,
+  species: Species | 'none',
+): number | null {
+  if (species === 'none') return null
+  const a = getRelativePreference(option.newCodons[0], species)
+  const b = getRelativePreference(option.newCodons[1], species)
+  if (a === null || b === null) return null
+  return a * b
+}
 
 export function buildSegments(
   positions: number[],

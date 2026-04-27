@@ -19,6 +19,7 @@ function Playground({
       <SpliceSliderContext
         sequence={sequence}
         positions={positions}
+        species="human"
         onPositionsChange={setPositions}
         onSelectionChange={() => {}}
       />

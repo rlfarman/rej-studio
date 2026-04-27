@@ -54,12 +54,16 @@ import {
   nearestSiteIndex,
   pickTopSites,
   roleStylesFor,
+  scoreRewriteOption,
   splitPositionToPercent,
 } from './splice-slider/sequence-helpers'
 
 interface Props {
   sequence: string
   positions: number[]
+  // Host species for the codon-preference score on rewrite chips. 'none'
+  // hides the score (no host picked = the score is meaningless).
+  species: 'none' | 'human' | 'mouse'
   onPositionsChange: (positions: number[]) => void
   onSelectionChange: (sites: (SelectedWggwSite | null)[]) => void
 }
@@ -67,6 +71,7 @@ interface Props {
 export function SpliceSliderContext({
   sequence,
   positions,
+  species,
   onPositionsChange,
   onSelectionChange,
 }: Props) {
@@ -922,6 +927,7 @@ export function SpliceSliderContext({
               selectedSiteIndex={selectedSiteIndices[idx] ?? -1}
               totalSites={wggwSites.length}
               topPicks={pickTopSites(wggwSites, activeSitePositions, idx, 6)}
+              species={species}
               onSelectSite={handleSelectSite}
               currentRewrite={currentRewrites[idx]}
               selectedRewriteIndex={(() => {
@@ -1437,6 +1443,7 @@ function Inspector({
   selectedSiteIndex,
   totalSites,
   topPicks,
+  species,
   onSelectSite,
   currentRewrite,
   selectedRewriteIndex,
@@ -1457,6 +1464,7 @@ function Inspector({
   selectedSiteIndex: number
   totalSites: number
   topPicks: WggwSiteCandidate[]
+  species: 'none' | 'human' | 'mouse'
   onSelectSite: (site: WggwSiteCandidate) => void
   currentRewrite: WggwRecodingOption | null
   selectedRewriteIndex: number
@@ -1654,61 +1662,88 @@ function Inspector({
             )}
           </div>
           <RewriteRow>
-            {selectedSite.rewriteOptions.map((option, index) => {
-              const active = index === selectedRewriteIndex
-              const optionTone = costToneFor(option.baseChanges)
-              return (
-                <button
-                  type="button"
-                  key={`${option.newHexamer}-${index}`}
-                  onClick={() => onSelectRewrite(index)}
-                  aria-pressed={active}
-                  className={cn(
-                    'inline-flex shrink-0 items-center gap-2 rounded-md border px-2.5 py-1.5 font-mono text-[12px] transition-colors',
-                    active
-                      ? 'border-primary bg-primary/10 text-primary'
-                      : 'text-muted-foreground hover:border-primary/30 hover:bg-background/60',
-                  )}
-                >
-                  <span className="flex flex-col items-center gap-0.5 leading-tight">
-                    <span
-                      className="grid font-mono text-[12px] leading-none"
-                      style={{ gridTemplateColumns: 'repeat(7, 1ch)' }}
-                    >
-                      <span className="text-muted-foreground/80 col-start-2 text-center font-medium">
-                        {translateCodon(option.newCodons[0]) ?? '?'}
-                      </span>
-                      <span className="text-muted-foreground/80 col-start-6 text-center font-medium">
-                        {translateCodon(option.newCodons[1]) ?? '?'}
-                      </span>
-                    </span>
-                    <span
-                      className="grid font-mono leading-none font-semibold"
-                      style={{ gridTemplateColumns: 'repeat(7, 1ch)' }}
-                    >
-                      <span className="col-span-3 text-center">
-                        {option.newCodons[0]}
-                      </span>
-                      <span className="col-span-3 col-start-5 text-center">
-                        {option.newCodons[1]}
-                      </span>
-                    </span>
-                  </span>
-                  <span
+            {selectedSite.rewriteOptions
+              .map((option, originalIndex) => ({
+                option,
+                originalIndex,
+                score: scoreRewriteOption(option, species),
+              }))
+              // Sort by codon-preference score desc when scores are
+              // available; fall back to base-change count asc otherwise
+              // (no host picked).
+              .sort((a, b) => {
+                if (a.score !== null && b.score !== null)
+                  return b.score - a.score
+                if (a.score !== null) return -1
+                if (b.score !== null) return 1
+                return a.option.baseChanges - b.option.baseChanges
+              })
+              .map(({ option, originalIndex, score }) => {
+                const active = originalIndex === selectedRewriteIndex
+                const optionTone = costToneFor(option.baseChanges)
+                const scoreLabel =
+                  score !== null
+                    ? `${Math.round(score * 100)}%`
+                    : option.baseChanges === 0
+                      ? 'Native'
+                      : `${option.baseChanges} BP`
+                return (
+                  <button
+                    type="button"
+                    key={`${option.newHexamer}-${originalIndex}`}
+                    onClick={() => onSelectRewrite(originalIndex)}
+                    aria-pressed={active}
+                    title={
+                      score !== null
+                        ? `Codon-preference score: ${scoreLabel} (${species})`
+                        : option.baseChanges === 0
+                          ? 'Native motif — no synonymous swaps required'
+                          : `${option.baseChanges} bp synonymous change${option.baseChanges === 1 ? '' : 's'} required`
+                    }
                     className={cn(
-                      'rounded border px-1 py-px text-[9px] font-medium tracking-[0.04em] uppercase',
-                      optionTone.badgeBorder,
-                      optionTone.badgeBg,
-                      optionTone.text,
+                      'inline-flex shrink-0 items-center gap-2 rounded-md border px-2.5 py-1.5 font-mono text-[12px] transition-colors',
+                      active
+                        ? 'border-primary bg-primary/10 text-primary'
+                        : 'text-muted-foreground hover:border-primary/30 hover:bg-background/60',
                     )}
                   >
-                    {option.baseChanges === 0
-                      ? 'Native'
-                      : `${option.baseChanges} bp`}
-                  </span>
-                </button>
-              )
-            })}
+                    <span className="flex flex-col items-center gap-0.5 leading-tight">
+                      <span
+                        className="grid font-mono text-[12px] leading-none"
+                        style={{ gridTemplateColumns: 'repeat(7, 1ch)' }}
+                      >
+                        <span className="text-muted-foreground/80 col-start-2 text-center font-medium">
+                          {translateCodon(option.newCodons[0]) ?? '?'}
+                        </span>
+                        <span className="text-muted-foreground/80 col-start-6 text-center font-medium">
+                          {translateCodon(option.newCodons[1]) ?? '?'}
+                        </span>
+                      </span>
+                      <span
+                        className="grid font-mono leading-none font-semibold"
+                        style={{ gridTemplateColumns: 'repeat(7, 1ch)' }}
+                      >
+                        <span className="col-span-3 text-center">
+                          {option.newCodons[0]}
+                        </span>
+                        <span className="col-span-3 col-start-5 text-center">
+                          {option.newCodons[1]}
+                        </span>
+                      </span>
+                    </span>
+                    <span
+                      className={cn(
+                        'rounded border px-1 py-px text-[9px] font-medium tracking-[0.04em] uppercase',
+                        optionTone.badgeBorder,
+                        optionTone.badgeBg,
+                        optionTone.text,
+                      )}
+                    >
+                      {scoreLabel}
+                    </span>
+                  </button>
+                )
+              })}
           </RewriteRow>
         </div>
 

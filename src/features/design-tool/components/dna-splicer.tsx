@@ -79,6 +79,7 @@ export function DNASplicer() {
     <SpliceSliderContext
       sequence={codingSequence}
       positions={positions.length ? positions : [Math.floor(seqLength / 2)]}
+      species={watch('species') ?? 'none'}
       onPositionsChange={setPositions}
       onSelectionChange={setSelectedSites}
     />
