@@ -1317,7 +1317,7 @@ function CodonCard({
   return (
     <div
       className={cn(
-        'flex w-[42px] shrink-0 flex-col items-stretch text-center [contain-intrinsic-size:42px_56px] [content-visibility:auto]',
+        'flex w-[42px] shrink-0 flex-col items-stretch text-center',
         !isLast && 'border-border/60 border-r',
       )}
     >
