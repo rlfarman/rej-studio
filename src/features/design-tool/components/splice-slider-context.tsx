@@ -1655,10 +1655,15 @@ function Inspector({
                 originalIndex,
                 score: scoreRewriteOption(option, species),
               }))
-              // Sort by codon-preference score desc when scores are
-              // available; fall back to base-change count asc otherwise
-              // (no host picked).
+              // Native rewrites (baseChanges === 0) always lead — they
+              // require no synonymous swaps, qualitatively different
+              // from any non-native option. Within tier, sort by codon-
+              // preference score desc when scores are available; fall
+              // back to base-change count asc otherwise (no host picked).
               .sort((a, b) => {
+                const aNative = a.option.baseChanges === 0
+                const bNative = b.option.baseChanges === 0
+                if (aNative !== bNative) return aNative ? -1 : 1
                 if (a.score !== null && b.score !== null)
                   return b.score - a.score
                 if (a.score !== null) return -1

@@ -102,11 +102,18 @@ export function findSequenceMatches(sequence: string, query: string) {
   return matches
 }
 
-// Pick the top N WGGW sites for a given splice slot, ranked by lowest
-// base-change cost. Sites already selected for other splices are
-// excluded. For multi-splice configurations, sites are biased toward
-// the splice's "side" of the sequence: splice 0 prefers earlier sites,
-// splice 1 prefers later sites.
+// Pick the top N WGGW sites for a given splice slot. Suggestions are
+// ranked primarily by how close each site is to an "ideal" position for
+// that splice — the midpoint for single-splice, ~1/3 for splice 1 and
+// ~2/3 for splice 2 in a multi-splice configuration. Native sites get
+// a small score bonus so they edge out adjacent non-native sites of
+// similar position. Sites already selected on the other splice are
+// excluded.
+//
+// The dominance of position-distance is intentional: a splice point
+// near an extreme of the sequence is rarely useful regardless of how
+// little modification it requires; biasing on position keeps the
+// suggestions in the region the user is plausibly going to pick from.
 export function pickTopSites(
   sites: WggwSiteCandidate[],
   selectedPositions: (number | null)[],
@@ -121,19 +128,24 @@ export function pickTopSites(
   const isMultiSplice = selectedPositions.length > 1
   const seqLength =
     sites.length > 0 ? Math.max(...sites.map((s) => s.position)) : 0
+  const idealFraction = isMultiSplice
+    ? spliceIndex === 0
+      ? 1 / 3
+      : 2 / 3
+    : 1 / 2
+  const idealPosition = seqLength * idealFraction
   return sites
     .filter((s) => !otherSelected.has(s.position))
     .map((site) => {
-      // For multi-splice, score by cost + a small "side preference"
-      // penalty so splice 1 prefers earlier sites and splice 2 prefers
-      // later sites. Single-splice configs sort purely by cost.
-      const sidePenalty = isMultiSplice
-        ? Math.abs(
-            site.position / Math.max(1, seqLength) -
-              (spliceIndex === 0 ? 0.33 : 0.66),
-          )
-        : 0
-      return { site, score: site.baseChanges + sidePenalty }
+      // Distance from ideal as a fraction of seq length (in [0, 0.5]).
+      const distance =
+        Math.abs(site.position - idealPosition) / Math.max(1, seqLength)
+      // Native sites get a 0.04 score advantage — enough to pull them
+      // ahead of non-native sites within ~120 bp on a 3 kb sequence,
+      // not enough to surface an edge-of-sequence native over a
+      // mid-sequence non-native.
+      const nativeBonus = site.baseChanges === 0 ? -0.04 : 0
+      return { site, score: distance + nativeBonus }
     })
     .sort((a, b) => a.score - b.score || a.site.position - b.site.position)
     .slice(0, count)
