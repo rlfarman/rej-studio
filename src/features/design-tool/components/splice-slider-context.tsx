@@ -884,11 +884,11 @@ export function SpliceSliderContext({
                 variant="outline"
                 size="sm"
                 onClick={addSplice}
-                title="Add a second splice (for triple-AAV cassettes)"
+                title="Add a second splice point (for triple-AAV cassettes)"
                 className="text-muted-foreground hover:text-foreground"
               >
                 <Plus />
-                Splice
+                Add Splice Point
               </Button>
             ) : (
               <span />
