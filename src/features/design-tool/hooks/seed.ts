@@ -347,7 +347,7 @@ function buildJobSeed(): JobHistoryEntry[] {
       result: null,
       error: null,
       progress: 0.62,
-      stage: 'Packaging optimized fragments',
+      stage: 'Packaging optimized sequences',
       formValues: baseFormValues({
         name: 'ACTB packaging test',
         codingSequence: REAL_CDS.ENST00000425660,

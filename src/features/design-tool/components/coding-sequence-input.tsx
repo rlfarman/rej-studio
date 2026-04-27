@@ -25,9 +25,6 @@ import { designToolCopy } from '../copy'
 
 const copy = designToolCopy.sequenceInput
 
-const MAX_DNA_LENGTH = 50_000
-const MAX_PROTEIN_LENGTH = 16_666
-
 function SequenceTypeToggle({
   value,
   onChange,
@@ -83,7 +80,6 @@ export function CodingSequenceInput() {
 
   const activeValue = isProtein ? proteinValue : dnaValue
   const length = activeValue?.length ?? 0
-  const maxLength = isProtein ? MAX_PROTEIN_LENGTH : MAX_DNA_LENGTH
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -113,8 +109,8 @@ export function CodingSequenceInput() {
             shouldValidate: false,
           },
         )
+        setValue('sequenceType', 'dna', { shouldValidate: false })
       } catch {
-        // Validation errors are shown via the form schema
         setValue('codingSequence', '', { shouldValidate: false })
       }
     },
@@ -123,12 +119,9 @@ export function CodingSequenceInput() {
 
   const applyCleanedSequence = useCallback(
     (text: string, source: string) => {
-      // Auto-detect DNA vs protein from the raw input so paste/upload
-      // switch mode when the user drops in the other kind of sequence.
       const detected = detectSequenceType(text)
       const detectedIsProtein = detected === 'protein'
 
-      // If the input contains multiple FASTA entries, use only the first
       let textToClean = text
       let ignoredSequences = 0
       if (text.includes('>')) {
@@ -185,10 +178,7 @@ export function CodingSequenceInput() {
           setValue('proteinSequence', '', { shouldValidate: false })
         }
       } else {
-        applyReverseTranslation(cleaned)
-        if (modeSwitched) {
-          // DNA field will be repopulated by reverse-translation when species is set
-        }
+        setValue('codingSequence', '', { shouldValidate: false })
       }
 
       const charType = detectedIsProtein
@@ -205,15 +195,13 @@ export function CodingSequenceInput() {
         toast.info(copy.cleanedSummary(source, parts.join(', ')))
       }
     },
-    [setValue, clearErrors, sequenceType, species, applyReverseTranslation],
+    [setValue, clearErrors, sequenceType, species],
   )
 
   const handlePaste = useCallback(
     (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
       const text = e.clipboardData.getData('text')
       const hasHeaders = text.includes('>')
-      // Intercept anything that looks like a sequence paste so we can
-      // auto-detect DNA vs protein and clean in one step.
       const letters = text.replace(/\s/g, '')
       const seqChars =
         letters.match(/[ACDEFGHIKLMNPQRSTUVWYacdefghiklmnpqrstuvwy*]/g)
@@ -260,34 +248,33 @@ export function CodingSequenceInput() {
       clearErrors(['codingSequence', 'proteinSequence', 'species'])
 
       if (newType === 'protein') {
-        // Reverse-translation needs a codon table; default to human if none set.
         if (species === 'none') {
           setValue('species', 'human', { shouldValidate: false })
         }
-        // DNA → Protein: translate existing DNA (trailing stop stripped)
         const dna = (dnaValue ?? '').toUpperCase().replace(/U/g, 'T')
         if (dna.length >= 3) {
           const protein = translate(dna).replace(/\*+$/, '')
           setValue('proteinSequence', protein, { shouldValidate: false })
         }
       } else {
-        // Protein → DNA: reverse-translate (needs species)
-        const protein = (proteinValue ?? '').toUpperCase().replace(/\s/g, '')
-        if (protein.length > 0) {
-          applyReverseTranslation(protein)
-        }
+        setValue('codingSequence', '', { shouldValidate: false })
       }
     },
-    [
-      sequenceType,
-      setValue,
-      clearErrors,
-      dnaValue,
-      proteinValue,
-      species,
-      applyReverseTranslation,
-    ],
+    [sequenceType, setValue, clearErrors, dnaValue, species],
   )
+
+  const handleReverseTranslate = useCallback(() => {
+    const protein = (proteinValue ?? '').toUpperCase().replace(/\s/g, '')
+    if (!protein) {
+      toast.error(copy.reverseTranslateProteinRequired)
+      return
+    }
+    if (!isSpecies(species)) {
+      toast.error(copy.reverseTranslateSpeciesRequired)
+      return
+    }
+    applyReverseTranslation(protein)
+  }, [applyReverseTranslation, proteinValue, species])
 
   const activeField = isProtein ? 'proteinSequence' : 'codingSequence'
   const fileAccept = isProtein ? '.fasta,.fa,.faa,.txt' : '.fasta,.fa,.fna,.txt'
@@ -336,7 +323,6 @@ export function CodingSequenceInput() {
           </div>
           <FormControl>
             <div className="relative min-h-[6.5rem]">
-              {/* Highlight backdrop — DNA mode only */}
               {!isProtein && (
                 <div
                   ref={backdropRef}
@@ -361,14 +347,7 @@ export function CodingSequenceInput() {
                 rows={4}
                 aria-required="true"
                 {...field}
-                onChange={(e) => {
-                  field.onChange(e)
-                  // In protein mode, reverse-translate on each change
-                  if (isProtein) {
-                    const val = e.target.value.toUpperCase().replace(/\s/g, '')
-                    applyReverseTranslation(val)
-                  }
-                }}
+                onChange={field.onChange}
                 ref={(el) => {
                   field.ref(el)
                   ;(
@@ -382,8 +361,6 @@ export function CodingSequenceInput() {
                   'border-input placeholder:text-muted-foreground selection:bg-primary/30 relative flex w-full min-w-0 rounded-md border bg-transparent shadow-xs transition-[color,box-shadow] outline-none disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
                   'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
                   'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
-                  // In DNA mode, text is transparent (highlight backdrop shows through)
-                  // In protein mode, text is visible directly
                   isProtein
                     ? 'caret-foreground resize-y'
                     : 'caret-foreground resize-y text-transparent',
@@ -392,18 +369,16 @@ export function CodingSequenceInput() {
             </div>
           </FormControl>
           <FormMessage />
-          <p
-            className={cn(
-              'text-sm leading-5 tabular-nums',
-              length > maxLength
-                ? 'text-destructive-foreground'
-                : 'text-muted-foreground',
-            )}
-          >
-            {length.toLocaleString()}{' '}
-            {isProtein ? copy.unitResidues : copy.unitBp} /{' '}
-            {maxLength.toLocaleString()}
-          </p>
+          {isProtein && (
+            <Button
+              type="button"
+              size="sm"
+              className="mt-2 bg-[oklch(0.82_0.2_125)] text-[oklch(0.2_0.06_140)] hover:bg-[oklch(0.77_0.2_125)]"
+              onClick={handleReverseTranslate}
+            >
+              {copy.reverseTranslateButton}
+            </Button>
+          )}
           {isProtein && isSpecies(species) && dnaValue && (
             <p className="text-muted-foreground text-sm">
               {copy.reverseTranslated(

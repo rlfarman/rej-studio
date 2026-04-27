@@ -1256,7 +1256,7 @@ function LocalSequenceView({
       ref={stripRef}
       role="group"
       aria-label="Sequence context around WGGW split site"
-      className="bg-muted/40 overflow-x-auto rounded-lg border px-2 pt-2 pb-3 font-mono text-[11px] leading-none [scrollbar-width:thin] sm:pt-3"
+      className="bg-muted/40 type-nano overflow-x-auto rounded-lg border px-2 pt-2 pb-3 font-mono leading-none [scrollbar-width:thin] sm:pt-3"
     >
       <div className="flex items-stretch">
         {ctx.codons.map((codon, codonIdx) => (
@@ -1745,7 +1745,7 @@ function Inspector({
         </div>
 
         <div className="space-y-1.5">
-          <div className="text-muted-foreground text-[10px] font-medium tracking-[0.08em] uppercase">
+          <div className="text-muted-foreground type-micro font-medium tracking-[0.08em] uppercase">
             Sequence context
           </div>
           <div className="bg-background/80 rounded-md border px-3 py-2.5">
@@ -1850,7 +1850,7 @@ function RewriteRow({ children }: { children: ReactNode }) {
 
 function Kbd({ children }: { children: ReactNode }) {
   return (
-    <kbd className="bg-background text-foreground inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded border px-1 font-mono text-[10px] font-semibold">
+    <kbd className="bg-background text-foreground type-micro inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded border px-1 font-mono font-semibold">
       {children}
     </kbd>
   )

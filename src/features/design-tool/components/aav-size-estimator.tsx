@@ -111,7 +111,7 @@ export function AavResults({ seq5Length, seq3Length }: AavResultsProps) {
                     ? 'outline'
                     : 'destructive'
               }
-              className="text-[10px]"
+              className="type-micro"
             >
               <StatusIcon status={fiveStatus} />
               {fiveStatus === 'fits'
@@ -121,7 +121,7 @@ export function AavResults({ seq5Length, seq3Length }: AavResultsProps) {
                   : copy.results.overLimit}
             </Badge>
           </div>
-          <span className="text-muted-foreground mt-1 text-[10px]">
+          <span className="text-muted-foreground type-micro mt-1">
             {seq5Length.toLocaleString()} bp + ~
             {AAV_OVERHEAD_BP.toLocaleString()} overhead
           </span>
@@ -142,7 +142,7 @@ export function AavResults({ seq5Length, seq3Length }: AavResultsProps) {
                     ? 'outline'
                     : 'destructive'
               }
-              className="text-[10px]"
+              className="type-micro"
             >
               <StatusIcon status={threeStatus} />
               {threeStatus === 'fits'
@@ -152,13 +152,13 @@ export function AavResults({ seq5Length, seq3Length }: AavResultsProps) {
                   : copy.results.overLimit}
             </Badge>
           </div>
-          <span className="text-muted-foreground mt-1 text-[10px]">
+          <span className="text-muted-foreground type-micro mt-1">
             {seq3Length.toLocaleString()} bp + ~
             {AAV_OVERHEAD_BP.toLocaleString()} overhead
           </span>
         </div>
       </div>
-      <p className="text-muted-foreground text-[11px]">
+      <p className="text-muted-foreground type-nano">
         Estimates assume ~{AAV_OVERHEAD_BP.toLocaleString()} bp overhead (ITRs +
         promoter + polyA + regulatory elements). AAV packaging limit is ~
         {AAV_PACKAGING_LIMIT.toLocaleString()} bp.

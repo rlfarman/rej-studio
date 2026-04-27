@@ -5,18 +5,14 @@ import { useFormContext } from 'react-hook-form'
 import { FormValues } from '../types/form-schema'
 import {
   DiagBadge,
-  lengthCheck,
-  gcCheck,
+  bpLengthCheck,
+  aaLengthCheck,
   startCodonCheck,
   stopCodonCheck,
   multipleOf3Check,
   invalidCharsCheck,
   prematureStopCheck,
-  homopolymerCheck,
-  tandemRepeatCheck,
-  shortCdsCheck,
 } from '@/components/bio/diag-badge'
-import { AavPreflight } from './aav-size-estimator'
 
 export function SequenceDiagnostics() {
   const { watch } = useFormContext<FormValues>()
@@ -27,11 +23,9 @@ export function SequenceDiagnostics() {
   const diagnostics = useMemo(() => {
     if (seq.length === 0) return null
 
-    const bpLength = seq.length
-
     const checks = [
-      lengthCheck(seq),
-      gcCheck(seq),
+      bpLengthCheck(seq),
+      aaLengthCheck(seq),
       startCodonCheck(seq),
       stopCodonCheck(seq),
     ]
@@ -42,14 +36,8 @@ export function SequenceDiagnostics() {
     if (inv) checks.push(inv)
     const ps = prematureStopCheck(seq)
     if (ps) checks.push(ps)
-    const hp = homopolymerCheck(seq)
-    if (hp) checks.push(hp)
-    const tr = tandemRepeatCheck(seq)
-    if (tr) checks.push(tr)
-    const sc = shortCdsCheck(seq)
-    if (sc) checks.push(sc)
 
-    return { checks, bpLength }
+    return { checks }
   }, [seq])
 
   if (!diagnostics) return null
@@ -59,8 +47,6 @@ export function SequenceDiagnostics() {
       {diagnostics.checks.map((check) => (
         <DiagBadge key={check.label} {...check} />
       ))}
-
-      <AavPreflight sequenceLength={diagnostics.bpLength} />
     </div>
   )
 }

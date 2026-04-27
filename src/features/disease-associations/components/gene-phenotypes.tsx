@@ -31,7 +31,7 @@ export function GenePhenotypes({ row, omimMim }: Props) {
             href={`https://omim.org/entry/${omimMim}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 font-mono text-[11px]"
+            className="text-muted-foreground hover:text-foreground type-nano inline-flex items-center gap-1 font-mono"
           >
             OMIM {omimMim}
             <ExternalLink className="size-3" aria-hidden />
@@ -51,7 +51,7 @@ export function GenePhenotypes({ row, omimMim }: Props) {
               {p.status !== 'confirmed' && (
                 <Badge
                   variant="outline"
-                  className={`shrink-0 text-[10px] font-normal ${STATUS_BADGE_CLASS[p.status]}`}
+                  className={`type-micro shrink-0 font-normal ${STATUS_BADGE_CLASS[p.status]}`}
                 >
                   {statusLabel[p.status]}
                 </Badge>

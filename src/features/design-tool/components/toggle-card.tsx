@@ -13,7 +13,7 @@ type BoolField = FieldPathByValue<FormValues, boolean>
 interface ToggleCardProperties {
   name: BoolField
   label: string
-  description: string
+  description?: string
   badge?: string
   /** Docs URL shown on a small "?" icon at the edge of the card. */
   helpHref?: string
@@ -42,44 +42,54 @@ export function ToggleCard({
           <FormItem className="gap-0">
             <div
               className={cn(
-                'flex flex-row items-start gap-1 border p-3 transition-colors',
+                'flex flex-row items-center gap-2.5 rounded-lg border px-3 py-2.5 transition-colors',
                 checked
                   ? 'border-primary/40 bg-primary/5'
                   : 'hover:bg-muted/50',
-                activeChildren && checked
-                  ? 'rounded-t-lg border-b-0'
-                  : 'rounded-lg',
               )}
             >
               <label
                 htmlFor={name}
-                className="flex flex-1 cursor-pointer flex-row items-start gap-3"
+                className="flex flex-1 cursor-pointer flex-row items-center gap-2.5"
               >
                 <FormControl>
                   <Checkbox
                     id={name}
                     checked={checked}
                     onCheckedChange={field.onChange}
-                    className="mt-0.5"
+                    className="self-center"
                   />
                 </FormControl>
-                <div className="flex-1 space-y-1">
+                <div className="flex-1 space-y-0.5 self-center">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="text-sm leading-none font-medium">
                       {label}
                     </span>
                     {badge ? (
-                      <Badge variant="outline" className="text-[10px]">
+                      <Badge variant="outline" className="type-micro">
                         {badge}
                       </Badge>
                     ) : null}
                   </div>
-                  <p className="text-muted-foreground text-[13px] leading-snug">
-                    {description}
-                  </p>
+                  {description ? (
+                    <p className="text-muted-foreground text-xs leading-snug">
+                      {description}
+                    </p>
+                  ) : null}
                   {children}
                 </div>
               </label>
+              {activeChildren ? (
+                <div
+                  className={cn(
+                    'min-w-fit self-center pl-1.5 transition-opacity',
+                    !checked && 'opacity-50',
+                  )}
+                  aria-disabled={!checked}
+                >
+                  {activeChildren}
+                </div>
+              ) : null}
               {helpHref && (
                 <HelpLink
                   href={helpHref}
@@ -88,16 +98,6 @@ export function ToggleCard({
                 />
               )}
             </div>
-            {activeChildren && checked && (
-              <div
-                className={cn(
-                  'border-primary/40 bg-primary/5 rounded-b-lg border border-t-0 px-3 pt-3 pb-3',
-                  'motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-top-1 motion-safe:duration-200',
-                )}
-              >
-                {activeChildren}
-              </div>
-            )}
           </FormItem>
         )
       }}

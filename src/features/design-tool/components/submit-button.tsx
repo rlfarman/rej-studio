@@ -40,7 +40,8 @@ export function SubmitButton({
   return (
     <Button
       type="submit"
-      className="inline bg-[oklch(0.82_0.2_125)] text-[oklch(0.2_0.06_140)] hover:bg-[oklch(0.77_0.2_125)]"
+      size="lg"
+      className="min-w-56 bg-[oklch(0.82_0.2_125)] px-6 py-6 text-base font-semibold text-[oklch(0.2_0.06_140)] hover:bg-[oklch(0.77_0.2_125)]"
       disabled={isProcessing}
       aria-busy={isProcessing}
       aria-live="polite"
@@ -53,9 +54,9 @@ export function SubmitButton({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={quickFade}
-            className="inline-flex items-center gap-2"
+            className="inline-flex items-center gap-2.5"
           >
-            <Loader2 className="animate-spin" />
+            <Loader2 className="size-4.5 animate-spin" />
             {stageText}
           </m.span>
         ) : showSuccess ? (
@@ -65,9 +66,9 @@ export function SubmitButton({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0 }}
             transition={softSpring}
-            className="inline-flex items-center gap-2"
+            className="inline-flex items-center gap-2.5"
           >
-            <Check className="size-4" />
+            <Check className="size-4.5" />
             {designToolCopy.submit.success}
           </m.span>
         ) : (
@@ -77,9 +78,9 @@ export function SubmitButton({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={quickFade}
-            className="inline-flex items-center gap-2"
+            className="inline-flex items-center gap-2.5"
           >
-            <Play className="size-4" />
+            <Play className="size-4.5" />
             {designToolCopy.submit.idle}
           </m.span>
         )}

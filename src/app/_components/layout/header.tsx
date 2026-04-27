@@ -125,7 +125,7 @@ export function Header() {
     <header
       aria-hidden={isHidden || undefined}
       className={cn(
-        'sticky top-0 z-10 flex items-center px-3 md:px-6',
+        'sticky top-0 z-10 flex items-center px-3 sm:px-4 md:px-6',
         'border-b transition-[height,margin-top,opacity,background-color,border-color] duration-200 ease-out motion-reduce:transition-none',
         scrolled
           ? 'bg-background/80 border-border/60 h-12 backdrop-blur'

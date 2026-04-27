@@ -4,6 +4,7 @@ import { useMemo } from 'react'
 import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { BarChart3 } from 'lucide-react'
+import { m } from 'motion/react'
 import { cn } from '@/lib/utils'
 import {
   assessDesignSuitability,
@@ -70,7 +71,7 @@ export function IsoformLengthChart({ isoforms }: Props) {
           <BarChart3 className="text-muted-foreground size-4" />
           CDS length by isoform
         </div>
-        <div className="flex items-center gap-3 text-[10px]">
+        <div className="type-micro flex items-center gap-3">
           {(['single-aav', 'dual-aav', 'triple-aav'] as const).map((s) => {
             const cfg = getSuitabilityConfig(s)
             return (
@@ -87,7 +88,7 @@ export function IsoformLengthChart({ isoforms }: Props) {
       </div>
 
       <div className="space-y-1">
-        {rows.map((row) => {
+        {rows.map((row, i) => {
           const pct = (row.length / scaleMax) * 100
           const cfg = getSuitabilityConfig(row.suitability)
           return (
@@ -95,7 +96,7 @@ export function IsoformLengthChart({ isoforms }: Props) {
               key={row.id}
               href={buildHref(row.id)}
               scroll={false}
-              className="group hover:bg-muted/40 focus-visible:ring-ring -mx-1 flex items-center gap-2 rounded-sm px-1 py-0.5 text-[10px] transition-colors focus-visible:ring-2 focus-visible:outline-none"
+              className="group hover:bg-muted/40 focus-visible:ring-ring type-micro -mx-1 flex items-center gap-2 rounded-sm px-1 py-0.5 transition-colors focus-visible:ring-2 focus-visible:outline-none"
               title={`${row.id} · ${row.length.toLocaleString()} bp · ${cfg.label}`}
               aria-label={`${row.id}, ${row.length.toLocaleString()} base pairs, ${cfg.label}`}
             >
@@ -103,12 +104,19 @@ export function IsoformLengthChart({ isoforms }: Props) {
                 {row.id}
               </span>
               <div className="bg-muted/30 relative h-3 flex-1 overflow-hidden rounded-sm">
-                <div
+                <m.div
                   className={cn(
-                    'h-full transition-opacity group-hover:opacity-100',
+                    'h-full origin-left transition-opacity group-hover:opacity-100',
                     cfg.fillClass,
                   )}
                   style={{ width: `${pct}%` }}
+                  initial={{ scaleX: 0, opacity: 0.6 }}
+                  animate={{ scaleX: 1, opacity: 1 }}
+                  transition={{
+                    duration: 0.6,
+                    delay: Math.min(i * 0.04, 0.4),
+                    ease: [0.16, 1, 0.3, 1],
+                  }}
                 />
                 <div
                   className="bg-border/80 pointer-events-none absolute inset-y-0 w-px"
@@ -135,7 +143,7 @@ export function IsoformLengthChart({ isoforms }: Props) {
         })}
       </div>
 
-      <div className="text-muted-foreground flex items-center gap-2 text-[10px] tabular-nums">
+      <div className="text-muted-foreground type-micro flex items-center gap-2 tabular-nums">
         <span className="w-28 shrink-0" />
         <div className="relative h-3 flex-1">
           <span className="absolute left-0">0</span>
