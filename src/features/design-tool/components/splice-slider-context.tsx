@@ -1256,10 +1256,7 @@ function LocalSequenceView({
       aria-label="Sequence context around WGGW split site"
       className="bg-muted/40 rounded-lg border px-2 py-2 font-mono text-[11px] leading-none sm:py-3"
     >
-      <div
-        ref={stripRef}
-        className="overflow-x-auto [scrollbar-color:rgb(0_0_0/0.18)_transparent] [scrollbar-width:thin]"
-      >
+      <div ref={stripRef} className="overflow-x-auto [scrollbar-width:thin]">
         <div className="flex items-stretch">
           {ctx.codons.map((codon, codonIdx) => (
             <CodonCard
@@ -1304,13 +1301,38 @@ function CodonCard({
 }) {
   const roleStyles = roleStylesFor(codon.role)
 
-  return (
-    <div
-      className={cn(
-        'flex w-[42px] shrink-0 flex-col items-stretch text-center',
-        !isLast && 'border-border/60 border-r',
-      )}
-    >
+  // Find the first site (preferring selected) that covers any base in
+  // this codon — used to make the whole card clickable when applicable.
+  // Symmetric across all codons that share a site, not just the codon
+  // containing motifStart.
+  let cardSite: WggwSiteCandidate | null = null
+  for (let bi = 0; bi < 3; bi++) {
+    const pos = codon.start + bi
+    const sel = selectedCoverByBase.get(pos)
+    if (sel) {
+      cardSite = sel.site
+      break
+    }
+  }
+  if (!cardSite) {
+    for (let bi = 0; bi < 3; bi++) {
+      const pos = codon.start + bi
+      const other = otherSiteCoverByBase.get(pos)
+      if (other) {
+        cardSite = other
+        break
+      }
+    }
+  }
+
+  const cardClasses = cn(
+    'group flex w-[42px] shrink-0 flex-col items-stretch text-center',
+    !isLast && 'border-border/60 border-r',
+    cardSite && 'cursor-pointer hover:bg-foreground/5',
+  )
+
+  const cardBody = (
+    <>
       <div className="text-muted-foreground/75 text-[9px] leading-3 tabular-nums">
         {codon.start.toLocaleString()}
       </div>
@@ -1344,25 +1366,16 @@ function CodonCard({
             ? spliceTone(selectedCover.spliceIndex)
             : null
           return (
-            <button
+            <span
               key={pos}
-              type="button"
-              onClick={coverSite ? () => onSelectSite(coverSite) : undefined}
-              disabled={!coverSite}
-              aria-pressed={coverSite ? !!inSelectedMotif : undefined}
               title={`bp ${pos.toLocaleString()}${coverSite ? ` · WGGW ${coverSite.motif}` : ''}`}
               className={cn(
                 'relative flex h-5 w-[14px] items-center justify-center text-sm font-semibold tabular-nums transition-colors',
                 roleStyles.base,
-                inOtherSite &&
-                  'bg-marker/10 text-foreground hover:bg-marker/20 cursor-pointer',
+                inOtherSite && 'bg-marker/10 text-foreground',
                 inSelectedMotif &&
                   selectedTone &&
-                  cn(
-                    selectedTone.baseBg,
-                    selectedTone.baseText,
-                    'cursor-pointer',
-                  ),
+                  cn(selectedTone.baseBg, selectedTone.baseText),
                 isMotifStart && 'rounded-l-sm',
                 isMotifEnd && 'rounded-r-sm',
                 changeTone && changeTone.text,
@@ -1380,12 +1393,29 @@ function CodonCard({
                   aria-hidden="true"
                 />
               )}
-            </button>
+            </span>
           )
         })}
       </div>
-    </div>
+    </>
   )
+
+  if (cardSite) {
+    const target = cardSite
+    return (
+      <button
+        type="button"
+        className={cardClasses}
+        onClick={() => onSelectSite(target)}
+        title={`Select WGGW ${target.motif} at bp ${target.position.toLocaleString()}`}
+        aria-label={`Select WGGW site at bp ${target.position}`}
+      >
+        {cardBody}
+      </button>
+    )
+  }
+
+  return <div className={cardClasses}>{cardBody}</div>
 }
 
 function Inspector({
