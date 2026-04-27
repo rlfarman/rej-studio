@@ -40,8 +40,12 @@ export function spliceTone(index: number) {
   return SPLICE_TONES[index] ?? SPLICE_TONES[0]
 }
 
-// AAV-cost tone for individual WGGW sites and rewrite chips. 0 bp =
-// native (success), 1 bp = neutral marker, 2+ bp = warmer / danger.
+// Cost tone for individual WGGW sites and rewrite chips. The tool can't
+// actually judge "1 bp vs 2 bp" as better/worse — that's a soft
+// preference, not a correctness constraint. Native sites are
+// qualitatively different (zero modification needed, no optimizer
+// constraints introduced) so they get a positive accent; everything
+// else is neutral and labels the bp-change count for the user to weigh.
 export interface CostTone {
   tickBg: string
   text: string
@@ -58,18 +62,10 @@ export function costToneFor(baseChanges: number): CostTone {
       badgeBorder: 'border-success/25',
     }
   }
-  if (baseChanges === 1) {
-    return {
-      tickBg: 'bg-marker',
-      text: 'text-foreground',
-      badgeBg: 'bg-muted/40',
-      badgeBorder: 'border-border/60',
-    }
-  }
   return {
-    tickBg: 'bg-danger/70',
-    text: 'text-danger-soft',
-    badgeBg: 'bg-danger/10',
-    badgeBorder: 'border-danger/25',
+    tickBg: 'bg-marker',
+    text: 'text-foreground',
+    badgeBg: 'bg-muted/40',
+    badgeBorder: 'border-border/60',
   }
 }
