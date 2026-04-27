@@ -238,6 +238,7 @@ function baseFormValues(
     species?: FormValues['species']
   },
 ): FormValues {
+  const { spliceJunctionPosition, ...rest } = overrides
   return {
     sequenceType: 'dna' as const,
     removeCrypticSpliceSites: true,
@@ -252,7 +253,9 @@ function baseFormValues(
     enforceGcContent: true,
     species: 'human',
     proteinSequence: '',
-    ...overrides,
+    spliceJunctionPositions: [spliceJunctionPosition],
+    selectedWggwSites: [null],
+    ...rest,
   }
 }
 

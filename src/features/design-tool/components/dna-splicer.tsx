@@ -10,48 +10,57 @@ export function DNASplicer() {
   const codingSequence = watch('codingSequence') ?? ''
   const seqLength = codingSequence.length || 1
 
+  const positions = watch('spliceJunctionPositions') ?? []
+
   const prevSeqLengthRef = React.useRef(seqLength)
-  const prevPositionRef = React.useRef<number>(
-    watch('spliceJunctionPosition') || Math.floor(seqLength / 2),
+  const prevPositionsRef = React.useRef<number[]>(
+    positions.length > 0 ? positions : [Math.floor(seqLength / 2)],
   )
 
   // When sequence length changes, maintain the relative position
-  // (percentage) — but only between two real sequences. Transitions from
-  // the empty/stub state (prevSeqLengthRef === 1 because seqLength fell
-  // back to 1 for an empty textarea) would otherwise scale by a garbage
-  // ratio and snap to the end; in that case just sync refs and let the
-  // paste/upload handler's own default stand.
+  // (percentage) per splice — but only between two real sequences.
+  // Transitions from the empty/stub state would otherwise scale by
+  // a garbage ratio; in that case just sync refs.
   React.useEffect(() => {
     if (seqLength === prevSeqLengthRef.current) return
     const prevLen = prevSeqLengthRef.current
     if (prevLen > 1 && seqLength > 1) {
-      const ratio = prevPositionRef.current / prevLen
-      const newPosition = Math.max(
-        1,
-        Math.min(Math.round(ratio * seqLength), seqLength - 1),
+      const next = prevPositionsRef.current.map((p) =>
+        Math.max(
+          1,
+          Math.min(Math.round((p / prevLen) * seqLength), seqLength - 1),
+        ),
       )
-      prevPositionRef.current = newPosition
-      setValue('spliceJunctionPosition', newPosition)
-      setValue('selectedWggwSite', null)
+      prevPositionsRef.current = next
+      setValue('spliceJunctionPositions', next)
+      setValue(
+        'selectedWggwSites',
+        next.map(() => null),
+      )
     } else {
-      prevPositionRef.current = watch('spliceJunctionPosition')
-      setValue('selectedWggwSite', null)
+      prevPositionsRef.current = positions.length
+        ? positions
+        : [Math.floor(seqLength / 2)]
+      setValue(
+        'selectedWggwSites',
+        prevPositionsRef.current.map(() => null),
+      )
     }
     prevSeqLengthRef.current = seqLength
-  }, [seqLength, setValue, watch])
+  }, [positions, seqLength, setValue])
 
-  const position = watch('spliceJunctionPosition')
+  const setPositions = React.useCallback(
+    (next: number[]) => {
+      const clamped = next.map((p) => Math.max(1, Math.min(p, seqLength - 1)))
+      prevPositionsRef.current = clamped
+      setValue('spliceJunctionPositions', clamped)
+    },
+    [seqLength, setValue],
+  )
 
-  const setPosition = (pos: number) => {
-    const clamped = Math.max(1, Math.min(pos, seqLength - 1))
-    prevPositionRef.current = clamped
-    setValue('spliceJunctionPosition', clamped)
-    setValue('selectedWggwSite', null)
-  }
-
-  const setSelectedSite = React.useCallback(
-    (site: SelectedWggwSite | null) => {
-      setValue('selectedWggwSite', site)
+  const setSelectedSites = React.useCallback(
+    (sites: (SelectedWggwSite | null)[]) => {
+      setValue('selectedWggwSites', sites)
     },
     [setValue],
   )
@@ -69,9 +78,10 @@ export function DNASplicer() {
   return (
     <SpliceSliderContext
       sequence={codingSequence}
-      position={position}
-      onSnap={setPosition}
-      onSelectionChange={setSelectedSite}
+      positions={positions.length ? positions : [Math.floor(seqLength / 2)]}
+      species={watch('species') ?? 'none'}
+      onPositionsChange={setPositions}
+      onSelectionChange={setSelectedSites}
     />
   )
 }

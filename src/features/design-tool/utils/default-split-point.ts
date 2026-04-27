@@ -22,3 +22,18 @@ export function pickDefaultSplitPoint(sequence: string): number {
   const ranked = rankInducibleWggwByBalance(sequence)
   return ranked[0]?.position ?? midpoint
 }
+
+/**
+ * Pick the default set of splice positions for a given CDS. Sequences that
+ * exceed 2× the AAV packaging limit can't fit in two AAVs even with one
+ * cut, so we suggest two splices (triple-AAV cassette). Otherwise, one
+ * splice (or zero, for sequences that already fit in a single AAV).
+ */
+export function pickDefaultSplitPoints(sequence: string): number[] {
+  const length = sequence.length
+  if (length < 2) return [1]
+  if (length > AAV_PACKAGING_LIMIT * 2) {
+    return [Math.floor(length / 3), Math.floor((length * 2) / 3)]
+  }
+  return [pickDefaultSplitPoint(sequence)]
+}

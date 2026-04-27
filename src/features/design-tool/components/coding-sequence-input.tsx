@@ -18,7 +18,7 @@ import { cleanSequence, parseFasta } from '@/lib/bio/fasta'
 import { detectSequenceType } from '@/lib/bio/sequence-utils'
 import { toast } from 'sonner'
 import { isSpecies, type Species } from '@/lib/bio/species'
-import { pickDefaultSplitPoint } from '../utils/default-split-point'
+import { pickDefaultSplitPoints } from '../utils/default-split-point'
 import { reverseTranslate } from '@/lib/bio/reverse-translate'
 import { translate } from '@/lib/bio/genetic-code'
 import { designToolCopy } from '../copy'
@@ -97,10 +97,18 @@ export function CodingSequenceInput() {
       if (!isSpecies(species)) return
       try {
         const dna = reverseTranslate(protein, species as Species)
+        const points = pickDefaultSplitPoints(dna)
         setValue('codingSequence', dna, { shouldValidate: false })
-        setValue('spliceJunctionPosition', pickDefaultSplitPoint(dna), {
+        setValue('spliceJunctionPositions', points, {
           shouldValidate: false,
         })
+        setValue(
+          'selectedWggwSites',
+          points.map(() => null),
+          {
+            shouldValidate: false,
+          },
+        )
         setValue('sequenceType', 'dna', { shouldValidate: false })
       } catch {
         setValue('codingSequence', '', { shouldValidate: false })
@@ -154,9 +162,18 @@ export function CodingSequenceInput() {
       setValue(field as keyof FormValues, cleaned, { shouldValidate: true })
 
       if (!detectedIsProtein) {
-        setValue('spliceJunctionPosition', pickDefaultSplitPoint(cleaned), {
+        const points = pickDefaultSplitPoints(cleaned)
+        setValue('spliceJunctionPositions', points, {
           shouldValidate: true,
         })
+        setValue(
+          'selectedWggwSites',
+          points.map(() => null),
+          {
+            shouldValidate: false,
+          },
+        )
+        // Clear the protein field so switching back doesn't show stale input
         if (modeSwitched) {
           setValue('proteinSequence', '', { shouldValidate: false })
         }
