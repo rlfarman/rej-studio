@@ -121,11 +121,43 @@ async function initPglite(): Promise<Db> {
     await bootstrapPglite(client as unknown as PGliteClient)
   }
 
+  await logPgliteTier(client, dataDir)
+
   pgliteDb = drizzlePglite(client, {
     schema,
     logger: devLogger,
   }) as unknown as Db
   return pgliteDb
+}
+
+async function logPgliteTier(
+  client: { query: (sql: string) => Promise<unknown> },
+  dataDir: string | undefined,
+): Promise<void> {
+  const { existsSync, readFileSync } = await import('node:fs')
+  const { resolve } = await import('node:path')
+
+  const result = (await client.query(
+    `SELECT count(*)::int AS c FROM genes`,
+  )) as {
+    rows: Array<{ c: number }>
+  }
+  const geneCount = result.rows[0]?.c ?? 0
+
+  const stamp =
+    dataDir && existsSync(resolve(dataDir, '.corpus-version'))
+      ? readFileSync(resolve(dataDir, '.corpus-version'), 'utf8').trim()
+      : null
+
+  if (stamp) {
+    console.log(`[pglite] Full corpus (${stamp}, ${geneCount} genes).`)
+  } else if (geneCount < 100) {
+    console.log(
+      `[pglite] Sample seed (${geneCount} genes). Run \`pnpm db:fetch\` for the full corpus.`,
+    )
+  } else {
+    console.log(`[pglite] Local corpus (${geneCount} genes, unversioned).`)
+  }
 }
 
 /**
