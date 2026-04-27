@@ -18,7 +18,8 @@ const BASE_VALUES: FormValues = {
   enforceGcContent: true,
   '5PrimeStimulatoryIntron': true,
   '3PrimeStimulatoryIntron': false,
-  spliceJunctionPosition: 3,
+  spliceJunctionPositions: [3],
+  selectedWggwSites: [],
 }
 
 describe('buildJobParams', () => {

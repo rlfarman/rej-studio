@@ -1,32 +1,5 @@
 import '@/styles/globals.css'
-import {
-  Source_Code_Pro,
-  Source_Sans_3,
-  Source_Serif_4,
-} from 'next/font/google'
-
-// `next/font` auto-generates a metric-matched fallback (size-adjust /
-// ascent-override) for each of these when adjustFontFallback is left at the
-// default of true — that's what kills layout shift on first paint.
-const fontSans = Source_Sans_3({
-  subsets: ['latin'],
-  variable: '--font-source-sans',
-  display: 'swap',
-  adjustFontFallback: true,
-})
-
-const fontMono = Source_Code_Pro({
-  subsets: ['latin'],
-  variable: '--font-source-mono',
-  display: 'swap',
-})
-
-const fontDisplay = Source_Serif_4({
-  subsets: ['latin'],
-  variable: '--font-source-serif',
-  display: 'swap',
-  adjustFontFallback: true,
-})
+import { fontVariableClassName } from '@/styles/fonts'
 import { ThemeProvider } from '@/app/_components/layout/theme-provider'
 import { Toaster } from '@/components/ui/sonner'
 import { QueryProvider } from '@/app/_components/providers/query-provider'
@@ -79,11 +52,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html
-      lang="en"
-      className={`${fontSans.variable} ${fontMono.variable} ${fontDisplay.variable}`}
-      suppressHydrationWarning
-    >
+    <html lang="en" className={fontVariableClassName} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: SIDEBAR_PRELOAD_SCRIPT }} />
         {process.env.NEXT_PUBLIC_GTM_ID && (

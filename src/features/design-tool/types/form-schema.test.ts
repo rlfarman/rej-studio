@@ -18,7 +18,8 @@ const VALID_BASE = {
   enforceGcContent: false,
   '5PrimeStimulatoryIntron': false,
   '3PrimeStimulatoryIntron': false,
-  spliceJunctionPosition: 3,
+  spliceJunctionPositions: [3],
+  selectedWggwSites: [],
 }
 
 function parse(overrides: Record<string, unknown> = {}) {
@@ -51,7 +52,7 @@ describe('validationSchema', () => {
 
   it('rejects sequence over 50000 chars', () => {
     const seq = 'ATG' + 'AAA'.repeat(16666) + 'TGA'
-    const result = parse({ codingSequence: seq, spliceJunctionPosition: 1 })
+    const result = parse({ codingSequence: seq, spliceJunctionPositions: [1] })
     expect(result.success).toBe(false)
   })
 
@@ -85,7 +86,7 @@ describe('validationSchema', () => {
     // ATG + TAA (internal stop) + AAA + TGA
     const result = parse({
       codingSequence: 'ATGTAAAAATGA',
-      spliceJunctionPosition: 3,
+      spliceJunctionPositions: [3],
     })
     expect(result.success).toBe(false)
   })
@@ -93,7 +94,7 @@ describe('validationSchema', () => {
   it('rejects spliceJunctionPosition > sequence length - 1', () => {
     const result = parse({
       codingSequence: 'ATGAAATGA',
-      spliceJunctionPosition: 9, // length is 9, max is 8
+      spliceJunctionPositions: [9], // length is 9, max is 8
     })
     expect(result.success).toBe(false)
   })
@@ -101,7 +102,7 @@ describe('validationSchema', () => {
   it('accepts spliceJunctionPosition at max (length - 1)', () => {
     const result = parse({
       codingSequence: 'ATGAAATGA',
-      spliceJunctionPosition: 8,
+      spliceJunctionPositions: [8],
     })
     expect(result.success).toBe(true)
   })
