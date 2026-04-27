@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # Bootstrap a git worktree so the app can run from it.
 #
-# Symlinks venv/ and .env from the main repo, then runs pnpm install.
+# Symlinks venv/ and .env from the main repo, then runs pnpm install in the
+# worktree (a real install, not a node_modules symlink — Next 16's Turbopack
+# rejects symlinks that point outside the project root).
 # Safe to re-run: skips steps that are already done.
 set -euo pipefail
 
@@ -43,19 +45,19 @@ if [ ! -e "$WORKTREE_ROOT/venv" ]; then
   echo "Linked venv -> $MAIN_REPO/venv"
 fi
 
-# Node deps: symlink the main repo's node_modules when package.json is identical
-# (the common case). Build state lives in .next/, not node_modules, so sharing is
-# safe. Fall back to pnpm install only when dependencies have diverged.
+# Node deps: run a real install in the worktree. Symlinking node_modules from the
+# main repo breaks Next 16's Turbopack ("Symlink [project]/node_modules is invalid,
+# it points out of the filesystem root"). pnpm's global content-addressed store
+# makes --prefer-offline cheap — packages are hardlinked from ~/.pnpm-store rather
+# than re-downloaded.
 # Use a login shell so pnpm is on PATH in minimal-env contexts (e.g. Claude Code).
+if [ -L "$WORKTREE_ROOT/node_modules" ]; then
+  echo "Removing stale node_modules symlink (incompatible with Next 16 Turbopack)..."
+  unlink "$WORKTREE_ROOT/node_modules"
+fi
 if [ ! -e "$WORKTREE_ROOT/node_modules" ]; then
-  if diff -q "$MAIN_REPO/package.json" "$WORKTREE_ROOT/package.json" >/dev/null 2>&1 \
-      && [ -d "$MAIN_REPO/node_modules" ]; then
-    ln -s "$MAIN_REPO/node_modules" "$WORKTREE_ROOT/node_modules"
-    echo "Linked node_modules -> $MAIN_REPO/node_modules (package.json identical)"
-  else
-    echo "Running pnpm install (package.json differs or main node_modules missing)..."
-    (cd "$WORKTREE_ROOT" && /bin/zsh -l -c "pnpm install")
-  fi
+  echo "Running pnpm install --prefer-offline..."
+  (cd "$WORKTREE_ROOT" && /bin/zsh -l -c "pnpm install --prefer-offline")
 else
   echo "node_modules present — skipping (run pnpm install manually if package.json changed)."
 fi
