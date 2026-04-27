@@ -1247,31 +1247,31 @@ function LocalSequenceView({
   }, [stripRef, focusPosition, ctx.start, seqLen])
 
   return (
-    // Outer card carries the rounded border + bg; the inner div is the
-    // actual scroller. Padding on the outer keeps the scrollbar inset
-    // from the card's rounded corners (so it doesn't bleed past them)
-    // while still being visible as a scroll affordance.
+    // Single scroller on the rounded card itself. Asymmetric vertical
+    // padding (more bottom than top) keeps the horizontal scrollbar in
+    // its own space below the bases — on platforms with overlay
+    // scrollbars (macOS) the bar sits over padding rather than the
+    // base letters at the bottom of each card.
     <div
+      ref={stripRef}
       role="group"
       aria-label="Sequence context around WGGW split site"
-      className="bg-muted/40 rounded-lg border px-2 py-2 font-mono text-[11px] leading-none sm:py-3"
+      className="bg-muted/40 overflow-x-auto rounded-lg border px-2 pt-2 pb-3 font-mono text-[11px] leading-none [scrollbar-width:thin] sm:pt-3"
     >
-      <div ref={stripRef} className="overflow-x-auto [scrollbar-width:thin]">
-        <div className="flex items-stretch">
-          {ctx.codons.map((codon, codonIdx) => (
-            <CodonCard
-              key={codon.idx}
-              codon={codon}
-              selectedCoverByBase={selectedCoverByBase}
-              otherSiteCoverByBase={otherSiteCoverByBase}
-              changedBases={changedBases}
-              searchMatchBases={searchMatchBases}
-              cursorPositions={cursorPositions}
-              isLast={codonIdx === ctx.codons.length - 1}
-              onSelectSite={onSelectSite}
-            />
-          ))}
-        </div>
+      <div className="flex items-stretch">
+        {ctx.codons.map((codon, codonIdx) => (
+          <CodonCard
+            key={codon.idx}
+            codon={codon}
+            selectedCoverByBase={selectedCoverByBase}
+            otherSiteCoverByBase={otherSiteCoverByBase}
+            changedBases={changedBases}
+            searchMatchBases={searchMatchBases}
+            cursorPositions={cursorPositions}
+            isLast={codonIdx === ctx.codons.length - 1}
+            onSelectSite={onSelectSite}
+          />
+        ))}
       </div>
     </div>
   )
