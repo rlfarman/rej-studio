@@ -36,6 +36,66 @@ type Db = ReturnType<typeof drizzleNeon>
 let pgliteDb: Db | null = null
 let pgliteInitPromise: Promise<Db> | null = null
 
+type PGliteClient = { exec: (sql: string) => Promise<unknown> }
+
+async function bootstrapPglite(client: PGliteClient): Promise<void> {
+  const { readFileSync, existsSync } = await import('node:fs')
+  const { resolve } = await import('node:path')
+
+  const migrationPath = resolve(
+    process.cwd(),
+    'src/drizzle/migrations/0000_initial.sql',
+  )
+  const migrationSql = readFileSync(migrationPath, 'utf8')
+  const statements = migrationSql
+    .split('--> statement-breakpoint')
+    .map((s) => s.trim())
+    .filter(Boolean)
+  for (const stmt of statements) {
+    await client.exec(stmt)
+  }
+
+  const genesPath = resolve(process.cwd(), 'data/sample-genes.jsonl')
+  const isoformsPath = resolve(process.cwd(), 'data/sample-isoforms.jsonl')
+  if (!existsSync(genesPath) || !existsSync(isoformsPath)) {
+    console.log(
+      '[pglite] Schema applied; sample seed not found, skipping seed.',
+    )
+    return
+  }
+
+  const geneRows = readFileSync(genesPath, 'utf8')
+    .split('\n')
+    .filter(Boolean)
+    .map((l) => JSON.parse(l) as Record<string, unknown>)
+  const isoformRows = readFileSync(isoformsPath, 'utf8')
+    .split('\n')
+    .filter(Boolean)
+    .map((l) => JSON.parse(l) as Record<string, unknown>)
+
+  const escape = (v: unknown) =>
+    v === null || v === undefined
+      ? 'NULL'
+      : typeof v === 'number'
+        ? String(v)
+        : `'${String(v).replace(/'/g, "''")}'`
+
+  for (const g of geneRows) {
+    await client.exec(
+      `INSERT INTO genes (id, symbol, name, species, alternate_symbols) VALUES (${escape(g.id)}, ${escape(g.symbol)}, ${escape(g.name)}, ${escape(g.species)}, ${escape(g.alternateSymbols ?? '')});`,
+    )
+  }
+  for (const i of isoformRows) {
+    await client.exec(
+      `INSERT INTO isoforms (id, gene_id, coding_sequence_length, protein_length, coding_sequence, protein_sequence, species) VALUES (${escape(i.id)}, ${escape(i.geneId)}, ${escape(i.codingSequenceLength)}, ${escape(i.proteinSequenceLength)}, ${escape(i.codingSequence ?? '')}, ${escape(i.proteinSequence ?? '')}, ${escape(i.species)});`,
+    )
+  }
+
+  console.log(
+    `[pglite] Bootstrapped schema and loaded sample seed (${geneRows.length} genes, ${isoformRows.length} isoforms).`,
+  )
+}
+
 async function initPglite(): Promise<Db> {
   const { PGlite } = await import('@electric-sql/pglite')
   const { drizzle: drizzlePglite } = await import('drizzle-orm/pglite')
@@ -51,6 +111,15 @@ async function initPglite(): Promise<Db> {
 
   const client = new PGlite(dataDir)
   console.log(`[pglite] Using embedded Postgres (${dataDir ?? 'in-memory'})`)
+
+  // First-run bootstrap: if the genes table is missing, apply the migration
+  // and load the sample seed so search works out of the box.
+  const tableCheck = (await client.query(
+    `SELECT to_regclass('public.genes') AS exists`,
+  )) as { rows: Array<{ exists: string | null }> }
+  if (!tableCheck.rows[0]?.exists) {
+    await bootstrapPglite(client as unknown as PGliteClient)
+  }
 
   pgliteDb = drizzlePglite(client, {
     schema,
