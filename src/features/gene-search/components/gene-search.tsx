@@ -66,7 +66,7 @@ export function GeneSearch({
   })
   const [isOpen, setIsOpen] = useState(false)
   const [pendingGene, setPendingGene] = useState<SavedGene | null>(null)
-  const [isPending, startTransition] = useTransition()
+  const [, startTransition] = useTransition()
   const { recentGenes, addRecentGene } = useRecentGenes()
   const { favoriteGenes } = useFavoriteGenes()
   const isMac = useSyncExternalStore(
@@ -83,22 +83,19 @@ export function GeneSearch({
       species: gene.species ?? 'unknown',
       isoform_id: gene.matchedIsoformId,
     })
+    // Show the in-place "Opening X…" loader immediately as an urgent update.
     setPendingGene(gene)
+    // Bundle the navigation with the cleanup so the dialog close, query reset,
+    // and pending clear all commit together once the destination is ready.
+    // No useEffect needed — the transition itself is our "navigation done"
+    // signal.
     startTransition(() => {
       router.push(geneHref(gene.symbol, gene.species, gene.matchedIsoformId))
+      setIsOpen(false)
+      setQuery(gene.symbol)
+      setPendingGene(null)
     })
   }
-
-  // Once the navigation transition resolves, dismiss the pending state and
-  // close the dialog. Keeping the dialog open during the transition gives
-  // the user a clear, in-place "Opening X…" loader instead of a blank wait.
-  useEffect(() => {
-    if (!isPending && pendingGene) {
-      setIsOpen(false)
-      setQuery(pendingGene.symbol)
-      setPendingGene(null)
-    }
-  }, [isPending, pendingGene, setQuery])
 
   const handleSelectJob = (entry: JobSearchItem) => {
     setIsOpen(false)
