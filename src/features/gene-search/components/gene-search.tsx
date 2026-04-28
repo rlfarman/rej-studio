@@ -173,6 +173,7 @@ export function GeneSearch({
       favoriteGenes={favoriteGenes}
       jobs={jobs}
       handleSelectJob={handleSelectJob}
+      pendingGene={pendingGene}
     />
   )
 }
