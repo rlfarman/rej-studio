@@ -88,23 +88,6 @@ function useDelayedTrue(flag: boolean, delayMs: number) {
   return delayed
 }
 
-/** Small inline loader that fades in on the right edge of the input. */
-function InputLoader({ visible }: { visible: boolean }) {
-  return (
-    <div
-      role="status"
-      aria-live="polite"
-      aria-label={visible ? copy.searching : ''}
-      className={cn(
-        'pointer-events-none absolute top-0 right-3 flex h-9 items-center transition-opacity duration-200',
-        visible ? 'opacity-100' : 'opacity-0',
-      )}
-    >
-      <DnaLoader className="h-4 w-10" />
-    </div>
-  )
-}
-
 interface GeneSearchInputProps {
   query: string
   setQuery: (query: string) => void
@@ -119,6 +102,7 @@ interface GeneSearchInputProps {
   favoriteGenes: SavedGene[]
   jobs: JobSearchItem[]
   handleSelectJob: (entry: JobSearchItem) => void
+  pendingGene?: SavedGene | null
 }
 
 function geneMatches(gene: SavedGene, q: string): boolean {
@@ -228,6 +212,7 @@ export function GeneSearchCommand({
   favoriteGenes,
   jobs,
   handleSelectJob,
+  pendingGene,
 }: GeneSearchInputProps) {
   const [showList, setShowList] = useState(true)
   const { species } = useSpeciesContext()
@@ -309,35 +294,46 @@ export function GeneSearchCommand({
         ? 'no-results'
         : 'prompt'
 
-  // Defer the inline loader ~180ms. Most searches resolve inside that
-  // window and never reveal it, which is how Google and Raycast feel
-  // instant even though they're actually async.
+  // Defer dimming the result list ~180ms so fast queries never flicker.
   const showLoader = useDelayedTrue(isLoading, 180)
+
+  const isNavigating = Boolean(pendingGene)
 
   return (
     <Command
       className="rounded-lg border md:min-w-[450px]"
       shouldFilter={false}
     >
-      <div className="relative">
-        <CommandInput
-          id="search"
-          aria-label={copy.inputAria}
-          placeholder={isMobile ? copy.placeholderMobile : copy.placeholder}
-          className="border-0 text-base ring-0 outline-0 focus:border-0 focus:ring-0 active:border-0 active:ring-0 sm:text-sm"
-          value={query}
-          onValueChange={(q) => {
-            setQuery(q)
-            if (!showList) {
-              setShowList(true)
-            }
-          }}
-          autoFocus
-        />
-        <InputLoader visible={showLoader} />
-      </div>
-      <SpeciesToggle />
-      {showList && (
+      <CommandInput
+        id="search"
+        aria-label={copy.inputAria}
+        placeholder={isMobile ? copy.placeholderMobile : copy.placeholder}
+        className="border-0 text-base ring-0 outline-0 focus:border-0 focus:ring-0 active:border-0 active:ring-0 sm:text-sm"
+        value={isNavigating && pendingGene ? pendingGene.symbol : query}
+        onValueChange={(q) => {
+          setQuery(q)
+          if (!showList) {
+            setShowList(true)
+          }
+        }}
+        disabled={isNavigating}
+        autoFocus
+      />
+      {isNavigating && pendingGene ? (
+        <div
+          role="status"
+          aria-live="polite"
+          className="flex flex-col items-center justify-center gap-3 px-6 py-10"
+        >
+          <DnaLoader className="h-8 w-20" />
+          <p className="text-muted-foreground text-sm">
+            {copy.opening(pendingGene.symbol)}
+          </p>
+        </div>
+      ) : (
+        <SpeciesToggle />
+      )}
+      {!isNavigating && showList && (
         <>
           {content === 'error' && (
             <div className="text-destructive-foreground flex flex-col items-center gap-2 p-4 text-center text-sm">

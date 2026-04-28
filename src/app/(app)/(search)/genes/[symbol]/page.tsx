@@ -123,12 +123,70 @@ async function IsoformSection({
   )
 }
 
-export default async function GeneSymbolPage(props: Props) {
+/**
+ * Resolves the gene record for the favorite button. Inline with the synchronous
+ * `<PageTitle>` so the button streams in next to the symbol once the gene
+ * record is available, without blocking the title from painting.
+ */
+async function FavoriteSlot(props: Props) {
   const gene = await resolveGene(props)
+  if (!gene) return null
+  return (
+    <span data-tour="gene-favorite">
+      <FavoriteGeneButton gene={gene} />
+    </span>
+  )
+}
 
-  if (!gene) {
-    notFound()
-  }
+/**
+ * Renders gene metadata (name, Ensembl link, species badge). Suspended so the
+ * page shell — including the symbol pulled from the URL — paints instantly
+ * while the gene query resolves.
+ */
+async function GeneHeaderMeta(props: Props) {
+  const gene = await resolveGene(props)
+  if (!gene) notFound()
+
+  return (
+    <>
+      <SpeciesSync species={gene.species} />
+      <GeneBreadcrumbJsonLd gene={gene} />
+      <p className="text-muted-foreground text-sm md:text-base">{gene.name}</p>
+      <div className="flex items-center gap-3">
+        <a
+          href={`https://ensembl.org/id/${gene.id}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 font-mono text-xs transition-colors"
+        >
+          {gene.id}
+          <ExternalLink className="size-3" />
+        </a>
+        {isSpecies(gene.species) && (
+          <>
+            <span className="text-border">·</span>
+            <Badge
+              variant="secondary"
+              className="inline-flex items-center gap-1.5 text-xs"
+            >
+              <SpeciesIcon species={gene.species} className="size-3.5" />
+              {SPECIES_DISPLAY_NAME[gene.species]}
+            </Badge>
+          </>
+        )}
+      </div>
+    </>
+  )
+}
+
+/**
+ * Resolves the gene record and renders the isoform section. Independently
+ * suspended so the slow isoform query doesn't block the gene header from
+ * painting.
+ */
+async function GeneIsoforms(props: Props) {
+  const gene = await resolveGene(props)
+  if (!gene) notFound()
 
   const { isoform: highlightedIsoformId } = await props.searchParams
   // Associations are human-only; key by symbol since /genes/<sym> may resolve to
@@ -137,52 +195,57 @@ export default async function GeneSymbolPage(props: Props) {
     gene.species === 'human' ? findBySymbol(gene.symbol) : undefined
 
   return (
+    <IsoformSection
+      gene={gene}
+      highlightedIsoformId={highlightedIsoformId}
+      associationRow={associationRow}
+    />
+  )
+}
+
+function GeneHeaderSkeleton() {
+  return (
     <>
-      <SpeciesSync species={gene.species} />
-      <GeneBreadcrumbJsonLd gene={gene} />
+      <div
+        aria-hidden
+        className="bg-muted h-5 w-56 animate-pulse rounded-md md:h-6"
+      />
+      <div className="flex items-center gap-3">
+        <div
+          aria-hidden
+          className="bg-muted h-4 w-32 animate-pulse rounded-md"
+        />
+        <span className="text-border">·</span>
+        <div
+          aria-hidden
+          className="bg-muted h-5 w-20 animate-pulse rounded-md"
+        />
+      </div>
+    </>
+  )
+}
+
+export default async function GeneSymbolPage(props: Props) {
+  const { symbol } = await props.params
+
+  return (
+    <>
       <GeneDetailTour />
       <div className="flex flex-col gap-5 pt-6 md:pt-10">
         <header className="flex flex-col gap-1">
           <div className="flex items-center gap-3">
-            <PageTitle>{gene.symbol}</PageTitle>
-            <span data-tour="gene-favorite">
-              <FavoriteGeneButton gene={gene} />
-            </span>
+            <PageTitle>{symbol}</PageTitle>
+            <Suspense fallback={null}>
+              <FavoriteSlot {...props} />
+            </Suspense>
           </div>
-          <p className="text-muted-foreground text-sm md:text-base">
-            {gene.name}
-          </p>
-          <div className="flex items-center gap-3">
-            <a
-              href={`https://ensembl.org/id/${gene.id}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 font-mono text-xs transition-colors"
-            >
-              {gene.id}
-              <ExternalLink className="size-3" />
-            </a>
-            {isSpecies(gene.species) && (
-              <>
-                <span className="text-border">·</span>
-                <Badge
-                  variant="secondary"
-                  className="inline-flex items-center gap-1.5 text-xs"
-                >
-                  <SpeciesIcon species={gene.species} className="size-3.5" />
-                  {SPECIES_DISPLAY_NAME[gene.species]}
-                </Badge>
-              </>
-            )}
-          </div>
+          <Suspense fallback={<GeneHeaderSkeleton />}>
+            <GeneHeaderMeta {...props} />
+          </Suspense>
         </header>
         <Suspense fallback={<IsoformTableLoading />}>
           <ViewTransition enter="suspense-reveal" default="none">
-            <IsoformSection
-              gene={gene}
-              highlightedIsoformId={highlightedIsoformId}
-              associationRow={associationRow}
-            />
+            <GeneIsoforms {...props} />
           </ViewTransition>
         </Suspense>
       </div>
