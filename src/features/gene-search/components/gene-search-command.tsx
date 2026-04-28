@@ -119,6 +119,7 @@ interface GeneSearchInputProps {
   favoriteGenes: SavedGene[]
   jobs: JobSearchItem[]
   handleSelectJob: (entry: JobSearchItem) => void
+  pendingGene?: SavedGene | null
 }
 
 function geneMatches(gene: SavedGene, q: string): boolean {
@@ -228,6 +229,7 @@ export function GeneSearchCommand({
   favoriteGenes,
   jobs,
   handleSelectJob,
+  pendingGene,
 }: GeneSearchInputProps) {
   const [showList, setShowList] = useState(true)
   const { species } = useSpeciesContext()
@@ -314,6 +316,8 @@ export function GeneSearchCommand({
   // instant even though they're actually async.
   const showLoader = useDelayedTrue(isLoading, 180)
 
+  const isNavigating = Boolean(pendingGene)
+
   return (
     <Command
       className="rounded-lg border md:min-w-[450px]"
@@ -325,19 +329,33 @@ export function GeneSearchCommand({
           aria-label={copy.inputAria}
           placeholder={isMobile ? copy.placeholderMobile : copy.placeholder}
           className="border-0 text-base ring-0 outline-0 focus:border-0 focus:ring-0 active:border-0 active:ring-0 sm:text-sm"
-          value={query}
+          value={isNavigating && pendingGene ? pendingGene.symbol : query}
           onValueChange={(q) => {
             setQuery(q)
             if (!showList) {
               setShowList(true)
             }
           }}
+          disabled={isNavigating}
           autoFocus
         />
-        <InputLoader visible={showLoader} />
+        <InputLoader visible={showLoader || isNavigating} />
       </div>
-      <SpeciesToggle />
-      {showList && (
+      {isNavigating && pendingGene ? (
+        <div
+          role="status"
+          aria-live="polite"
+          className="flex flex-col items-center justify-center gap-3 px-6 py-10"
+        >
+          <DnaLoader className="h-8 w-20" />
+          <p className="text-muted-foreground text-sm">
+            {copy.opening(pendingGene.symbol)}
+          </p>
+        </div>
+      ) : (
+        <SpeciesToggle />
+      )}
+      {!isNavigating && showList && (
         <>
           {content === 'error' && (
             <div className="text-destructive-foreground flex flex-col items-center gap-2 p-4 text-center text-sm">

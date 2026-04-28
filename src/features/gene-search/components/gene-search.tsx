@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState, useSyncExternalStore } from 'react'
+import { useEffect, useState, useSyncExternalStore, useTransition } from 'react'
 import { CommandDialog } from '@/components/ui/command'
 import { useRouter } from 'next/navigation'
 import { type SearchGenesResult } from '@/features/gene-search/api/genes'
@@ -65,6 +65,8 @@ export function GeneSearch({
     defaultQuery,
   })
   const [isOpen, setIsOpen] = useState(false)
+  const [pendingGene, setPendingGene] = useState<SavedGene | null>(null)
+  const [isPending, startTransition] = useTransition()
   const { recentGenes, addRecentGene } = useRecentGenes()
   const { favoriteGenes } = useFavoriteGenes()
   const isMac = useSyncExternalStore(
@@ -74,7 +76,6 @@ export function GeneSearch({
   )
 
   const handleSelect = (gene: SavedGene) => {
-    setIsOpen(false)
     addRecentGene(gene)
     trackEvent({
       event: 'gene_select',
@@ -82,9 +83,22 @@ export function GeneSearch({
       species: gene.species ?? 'unknown',
       isoform_id: gene.matchedIsoformId,
     })
-    router.push(geneHref(gene.symbol, gene.species, gene.matchedIsoformId))
-    setQuery(gene.symbol)
+    setPendingGene(gene)
+    startTransition(() => {
+      router.push(geneHref(gene.symbol, gene.species, gene.matchedIsoformId))
+    })
   }
+
+  // Once the navigation transition resolves, dismiss the pending state and
+  // close the dialog. Keeping the dialog open during the transition gives
+  // the user a clear, in-place "Opening X…" loader instead of a blank wait.
+  useEffect(() => {
+    if (!isPending && pendingGene) {
+      setIsOpen(false)
+      setQuery(pendingGene.symbol)
+      setPendingGene(null)
+    }
+  }, [isPending, pendingGene, setQuery])
 
   const handleSelectJob = (entry: JobSearchItem) => {
     setIsOpen(false)
@@ -137,6 +151,7 @@ export function GeneSearch({
             favoriteGenes={favoriteGenes}
             jobs={jobs}
             handleSelectJob={handleSelectJob}
+            pendingGene={pendingGene}
           />
         </CommandDialog>
       </div>
