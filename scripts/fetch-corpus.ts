@@ -53,6 +53,10 @@ const DB_DIR = 'data/local.db'
 const STAMP = `${DB_DIR}/.corpus-version`
 const CACHE_DIR = '.cache'
 
+function hashFile(path: string): string {
+  return createHash('sha256').update(readFileSync(path)).digest('hex')
+}
+
 async function main() {
   if (existsSync(STAMP)) {
     const current = readFileSync(STAMP, 'utf8').trim()
@@ -81,20 +85,30 @@ async function main() {
   await mkdir(CACHE_DIR, { recursive: true })
   const tarPath = `${CACHE_DIR}/${manifest!.asset}`
 
-  // Remove any stale partial from a previous failed download.
-  await rm(tarPath, { force: true })
+  // Resume: if the tarball is already cached and its SHA matches, skip the
+  // network round-trip entirely. Saves ~235 MB of bandwidth on repeat fetches
+  // (e.g. after `pnpm db:reset` or when bouncing between worktrees).
+  const cached = existsSync(tarPath) ? hashFile(tarPath) : null
+  if (cached === manifest!.sha256) {
+    console.log(`Using cached ${tarPath} (SHA-256 matches).`)
+  } else {
+    if (cached) {
+      console.log(`Cached ${tarPath} has stale hash; re-downloading.`)
+    }
+    await rm(tarPath, { force: true })
 
-  console.log(`Downloading ${manifest!.tag}/${manifest!.asset}…`)
-  execSync(
-    `gh release download ${manifest!.tag} --pattern '${manifest!.asset}' --dir ${CACHE_DIR}`,
-    { stdio: 'inherit' },
-  )
-
-  const hash = createHash('sha256').update(readFileSync(tarPath)).digest('hex')
-  if (hash !== manifest!.sha256) {
-    throw new Error(
-      `SHA-256 mismatch for ${tarPath}\n  expected: ${manifest!.sha256}\n  actual:   ${hash}`,
+    console.log(`Downloading ${manifest!.tag}/${manifest!.asset}…`)
+    execSync(
+      `gh release download ${manifest!.tag} --pattern '${manifest!.asset}' --dir ${CACHE_DIR}`,
+      { stdio: 'inherit' },
     )
+
+    const downloaded = hashFile(tarPath)
+    if (downloaded !== manifest!.sha256) {
+      throw new Error(
+        `SHA-256 mismatch for ${tarPath}\n  expected: ${manifest!.sha256}\n  actual:   ${downloaded}`,
+      )
+    }
   }
 
   await rm(DB_DIR, { recursive: true, force: true })

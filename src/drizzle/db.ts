@@ -1,5 +1,6 @@
-import { neon, neonConfig } from '@neondatabase/serverless'
+import { neon } from '@neondatabase/serverless'
 import { drizzle as drizzleNeon } from 'drizzle-orm/neon-http'
+import type { PgDatabase, PgQueryResultHKT } from 'drizzle-orm/pg-core'
 import * as schema from './schema'
 
 const isDev = process.env.NODE_ENV === 'development'
@@ -23,37 +24,26 @@ const devLogger = {
   },
 }
 
-function createNeonDb() {
+// Both Neon-HTTP and PGlite extend PgDatabase with their own HKT param.
+// Typing the singleton as the polymorphic base lets us share one return
+// type across drivers without nominal-cast noise at call sites.
+type Db = PgDatabase<PgQueryResultHKT, typeof schema>
+
+function createNeonDb(): Db {
   const sql = neon(databaseUrl)
   return drizzleNeon(sql, { schema, logger: devLogger })
 }
-
-// Use Neon type as the base — the Drizzle query builder API is identical
-// across all PostgreSQL drivers.
-type Db = ReturnType<typeof drizzleNeon>
 
 // Lazy PGlite singleton — resolved on first query via getDb().
 let pgliteDb: Db | null = null
 let pgliteInitPromise: Promise<Db> | null = null
 
-type PGliteClient = { exec: (sql: string) => Promise<unknown> }
+type GeneRow = typeof schema.genes.$inferInsert
+type IsoformRow = typeof schema.isoforms.$inferInsert
 
-async function bootstrapPglite(client: PGliteClient): Promise<void> {
+async function bootstrapPglite(db: Db): Promise<void> {
   const { readFileSync, existsSync } = await import('node:fs')
   const { resolve } = await import('node:path')
-
-  const migrationPath = resolve(
-    process.cwd(),
-    'src/drizzle/migrations/0000_initial.sql',
-  )
-  const migrationSql = readFileSync(migrationPath, 'utf8')
-  const statements = migrationSql
-    .split('--> statement-breakpoint')
-    .map((s) => s.trim())
-    .filter(Boolean)
-  for (const stmt of statements) {
-    await client.exec(stmt)
-  }
 
   const genesPath = resolve(process.cwd(), 'data/sample-genes.jsonl')
   const isoformsPath = resolve(process.cwd(), 'data/sample-isoforms.jsonl')
@@ -67,28 +57,20 @@ async function bootstrapPglite(client: PGliteClient): Promise<void> {
   const geneRows = readFileSync(genesPath, 'utf8')
     .split('\n')
     .filter(Boolean)
-    .map((l) => JSON.parse(l) as Record<string, unknown>)
+    .map((l) => JSON.parse(l) as GeneRow)
   const isoformRows = readFileSync(isoformsPath, 'utf8')
     .split('\n')
     .filter(Boolean)
-    .map((l) => JSON.parse(l) as Record<string, unknown>)
+    .map((l) => JSON.parse(l) as IsoformRow)
 
-  const escape = (v: unknown) =>
-    v === null || v === undefined
-      ? 'NULL'
-      : typeof v === 'number'
-        ? String(v)
-        : `'${String(v).replace(/'/g, "''")}'`
-
-  for (const g of geneRows) {
-    await client.exec(
-      `INSERT INTO genes (id, symbol, name, species, alternate_symbols) VALUES (${escape(g.id)}, ${escape(g.symbol)}, ${escape(g.name)}, ${escape(g.species)}, ${escape(g.alternateSymbols ?? '')});`,
-    )
+  // Batched inserts via Drizzle. PGlite has a parameter ceiling per query
+  // (~65k), so chunk to keep us safely under it for both tables.
+  const BATCH = 500
+  for (let i = 0; i < geneRows.length; i += BATCH) {
+    await db.insert(schema.genes).values(geneRows.slice(i, i + BATCH))
   }
-  for (const i of isoformRows) {
-    await client.exec(
-      `INSERT INTO isoforms (id, gene_id, coding_sequence_length, protein_length, coding_sequence, protein_sequence, species) VALUES (${escape(i.id)}, ${escape(i.geneId)}, ${escape(i.codingSequenceLength)}, ${escape(i.proteinSequenceLength)}, ${escape(i.codingSequence ?? '')}, ${escape(i.proteinSequence ?? '')}, ${escape(i.species)});`,
-    )
+  for (let i = 0; i < isoformRows.length; i += BATCH) {
+    await db.insert(schema.isoforms).values(isoformRows.slice(i, i + BATCH))
   }
 
   console.log(
@@ -96,9 +78,65 @@ async function bootstrapPglite(client: PGliteClient): Promise<void> {
   )
 }
 
+type PGliteClient = {
+  query: (sql: string, params?: unknown[]) => Promise<{ rows: unknown[] }>
+  exec: (sql: string) => Promise<unknown>
+}
+
+/**
+ * If a published tarball was built before drizzle's migration tracking was
+ * wired up, the schema exists but `drizzle.__drizzle_migrations` doesn't —
+ * which makes the migrator try to re-run `0000_initial` and fail with
+ * "relation \"genes\" already exists". Stamp the existing migration as
+ * applied so future migrations forward-apply cleanly.
+ */
+async function backfillMigrationTracking(
+  client: PGliteClient,
+  hasGenes: boolean,
+): Promise<void> {
+  if (!hasGenes) return
+  const tracking = (await client.query(
+    `SELECT to_regclass('drizzle.__drizzle_migrations') AS t`,
+  )) as { rows: Array<{ t: string | null }> }
+  if (tracking.rows[0]?.t) return
+
+  const { readFileSync } = await import('node:fs')
+  const { resolve } = await import('node:path')
+  const { createHash } = await import('node:crypto')
+
+  // Drizzle hashes the joined migration SQL (semicolons normalized,
+  // breakpoints stripped). Approximate via the same transform readMigrationFiles
+  // applies — see drizzle-orm/migrator.ts.
+  const sqlText = readFileSync(
+    resolve(process.cwd(), 'src/drizzle/migrations/0000_initial.sql'),
+    'utf8',
+  )
+  const statements = sqlText
+    .replace(/\n*--.*?\n/g, '')
+    .split('--> statement-breakpoint')
+    .map((s) => s.trim())
+    .filter(Boolean)
+  const hash = createHash('sha256').update(statements.join('')).digest('hex')
+
+  await client.exec(`CREATE SCHEMA IF NOT EXISTS drizzle`)
+  await client.exec(
+    `CREATE TABLE IF NOT EXISTS drizzle.__drizzle_migrations (
+       id SERIAL PRIMARY KEY,
+       hash text NOT NULL,
+       created_at bigint
+     )`,
+  )
+  await client.query(
+    `INSERT INTO drizzle.__drizzle_migrations (hash, created_at) VALUES ($1, $2)`,
+    [hash, Date.now()],
+  )
+  console.log('[pglite] Backfilled migration tracking for legacy tarball.')
+}
+
 async function initPglite(): Promise<Db> {
   const { PGlite } = await import('@electric-sql/pglite')
   const { drizzle: drizzlePglite } = await import('drizzle-orm/pglite')
+  const { migrate } = await import('drizzle-orm/pglite/migrator')
 
   let dataDir: string | undefined
   if (databaseUrl.startsWith('file:')) {
@@ -112,37 +150,47 @@ async function initPglite(): Promise<Db> {
   const client = new PGlite(dataDir)
   console.log(`[pglite] Using embedded Postgres (${dataDir ?? 'in-memory'})`)
 
-  // First-run bootstrap: if the genes table is missing, apply the migration
-  // and load the sample seed so search works out of the box.
-  const tableCheck = (await client.query(
-    `SELECT to_regclass('public.genes') AS exists`,
-  )) as { rows: Array<{ exists: string | null }> }
-  if (!tableCheck.rows[0]?.exists) {
-    await bootstrapPglite(client as unknown as PGliteClient)
+  // PGlite's public client surface (.query, .exec) is what our helpers need.
+  const rawClient = client as unknown as PGliteClient
+
+  const wasEmpty = !(await tablesExist(rawClient))
+  await backfillMigrationTracking(rawClient, !wasEmpty)
+
+  const db: Db = drizzlePglite(client, { schema, logger: devLogger })
+
+  // Apply any pending migrations. Idempotent: tracked in
+  // drizzle.__drizzle_migrations.
+  await migrate(db as Parameters<typeof migrate>[0], {
+    migrationsFolder: 'src/drizzle/migrations',
+  })
+
+  // Only seed when the DB had no schema before this boot. A populated
+  // tarball already has rows; we don't want to re-insert the sample seed
+  // on top of the full corpus.
+  if (wasEmpty) {
+    await bootstrapPglite(db)
   }
 
-  await logPgliteTier(client, dataDir)
+  await logPgliteTier(rawClient, dataDir)
 
-  pgliteDb = drizzlePglite(client, {
-    schema,
-    logger: devLogger,
-  }) as unknown as Db
+  pgliteDb = db
   return pgliteDb
 }
 
+async function tablesExist(client: PGliteClient): Promise<boolean> {
+  const r = await client.query(`SELECT to_regclass('public.genes') AS exists`)
+  return Boolean((r.rows[0] as { exists: string | null } | undefined)?.exists)
+}
+
 async function logPgliteTier(
-  client: { query: (sql: string) => Promise<unknown> },
+  client: PGliteClient,
   dataDir: string | undefined,
 ): Promise<void> {
   const { existsSync, readFileSync } = await import('node:fs')
   const { resolve } = await import('node:path')
 
-  const result = (await client.query(
-    `SELECT count(*)::int AS c FROM genes`,
-  )) as {
-    rows: Array<{ c: number }>
-  }
-  const geneCount = result.rows[0]?.c ?? 0
+  const result = await client.query(`SELECT count(*)::int AS c FROM genes`)
+  const geneCount = (result.rows[0] as { c: number } | undefined)?.c ?? 0
 
   const stamp =
     dataDir && existsSync(resolve(dataDir, '.corpus-version'))
