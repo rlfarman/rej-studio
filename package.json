@@ -6,6 +6,12 @@
   "engines": {
     "node": "24.x"
   },
+  "corpus": {
+    "version": "v1",
+    "tag": "corpus-v1",
+    "asset": "rej-corpus-v1.tar.gz",
+    "sha256": "5dc0f5283dfc34cbc7d441ee2c469ce16ae9ff0e164334842216c10ffcec57ff"
+  },
   "scripts": {
     "fastapi-dev": "source venv/bin/activate && pip install -r python/requirements.txt && python3 -m uvicorn python.index:app --reload",
     "next-dev": "next dev",
@@ -14,8 +20,10 @@
     "data:associations": "python3 scripts/build-disease-associations.py",
     "db:push": "drizzle-kit push",
     "db:upload": "tsx --env-file=.env scripts/load-db.ts",
+    "db:fetch": "tsx scripts/fetch-corpus.ts",
+    "db:reset": "rm -rf data/local.db",
     "db:studio": "drizzle-kit studio",
-    "build": "next build",
+    "build": "fumadocs-mdx && next build",
     "build:cf": "DEPLOY_TARGET=cloudflare opennextjs-cloudflare build",
     "preview:cf": "DEPLOY_TARGET=cloudflare opennextjs-cloudflare preview",
     "deploy:cf": "DEPLOY_TARGET=cloudflare opennextjs-cloudflare deploy",

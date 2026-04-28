@@ -9,7 +9,7 @@ REJ Studio is a bioinformatics web app for RNA End-Joining sequence design. User
 - **Next.js 16 (App Router)** — Frontend and server actions. All user-facing routes live under the `(app)` group, which contains `(search)` for gene browsing, `(design-tool)` for the optimization form, and `(internal)` for non-indexed pages (e.g. `/architecture`). Fumadocs powers `/docs`. Frontend source lives under `src/`.
 - **Bulletproof-react structure** — Code is organized into `src/features/<feature>/` (self-contained: `api/`, `components/`, `hooks/`, `stores/`, `types/`, `utils/`) plus shared layers (`src/components/`, `src/lib/`, `src/hooks/`, `src/stores/`). Cross-feature imports and shared→feature imports are forbidden by ESLint (`import/no-restricted-paths`).
 - **FastAPI (Python)** — Runs the DNA optimization algorithm. Canonical code lives in `python/`. Single endpoint: `POST /api/py/process`. In development, Next.js proxies `/api/py/*` to a local uvicorn at `localhost:8000`. In production Python does NOT run on Vercel or Cloudflare — it's deployed to Modal and called directly from server actions. `COMPUTE_BACKEND=modal` is required in prod on every host; the local backend is dev-only.
-- **Postgres + Drizzle ORM** — Read-only gene/isoform/sequence data. Production uses Neon over HTTP via `@neondatabase/serverless`. Local dev and CI fall back to PGlite (embedded Postgres) when `DATABASE_URL` is empty, a `file:` path, or `memory://` — full Postgres compatibility including `tsvector` and GIN indexes. Driver selection is in `src/drizzle/db.ts`; schema is in `src/drizzle/schema.ts`.
+- **Postgres + Drizzle ORM** — Read-only gene/isoform/sequence data. Production uses Neon over HTTP via `@neondatabase/serverless`. Local dev and CI fall back to PGlite (embedded Postgres) when `DATABASE_URL` is empty, a `file:` path, or `memory://` — full Postgres compatibility including `tsvector` and GIN indexes. Driver selection is in `src/drizzle/db.ts`; schema is in `src/drizzle/schema.ts`. On first PGlite boot, `initPglite()` auto-applies `src/drizzle/migrations/0000_initial.sql` and loads the committed sample seed (`data/sample-genes.jsonl` + `data/sample-isoforms.jsonl`, 24 genes / 228 isoforms with real CDS) so gene search and the design-tool optimizer work end-to-end with zero setup. Run `pnpm db:fetch` to swap the sample seed for the full prebuilt corpus tarball pinned in `package.json` (downloaded from a GitHub Release, SHA-256 verified).
 - **shadcn/ui + Radix UI** — Component library. UI primitives live in `src/components/ui/`. Config in `components.json`.
 - **Zustand** — Global client state (favorites, recent genes, species filter) lives in `src/stores/` (shared) or `src/features/<feature>/stores/` (feature-owned).
 - **Auth** — Basic-auth guard on the landing page via middleware (`src/proxy.ts`). Engages only when both `BASIC_AUTH_USER` and `BASIC_AUTH_PASSWORD` are set; skip locally with `BYPASS_AUTH=true`. The `/api/health` endpoint optionally gates detailed diagnostics behind `HEALTH_AUTH_TOKEN`.
@@ -89,11 +89,19 @@ Primary store is a Neon (Postgres) database. The Next.js server connects via the
 
 App code uses dialect-neutral SQL (Drizzle query builder + `LOWER(col) LIKE '%x%'`) so the DB backend can be swapped without touching queries.
 
-To seed / refresh:
+**Local dev (PGlite):** No setup needed. On first `getDb()` call, `initPglite()` checks for the `genes` table and, if missing, applies `src/drizzle/migrations/0000_initial.sql` and loads the committed sample seed at `data/sample-genes.jsonl` + `data/sample-isoforms.jsonl`. Delete `data/local.db/` to re-bootstrap. The sample covers 24 well-known genes (TP53, BRCA1/2, EGFR, KRAS, MYC, INS, etc.) with real CDS + protein sequences for all 228 isoforms — gene search and the design-tool optimizer both work end-to-end with no further setup.
 
-1. `pnpm db:build` — emit `data/genes.jsonl` + `data/isoforms.jsonl` from `drizzle/transcript_metadata.csv`.
-2. `pnpm db:push` — create tables in `$DATABASE_URL` from `schema.ts`.
-3. `pnpm db:upload` — load JSONL via Drizzle INSERTs.
+**Full corpus locally (`pnpm db:fetch`):** Downloads the prebuilt PGlite tarball pinned in `package.json`'s `corpus` field from a GitHub Release via `gh release download` (rej-studio is a private repo, so auth flows through your existing `gh auth login`), verifies SHA-256, and extracts to `data/local.db/`. One command, no Python, no CSV. `initPglite()` reads the version from `data/local.db/.corpus-version` and logs `[pglite] Full corpus (vN, …)` on boot. Run `pnpm db:reset` to wipe `data/local.db/` and fall back to the sample seed.
+
+**Maintainer-only — publishing a new corpus version:**
+
+1. Build a fresh `data/local.db/` from Neon (e.g. via `pnpm db:build && pnpm db:push && pnpm db:upload` against `drizzle/transcript_metadata.csv`, or by snapshotting Neon directly).
+2. `tar czf rej-corpus-vN.tar.gz -C data local.db && shasum -a 256 rej-corpus-vN.tar.gz`
+3. `gh release create corpus-vN --title "Corpus vN" --notes "…"` (creates the release with no asset).
+4. `gh release upload corpus-vN rej-corpus-vN.tar.gz` (upload separately — uploading at create time has hit `HTTP 400` for ~250 MB assets).
+5. Bump `package.json`'s `corpus.{version,tag,asset,sha256}` and open a PR. Contributors pick up the new version on next `pnpm db:fetch`.
+
+For seeding a Neon database (production), the same `db:build`/`db:push`/`db:upload` pipeline still works against `$DATABASE_URL`.
 
 ## Environment Variables
 

@@ -1,0 +1,24 @@
+{"id":"ENSG00000141510","symbol":"TP53","name":"Tumor Protein P53","species":"human","alternateSymbols":"|BCC7|BMFS5|LFS1|P53|TRP53|"}
+{"id":"ENSG00000012048","symbol":"BRCA1","name":"Brca1 Dna Repair Associated","species":"human","alternateSymbols":"|BRCAI|BRCC1|BROVCA1|FANCS|IRIS|PNCA4|PPP1R53|PSCP|RNF53|"}
+{"id":"ENSG00000139618","symbol":"BRCA2","name":"Brca2 Dna Repair Associated","species":"human","alternateSymbols":"|BRCC2|BROVCA2|FACD|FAD|FAD1|FANCD|FANCD1|GLM3|PNCA2|XRCC11|"}
+{"id":"ENSG00000146648","symbol":"EGFR","name":"Epidermal Growth Factor Receptor","species":"human","alternateSymbols":"|ERBB|ERBB1|ERRP|HER1|NISBD2|NNCIS|PIG61|MENA|"}
+{"id":"ENSG00000133703","symbol":"KRAS","name":"Kras Proto-oncogene, Gtpase","species":"human","alternateSymbols":"|'C-K-RAS|C-K-RAS|CFC2|K-RAS2A|K-RAS2B|K-RAS4A|K-RAS4B|K-RAS|K-RAS 2|KI-RAS|KRAS1|KRAS2|NS|NS3|OES|RALD|RASK2|C-KI-RAS|C-KI-RAS2|"}
+{"id":"ENSG00000136997","symbol":"MYC","name":"Myc Proto-oncogene, Bhlh Transcription Factor","species":"human","alternateSymbols":"|MRTL|MYCC|BHLHE39|C-MYC|"}
+{"id":"ENSG00000142192","symbol":"APP","name":"Amyloid Beta Precursor Protein","species":"human","alternateSymbols":"|AAA|ABETA|ABPP|AD1|APPI|CTFGAMMA|CVAP|PN-II|PN2|ALPHA-SAPP|PREA4|"}
+{"id":"ENSG00000142168","symbol":"SOD1","name":"Superoxide Dismutase 1","species":"human","alternateSymbols":"|ALS|ALS1|HEL-S-44|IPOA|SOD|STAHP|HSOD1|HOMODIMER|"}
+{"id":"ENSG00000254647","symbol":"INS","name":"Insulin","species":"human","alternateSymbols":"|IDDM|IDDM1|IDDM2|ILPR|IRDN|MODY10|PNDM4|"}
+{"id":"ENSG00000111640","symbol":"GAPDH","name":"Glyceraldehyde-3-phosphate Dehydrogenase","species":"human","alternateSymbols":"|G3PD|GAPD|HEL-S-162EP|"}
+{"id":"ENSG00000075624","symbol":"ACTB","name":"Actin Beta","species":"human","alternateSymbols":"|BKRNS|BNS|BRWS1|CSMH|DDS1|PS1TP5BP1|THC8|"}
+{"id":"ENSG00000169083","symbol":"AR","name":"Androgen Receptor","species":"human","alternateSymbols":"|AIS|AR8|DHTR|HUMARA|HYSP1|KD|NR3C4|SBMA|SMAX1|TFM|"}
+{"id":"ENSG00000091831","symbol":"ESR1","name":"Estrogen Receptor 1","species":"human","alternateSymbols":"|ER|ESR|ESRA|ESTRR|ERA|NR3A1|"}
+{"id":"ENSG00000124762","symbol":"CDKN1A","name":"Cyclin Dependent Kinase Inhibitor 1a","species":"human","alternateSymbols":"|CAP20|CDKN1|CIP1|MDA-6|P21|SDI1|WAF1|P21CIP1|"}
+{"id":"ENSG00000147889","symbol":"CDKN2A","name":"Cyclin Dependent Kinase Inhibitor 2a","species":"human","alternateSymbols":"|ARF|CAI2|CDK4I|CDKN2|CMM2|INK4|INK4A|MLM|MTS-1|MTS1|P14|P14ARF|P16|P16-INK4A|P16INK4|P16INK4A|P19|P19ARF|TP16|"}
+{"id":"ENSG00000196712","symbol":"NF1","name":"Neurofibromin 1","species":"human","alternateSymbols":"|NFNS|VRNF|WSS|"}
+{"id":"ENSG00000165731","symbol":"RET","name":"Ret Proto-oncogene","species":"human","alternateSymbols":"|CDHF12|CDHR16|HSCR1|MEN2A|MEN2B|MTC1|PTC|RET-ELE1|"}
+{"id":"ENSG00000169174","symbol":"PCSK9","name":"Proprotein Convertase Subtilisin/kexin Type 9","species":"human","alternateSymbols":"|FH3|FHCL3|HCHOLA3|LDLCQ1|NARC-1|NARC1|PC9|"}
+{"id":"ENSG00000116044","symbol":"NFE2L2","name":"Nfe2 Like Bzip Transcription Factor 2","species":"human","alternateSymbols":"|HEBP1|IMDDHH|NRF2|NRF-2|"}
+{"id":"ENSMUSG00000059552","symbol":"TRP53","name":"Transformation Related Protein 53","species":"mouse","alternateSymbols":"|TP53|BBL|BFY|BHY|P44|P53|"}
+{"id":"ENSMUSG00000017146","symbol":"BRCA1","name":"Breast Cancer 1, Early Onset","species":"mouse","alternateSymbols":""}
+{"id":"ENSMUSG00000041147","symbol":"BRCA2","name":"Breast Cancer 2, Early Onset","species":"mouse","alternateSymbols":"|FANCD1|RAB163|"}
+{"id":"ENSMUSG00000022346","symbol":"MYC","name":"Myelocytomatosis Oncogene","species":"mouse","alternateSymbols":"|MYC2|NIARD|NIRD|BHLHE39|"}
+{"id":"ENSMUSG00000057666","symbol":"GAPDH","name":"Glyceraldehyde-3-phosphate Dehydrogenase","species":"mouse","alternateSymbols":"|GAPD|"}

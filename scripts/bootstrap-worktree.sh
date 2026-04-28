@@ -62,4 +62,14 @@ else
   echo "node_modules present — skipping (run pnpm install manually if package.json changed)."
 fi
 
+# Generate .source/ (fumadocs MDX runtime). The /.source dir is gitignored and
+# created by the `postinstall` hook on a normal `pnpm install` — but symlinking
+# node_modules above bypasses postinstall, so the worktree starts without it
+# and `tsc` errors on `import { docs } from 'collections/server'` (the
+# tsconfig path alias points at .source/server.ts).
+if [ ! -e "$WORKTREE_ROOT/.source" ]; then
+  echo "Generating .source/ via fumadocs-mdx..."
+  (cd "$WORKTREE_ROOT" && /bin/zsh -l -c "pnpm exec fumadocs-mdx")
+fi
+
 echo "Bootstrap complete. You can now run: pnpm dev"
