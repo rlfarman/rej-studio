@@ -7,7 +7,6 @@ export const geneSearchCopy = {
     inputAria: 'Search genes',
     placeholder: 'Search by gene symbol, name, or disease...',
     placeholderMobile: 'Search genes…',
-    searching: 'Searching…',
     opening: (symbol: string) => `Opening ${symbol}…`,
     retry: 'Retry',
     promptEmpty: 'Search by gene symbol, name, or disease.',
