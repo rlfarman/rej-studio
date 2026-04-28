@@ -7,9 +7,10 @@
     "node": "24.x"
   },
   "corpus": {
-    "version": "PLACEHOLDER",
-    "url": "https://github.com/rlfarman/rej-studio/releases/download/corpus-PLACEHOLDER/rej-corpus-PLACEHOLDER.tar.gz",
-    "sha256": "PLACEHOLDER"
+    "version": "v1",
+    "tag": "corpus-v1",
+    "asset": "rej-corpus-v1.tar.gz",
+    "sha256": "5dc0f5283dfc34cbc7d441ee2c469ce16ae9ff0e164334842216c10ffcec57ff"
   },
   "scripts": {
     "fastapi-dev": "source venv/bin/activate && pip install -r python/requirements.txt && python3 -m uvicorn python.index:app --reload",

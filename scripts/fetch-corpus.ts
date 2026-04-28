@@ -8,23 +8,27 @@
  * Idempotent: a no-op when data/local.db/.corpus-version matches the pinned
  * version. Verifies SHA-256 against package.json before extracting.
  *
+ * Uses `gh release download` so auth flows through the contributor's existing
+ * `gh auth login` — required because rej-studio is a private repo. Public
+ * repos could swap this for a plain `fetch(url)` against the public CDN URL.
+ *
  * Maintainers (re)publish a corpus version like so:
- *   pnpm db:build && pnpm db:push && pnpm db:upload
+ *   # build data/local.db/ from Neon
  *   tar czf rej-corpus-<version>.tar.gz -C data local.db
- *   sha256sum rej-corpus-<version>.tar.gz
- *   gh release create corpus-<version> rej-corpus-<version>.tar.gz
- *   # then bump package.json's corpus.{version,url,sha256} and open a PR
+ *   shasum -a 256 rej-corpus-<version>.tar.gz
+ *   gh release create corpus-<version> --title "Corpus <version>" --notes "..."
+ *   gh release upload corpus-<version> rej-corpus-<version>.tar.gz
+ *   # then bump package.json's corpus.{version,sha256} and open a PR
  */
-import { createWriteStream, existsSync, readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { mkdir, rm, writeFile } from 'node:fs/promises'
 import { createHash } from 'node:crypto'
 import { execSync } from 'node:child_process'
-import { Readable } from 'node:stream'
-import { pipeline } from 'node:stream/promises'
 
 type CorpusManifest = {
   version: string
-  url: string
+  tag: string
+  asset: string
   sha256: string
 }
 
@@ -33,7 +37,11 @@ const pkg = JSON.parse(readFileSync('package.json', 'utf8')) as {
 }
 const manifest = pkg.corpus
 
-if (!manifest || manifest.url.includes('PLACEHOLDER')) {
+if (
+  !manifest ||
+  manifest.version === 'PLACEHOLDER' ||
+  manifest.sha256 === 'PLACEHOLDER'
+) {
   console.error(
     'No corpus version pinned in package.json yet. The first tarball must be\n' +
       'published by a maintainer. See AGENTS.md → "Local dev tiers".',
@@ -57,18 +65,29 @@ async function main() {
     console.log(`Fetching corpus ${manifest!.version}…`)
   }
 
-  await mkdir(CACHE_DIR, { recursive: true })
-  const tarPath = `${CACHE_DIR}/rej-corpus-${manifest!.version}.tar.gz`
-
-  const res = await fetch(manifest!.url)
-  if (!res.ok || !res.body) {
-    throw new Error(`Download failed: HTTP ${res.status}`)
+  // Verify gh CLI is available (contributors already need it; surface the
+  // requirement clearly if not).
+  try {
+    execSync('gh auth status', { stdio: 'ignore' })
+  } catch {
+    console.error(
+      'gh CLI is required (rej-studio is a private repo, so the corpus\n' +
+        'tarball is fetched via authenticated `gh release download`). Install\n' +
+        'from https://cli.github.com/ and run `gh auth login`.',
+    )
+    process.exit(1)
   }
-  await pipeline(
-    Readable.fromWeb(
-      res.body as unknown as import('stream/web').ReadableStream,
-    ),
-    createWriteStream(tarPath),
+
+  await mkdir(CACHE_DIR, { recursive: true })
+  const tarPath = `${CACHE_DIR}/${manifest!.asset}`
+
+  // Remove any stale partial from a previous failed download.
+  await rm(tarPath, { force: true })
+
+  console.log(`Downloading ${manifest!.tag}/${manifest!.asset}…`)
+  execSync(
+    `gh release download ${manifest!.tag} --pattern '${manifest!.asset}' --dir ${CACHE_DIR}`,
+    { stdio: 'inherit' },
   )
 
   const hash = createHash('sha256').update(readFileSync(tarPath)).digest('hex')
