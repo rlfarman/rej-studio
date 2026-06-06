@@ -81,7 +81,7 @@ export function AssociationsFilters({ bucketCounts }: Props) {
           onChange={(e) => setQuery(e.target.value)}
           placeholder={diseaseAssociationsCopy.filters.searchPlaceholder}
           aria-label={diseaseAssociationsCopy.filters.searchAria}
-          className="max-w-lg"
+          className="bg-card max-w-lg shadow-xs"
         />
         {hasFilters && (
           <Button

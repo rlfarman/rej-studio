@@ -1,10 +1,11 @@
 import Link from 'next/link'
 import { GeneSearchShell } from '@/app/_components/gene-search-shell'
 import { searchGenes } from '@/features/gene-search/api/genes'
-import { Dna } from 'lucide-react'
+import { ArrowRight, Dna } from 'lucide-react'
 import { Hero, HeroItem } from '@/app/_components/hero'
 import { HomeTour } from '@/features/onboarding/components/home-tour'
 import { PageTitle } from '@/components/page-title'
+import { Button } from '@/components/ui/button'
 import type { Metadata } from 'next'
 import { appCopy } from '@/copy/app'
 
@@ -44,22 +45,18 @@ export default function HomePage() {
             </PageTitle>
           </HeroItem>
           <HeroItem index={2} className="mt-3">
-            <p
-              className="text-muted-foreground text-base"
+            <div
+              className="text-muted-foreground flex flex-wrap items-center justify-center gap-x-2 gap-y-3 text-base"
               data-tour="home-design-link"
             >
-              {appCopy.home.orPrefix}{' '}
-              <Link
-                href={{
-                  pathname: '/design-tool',
-                  query: { gene: 'ATM' },
-                }}
-                className="text-primary font-medium underline underline-offset-4"
-              >
-                {appCopy.home.designLink}
-              </Link>
-              .
-            </p>
+              <span>{appCopy.home.searchSubcopy}</span>
+              <Button asChild size="sm" className="h-8 rounded-full px-4">
+                <Link href="/design-tool">
+                  {appCopy.home.designLink}
+                  <ArrowRight className="size-3.5" />
+                </Link>
+              </Button>
+            </div>
           </HeroItem>
         </div>
         <HeroItem

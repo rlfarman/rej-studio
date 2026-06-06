@@ -239,8 +239,8 @@ export function buildSplitContext(
   motifStart: number,
   editedPositions: Set<number>,
 ) {
-  const leftStart = Math.max(1, position - 15)
-  const rightEnd = Math.min(sequence.length, position + 14)
+  const leftStart = Math.max(1, position - 23)
+  const rightEnd = Math.min(sequence.length, position + 21)
   const left = sequence.slice(leftStart - 1, position - 1)
   const right = sequence.slice(position - 1, rightEnd)
   const text = `${left}|${right}`

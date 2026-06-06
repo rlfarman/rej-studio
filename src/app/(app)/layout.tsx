@@ -1,6 +1,5 @@
 import { Suspense } from 'react'
 import { Header } from '@/app/_components/layout/header'
-import { Footer } from '@/app/_components/layout/footer'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { AppSidebar } from '@/app/_components/layout/app-sidebar'
 import { MaintenanceBanner } from '@/components/maintenance-banner'
@@ -43,7 +42,6 @@ function AppShell({
           className="relative flex h-full w-full flex-1 flex-col overflow-auto"
         >
           <div className="flex-1">{children}</div>
-          <Footer />
         </main>
         <WelcomeDialog />
         <HelpButton />
