@@ -9,6 +9,7 @@ import re
 import pytest
 
 from python.algorithm import (
+    apply_explicit_wggw_site,
     insert_wggw_motif,
     optimize_and_split,
     process_single_request_json,
@@ -54,6 +55,14 @@ FULL_OPTIONS = {
     "ensure_wggw": True,
     "wggw_threshold": 300,
 }
+
+
+def strip_design_placeholders(sequence: str) -> str:
+    return (
+        sequence.replace("[REJ5]", "")
+        .replace("[REJ3]", "")
+        .replace("[STIMINTRON]", "")
+    )
 
 
 @pytest.mark.timeout(30)
@@ -124,6 +133,14 @@ class TestOptimizeAndSplit:
         seq5, seq3, _, _, optimized = optimize_and_split(TEST_CDS, opts)
         assert len(optimized) > 0
 
+    def test_fragments_reconstruct_final_optimized_sequence(self):
+        opts = {**FAST_OPTIONS, "ensure_wggw": True, "stim_5": True, "stim_3": True}
+        seq5, seq3, _, _, optimized = optimize_and_split(TEST_CDS, opts)
+        clean_seq5 = strip_design_placeholders(seq5)
+        clean_seq3 = strip_design_placeholders(seq3)
+        assert clean_seq5 + clean_seq3 == optimized
+        assert optimized[opts["actual_split_point"] :] == clean_seq3
+
 
 @pytest.mark.timeout(30)
 class TestInsertWggwMotif:
@@ -145,6 +162,21 @@ class TestInsertWggwMotif:
         assert info is None
         assert recoded == short
 
+    def test_explicit_wggw_split_uses_bases_on_five_prime_side(self):
+        sequence = "AATGGATGA"
+        explicit_site = {
+            "position": 4,
+            "motif_start": 3,
+            "motif": "TGGA",
+            "hexamer_start": 1,
+            "original_codons": ["AAT", "GGA"],
+            "new_codons": ["AAT", "GGA"],
+            "new_hexamer": "AATGGA",
+        }
+        recoded, info, _ = apply_explicit_wggw_site(sequence, explicit_site, 4)
+        assert recoded == sequence
+        assert info["split_position"] == 4
+
 
 @pytest.mark.timeout(60)
 class TestProcessSingleRequestJson:
@@ -163,6 +195,11 @@ class TestProcessSingleRequestJson:
         assert isinstance(result["used_wggw_as_split"], bool)
         assert isinstance(result["processing_time_seconds"], (int, float))
         assert result["processing_time_seconds"] >= 0
+
+        clean_seq5 = strip_design_placeholders(result["seq5"])
+        clean_seq3 = strip_design_placeholders(result["seq3"])
+        assert clean_seq5 + clean_seq3 == result["optimized_sequence"]
+        assert result["split_point"] == len(clean_seq5)
 
     def test_objectives_reports_are_dicts(self):
         result = process_single_request_json(

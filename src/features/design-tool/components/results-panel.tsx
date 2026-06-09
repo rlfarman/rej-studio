@@ -226,22 +226,27 @@ function MetricsStrip({ result }: { result: ProcessResult }) {
   )
 }
 
-const INTRON_MARKER_RE = /(\[REJ5\]|\[REJ3\])/g
+const INTRON_MARKER_RE = /(\[REJ5\]|\[REJ3\]|\[STIMINTRON\])/g
 
 function renderSequenceWithIntrons(sequence: string) {
   const parts = sequence.split(INTRON_MARKER_RE)
   return parts.map((part, i) => {
-    if (part === '[REJ5]' || part === '[REJ3]') {
+    if (part === '[REJ5]' || part === '[REJ3]' || part === '[STIMINTRON]') {
       const isFive = part === '[REJ5]'
-      const tip = isFive
-        ? resultsCopy.intronTooltip.fivePrime
-        : resultsCopy.intronTooltip.threePrime
+      const isStim = part === '[STIMINTRON]'
+      const tip = isStim
+        ? resultsCopy.intronTooltip.stimulatory
+        : isFive
+          ? resultsCopy.intronTooltip.fivePrime
+          : resultsCopy.intronTooltip.threePrime
       return (
         <Tooltip key={i}>
           <TooltipTrigger asChild>
             <span
               className={
-                isFive
+                isStim
+                  ? 'bg-accent text-accent-foreground cursor-help rounded px-1 font-semibold'
+                  : isFive
                   ? 'text-info-soft bg-info/15 dark:text-info cursor-help rounded px-1 font-semibold'
                   : 'bg-primary/15 text-primary dark:text-primary-foreground dark:bg-primary/40 cursor-help rounded px-1 font-semibold'
               }
@@ -505,8 +510,8 @@ function ResultsPanelImpl({ result, optionsUsed, species }: ResultsPanelProps) {
   }
 
   // Strip markers for length display
-  const seq5Clean = result.seq5.replace(/\[REJ5\]/g, '')
-  const seq3Clean = result.seq3.replace(/\[REJ3\]/g, '')
+  const seq5Clean = result.seq5.replace(INTRON_MARKER_RE, '')
+  const seq3Clean = result.seq3.replace(INTRON_MARKER_RE, '')
   const wggwCount = result.wggw_info ? Object.keys(result.wggw_info).length : 0
 
   const codonChangesSummary = useMemo(() => {

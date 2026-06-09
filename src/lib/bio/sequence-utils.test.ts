@@ -10,6 +10,7 @@ import {
   findWggwMotifs,
   getStopCodonStatus,
   hasStartCodon,
+  rankInducibleWggwByBalance,
   rankWggwByBalance,
   segmentSequence,
   slidingGcContent,
@@ -267,8 +268,23 @@ describe('rankWggwByBalance', () => {
     const ranked = rankWggwByBalance(seq)
     if (ranked.length > 0) {
       const first = ranked[0]
+      expect(first.position).toBe(4)
+      expect(first.fivePrimeLength).toBe(4)
+      expect(first.threePrimeLength).toBe(4)
       expect(first.fivePrimeLength + first.threePrimeLength).toBe(seq.length)
     }
+  })
+})
+
+describe('rankInducibleWggwByBalance', () => {
+  it('reports the WG|GW cut as the number of bases on the 5′ side', () => {
+    const ranked = rankInducibleWggwByBalance('AATGGAAA')
+    const existing = ranked.find((candidate) => candidate.alreadyPresent)
+    expect(existing).toBeDefined()
+    expect(existing?.motifStart).toBe(3)
+    expect(existing?.position).toBe(4)
+    expect(existing?.fivePrimeLength).toBe(4)
+    expect(existing?.threePrimeLength).toBe(4)
   })
 })
 

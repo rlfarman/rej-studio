@@ -64,7 +64,7 @@ export function JunctionContext({
           </div>
           <div
             className="relative mx-0.5 self-stretch"
-            title={`Split at position ${splitPoint.toLocaleString()}`}
+            title={`Split after base ${splitPoint.toLocaleString()}`}
           >
             <div className="bg-primary h-full w-0.5" />
             <div className="bg-primary absolute top-1/2 left-1/2 size-1.5 -translate-x-1/2 -translate-y-1/2 rotate-45" />
