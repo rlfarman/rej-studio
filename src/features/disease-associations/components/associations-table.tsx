@@ -37,7 +37,7 @@ export function AssociationsTable({
 }: Props) {
   if (rows.length === 0) {
     return (
-      <div className="text-muted-foreground rounded-md border p-6 text-center text-sm">
+      <div className="bg-card text-muted-foreground rounded-lg border p-6 text-center text-sm shadow-sm">
         {diseaseAssociationsCopy.table.empty}
       </div>
     )
@@ -46,11 +46,11 @@ export function AssociationsTable({
   const headerProps = { sortKey, sortDir, searchParams }
 
   return (
-    <div className="overflow-hidden rounded-md border">
+    <div className="bg-card overflow-hidden rounded-lg border shadow-sm">
       <Table aria-label={diseaseAssociationsCopy.table.ariaLabel}>
         <TableHeader>
-          <TableRow className="bg-muted/40">
-            <TableHead className="w-[96px]">
+          <TableRow className="bg-muted/50 hover:bg-muted/50">
+            <TableHead className="w-[96px] px-4">
               <SortHeader
                 label={diseaseAssociationsCopy.table.columns.symbol}
                 column="symbol"
@@ -58,16 +58,16 @@ export function AssociationsTable({
                 {...headerProps}
               />
             </TableHead>
-            <TableHead className="min-w-[240px]">
+            <TableHead className="min-w-[240px] px-4">
               {diseaseAssociationsCopy.table.columns.name}
             </TableHead>
-            <TableHead className="w-[220px]">
+            <TableHead className="w-[220px] px-4">
               {diseaseAssociationsCopy.table.columns.phenotype}
             </TableHead>
-            <TableHead className="w-[220px]">
+            <TableHead className="w-[220px] px-4">
               {diseaseAssociationsCopy.table.columns.inheritance}
             </TableHead>
-            <TableHead className="w-[104px] text-right">
+            <TableHead className="w-[132px] px-4 text-right whitespace-nowrap">
               <SortHeader
                 label={diseaseAssociationsCopy.table.columns.largestCds}
                 column="cds"
@@ -78,13 +78,13 @@ export function AssociationsTable({
             </TableHead>
           </TableRow>
         </TableHeader>
-        <TableBody>
+        <TableBody className="bg-card">
           {rows.map((row) => {
             const buckets = Array.from(rowBuckets(row))
             const phenotype = firstPhenotypeLabel(row)
             return (
-              <TableRow key={row.symbol} className="hover:bg-muted/30">
-                <TableCell className="py-2.5">
+              <TableRow key={row.symbol} className="bg-card hover:bg-muted/25">
+                <TableCell className="px-4 py-2.5">
                   <Link
                     href={`/genes/${encodeURIComponent(row.symbol)}?species=human`}
                     className="text-primary font-mono font-semibold hover:underline"
@@ -95,13 +95,13 @@ export function AssociationsTable({
                     {row.symbol}
                   </Link>
                 </TableCell>
-                <TableCell className="text-muted-foreground py-2.5 text-sm">
+                <TableCell className="text-muted-foreground px-4 py-2.5 text-sm">
                   {row.name}
                 </TableCell>
-                <TableCell className="text-muted-foreground py-2.5 text-sm">
+                <TableCell className="text-muted-foreground px-4 py-2.5 text-sm">
                   {phenotype}
                 </TableCell>
-                <TableCell className="py-2.5">
+                <TableCell className="px-4 py-2.5">
                   <div className="flex flex-wrap gap-1">
                     {buckets.map((b) => (
                       <Badge
@@ -114,7 +114,7 @@ export function AssociationsTable({
                     ))}
                   </div>
                 </TableCell>
-                <TableCell className="text-muted-foreground py-2.5 text-right font-mono text-xs">
+                <TableCell className="text-muted-foreground px-4 py-2.5 text-right font-mono text-xs">
                   {row.largestCds != null ? (
                     <>
                       {cdsFormatter.format(row.largestCds)}

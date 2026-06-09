@@ -81,11 +81,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               <SidebarMenuButton
                 asChild
                 isActive={pathname.startsWith('/disease-associations')}
-                tooltip="Disease Associations"
+                tooltip="Disease-Associated Genes"
               >
                 <Link href="/disease-associations">
                   <Activity />
-                  <span>Disease Associations</span>
+                  <span>Disease-Associated Genes</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -104,9 +104,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarFooter>
         <SidebarMenuPrimitive>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild tooltip="Salk Institute">
+            <SidebarMenuButton asChild tooltip="Pfaff Lab | Salk Institute">
               <a
-                href="https://www.salk.edu"
+                href="https://pfaff.salk.edu/"
                 target="_blank"
                 rel="noopener noreferrer"
               >
@@ -124,7 +124,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   height={16}
                   className="hidden size-4 object-contain dark:block"
                 />
-                <span>Salk Institute</span>
+                <span>Pfaff Lab | Salk Institute</span>
               </a>
             </SidebarMenuButton>
           </SidebarMenuItem>

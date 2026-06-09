@@ -134,6 +134,12 @@ const clientSchema = z
     NEXT_PUBLIC_GITHUB_OWNER: z.string().optional(),
     NEXT_PUBLIC_GITHUB_REPO: z.string().optional(),
     NEXT_PUBLIC_GITHUB_BRANCH: z.string().optional(),
+
+    // Feature flag: enable the experimental multi-split (two split points)
+    // UI in the design tool. Hidden by default for the preview release; the
+    // data layer already supports two positions. Client code reads this
+    // directly via process.env (see features/design-tool/utils/feature-flags.ts).
+    NEXT_PUBLIC_ENABLE_MULTI_SPLIT: z.enum(['true', 'false']).optional(),
   })
   .superRefine((data, ctx) => {
     if (isProd && !data.NEXT_PUBLIC_SITE_URL) {

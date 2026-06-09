@@ -39,33 +39,3 @@ export const SPLICE_TONES: Array<{
 export function spliceTone(index: number) {
   return SPLICE_TONES[index] ?? SPLICE_TONES[0]
 }
-
-// Cost tone for individual WGGW sites and rewrite chips. The tool can't
-// actually judge "1 bp vs 2 bp" as better/worse — that's a soft
-// preference, not a correctness constraint. Native sites are
-// qualitatively different (zero modification needed, no optimizer
-// constraints introduced) so they get a positive accent; everything
-// else is neutral and labels the bp-change count for the user to weigh.
-export interface CostTone {
-  tickBg: string
-  text: string
-  badgeBg: string
-  badgeBorder: string
-}
-
-export function costToneFor(baseChanges: number): CostTone {
-  if (baseChanges === 0) {
-    return {
-      tickBg: 'bg-success',
-      text: 'text-success-soft',
-      badgeBg: 'bg-success/10',
-      badgeBorder: 'border-success/25',
-    }
-  }
-  return {
-    tickBg: 'bg-marker',
-    text: 'text-foreground',
-    badgeBg: 'bg-muted/40',
-    badgeBorder: 'border-border/60',
-  }
-}

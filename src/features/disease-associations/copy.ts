@@ -1,8 +1,8 @@
 export const diseaseAssociationsCopy = {
   page: {
-    title: 'Disease Associations',
+    title: 'Disease-Associated Genes',
     subtitle:
-      'Human disease-associated genes whose longest coding sequence exceeds 4,000 bp — a curated set of large-CDS therapeutic targets from OMIM.',
+      'Human disease-associated genes whose longest coding sequence exceeds 4,000 bp — highlighting large genes with predesigned REJ sequences.',
     sourceLabel: 'Source',
     source: 'OMIM Phenotype Catalog (4/2026)',
   },
@@ -42,7 +42,7 @@ export const diseaseAssociationsCopy = {
     mimLinkAria: (mim: number) => `OMIM phenotype ${mim} (opens in new tab)`,
   },
   geneDetail: {
-    heading: 'Disease Associations',
+    heading: 'Disease-Associated Genes',
     subtitle: 'Reported phenotypes from the OMIM catalog.',
     openOmimGene: 'Open gene in OMIM',
   },
