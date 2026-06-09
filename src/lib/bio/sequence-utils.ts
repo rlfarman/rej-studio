@@ -104,8 +104,10 @@ function findWggwWindows(seq: string): {
     matches.push({
       motif: m[0],
       motifOffset: m.index,
-      // 1-based cut position relative to the 6mer: WG|GW
-      splitOffset: m.index + 2,
+      // Cut coordinate relative to the 1-based 6mer start: WG|GW leaves
+      // motifOffset + 2 bases on the 5' side, so add motifOffset + 1 to
+      // the 1-based hexamer start.
+      splitOffset: m.index + 1,
     })
     WGGW_REGEX.lastIndex = m.index + 1
   }
@@ -347,7 +349,7 @@ export function rankWggwByBalance(sequence: string): WggwCandidate[] {
   const motifs = findWggwMotifs(sequence)
   return motifs
     .map((m): WggwCandidate => {
-      const cut = m.position + 2 // midpoint of the 4bp motif: WG|GW
+      const cut = m.position + 1 // midpoint of the 4bp motif: WG|GW
       return {
         position: cut,
         motif: m.motif,

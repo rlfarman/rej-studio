@@ -201,11 +201,13 @@ export const designToolCopy = {
     downloadZip: 'Download Results',
     intronTooltip: {
       fivePrime:
-        '5′ stimulatory intron insertion site — place an intron here during synthesis to enhance 5′ sequence expression.',
+        '5′ REJ module insertion site — insert the 5′ REJ module here during construct assembly.',
       threePrime:
-        '3′ stimulatory intron insertion site — place an intron here during synthesis to enhance 3′ sequence expression.',
+        '3′ REJ module insertion site — insert the 3′ REJ module here during construct assembly.',
+      stimulatory:
+        'Optional stimulatory intron insertion site — insert a stimulatory intron here if including optional stimulatory introns.',
     },
-    splitAtPosition: 'Split at position',
+    splitAtPosition: 'Split after base',
     splitRatio: (left: number, right: number) => `(${left}% / ${right}%)`,
     sequenceCard: {
       fiveLabel: '5′ sequence',

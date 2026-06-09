@@ -9,6 +9,7 @@ import threading
 import time
 from collections import defaultdict
 from concurrent.futures import ProcessPoolExecutor
+from dataclasses import dataclass
 from functools import partial
 
 from dnachisel import (
@@ -81,6 +82,15 @@ class _MonotonicProgress:
             if self._last_emit_at == 0.0:
                 return float("inf")
             return time.monotonic() - self._last_emit_at
+
+
+@dataclass
+class SplitMarkerResult:
+    final_sequence: str
+    sequence_with_markers: str
+    actual_split_point: int
+    wggw_info: dict | None
+    used_wggw_as_split: bool
 
 
 class _ProgressBridgeLogger(_ProgressBarLoggerBase):
@@ -420,7 +430,7 @@ def apply_explicit_wggw_site(sequence, explicit_site, split_point):
         raise ValueError("Selected WGGW rewrite does not actually create a WGGW motif")
 
     expected_motif_start = hexamer_start + local_match.start()
-    expected_split = hexamer_start + local_match.start() + 2
+    expected_split = hexamer_start + local_match.start() + 1
     if motif_start != expected_motif_start or position != expected_split:
         raise ValueError("Selected WGGW coordinates do not match the provided codon rewrite")
     if motif != local_match.group():
@@ -516,37 +526,9 @@ def build_objectives_report(problem):
     return {"entries": entries, "total_score": total}
 
 
-def runOptimization(CDS, OPTIONS, on_progress=None):
-    """
-    Optimize a coding sequence (CDS) based on provided options.
-
-    Returns a tuple:
-        (optimized_sequence, objectives_before, objectives_after)
-
-    on_progress is an optional callable (fraction: float, stage: str) used
-    to surface progress to callers that want to report it (e.g. Modal web
-    endpoint polling a shared Dict). None by default so the synchronous
-    local FastAPI path stays callback-free.
-    """
-    # Shared monotonic gate: every progress write goes through here, so
-    # the UI only ever sees frac advance, never regress.
-    progress_gate = _MonotonicProgress(on_progress)
-
-    def _emit(frac, stage):
-        progress_gate.emit(frac, stage)
-
+def build_optimization_problem(CDS, OPTIONS, logger="bar", explicit_lock_region=None):
+    """Create a DNAChisel problem using the configured objectives."""
     CDS = CDS.upper().replace("U", "T")
-    explicit_main_site = OPTIONS.get("selected_wggw_site")
-    explicit_main_info = None
-    explicit_lock_region = None
-    if explicit_main_site:
-        CDS, explicit_main_info, explicit_lock_region = apply_explicit_wggw_site(
-            CDS,
-            explicit_main_site,
-            OPTIONS.get("split_point", len(CDS) // 2),
-        )
-        OPTIONS["explicit_wggw_main"] = explicit_main_info
-
     AAseq = biotools.translate(CDS)
     constraints = []
     objectives = []
@@ -626,6 +608,58 @@ def runOptimization(CDS, OPTIONS, on_progress=None):
     if OPTIONS.get("enforce_gc", True):
         constraints.append(EnforceGCContent(location=(0, CDSlen, 1), mini=0.35, maxi=0.60))  # type: ignore[arg-type]
 
+    return DnaOptimizationProblem(
+        sequence=CDS,
+        constraints=constraints,
+        objectives=objectives,
+        logger=logger,  # type: ignore[arg-type]
+    )
+
+
+def evaluate_objectives_for_sequence(sequence, OPTIONS):
+    """Re-evaluate configured objectives on an already-finalized sequence."""
+    problem = build_optimization_problem(
+        sequence,
+        OPTIONS,
+        logger="bar",
+        explicit_lock_region=OPTIONS.get("explicit_lock_region"),
+    )
+    return problem.objectives_text_summary(), build_objectives_report(problem)
+
+
+def runOptimization(CDS, OPTIONS, on_progress=None):
+    """
+    Optimize a coding sequence (CDS) based on provided options.
+
+    Returns a tuple:
+        (optimized_sequence, objectives_before, objectives_after)
+
+    on_progress is an optional callable (fraction: float, stage: str) used
+    to surface progress to callers that want to report it (e.g. Modal web
+    endpoint polling a shared Dict). None by default so the synchronous
+    local FastAPI path stays callback-free.
+    """
+    # Shared monotonic gate: every progress write goes through here, so
+    # the UI only ever sees frac advance, never regress.
+    progress_gate = _MonotonicProgress(on_progress)
+
+    def _emit(frac, stage):
+        progress_gate.emit(frac, stage)
+
+    CDS = CDS.upper().replace("U", "T")
+    explicit_main_site = OPTIONS.get("selected_wggw_site")
+    explicit_main_info = None
+    explicit_lock_region = None
+    if explicit_main_site:
+        CDS, explicit_main_info, explicit_lock_region = apply_explicit_wggw_site(
+            CDS,
+            explicit_main_site,
+            OPTIONS.get("split_point", len(CDS) // 2),
+        )
+        OPTIONS["explicit_wggw_main"] = explicit_main_info
+    if explicit_lock_region is not None:
+        OPTIONS["explicit_lock_region"] = explicit_lock_region
+
     # Create and solve the optimization problem. We hand DNAChisel a custom
     # proglog logger that forwards its internal bar updates ('mutation',
     # 'objective', 'constraint') to our on_progress callback, so the frontend
@@ -651,11 +685,11 @@ def runOptimization(CDS, OPTIONS, on_progress=None):
     )
 
     _emit(0.10, "Preparing constraints")
-    problem = DnaOptimizationProblem(
-        sequence=CDS,
-        constraints=constraints,
-        objectives=objectives,
-        logger=resolve_logger,  # type: ignore[arg-type]
+    problem = build_optimization_problem(
+        CDS,
+        OPTIONS,
+        logger=resolve_logger,
+        explicit_lock_region=explicit_lock_region,
     )
     _emit(0.15, "Resolving constraints")
     problem.resolve_constraints()
@@ -718,7 +752,8 @@ def insertSplitMarkers(optimized_sequence, OPTIONS):
     First installs all WGGW motifs, verifies translation is preserved,
     and only then adds markers.
 
-    Returns sequence with inserted markers.
+    Returns the final parent sequence plus the marked sequence used to
+    generate the 5' and 3' outputs.
     """
     CDSlen = len(optimized_sequence)
     split_point = OPTIONS.get("split_point", CDSlen // 2)
@@ -735,12 +770,13 @@ def insertSplitMarkers(optimized_sequence, OPTIONS):
     main_split = None
     stim5_point = None
     stim3_point = None
+    used_wggw_as_split = False
 
     explicit_main_info = OPTIONS.get("explicit_wggw_main")
     if explicit_main_info:
         main_split = explicit_main_info["split_position"]
         wggw_info_all["main"] = explicit_main_info
-        OPTIONS["used_wggw_as_split"] = True
+        used_wggw_as_split = True
     # Find and install main WGGW motif
     elif OPTIONS.get("ensure_wggw", True):
         sequence_with_wggw, wggw_info = insert_wggw_motif(working_sequence, split_point)
@@ -753,7 +789,7 @@ def insertSplitMarkers(optimized_sequence, OPTIONS):
             # If the WGGW motif is close enough to the split point, use it as the main split
             if wggw_info["distance_from_split"] <= wggw_threshold:
                 main_split = wggw_info["position"] + 2  # Split in the middle of GG
-                OPTIONS["used_wggw_as_split"] = True
+                used_wggw_as_split = True
 
     # If no main split point identified yet, find one based on candidate splice sites
     if main_split is None:
@@ -831,6 +867,7 @@ def insertSplitMarkers(optimized_sequence, OPTIONS):
 
         # Clear WGGW info since we reverted
         wggw_info_all = {}
+        used_wggw_as_split = False
 
     # Step 5: Add markers
     # Add main split marker
@@ -860,8 +897,17 @@ def insertSplitMarkers(optimized_sequence, OPTIONS):
     # Add WGGW info to OPTIONS for reporting
     if wggw_info_all:
         OPTIONS["wggw_info"] = wggw_info_all
+    else:
+        OPTIONS.pop("wggw_info", None)
+    OPTIONS["used_wggw_as_split"] = used_wggw_as_split
 
-    return seq_with_marker
+    return SplitMarkerResult(
+        final_sequence=working_sequence,
+        sequence_with_markers=seq_with_marker,
+        actual_split_point=main_split,
+        wggw_info=wggw_info_all or None,
+        used_wggw_as_split=used_wggw_as_split,
+    )
 
 
 def replaceMarkersWithPlaceholders(seq_with_markers):
@@ -906,7 +952,8 @@ def optimize_and_split(CDS, OPTIONS, on_progress=None):
         optimized_seq, objectives_before, objectives_after = runOptimization(
             CDS, OPTIONS, on_progress=on_progress
         )
-        seq_with_markers = insertSplitMarkers(optimized_seq, OPTIONS)
+        split_result = insertSplitMarkers(optimized_seq, OPTIONS)
+        seq_with_markers = split_result.sequence_with_markers
 
         # Check for numeric markers in sequence which could cause translation errors
         if re.search(r"[^ACGT]", seq_with_markers):
@@ -918,8 +965,17 @@ def optimize_and_split(CDS, OPTIONS, on_progress=None):
             )
 
         seq5, seq3 = replaceMarkersWithPlaceholders(seq_with_markers)
+        OPTIONS["actual_split_point"] = split_result.actual_split_point
+        try:
+            objectives_after, objectives_report_after = evaluate_objectives_for_sequence(
+                split_result.final_sequence,
+                OPTIONS,
+            )
+            OPTIONS["objectives_report_after"] = objectives_report_after
+        except Exception as report_error:
+            print(f"Warning: Final objective re-evaluation failed: {report_error}")
 
-        return seq5, seq3, objectives_before, objectives_after, optimized_seq
+        return seq5, seq3, objectives_before, objectives_after, split_result.final_sequence
 
     except Exception as e:
         print(f"Error in optimize_and_split: {str(e)}")
@@ -1466,7 +1522,10 @@ def process_single_request_json(CDS, name, OPTIONS, on_progress=None):
         "optimized_sequence": optimized_seq,
         "seq5": seq5,
         "seq3": seq3,
-        "split_point": options_copy.get("split_point", OPTIONS.get("split_point")),
+        "split_point": options_copy.get(
+            "actual_split_point",
+            options_copy.get("split_point", OPTIONS.get("split_point")),
+        ),
         "used_wggw_as_split": options_copy.get("used_wggw_as_split", False),
         "objectives_before": obj_before,
         "objectives_after": obj_after,
