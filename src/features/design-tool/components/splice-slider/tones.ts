@@ -39,22 +39,3 @@ export const SPLICE_TONES: Array<{
 export function spliceTone(index: number) {
   return SPLICE_TONES[index] ?? SPLICE_TONES[0]
 }
-
-// Cost tone for individual WGGW sites and rewrite chips. Base-change count is
-// useful text, but candidates share the same marker tone so native/non-native
-// status is not visually privileged.
-export interface CostTone {
-  tickBg: string
-  text: string
-  badgeBg: string
-  badgeBorder: string
-}
-
-export function costToneFor(_baseChanges: number): CostTone {
-  return {
-    tickBg: 'bg-marker',
-    text: 'text-foreground',
-    badgeBg: 'bg-muted/40',
-    badgeBorder: 'border-border/60',
-  }
-}
