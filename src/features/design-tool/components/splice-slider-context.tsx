@@ -16,17 +16,21 @@ import {
   type WggwRecodingOption,
 } from '@/lib/bio/sequence-utils'
 import { translateCodon } from '@/lib/bio/genetic-code'
-import { ChevronLeft, ChevronRight, AlignCenter } from 'lucide-react'
+import { ChevronLeft, ChevronRight, AlignCenter, X, Plus } from 'lucide-react'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import type { SelectedWggwSite } from '../types/form-schema'
+import { MULTI_SPLIT_ENABLED } from '../utils/feature-flags'
 import {
   AAV_MAX_BP,
   MIN_SEQUENCE_LENGTH,
   RECENTLY_ASSIGNED_DURATION_MS,
   STRIP_SMOOTH_SCROLL_THRESHOLD_BP,
+  SWAP_TOAST_DURATION_MS,
+  SWAP_TOAST_THROTTLE_MS,
   TICK_CLICK_THRESHOLD_PX,
 } from './splice-slider/constants'
-import { costToneFor, spliceTone } from './splice-slider/tones'
+import { spliceTone } from './splice-slider/tones'
 import type {
   CodonRole,
   SequenceContext,
@@ -129,15 +133,25 @@ export function SpliceSliderContext({
     searchMatches.length > 0 ? (searchMatches[searchMatchIndex] ?? null) : null
 
   const midpoint = Math.max(1, Math.min(seqLen - 1, Math.floor(seqLen / 2)))
+  // Multi-split is hidden behind a flag for the preview release: by default
+  // we clamp to a single split point. With the flag on, all positions are
+  // kept (clamped into range) so the slider/strip render two carets.
   const positions = useMemo(() => {
-    const first = inputPositions[0] ?? midpoint
-    return [Math.max(1, Math.min(seqLen - 1, first))]
+    const clamp = (n: number) => Math.max(1, Math.min(seqLen - 1, n))
+    if (MULTI_SPLIT_ENABLED) {
+      const src = inputPositions.length ? inputPositions : [midpoint]
+      return src.map(clamp)
+    }
+    return [clamp(inputPositions[0] ?? midpoint)]
   }, [inputPositions, midpoint, seqLen])
 
+  // Write the normalized positions back to the parent when they diverge from
+  // the incoming prop (e.g. flag-off collapse to one, or out-of-range clamp).
   useEffect(() => {
-    if (inputPositions.length !== 1 || inputPositions[0] !== positions[0]) {
-      onPositionsChange(positions)
-    }
+    const mismatch =
+      inputPositions.length !== positions.length ||
+      positions.some((p, i) => inputPositions[i] !== p)
+    if (mismatch) onPositionsChange(positions)
   }, [inputPositions, onPositionsChange, positions])
 
   const spliceCount = Math.max(1, positions.length)
@@ -194,12 +208,49 @@ export function SpliceSliderContext({
 
   const frameContext = useMemo(() => buildSequenceContext(sequence), [sequence])
 
+  // Throttle the swap toast so a single drag-cross emits one notification,
+  // not one per pointermove that crosses. Only used in multi-split mode.
+  const lastSwapToastRef = useRef(0)
+
+  // In single-split mode this just clamps and writes the one position. In
+  // multi-split mode, dragging a caret past another auto-swaps so positions
+  // stay sorted (Splice 1 always 5′-most); the parallel state arrays
+  // (activeSitePositions, rewriteSelections) and activeSpliceIndex are
+  // permuted to match so the user keeps controlling the same caret visually.
   const setPositionAt = useCallback(
-    (_idx: number, value: number) => {
+    (idx: number, value: number) => {
       const v = Math.max(1, Math.min(seqLen - 1, value))
-      onPositionsChange([v])
+      if (!MULTI_SPLIT_ENABLED) {
+        onPositionsChange([v])
+        return
+      }
+      const next = [...positions]
+      next[idx] = v
+      const indexed = next.map((p, i) => ({ p, original: i }))
+      indexed.sort((a, b) => a.p - b.p)
+      const permuted = indexed.some((x, i) => x.original !== i)
+      if (permuted) {
+        setActiveSitePositions((prev) =>
+          indexed.map((x) => prev[x.original] ?? null),
+        )
+        setRewriteSelections((prev) =>
+          indexed.map((x) => prev[x.original] ?? { position: null, index: 0 }),
+        )
+        setActiveSpliceIndex((prev) => {
+          const i = indexed.findIndex((x) => x.original === prev)
+          return i === -1 ? prev : i
+        })
+        const now = Date.now()
+        if (now - lastSwapToastRef.current > SWAP_TOAST_THROTTLE_MS) {
+          lastSwapToastRef.current = now
+          toast('Splices reordered to keep Splice 1 5′-most', {
+            duration: SWAP_TOAST_DURATION_MS,
+          })
+        }
+      }
+      onPositionsChange(indexed.map((x) => x.p))
     },
-    [onPositionsChange, seqLen],
+    [onPositionsChange, positions, seqLen],
   )
 
   // Brief pulse on a splice's readout right after a tick is assigned to
@@ -236,6 +287,22 @@ export function SpliceSliderContext({
   const handleSelectSite = useCallback(
     (site: WggwSiteCandidate, spliceIdx?: number) => {
       let idx = spliceIdx ?? clampedActiveIndex
+      if (
+        MULTI_SPLIT_ENABLED &&
+        spliceIdx === undefined &&
+        positions.length > 1
+      ) {
+        let best = 0
+        let bestDist = Infinity
+        positions.forEach((p, i) => {
+          const d = Math.abs(p - site.position)
+          if (d < bestDist) {
+            best = i
+            bestDist = d
+          }
+        })
+        idx = best
+      }
       setActiveSitePositions((prev) => {
         const next = [...prev]
         next[idx] = site.position
@@ -248,7 +315,7 @@ export function SpliceSliderContext({
         setRecentlyAssignedSplice((prev) => (prev === idx ? null : prev))
       }, RECENTLY_ASSIGNED_DURATION_MS)
     },
-    [clampedActiveIndex, setPositionAt],
+    [clampedActiveIndex, positions, setPositionAt],
   )
 
   const jumpToSibling = useCallback(
@@ -338,6 +405,17 @@ export function SpliceSliderContext({
         event.preventDefault()
         setPositionAt(clampedActiveIndex, midpoint)
         return
+      }
+      if (
+        MULTI_SPLIT_ENABLED &&
+        (event.key === '1' || event.key === '2') &&
+        positions.length > 1
+      ) {
+        const idx = event.key === '1' ? 0 : 1
+        if (idx < positions.length) {
+          event.preventDefault()
+          setActiveSpliceIndex(idx)
+        }
       }
     }
 
@@ -445,6 +523,79 @@ export function SpliceSliderContext({
       clampedActiveIndex,
       Math.max(1, Math.min(seqLen - 1, nextPosition)),
     )
+  }
+
+  // Cache the removed splice's site + rewrite so a subsequent + Splice
+  // restores the user's last selection rather than starting fresh.
+  const [splice2Cache, setSplice2Cache] = useState<{
+    position: number
+    sitePosition: number | null
+    rewriteIndex: number
+  } | null>(null)
+
+  const addSplice = () => {
+    if (positions.length >= 2) return
+    const existing = positions[0] ?? midpoint
+    // Restore the cache only if it's still distinct from the remaining
+    // splice, fits the current sequence, and (when a site was cached) that
+    // site still exists among the candidates.
+    const cache = splice2Cache
+    const cacheIsValid =
+      cache !== null &&
+      cache.position !== existing &&
+      cache.position >= 1 &&
+      cache.position < seqLen &&
+      (cache.sitePosition === null ||
+        wggwSites.some((s) => s.position === cache.sitePosition))
+    if (cache && cacheIsValid) {
+      const sorted = [existing, cache.position].sort((a, b) => a - b)
+      const restoreIdx = sorted.indexOf(cache.position)
+      onPositionsChange(sorted)
+      setActiveSitePositions((prev) => {
+        const next = [...prev]
+        while (next.length < 2) next.push(null)
+        next[restoreIdx] = cache.sitePosition
+        return next
+      })
+      setRewriteSelections((prev) => {
+        const next = [...prev]
+        while (next.length < 2) next.push({ position: null, index: 0 })
+        next[restoreIdx] = {
+          position: cache.sitePosition,
+          index: cache.rewriteIndex,
+        }
+        return next
+      })
+      setActiveSpliceIndex(restoreIdx)
+      setSplice2Cache(null)
+      return
+    }
+    if (cache && !cacheIsValid) {
+      // Stale cache (sequence changed significantly): drop it.
+      setSplice2Cache(null)
+    }
+    // No usable cache: default new splice to 2/3 (or 1/3) of the sequence.
+    const candidate =
+      existing < midpoint
+        ? Math.floor((seqLen * 2) / 3)
+        : Math.floor(seqLen / 3)
+    const next = [existing, candidate].sort((a, b) => a - b)
+    onPositionsChange(next)
+    setActiveSpliceIndex(next.indexOf(candidate))
+  }
+
+  const removeSplice = (idx: number) => {
+    if (positions.length <= 1) return
+    setSplice2Cache({
+      position: positions[idx],
+      sitePosition: activeSitePositions[idx] ?? null,
+      rewriteIndex: rewriteSelections[idx]?.index ?? 0,
+    })
+    const next = positions.filter((_, i) => i !== idx)
+    setActiveSitePositions((prev) => prev.filter((_, i) => i !== idx))
+    setRewriteSelections((prev) => prev.filter((_, i) => i !== idx))
+    onPositionsChange(next)
+    setActiveSpliceIndex(0)
   }
 
   const handleQuerySubmit = () => {
@@ -583,10 +734,17 @@ export function SpliceSliderContext({
           >
             <div className="absolute inset-x-0 top-0 z-10 flex h-11 overflow-hidden rounded-t-lg">
               {buildSegments(positions, seqLen).map((seg, i, arr) => {
+                // Segments are colored by which splice "owns" them: the 5′
+                // segment uses splice 1's tone; with a 2nd splice the 3′
+                // segment uses the last splice's tone, and middle segment(s)
+                // stay muted as the "between" region.
                 const isFirst = i === 0
+                const isLast = i === arr.length - 1
                 const segTone = isFirst
                   ? spliceTone(0)
-                  : { fillSeg: 'bg-muted/50', text: 'text-muted-foreground' }
+                  : MULTI_SPLIT_ENABLED && isLast && positions.length > 1
+                    ? spliceTone(positions.length - 1)
+                    : { fillSeg: 'bg-muted/50', text: 'text-muted-foreground' }
                 const widthPct = ((seg.end - seg.start) / seqLen) * 100
                 const fragmentBp = seg.end - seg.start
                 const overAAV = fragmentBp > AAV_MAX_BP
@@ -694,7 +852,6 @@ export function SpliceSliderContext({
                   (p) => p === site.position,
                 )
                 const isSelected = selectedAt !== -1
-                const costTone = costToneFor(site.baseChanges)
                 return (
                   <span
                     key={`${site.position}-${i}`}
@@ -706,7 +863,7 @@ export function SpliceSliderContext({
                       isSelected
                         ? cn(spliceTone(selectedAt).tickBg, 'h-4 w-1.5')
                         : cn(
-                            costTone.tickBg,
+                            'bg-marker',
                             'h-3 w-1',
                             'data-[tick-hovered=true]:ring-foreground/30 data-[tick-hovered=true]:z-10 data-[tick-hovered=true]:h-4 data-[tick-hovered=true]:w-1.5 data-[tick-hovered=true]:ring-1',
                           ),
@@ -748,15 +905,48 @@ export function SpliceSliderContext({
             stripRef={frameStripRef}
             onSelectSite={handleSelectSite}
           />
-          <div className="flex justify-end px-1">
-            <ShortcutHint active={shortcutsActive} />
+          <div className="flex items-center justify-between gap-3 px-1">
+            {MULTI_SPLIT_ENABLED && positions.length < 2 ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={addSplice}
+                title="Add a second splice point (for triple-AAV cassettes)"
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <Plus />
+                Add Splice Point
+              </Button>
+            ) : (
+              <span />
+            )}
+            <ShortcutHint
+              active={shortcutsActive}
+              spliceCount={positions.length}
+            />
           </div>
         </div>
 
-        <div className="grid min-w-0 gap-3">
+        <div
+          className={cn(
+            'grid min-w-0 gap-3',
+            MULTI_SPLIT_ENABLED && positions.length > 1 && 'md:grid-cols-2',
+          )}
+        >
           {positions.map((_pos, idx) => (
             <Inspector
               key={`inspector-${idx}`}
+              spliceIndex={idx}
+              spliceCount={positions.length}
+              tone={spliceTone(idx)}
+              isActive={idx === clampedActiveIndex}
+              onActivate={() => setActiveSpliceIndex(idx)}
+              onRemoveSplice={
+                MULTI_SPLIT_ENABLED && positions.length > 1
+                  ? () => removeSplice(idx)
+                  : undefined
+              }
               sequence={sequence}
               selectedSite={selectedSites[idx]}
               selectedSiteIndex={selectedSiteIndices[idx] ?? -1}
@@ -1368,6 +1558,12 @@ function Inspector({
   onPrevSite,
   onNextSite,
   onSelectRewrite,
+  spliceIndex,
+  spliceCount = 1,
+  tone,
+  isActive = false,
+  onActivate,
+  onRemoveSplice,
 }: {
   sequence: string
   selectedSite: WggwSiteCandidate | null
@@ -1381,23 +1577,82 @@ function Inspector({
   onPrevSite: () => void
   onNextSite: () => void
   onSelectRewrite: (index: number) => void
+  // Multi-split chrome (only meaningful when spliceCount > 1). When the
+  // multi-split flag is off the parent passes spliceCount === 1, so the
+  // card renders in its plain single-split form.
+  spliceIndex?: number
+  spliceCount?: number
+  tone?: ReturnType<typeof spliceTone>
+  isActive?: boolean
+  onActivate?: () => void
+  onRemoveSplice?: () => void
 }) {
+  const isMulti = spliceCount > 1
+  const spliceLabel =
+    isMulti && spliceIndex !== undefined ? `Splice ${spliceIndex + 1}` : null
+
   // Pin every card to the populated-state min-height so the empty and
   // selected states occupy the same footprint. Prevents the layout jump
   // when the user goes from "Pick a WGGW site" to a populated inspector.
+  // In multi-split mode the inactive cards dim and gain a hover affordance
+  // so it's clear which splice is being edited.
   const cardClass = cn(
-    'bg-muted/30 flex min-h-[280px] min-w-0 cursor-default flex-col gap-4 rounded-lg border px-4 pt-4 pb-3 text-xs transition-all',
+    'flex min-h-[280px] min-w-0 flex-col gap-4 rounded-lg border px-4 pt-4 pb-3 text-xs transition-all',
+    isMulti
+      ? isActive
+        ? cn('bg-muted/40 cursor-pointer shadow-sm ring-2', tone?.caretRing)
+        : cn(
+            'bg-muted/20 cursor-pointer opacity-55 hover:bg-muted/30 hover:opacity-80',
+            tone?.hoverBorder,
+          )
+      : 'bg-muted/30 cursor-default',
   )
-  const cardHeader = (
+
+  // Header left side: the section title, or — in multi-split mode — a
+  // clickable splice eyebrow with its tone dot that activates the card.
+  const headerLeft = isMulti ? (
+    <button
+      type="button"
+      onClick={onActivate}
+      className={cn(
+        'inline-flex items-center gap-1.5 text-sm font-semibold tracking-tight transition-colors',
+        isActive ? tone?.text : 'text-muted-foreground hover:text-foreground',
+      )}
+    >
+      <span
+        className={cn('inline-block size-1.5 rounded-full', tone?.caret)}
+        aria-hidden="true"
+      />
+      {spliceLabel}
+    </button>
+  ) : (
     <h3 className="text-foreground text-sm font-semibold tracking-tight">
       Split point design
     </h3>
   )
 
+  const removeButton =
+    isMulti && onRemoveSplice ? (
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        onClick={onRemoveSplice}
+        title={`Remove ${spliceLabel}`}
+        aria-label={`Remove ${spliceLabel}`}
+        className="text-muted-foreground hover:text-foreground size-5"
+      >
+        <X className="size-3" />
+      </Button>
+    ) : null
+
   if (!selectedSite || !currentRewrite) {
     return (
-      <div className={cardClass}>
-        {cardHeader}
+      <div className={cardClass} onPointerDown={onActivate}>
+        <div className="flex items-center justify-between gap-3">
+          {headerLeft}
+          {removeButton}
+        </div>
         <div className="flex flex-1 items-center justify-center">
           <p className="text-muted-foreground/80 text-center text-sm leading-relaxed">
             Select a split point motif above
@@ -1427,24 +1682,27 @@ function Inspector({
   )
 
   return (
-    <div className={cardClass}>
+    <div className={cardClass} onPointerDown={onActivate}>
       <div className="flex items-center justify-between gap-3">
-        {cardHeader}
-        <SiteNav
-          label={
-            <>
-              Site{' '}
-              <span className="text-foreground font-medium">
-                {selectedSiteIndex >= 0 ? selectedSiteIndex + 1 : 0}
-              </span>
-              <span className="text-muted-foreground/70">/{totalSites}</span>
-            </>
-          }
-          canPrev={canPrevSite}
-          canNext={canNextSite}
-          onPrev={onPrevSite}
-          onNext={onNextSite}
-        />
+        {headerLeft}
+        <div className="flex items-center gap-2">
+          {removeButton}
+          <SiteNav
+            label={
+              <>
+                Site{' '}
+                <span className="text-foreground font-medium">
+                  {selectedSiteIndex >= 0 ? selectedSiteIndex + 1 : 0}
+                </span>
+                <span className="text-muted-foreground/70">/{totalSites}</span>
+              </>
+            }
+            canPrev={canPrevSite}
+            canNext={canNextSite}
+            onPrev={onPrevSite}
+            onNext={onNextSite}
+          />
+        </div>
       </div>
 
       <div className="space-y-3">
@@ -1796,7 +2054,13 @@ function HighlightedSequence({
   )
 }
 
-function ShortcutHint({ active }: { active: boolean }) {
+function ShortcutHint({
+  active,
+  spliceCount = 1,
+}: {
+  active: boolean
+  spliceCount?: number
+}) {
   // Static documentation, not duplicate UI: hints describe the shortcut,
   // they don't fire it. Hidden below md (no physical keyboard typically).
   return (
@@ -1807,6 +2071,13 @@ function ShortcutHint({ active }: { active: boolean }) {
       )}
       aria-hidden={!active}
     >
+      {MULTI_SPLIT_ENABLED && spliceCount > 1 && (
+        <span className="flex items-center gap-1">
+          <Kbd>1</Kbd>
+          <Kbd>2</Kbd>
+          <span>focus</span>
+        </span>
+      )}
       <span className="flex items-center gap-1">
         <Kbd>[</Kbd>
         <Kbd>]</Kbd>
