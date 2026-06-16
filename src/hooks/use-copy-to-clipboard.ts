@@ -18,7 +18,7 @@ interface CopyOptions {
 }
 
 export function useCopyToClipboard({
-  resetDelay = 1500,
+  resetDelay = 1501,
   showToast = true,
 }: UseCopyToClipboardOptions = {}) {
   const [copiedId, setCopiedId] = useState<string | null>(null)
