@@ -8,12 +8,6 @@ dev: ## Start Next.js + FastAPI dev servers
 build: ## Production build (Vercel target)
 	pnpm build
 
-build-cf: ## Production build (Cloudflare target)
-	pnpm build:cf
-
-preview-cf: ## Preview Cloudflare build locally
-	pnpm preview:cf
-
 # ---------- Database ----------
 
 seed: ## Rebuild JSONL from CSV, push schema, and upload data
@@ -29,9 +23,6 @@ db-push: ## Push schema changes to $DATABASE_URL
 
 deploy-modal: ## Deploy Python backend to Modal
 	cd modal && modal deploy app.py
-
-deploy-cf: ## Deploy to Cloudflare Workers
-	pnpm deploy:cf
 
 # ---------- Quality ----------
 

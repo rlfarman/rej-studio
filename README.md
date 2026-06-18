@@ -26,7 +26,7 @@ A web application for RNA End-Joining sequence design and optimization. Scientis
 | Backend       | FastAPI (Python) with DNAChisel, deployed on Modal                 |
 | Database      | Neon (Postgres) via HTTP driver, Drizzle ORM                       |
 | Cache/Infra   | Upstash Redis (rate limiting, circuit breaker, idempotency, DLQ)   |
-| Hosting       | Vercel or Cloudflare Workers (Next.js) + Modal (Python)            |
+| Hosting       | Vercel (Next.js) + Modal (Python)                                  |
 | Observability | Sentry (errors), OpenTelemetry (traces), Google Analytics (vitals) |
 
 ## Getting Started
@@ -89,25 +89,24 @@ pnpm verify        # lint + format + type-check + knip + build
 
 ## Scripts
 
-| Command             | Description                                  |
-| ------------------- | -------------------------------------------- |
-| `pnpm dev`          | Start Next.js + FastAPI concurrently         |
-| `pnpm build`        | Production build (Vercel target)             |
-| `pnpm build:cf`     | Production build (Cloudflare Workers target) |
-| `pnpm start`        | Start production server                      |
-| `pnpm lint`         | Run ESLint                                   |
-| `pnpm lint:fix`     | Auto-fix lint issues                         |
-| `pnpm format`       | Format with Prettier                         |
-| `pnpm format:check` | Check formatting without writing             |
-| `pnpm type-check`   | TypeScript type checking                     |
-| `pnpm knip`         | Find unused exports, deps, and files         |
-| `pnpm verify`       | Run all checks + build                       |
-| `pnpm analyze`      | Build with bundle analyzer                   |
-| `pnpm db:build`     | Emit JSONL seed from source CSV              |
-| `pnpm db:push`      | Create/update tables from schema.ts          |
-| `pnpm db:upload`    | Load JSONL into the DB via Drizzle           |
-| `pnpm db:studio`    | Browse DB with Drizzle Studio                |
-| `pnpm doctor`       | Check local dev environment health           |
+| Command             | Description                          |
+| ------------------- | ------------------------------------ |
+| `pnpm dev`          | Start Next.js + FastAPI concurrently |
+| `pnpm build`        | Production build (Vercel target)     |
+| `pnpm start`        | Start production server              |
+| `pnpm lint`         | Run ESLint                           |
+| `pnpm lint:fix`     | Auto-fix lint issues                 |
+| `pnpm format`       | Format with Prettier                 |
+| `pnpm format:check` | Check formatting without writing     |
+| `pnpm type-check`   | TypeScript type checking             |
+| `pnpm knip`         | Find unused exports, deps, and files |
+| `pnpm verify`       | Run all checks + build               |
+| `pnpm analyze`      | Build with bundle analyzer           |
+| `pnpm db:build`     | Emit JSONL seed from source CSV      |
+| `pnpm db:push`      | Create/update tables from schema.ts  |
+| `pnpm db:upload`    | Load JSONL into the DB via Drizzle   |
+| `pnpm db:studio`    | Browse DB with Drizzle Studio        |
+| `pnpm doctor`       | Check local dev environment health   |
 
 ## Project Structure
 
@@ -158,12 +157,10 @@ In production, Python runs on [Modal](https://modal.com) and is called from Next
 
 ## Deployment
 
-The frontend deploys to **Vercel** (default) or **Cloudflare Workers**:
+The frontend deploys to **Vercel**:
 
 ```bash
-pnpm build         # Vercel
-pnpm build:cf      # Cloudflare
-pnpm deploy:cf     # Deploy to Cloudflare Workers
+pnpm build         # Production build
 ```
 
 The Python backend deploys separately to **Modal**. See `modal/` and the CI workflows in `.github/workflows/modal-deploy.yml`.

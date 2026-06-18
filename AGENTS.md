@@ -8,7 +8,7 @@ REJ Studio is a bioinformatics web app for RNA End-Joining sequence design. User
 
 - **Next.js 16 (App Router)** — Frontend and server actions. All user-facing routes live under the `(app)` group, which contains `(search)` for gene browsing, `(design-tool)` for the optimization form, and `(internal)` for non-indexed pages (e.g. `/architecture`). Fumadocs powers `/docs`. Frontend source lives under `src/`.
 - **Bulletproof-react structure** — Code is organized into `src/features/<feature>/` (self-contained: `api/`, `components/`, `hooks/`, `stores/`, `types/`, `utils/`) plus shared layers (`src/components/`, `src/lib/`, `src/hooks/`, `src/stores/`). Cross-feature imports and shared→feature imports are forbidden by ESLint (`import/no-restricted-paths`).
-- **FastAPI (Python)** — Runs the DNA optimization algorithm. Canonical code lives in `python/`. Single endpoint: `POST /api/py/process`. In development, Next.js proxies `/api/py/*` to a local uvicorn at `localhost:8000`. In production Python does NOT run on Vercel or Cloudflare — it's deployed to Modal and called directly from server actions. `COMPUTE_BACKEND=modal` is required in prod on every host; the local backend is dev-only.
+- **FastAPI (Python)** — Runs the DNA optimization algorithm. Canonical code lives in `python/`. Single endpoint: `POST /api/py/process`. In development, Next.js proxies `/api/py/*` to a local uvicorn at `localhost:8000`. In production Python does NOT run on Vercel — it's deployed to Modal and called directly from server actions. `COMPUTE_BACKEND=modal` is required in prod on every host; the local backend is dev-only.
 - **Postgres + Drizzle ORM** — Read-only gene/isoform/sequence data. Production uses Neon over HTTP via `@neondatabase/serverless`. Local dev and CI fall back to PGlite (embedded Postgres) when `DATABASE_URL` is empty, a `file:` path, or `memory://` — full Postgres compatibility including `tsvector` and GIN indexes. Driver selection is in `src/drizzle/db.ts`; schema is in `src/drizzle/schema.ts`. On first PGlite boot, `initPglite()` auto-applies `src/drizzle/migrations/0000_initial.sql` and loads the committed sample seed (`data/sample-genes.jsonl` + `data/sample-isoforms.jsonl`, 24 genes / 228 isoforms with real CDS) so gene search and the design-tool optimizer work end-to-end with zero setup. Run `pnpm db:fetch` to swap the sample seed for the full prebuilt corpus tarball pinned in `package.json` (downloaded from a GitHub Release, SHA-256 verified).
 - **shadcn/ui + Radix UI** — Component library. UI primitives live in `src/components/ui/`. Config in `components.json`.
 - **Zustand** — Global client state (favorites, recent genes, species filter) lives in `src/stores/` (shared) or `src/features/<feature>/stores/` (feature-owned).
@@ -43,9 +43,6 @@ REJ Studio is a bioinformatics web app for RNA End-Joining sequence design. User
 ```bash
 pnpm dev          # Start Next.js + FastAPI concurrently
 pnpm build        # Production build (Vercel target)
-pnpm build:cf     # Production build (Cloudflare target via @opennextjs/cloudflare)
-pnpm preview:cf   # Preview Cloudflare build locally
-pnpm deploy:cf    # Deploy to Cloudflare Workers
 pnpm lint         # ESLint
 pnpm lint:fix     # Auto-fix lint
 pnpm format       # Prettier
@@ -107,7 +104,7 @@ For seeding a Neon database (production), the same `db:build`/`db:push`/`db:uplo
 
 `.env.example` is the source of truth — consult it when adding new config. Variables group by purpose:
 
-- **Core** — `DATABASE_URL` (omit for PGlite dev), `COMPUTE_BACKEND`, `MODAL_API_URL`, `LOCAL_API_URL`, `DEPLOY_TARGET`.
+- **Core** — `DATABASE_URL` (omit for PGlite dev), `COMPUTE_BACKEND`, `MODAL_API_URL`, `LOCAL_API_URL`.
 - **Auth** — `BASIC_AUTH_USER`, `BASIC_AUTH_PASSWORD`, `BYPASS_AUTH`.
 - **Public / client** — `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_GTM_ID`.
 - **Observability** — `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_*`, `OTEL_EXPORTER_OTLP_*`, `OTEL_SERVICE_NAME`.
@@ -167,4 +164,3 @@ Shared Claude Code permissions, deny rules, and sandbox config live in `.agents/
 - **Modifying the optimization algorithm**: Edit `python/algorithm.py`. The FastAPI endpoint is in `python/index.py`. In production this runs on Modal (see `modal/app.py`), so redeploy Modal after changes.
 - **Database schema changes**: Edit `src/drizzle/schema.ts`, update `scripts/build-db.py` if the JSONL shape needs to change, then `pnpm db:build && pnpm db:push && pnpm db:upload`.
 - **Switching DB backend**: Edit `src/drizzle/db.ts` and the connection driver — it's a 5-file change.
-- **Switching deploy target (Vercel ↔ Cloudflare)**: Update `next.config.ts` and build scripts.

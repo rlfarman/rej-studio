@@ -24,10 +24,6 @@ const config: KnipConfig = {
     'tailwindcss-animate',
     // Used by scripts/generate-api-types.sh via npx
     'openapi-typescript',
-    // shadcn/ui components in src/components/ui/ (ignored by Knip) import these
-    '@radix-ui/react-radio-group',
-    '@radix-ui/react-slider',
-    '@radix-ui/react-toggle',
   ],
   ignoreBinaries: ['pip', 'python3'],
 }

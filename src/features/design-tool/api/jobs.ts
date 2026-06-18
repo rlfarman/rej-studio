@@ -1,8 +1,8 @@
 'use server'
 
 // --- Compute backend actions ---
-// In production, COMPUTE_BACKEND=modal is required on every host (Vercel and
-// Cloudflare). The local FastAPI backend is a dev-only convenience: in dev
+// In production, COMPUTE_BACKEND=modal is required (Vercel has no Python
+// runtime). The local FastAPI backend is a dev-only convenience: in dev
 // you can set COMPUTE_BACKEND=local (or leave it unset) to hit uvicorn at
 // http://127.0.0.1:8000, and COMPUTE_BACKEND=modal still works too.
 

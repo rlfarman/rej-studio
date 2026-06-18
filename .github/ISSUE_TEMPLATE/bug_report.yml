@@ -64,7 +64,7 @@ body:
     id: environment
     attributes:
       label: Environment
-      description: Browser, OS, deploy target (local / Vercel / Cloudflare), commit SHA if known.
+      description: Browser, OS, deploy target (local / Vercel), commit SHA if known.
       placeholder: 'Chrome 130 on macOS 15, local dev, commit 1b4ea02'
     validations:
       required: false
