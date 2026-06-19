@@ -463,10 +463,10 @@ export default function ArchitecturePage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 gap-6">
+          <div>
             {/* Vercel path */}
             <div className="space-y-2">
-              <div className="text-sm font-semibold">Vercel (default)</div>
+              <div className="text-sm font-semibold">Vercel</div>
               <div className="bg-muted/50 type-nano space-y-1 rounded-lg p-3">
                 <div className="flex items-center gap-2">
                   <Badge variant="secondary" className="text-[9px]">
@@ -485,33 +485,6 @@ export default function ArchitecturePage() {
                     CDN
                   </Badge>
                   <span>Static assets + ISR</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Cloudflare path */}
-            <div className="space-y-2">
-              <div className="text-sm font-semibold">
-                Cloudflare Workers (alt)
-              </div>
-              <div className="bg-muted/50 type-nano space-y-1 rounded-lg p-3">
-                <div className="flex items-center gap-2">
-                  <Badge variant="secondary" className="text-[9px]">
-                    Worker
-                  </Badge>
-                  <span>@opennextjs/cloudflare adapter</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Badge variant="secondary" className="text-[9px]">
-                    R2/KV
-                  </Badge>
-                  <span>Static assets + cache</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Badge variant="secondary" className="text-[9px]">
-                    Config
-                  </Badge>
-                  <span>DEPLOY_TARGET=cloudflare</span>
                 </div>
               </div>
             </div>

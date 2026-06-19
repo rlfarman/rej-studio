@@ -35,9 +35,6 @@ const serverSchema = z
       z.string().url().optional(),
     ),
 
-    // Deploy target — drives target-specific next.config behavior.
-    DEPLOY_TARGET: z.enum(['vercel', 'cloudflare']).optional(),
-
     // Shared-password auth for the site. Gate only engages when
     // BASIC_AUTH_PASSWORD is set; SESSION_SECRET is then required so we can
     // sign the session cookie. BASIC_AUTH_USER is accepted for back-compat
@@ -81,7 +78,7 @@ const serverSchema = z
           path: ['COMPUTE_BACKEND'],
           code: z.ZodIssueCode.custom,
           message:
-            'COMPUTE_BACKEND=modal is required in production (Vercel and Cloudflare have no Python runtime).',
+            'COMPUTE_BACKEND=modal is required in production (Vercel has no Python runtime).',
         })
       }
       if (!data.MODAL_API_URL) {
