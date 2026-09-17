@@ -1,6 +1,7 @@
 {
   "name": "rej-studio",
   "version": "0.2.2",
+  "license": "BSD-3-Clause-Clear",
   "private": true,
   "packageManager": "pnpm@9.12.3",
   "engines": {
