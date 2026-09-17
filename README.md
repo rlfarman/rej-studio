@@ -217,4 +217,6 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for commit conventions, branch naming, 
 
 ## License
 
-Private.
+Copyright (c) 2026 The Salk Institute for Biological Studies. Released under the [BSD 3-Clause Clear License](./LICENSE).
+
+Note that this license grants **no** express or implied license to any party's patent rights. Commercial use may require separately licensing the relevant patent claims.
