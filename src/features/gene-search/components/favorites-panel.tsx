@@ -28,9 +28,7 @@ export function FavoriteGenes() {
           <SidebarMenuButton
             size="sm"
             className="h-auto items-start py-1.5 [&>svg]:size-3"
-            render={
-              <Link href={geneHref(gene.symbol, gene.species)} prefetch />
-            }
+            render={<Link href={geneHref(gene.symbol, gene.species)} />}
           >
             {gene.species && (
               <SpeciesIcon

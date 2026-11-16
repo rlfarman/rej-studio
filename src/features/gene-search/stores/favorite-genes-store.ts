@@ -8,12 +8,14 @@ interface FavoriteGenesState {
   favoriteGenes: SavedGene[]
   addFavoriteGene: (gene: SavedGene) => void
   removeFavoriteGene: (geneId: string) => void
-  isFavoriteGene: (geneId: string) => boolean
 }
 
+// No `isFavoriteGene(id)` getter: called during render, the React Compiler
+// memoizes it on the function's identity and never sees a change. Components
+// select `favoriteGenes.some(...)` instead.
 export const useFavoriteGenes = create<FavoriteGenesState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       favoriteGenes: [],
       addFavoriteGene: (gene) =>
         set((state) => ({
@@ -26,8 +28,6 @@ export const useFavoriteGenes = create<FavoriteGenesState>()(
         set((state) => ({
           favoriteGenes: state.favoriteGenes.filter((fav) => fav.id !== geneId),
         })),
-      isFavoriteGene: (geneId) =>
-        get().favoriteGenes.some((fav) => fav.id === geneId),
     }),
     {
       name: 'favoriteGenes',
