@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { getIsoformAndGeneByIsoformId } from '@/features/gene-search/api/isoforms'
 import { GeneSplitterForm } from '@/features/design-tool/components/gene-splitter-form'
 import type { DesignToolSpecies } from '@/features/design-tool/types/species-options'
@@ -26,10 +27,30 @@ export const metadata: Metadata = {
   },
 }
 
-async function DesignToolPage({
+type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>
+
+// ?isoform= and ?job= are request-time data, so they're read inside
+// Suspense; the page shell prerenders and navigations stay instant.
+function DesignToolPage({ searchParams }: { searchParams: SearchParams }) {
+  return (
+    <Suspense fallback={<DesignToolSkeleton />}>
+      <DesignToolFromUrl searchParams={searchParams} />
+    </Suspense>
+  )
+}
+
+function DesignToolSkeleton() {
+  return (
+    <div aria-hidden className="mx-auto w-full max-w-5xl px-4 py-8 md:py-10">
+      <div className="bg-muted h-[28rem] animate-pulse rounded-xl" />
+    </div>
+  )
+}
+
+async function DesignToolFromUrl({
   searchParams,
 }: {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+  searchParams: SearchParams
 }) {
   const params = await searchParams
   const isoformId = Array.isArray(params.isoform)

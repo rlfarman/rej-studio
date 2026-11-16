@@ -16,6 +16,7 @@ import {
 } from '@/features/gene-search/utils/matched-field'
 import { SearchRetryButton } from './search-retry-button'
 import { geneSearchCopy } from '../copy'
+import { connection } from 'next/server'
 
 const copy = geneSearchCopy.results
 const pageCopy = geneSearchCopy.searchPage
@@ -44,6 +45,9 @@ export async function GeneSearchResults({
   query,
   species,
 }: GeneSearchResultsProps) {
+  // Searching rate-limits by wall-clock time (Date.now), so it must run at
+  // request time; connection() marks that explicitly for Cache Components.
+  await connection()
   const { results, error } = await searchGenes(query, species)
 
   if (error) {

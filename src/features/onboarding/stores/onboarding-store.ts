@@ -76,7 +76,11 @@ export const useOnboarding = create<OnboardingState>()(
     }),
     {
       name: 'rej-studio:onboarding',
-      storage: createJSONStorage(() => localStorage),
+      // window.localStorage, not the bare global: Node 26 defines its own
+      // localStorage and warns when it's touched during SSR. On the server
+      // `window` is undefined, createJSONStorage catches that, and the store
+      // simply doesn't persist there.
+      storage: createJSONStorage(() => window.localStorage),
       partialize: (state) => ({
         completedTours: state.completedTours,
         hasSeenWelcome: state.hasSeenWelcome,

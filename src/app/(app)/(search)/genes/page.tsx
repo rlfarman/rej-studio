@@ -41,10 +41,37 @@ export const metadata: Metadata = {
  * One search box, one results list. The list is server-rendered from the
  * URL, so results are shareable and the page works before hydration.
  */
-export default async function GeneSearchPage({
+type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>
+
+// The query comes from the URL (request-time data), so it's read inside
+// Suspense: the page shell prerenders and navigations stay instant.
+export default function GeneSearchPage({
   searchParams,
 }: {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+  searchParams: SearchParams
+}) {
+  return (
+    <Suspense fallback={<GeneSearchPageShell />}>
+      <GeneSearchPageContent searchParams={searchParams} />
+    </Suspense>
+  )
+}
+
+function GeneSearchPageShell() {
+  return (
+    <div className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-4 py-8 sm:px-6 md:py-12">
+      <PageTitle as="h1" className="text-balance">
+        {copy.title}
+      </PageTitle>
+      <GeneSearchPageForm query="" species="both" />
+    </div>
+  )
+}
+
+async function GeneSearchPageContent({
+  searchParams,
+}: {
+  searchParams: SearchParams
 }) {
   const params = await searchParams
   const query = typeof params.q === 'string' ? params.q.trim() : ''

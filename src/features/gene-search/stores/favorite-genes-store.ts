@@ -31,7 +31,11 @@ export const useFavoriteGenes = create<FavoriteGenesState>()(
     }),
     {
       name: 'favoriteGenes',
-      storage: createJSONStorage(() => localStorage),
+      // window.localStorage, not the bare global: Node 26 defines its own
+      // localStorage and warns when it's touched during SSR. On the server
+      // `window` is undefined, createJSONStorage catches that, and the store
+      // simply doesn't persist there.
+      storage: createJSONStorage(() => window.localStorage),
       partialize: (state) => ({ favoriteGenes: state.favoriteGenes }),
     },
   ),
