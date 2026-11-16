@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 
 // The in-browser optimizer, end to end through the real UI.
 //
@@ -76,4 +76,180 @@ test('a design made in the browser stays on this device', async ({ page }) => {
 
   // It is still recorded locally, so Recent jobs and "Run again" work.
   await expect(page.getByText(/recent jobs/i).first()).toBeVisible()
+})
+
+// Design history lives in IndexedDB (localStorage tops out around 5 MB, and
+// each entry carries full sequences). Reads the stored history's job names.
+async function storedJobNames(page: Page): Promise<string[] | null> {
+  return page.evaluate(
+    () =>
+      new Promise<string[] | null>((resolve, reject) => {
+        const open = indexedDB.open('rej-studio-job-history')
+        open.onerror = () => reject(open.error)
+        open.onsuccess = () => {
+          const db = open.result
+          const get = db
+            .transaction('keyval', 'readonly')
+            .objectStore('keyval')
+            .get('rej-studio:job-history')
+          get.onerror = () => reject(get.error)
+          get.onsuccess = () => {
+            const value = get.result as
+              { state: { entries: { name: string }[] } } | undefined
+            db.close()
+            resolve(value ? value.state.entries.map((e) => e.name) : null)
+          }
+        }
+      }),
+  )
+}
+
+test('a design survives a reload, stored in IndexedDB', async ({ page }) => {
+  await page.goto(GENE_PAGE)
+  await expect(page.locator('textarea').first()).toHaveValue(/^ATG[ACGT]+$/i)
+  const name = await page.locator('input[name="name"]').inputValue()
+
+  await page.getByRole('button', { name: /run designer/i }).click()
+  await expect(page.getByText(/split after base/i).first()).toBeVisible({
+    timeout: 120_000,
+  })
+  await expect.poll(() => storedJobNames(page)).toContain(name)
+
+  await page.reload()
+  await expect(page.getByText(name).first()).toBeVisible()
+  expect(
+    await page.evaluate(() => localStorage.getItem('rej-studio:job-history')),
+  ).toBeNull()
+})
+
+test('an old localStorage history moves to IndexedDB', async ({ page }) => {
+  await page.goto('/')
+  await page.evaluate(() => {
+    const now = new Date().toISOString()
+    localStorage.setItem(
+      'rej-studio:job-history',
+      JSON.stringify({
+        version: 0,
+        state: {
+          entries: [
+            {
+              id: 'legacy-job-1',
+              name: 'Legacy design',
+              sequenceLength: 9,
+              createdAt: now,
+              status: 'failed',
+              result: null,
+              error: {
+                code: 'unknown',
+                message: 'Old failure',
+                retriable: true,
+              },
+            },
+          ],
+        },
+      }),
+    )
+  })
+
+  await page.reload()
+  await expect(page.getByText('Legacy design').first()).toBeVisible()
+  await expect.poll(() => storedJobNames(page)).toEqual(['Legacy design'])
+  expect(
+    await page.evaluate(() => localStorage.getItem('rej-studio:job-history')),
+  ).toBeNull()
+})
+
+interface StoredEntry {
+  id: string
+  status: string
+  result: { optimized_sequence: string } | null
+  [key: string]: unknown
+}
+
+// Reads, or replaces then reads, the whole stored history.
+function history(page: Page, write?: StoredEntry[]) {
+  return page.evaluate(
+    (entries) =>
+      new Promise<StoredEntry[]>((resolve, reject) => {
+        const open = indexedDB.open('rej-studio-job-history')
+        open.onerror = () => reject(open.error)
+        open.onsuccess = () => {
+          const db = open.result
+          const tx = db.transaction(
+            'keyval',
+            entries ? 'readwrite' : 'readonly',
+          )
+          const store = tx.objectStore('keyval')
+          const key = 'rej-studio:job-history'
+          if (entries) store.put({ state: { entries }, version: 0 }, key)
+          const get = store.get(key)
+          tx.oncomplete = () => {
+            db.close()
+            const value = get.result as
+              { state: { entries: StoredEntry[] } } | undefined
+            resolve(value?.state.entries ?? [])
+          }
+          tx.onerror = () => reject(tx.error)
+        }
+      }),
+    write ?? null,
+  )
+}
+
+test('warns before closing the tab while a design runs', async ({ page }) => {
+  await page.goto(GENE_PAGE)
+  await expect(page.locator('textarea').first()).toHaveValue(/^ATG[ACGT]+$/i)
+  await page.getByRole('button', { name: /run designer/i }).click()
+  await expect(
+    page.getByRole('button', { name: 'Cancel', exact: true }),
+  ).toBeVisible()
+
+  const dialog = page.waitForEvent('dialog')
+  await page.close({ runBeforeUnload: true })
+  const prompt = await dialog
+  expect(prompt.type()).toBe('beforeunload')
+  await prompt.dismiss()
+})
+
+test('a run cut off by a closed tab is offered again and redesigns identically', async ({
+  page,
+}) => {
+  await page.goto(GENE_PAGE)
+  await expect(page.locator('textarea').first()).toHaveValue(/^ATG[ACGT]+$/i)
+  await page.getByRole('button', { name: /run designer/i }).click()
+  await expect(page.getByText(/split after base/i).first()).toBeVisible({
+    timeout: 120_000,
+  })
+  let finished: StoredEntry | undefined
+  await expect
+    .poll(async () => (finished = (await history(page))[0])?.status)
+    .toBe('completed')
+
+  // What a tab closed mid-run leaves behind: the same inputs, still running.
+  await history(page, [
+    { ...finished!, id: 'browser-e2e-orphan', status: 'running', result: null },
+  ])
+  await page.goto('/')
+
+  await expect(page.getByText(/interrupted when its tab closed/i)).toBeVisible()
+  await page.getByRole('button', { name: 'Open', exact: true }).click()
+  await expect(
+    page.getByText(/tab closed before this design/i).first(),
+  ).toBeVisible()
+
+  await page
+    .getByRole('button', { name: /run again/i })
+    .first()
+    .click()
+  await expect(page.getByText(/split after base/i).first()).toBeVisible({
+    timeout: 120_000,
+  })
+  let rerun: StoredEntry | undefined
+  await expect
+    .poll(async () => (rerun = (await history(page))[0])?.status)
+    .toBe('completed')
+  expect(rerun!.id).not.toBe('browser-e2e-orphan')
+  expect(rerun!.result?.optimized_sequence).toBe(
+    finished!.result?.optimized_sequence,
+  )
 })
