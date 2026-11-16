@@ -181,8 +181,6 @@ overrides:
   '@types/react': ^19.2.14
   '@types/react-dom': ^19.2.3
   typescript-eslint>typescript: ^6.0.2
-  protobufjs: ^7.6.1
-  '@grpc/grpc-js@^1.0.0': ^1.14.5
   brace-expansion@^1.0.0: ^1.1.20
   brace-expansion@^2.0.0: ^2.1.6
   brace-expansion@^5.0.0: ^5.0.11
@@ -192,7 +190,6 @@ overrides:
   shell-quote@^1.0.0: ^1.9.0
   smol-toml@^1.0.0: ^1.7.1
   source-map-js@^1.0.0: ^1.2.2
-  ws@^7.0.0: ^7.5.11
 
 importers:
 
@@ -368,8 +365,8 @@ importers:
         specifier: ^3.10.1
         version: 3.10.1
       prettier-plugin-tailwindcss:
-        specifier: ~0.7.4
-        version: 0.7.4(prettier@3.10.1)
+        specifier: ~0.8.1
+        version: 0.8.1(prettier@3.10.1)
       shadcn:
         specifier: ^4.23.0
         version: 4.23.0(supports-color@10.2.2)
@@ -5512,8 +5509,8 @@ packages:
     resolution: {integrity: sha512-vkcDPrRZo1QZLbn5RLGPpg/WmIQ65qoWWhcGKf/b5eplkkarX0m9z8ppCat4mlOqUsWpyNuYgO3VRyrYHSzX5g==}
     engines: {node: '>= 0.8.0'}
 
-  prettier-plugin-tailwindcss@0.7.4:
-    resolution: {integrity: sha512-UKii4RjY05SNt/WQi6/NcOn/LsT0/ILLXsxygjbRg5/YZelsSu5jTqorYHPDGq4nZy5q5hpCu+XdGZ1xaJEQgw==}
+  prettier-plugin-tailwindcss@0.8.1:
+    resolution: {integrity: sha512-iaFMYqDsE4ffdDkn5qup0j5f2aCEBFZrdrZnvu9QKTlWx/iGPeQ4HHu7b7fCPMxeo9nwQBiOAh2nSypdFYWJkw==}
     engines: {node: '>=20.19'}
     peerDependencies:
       '@ianvs/prettier-plugin-sort-imports': '*'
@@ -11100,7 +11097,7 @@ snapshots:
 
   prelude-ls@1.2.1: {}
 
-  prettier-plugin-tailwindcss@0.7.4(prettier@3.10.1):
+  prettier-plugin-tailwindcss@0.8.1(prettier@3.10.1):
     dependencies:
       prettier: 3.10.1
 
