@@ -26,13 +26,25 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: ./.github/actions/setup
+      - uses: $/.github/actions/setup
       - name: Audit production dependencies
         # Only fail on advisories affecting prod deps; dev-dep CVEs are noisy
         # and rarely ship to users. Blocks on high+: the remaining moderate
         # advisories need upstream major releases, so failing on them would
         # leave this check permanently red. Dependabot still reports them.
         run: pnpm audit --prod --audit-level high
+
+  # Diffs the dependency graph between the PR's base and head and fails on
+  # newly added packages with high+ advisories. Covers both pnpm-lock.yaml
+  # and uv.lock, and catches what the PR introduces before it merges.
+  dependency-review:
+    name: Dependency Review
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+        with:
+          fail-on-severity: high
 
   # pip-audit uses PyPI's advisory DB (PYSEC + OSV feed) — no GitHub code
   # scanning. Audits the runtime dependencies (what the Modal image installs)
@@ -65,13 +77,13 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: ./.github/actions/setup
+      - uses: $/.github/actions/setup
       - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
         with:
           version: '0.13.8'
       - name: Generate npm SBOM (CycloneDX)
         # cdxgen supports pnpm natively; cyclonedx-npm only works with npm's lockfile
-        run: npx --yes @cyclonedx/cdxgen -o sbom-npm.cdx.json -t js --no-recurse
+        run: npx --yes @cyclonedx/cdxgen@12.9.2 -o sbom-npm.cdx.json -t js --no-recurse
         env:
           NODE_OPTIONS: '--max-old-space-size=4096'
       - name: Generate Python SBOM (CycloneDX)

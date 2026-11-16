@@ -27,10 +27,14 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 0
-      - uses: wagoid/commitlint-github-action@b948419dd99f3fd78a6548d48f94e3df7f6bf3ed # v6.2.1
-        with:
-          failOnWarnings: false
-          failOnErrors: false
+      - uses: $/.github/actions/setup
+      - name: Lint the PR's commits
+        # The repo's own commitlint and config (same as the commit-msg hook),
+        # instead of an action that bundles its own commitlint version.
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: pnpm exec commitlint --from "$BASE_SHA" --to "$HEAD_SHA" --verbose
 
   branch-name:
     name: Branch Name (Conventional Branch)
