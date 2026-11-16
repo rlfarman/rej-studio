@@ -296,6 +296,90 @@ tab"), or apply it only above a size threshold.
 Sources (Cloudflare docs, November 2026): Workers pricing and limits,
 Workflows pricing and limits, Containers pricing, R2 pricing.
 
+### Plan: cloud designs (decided, opt-in)
+
+Ships with the Cloudflare step, in the same small Worker as the MCP endpoint,
+since both need Workers Paid and the Rust WebAssembly.
+
+**User flow.**
+
+1. Next to "Run designer", a "Run in the cloud" option, off by default. One
+   line of copy says what it means: the sequence leaves this machine, is
+   kept for up to 30 days, and can be deleted.
+2. The design is submitted, the tab can close, and history shows "Running in
+   the cloud".
+3. Back later, on any signed-in device, the finished design appears in
+   history.
+
+**Request path.**
+
+- `POST /api/designs` is behind Access, like the rest of the app. The Worker
+  validates the request against the same contract the browser uses
+  (`contract.rs` / zod), rejects sequences over the size cap, and creates a
+  Workflow instance.
+- **The instance id is a hash of the canonical request plus the optimizer's
+  `.wasm` digest.** Designs are deterministic given that pair, so a
+  resubmitted request finds its existing instance rather than paying twice.
+  `create()` throws on an id that is still within retention, which is the
+  dedupe signal. Including the digest means a new optimizer build never
+  serves a stale design.
+- The Access JWT's email is recorded in the instance params, so history can
+  show who ran what and deletion can be limited to the owner.
+
+**The Workflow.**
+
+- One step, `design`, runs the Rust WebAssembly with `cpu_ms = 300000`
+  (5 minutes) and returns the result. A step return value is capped at
+  1 MiB. A 45 kb design is a few hundred KB, but if a result ever exceeds
+  ~900 KB, write it to R2 and return the key.
+- Retention: `successRetention: "30 days"` and `errorRetention: "7 days"`,
+  the Paid plan's maximums.
+- If the step exceeds the CPU limit, the instance errors. Report it as "too
+  large for the cloud — run it in the browser". No retries for that case;
+  retry only transient failures.
+
+**Status, results, deletion.**
+
+- `GET /api/designs/:id` returns `instance.status()`: queued, running,
+  complete with the result, or errored.
+- Workflows can't stream progress from inside a step, so the UI shows an
+  estimate from sequence length, not a live bar.
+- The history entry (IndexedDB) stores the cloud id. On load, and when the
+  tab regains focus, running entries are polled with backoff. Once fetched,
+  the result is stored locally, so the 30-day retention only matters for
+  devices that never opened it.
+- `DELETE /api/designs/:id` calls `instance.delete()`, which removes the
+  stored state; history has a "delete from cloud" action. `?job=<id>` links
+  work again for anyone signed in to the lab.
+
+**Guards.**
+
+- Size cap at about 45 kb, estimated from the measured scaling and enforced
+  on both client and server.
+- Cloudflare's Rate Limiting binding per signed-in user, for example 20 cloud
+  designs an hour.
+- A Workers spending limit on the account as a backstop. At the measured
+  scale, 1,500 designs a month costs about $0.30 over the $5 base.
+
+**MCP.** `submit_design` stays inline: an agent wants the tool result in the
+same turn. Optionally, `submit_design` could hand very large sequences to
+the same Workflow and return an id for `get_design`, which is the old async
+contract, kept for the cases that would otherwise time out.
+
+**Tests.**
+
+- Unit tests for the id derivation, so the same request and digest always
+  give the same id, and anything else differs.
+- The Worker and Workflow under `@cloudflare/vitest-pool-workers`, including
+  the CPU-limit error path.
+- A parity check that a cloud design equals the browser design for the
+  fixture genes, since it's the same `.wasm` and the same seed.
+- An e2e test that runs a cloud design, closes the page, reopens it and finds
+  the result.
+
+**Not in scope.** Checkpointing for titin-scale genes (over 45 kb), and
+Containers. Revisit only if someone needs them.
+
 ## Cloudflare features worth taking
 
 | Feature               | Why it matters here                                                                                          |
