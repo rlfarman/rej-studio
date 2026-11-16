@@ -16,6 +16,14 @@ const nextConfig: NextConfig = {
   // Gated behind DOCKER_BUILD to avoid changing Vercel/CF deploy behavior.
   ...(process.env.DOCKER_BUILD === 'true' && { output: 'standalone' }),
   cacheComponents: true,
+  // Prefetch one reusable App Shell per route instead of one prefetch per
+  // visible link. Requires cacheComponents; becomes the default in Next 17.
+  partialPrefetching: true,
+  // React Compiler 1.0 (stable since Next 16): automatic memoization, so
+  // components don't need hand-written useMemo/useCallback. Uses the stable
+  // Babel plugin; Next only applies it to files with JSX or hooks. The Rust
+  // port (experimental.turbopackRustReactCompiler) is still experimental.
+  reactCompiler: true,
   experimental: {
     optimizePackageImports: [
       'motion',
