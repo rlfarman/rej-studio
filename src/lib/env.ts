@@ -15,16 +15,6 @@ import { z } from 'zod'
 
 const isProd = process.env.NODE_ENV === 'production'
 
-// Treat `FOO=` in a .env file as unset rather than as an empty string.
-const optionalUrl = z.preprocess(
-  (v) => (v === '' ? undefined : v),
-  z.url().optional(),
-)
-const optionalString = z.preprocess(
-  (v) => (v === '' ? undefined : v),
-  z.string().optional(),
-)
-
 const serverSchema = z
   .object({
     NODE_ENV: z
@@ -40,12 +30,12 @@ const serverSchema = z
     // Compute backend. In production, must be "modal". In dev, "local" (or
     // unset) falls through to the uvicorn dev server.
     COMPUTE_BACKEND: z.enum(['modal', 'local']).optional(),
-    MODAL_API_URL: optionalUrl,
+    MODAL_API_URL: z.url().optional(),
     // Bearer token the server sends to the Modal endpoint, so the optimizer
     // isn't callable by anyone who learns its URL. Optional for now; a
     // production deploy without it logs a warning (see parseEnv).
-    MODAL_API_TOKEN: optionalString,
-    LOCAL_API_URL: optionalUrl,
+    MODAL_API_TOKEN: z.string().optional(),
+    LOCAL_API_URL: z.url().optional(),
 
     // Shared-password auth for the site. Gate only engages when
     // BASIC_AUTH_PASSWORD is set; SESSION_SECRET is then required so we can
@@ -67,7 +57,7 @@ const serverSchema = z
     SENTRY_AUTH_TOKEN: z.string().optional(),
 
     // OpenTelemetry — vendor-neutral. Axiom, Grafana, Honeycomb, etc.
-    OTEL_EXPORTER_OTLP_ENDPOINT: optionalUrl,
+    OTEL_EXPORTER_OTLP_ENDPOINT: z.url().optional(),
     OTEL_EXPORTER_OTLP_HEADERS: z.string().optional(),
     OTEL_SERVICE_NAME: z.string().optional(),
   })
@@ -127,12 +117,12 @@ const clientSchema = z
       .optional(),
 
     // Sentry DSN (client-side). When unset, Sentry is not initialised.
-    NEXT_PUBLIC_SENTRY_DSN: optionalUrl,
+    NEXT_PUBLIC_SENTRY_DSN: z.url().optional(),
 
     // Canonical site URL for metadata, OG images, sitemap, and robots.txt.
     // Required in production to prevent hardcoded fallback from silently
     // serving the wrong URL. In dev, defaults to https://rejstudio.com.
-    NEXT_PUBLIC_SITE_URL: optionalUrl,
+    NEXT_PUBLIC_SITE_URL: z.url().optional(),
 
     // Feature flag: enable the experimental multi-split (two split points)
     // UI in the design tool. Hidden by default for the preview release; the
@@ -152,8 +142,13 @@ const clientSchema = z
   })
 
 function parseEnv() {
-  const serverResult = serverSchema.safeParse(process.env)
-  const clientResult = clientSchema.safeParse(process.env)
+  // A blank `FOO=` line (as in .env.example) means unset, not "": otherwise
+  // every optional enum, URL and min-length check rejects the empty string.
+  const source = Object.fromEntries(
+    Object.entries(process.env).filter(([, value]) => value !== ''),
+  )
+  const serverResult = serverSchema.safeParse(source)
+  const clientResult = clientSchema.safeParse(source)
 
   if (!serverResult.success || !clientResult.success) {
     const issues = [

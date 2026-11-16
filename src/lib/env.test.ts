@@ -47,6 +47,25 @@ describe('env', () => {
     )
   })
 
+  it('treats blank values (as in .env.example) as unset', async () => {
+    vi.stubEnv('NODE_ENV', 'development')
+    for (const key of [
+      'DATABASE_URL',
+      'COMPUTE_BACKEND',
+      'MODAL_API_URL',
+      'SESSION_SECRET',
+      'NEXT_PUBLIC_GTM_ID',
+      'NEXT_PUBLIC_SENTRY_DSN',
+      'NEXT_PUBLIC_SITE_URL',
+      'NEXT_PUBLIC_ENABLE_MULTI_SPLIT',
+    ]) {
+      vi.stubEnv(key, '')
+    }
+    const env = await loadEnv()
+    expect(env.COMPUTE_BACKEND).toBeUndefined()
+    expect(env.NEXT_PUBLIC_GTM_ID).toBeUndefined()
+  })
+
   it('rejects a malformed URL', async () => {
     vi.stubEnv('MODAL_API_URL', 'not a url')
     await expect(loadEnv()).rejects.toThrow(/MODAL_API_URL/)
