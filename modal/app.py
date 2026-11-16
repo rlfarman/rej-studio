@@ -58,11 +58,13 @@ project_root = Path(__file__).parent.parent
 # image with the repo-root pyproject.toml + uv.lock. Modal doesn't pass
 # --no-dev itself, so do it here: ruff/pyright/pytest stay out of production,
 # and the `deploy` group (the Modal client) isn't requested either.
-# Python 3.13 matches pyproject's requires-python, CI and the dev Dockerfile.
+# Python 3.14 matches pyproject's requires-python, CI and the dev Dockerfile.
+# uv_sync and Python 3.14 both need image builder 2025.06+; deploys pin
+# MODAL_IMAGE_BUILDER_VERSION=2026.10 (see modal-deploy.yml / modal/README.md).
 # UV_VERSION matches the uv used to write the lock (and setup-uv in CI).
 UV_VERSION = "0.13.8"
 image = (
-    modal.Image.debian_slim(python_version="3.13")
+    modal.Image.debian_slim(python_version="3.14")
     .uv_sync(str(project_root), extra_options="--no-dev", uv_version=UV_VERSION)
     .add_local_file(project_root / "python" / "algorithm.py", remote_path="/root/algorithm.py")
     .add_local_file(project_root / "python" / "telemetry.py", remote_path="/root/telemetry.py")

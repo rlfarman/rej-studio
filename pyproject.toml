@@ -11,10 +11,9 @@
 name = "rej-studio-optimizer"
 version = "0.0.0"
 description = "DNA optimization backend for REJ Studio (FastAPI + DNA Chisel)"
-# Python 3.13 everywhere: here, the Modal image, CI and the dev Dockerfile.
-# 3.14 would need Modal image builder 2025.06+; 3.13 builds on every builder
-# version since 2024.10.
-requires-python = ">=3.13,<3.14"
+# Python 3.14 everywhere: here, .python-version, the Modal image (built with
+# image builder 2026.10, pinned in modal-deploy.yml), CI and the dev Dockerfile.
+requires-python = ">=3.14,<3.15"
 dependencies = [
     # Web API. The [standard] extra is what Modal web endpoints expect, and it
     # brings uvicorn for the local dev server.
@@ -58,7 +57,7 @@ package = false
 
 [tool.ruff]
 line-length = 100
-target-version = "py313"
+target-version = "py314"
 extend-exclude = ["venv", ".venv", "scripts/build-db.py"]
 
 [tool.ruff.lint]
@@ -82,7 +81,7 @@ ignore = [
 [tool.pyright]
 include = ["python", "modal"]
 exclude = ["venv", ".venv", "**/__pycache__"]
-pythonVersion = "3.13"
+pythonVersion = "3.14"
 typeCheckingMode = "basic"
 reportMissingImports = true
 reportMissingTypeStubs = false

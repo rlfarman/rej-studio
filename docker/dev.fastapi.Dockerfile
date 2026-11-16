@@ -1,5 +1,5 @@
-# Python 3.13 matches pyproject's requires-python, the Modal image and CI.
-FROM python:3.13-slim
+# Python 3.14 matches pyproject's requires-python, the Modal image and CI.
+FROM python:3.14-slim
 
 # uv, pinned to the version that wrote uv.lock (same as the Modal image and CI).
 COPY --from=ghcr.io/astral-sh/uv:0.13.8 /uv /uvx /bin/

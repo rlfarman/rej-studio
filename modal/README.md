@@ -11,12 +11,12 @@ uv sync --group deploy
 uv run modal setup
 ```
 
-Dependencies live in the repo-root `pyproject.toml` and are pinned in `uv.lock`. The image is built from that same lock with `Image.uv_sync` (runtime dependencies only, on Python 3.13), so production changes only when the lock does. To change a dependency, use `uv add` / `uv lock --upgrade-package <name>` rather than editing `uv.lock` by hand. `uv_sync` needs Modal image builder version 2025.06 or newer (Modal workspace settings); older builders require `modal` itself in the installed dependencies.
+Dependencies live in the repo-root `pyproject.toml` and are pinned in `uv.lock`. The image is built from that same lock with `Image.uv_sync` (runtime dependencies only, on Python 3.14), so production changes only when the lock does. To change a dependency, use `uv add` / `uv lock --upgrade-package <name>` rather than editing `uv.lock` by hand.
 
-2. Deploy (the algorithm is sourced from `python/algorithm.py` automatically):
+2. Deploy (the algorithm is sourced from `python/algorithm.py` automatically). Pin the image builder the same way CI does (`.github/workflows/modal-deploy.yml`): `uv_sync` and Python 3.14 both need builder 2025.06 or newer, and the env var overrides whatever the workspace default is:
 
 ```bash
-uv run modal deploy modal/app.py
+MODAL_IMAGE_BUILDER_VERSION=2026.10 uv run modal deploy modal/app.py
 ```
 
 After deploying, Modal will print the web endpoint URL. Set this as `MODAL_API_URL` in your `.env.local`:

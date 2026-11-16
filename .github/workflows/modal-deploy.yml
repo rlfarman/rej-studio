@@ -45,6 +45,13 @@ jobs:
           MODAL_TOKEN_ID: ${{ secrets.MODAL_TOKEN_ID }}
           MODAL_TOKEN_SECRET: ${{ secrets.MODAL_TOKEN_SECRET }}
           GIT_SHA: ${{ github.sha }}
+          # Pin the image builder instead of inheriting the workspace default.
+          # The image needs Image.uv_sync and Python 3.14, which both require
+          # builder 2025.06+; 2026.10 is the newest stable version the pinned
+          # Modal client (modal==1.6.4) accepts. The client reads
+          # MODAL_IMAGE_BUILDER_VERSION before the workspace setting. Changing
+          # this rebuilds the image from scratch on the next deploy.
+          MODAL_IMAGE_BUILDER_VERSION: '2026.10'
         run: uv run --frozen --no-sync modal deploy modal/app.py
 
       - name: Tag deploy
