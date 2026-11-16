@@ -16,6 +16,9 @@ from .contracts import (
     ProcessOptions,
     ProcessRequest,
     ProcessResult,
+    RunRecord,
+    RunRecordInput,
+    RunRecordVersions,
     SelectedWggwSite,
     WggwSiteInfo,
 )
@@ -30,6 +33,9 @@ __all__ = [
     "ProcessOptions",
     "ProcessRequest",
     "ProcessResult",
+    "RunRecord",
+    "RunRecordInput",
+    "RunRecordVersions",
     "SelectedWggwSite",
     "WggwSiteInfo",
     "app",
@@ -50,6 +56,7 @@ def process_gene_json(request: ProcessRequest):
             CDS=request.CDS,
             name=request.name,
             OPTIONS=request.to_options_dict(),
+            corpus_version=request.corpus_version,
         )
     except ValueError as e:
         # Bad input that got past the model (e.g. an explicit WGGW rewrite

@@ -340,6 +340,7 @@ export const designToolCopy = {
       aavPackaging: 'AAV packaging',
       wggwDetails: 'WGGW motif details',
       objectivesReport: 'Objectives report',
+      runRecord: 'Run record',
       replay: 'What changed',
     },
     summaries: {
@@ -412,6 +413,44 @@ export const designToolCopy = {
         score: 'Score',
         flagged: 'Regions flagged',
       },
+    },
+    runRecord: {
+      description:
+        'Everything needed to repeat or cite this run. Submitting the same sequence and options with the seed below gives the same design.',
+      summary: 'Repeatable',
+      unavailable:
+        'This result predates run records, so there is nothing to show. Run the design again to get one.',
+      fields: {
+        startedAt: 'Run at',
+        duration: 'Duration',
+        input: 'Input sequence',
+        inputValue: (length: string, sha256: string) =>
+          `${length} nt \u00b7 SHA-256 ${sha256}`,
+        seed: 'Seed',
+        algorithm: 'Algorithm',
+        commit: 'Commit',
+        dnachisel: 'DNAChisel',
+        python: 'Python',
+        // The dataset the deployment was serving, which is not a claim about
+        // where this sequence came from.
+        corpus: 'Gene corpus loaded',
+        options: 'Options applied',
+      },
+      optionsCount: (count: number) =>
+        `${count} option${count === 1 ? '' : 's'}`,
+      methodsHeading: 'Methods',
+      copyRecord: 'Copy record',
+      copyRecordAria: 'Copy the run record as JSON',
+      copyMethods: 'Copy methods',
+      copyMethodsAria: 'Copy the methods paragraph',
+      downloadRecord: 'Download JSON',
+      downloadRecordAria: 'Download the run record as a JSON file',
+      copiedRecord: 'Run record copied',
+      copiedMethods: 'Methods paragraph copied',
+      tableCaption: 'The facts recorded for this run',
+      optionsTableCaption: 'The options applied to this run',
+      optionName: 'Option',
+      optionValue: 'Value',
     },
     charts: {
       gcContent: {

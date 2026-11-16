@@ -227,6 +227,7 @@ def run_job(params: dict) -> dict:
             name=params["name"],
             OPTIONS=params["options"],
             on_progress=on_progress,
+            corpus_version=params.get("corpus_version"),
         )
         _close_stage(time.monotonic())
         _log(
@@ -387,13 +388,22 @@ class JobRequest(BaseModel):
     CDS: str
     name: str
     options: ProcessOptions = ProcessOptions()
+    # The gene dataset the calling deployment is serving, when it knows its
+    # name. Goes into the run record as a fact about the deployment, not about
+    # where this sequence came from — the caller cannot tell.
+    corpus_version: str | None = None
 
     def to_params(self) -> dict:
         """Payload for the worker, with the split point already resolved."""
         cds = normalize_cds(self.CDS)
         options = self.options.model_dump()
         options["split_point"] = self.options.resolved_split_point(len(cds))
-        return {"CDS": cds, "name": normalize_name(self.name), "options": options}
+        return {
+            "CDS": cds,
+            "name": normalize_name(self.name),
+            "options": options,
+            "corpus_version": self.corpus_version,
+        }
 
 
 class JobResponse(BaseModel):
