@@ -127,3 +127,18 @@ describe('findSimilarGenes', () => {
     expect(mockFetchSimilar).toHaveBeenCalledWith('A'.repeat(20))
   })
 })
+
+describe('searchGenes auth gate', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs()
+  })
+
+  it('rejects callers without a session when the gate is on', async () => {
+    vi.stubEnv('BASIC_AUTH_PASSWORD', 'hunter2')
+    vi.stubEnv('SESSION_SECRET', 'test-secret-that-is-at-least-32-chars-long')
+    await expect(searchGenes('BRCA1')).rejects.toThrow(
+      'Authentication required.',
+    )
+    expect(mockFetchBySearch).not.toHaveBeenCalled()
+  })
+})

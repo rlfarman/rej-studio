@@ -17,11 +17,20 @@ function getClientIp(req: NextRequest): string {
   return req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
 }
 
-function safeReturnTo(raw: string | null | undefined): string {
-  if (!raw) return '/'
-  // Only allow internal paths to prevent open redirects.
-  if (raw.startsWith('/') && !raw.startsWith('//')) return raw
-  return '/'
+/**
+ * Resolve `return_to` to a same-origin URL, falling back to `/`. A prefix
+ * check alone isn't enough to prevent open redirects: URL parsing treats a
+ * backslash like a slash, so `/\evil.com` resolves to https://evil.com/.
+ */
+function safeReturnTo(raw: string, base: string): URL {
+  const fallback = new URL('/', base)
+  if (!raw.startsWith('/')) return fallback
+  try {
+    const url = new URL(raw, base)
+    return url.origin === fallback.origin ? url : fallback
+  } catch {
+    return fallback
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -33,7 +42,7 @@ export async function POST(req: NextRequest) {
 
   const form = await req.formData()
   const password = String(form.get('password') ?? '')
-  const returnTo = safeReturnTo(String(form.get('return_to') ?? ''))
+  const returnTo = safeReturnTo(String(form.get('return_to') ?? ''), req.url)
 
   const expected = process.env.BASIC_AUTH_PASSWORD
   if (!expected) {
@@ -44,14 +53,13 @@ export async function POST(req: NextRequest) {
   if (!matches) {
     const url = new URL('/login', req.url)
     url.searchParams.set('error', '1')
-    if (returnTo !== '/') url.searchParams.set('return_to', returnTo)
+    const returnPath = returnTo.pathname + returnTo.search
+    if (returnPath !== '/') url.searchParams.set('return_to', returnPath)
     return NextResponse.redirect(url, { status: 303 })
   }
 
   const token = await signSession()
-  const response = NextResponse.redirect(new URL(returnTo, req.url), {
-    status: 303,
-  })
+  const response = NextResponse.redirect(returnTo, { status: 303 })
   response.cookies.set(SESSION_COOKIE_NAME, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',

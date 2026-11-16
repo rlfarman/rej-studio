@@ -143,9 +143,9 @@ Features are self-contained modules (`api/`, `components/`, `hooks/`, `stores/`,
 
 ### Next.js API Routes
 
-- **`GET /api/health`** — System health check (DB latency, Modal status). Rate-limited; set `HEALTH_AUTH_TOKEN` for detailed output.
+- **`GET /api/health`** — Public liveness check. DB and Modal checks run only with `Authorization: Bearer $HEALTH_AUTH_TOKEN` (or outside production when no token is set). Rate-limited.
 - **`GET /api/version`** — Build SHA, timestamp, package version.
-- **`POST /api/auth`** — Basic auth endpoint (when `BASIC_AUTH_USER` / `BASIC_AUTH_PASSWORD` are set).
+- **`POST /api/login`** / **`POST /api/logout`** — Shared-password session login/logout (when `BASIC_AUTH_PASSWORD` is set).
 
 ### FastAPI Backend
 
@@ -185,13 +185,13 @@ Set `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` to enable. Without t
 
 - **HSTS** — `Strict-Transport-Security` with preload directive via `next.config.ts` headers.
 - **CSRF** — Origin validation in `src/proxy.ts` against a shared allowlist (`src/lib/allowed-origins.ts`).
-- **Rate-limited auth** — Basic auth login attempts capped at 5/min per IP (inline in proxy).
+- **Session gate** — When `BASIC_AUTH_PASSWORD` is set, the proxy redirects page loads without a session to `/login` and rejects API calls and server actions with 401. Login attempts are capped at 5/min per IP.
 - **Request size cap** — 256 KB body limit for mutating requests (proxy).
 - **Input validation** — Zod schemas at every server action boundary.
 
 ### Health & Version Endpoints
 
-- **`GET /api/health`** — DB ping with latency percentiles (p50/p95/p99), Modal connectivity check. Supports `Authorization: Bearer <token>` for detailed output.
+- **`GET /api/health`** — Anonymous callers get liveness only (no DB query, so probes don't keep Neon awake). With `Authorization: Bearer <token>`: DB ping with latency percentiles (p50/p95/p99) and a Modal connectivity check.
 - **`GET /api/version`** — Build SHA, timestamp, and package version.
 
 ## Observability

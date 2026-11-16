@@ -12,6 +12,7 @@ import { createUpstashRateLimiter, redis } from '@/lib/upstash'
 import { env } from '@/lib/env'
 import { withRetry, isTransientError } from '@/lib/retry'
 import { createLogger } from '@/lib/logger'
+import { requireSession } from '@/lib/auth/require-session'
 
 const log = createLogger('jobs')
 
@@ -272,6 +273,7 @@ function getLocalApiUrl() {
 export async function submitJob(
   params: JobParams,
 ): Promise<{ jobId: string; result?: Record<string, unknown> }> {
+  await requireSession()
   const validated = jobParamsSchema.parse(params)
   // Normalize to uppercase — the backend and algorithm expect uppercase
   // nucleotides. This prevents case-confusion bugs between mixed-case input
@@ -378,6 +380,7 @@ export async function submitJob(
 }
 
 export async function getJobStatus(jobId: string): Promise<JobStatusResult> {
+  await requireSession()
   const validatedId = jobIdSchema.parse(jobId)
 
   if (isModalBackend()) {
@@ -401,6 +404,7 @@ export async function getJobStatus(jobId: string): Promise<JobStatusResult> {
 }
 
 export async function cancelJob(jobId: string): Promise<JobStatusResult> {
+  await requireSession()
   const validatedId = jobIdSchema.parse(jobId)
 
   if (isModalBackend()) {
