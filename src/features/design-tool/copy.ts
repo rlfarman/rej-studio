@@ -76,6 +76,23 @@ export const designToolCopy = {
     browserFailed:
       'The designer stopped unexpectedly in your browser. Running again usually works.',
   },
+  /** Designs that run in this browser while the person is elsewhere. */
+  browserRun: {
+    notifyOptIn: 'Notify me when done',
+    notifyOptInHint:
+      'Get a browser notification when a design finishes while this tab is in the background.',
+    completedTitle: 'Design ready',
+    completedBody: (name: string) => `${name} has finished.`,
+    failedTitle: 'Design failed',
+    failedBody: (name: string, reason: string) => `${name}: ${reason}`,
+    interrupted:
+      'Interrupted — the tab closed before this design finished. Run it again for the identical design.',
+    interruptedToast: (count: number) =>
+      count === 1
+        ? 'A design was interrupted when its tab closed.'
+        : `${count} designs were interrupted when their tab closed.`,
+    interruptedToastAction: 'Open',
+  },
   draft: {
     restored: 'Restored your unsaved draft.',
     discard: 'Discard draft',

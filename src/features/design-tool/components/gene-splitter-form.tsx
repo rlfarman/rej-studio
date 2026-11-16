@@ -23,6 +23,7 @@ import { useFormDraft } from '@/features/design-tool/hooks/use-form-draft'
 import { CustomizationOptions } from './customization-options'
 import { DesignObjectives } from './optimization-options'
 import { SubmitButton } from './submit-button'
+import { FinishNotificationOptIn } from './finish-notification-opt-in'
 import { FieldHelp } from './field-help'
 import { RunSummary } from './run-summary'
 import { ResultsPanel } from './results-panel'
@@ -284,11 +285,15 @@ export function GeneSplitterForm({
                 and within thumb reach on a phone. */}
             <div className="bg-background/85 border-border supports-[backdrop-filter]:bg-background/70 sticky bottom-0 z-20 -mx-1 flex flex-wrap items-center justify-between gap-3 rounded-t-2xl border-t px-4 py-3 backdrop-blur">
               <RunSummary />
-              <SubmitButton
-                isJobRunning={job.isLoading}
-                isJobComplete={job.status === 'completed'}
-                stage={job.stage}
-              />
+              <div className="flex flex-wrap items-center gap-2">
+                {/* Only browser runs can finish unseen in a background tab. */}
+                {job.runsInBrowser && <FinishNotificationOptIn />}
+                <SubmitButton
+                  isJobRunning={job.isLoading}
+                  isJobComplete={job.status === 'completed'}
+                  stage={job.stage}
+                />
+              </div>
             </div>
           </>
         )}

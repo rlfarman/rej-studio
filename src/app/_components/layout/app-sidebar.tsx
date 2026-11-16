@@ -17,6 +17,7 @@ import { FavoriteGenes } from '@/features/gene-search/components/favorites-panel
 import { RecentGenes } from '@/features/gene-search/components/recent-genes-panel'
 import { RecentJobs } from '@/features/design-tool/components/recent-jobs-panel'
 import { JobWatcher } from '@/features/design-tool/components/job-watcher'
+import { BrowserRuns } from '@/features/design-tool/components/browser-runs'
 import { SidebarMenu } from '@/app/_components/layout/sidebar-menu'
 import {
   useJobHistory,
@@ -132,6 +133,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       {/* Outside <Sidebar>: on phones the sidebar is a sheet whose content
           unmounts while closed, which stopped running jobs from polling. */}
       <JobWatcher />
+      <BrowserRuns />
       <Sidebar collapsible="icon" {...props}>
         <SidebarHeader>
           <SidebarMenuPrimitive>

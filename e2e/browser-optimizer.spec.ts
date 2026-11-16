@@ -158,3 +158,98 @@ test('an old localStorage history moves to IndexedDB', async ({ page }) => {
     await page.evaluate(() => localStorage.getItem('rej-studio:job-history')),
   ).toBeNull()
 })
+
+interface StoredEntry {
+  id: string
+  status: string
+  result: { optimized_sequence: string } | null
+  [key: string]: unknown
+}
+
+// Reads, or replaces then reads, the whole stored history.
+function history(page: Page, write?: StoredEntry[]) {
+  return page.evaluate(
+    (entries) =>
+      new Promise<StoredEntry[]>((resolve, reject) => {
+        const open = indexedDB.open('rej-studio-job-history')
+        open.onerror = () => reject(open.error)
+        open.onsuccess = () => {
+          const db = open.result
+          const tx = db.transaction(
+            'keyval',
+            entries ? 'readwrite' : 'readonly',
+          )
+          const store = tx.objectStore('keyval')
+          const key = 'rej-studio:job-history'
+          if (entries) store.put({ state: { entries }, version: 0 }, key)
+          const get = store.get(key)
+          tx.oncomplete = () => {
+            db.close()
+            const value = get.result as
+              { state: { entries: StoredEntry[] } } | undefined
+            resolve(value?.state.entries ?? [])
+          }
+          tx.onerror = () => reject(tx.error)
+        }
+      }),
+    write ?? null,
+  )
+}
+
+test('warns before closing the tab while a design runs', async ({ page }) => {
+  await page.goto(GENE_PAGE)
+  await expect(page.locator('textarea').first()).toHaveValue(/^ATG[ACGT]+$/i)
+  await page.getByRole('button', { name: /run designer/i }).click()
+  await expect(
+    page.getByRole('button', { name: 'Cancel', exact: true }),
+  ).toBeVisible()
+
+  const dialog = page.waitForEvent('dialog')
+  await page.close({ runBeforeUnload: true })
+  const prompt = await dialog
+  expect(prompt.type()).toBe('beforeunload')
+  await prompt.dismiss()
+})
+
+test('a run cut off by a closed tab is offered again and redesigns identically', async ({
+  page,
+}) => {
+  await page.goto(GENE_PAGE)
+  await expect(page.locator('textarea').first()).toHaveValue(/^ATG[ACGT]+$/i)
+  await page.getByRole('button', { name: /run designer/i }).click()
+  await expect(page.getByText(/split after base/i).first()).toBeVisible({
+    timeout: 120_000,
+  })
+  let finished: StoredEntry | undefined
+  await expect
+    .poll(async () => (finished = (await history(page))[0])?.status)
+    .toBe('completed')
+
+  // What a tab closed mid-run leaves behind: the same inputs, still running.
+  await history(page, [
+    { ...finished!, id: 'browser-e2e-orphan', status: 'running', result: null },
+  ])
+  await page.goto('/')
+
+  await expect(page.getByText(/interrupted when its tab closed/i)).toBeVisible()
+  await page.getByRole('button', { name: 'Open', exact: true }).click()
+  await expect(
+    page.getByText(/tab closed before this design/i).first(),
+  ).toBeVisible()
+
+  await page
+    .getByRole('button', { name: /run again/i })
+    .first()
+    .click()
+  await expect(page.getByText(/split after base/i).first()).toBeVisible({
+    timeout: 120_000,
+  })
+  let rerun: StoredEntry | undefined
+  await expect
+    .poll(async () => (rerun = (await history(page))[0])?.status)
+    .toBe('completed')
+  expect(rerun!.id).not.toBe('browser-e2e-orphan')
+  expect(rerun!.result?.optimized_sequence).toBe(
+    finished!.result?.optimized_sequence,
+  )
+})

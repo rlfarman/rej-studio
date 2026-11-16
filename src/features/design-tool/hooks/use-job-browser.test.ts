@@ -39,6 +39,11 @@ vi.mock('@/features/design-tool/api/browser-optimizer', () => ({
   terminateOptimizerWorker: vi.fn(),
 }))
 
+vi.mock('@/features/design-tool/utils/finish-notification', () => ({
+  notifyRunSettled: vi.fn(),
+}))
+
+import { notifyRunSettled } from '@/features/design-tool/utils/finish-notification'
 import {
   submitJob as submitJobAction,
   cancelJob as cancelJobAction,
@@ -51,6 +56,7 @@ import {
 import {
   isBrowserJobId,
   useJobHistory,
+  whenJobHistoryHydrated,
 } from '@/features/design-tool/hooks/use-job-history'
 import { useJob } from './use-job'
 
@@ -59,6 +65,13 @@ const mockCancel = vi.mocked(cancelJobAction)
 const mockDesign = vi.mocked(designInBrowser)
 const mockSupported = vi.mocked(browserOptimizerSupported)
 const mockWarm = vi.mocked(warmOptimizerWorker)
+const mockNotify = vi.mocked(notifyRunSettled)
+
+const unloadPrevented = () => {
+  const event = new Event('beforeunload', { cancelable: true })
+  window.dispatchEvent(event)
+  return event.defaultPrevented
+}
 
 function createWrapper() {
   const client = new QueryClient({
@@ -112,8 +125,9 @@ const succeeds = (): JobActionResult<BackendProcessResult> => ({
   data: RESULT,
 })
 
-beforeEach(() => {
+beforeEach(async () => {
   vi.clearAllMocks()
+  await whenJobHistoryHydrated()
   mockSupported.mockReturnValue(true)
   useJobHistory.setState({ entries: [], progressById: {} })
   localStorage.clear()
@@ -150,9 +164,11 @@ describe('useJob with the in-browser optimizer', () => {
 
   it('feeds progress into the history store as the design runs', async () => {
     let report: ((fraction: number, stage: string) => void) | undefined
+    let settle!: (value: JobActionResult<BackendProcessResult>) => void
     mockDesign.mockImplementation((_params, callbacks) => {
       report = callbacks?.onProgress
-      return new Promise(() => {}) // never settles: the run stays in flight
+      // Stays in flight until the end of the test.
+      return new Promise((resolve) => (settle = resolve))
     })
 
     const { result } = renderHook(() => useJob(), { wrapper: createWrapper() })
@@ -168,6 +184,10 @@ describe('useJob with the in-browser optimizer', () => {
       expect(result.current.stage).toBe('Optimizing sequence')
     })
     expect(result.current.status).toBe('running')
+
+    // Settle it, so the run's tab-close guard doesn't leak into later tests.
+    await act(async () => settle(succeeds()))
+    await waitFor(() => expect(result.current.status).toBe('completed'))
   })
 
   it('records a failed design against the same entry', async () => {
@@ -223,6 +243,71 @@ describe('useJob with the in-browser optimizer', () => {
   it('starts loading the optimizer as soon as the form appears', () => {
     renderHook(() => useJob(), { wrapper: createWrapper() })
     expect(mockWarm).toHaveBeenCalled()
+  })
+
+  it('warns before the tab closes only while a run is in flight', async () => {
+    let finish!: (value: JobActionResult<BackendProcessResult>) => void
+    mockDesign.mockImplementation(
+      () => new Promise((resolve) => (finish = resolve)),
+    )
+    const { result } = renderHook(() => useJob(), { wrapper: createWrapper() })
+    expect(unloadPrevented()).toBe(false)
+
+    act(() => {
+      void result.current.submitJob(FORM_VALUES)
+    })
+    await waitFor(() => expect(mockDesign).toHaveBeenCalled())
+    expect(unloadPrevented()).toBe(true)
+
+    await act(async () => finish(succeeds()))
+    await waitFor(() => expect(result.current.status).toBe('completed'))
+    expect(unloadPrevented()).toBe(false)
+  })
+
+  it('offers a finish notification on completion and failure, not on cancel', async () => {
+    mockDesign.mockResolvedValueOnce(succeeds())
+    const { result } = renderHook(() => useJob(), { wrapper: createWrapper() })
+    await act(async () => {
+      await result.current.submitJob(FORM_VALUES)
+    })
+    expect(mockNotify).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        id: result.current.jobId,
+        title: 'Design ready',
+      }),
+    )
+
+    mockDesign.mockResolvedValueOnce({
+      ok: false,
+      error: { code: 'invalid_input', message: 'Bad', retriable: false },
+    })
+    await act(async () => {
+      await result.current.submitJob(FORM_VALUES)
+    })
+    expect(mockNotify).toHaveBeenLastCalledWith(
+      expect.objectContaining({ title: 'Design failed', body: 'Test: Bad' }),
+    )
+
+    mockNotify.mockClear()
+    mockDesign.mockResolvedValueOnce({
+      ok: false,
+      error: { code: 'cancelled', message: 'Cancelled', retriable: true },
+    })
+    await act(async () => {
+      await result.current.submitJob(FORM_VALUES)
+    })
+    expect(mockNotify).not.toHaveBeenCalled()
+  })
+
+  it('settles the entry and lifts the warning when the run throws', async () => {
+    mockDesign.mockRejectedValueOnce(new Error('worker crashed'))
+    const { result } = renderHook(() => useJob(), { wrapper: createWrapper() })
+    await act(async () => {
+      await result.current.submitJob(FORM_VALUES).catch(() => {})
+    })
+    const [entry] = useJobHistory.getState().entries
+    expect(entry.status).toBe('failed')
+    expect(unloadPrevented()).toBe(false)
   })
 
   it('falls back to the backend when the browser cannot run it', async () => {
