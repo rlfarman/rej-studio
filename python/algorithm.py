@@ -121,7 +121,7 @@ class _ProgressBridgeLogger(_ProgressBarLoggerBase):
             return
         try:
             v = int(value)
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             return
         if bar == "objective":
             if attr == "total":
@@ -466,7 +466,7 @@ def _serialize_evaluation_location(loc):
         if strand is not None:
             try:
                 strand = int(strand)
-            except (TypeError, ValueError):
+            except TypeError, ValueError:
                 strand = None
         return {"start": start, "end": end, "strand": strand}
     except Exception:
@@ -477,7 +477,7 @@ def _serialize_evaluation(ev):
     """Serialize a single DNAChisel ObjectiveEvaluation to a JSON-safe dict."""
     try:
         score = float(ev.score) if ev.score is not None else 0.0
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         score = 0.0
     try:
         passes = bool(ev.passes)
@@ -530,7 +530,7 @@ def build_objectives_report(problem):
 # (see _ProgressBridgeLogger); annotated so pyright doesn't infer `str` from
 # the default.
 def build_optimization_problem(
-    CDS, OPTIONS, logger: "str | _ProgressBarLoggerBase" = "bar", explicit_lock_region=None
+    CDS, OPTIONS, logger: str | _ProgressBarLoggerBase = "bar", explicit_lock_region=None
 ):
     """Create a DNAChisel problem using the configured objectives."""
     CDS = CDS.upper().replace("U", "T")

@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # Bootstrap a git worktree so the app can run from it.
 #
-# Symlinks venv/ and .env from the main repo, then runs pnpm install in the
-# worktree (a real install, not a node_modules symlink — Next 16's Turbopack
-# rejects symlinks that point outside the project root).
+# Symlinks .env from the main repo, creates the Python environment with
+# `uv sync`, then runs pnpm install in the worktree (a real install, not a
+# node_modules symlink — Next 16's Turbopack rejects symlinks that point
+# outside the project root).
 # Safe to re-run: skips steps that are already done.
 set -euo pipefail
 
@@ -32,17 +33,15 @@ if [ ! -e "$WORKTREE_ROOT/.env" ]; then
   fi
 fi
 
-# Python venv: create in the main repo if absent, then symlink here.
-# Creating in the main repo means all worktrees share one install.
-if [ ! -e "$WORKTREE_ROOT/venv" ]; then
-  if [ ! -d "$MAIN_REPO/venv" ]; then
-    echo "Creating Python venv..."
-    python3 -m venv "$MAIN_REPO/venv"
-    "$MAIN_REPO/venv/bin/pip" install -q -r "$MAIN_REPO/python/requirements.txt"
-    echo "Python venv created at $MAIN_REPO/venv"
-  fi
-  ln -s "$MAIN_REPO/venv" "$WORKTREE_ROOT/venv"
-  echo "Linked venv -> $MAIN_REPO/venv"
+# Python: uv creates the worktree's own .venv from uv.lock (runtime + dev
+# tools). uv's global cache hardlinks packages, so a per-worktree environment
+# is cheap and can't drift from the lock the way a shared venv symlink could.
+if command -v uv >/dev/null 2>&1; then
+  echo "Running uv sync..."
+  (cd "$WORKTREE_ROOT" && uv sync --frozen --quiet)
+  echo "Python environment ready at $WORKTREE_ROOT/.venv"
+else
+  echo "Warning: uv not found — install it (https://docs.astral.sh/uv/) to run the Python backend." >&2
 fi
 
 # Node deps: run a real install in the worktree. Symlinking node_modules from the

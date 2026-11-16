@@ -1,5 +1,8 @@
-# Python 3.11 matches the Modal image, python-ci.yml and the pip-compile lock.
-FROM python:3.11-slim
+# Python 3.14 matches pyproject's requires-python, the Modal image and CI.
+FROM python:3.14-slim
+
+# uv, pinned to the version that wrote uv.lock (same as the Modal image and CI).
+COPY --from=ghcr.io/astral-sh/uv:0.13.8 /uv /uvx /bin/
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends curl && \
@@ -7,11 +10,15 @@ RUN apt-get update && \
 
 WORKDIR /app
 
-COPY python/requirements.txt python/requirements.txt
-RUN python -m venv /app/venv && \
-    /app/venv/bin/pip install --no-cache-dir -r python/requirements.txt
+# Install from the lock before copying code so edits don't rebuild this layer.
+# --no-dev: the container only serves the API; lint/test tools stay on the host.
+ENV UV_PROJECT_ENVIRONMENT=/app/.venv \
+    UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-dev
 
-ENV PATH="/app/venv/bin:$PATH"
+ENV PATH="/app/.venv/bin:$PATH"
 
 COPY python/ python/
 
