@@ -1,7 +1,11 @@
 # Moving REJ Studio to Cloudflare
 
-A plan to retire the server. Written November 2026, after porting the
-optimizer to Rust and running it in the browser.
+A plan to retire the server that humans depend on. Written November 2026,
+after porting the optimizer to Rust and running it in the browser.
+
+**One server stays**, and deliberately: the MCP endpoint that lets a
+scientist's own agent search genes and run designs. See
+[Agent access](#agent-access-mcp). Everything else goes.
 
 **Nothing here has been started.** Step 0 is done and merged behind a flag;
 steps 1 to 4 are proposals. Each one ships on its own and makes the next
@@ -127,7 +131,8 @@ the lab have an identity provider the whole group can use?
 
 ## Step 4 — host on Cloudflare
 
-By this point the app is static plus, at most, one small Worker. Two routes:
+By this point the browser-facing app is static, and the only server left is
+the MCP endpoint. Two routes for the app itself:
 
 - **Static export.** Fewest moving parts. The remaining dynamic pieces (OG
   images, `/api/health`, `/api/version`) become pre-generated files or one
@@ -152,6 +157,55 @@ adapter can be skipped entirely.
 If being on Cloudflare sooner matters more than that, the alternative is a
 lift-and-shift through OpenNext now, accepting the risk and re-testing after
 each later step.
+
+## Agent access (MCP)
+
+REJ Studio exposes itself to AI assistants over MCP: `search_genes`,
+`get_gene`, `submit_design` and `get_design`, reachable with a named bearer
+token, plus an MCP Apps view so a finished design renders inside the chat
+host. The work lives on the `feat/mcp-server` and `feat/mcp-apps` branches.
+
+**This survives the migration, and Cloudflare suits it better than Vercel
+does.** But it is the one part of the product that genuinely needs a server,
+so "no backend" is the wrong way to describe the end state. The accurate
+description is: static for humans, one small Worker for agents.
+
+What the Worker needs, and where each piece comes from afterwards:
+
+| Need             | Today                      | After                                                  |
+| ---------------- | -------------------------- | ------------------------------------------------------ |
+| An HTTP endpoint | `/api/mcp` route handler   | a Worker                                               |
+| Gene lookups     | Neon                       | R2 binding over the static corpus                      |
+| Running a design | Modal                      | the same Rust crate, as WebAssembly                    |
+| Rate limiting    | Upstash                    | Cloudflare's Rate Limiting binding                     |
+| Caller identity  | `MCP_TOKENS` bearer tokens | the same, as a Worker secret, or Access service tokens |
+| The design view  | static HTML                | unchanged                                              |
+
+The port is close to mechanical, because the endpoint is already stateless:
+it builds a server per request with `createMcpHandler` and calls
+`handler.fetch(request)` — a `Request` in, a `Response` out, which is exactly
+a Worker's shape. Cloudflare now steers new MCP servers towards stateless
+handlers rather than the older session-backed `McpAgent`, so the existing
+design is already the one they recommend.
+
+**The one real design question** is the job model. Today `submit_design`
+returns a job id and the agent polls `get_design`, because a design on Modal
+took minutes. The Rust optimizer takes seconds, so there are two options:
+
+- **Run it inline** and have `submit_design` return the finished design. Far
+  simpler — no job state, no polling, no storage — but it changes the tool
+  contract and risks an MCP client timing out on a very large gene.
+- **Keep the asynchronous model**, which needs somewhere to hold job state: a
+  Durable Object per job, or Workflows.
+
+A reasonable middle: run inline when the sequence is small enough to finish
+quickly, and fall back to the asynchronous path beyond that. Decide this
+before porting, because it determines whether any state store is needed at
+all.
+
+**Sequencing:** the MCP endpoint depends on the optimizer and on gene
+lookups, so port it after steps 1 and 2, alongside step 4. Until then it
+keeps working as it does today.
 
 ## The big-gene fallback
 
@@ -178,8 +232,12 @@ local and private.
 | D1                    | If the lab later wants shared history rather than per-device                                                 |
 | Workers Issues        | Groups Worker errors and posts stack traces to a webhook; complements Sentry, which stays for browser errors |
 
-Not worth taking for this app: Durable Objects (no realtime collaboration),
-Workers AI, Hyperdrive (the database goes away), Zaraz (GTM goes away).
+Relevant only if agent access keeps its asynchronous job model: **Durable
+Objects** or **Workflows** to hold a design's state between `submit_design`
+and `get_design`, and the **Rate Limiting binding** to replace Upstash.
+
+Not worth taking for this app: Workers AI, Hyperdrive (the database goes
+away), Zaraz (GTM goes away).
 
 ## Open questions
 
@@ -191,7 +249,9 @@ Verify before committing:
    features?** Only matters if step 4 takes the lift-and-shift route.
 3. **What is the largest sequence the lab actually designs?** Decides whether
    the fallback is needed at all.
-4. **Is anyone relying on sharing a `?job=` link?** Browser designs exist only
+4. **Should `submit_design` return the design inline, or keep the job id and
+   polling?** Decides whether the MCP Worker needs any state store.
+5. **Is anyone relying on sharing a `?job=` link?** Browser designs exist only
    on the device that made them, so that capability goes away in step 1.
 
 ## What does not change
