@@ -106,9 +106,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: changes
     if: needs.changes.outputs.code == 'true'
-    permissions:
-      contents: read
-      pull-requests: write # coverage comment
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -116,19 +113,24 @@ jobs:
       - uses: $/.github/actions/setup
       - run: pnpm test:coverage
       - name: Upload coverage artifact
-        if: always()
+        if: success() || failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: coverage
           path: coverage/
           retention-days: 7
-      - name: Comment coverage on PR
-        if: github.event_name == 'pull_request'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Write coverage comment
+        if: github.event_name == 'pull_request' && (success() || failure())
         run: |
-          BODY=$(node scripts/comment-coverage.mjs)
-          gh pr comment "${{ github.event.pull_request.number }}" --body "$BODY" || true
+          mkdir -p "$RUNNER_TEMP/pr-comment"
+          node scripts/comment-coverage.mjs > "$RUNNER_TEMP/pr-comment/coverage.md"
+      - name: Upload coverage comment
+        if: github.event_name == 'pull_request' && (success() || failure())
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: pr-comment-coverage
+          path: ${{ runner.temp }}/pr-comment/coverage.md
+          retention-days: 1
 
   e2e:
     name: E2E (Playwright)
@@ -161,11 +163,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: changes
     if: needs.changes.outputs.code == 'true'
-    permissions:
-      contents: read
-      pull-requests: write # bundle-size comment
-    outputs:
-      bundle-delta: ${{ steps.budget.outputs.delta }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -182,32 +179,81 @@ jobs:
           COMPUTE_BACKEND: modal
           MODAL_API_URL: https://placeholder.modal.run
           NEXT_PUBLIC_SITE_URL: http://localhost:3000
-      - name: Enforce bundle-size budget
-        id: budget
-        # Sums all First-Load JS chunks in .next/static/chunks/ and fails if
-        # the total exceeds BUDGET_KB. Pure Node — no extra deps needed.
-        # Tune BUDGET_KB as the app grows; current value is a ceiling, not
-        # a target.
-        env:
-          BUDGET_KB: '3000'
-        run: node scripts/check-bundle-size.mjs
 
-      - name: Record bundle size
-        if: github.ref == 'refs/heads/main'
-        run: node scripts/record-bundle-size.mjs
-
-      - name: Comment bundle size on PR
+      # Bundle budgets: per-route first-load JS (gzip) from the build's
+      # route-bundle-stats.json. Each main build caches its stats under its
+      # SHA; a PR compares against its base commit's stats.
+      - name: Restore main's bundle stats
         if: github.event_name == 'pull_request'
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/bundle-stats/base.json
+          key: bundle-stats-${{ github.event.pull_request.base.sha }}
+          # A newer push can cancel main's build for the base commit, so fall
+          # back to the newest stats main saved (the comment names its SHA).
+          restore-keys: bundle-stats-
+      - name: Check bundle budgets
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_SHA: ${{ github.sha }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: >-
+          node scripts/bundle-size.mjs
+          --base "$RUNNER_TEMP/bundle-stats/base.json"
+          --out "$RUNNER_TEMP/bundle-stats/current.json"
+          --markdown "$RUNNER_TEMP/pr-comment/bundle-size.md"
+      - name: Upload bundle-size comment
+        if: github.event_name == 'pull_request' && (success() || failure())
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: pr-comment-bundle-size
+          path: ${{ runner.temp }}/pr-comment/bundle-size.md
+          retention-days: 1
+      - name: Keep stats as main's baseline
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: cp "$RUNNER_TEMP/bundle-stats/current.json" "$RUNNER_TEMP/bundle-stats/base.json"
+      - name: Save main's bundle stats
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/bundle-stats/base.json
+          key: bundle-stats-${{ github.sha }}
+
+  # Posts the coverage and bundle-size reports the jobs above leave as
+  # artifacts. The only job with a write token, and it runs no repo code.
+  pr-comments:
+    name: PR Comments
+    runs-on: ubuntu-latest
+    needs: [changes, test, build]
+    # Also after failures: an over-budget build is when the comment matters.
+    if: always() && github.event_name == 'pull_request' && needs.changes.outputs.code == 'true'
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: pr-comment-*
+          path: ${{ runner.temp }}/pr-comment
+          merge-multiple: true
+      - name: Post or update comments
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           set -euo pipefail
-          # Read base branch bundle size from history file (if it exists)
-          BASE_KB=0
-          if [ -f bundle-size-history.json ]; then
-            BASE_KB=$(node -e "const h=JSON.parse(require('fs').readFileSync('bundle-size-history.json','utf-8'));console.log(h.length?h[h.length-1].totalKB:0)")
-          fi
-          export BASE_BUNDLE_KB="$BASE_KB"
-          BODY=$(node scripts/comment-bundle-size.mjs)
-          gh pr comment "${{ github.event.pull_request.number }}" --body "$BODY" || true
+          shopt -s nullglob
+          for file in "$RUNNER_TEMP"/pr-comment/*.md; do
+            [ -s "$file" ] || continue
+            # Each body starts with a hidden marker line; edit the earlier
+            # comment that has it rather than adding one per push.
+            MARKER=$(head -n1 "$file")
+            export MARKER
+            id=$(gh api --paginate "repos/$GH_REPO/issues/$PR_NUMBER/comments" \
+              --jq '.[] | select(.user.login == "github-actions[bot]" and (.body | startswith(env.MARKER))) | .id' | head -n1)
+            if [ -n "$id" ]; then
+              gh api -X PATCH "repos/$GH_REPO/issues/comments/$id" -F "body=@$file" > /dev/null
+            else
+              # Fork PRs get a read-only token, so this can't post there.
+              gh api -X POST "repos/$GH_REPO/issues/$PR_NUMBER/comments" -F "body=@$file" > /dev/null \
+                || echo "::warning::Could not comment on the PR (read-only token on fork PRs)."
+            fi
+          done

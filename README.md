@@ -88,26 +88,26 @@ pnpm test:e2e      # Playwright smoke tests (gated next dev on :3000)
 
 ## Scripts
 
-| Command                   | Description                          |
-| ------------------------- | ------------------------------------ |
-| `pnpm dev`                | Start Next.js + FastAPI concurrently |
-| `pnpm build`              | Production build (Vercel target)     |
-| `pnpm start`              | Start production server              |
-| `pnpm lint`               | Run Oxlint, then ESLint              |
-| `pnpm lint:fix`           | Auto-fix lint issues                 |
-| `pnpm format`             | Format with Prettier                 |
-| `pnpm format:check`       | Check formatting without writing     |
-| `pnpm type-check`         | Type check with TypeScript 7         |
-| `pnpm test`               | Run unit tests (Vitest)              |
-| `pnpm test:e2e`           | Run Playwright smoke tests           |
-| `pnpm knip`               | Find unused exports, deps, and files |
-| `pnpm verify`             | Lint + type-check + unit tests       |
-| `ANALYZE=true pnpm build` | Build with bundle analyzer           |
-| `pnpm db:build`           | Emit JSONL seed from source CSV      |
-| `pnpm db:push`            | Create/update tables from schema.ts  |
-| `pnpm db:upload`          | Load JSONL into the DB via Drizzle   |
-| `pnpm db:studio`          | Browse DB with Drizzle Studio        |
-| `pnpm doctor`             | Check local dev environment health   |
+| Command             | Description                          |
+| ------------------- | ------------------------------------ |
+| `pnpm dev`          | Start Next.js + FastAPI concurrently |
+| `pnpm build`        | Production build (Vercel target)     |
+| `pnpm start`        | Start production server              |
+| `pnpm lint`         | Run Oxlint, then ESLint              |
+| `pnpm lint:fix`     | Auto-fix lint issues                 |
+| `pnpm format`       | Format with Prettier                 |
+| `pnpm format:check` | Check formatting without writing     |
+| `pnpm type-check`   | Type check with TypeScript 7         |
+| `pnpm test`         | Run unit tests (Vitest)              |
+| `pnpm test:e2e`     | Run Playwright smoke tests           |
+| `pnpm knip`         | Find unused exports, deps, and files |
+| `pnpm verify`       | Lint + type-check + unit tests       |
+| `pnpm next analyze` | Explore the client/server bundles    |
+| `pnpm db:build`     | Emit JSONL seed from source CSV      |
+| `pnpm db:push`      | Create/update tables from schema.ts  |
+| `pnpm db:upload`    | Load JSONL into the DB via Drizzle   |
+| `pnpm db:studio`    | Browse DB with Drizzle Studio        |
+| `pnpm doctor`       | Check local dev environment health   |
 
 ## Project Structure
 

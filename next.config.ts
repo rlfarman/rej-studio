@@ -1,11 +1,6 @@
 import { withSentryConfig } from '@sentry/nextjs/config'
 import type { NextConfig } from 'next'
 import path from 'path'
-import withBundleAnalyzer from '@next/bundle-analyzer'
-
-const bundleAnalyzer = withBundleAnalyzer({
-  enabled: process.env.ANALYZE === 'true',
-})
 
 // In development, proxy /api/py/* to the local uvicorn dev server.
 // In production, the Python backend runs on Modal and is called directly from
@@ -124,7 +119,7 @@ const nextConfig: NextConfig = {
 // Sentry wrapping — only active when NEXT_PUBLIC_SENTRY_DSN is set.
 // In dev / CI without the DSN, this is a no-op pass-through.
 const sentryWrapped = process.env.NEXT_PUBLIC_SENTRY_DSN
-  ? withSentryConfig(bundleAnalyzer(nextConfig), {
+  ? withSentryConfig(nextConfig, {
       org: process.env.SENTRY_ORG,
       project: process.env.SENTRY_PROJECT,
       silent: !process.env.CI,
@@ -135,6 +130,6 @@ const sentryWrapped = process.env.NEXT_PUBLIC_SENTRY_DSN
         automaticVercelMonitors: true,
       },
     })
-  : bundleAnalyzer(nextConfig)
+  : nextConfig
 
 export default sentryWrapped
