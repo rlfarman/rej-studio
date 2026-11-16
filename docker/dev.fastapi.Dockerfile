@@ -1,4 +1,5 @@
-FROM python:3.13-slim
+# Python 3.11 matches the Modal image, python-ci.yml and the pip-compile lock.
+FROM python:3.11-slim
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends curl && \
