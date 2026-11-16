@@ -26,7 +26,7 @@ concurrency:
 permissions:
   contents: read
 
-# uv reads the Python version from .python-version (3.13). --frozen installs
+# uv reads the Python version from .python-version (3.14). --frozen installs
 # exactly what uv.lock pins and never rewrites it; the `lock` job runs
 # `uv lock --check` so a pyproject.toml edit without re-locking fails CI.
 env:
@@ -37,7 +37,9 @@ jobs:
     name: uv.lock up to date
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
         with:
           version: ${{ env.UV_VERSION }}
@@ -48,7 +50,9 @@ jobs:
     name: Ruff (lint + format)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
         with:
           version: ${{ env.UV_VERSION }}
@@ -66,28 +70,28 @@ jobs:
     name: Pytest
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
         with:
           version: ${{ env.UV_VERSION }}
           enable-cache: true
           cache-dependency-glob: uv.lock
-      - name: Install runtime + dev deps
-        run: uv sync --frozen
+      - name: Install runtime + dev + deploy deps
+        # The deploy group brings the Modal client, which the modal/app.py
+        # tests import. Without it those tests skip and the web endpoint
+        # (auth, job lifecycle, error mapping) goes untested.
+        run: uv sync --frozen --group deploy
       - run: uv run --frozen --no-sync pytest
-      - name: Upload Python coverage to Codecov
-        if: always()
-        uses: codecov/codecov-action@18283e04ce6e62d37312384ff67231eb8fd56d24 # v5.4.3
-        with:
-          files: coverage/python-lcov.info
-          flags: python
-          fail_ci_if_error: false
 
   pyright:
     name: Pyright
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
         with:
           version: ${{ env.UV_VERSION }}
