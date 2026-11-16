@@ -50,8 +50,24 @@ export interface ChartDataTableProps {
 const STORAGE_PREFIX = 'chart-table:'
 const CHANGED = 'chart-table-changed'
 
-/** The fallback when session storage throws, and the source of truth when it works. */
+/** The fallback when session storage cannot be written, keyed the same way. */
 const inMemory = new Map<string, boolean>()
+
+/**
+ * Set once a write has failed, after which this page stops consulting storage.
+ *
+ * Reading and writing can disagree: Safari at its quota, and private modes
+ * generally, serve `getItem` happily and throw on `setItem`. Without this the
+ * toggle wrote to a map that nothing read and the table never opened — a
+ * button that renders, clicks and does nothing at all.
+ */
+let storageWritable = true
+
+/** Test seam — clears what this module remembers between cases. */
+export function resetChartTablePreferencesForTests() {
+  inMemory.clear()
+  storageWritable = true
+}
 
 function subscribe(onChange: () => void): () => void {
   window.addEventListener(CHANGED, onChange)
@@ -64,9 +80,13 @@ function subscribe(onChange: () => void): () => void {
 }
 
 function readPreference(key: string): boolean {
+  if (!storageWritable) {
+    // A write has already failed, so storage cannot answer for this page.
+    return inMemory.get(key) ?? false
+  }
   try {
-    // When storage works it is the only source of truth, so a cleared session
-    // really is cleared.
+    // While storage works it is the only source of truth, so a cleared
+    // session really is cleared.
     return window.sessionStorage.getItem(STORAGE_PREFIX + key) === 'open'
   } catch {
     // Blocked or unavailable: what this page remembers is all there is.
@@ -84,10 +104,15 @@ function useRemembered(key: string): [boolean, (open: boolean) => void] {
   )
 
   const remember = (next: boolean) => {
-    try {
-      window.sessionStorage.setItem(STORAGE_PREFIX + key, next ? 'open' : '')
-    } catch {
-      inMemory.set(key, next)
+    // Remembered in memory either way: the write below can fail after a read
+    // succeeded, and the click still has to open the table.
+    inMemory.set(key, next)
+    if (storageWritable) {
+      try {
+        window.sessionStorage.setItem(STORAGE_PREFIX + key, next ? 'open' : '')
+      } catch {
+        storageWritable = false
+      }
     }
     window.dispatchEvent(new Event(CHANGED))
   }

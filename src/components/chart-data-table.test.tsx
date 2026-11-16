@@ -7,7 +7,10 @@ import {
   within,
 } from '@testing-library/react'
 
-import { ChartDataTable } from './chart-data-table'
+import {
+  ChartDataTable,
+  resetChartTablePreferencesForTests,
+} from './chart-data-table'
 
 afterEach(() => {
   // Restore before cleanup: the CSV test spies on document.createElement,
@@ -16,6 +19,7 @@ afterEach(() => {
   vi.unstubAllGlobals()
   cleanup()
   window.sessionStorage.clear()
+  resetChartTablePreferencesForTests()
 })
 
 const COLUMNS = ['Position (bp)', 'Original GC %', 'Optimized GC %']
@@ -107,6 +111,24 @@ describe('the numbers behind a chart', () => {
 
     // The reader asked for the numbers; a blocked preference must not withhold them.
     expect(screen.getByRole('table')).toBeTruthy()
+  })
+
+  it('can still be opened when storage reads but refuses to write', () => {
+    // Safari at its quota, and private modes generally: getItem answers, and
+    // setItem throws. The preference used to go to a map that nothing read,
+    // so the button clicked and the table never appeared.
+    vi.spyOn(window.sessionStorage, 'setItem').mockImplementation(() => {
+      throw new Error('quota exceeded')
+    })
+
+    table({ storageKey: 'unwritable' })
+    fireEvent.click(screen.getByRole('button', { name: 'View as table' }))
+
+    expect(screen.getByRole('table')).toBeTruthy()
+
+    // And it still closes again, rather than latching open.
+    fireEvent.click(screen.getByRole('button', { name: 'Hide table' }))
+    expect(screen.queryByRole('table')).toBeNull()
   })
 
   it('offers the rows as a CSV when one is wanted', () => {
