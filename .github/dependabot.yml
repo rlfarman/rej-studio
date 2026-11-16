@@ -57,10 +57,20 @@ updates:
           - '@tanstack/*'
 
   - package-ecosystem: 'pip'
-    directory: '/'
+    # The requirements live in python/ (runtime + dev locks, compiled with
+    # pip-compile from the .in files) and modal/ (deploy client). There is no
+    # requirements file at the root, so `directory: '/'` found nothing.
+    directories:
+      - '/python'
+      - '/modal'
     schedule:
       interval: 'weekly'
     open-pull-requests-limit: 5
+    groups:
+      # Released in lockstep; updating them separately breaks resolution.
+      opentelemetry:
+        patterns:
+          - 'opentelemetry-*'
 
   - package-ecosystem: 'github-actions'
     directory: '/'

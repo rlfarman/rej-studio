@@ -4,12 +4,14 @@ This directory contains the Modal app that runs gene optimization jobs asynchron
 
 ## Setup
 
-1. Install the Modal CLI and authenticate:
+1. Install the pinned Modal CLI (plus the runtime lock, which `app.py` imports at deploy time) and authenticate:
 
 ```bash
-pip install modal
+pip install -r python/requirements.txt -r modal/requirements.txt
 modal setup
 ```
+
+The image installs `python/requirements.txt`, a lock compiled from `python/requirements.in` with `pip-compile` on Python 3.11. To change a dependency, edit the `.in` file and regenerate the lock rather than editing it by hand.
 
 2. Deploy (the algorithm is sourced from `python/algorithm.py` automatically):
 

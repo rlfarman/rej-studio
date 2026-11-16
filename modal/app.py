@@ -53,18 +53,14 @@ app = modal.App("rej-studio")
 
 project_root = Path(__file__).parent.parent
 
+# Install the compiled lock (every package pinned, transitive ones included)
+# so the image only changes when the lock does. An unpinned list was resolved
+# once when Modal first built the layer, then silently re-resolved to whatever
+# was newest the next time the image definition changed. Python 3.11 matches
+# python-ci.yml and the lock's pip-compile header.
 image = (
     modal.Image.debian_slim(python_version="3.11")
-    .pip_install(
-        "dnachisel",
-        "tqdm",
-        "fastapi[standard]",
-        "sentry-sdk[fastapi]",
-        "opentelemetry-api",
-        "opentelemetry-sdk",
-        "opentelemetry-exporter-otlp-proto-http",
-        "opentelemetry-instrumentation-fastapi",
-    )
+    .pip_install_from_requirements(str(project_root / "python" / "requirements.txt"))
     .add_local_file(project_root / "python" / "algorithm.py", remote_path="/root/algorithm.py")
     .add_local_file(project_root / "python" / "telemetry.py", remote_path="/root/telemetry.py")
 )
