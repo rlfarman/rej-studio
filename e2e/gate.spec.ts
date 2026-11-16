@@ -49,3 +49,17 @@ test('server actions reject callers without a session', async ({ request }) => {
   })
   expect(response.status()).toBe(401)
 })
+
+test('the MCP endpoint does not exist until tokens are configured', async ({
+  request,
+}) => {
+  // The dev server Playwright starts sets no MCP_TOKENS, so a deployment that
+  // has not decided about agent access must not have an agent surface. It is
+  // also not behind the password gate, which would make it a 401 instead.
+  const response = await request.post('/api/mcp', {
+    headers: { 'content-type': 'application/json' },
+    data: { jsonrpc: '2.0', id: 1, method: 'tools/list' },
+  })
+
+  expect(response.status()).toBe(404)
+})

@@ -51,6 +51,9 @@ const PUBLIC_PATHS = [
   '/api/login',
   '/api/logout',
   '/api/csp-report',
+  // The MCP endpoint carries its own auth: named bearer tokens, checked in
+  // app/api/mcp/tokens.ts. It answers 404 when none are configured.
+  '/api/mcp',
   // Liveness only for anonymous callers; deep checks need a token.
   '/api/health',
   '/manifest.webmanifest',
