@@ -72,7 +72,13 @@
     // custom slider/segmented controls in the design tool. The suggested
     // native tags (<output>, <img>, <input>) would change semantics or
     // styling, so this stays off by decision, not as debt.
-    "jsx-a11y/prefer-tag-over-role": "off"
+    "jsx-a11y/prefer-tag-over-role": "off",
+    // A labelled region with tabIndex={0} is the WCAG technique for making
+    // scrollable content reachable by keyboard (axe scrollable-region-focusable).
+    "jsx-a11y/no-noninteractive-tabindex": [
+      "error",
+      { "roles": ["tabpanel", "region"] }
+    ]
   },
   "overrides": [
     {

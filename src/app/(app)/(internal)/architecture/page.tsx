@@ -103,9 +103,17 @@ function ServiceBox({
 
 export default function ArchitecturePage() {
   return (
-    <div className="mx-auto max-w-5xl space-y-6 p-6">
+    // Focusable region: this page has no links or controls, so without it
+    // keyboard users couldn't scroll the main content (axe
+    // scrollable-region-focusable).
+    <div
+      role="region"
+      tabIndex={0}
+      aria-labelledby="architecture-title"
+      className="focus-visible:ring-ring mx-auto max-w-5xl space-y-6 rounded-md p-6 outline-none focus-visible:ring-2"
+    >
       <div>
-        <PageTitle>REJ Studio — Architecture</PageTitle>
+        <PageTitle id="architecture-title">REJ Studio — Architecture</PageTitle>
         <p className="text-muted-foreground mt-1 text-sm">
           System overview of data flow, infrastructure, and deployment topology.
         </p>

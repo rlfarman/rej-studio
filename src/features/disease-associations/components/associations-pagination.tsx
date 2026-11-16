@@ -83,6 +83,10 @@ export function AssociationsPagination({
                 href={
                   hasPrev ? buildHref(searchParams, currentPage - 1) : undefined
                 }
+                // Without an href this <a> is a generic element, where aria-label
+                // is prohibited; role="link" + aria-disabled is the disabled-link
+                // pattern.
+                role={hasPrev ? undefined : 'link'}
                 aria-disabled={!hasPrev}
                 tabIndex={hasPrev ? undefined : -1}
                 className={
@@ -111,6 +115,10 @@ export function AssociationsPagination({
                 href={
                   hasNext ? buildHref(searchParams, currentPage + 1) : undefined
                 }
+                // Without an href this <a> is a generic element, where aria-label
+                // is prohibited; role="link" + aria-disabled is the disabled-link
+                // pattern.
+                role={hasNext ? undefined : 'link'}
                 aria-disabled={!hasNext}
                 tabIndex={hasNext ? undefined : -1}
                 className={
