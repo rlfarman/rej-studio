@@ -24,7 +24,6 @@ export function RecentGenes() {
       items={recentGenes}
       getItemKey={(gene) => gene.id}
       onClear={clearRecentGenes}
-      emptyMessage={copy.empty}
       renderItem={(gene) => (
         <SidebarMenuItem>
           <SidebarMenuButton

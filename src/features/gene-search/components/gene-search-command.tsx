@@ -67,6 +67,40 @@ function SpeciesToggle() {
 }
 
 /**
+ * First-run hint inside the empty palette: a few well-known genes to try,
+ * instead of a sentence that restates the placeholder. Picking one fills the
+ * query (so the results show how search works) and returns focus to the input
+ * so arrow keys reach the results.
+ */
+function ExampleGenes({ onPick }: { onPick: (symbol: string) => void }) {
+  return (
+    <div className="flex flex-wrap items-center gap-2 px-3 py-3 text-sm">
+      <span className="text-muted-foreground mr-1">{copy.examplesLabel}</span>
+      <ul className="flex flex-wrap gap-2" aria-label={copy.examplesAria}>
+        {geneSearchCopy.exampleGenes.map((symbol) => (
+          <li key={symbol}>
+            <button
+              type="button"
+              aria-label={copy.exampleAria(symbol)}
+              onClick={(e) => {
+                onPick(symbol)
+                e.currentTarget
+                  .closest('[cmdk-root]')
+                  ?.querySelector<HTMLInputElement>('[cmdk-input]')
+                  ?.focus()
+              }}
+              className="hover:bg-accent hover:text-accent-foreground focus-visible:ring-ring rounded-full border px-3 py-1 font-mono text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
+            >
+              {symbol}
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
+/**
  * Reveals `true` only after the input flag has been continuously `true` for
  * `delayMs`. Lets us defer rendering transient UI (like a loading indicator)
  * long enough that fast queries never flash it on screen.
@@ -305,7 +339,6 @@ export function GeneSearchCommand({
       shouldFilter={false}
     >
       <CommandInput
-        id="search"
         aria-label={copy.inputAria}
         placeholder={isMobile ? copy.placeholderMobile : copy.placeholder}
         className="border-0 text-base ring-0 outline-0 focus:border-0 focus:ring-0 active:border-0 active:ring-0 sm:text-sm"
@@ -358,9 +391,12 @@ export function GeneSearchCommand({
             </div>
           )}
           {content === 'prompt' && (
-            <div className="py-6 text-center text-sm transition-opacity duration-200">
-              {copy.promptEmpty}
-            </div>
+            <ExampleGenes
+              onPick={(symbol) => {
+                setQuery(symbol)
+                setShowList(true)
+              }}
+            />
           )}
           {content === 'no-results' && (
             <div className="py-6 text-center text-sm transition-opacity duration-200">
