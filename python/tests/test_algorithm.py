@@ -214,3 +214,40 @@ class TestRelativePosition:
         result = relativePosition(motifs, 55)
         distances = [abs(d) for d, _ in result]
         assert distances == sorted(distances)
+
+
+class TestOptimizationWithoutProgressReporting:
+    """The JSON endpoint runs with no progress callback; that path must work.
+
+    It used to hand DNAChisel the string "bar" as a logger after the problem
+    was built, and `optimize()` then raised AttributeError: 'str' object has no
+    attribute 'iter_bar'. `optimize_and_split` swallows exceptions and returns
+    empty strings, so the failure reached the user as a blank result rather
+    than an error.
+    """
+
+    def test_returns_an_optimized_sequence(self):
+        from python.algorithm import process_single_request_json
+
+        cds = "ATGGAGGAGCCGCAGTCAGATCCTAGCGTCGAGCCCCCTCTGAGTCAGGAAACATTTTCAGACCTATGGAAACTACTT"
+        result = process_single_request_json(
+            CDS=cds,
+            name="no-progress",
+            OPTIONS={
+                "codon_optimize": "h_sapiens",
+                "remove_cryptic_ss": True,
+                "minimize_CpGs": True,
+                "reduce_kmer_complexity": True,
+                "enforce_gc": True,
+                "stim_5": False,
+                "stim_3": False,
+                "split_point": 39,
+                "ensure_wggw": True,
+                "wggw_threshold": 30,
+            },
+        )
+
+        assert len(result["optimized_sequence"]) == len(cds)
+        assert result["seq5"]
+        assert result["seq3"]
+        assert "Error" not in result["objectives_after"]
