@@ -26,10 +26,17 @@ vi.mock('@/drizzle/db', () => ({
 }))
 
 // Import queries AFTER the mock is set up
-const { fetchGenesBySearch, fetchGeneBySymbol, fetchSimilarGenes } =
-  await import('@/features/gene-search/api/gene-queries')
-const { fetchIsoformsByGene, fetchIsoformAndGeneByIsoformId } =
-  await import('@/features/gene-search/api/isoform-queries')
+const {
+  fetchGenesBySearch,
+  fetchGeneBySymbol,
+  fetchSimilarGenes,
+  fetchAllGeneSymbols,
+} = await import('@/features/gene-search/api/gene-queries')
+const {
+  fetchIsoformsByGene,
+  fetchIsoformSummaryByGene,
+  fetchIsoformAndGeneByIsoformId,
+} = await import('@/features/gene-search/api/isoform-queries')
 
 beforeAll(async () => {
   testDb = await getTestDb()
@@ -218,5 +225,46 @@ describe('fetchIsoformAndGeneByIsoformId', () => {
   it('returns undefined for non-existent', async () => {
     const result = await fetchIsoformAndGeneByIsoformId('NONEXISTENT')
     expect(result).toBeUndefined()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// fetchIsoformSummaryByGene
+// ---------------------------------------------------------------------------
+describe('fetchIsoformSummaryByGene', () => {
+  it('counts isoforms and lists species without loading sequences', async () => {
+    await seedGenes(testDb.db, [makeGene({ id: 'ENSG001' })])
+    await seedIsoforms(testDb.db, [
+      makeIsoform({ id: 'ENST001', geneId: 'ENSG001', species: 'mouse' }),
+      makeIsoform({ id: 'ENST002', geneId: 'ENSG001', species: 'human' }),
+      makeIsoform({ id: 'ENST003', geneId: 'ENSG001', species: 'human' }),
+    ])
+    const summary = await fetchIsoformSummaryByGene('ENSG001')
+    expect(summary).toEqual({ isoformCount: 3, species: ['human', 'mouse'] })
+  })
+
+  it('returns zero for a gene without isoforms', async () => {
+    const summary = await fetchIsoformSummaryByGene('NONEXISTENT')
+    expect(summary).toEqual({ isoformCount: 0, species: [] })
+  })
+})
+
+// ---------------------------------------------------------------------------
+// fetchAllGeneSymbols
+// ---------------------------------------------------------------------------
+describe('fetchAllGeneSymbols', () => {
+  it('returns every gene symbol with its species', async () => {
+    await seedGenes(testDb.db, [
+      makeGene({ symbol: 'BRCA1', species: 'human' }),
+      makeGene({ symbol: 'Brca1', species: 'mouse' }),
+    ])
+    const rows = await fetchAllGeneSymbols()
+    expect(rows).toHaveLength(2)
+    expect(rows).toEqual(
+      expect.arrayContaining([
+        { symbol: 'BRCA1', species: 'human' },
+        { symbol: 'Brca1', species: 'mouse' },
+      ]),
+    )
   })
 })

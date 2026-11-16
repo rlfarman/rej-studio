@@ -10,6 +10,17 @@ import { cacheLife, cacheTag } from 'next/cache'
 // Tag all gene/isoform query caches so the entire gene corpus can be
 // invalidated in one call (`revalidateTag('genes')`) after a reseed, without
 // tracking every query variant we ever cached.
+//
+// Two cache tiers, chosen per query:
+// - 'use cache: remote' for lookups many requests share (a gene by symbol,
+//   its isoforms). Plain 'use cache' is per-instance memory, which on
+//   serverless rarely survives between requests, so it barely shields the
+//   database; the remote tier (Vercel Runtime Cache) is shared and durable.
+//   The data is read-only, so these use the 'max' lifetime. Entries are
+//   scoped to a deployment, so a deploy starts cold.
+// - plain 'use cache' for search and suggestions, whose keys are mostly
+//   unique keystroke prefixes. Remote writes there would cost more than
+//   the rare hit saves.
 const GENES_CACHE_TAG = 'genes'
 
 export type GeneSearchResult = Pick<
@@ -27,10 +38,10 @@ const geneSearchColumns = {
 } as const
 
 /**
- * Cached gene search. Gene data is read-only (only changes on re-seed), so
- * we cache for an hour and tag entries so a reseed can invalidate everything
- * at once via `revalidateTag('genes')`. Debounced typing produces a fresh
- * cache key per character, so a long TTL pays off across sessions.
+ * Cached gene search (per-instance memory; see the cache-tier note above).
+ * Gene data is read-only (only changes on re-seed), so we cache for an hour
+ * and tag entries so a reseed can invalidate everything at once via
+ * `revalidateTag('genes')`.
  */
 export async function fetchGenesBySearch(
   trimmedQuery: string,
@@ -114,9 +125,9 @@ export async function fetchGeneBySymbol(
   symbol: string,
   species: string | undefined,
 ) {
-  'use cache'
+  'use cache: remote'
   cacheTag(GENES_CACHE_TAG)
-  cacheLife({ revalidate: 3600 })
+  cacheLife('max')
 
   const conditions =
     species && species !== 'both'
@@ -134,9 +145,26 @@ export async function fetchGeneBySymbol(
 }
 
 /**
+ * Every gene's symbol and species, for the sitemap. One full scan of the
+ * genes table, so it lives in the shared remote cache rather than running
+ * per request.
+ */
+export async function fetchAllGeneSymbols(): Promise<
+  { symbol: string; species: string }[]
+> {
+  'use cache: remote'
+  cacheTag(GENES_CACHE_TAG)
+  cacheLife('max')
+
+  const db = await getDb()
+  return db.select({ symbol: genes.symbol, species: genes.species }).from(genes)
+}
+
+/**
  * Find genes with symbols similar to the input. Tries prefix match first,
  * then substring match, then partial prefix (first 3+ chars). Returns up
- * to 5 distinct suggestions.
+ * to 5 distinct suggestions. Per-instance cache: these are 404 lookups for
+ * arbitrary input, so remote entries would rarely be reused.
  */
 export async function fetchSimilarGenes(
   upperSymbol: string,

@@ -1,6 +1,8 @@
 import { ImageResponse } from 'next/og'
 import { getGeneBySymbol } from '@/features/gene-search/api/genes'
-import { getIsoformsByGene } from '@/features/gene-search/api/isoforms'
+// gene.id comes from the database, not the request, so the summary query is
+// called directly rather than through the validating server-action wrapper.
+import { fetchIsoformSummaryByGene } from '@/features/gene-search/api/isoform-queries'
 import { parseSpeciesParam } from '@/lib/bio/species'
 import {
   OG_ACCENT,
@@ -62,9 +64,7 @@ export async function GET(
     )
   }
 
-  const isoforms = await getIsoformsByGene(gene.id)
-  const isoformCount = isoforms.length
-  const species = [...new Set(isoforms.map((i) => i.species))]
+  const { isoformCount, species } = await fetchIsoformSummaryByGene(gene.id)
 
   return new ImageResponse(
     <div
