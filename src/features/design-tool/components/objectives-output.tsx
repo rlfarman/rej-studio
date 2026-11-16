@@ -17,6 +17,7 @@ import type {
   ObjectivesReport,
 } from '@/features/design-tool/types/process-result'
 import { deriveKeyMetrics } from '@/features/design-tool/utils/objective-metrics'
+import { escapeMarkdownTableCell } from '@/features/design-tool/utils/markdown-table'
 
 // ---------- parsing the "objective" string into a nicer display ----------
 
@@ -514,10 +515,6 @@ function buildSummaryItems(
 
 // ---------- markdown export ----------
 
-function mdEscape(s: string): string {
-  return s.replace(/\|/g, '\\|').replace(/\n/g, ' ')
-}
-
 function buildMarkdownReport(
   before: ObjectivesReport,
   after: ObjectivesReport,
@@ -557,7 +554,7 @@ function buildMarkdownReport(
     const delta = a && b ? (a.score - b.score).toFixed(2) : '—'
     const msg = afterEntry?.message ?? ''
     lines.push(
-      `| ${status} | \`${mdEscape(key)}\` | ${bs} | ${as} | ${delta} | ${mdEscape(msg)} |`,
+      `| ${status} | \`${escapeMarkdownTableCell(key)}\` | ${bs} | ${as} | ${delta} | ${escapeMarkdownTableCell(msg)} |`,
     )
   }
   return lines.join('\n')
