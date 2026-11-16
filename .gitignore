@@ -87,3 +87,6 @@ storybook-static/
 /e2e/.auth/
 /playwright-report/
 /test-results/
+
+# Copied from node_modules by scripts/copy-mcp-app-bridge.mjs
+public/mcp/

@@ -24,7 +24,7 @@
     "db:fetch": "tsx scripts/fetch-corpus.ts",
     "db:reset": "rm -rf data/local.db",
     "db:studio": "drizzle-kit studio",
-    "build": "fumadocs-mdx && next build",
+    "build": "fumadocs-mdx && node scripts/copy-mcp-app-bridge.mjs && next build",
     "start": "next start",
     "lint": "oxlint --report-unused-disable-directives && eslint .",
     "lint:fix": "oxlint --fix && eslint . --fix",
@@ -37,12 +37,13 @@
     "type-check": "node node_modules/typescript-native/bin/tsc --noEmit",
     "verify": "pnpm lint && pnpm type-check && pnpm test",
     "prepare": "husky",
-    "postinstall": "fumadocs-mdx",
+    "postinstall": "fumadocs-mdx && node scripts/copy-mcp-app-bridge.mjs",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
   },
   "dependencies": {
     "@hookform/resolvers": "^7.0.6",
+    "@modelcontextprotocol/ext-apps": "2.0.4",
     "@modelcontextprotocol/server": "2.4.0",
     "@neondatabase/serverless": "^1.2.1",
     "@next/third-parties": "^16.4.6",

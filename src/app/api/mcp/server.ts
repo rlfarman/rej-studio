@@ -1,3 +1,8 @@
+import {
+  registerAppResource,
+  registerAppTool,
+  RESOURCE_MIME_TYPE,
+} from '@modelcontextprotocol/ext-apps/server'
 import { McpServer } from '@modelcontextprotocol/server'
 import { z } from 'zod'
 
@@ -26,6 +31,32 @@ import { isSpecies } from '@/lib/bio/species'
 import { createLogger } from '@/lib/logger'
 
 import type { McpToken } from './tokens'
+import { designViewHtml } from './ui/design-view'
+
+/**
+ * The view a finished design is shown in, inside hosts that support MCP Apps.
+ * Hosts that do not simply ignore the metadata and show the structured result,
+ * which `get_design` returns either way.
+ */
+const DESIGN_VIEW_URI = 'ui://rej-studio/design-result.html'
+
+/**
+ * Where the view loads its client library from, and the only origin its
+ * content security policy allows. Falls back to a relative path when the
+ * deployment has not been told its own URL, which a host may refuse; the
+ * view then shows nothing rather than something wrong.
+ */
+function appOrigin(): string | null {
+  const url = process.env.NEXT_PUBLIC_SITE_URL?.trim()
+  if (!url) {
+    return null
+  }
+  try {
+    return new URL(url).origin
+  } catch {
+    return null
+  }
+}
 
 /**
  * REJ Studio for an agent.
@@ -346,7 +377,10 @@ export function createRejStudioMcpServer(token: McpToken): McpServer {
     },
   )
 
-  server.registerTool(
+  const origin = appOrigin()
+
+  registerAppTool(
+    server,
     'get_design',
     {
       title: 'Get a design',
@@ -363,6 +397,7 @@ export function createRejStudioMcpServer(token: McpToken): McpServer {
           .describe('The id returned by submit_design.'),
       }),
       annotations: { readOnlyHint: true },
+      _meta: { ui: { resourceUri: DESIGN_VIEW_URI } },
     },
     async ({ job_id }) => {
       const status = await runJobStatus(job_id)
@@ -402,6 +437,33 @@ export function createRejStudioMcpServer(token: McpToken): McpServer {
       })
     },
   )
+
+  if (origin) {
+    registerAppResource(
+      server,
+      'Design result',
+      DESIGN_VIEW_URI,
+      {
+        description:
+          'A compact view of a finished design: its length, where it was split, the objectives that changed, and the optimized sequence.',
+      },
+      async () => ({
+        contents: [
+          {
+            uri: DESIGN_VIEW_URI,
+            mimeType: RESOURCE_MIME_TYPE,
+            text: designViewHtml(`${origin}/mcp/app-bridge.js`),
+            _meta: {
+              ui: {
+                // The one script the view loads. Nothing else is fetched.
+                csp: { resourceDomains: [origin] },
+              },
+            },
+          },
+        ],
+      }),
+    )
+  }
 
   return server
 }
