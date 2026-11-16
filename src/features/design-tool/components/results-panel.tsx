@@ -247,8 +247,8 @@ function renderSequenceWithIntrons(sequence: string) {
                 isStim
                   ? 'bg-accent text-accent-foreground cursor-help rounded px-1 font-semibold'
                   : isFive
-                  ? 'text-info-soft bg-info/15 dark:text-info cursor-help rounded px-1 font-semibold'
-                  : 'bg-primary/15 text-primary dark:text-primary-foreground dark:bg-primary/40 cursor-help rounded px-1 font-semibold'
+                    ? 'text-info-soft bg-info/15 dark:text-info cursor-help rounded px-1 font-semibold'
+                    : 'bg-primary/15 text-primary dark:text-primary-foreground dark:bg-primary/40 cursor-help rounded px-1 font-semibold'
               }
             >
               {part}
