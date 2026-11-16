@@ -1,6 +1,6 @@
 'use client'
 
-import { memo, useMemo, useState } from 'react'
+import { memo, useState } from 'react'
 import {
   Download,
   Clock,
@@ -69,6 +69,10 @@ import { computeGcPercent, countCpG } from '@/lib/bio/sequence-utils'
 import { deriveKeyMetrics } from '@/features/design-tool/utils/objective-metrics'
 import { SPECIES_DISPLAY_NAME } from '@/lib/bio/species'
 import { toCodons } from '@/lib/bio/genetic-code'
+import {
+  GC_TARGET_MAX_PERCENT,
+  GC_TARGET_MIN_PERCENT,
+} from '@/features/design-tool/utils/job-constants'
 import { designToolCopy } from '../copy'
 import { errorsCopy } from '@/copy/errors'
 
@@ -124,47 +128,55 @@ function SplitVisualization({
   )
 }
 
-function MetricsStrip({ result }: { result: ProcessResult }) {
-  const stats = useMemo(() => {
-    const before = parseObjectives(result.objectives_before)
-    const after = parseObjectives(result.objectives_after)
-    const keyBefore = deriveKeyMetrics(result.objectives_report_before)
-    const keyAfter = deriveKeyMetrics(result.objectives_report_after)
+// The GC target band the optimizer enforces, as a MetricCell target: a GC
+// value that drifted out of range must not read as an improvement just
+// because the number went up.
+const GC_TARGET = { min: GC_TARGET_MIN_PERCENT, max: GC_TARGET_MAX_PERCENT }
 
-    const orig = result.original_sequence
-    const opt = result.optimized_sequence
-    if (!orig || !opt) {
-      return {
-        before,
-        after,
-        keyBefore,
-        keyAfter,
-        gc: null,
-        cpg: null,
-        identity: null,
-      }
-    }
+/** Plain function — the React Compiler handles memoization. */
+function computeStats(result: ProcessResult) {
+  const before = parseObjectives(result.objectives_before)
+  const after = parseObjectives(result.objectives_after)
+  const keyBefore = deriveKeyMetrics(result.objectives_report_before)
+  const keyAfter = deriveKeyMetrics(result.objectives_report_after)
 
-    const gcBefore = computeGcPercent(orig)
-    const gcAfter = computeGcPercent(opt)
-    const cpgBefore = countCpG(orig)
-    const cpgAfter = countCpG(opt)
-
-    let changed = 0
-    const len = Math.min(orig.length, opt.length)
-    for (let i = 0; i < len; i++) if (orig[i] !== opt[i]) changed++
-    const identity = len > 0 ? 100 - (changed / len) * 100 : 100
-
+  const orig = result.original_sequence
+  const opt = result.optimized_sequence
+  if (!orig || !opt) {
     return {
       before,
       after,
       keyBefore,
       keyAfter,
-      gc: { before: gcBefore, after: gcAfter },
-      cpg: { before: cpgBefore, after: cpgAfter },
-      identity,
+      gc: null,
+      cpg: null,
+      identity: null,
     }
-  }, [result])
+  }
+
+  const gcBefore = computeGcPercent(orig)
+  const gcAfter = computeGcPercent(opt)
+  const cpgBefore = countCpG(orig)
+  const cpgAfter = countCpG(opt)
+
+  let changed = 0
+  const len = Math.min(orig.length, opt.length)
+  for (let i = 0; i < len; i++) if (orig[i] !== opt[i]) changed++
+  const identity = len > 0 ? 100 - (changed / len) * 100 : 100
+
+  return {
+    before,
+    after,
+    keyBefore,
+    keyAfter,
+    gc: { before: gcBefore, after: gcAfter },
+    cpg: { before: cpgBefore, after: cpgAfter },
+    identity,
+  }
+}
+
+function MetricsStrip({ result }: { result: ProcessResult }) {
+  const stats = computeStats(result)
 
   const showDonors =
     stats.keyBefore.spliceDonors > 0 || stats.keyAfter.spliceDonors > 0
@@ -184,6 +196,7 @@ function MetricsStrip({ result }: { result: ProcessResult }) {
         before={stats.gc?.before ?? null}
         after={stats.gc?.after ?? null}
         unit="%"
+        target={GC_TARGET}
       />
       <MetricCell
         label="CpG"
@@ -481,7 +494,7 @@ function ResultsPanelImpl({ result, optionsUsed, species }: ResultsPanelProps) {
   const seq3Clean = result.seq3.replace(INTRON_MARKER_RE, '')
   const wggwCount = result.wggw_info ? Object.keys(result.wggw_info).length : 0
 
-  const codonChangesSummary = useMemo(() => {
+  const codonChangesSummary = (() => {
     const orig = toCodons(result.original_sequence)
     const opt = toCodons(result.optimized_sequence)
     const total = Math.min(orig.length, opt.length)
@@ -497,14 +510,14 @@ function ResultsPanelImpl({ result, optionsUsed, species }: ResultsPanelProps) {
       changed.toLocaleString(),
       total.toLocaleString(),
     )
-  }, [result.original_sequence, result.optimized_sequence])
+  })()
 
-  const objectivesSummary = useMemo(() => {
+  const objectivesSummary = (() => {
     const after = parseObjectives(result.objectives_after)
     const total = after.passedCount + after.failedCount
     if (total === 0) return undefined
     return resultsCopy.summaries.objectivesPassed(after.passedCount, total)
-  }, [result.objectives_after])
+  })()
 
   const junctionSummary = resultsCopy.summaries.junction(
     result.split_point.toLocaleString(),
@@ -563,6 +576,7 @@ function ResultsPanelImpl({ result, optionsUsed, species }: ResultsPanelProps) {
             title={resultsCopy.sections.codonChanges}
             icon={Shield}
             summary={codonChangesSummary}
+            defaultOpen={false}
           >
             <CodonChanges
               original={result.original_sequence}
@@ -581,9 +595,12 @@ function ResultsPanelImpl({ result, optionsUsed, species }: ResultsPanelProps) {
               wggwMotif={result.wggw_info?.main?.motif}
             />
           </ExpandableRow>
+          {/* Deep dives start collapsed: fully expanded, the panel ran to
+              ~2.5k px before the user had seen the split or the metrics. */}
           <ExpandableRow
             title={resultsCopy.sections.restrictionSites}
             icon={FlaskConical}
+            defaultOpen={false}
           >
             <RestrictionSiteMap
               original={result.original_sequence}
@@ -595,6 +612,7 @@ function ResultsPanelImpl({ result, optionsUsed, species }: ResultsPanelProps) {
               title={resultsCopy.sections.codonUsageDelta}
               icon={TrendingUp}
               summary={SPECIES_DISPLAY_NAME[species]}
+              defaultOpen={false}
             >
               <CodonDeltaStrip
                 original={result.original_sequence}
@@ -626,6 +644,7 @@ function ResultsPanelImpl({ result, optionsUsed, species }: ResultsPanelProps) {
             title={resultsCopy.sections.objectivesReport}
             icon={ClipboardCheck}
             summary={objectivesSummary}
+            defaultOpen={false}
           >
             <ObjectivesSummary
               reportBefore={result.objectives_report_before}

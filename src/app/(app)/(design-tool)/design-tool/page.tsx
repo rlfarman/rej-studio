@@ -60,7 +60,13 @@ async function DesignToolFromUrl({
   const jobId = Array.isArray(params.job) ? params.job[0] : params.job
 
   if (!isoformId) {
-    return <GeneSplitterForm key={jobId ?? 'new'} defaultJobId={jobId} />
+    return (
+      <GeneSplitterForm
+        key={jobId ?? 'new'}
+        defaultJobId={jobId}
+        draftKey="new"
+      />
+    )
   }
 
   const result = isoformId
@@ -68,7 +74,13 @@ async function DesignToolFromUrl({
     : undefined
 
   if (!result) {
-    return <GeneSplitterForm key={jobId ?? 'new'} defaultJobId={jobId} />
+    return (
+      <GeneSplitterForm
+        key={jobId ?? 'new'}
+        defaultJobId={jobId}
+        draftKey="new"
+      />
+    )
   }
 
   const { isoform, gene } = result
@@ -86,6 +98,7 @@ async function DesignToolFromUrl({
         isoform.codingSequence,
       )}
       defaultJobId={jobId}
+      draftKey={`iso-${isoformId}`}
     />
   )
 }

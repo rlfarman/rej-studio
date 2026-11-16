@@ -3,6 +3,7 @@ import * as React from 'react'
 import { useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { Undo2, X } from 'lucide-react'
 import {
   Card,
   CardContent,
@@ -12,11 +13,12 @@ import {
 } from '@/components/ui/card'
 import { DNASplicer } from './dna-splicer'
 import { Form } from '@/components/ui/form'
+import { Button } from '@/components/ui/button'
 import type { DesignToolSpecies } from '@/features/design-tool/types/species-options'
-import type { ProcessResult } from '@/features/design-tool/types/process-result'
 import { validationSchema, FormValues } from '../types/form-schema'
 import { formatOptionsForReport } from '../utils/form-handler'
 import { useJob } from '@/features/design-tool/hooks/use-job'
+import { useFormDraft } from '@/features/design-tool/hooks/use-form-draft'
 import { CustomizationOptions } from './customization-options'
 import { DesignObjectives } from './optimization-options'
 import { SubmitButton } from './submit-button'
@@ -28,6 +30,7 @@ import { toast } from 'sonner'
 import { designToolCopy } from '../copy'
 
 const copy = designToolCopy.form
+const draftCopy = designToolCopy.draft
 
 interface GeneSplitterFormProperties {
   defaultCodingSequence?: string
@@ -35,6 +38,8 @@ interface GeneSplitterFormProperties {
   defaultSpecies?: DesignToolSpecies
   defaultJobId?: string
   defaultSpliceJunctionPosition?: number
+  /** Scope for the saved draft — the isoform id, or 'new'. */
+  draftKey?: string
 }
 
 export function GeneSplitterForm({
@@ -43,16 +48,17 @@ export function GeneSplitterForm({
   defaultSpecies,
   defaultJobId,
   defaultSpliceJunctionPosition,
+  draftKey = 'new',
 }: GeneSplitterFormProperties) {
-  const [result, setResult] = useState<ProcessResult | null>(null)
   const [isEditing, setIsEditing] = useState(false)
   // Guards the one-shot form restore. Set true after we hydrate from a
   // resumed URL job, or eagerly on submit so the new job's own persisted
   // formValues don't ricochet back and overwrite the live form.
   const didResetRef = useRef(false)
-  // Dedup error toasts: only toast a given jobId once per mount, so
-  // navigating back to a previously-failed job doesn't spam.
-  const toastedJobsRef = useRef<Set<string>>(new Set())
+  // Dedup error toasts: a given failure is announced once per mount, so
+  // navigating back to a previously-failed job doesn't spam. Keyed by the
+  // error itself, not just the job id, so a fresh failure always speaks up.
+  const toastedFailuresRef = useRef<Set<string>>(new Set())
   const job = useJob({ initialJobId: defaultJobId ?? null })
 
   const methods = useForm<FormValues>({
@@ -84,6 +90,14 @@ export function GeneSplitterForm({
     },
   })
 
+  // Draft persistence — only when starting fresh. Resuming a job (?job=…)
+  // restores that job's own inputs instead, below.
+  const draft = useFormDraft({
+    draftKey,
+    methods,
+    enabled: !defaultJobId,
+  })
+
   // Hydrate the form from a resumed URL job's stored formValues — once they
   // appear in history (localStorage isn't populated on first render).
   // Guards against validation drift: if the schema has changed since this
@@ -101,27 +115,29 @@ export function GeneSplitterForm({
     didResetRef.current = true
   }, [job.formValues, methods])
 
-  // React to status changes: display result and scroll on completion, toast
-  // on failure. Storage is handled centrally (useJob on submit, JobWatcher
-  // on poll settle), so the form just presents.
+  // Results are derived, not mirrored into local state: the entry in history
+  // is the single source of truth, and a completed job's result is already
+  // there (set by useJob on a local run, by JobWatcher on a polled one).
+  const result = job.status === 'completed' ? job.result : null
+
+  // Announce failures. Storage is handled centrally (useJob on submit,
+  // JobWatcher on poll settle), so the form just presents.
   React.useEffect(() => {
-    if (job.status === 'completed' && job.result) {
-      setResult(job.result)
-    } else if (job.status === 'failed' && job.error && job.jobId) {
-      if (!toastedJobsRef.current.has(job.jobId)) {
-        toastedJobsRef.current.add(job.jobId)
-        toast.error(job.error.message)
-      }
-    }
-  }, [job.status, job.result, job.error, job.jobId])
+    if (job.status !== 'failed' || !job.error) return
+    const signature = `${job.jobId ?? 'unknown'}:${job.error.code}:${job.error.message}`
+    if (toastedFailuresRef.current.has(signature)) return
+    toastedFailuresRef.current.add(signature)
+    toast.error(job.error.message)
+  }, [job.status, job.error, job.jobId])
 
   const onSubmit = async (values: FormValues) => {
-    setResult(null)
     // Mark as reset so the about-to-be-persisted formValues don't trigger
     // the hydration effect above and overwrite the live form.
     didResetRef.current = true
     setIsEditing(false)
     await job.submitJob(values)
+    // The inputs are safe in the job entry now, so the draft can go.
+    draft.clear()
   }
 
   const handleRerun = async () => {
@@ -148,10 +164,13 @@ export function GeneSplitterForm({
           job.status === 'cancelled'
         ? job.status
         : null
+  // A job we have no record of (shared link, cleared history, expired
+  // call_id) has no length or species to report — the header hides those
+  // chips rather than inventing "0 bp".
+  const hasJobRecord = job.status === 'submitting' || job.formValues != null
 
   return (
     <Form {...methods}>
-      {}
       {/* eslint-disable react-hooks/refs -- onSubmit only writes didResetRef in the submit event handler, never during render */}
       <form
         onSubmit={methods.handleSubmit(onSubmit)}
@@ -160,8 +179,10 @@ export function GeneSplitterForm({
         {!showForm && headerStatus && (
           <JobHeader
             name={methods.getValues('name')}
-            sequenceLength={methods.getValues('codingSequence').length}
-            species={methods.getValues('species')}
+            sequenceLength={
+              hasJobRecord ? methods.getValues('codingSequence').length : null
+            }
+            species={hasJobRecord ? methods.getValues('species') : 'none'}
             status={headerStatus}
             processingTimeSeconds={result?.processing_time_seconds ?? null}
             errorMessage={job.error?.message ?? null}
@@ -178,6 +199,35 @@ export function GeneSplitterForm({
 
         {showForm && (
           <>
+            {draft.restored && (
+              <div
+                role="status"
+                className="text-muted-foreground flex flex-wrap items-center gap-2 text-xs"
+              >
+                <span>{draftCopy.restored}</span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 gap-1 px-2"
+                  onClick={draft.discard}
+                >
+                  <Undo2 className="size-3.5" />
+                  {draftCopy.discard}
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 w-7 p-0"
+                  aria-label={draftCopy.dismissAria}
+                  onClick={draft.dismiss}
+                >
+                  <X className="size-3.5" />
+                </Button>
+              </div>
+            )}
+
             {/* ── Input + split point ── */}
             <Card>
               <CardHeader>
