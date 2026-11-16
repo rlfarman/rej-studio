@@ -1,7 +1,15 @@
 export const commonCopy = {
+  brandName: 'REJ Studio',
   sidebar: {
     open: 'Open sidebar',
     close: 'Close sidebar',
+  },
+  // Header context label, shown once the page title has scrolled away.
+  pageContext: {
+    genes: 'Gene search',
+    designTool: 'Design tool',
+    diseaseAssociations: 'Disease-associated genes',
+    architecture: 'Architecture',
   },
   actions: {
     tryAgain: 'Try again',
