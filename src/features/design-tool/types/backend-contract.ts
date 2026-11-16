@@ -115,6 +115,52 @@ export const wggwSiteInfoSchema = z.object({
   new_codons: z.tuple([z.string(), z.string()]),
 })
 
+/** The sequence that went in, identified without being copied again. */
+const runRecordInputSchema = z.object({
+  sha256: z.string(),
+  length: z.number(),
+})
+
+/** What produced the result: the code and the libraries, pinned. */
+const runRecordVersionsSchema = z.object({
+  algorithm_sha256: z.string(),
+  dnachisel: z.string(),
+  python: z.string(),
+  /**
+   * Present when the deployment knows its own commit. Absent from Modal,
+   * which returns the record as built; null from FastAPI, which fills in
+   * optional fields. Either way, falsy means unknown.
+   */
+  commit: z.string().nullable().optional(),
+})
+
+/**
+ * What a run was, in enough detail to repeat or cite it.
+ *
+ * Built by the Python backend (`python/run_record.py`); every field is a fact
+ * about the run, so anything shown to the user is derived from these and
+ * nothing else. A run is repeatable from this record: submitting the same
+ * sequence and options with the recorded seed reproduces the design.
+ */
+export const runRecordSchema = z.object({
+  record_version: z.number(),
+  /** ISO 8601, UTC. */
+  started_at: z.string(),
+  duration_seconds: z.number(),
+  /** The seed the run used, supplied or derived by the backend. */
+  seed: z.number(),
+  input: runRecordInputSchema,
+  /** The options as applied, after validation and defaults. */
+  options: z.record(z.string(), z.unknown()),
+  versions: runRecordVersionsSchema,
+  /**
+   * The gene dataset the deployment was serving when the run happened — a
+   * fact about the deployment, not about where the sequence came from. Falsy
+   * when the dataset has not been named; see `api/corpus-version.ts`.
+   */
+  corpus_version: z.string().nullable().optional(),
+})
+
 export const processResultSchema = z.object({
   name: z.string(),
   // Non-empty sequences: when the optimizer catches its own exception it
@@ -141,6 +187,9 @@ export const processResultSchema = z.object({
   processing_time_seconds: z.number(),
   // Echoed RNG seed, so a run can be reproduced. Older backends omit it.
   seed: z.number().nullable().optional(),
+  // Optional only for results produced before run records existed, which may
+  // still be held in a browser's recent jobs. Every new run carries one.
+  run_record: runRecordSchema.optional(),
 })
 
 export type BackendProcessResult = z.infer<typeof processResultSchema>

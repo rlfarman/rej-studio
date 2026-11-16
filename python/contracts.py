@@ -170,6 +170,10 @@ class ProcessRequest(BaseModel):
     CDS: str
     name: str
     options: ProcessOptions = ProcessOptions()
+    # The gene dataset the calling deployment is serving, when it knows its
+    # name. Goes into the run record as a fact about the deployment, not about
+    # where this sequence came from — the caller cannot tell.
+    corpus_version: str | None = Field(default=None, max_length=200)
 
     @field_validator("CDS")
     @classmethod
@@ -234,6 +238,34 @@ class ObjectivesReport(BaseModel):
     total_score: float | None = None
 
 
+class RunRecordInput(BaseModel):
+    sha256: str
+    length: int
+
+
+class RunRecordVersions(BaseModel):
+    algorithm_sha256: str
+    dnachisel: str
+    python: str
+    commit: str | None = None
+
+
+class RunRecord(BaseModel):
+    """What this run was, in enough detail to repeat or cite it.
+
+    Built in `python/run_record.py`; every field is a fact about the run.
+    """
+
+    record_version: int
+    started_at: str
+    duration_seconds: float
+    seed: int
+    input: RunRecordInput
+    options: dict[str, object]
+    versions: RunRecordVersions
+    corpus_version: str | None = None
+
+
 class ProcessResult(BaseModel):
     name: str
     original_sequence: str
@@ -249,5 +281,7 @@ class ProcessResult(BaseModel):
     wggw_info: dict[str, WggwSiteInfo] | None = None
     processing_time_seconds: float
     # The seed the run actually used (supplied or derived). Replaying the same
-    # sequence + options + seed reproduces the same design.
+    # sequence + options + seed reproduces the same design. Also carried in
+    # `run_record`, which is the field a notebook should cite.
     seed: int | None = None
+    run_record: RunRecord

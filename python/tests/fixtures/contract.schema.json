@@ -511,6 +511,19 @@
         "title": "Cds",
         "type": "string"
       },
+      "corpus_version": {
+        "anyOf": [
+          {
+            "maxLength": 200,
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Corpus Version"
+      },
       "name": {
         "title": "Name",
         "type": "string"
@@ -631,6 +644,107 @@
         "title": "ObjectivesReport",
         "type": "object"
       },
+      "RunRecord": {
+        "description": "What this run was, in enough detail to repeat or cite it.\n\nBuilt in `python/run_record.py`; every field is a fact about the run.",
+        "properties": {
+          "corpus_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Corpus Version"
+          },
+          "duration_seconds": {
+            "title": "Duration Seconds",
+            "type": "number"
+          },
+          "input": {
+            "$ref": "#/$defs/RunRecordInput"
+          },
+          "options": {
+            "additionalProperties": true,
+            "title": "Options",
+            "type": "object"
+          },
+          "record_version": {
+            "title": "Record Version",
+            "type": "integer"
+          },
+          "seed": {
+            "title": "Seed",
+            "type": "integer"
+          },
+          "started_at": {
+            "title": "Started At",
+            "type": "string"
+          },
+          "versions": {
+            "$ref": "#/$defs/RunRecordVersions"
+          }
+        },
+        "required": [
+          "record_version",
+          "started_at",
+          "duration_seconds",
+          "seed",
+          "input",
+          "options",
+          "versions"
+        ],
+        "title": "RunRecord",
+        "type": "object"
+      },
+      "RunRecordInput": {
+        "properties": {
+          "length": {
+            "title": "Length",
+            "type": "integer"
+          },
+          "sha256": {
+            "title": "Sha256",
+            "type": "string"
+          }
+        },
+        "required": ["sha256", "length"],
+        "title": "RunRecordInput",
+        "type": "object"
+      },
+      "RunRecordVersions": {
+        "properties": {
+          "algorithm_sha256": {
+            "title": "Algorithm Sha256",
+            "type": "string"
+          },
+          "commit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Commit"
+          },
+          "dnachisel": {
+            "title": "Dnachisel",
+            "type": "string"
+          },
+          "python": {
+            "title": "Python",
+            "type": "string"
+          }
+        },
+        "required": ["algorithm_sha256", "dnachisel", "python"],
+        "title": "RunRecordVersions",
+        "type": "object"
+      },
       "WggwSiteInfo": {
         "properties": {
           "distance_from_split": {
@@ -710,6 +824,9 @@
         "title": "Processing Time Seconds",
         "type": "number"
       },
+      "run_record": {
+        "$ref": "#/$defs/RunRecord"
+      },
       "seed": {
         "anyOf": [
           {
@@ -764,7 +881,8 @@
       "used_wggw_as_split",
       "objectives_before",
       "objectives_after",
-      "processing_time_seconds"
+      "processing_time_seconds",
+      "run_record"
     ],
     "title": "ProcessResult",
     "type": "object"

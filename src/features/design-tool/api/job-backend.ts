@@ -42,6 +42,13 @@ export interface BackendJobParams {
   CDS: string
   name: string
   options: ProcessOptions
+  /**
+   * The gene dataset this deployment is serving, for the run record — not a
+   * claim about where the sequence came from. Deliberately outside the
+   * idempotency key, which identifies the work itself: the same sequence and
+   * options are the same job whatever the dataset is called.
+   */
+  corpus_version?: string | null
 }
 
 // --- Backend routing -------------------------------------------------------

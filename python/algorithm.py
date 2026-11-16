@@ -1040,7 +1040,7 @@ def optimize_and_split(CDS, OPTIONS, on_progress=None):
     return seq5, seq3, objectives_before, objectives_after, split_result.final_sequence
 
 
-def process_single_request_json(CDS, name, OPTIONS, on_progress=None):
+def process_single_request_json(CDS, name, OPTIONS, on_progress=None, corpus_version=None):
     """
     Process a single coding sequence and return structured results as a dict.
     Created for the web application JSON API.
@@ -1051,14 +1051,24 @@ def process_single_request_json(CDS, name, OPTIONS, on_progress=None):
         OPTIONS: Optimization options dictionary. An optional "seed" makes the
             run reproducible; without one a seed is derived from the inputs.
         on_progress: Optional (fraction, stage) progress callback
+        corpus_version: The gene dataset the calling deployment is serving,
+            when it knows its name. Recorded in the run record; see
+            run_record.py.
 
     Returns:
-        dict: Structured results including sequences, objectives, WGGW info
-        and the seed the run used
+        dict: Structured results including sequences, objectives, WGGW info,
+            the seed the run used, and a run record describing the run
+            (see run_record.py)
     """
     import time as _time
+    from datetime import UTC, datetime
+
+    from .run_record import build_run_record
 
     start = _time.monotonic()
+    started_at = datetime.now(UTC)
+    # Recorded before the algorithm writes its own working keys into a copy.
+    options_as_applied = dict(OPTIONS)
 
     # Clean up the input sequence
     CDS = CDS.strip().upper().replace("U", "T")
@@ -1122,4 +1132,12 @@ def process_single_request_json(CDS, name, OPTIONS, on_progress=None):
         "wggw_info": wggw_info,
         "processing_time_seconds": round(elapsed, 2),
         "seed": seed,
+        "run_record": build_run_record(
+            cds=CDS,
+            options=options_as_applied,
+            started_at=started_at,
+            duration_seconds=elapsed,
+            seed=seed,
+            corpus_version=corpus_version,
+        ),
     }

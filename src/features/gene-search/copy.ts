@@ -1,4 +1,16 @@
 export const geneSearchCopy = {
+  charts: {
+    isoformLengths: {
+      caption:
+        'Coding sequence length of each isoform, and whether it suits a single-vector design',
+      columns: ['Isoform', 'Coding sequence length (bp)', 'Suitability'],
+    },
+    identityMatrix: {
+      caption:
+        'Protein sequence identity between each pair of isoforms, as a percentage',
+      columns: ['Isoform', 'Compared with', 'Identity (%)'],
+    },
+  },
   trigger: {
     label: 'Search for genes',
     kbdHintPrefix: 'Press',

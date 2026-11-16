@@ -5,6 +5,7 @@ import { usePathname, useSearchParams } from 'next/navigation'
 import { Grid3x3 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { IsoformListItem } from '@/features/gene-search/types/domain-types'
+import { ChartDataTable } from '@/components/chart-data-table'
 import { geneSearchCopy } from '@/features/gene-search/copy'
 
 interface Props {
@@ -158,6 +159,23 @@ export function IsoformIdentityMatrix({ isoforms }: Props) {
       <p className="text-muted-foreground type-nano max-w-prose">
         {geneSearchCopy.identityMatrix.footnote}
       </p>
+      <ChartDataTable
+        storageKey="isoforms"
+        caption={geneSearchCopy.charts.identityMatrix.caption}
+        columns={geneSearchCopy.charts.identityMatrix.columns}
+        rows={ids.flatMap((id, i) =>
+          // Each pair once: the matrix is symmetric, and a diagonal of 100%
+          // tells the reader nothing.
+          ids
+            .slice(i + 1)
+            .map((other, j) => [
+              id,
+              other,
+              Number((rows[i]?.[i + 1 + j] ?? 0).toFixed(1)),
+            ]),
+        )}
+        csvFilename="isoform-identity.csv"
+      />
     </section>
   )
 }

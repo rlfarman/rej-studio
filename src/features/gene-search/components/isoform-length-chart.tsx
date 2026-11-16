@@ -9,6 +9,7 @@ import {
 } from '@/lib/bio/design-suitability'
 import type { IsoformListItem } from '@/features/gene-search/types/domain-types'
 import { lengthChartModel } from '@/features/gene-search/utils/length-chart'
+import { ChartDataTable } from '@/components/chart-data-table'
 import { geneSearchCopy } from '../copy'
 
 const copy = geneSearchCopy.lengthChart
@@ -137,6 +138,13 @@ export function IsoformLengthChart({ isoforms }: Props) {
         <span className="hidden sm:inline" />
         <span className="text-right">{copy.unit}</span>
       </div>
+      <ChartDataTable
+        storageKey="isoforms"
+        caption={geneSearchCopy.charts.isoformLengths.caption}
+        columns={geneSearchCopy.charts.isoformLengths.columns}
+        rows={rows.map((row) => [row.id, row.length, row.suitability])}
+        csvFilename="isoform-lengths.csv"
+      />
     </section>
   )
 }

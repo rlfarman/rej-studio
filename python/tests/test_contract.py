@@ -28,6 +28,9 @@ from python.index import (
     ObjectiveLocation,
     ObjectivesReport,
     ProcessResult,
+    RunRecord,
+    RunRecordInput,
+    RunRecordVersions,
     WggwSiteInfo,
 )
 
@@ -64,6 +67,30 @@ TS_PROCESS_RESULT_FIELDS = {
     # The seed the run used, so a design can be reproduced. The TS
     # ProcessResult interface needs `seed?: number | null` to match.
     "seed",
+    "run_record",
+}
+
+TS_RUN_RECORD_FIELDS = {
+    "record_version",
+    "started_at",
+    "duration_seconds",
+    "seed",
+    "input",
+    "options",
+    "versions",
+    "corpus_version",
+}
+
+TS_RUN_RECORD_INPUT_FIELDS = {
+    "sha256",
+    "length",
+}
+
+TS_RUN_RECORD_VERSIONS_FIELDS = {
+    "algorithm_sha256",
+    "dnachisel",
+    "python",
+    "commit",
 }
 
 TS_OBJECTIVES_REPORT_FIELDS = {
@@ -119,12 +146,41 @@ class TestProcessResultContract:
             "objectives_report_after": {"entries": [], "total_score": None},
             "wggw_info": None,
             "processing_time_seconds": 1.23,
+            "run_record": {
+                "record_version": 1,
+                "started_at": "2026-11-16T09:30:00Z",
+                "duration_seconds": 1.23,
+                "seed": 12345,
+                "input": {"sha256": "0" * 64, "length": 9},
+                "options": {"split_point": 6},
+                "versions": {
+                    "algorithm_sha256": "0" * 12,
+                    "dnachisel": "3.2.16",
+                    "python": "3.14.10",
+                },
+            },
         }
         result = ProcessResult(**payload)
         assert result.name == "Test"
         assert result.split_point == 6
         # seed is optional so an older payload still validates.
         assert result.seed is None
+
+
+class TestRunRecordContract:
+    def test_field_parity(self):
+        py_fields = _field_names(RunRecord)
+        assert py_fields == TS_RUN_RECORD_FIELDS, (
+            f"Field mismatch.\n"
+            f"  Python-only: {py_fields - TS_RUN_RECORD_FIELDS}\n"
+            f"  TypeScript-only: {TS_RUN_RECORD_FIELDS - py_fields}"
+        )
+
+    def test_input_field_parity(self):
+        assert _field_names(RunRecordInput) == TS_RUN_RECORD_INPUT_FIELDS
+
+    def test_versions_field_parity(self):
+        assert _field_names(RunRecordVersions) == TS_RUN_RECORD_VERSIONS_FIELDS
 
 
 class TestObjectivesReportContract:

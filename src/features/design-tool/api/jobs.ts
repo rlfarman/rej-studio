@@ -14,6 +14,7 @@ import { getRequestRateLimitKey } from '@/lib/client-ip'
 import { createUpstashRateLimiter } from '@/lib/upstash'
 import { createLogger } from '@/lib/logger'
 import { requireSession } from '@/lib/auth/require-session'
+import { getCorpusVersion } from '@/features/design-tool/api/corpus-version'
 import {
   cancelOnBackend,
   getComputeBackend,
@@ -113,7 +114,13 @@ export async function submitJob(
 
   const backend = getComputeBackend()
   const startMs = performance.now()
-  const outcome = await submitToBackend(validated.data)
+  // The dataset this deployment is serving is named here, where the database
+  // is reachable, and recorded by the backend in the run record. It is not a
+  // claim about where the sequence came from; see ./corpus-version.ts.
+  const outcome = await submitToBackend({
+    ...validated.data,
+    corpus_version: await getCorpusVersion(),
+  })
   if (!outcome.ok) return outcome
 
   log.info('job submitted', {
