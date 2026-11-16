@@ -11,7 +11,9 @@ type Props = {
 const STATUS_BADGE_CLASS: Record<PhenotypeStatus, string> = {
   confirmed: '',
   provisional: 'bg-muted text-muted-foreground border-border',
-  susceptibility: 'bg-chart-4/10 text-chart-4 border-chart-4/20',
+  // Status tint with its text-safe `-soft` shade. Chart colors are fills
+  // only; as text they fell to ~1.6:1.
+  susceptibility: 'bg-warning/15 text-warning-soft border-warning/30',
   nondisease: 'bg-muted text-muted-foreground border-border',
 }
 

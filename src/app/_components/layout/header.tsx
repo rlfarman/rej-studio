@@ -132,6 +132,9 @@ function pageContextLabel(pathname: string): string | null {
 export function Header() {
   const pathname = usePathname()
   const isHomePage = pathname === '/'
+  // Home and /genes each render their own search box, so the header trigger
+  // would be a second search on the page.
+  const pageHasSearch = isHomePage || pathname === '/genes'
   const { state, isMobile } = useSidebar()
   const sidebarLabel =
     state === 'expanded' ? commonCopy.sidebar.close : commonCopy.sidebar.open
@@ -177,7 +180,7 @@ export function Header() {
         )}
       </div>
       <div className="flex justify-center">
-        {!isHomePage && (
+        {!pageHasSearch && (
           <GeneSearchShell
             searchGenes={searchGenes}
             defaultQuery={geneSymbol}
