@@ -1,15 +1,12 @@
 'use client'
 
-import { useMemo } from 'react'
 import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
-import { m } from 'motion/react'
 import { cn } from '@/lib/utils'
 import {
   assessDesignSuitability,
   getSuitabilityConfig,
 } from '@/lib/bio/design-suitability'
-import { useSpeciesContext } from '@/stores/species-store'
 import type { IsoformListItem } from '@/features/gene-search/types/domain-types'
 import { lengthChartModel } from '@/features/gene-search/utils/length-chart'
 import { ChartDataTable } from '@/components/chart-data-table'
@@ -27,7 +24,6 @@ interface Props {
  * genes it would just restate the table's CDS column.
  */
 export function IsoformLengthChart({ isoforms }: Props) {
-  const { species } = useSpeciesContext()
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
@@ -37,21 +33,15 @@ export function IsoformLengthChart({ isoforms }: Props) {
     return `${pathname}?${params.toString()}#isoform-row-${id}`
   }
 
-  const { rows, model } = useMemo(() => {
-    const filtered = isoforms
-      .filter((i) => {
-        if (!species || species === 'both') return true
-        return i.species.toLowerCase() === species
-      })
-      // Shortest first so the bars read as a ramp toward the limits.
-      .sort((a, b) => a.codingSequenceLength - b.codingSequenceLength)
-    const rows = filtered.map((i) => ({
+  const rows = [...isoforms]
+    // Shortest first so the bars read as a ramp toward the limits.
+    .sort((a, b) => a.codingSequenceLength - b.codingSequenceLength)
+    .map((i) => ({
       id: i.id,
       length: i.codingSequenceLength,
       suitability: assessDesignSuitability(i.codingSequence),
     }))
-    return { rows, model: lengthChartModel(rows) }
-  }, [isoforms, species])
+  const model = lengthChartModel(rows)
 
   if (!model.show) return null
 
@@ -83,7 +73,7 @@ export function IsoformLengthChart({ isoforms }: Props) {
       </div>
 
       <ul className="space-y-1">
-        {rows.map((row, i) => {
+        {rows.map((row) => {
           const cfg = getSuitabilityConfig(row.suitability)
           return (
             <li key={row.id}>
@@ -100,16 +90,9 @@ export function IsoformLengthChart({ isoforms }: Props) {
                   <span className="sm:hidden">…{row.id.slice(-6)}</span>
                 </span>
                 <div className="bg-muted/30 relative h-3 overflow-hidden rounded-sm">
-                  <m.div
-                    className={cn('h-full origin-left', cfg.fillClass)}
+                  <div
+                    className={cn('h-full', cfg.fillClass)}
                     style={{ width: `${pct(row.length)}%` }}
-                    initial={{ scaleX: 0, opacity: 0.6 }}
-                    animate={{ scaleX: 1, opacity: 1 }}
-                    transition={{
-                      duration: 0.6,
-                      delay: Math.min(i * 0.04, 0.4),
-                      ease: [0.16, 1, 0.3, 1],
-                    }}
                   />
                   {model.thresholds.map((limit) => (
                     <div

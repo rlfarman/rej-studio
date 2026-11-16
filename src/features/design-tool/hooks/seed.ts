@@ -346,8 +346,6 @@ function buildJobSeed(): JobHistoryEntry[] {
       status: 'running',
       result: null,
       error: null,
-      progress: 0.62,
-      stage: 'Packaging optimized sequences',
       formValues: baseFormValues({
         name: 'ACTB packaging test',
         codingSequence: REAL_CDS.ENST00000425660,
@@ -424,6 +422,12 @@ export function seedDesignToolData(): { jobs: number } {
     return {
       entries: [...jobSeed, ...state.entries.filter((e) => !seedIds.has(e.id))],
     }
+  })
+  // Progress lives in the non-persisted slice, so the demo's in-flight job
+  // gets its bar set here rather than on the entry.
+  useJobHistory.getState().setProgress('seed-job-running-1', {
+    progress: 0.62,
+    stage: 'Packaging optimized sequences',
   })
   return { jobs: jobSeed.length }
 }

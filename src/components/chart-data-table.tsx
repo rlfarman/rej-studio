@@ -100,7 +100,9 @@ function toCsv(columns: readonly string[], rows: ChartCell[][]): string {
     const text = String(value)
     return /[",\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text
   }
-  return [[...columns], ...rows].map((row) => row.map(escape).join(',')).join('\n')
+  return [[...columns], ...rows]
+    .map((row) => row.map(escape).join(','))
+    .join('\n')
 }
 
 /**

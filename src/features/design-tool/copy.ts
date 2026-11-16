@@ -39,6 +39,44 @@ export const designToolCopy = {
       'Species selection is required for protein sequences (needed for codon preference during reverse translation).',
     spliceTooLarge: (max: number) =>
       `Split position must be ≤ ${max} (sequence length − 1).`,
+    singleSplitOnly:
+      'The designer runs one split point at a time — remove the extra split before running.',
+  },
+  /** Failures from the job pipeline, phrased for the person who hit them. */
+  jobErrors: {
+    unreachable:
+      'Couldn’t reach the optimizer — your inputs are saved, try again.',
+    backendUnavailable:
+      'The optimizer is temporarily unavailable. Try again in a few seconds.',
+    backendRejected: 'The optimizer rejected this run.',
+    busy: 'The optimizer is busy right now. Try again in a few seconds.',
+    rateLimited: (seconds: number) =>
+      `That's a lot of runs — wait ${seconds}s and try again.`,
+    submitTimeout:
+      'The optimizer didn’t answer in time. Your inputs are saved — try again.',
+    statusTimeout: 'Lost contact with the optimizer while checking progress.',
+    pollTimeout: 'Timed out waiting for the result.',
+    invalidInput: 'The designer couldn’t accept these inputs.',
+    invalidJobId: 'That job reference isn’t valid.',
+    splitPointPastEnd: (point: number, length: number) =>
+      `The split point (${point.toLocaleString()}) is past the end of the ${length.toLocaleString()}-base sequence.`,
+    wggwSiteOutsideSequence:
+      'The selected WGGW motif lies outside the coding sequence.',
+    unauthorized:
+      'The optimizer refused this request. The compute backend may be misconfigured.',
+    sessionExpired: 'Your session expired — sign in again to run the designer.',
+    unexpectedResponse:
+      'The optimizer returned something unexpected. This run was not saved.',
+    cancelled: 'Cancelled',
+    notFound: 'No longer available',
+    failed: 'Job failed',
+    unknown: 'Something went wrong — try running again.',
+  },
+  draft: {
+    restored: 'Restored your unsaved draft.',
+    discard: 'Discard draft',
+    dismiss: 'Dismiss',
+    dismissAria: 'Dismiss the restored-draft notice',
   },
   sequenceInput: {
     labelProtein: 'Enter your sequence',
@@ -118,7 +156,6 @@ export const designToolCopy = {
     },
     advanced: {
       label: 'Advanced: objective weights',
-      hint: 'Relative importance of each objective, 0–100. Higher values pull the designer harder toward that objective when they conflict. Defaults to 1 for every objective — equal weighting.',
     },
     help: {
       codonOptimize:
@@ -156,8 +193,9 @@ export const designToolCopy = {
     },
   },
   weights: {
-    label: 'Weight',
-    inputAria: 'Weight',
+    hint: 'Relative importance of each objective, 0–100. Higher values pull the designer harder toward that objective when they conflict. Defaults to 1 for every objective — equal weighting.',
+    /** Shown next to an objective's name while that objective is turned off. */
+    off: '(off)',
   },
   splitPoint: {
     preselected: (bp: string) =>
@@ -297,8 +335,7 @@ export const designToolCopy = {
         columns: ['Position (bp)', 'Original GC %', 'Optimized GC %'],
       },
       changeDensity: {
-        caption:
-          'How many bases changed in each bin along the sequence',
+        caption: 'How many bases changed in each bin along the sequence',
         columns: ['From (bp)', 'To (bp)', 'Bases changed', 'Share of bin (%)'],
       },
       codonDelta: {
@@ -340,12 +377,6 @@ export const designToolCopy = {
     },
   },
   aav: {
-    preflight: {
-      single: 'Single AAV',
-      dual: 'Dual vector',
-      dualTight: 'Dual vector (tight)',
-      exceeds: 'Over AAV limit',
-    },
     results: {
       heading: 'AAV packaging estimate',
       fiveVector: '5′ vector',

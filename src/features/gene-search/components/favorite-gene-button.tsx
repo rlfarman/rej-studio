@@ -2,8 +2,6 @@
 import { Button } from '@/components/ui/button'
 import { Star } from 'lucide-react'
 import { useFavoriteGenes } from '@/features/gene-search/stores/favorite-genes-store'
-import { AnimatePresence, m } from 'motion/react'
-import { popSpring } from '@/lib/motion'
 import type { SavedGene } from '@/features/gene-search/types/domain-types'
 import { trackEvent } from '@/lib/analytics'
 import { geneSearchCopy } from '../copy'
@@ -13,9 +11,14 @@ interface FavoriteButtonProps {
 }
 
 export function FavoriteGeneButton({ gene }: FavoriteButtonProps) {
-  const { addFavoriteGene, removeFavoriteGene, isFavoriteGene } =
-    useFavoriteGenes()
-  const isFavorite = isFavoriteGene(gene.id)
+  const addFavoriteGene = useFavoriteGenes((s) => s.addFavoriteGene)
+  const removeFavoriteGene = useFavoriteGenes((s) => s.removeFavoriteGene)
+  // Select the boolean rather than calling a store getter during render: the
+  // React Compiler memoizes `getter(id)` on the getter's identity, which never
+  // changes, so the button never saw its own toggle.
+  const isFavorite = useFavoriteGenes((s) =>
+    s.favoriteGenes.some((fav) => fav.id === gene.id),
+  )
 
   const handleFavoriteClick = () => {
     if (isFavorite) {
@@ -31,31 +34,27 @@ export function FavoriteGeneButton({ gene }: FavoriteButtonProps) {
     })
   }
 
+  // A toggle: the name stays put and aria-pressed carries the state, so a
+  // screen reader hears "Favorite TP53, toggle button, pressed".
   return (
     <Button
       onClick={handleFavoriteClick}
       variant="ghost"
       size="icon"
-      aria-label={
+      aria-pressed={isFavorite}
+      aria-label={geneSearchCopy.favoriteButton.label(gene.symbol)}
+      title={
         isFavorite
           ? geneSearchCopy.favoriteButton.remove
           : geneSearchCopy.favoriteButton.add
       }
     >
-      <AnimatePresence mode="wait" initial={false}>
-        <m.div
-          key={isFavorite ? 'filled' : 'empty'}
-          initial={{ scale: 0.8 }}
-          animate={{ scale: 1 }}
-          transition={popSpring}
-        >
-          <Star
-            className={`size-5 transition-colors duration-200 ${
-              isFavorite ? 'fill-warning text-warning' : 'text-muted-foreground'
-            }`}
-          />
-        </m.div>
-      </AnimatePresence>
+      <Star
+        aria-hidden
+        className={`size-5 transition-colors duration-200 ${
+          isFavorite ? 'fill-warning text-warning' : 'text-muted-foreground'
+        }`}
+      />
     </Button>
   )
 }

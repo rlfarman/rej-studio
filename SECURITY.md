@@ -4,10 +4,7 @@
 
 If you discover a security vulnerability in REJ Studio, **please do not file a public issue**. Instead, report it privately so we can address it before disclosure.
 
-**How to report:**
-
-- Use GitHub's [private vulnerability reporting](https://github.com/rlfarman/rej-studio/security/advisories/new) for this repository, **or**
-- Email the maintainers listed in [`.github/CODEOWNERS`](./.github/CODEOWNERS).
+**How to report:** open a private report through GitHub's [private vulnerability reporting](https://github.com/rlfarman/rej-studio/security/advisories/new) (the repository's **Security** tab → **Report a vulnerability**). Only the maintainers can see it, and we can discuss the issue and publish the fix and advisory from the same place.
 
 Please include:
 

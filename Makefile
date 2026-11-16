@@ -1,4 +1,4 @@
-.PHONY: dev build seed deploy-modal lint format type-check verify doctor
+.PHONY: dev build seed db-studio db-migrate lint lint-fix format type-check verify doctor api-types help
 
 # ---------- Development ----------
 
@@ -10,26 +10,26 @@ build: ## Production build (Vercel target)
 
 # ---------- Database ----------
 
-seed: ## Rebuild JSONL from CSV, push schema, and upload data
-	pnpm db:build && pnpm db:push && pnpm db:upload
+seed: ## Rebuild JSONL from CSV, apply migrations, and upload data
+	pnpm db:build && pnpm db:migrate && pnpm db:upload
 
 db-studio: ## Open Drizzle Studio
 	pnpm db:studio
 
-db-push: ## Push schema changes to $DATABASE_URL
-	pnpm db:push
+db-migrate: ## Apply committed migrations to $DATABASE_URL
+	pnpm db:migrate
 
 # ---------- Deploy ----------
-
-deploy-modal: ## Deploy Python backend to Modal
-	cd modal && modal deploy app.py
+# The Python backend deploys from CI (.github/workflows/modal-deploy.yml) on
+# merges to main, with the pinned image builder and locked Modal client. To
+# redeploy by hand: gh workflow run modal-deploy.yml
 
 # ---------- Quality ----------
 
-lint: ## Run ESLint
+lint: ## Run Oxlint, then ESLint
 	pnpm lint
 
-lint-fix: ## Auto-fix ESLint issues
+lint-fix: ## Auto-fix lint issues
 	pnpm lint:fix
 
 format: ## Run Prettier
@@ -38,11 +38,11 @@ format: ## Run Prettier
 type-check: ## Run TypeScript type checker
 	pnpm type-check
 
-verify: ## Run full CI gate locally (lint, format, types, knip, build)
+verify: ## Lint, type-check and unit tests (the pre-push gate)
 	pnpm verify
 
 doctor: ## Check local environment health
-	bash scripts/doctor.sh
+	pnpm doctor
 
 # ---------- Codegen ----------
 

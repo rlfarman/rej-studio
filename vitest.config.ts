@@ -1,9 +1,22 @@
 import { defineConfig } from 'vitest/config'
+import { createRequire } from 'node:module'
 import path from 'node:path'
+
+const require = createRequire(import.meta.url)
 
 export default defineConfig({
   resolve: {
-    alias: { '@': path.resolve(__dirname, 'src') },
+    alias: [
+      { find: '@', replacement: path.resolve(__dirname, 'src') },
+      // Server modules `import 'server-only'`, whose default export throws
+      // outside a React Server Components build. Next swaps in its own empty
+      // module at build time; tests run those modules on the server side, so
+      // they get the same empty module.
+      {
+        find: /^server-only$/,
+        replacement: require.resolve('next/dist/compiled/server-only/empty.js'),
+      },
+    ],
   },
   test: {
     globals: false,

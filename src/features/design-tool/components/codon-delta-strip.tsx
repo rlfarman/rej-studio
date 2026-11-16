@@ -146,9 +146,13 @@ export function CodonDeltaStrip({ original, optimized, species }: Props) {
           .map((cell) => [
             cell.idx + 1,
             cell.from,
-            cell.before === null ? '\u2014' : Number((cell.before * 100).toFixed(1)),
+            cell.before === null
+              ? '\u2014'
+              : Number((cell.before * 100).toFixed(1)),
             cell.to,
-            cell.after === null ? '\u2014' : Number((cell.after * 100).toFixed(1)),
+            cell.after === null
+              ? '\u2014'
+              : Number((cell.after * 100).toFixed(1)),
           ])}
         csvFilename="codon-usage-delta.csv"
       />

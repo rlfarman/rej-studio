@@ -1,13 +1,13 @@
 'use client'
 
-import { useMemo } from 'react'
 import { Activity, GitCompareArrows } from 'lucide-react'
-import {
-  type ChartCell,
-  ChartDataTable,
-} from '@/components/chart-data-table'
+import { type ChartCell, ChartDataTable } from '@/components/chart-data-table'
 import { designToolCopy } from '../copy'
 import { slidingGcContent, changeDensity } from '@/lib/bio/sequence-utils'
+import {
+  GC_TARGET_MAX_PERCENT,
+  GC_TARGET_MIN_PERCENT,
+} from '@/features/design-tool/utils/job-constants'
 
 interface Props {
   original: string
@@ -15,65 +15,75 @@ interface Props {
   splitPoint?: number
 }
 
-// Target GC band — reasonable default for mammalian synthetic genes.
-const TARGET_GC_MIN = 40
-const TARGET_GC_MAX = 60
+// Target GC band — the one the optimizer actually enforces
+// (EnforceGCContent(mini=0.35, maxi=0.60) in python/algorithm.py), so the
+// chart can't promise a band the solver isn't aiming for.
+const TARGET_GC_MIN = GC_TARGET_MIN_PERCENT
+const TARGET_GC_MAX = GC_TARGET_MAX_PERCENT
 
 const CHART_HEIGHT = 120
 const CHART_PAD_X = 4
 const CHART_PAD_Y = 8
 
-function GcContentTrack({ original, optimized, splitPoint }: Props) {
-  const { beforePath, afterPath, maxLen, rows, windowSize } = useMemo(() => {
-    const maxLen = Math.max(original.length, optimized.length)
-    if (maxLen === 0) {
-      return {
-        beforePath: '',
-        afterPath: '',
-        maxLen: 0,
-        rows: [] as ChartCell[][],
-        windowSize: 0,
-      }
-    }
-    // Scale window with sequence length so short sequences still get detail.
-    const windowSize = Math.max(30, Math.min(120, Math.round(maxLen / 25)))
-    const step = Math.max(1, Math.round(maxLen / 200))
-    const before = slidingGcContent(original, windowSize, step)
-    const after = slidingGcContent(optimized, windowSize, step)
-
-    const toPath = (pts: { position: number; gc: number }[]) => {
-      if (pts.length === 0) return ''
-      const width = 1000 - CHART_PAD_X * 2
-      const height = CHART_HEIGHT - CHART_PAD_Y * 2
-      return pts
-        .map((p, i) => {
-          const x = CHART_PAD_X + (p.position / Math.max(1, maxLen - 1)) * width
-          const y = CHART_PAD_Y + (1 - p.gc / 100) * height
-          return `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`
-        })
-        .join(' ')
-    }
-
-    // The same samples the lines are drawn from, as rows. One table rather
-    // than two, because the point of the chart is the comparison.
-    const afterByPosition = new Map(after.map((point) => [point.position, point.gc]))
-    const rows: ChartCell[][] = before.map((point) => {
-      const optimizedGc = afterByPosition.get(point.position)
-      return [
-        point.position,
-        Number(point.gc.toFixed(1)),
-        optimizedGc === undefined ? '\u2014' : Number(optimizedGc.toFixed(1)),
-      ]
-    })
-
+/** Plain function — the React Compiler handles memoization. */
+function buildGcPaths(original: string, optimized: string) {
+  const maxLen = Math.max(original.length, optimized.length)
+  if (maxLen === 0) {
     return {
-      beforePath: toPath(before),
-      afterPath: toPath(after),
-      maxLen,
-      rows,
-      windowSize,
+      beforePath: '',
+      afterPath: '',
+      maxLen: 0,
+      rows: [] as ChartCell[][],
+      windowSize: 0,
     }
-  }, [original, optimized])
+  }
+  // Scale window with sequence length so short sequences still get detail.
+  const windowSize = Math.max(30, Math.min(120, Math.round(maxLen / 25)))
+  const step = Math.max(1, Math.round(maxLen / 200))
+  const before = slidingGcContent(original, windowSize, step)
+  const after = slidingGcContent(optimized, windowSize, step)
+
+  const toPath = (pts: { position: number; gc: number }[]) => {
+    if (pts.length === 0) return ''
+    const width = 1000 - CHART_PAD_X * 2
+    const height = CHART_HEIGHT - CHART_PAD_Y * 2
+    return pts
+      .map((p, i) => {
+        const x = CHART_PAD_X + (p.position / Math.max(1, maxLen - 1)) * width
+        const y = CHART_PAD_Y + (1 - p.gc / 100) * height
+        return `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`
+      })
+      .join(' ')
+  }
+
+  // The same samples the lines are drawn from, as rows. One table rather
+  // than two, because the point of the chart is the comparison.
+  const afterByPosition = new Map(
+    after.map((point) => [point.position, point.gc]),
+  )
+  const rows: ChartCell[][] = before.map((point) => {
+    const optimizedGc = afterByPosition.get(point.position)
+    return [
+      point.position,
+      Number(point.gc.toFixed(1)),
+      optimizedGc === undefined ? '—' : Number(optimizedGc.toFixed(1)),
+    ]
+  })
+
+  return {
+    beforePath: toPath(before),
+    afterPath: toPath(after),
+    maxLen,
+    rows,
+    windowSize,
+  }
+}
+
+function GcContentTrack({ original, optimized, splitPoint }: Props) {
+  const { beforePath, afterPath, maxLen, rows, windowSize } = buildGcPaths(
+    original,
+    optimized,
+  )
 
   if (maxLen === 0) return null
 
@@ -180,14 +190,19 @@ function GcContentTrack({ original, optimized, splitPoint }: Props) {
   )
 }
 
+function buildChangeDensity(original: string, optimized: string) {
+  const bins = changeDensity(original, optimized, 60)
+  const maxChanges = bins.reduce((m, b) => Math.max(m, b.changes), 0)
+  const len = Math.min(original.length, optimized.length)
+  const total = bins.reduce((m, b) => m + b.changes, 0)
+  return { bins, maxChanges, len, total }
+}
+
 function ChangeDensityTrack({ original, optimized, splitPoint }: Props) {
-  const { bins, maxChanges, len, total } = useMemo(() => {
-    const bins = changeDensity(original, optimized, 60)
-    const maxChanges = bins.reduce((m, b) => Math.max(m, b.changes), 0)
-    const len = Math.min(original.length, optimized.length)
-    const total = bins.reduce((m, b) => m + b.changes, 0)
-    return { bins, maxChanges, len, total }
-  }, [original, optimized])
+  const { bins, maxChanges, len, total } = buildChangeDensity(
+    original,
+    optimized,
+  )
 
   if (bins.length === 0 || len === 0) return null
 

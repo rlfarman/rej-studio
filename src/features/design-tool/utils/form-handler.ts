@@ -11,9 +11,10 @@ export function buildJobParams(values: FormValues) {
 function buildOptions(values: FormValues) {
   const positions = values.spliceJunctionPositions
   const sites = values.selectedWggwSites
-  // Backwards-compat: emit single split_point / selected_wggw_site for the
-  // common 1-splice case so the existing Python backend keeps working
-  // without changes. For 2+ splices, also emit array forms.
+  // One split point, always: the optimizer answers 422 for more than one
+  // (ProcessOptions in python/index.py takes a single `split_point`), and
+  // the form schema blocks a second position before we get here. Emitting
+  // array forms would have shipped a payload the backend rejects.
   return {
     codon_optimize: values.species !== 'none' ? values.species : null,
     codon_optimize_weight: values.codonOptimizeWeight,
@@ -28,13 +29,14 @@ function buildOptions(values: FormValues) {
     stim_3: values['3PrimeStimulatoryIntron'],
     split_point: positions[0] ?? null,
     selected_wggw_site: serializeSelectedWggwSite(sites[0] ?? null),
-    ...(positions.length > 1 && {
-      split_points: positions,
-      selected_wggw_sites: sites.map(serializeSelectedWggwSite),
-    }),
     ensure_wggw: true,
     wggw_threshold: 300,
   }
+}
+
+/** Uppercase DNA, with RNA U folded back to T — the backend expects DNA. */
+function toDna(codon: string) {
+  return codon.toUpperCase().replace(/U/g, 'T')
 }
 
 function serializeSelectedWggwSite(site: SelectedWggwSite | null | undefined) {
@@ -42,15 +44,13 @@ function serializeSelectedWggwSite(site: SelectedWggwSite | null | undefined) {
   return {
     position: site.position,
     motif_start: site.motifStart,
-    motif: site.motif.toUpperCase().replace(/U/g, 'T'),
+    motif: toDna(site.motif),
     hexamer_start: site.hexamerStart,
-    original_codons: site.originalCodons.map((codon) =>
-      codon.toUpperCase().replace(/U/g, 'T'),
-    ),
-    new_codons: site.newCodons.map((codon) =>
-      codon.toUpperCase().replace(/U/g, 'T'),
-    ),
-    new_hexamer: site.newHexamer.toUpperCase().replace(/U/g, 'T'),
+    // Tuples, not arrays: the backend's SelectedWggwSite takes exactly two
+    // codons either side of the junction (see python/index.py).
+    original_codons: site.originalCodons.map(toDna) as [string, string],
+    new_codons: site.newCodons.map(toDna) as [string, string],
+    new_hexamer: toDna(site.newHexamer),
   }
 }
 

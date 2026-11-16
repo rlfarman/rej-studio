@@ -4,8 +4,6 @@ import { useFormContext } from 'react-hook-form'
 import { Button } from '@/components/ui/button'
 import { Loader2, Check, Play } from 'lucide-react'
 import { FormValues } from '../types/form-schema'
-import { AnimatePresence, m } from 'motion/react'
-import { quickFade, softSpring } from '@/lib/motion'
 import { designToolCopy } from '../copy'
 
 interface SubmitButtonProps {
@@ -46,45 +44,24 @@ export function SubmitButton({
       aria-busy={isProcessing}
       aria-live="polite"
     >
-      <AnimatePresence mode="wait" initial={false}>
+      <span className="inline-flex items-center gap-2.5">
         {isProcessing ? (
-          <m.span
-            key="loading"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={quickFade}
-            className="inline-flex items-center gap-2.5"
-          >
+          <>
             <Loader2 className="size-4.5 animate-spin" />
             {stageText}
-          </m.span>
+          </>
         ) : showSuccess ? (
-          <m.span
-            key="success"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0 }}
-            transition={softSpring}
-            className="inline-flex items-center gap-2.5"
-          >
+          <>
             <Check className="size-4.5" />
             {designToolCopy.submit.success}
-          </m.span>
+          </>
         ) : (
-          <m.span
-            key="idle"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={quickFade}
-            className="inline-flex items-center gap-2.5"
-          >
+          <>
             <Play className="size-4.5" />
             {designToolCopy.submit.idle}
-          </m.span>
+          </>
         )}
-      </AnimatePresence>
+      </span>
     </Button>
   )
 }

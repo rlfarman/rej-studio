@@ -18,8 +18,6 @@ interface ObjectiveToggleProperties {
   /** Plain-language explanation shown in a keyboard-reachable tooltip. */
   help?: string
   children?: React.ReactNode
-  /** Rendered at the row's trailing edge only when the toggle is checked. */
-  activeChildren?: React.ReactNode
 }
 
 /**
@@ -36,7 +34,6 @@ export function ToggleCard({
   badge,
   help,
   children,
-  activeChildren,
 }: ObjectiveToggleProperties) {
   const { control } = useFormContext<FormValues>()
   return (
@@ -85,17 +82,6 @@ export function ToggleCard({
                   {children}
                 </div>
               </label>
-              {activeChildren ? (
-                <div
-                  className={cn(
-                    'min-w-fit self-center pl-1.5 transition-opacity',
-                    !checked && 'opacity-50',
-                  )}
-                  aria-disabled={!checked}
-                >
-                  {activeChildren}
-                </div>
-              ) : null}
             </div>
           </FormItem>
         )

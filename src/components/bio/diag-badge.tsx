@@ -1,6 +1,7 @@
 'use client'
 
 import { Badge } from '@/components/ui/badge'
+import { cn } from '@/lib/utils'
 import {
   Tooltip,
   TooltipContent,
@@ -46,11 +47,22 @@ export function DiagBadge({ status, label, tooltip }: DiagBadgeProps) {
 
   return (
     <Tooltip>
-      <TooltipTrigger asChild>
-        <Badge variant={variant} className="gap-1 select-none">
-          <Icon className={`size-3 ${iconColor}`} />
-          {label}
-        </Badge>
+      <TooltipTrigger
+        render={
+          <Badge
+            variant={variant}
+            // The destructive variant's text-destructive measures ~4.2:1 on
+            // its own tint; danger-soft is the status text token (≥5:1 on
+            // the tint over card, background or muted, light and dark).
+            className={cn(
+              'gap-1 select-none',
+              status === 'error' && 'text-danger-soft',
+            )}
+          />
+        }
+      >
+        <Icon className={`size-3 ${iconColor}`} />
+        {label}
       </TooltipTrigger>
       <TooltipContent>{tooltip}</TooltipContent>
     </Tooltip>

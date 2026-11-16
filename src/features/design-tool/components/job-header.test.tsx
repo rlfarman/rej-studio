@@ -33,6 +33,36 @@ describe('JobHeader completion bloom', () => {
   })
 })
 
+describe('JobHeader metadata chips', () => {
+  it('shows bp and species when the run is known', () => {
+    const { container } = render(
+      <JobHeader {...baseProps} status="completed" />,
+    )
+    expect(container.textContent).toContain('1,182 bp')
+    expect(container.textContent).toContain('Human')
+  })
+
+  // An unavailable job used to read "Untitled run · 0 bp · No longer
+  // available": filler for data we simply don't have.
+  it('hides bp and species when there is no local record', () => {
+    const { container } = render(
+      <JobHeader
+        {...baseProps}
+        name=""
+        sequenceLength={null}
+        species="none"
+        status="failed"
+        retriable={false}
+        errorMessage="No longer available"
+      />,
+    )
+    expect(container.textContent).not.toContain('bp')
+    expect(container.textContent).not.toContain('Human')
+    expect(container.textContent).toContain('No longer available')
+    expect(container.textContent).toContain('Untitled run')
+  })
+})
+
 describe('RunningPlaceholder progress', () => {
   it('snaps to each new checkpoint and clears when progress is unknown', () => {
     const { container, rerender } = render(

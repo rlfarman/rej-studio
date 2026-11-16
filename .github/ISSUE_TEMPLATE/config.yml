@@ -3,3 +3,6 @@ contact_links:
   - name: Contributing guide
     url: https://github.com/rlfarman/rej-studio/blob/main/CONTRIBUTING.md
     about: Commit conventions, branch naming, and how to open a PR.
+  - name: Report a security vulnerability
+    url: https://github.com/rlfarman/rej-studio/security/advisories/new
+    about: Report privately; please don't open a public issue. See SECURITY.md.
