@@ -12,7 +12,7 @@ name = "rej-studio-optimizer"
 version = "0.0.0"
 description = "DNA optimization backend for REJ Studio (FastAPI + DNA Chisel)"
 # Python 3.14 everywhere: here, .python-version, the Modal image (built with
-# image builder 2026.10, pinned in modal-deploy.yml), CI and the dev Dockerfile.
+# image builder 2026.10, pinned in modal-deploy.yml) and CI.
 requires-python = ">=3.14,<3.15"
 dependencies = [
     # Web API. The [standard] extra is what Modal web endpoints expect, and it

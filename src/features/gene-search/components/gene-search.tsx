@@ -1,8 +1,7 @@
 'use client'
-import { useEffect, useState, useTransition } from 'react'
+import { useRef, useState, useTransition } from 'react'
 import { CommandDialog } from '@/components/ui/command'
 import { useRouter } from 'next/navigation'
-import { type SearchGenesResult } from '@/features/gene-search/api/genes'
 import { Button } from '@/components/ui/button'
 import { Kbd, ModKey } from '@/components/ui/kbd'
 import { SearchIcon } from 'lucide-react'
@@ -10,19 +9,18 @@ import { useGeneSearch } from '@/features/gene-search/hooks/use-gene-search'
 import { GeneSearchCommand } from './gene-search-command'
 import { useRecentGenes } from '@/features/gene-search/stores/recent-genes-store'
 import { useFavoriteGenes } from '@/features/gene-search/stores/favorite-genes-store'
-import { geneHref, type SpeciesFilter } from '@/lib/bio/species'
+import { geneHref } from '@/lib/bio/species'
+import { useSpeciesContext } from '@/stores/species-store'
+import { searchPageHref } from '@/features/gene-search/utils/search-href'
 import type {
   SavedGene,
   JobSearchItem,
 } from '@/features/gene-search/types/domain-types'
 import { trackEvent } from '@/lib/analytics'
+import { useSearchShortcut } from '@/hooks/use-search-shortcut'
 import { geneSearchCopy } from '../copy'
 
 interface GeneSearchProperties {
-  searchGenes: (
-    content: string,
-    species?: SpeciesFilter,
-  ) => Promise<SearchGenesResult>
   defaultQuery?: string
   isDialog?: boolean
   // Jobs to merge into search results. Supplied by the app-level shell so
@@ -34,7 +32,6 @@ interface GeneSearchProperties {
 const EMPTY_JOBS: JobSearchItem[] = []
 
 export function GeneSearch({
-  searchGenes,
   defaultQuery,
   isDialog = false,
   jobs = EMPTY_JOBS,
@@ -44,15 +41,16 @@ export function GeneSearch({
   const {
     query,
     setQuery,
+    searchNow,
     hasSearched,
     searchResults,
+    truncated,
+    suggestions,
     isLoading,
     error,
     retry,
-  } = useGeneSearch({
-    searchGenes,
-    defaultQuery,
-  })
+  } = useGeneSearch({ defaultQuery })
+  const { species } = useSpeciesContext()
   const [isOpen, setIsOpen] = useState(false)
   const [pendingGene, setPendingGene] = useState<SavedGene | null>(null)
   const [, startTransition] = useTransition()
@@ -86,17 +84,23 @@ export function GeneSearch({
     onSelectJob?.(entry.id)
   }
 
-  useEffect(() => {
-    const down = (e: KeyboardEvent) => {
-      if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault()
-        setIsOpen((isOpen) => !isOpen)
-      }
-    }
+  // The palette shows a handful of genes; the /genes page shows the rest.
+  const handleSeeAll = () => {
+    setIsOpen(false)
+    router.push(searchPageHref(query.trim(), species))
+  }
 
-    document.addEventListener('keydown', down)
-    return () => document.removeEventListener('keydown', down)
-  }, [])
+  // ⌘K toggles the palette; on a page with the inline search (home), it
+  // focuses that box instead.
+  const inputRef = useRef<HTMLInputElement>(null)
+  useSearchShortcut(() => {
+    if (isDialog) {
+      setIsOpen((isOpen) => !isOpen)
+    } else {
+      inputRef.current?.focus()
+      inputRef.current?.select()
+    }
+  })
 
   if (isDialog) {
     return (
@@ -121,8 +125,12 @@ export function GeneSearch({
           <GeneSearchCommand
             query={query}
             setQuery={setQuery}
+            searchNow={searchNow}
             hasSearched={hasSearched}
             searchResults={searchResults}
+            truncated={truncated}
+            suggestions={suggestions}
+            onSeeAll={handleSeeAll}
             isLoading={isLoading}
             setIsOpen={setIsOpen}
             handleSelect={handleSelect}
@@ -143,8 +151,14 @@ export function GeneSearch({
     <GeneSearchCommand
       query={query}
       setQuery={setQuery}
+      searchNow={searchNow}
+      inputRef={inputRef}
+      shortcutHint
       hasSearched={hasSearched}
       searchResults={searchResults}
+      truncated={truncated}
+      suggestions={suggestions}
+      onSeeAll={handleSeeAll}
       isLoading={isLoading}
       setIsOpen={setIsOpen}
       handleSelect={handleSelect}

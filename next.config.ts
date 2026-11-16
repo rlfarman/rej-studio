@@ -1,20 +1,11 @@
 import { withSentryConfig } from '@sentry/nextjs/config'
 import type { NextConfig } from 'next'
 import path from 'path'
-import withBundleAnalyzer from '@next/bundle-analyzer'
-import { createMDX } from 'fumadocs-mdx/next'
-
-const bundleAnalyzer = withBundleAnalyzer({
-  enabled: process.env.ANALYZE === 'true',
-})
 
 // In development, proxy /api/py/* to the local uvicorn dev server.
 // In production, the Python backend runs on Modal and is called directly from
 // server actions (see src/features/design-tool/api/jobs.ts) — no rewrites.
 const nextConfig: NextConfig = {
-  // Emit standalone output for Docker production builds (see docker/prod.Dockerfile).
-  // Gated behind DOCKER_BUILD to avoid changing Vercel/CF deploy behavior.
-  ...(process.env.DOCKER_BUILD === 'true' && { output: 'standalone' }),
   cacheComponents: true,
   // Prefetch one reusable App Shell per route instead of one prefetch per
   // visible link. Requires cacheComponents; becomes the default in Next 17.
@@ -25,16 +16,8 @@ const nextConfig: NextConfig = {
   // port (experimental.turbopackRustReactCompiler) is still experimental.
   reactCompiler: true,
   experimental: {
-    optimizePackageImports: [
-      'motion',
-      'lucide-react',
-      '@radix-ui/react-icons',
-      'fumadocs-ui',
-      'fumadocs-core',
-      '@tanstack/react-query',
-      'react-hook-form',
-      'date-fns',
-    ],
+    // lucide-react is already in Next's built-in list.
+    optimizePackageImports: ['@tanstack/react-query', 'react-hook-form'],
   },
   // PGlite uses native/WASM modules that must not be bundled by webpack/turbopack.
   serverExternalPackages: ['@electric-sql/pglite'],
@@ -53,22 +36,6 @@ const nextConfig: NextConfig = {
       process.env.VERCEL_GIT_COMMIT_SHA ??
       'unknown',
     BUILD_TIMESTAMP: new Date().toISOString(),
-    // GitHub repo info — used by docs "edit this page" links and the nav
-    // GitHub button. Falls back to Vercel's git env so deployments get
-    // correct values with zero config; override by setting any of the
-    // NEXT_PUBLIC_GITHUB_* vars explicitly.
-    NEXT_PUBLIC_GITHUB_OWNER:
-      process.env.NEXT_PUBLIC_GITHUB_OWNER ??
-      process.env.VERCEL_GIT_REPO_OWNER ??
-      '',
-    NEXT_PUBLIC_GITHUB_REPO:
-      process.env.NEXT_PUBLIC_GITHUB_REPO ??
-      process.env.VERCEL_GIT_REPO_SLUG ??
-      '',
-    NEXT_PUBLIC_GITHUB_BRANCH:
-      process.env.NEXT_PUBLIC_GITHUB_BRANCH ??
-      process.env.VERCEL_GIT_COMMIT_REF ??
-      '',
   },
   headers: async () => [
     // Stale-while-revalidate for the sitemap — CDN serves the cached version
@@ -110,8 +77,8 @@ const nextConfig: NextConfig = {
           key: 'X-Permitted-Cross-Domain-Policies',
           value: 'none',
         },
-        // CSP is set per-request in proxy.ts with a unique nonce.
-        // Do not add a static CSP header here — it would conflict.
+        // The Content-Security-Policy is set in proxy.ts (production only).
+        // Don't add one here: browsers enforce every CSP header they get.
       ],
     },
   ],
@@ -122,8 +89,7 @@ const nextConfig: NextConfig = {
   ],
   rewrites: async () => {
     if (process.env.NODE_ENV === 'development') {
-      // LOCAL_API_URL defaults to localhost; in Docker it points to the
-      // fastapi service (e.g. http://fastapi:8000).
+      // LOCAL_API_URL overrides where uvicorn listens (default localhost).
       const pyBackend = process.env.LOCAL_API_URL ?? 'http://127.0.0.1:8000'
       return [
         {
@@ -141,12 +107,10 @@ const nextConfig: NextConfig = {
   },
 }
 
-const withMDX = createMDX()
-
 // Sentry wrapping — only active when NEXT_PUBLIC_SENTRY_DSN is set.
 // In dev / CI without the DSN, this is a no-op pass-through.
 const sentryWrapped = process.env.NEXT_PUBLIC_SENTRY_DSN
-  ? withSentryConfig(bundleAnalyzer(withMDX(nextConfig)), {
+  ? withSentryConfig(nextConfig, {
       org: process.env.SENTRY_ORG,
       project: process.env.SENTRY_PROJECT,
       silent: !process.env.CI,
@@ -157,6 +121,6 @@ const sentryWrapped = process.env.NEXT_PUBLIC_SENTRY_DSN
         automaticVercelMonitors: true,
       },
     })
-  : bundleAnalyzer(withMDX(nextConfig))
+  : nextConfig
 
 export default sentryWrapped

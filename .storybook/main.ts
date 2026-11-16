@@ -5,9 +5,6 @@ const config: StorybookConfig = {
   framework: '@storybook/nextjs-vite',
   addons: ['@storybook/addon-themes'],
   staticDirs: ['../public'],
-  docs: {
-    autodocs: true,
-  },
 }
 
 export default config

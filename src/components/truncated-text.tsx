@@ -30,10 +30,16 @@ export function TruncatedText({
 
   return (
     <Tooltip open={isTruncated ? undefined : false}>
-      <TooltipTrigger asChild>
-        <span ref={ref} className={className} onMouseEnter={handleMouseEnter}>
-          {children}
-        </span>
+      <TooltipTrigger
+        render={
+          <span
+            ref={ref}
+            className={className}
+            onMouseEnter={handleMouseEnter}
+          />
+        }
+      >
+        {children}
       </TooltipTrigger>
       <TooltipContent>{tooltip}</TooltipContent>
     </Tooltip>

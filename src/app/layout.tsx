@@ -7,9 +7,7 @@ import { GoogleTagManager } from '@/components/google-tag-manager'
 import { AnalyticsPageview } from '@/components/analytics-pageview'
 import { AnalyticsProperties } from '@/components/analytics-properties'
 import { WebVitals } from '@/components/web-vitals'
-import { ConsoleGreeting } from '@/components/console-greeting'
 import { Suspense } from 'react'
-import { AuthGate } from '@/features/auth/components/auth-gate'
 
 // Inline hydration script — reads the user's sidebar preferences from
 // localStorage and applies them to <html> before React renders. Keeps the
@@ -84,9 +82,10 @@ export default function RootLayout({
             >
               Skip to content
             </a>
-            <Suspense fallback={null}>
-              <AuthGate>{children}</AuthGate>
-            </Suspense>
+            {/* No session check here: the proxy (src/proxy.ts) redirects
+                signed-out page loads before anything renders, and server
+                actions re-check with requireSession(). */}
+            {children}
             <Toaster />
             <Suspense fallback={null}>
               <AnalyticsPageview />
@@ -95,7 +94,6 @@ export default function RootLayout({
           </QueryProvider>
         </ThemeProvider>
         <WebVitals />
-        <ConsoleGreeting />
         <GoogleTagManager />
       </body>
     </html>

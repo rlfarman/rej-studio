@@ -1,6 +1,6 @@
 /**
  * Load the JSONL seed (built by scripts/build-db.py) into whatever DB the
- * Drizzle client in src/drizzle/db.ts is currently pointed at.
+ * Drizzle client in src/drizzle/client.ts is currently pointed at.
  *
  * Dialect-neutral: uses Drizzle's query builder for DDL and batched INSERTs,
  * so switching the underlying DB only requires updating db.ts + schema.ts.
@@ -11,7 +11,7 @@
 
 import { readFileSync, existsSync } from 'fs'
 import { sql } from 'drizzle-orm'
-import { getDb } from '../src/drizzle/db'
+import { getDb } from '../src/drizzle/client'
 import { genes, isoforms } from '../src/drizzle/schema'
 
 const GENES_JSONL = 'data/genes.jsonl'

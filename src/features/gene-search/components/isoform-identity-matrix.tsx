@@ -1,11 +1,9 @@
 'use client'
 
-import { useMemo } from 'react'
 import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { Grid3x3 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { useSpeciesContext } from '@/stores/species-store'
 import type { IsoformListItem } from '@/features/gene-search/types/domain-types'
 import { geneSearchCopy } from '@/features/gene-search/copy'
 
@@ -80,7 +78,6 @@ function proteinIdentity(a: string, b: string): number {
  * carries its value for screen readers and as a hover title.
  */
 export function IsoformIdentityMatrix({ isoforms }: Props) {
-  const { species } = useSpeciesContext()
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
@@ -90,23 +87,15 @@ export function IsoformIdentityMatrix({ isoforms }: Props) {
     return `${pathname}?${params.toString()}#isoform-row-${id}`
   }
 
-  const { rows, ids } = useMemo(() => {
-    const filtered = isoforms.filter((i) => {
-      if (!species || species === 'both') return true
-      return i.species.toLowerCase() === species
-    })
-    // Sort by protein length descending so the longest (usually canonical)
-    // isoform is in the top-left corner.
-    const sorted = [...filtered].sort(
-      (a, b) => b.proteinSequenceLength - a.proteinSequenceLength,
-    )
-    const trimmed = sorted.slice(0, MAX_ISOFORMS)
-    const ids = trimmed.map((i) => i.id)
-    const rows = trimmed.map((a) =>
-      trimmed.map((b) => proteinIdentity(a.proteinSequence, b.proteinSequence)),
-    )
-    return { rows, ids }
-  }, [isoforms, species])
+  // Sort by protein length descending so the longest (usually canonical)
+  // isoform is in the top-left corner.
+  const trimmed = [...isoforms]
+    .sort((a, b) => b.proteinSequenceLength - a.proteinSequenceLength)
+    .slice(0, MAX_ISOFORMS)
+  const ids = trimmed.map((i) => i.id)
+  const rows = trimmed.map((a) =>
+    trimmed.map((b) => proteinIdentity(a.proteinSequence, b.proteinSequence)),
+  )
 
   if (ids.length < MIN_ISOFORMS) return null
 
@@ -214,8 +203,8 @@ function Row({
         <Link
           href={href}
           scroll={false}
-          className="text-muted-foreground hover:text-foreground focus-visible:ring-ring/50 type-nano inline-flex items-baseline gap-2 rounded-sm font-mono outline-none hover:underline focus-visible:ring-[3px]"
-          title={`Jump to ${id}`}
+          className="text-muted-foreground hover:text-foreground focus-visible:ring-ring/50 type-nano inline-flex min-h-6 items-center gap-2 rounded-sm font-mono outline-none hover:underline focus-visible:ring-[3px] sm:min-h-0 sm:items-baseline"
+          title={geneSearchCopy.identityMatrix.jumpTo(id)}
         >
           <span className="text-foreground font-sans font-medium tabular-nums">
             {index + 1}
@@ -233,7 +222,11 @@ function Row({
         // Lower triangle + diagonal only; the mirror would repeat every value.
         if (j > index) return <td key={j} aria-hidden className="size-5" />
         const bin = binFor(v)
-        const label = `${v.toFixed(1)}% identity between ${id} and ${ids[j]}`
+        const label = geneSearchCopy.identityMatrix.cellLabel(
+          v.toFixed(1),
+          id,
+          ids[j],
+        )
         return (
           <td
             key={j}

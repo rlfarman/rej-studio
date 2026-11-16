@@ -36,14 +36,16 @@ export default async function GeneNotFound() {
       description={copy.detail}
       actions={
         <>
-          <Button asChild>
-            <Link href="/genes">
-              <SearchIcon />
-              {copy.searchGenes}
-            </Link>
+          <Button nativeButton={false} render={<Link href="/genes" />}>
+            <SearchIcon />
+            {copy.searchGenes}
           </Button>
-          <Button asChild variant="outline">
-            <Link href="/design-tool">{copy.customSequence}</Link>
+          <Button
+            variant="outline"
+            nativeButton={false}
+            render={<Link href="/design-tool" />}
+          >
+            {copy.customSequence}
           </Button>
         </>
       }
@@ -57,14 +59,16 @@ export default async function GeneNotFound() {
             {suggestions.map((gene) => (
               <li key={`${gene.symbol}-${gene.species}`}>
                 <Badge
-                  asChild
                   variant="outline"
                   className="hover:bg-accent hover:text-accent-foreground gap-1.5 px-2.5 py-1 text-sm"
+                  render={
+                    <Link
+                      href={`/genes/${gene.symbol}?species=${gene.species}`}
+                    />
+                  }
                 >
-                  <Link href={`/genes/${gene.symbol}?species=${gene.species}`}>
-                    <SpeciesIcon species={gene.species} className="size-3.5" />
-                    {gene.symbol}
-                  </Link>
+                  <SpeciesIcon species={gene.species} className="size-3.5" />
+                  {gene.symbol}
                 </Badge>
               </li>
             ))}

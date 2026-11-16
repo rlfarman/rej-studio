@@ -1,5 +1,11 @@
 import { afterEach, describe, expect, it } from 'vitest'
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  within,
+} from '@testing-library/react'
 
 import type {
   ObjectiveEvaluationEntry,
@@ -97,10 +103,9 @@ describe('stepping through what changed', () => {
       screen.getByRole('button', { name: 'Previous objective' }),
     ).toHaveProperty('disabled', true)
     fireEvent.click(screen.getByRole('button', { name: 'Next objective' }))
-    expect(screen.getByRole('button', { name: 'Next objective' })).toHaveProperty(
-      'disabled',
-      true,
-    )
+    expect(
+      screen.getByRole('button', { name: 'Next objective' }),
+    ).toHaveProperty('disabled', true)
   })
 
   it('says what each report flagged, as text as well as a picture', () => {
@@ -164,14 +169,18 @@ describe('stepping through what changed', () => {
     // read as a run where nothing changed.
     replay(BEFORE, report([]))
 
-    expect(screen.getByText(/not after, so there is nothing to compare/)).toBeTruthy()
+    expect(
+      screen.getByText(/not after, so there is nothing to compare/),
+    ).toBeTruthy()
     expect(screen.queryByText(/Every objective held/)).toBeNull()
   })
 
   it('says so when only the final report is there', () => {
     replay(report([]), AFTER)
 
-    expect(screen.getByText(/not before, so there is nothing to compare/)).toBeTruthy()
+    expect(
+      screen.getByText(/not before, so there is nothing to compare/),
+    ).toBeTruthy()
   })
 
   it('says so plainly when there is no report to step through', () => {

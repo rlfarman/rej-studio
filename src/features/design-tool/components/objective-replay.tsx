@@ -153,7 +153,12 @@ export function ObjectiveReplay({
     return (
       <div className="space-y-3">
         <p className="text-muted-foreground text-sm">{copy.nothingChanged}</p>
-        <Button type="button" variant="outline" size="sm" onClick={() => setShowAll(true)}>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => setShowAll(true)}
+        >
           {copy.showAll}
         </Button>
       </div>
@@ -242,7 +247,9 @@ export function ObjectiveReplay({
           </div>
 
           {step.after?.message ? (
-            <p className="text-muted-foreground text-sm">{step.after.message}</p>
+            <p className="text-muted-foreground text-sm">
+              {step.after.message}
+            </p>
           ) : step.before?.message ? (
             <p className="text-muted-foreground text-sm">
               {step.before.message}

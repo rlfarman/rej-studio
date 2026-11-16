@@ -1,3 +1,5 @@
+// The JSON is ~376 KB; keep it (and this module) out of client bundles.
+import 'server-only'
 import { cache } from 'react'
 import associations from '../data/associations.json'
 import type {

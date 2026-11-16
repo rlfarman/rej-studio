@@ -9,12 +9,12 @@ import {
 const SECRET = 'test-secret-that-is-at-least-32-chars-long'
 
 describe('session', () => {
-  const prev = process.env.SESSION_SECRET
   beforeEach(() => {
-    process.env.SESSION_SECRET = SECRET
+    vi.stubEnv('SESSION_SECRET', SECRET)
+    vi.stubEnv('BASIC_AUTH_PASSWORD', 'hunter2')
   })
   afterEach(() => {
-    process.env.SESSION_SECRET = prev
+    vi.unstubAllEnvs()
     vi.useRealTimers()
   })
 
@@ -27,6 +27,13 @@ describe('session', () => {
     const session = await verifySession(token)
     expect(session).not.toBeNull()
     expect(session?.v).toBe(1)
+  })
+
+  it('gives each sign-in its own session id', async () => {
+    const a = await verifySession(await signSession(60))
+    const b = await verifySession(await signSession(60))
+    expect(a?.sid).toMatch(/^[0-9a-f-]{36}$/)
+    expect(a?.sid).not.toBe(b?.sid)
   })
 
   it('rejects a token with a tampered payload', async () => {
@@ -48,8 +55,41 @@ describe('session', () => {
 
   it('rejects a token signed with a different secret', async () => {
     const token = await signSession(60)
-    process.env.SESSION_SECRET = 'different-secret-that-is-also-32-chars'
+    vi.stubEnv('SESSION_SECRET', 'different-secret-that-is-also-32-chars')
     expect(await verifySession(token)).toBeNull()
+  })
+
+  it('signs everyone out when the shared password changes', async () => {
+    const token = await signSession(60)
+    vi.stubEnv('BASIC_AUTH_PASSWORD', 'correct-horse')
+    expect(await verifySession(token)).toBeNull()
+
+    // A fresh sign-in under the new password works.
+    expect(await verifySession(await signSession(60))).not.toBeNull()
+  })
+
+  it('rejects a token signed with the bare secret (pre-rotation format)', async () => {
+    // Before sessions were bound to the password, the HMAC key was the raw
+    // SESSION_SECRET. Those cookies must not verify any more.
+    const encoder = new TextEncoder()
+    const payloadB64 = btoa(
+      JSON.stringify({ v: 1, sid: 'x', exp: Date.now() / 1000 + 60 }),
+    ).replace(/=+$/, '')
+    const key = await crypto.subtle.importKey(
+      'raw',
+      encoder.encode(SECRET),
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['sign'],
+    )
+    const sig = new Uint8Array(
+      await crypto.subtle.sign('HMAC', key, encoder.encode(payloadB64)),
+    )
+    const sigB64 = btoa(String.fromCharCode(...sig))
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '')
+    expect(await verifySession(`${payloadB64}.${sigB64}`)).toBeNull()
   })
 
   it('rejects an expired token', async () => {
@@ -67,13 +107,20 @@ describe('session', () => {
   })
 
   it('throws when SESSION_SECRET is missing', async () => {
-    delete process.env.SESSION_SECRET
+    vi.stubEnv('SESSION_SECRET', undefined)
     await expect(signSession()).rejects.toThrow(/SESSION_SECRET/)
   })
 
   it('throws when SESSION_SECRET is too short', async () => {
-    process.env.SESSION_SECRET = 'too-short'
+    vi.stubEnv('SESSION_SECRET', 'too-short')
     await expect(signSession()).rejects.toThrow(/SESSION_SECRET/)
+  })
+
+  it('issues and accepts nothing without a password', async () => {
+    const token = await signSession(60)
+    vi.stubEnv('BASIC_AUTH_PASSWORD', '')
+    await expect(signSession()).rejects.toThrow(/BASIC_AUTH_PASSWORD/)
+    expect(await verifySession(token)).toBeNull()
   })
 })
 

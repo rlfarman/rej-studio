@@ -1,3 +1,4 @@
+import 'server-only'
 import { getDb } from '@/drizzle/db'
 import { genes, isoforms } from '@/drizzle/schema'
 import { count, eq } from 'drizzle-orm'

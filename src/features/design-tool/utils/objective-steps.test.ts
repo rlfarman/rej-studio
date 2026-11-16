@@ -65,7 +65,10 @@ describe('what the optimizer did to each objective', () => {
   })
 
   it('marks an objective only the earlier report has as dropped', () => {
-    const [step] = buildObjectiveSteps(report([entry('Gone', true)]), report([]))
+    const [step] = buildObjectiveSteps(
+      report([entry('Gone', true)]),
+      report([]),
+    )
 
     expect(step).toMatchObject({ outcome: 'dropped', after: null })
   })
@@ -110,8 +113,16 @@ describe('what the optimizer did to each objective', () => {
 describe('which steps are worth seeing first', () => {
   it('is the ones where something happened, or still is', () => {
     const steps = buildObjectiveSteps(
-      report([entry('fixed', false), entry('held', true), entry('stuck', false)]),
-      report([entry('fixed', true), entry('held', true), entry('stuck', false)]),
+      report([
+        entry('fixed', false),
+        entry('held', true),
+        entry('stuck', false),
+      ]),
+      report([
+        entry('fixed', true),
+        entry('held', true),
+        entry('stuck', false),
+      ]),
     )
 
     expect(steps.filter(isNotable).map((step) => step.objective)).toEqual([
@@ -130,6 +141,11 @@ describe('the tally across a run', () => {
       ),
     )
 
-    expect(counts).toMatchObject({ fixed: 1, broken: 1, unresolved: 1, held: 0 })
+    expect(counts).toMatchObject({
+      fixed: 1,
+      broken: 1,
+      unresolved: 1,
+      held: 0,
+    })
   })
 })

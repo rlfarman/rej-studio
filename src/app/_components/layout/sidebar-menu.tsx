@@ -5,7 +5,6 @@ import { useTheme } from 'next-themes'
 import {
   Download,
   Eraser,
-  GraduationCap,
   Monitor,
   Moon,
   Settings,
@@ -23,16 +22,14 @@ import {
   DropdownMenuTrigger,
   DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu'
-import { exportUserData, importUserData } from '@/lib/data-transfer'
+import { exportUserData, importUserData } from '@/app/_components/user-data'
 import { seedUserData, clearSeedUserData } from '@/app/_components/seed-data'
 import { toast } from 'sonner'
 import {
   SidebarMenu as SidebarMenuPrimitive,
   SidebarMenuItem,
   SidebarMenuButton,
-  useSidebar,
 } from '@/components/ui/sidebar'
-import { useOnboarding } from '@/features/onboarding/stores/onboarding-store'
 import { commonCopy } from '@/copy/common'
 import { errorsCopy } from '@/copy/errors'
 
@@ -48,8 +45,6 @@ export function SidebarMenu() {
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const resetAllTours = useOnboarding((s) => s.resetAllTours)
-  const { isMobile, setOpenMobile } = useSidebar()
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- detecting client-side mount
@@ -57,17 +52,33 @@ export function SidebarMenu() {
   }, [])
 
   async function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
+    const input = e.currentTarget
+    const file = input.files?.[0]
+    // Clear it so picking the same file again still fires onChange.
+    input.value = ''
     if (!file) return
+
+    const importCopy = errorsCopy.importUserData
     try {
-      const { imported } = await importUserData(file)
-      toast.success(errorsCopy.importUserData.success(imported))
-    } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : errorsCopy.importUserData.failure,
-      )
+      const result = await importUserData(file)
+      if (!result.ok) {
+        toast.error(
+          result.reason === 'too-large'
+            ? importCopy.tooLarge
+            : importCopy.invalid,
+        )
+        return
+      }
+      const { favorites, recents, jobs } = result.added
+      if (favorites + recents + jobs === 0) {
+        toast.info(importCopy.nothingNew)
+      } else {
+        toast.success(importCopy.success(favorites, recents, jobs))
+      }
+    } catch {
+      // e.g. localStorage is full or blocked.
+      toast.error(importCopy.failure)
     }
-    e.target.value = ''
   }
 
   return (
@@ -81,22 +92,26 @@ export function SidebarMenu() {
         onChange={handleImport}
       />
       <SidebarMenuPrimitive>
-        <SidebarMenuItem data-tour="nav-settings">
+        <SidebarMenuItem>
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <SidebarMenuButton tooltip={menuCopy.settings}>
-                <Settings />
-                <span>{menuCopy.settings}</span>
-              </SidebarMenuButton>
+            <DropdownMenuTrigger
+              render={<SidebarMenuButton tooltip={menuCopy.settings} />}
+            >
+              <Settings />
+              <span>{menuCopy.settings}</span>
             </DropdownMenuTrigger>
             <DropdownMenuContent side="top" align="start">
               {mounted && (
                 <>
-                  <DropdownMenuLabel>{menuCopy.theme.label}</DropdownMenuLabel>
+                  {/* Base UI requires a menu label inside its group; this also
+                      labels the radio group for screen readers. */}
                   <DropdownMenuRadioGroup
                     value={theme}
                     onValueChange={setTheme}
                   >
+                    <DropdownMenuLabel>
+                      {menuCopy.theme.label}
+                    </DropdownMenuLabel>
                     {THEMES.map(({ value, label, icon: Icon }) => (
                       <DropdownMenuRadioItem key={value} value={value}>
                         <Icon className="text-foreground h-4 w-4" />
@@ -114,17 +129,6 @@ export function SidebarMenu() {
               <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>
                 <Upload className="text-foreground h-4 w-4" />
                 {menuCopy.importData}
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => {
-                  resetAllTours()
-                  if (isMobile) setOpenMobile(false)
-                  toast.success(menuCopy.toursReset)
-                }}
-              >
-                <GraduationCap className="text-foreground h-4 w-4" />
-                {menuCopy.restartTours}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
