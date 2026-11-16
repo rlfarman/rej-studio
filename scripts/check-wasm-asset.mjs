@@ -27,6 +27,10 @@ const manifestPath = path.join(
   root,
   'src/features/design-tool/workers/optimizer-asset.generated.ts',
 )
+// The notices served beside the module must be the crate's own, verbatim:
+// the licenses they carry require them to accompany the binary.
+const noticesSource = path.join(root, 'rust/optimizer/THIRD-PARTY-NOTICES.md')
+const noticesServed = path.join(root, 'public/optimizer/THIRD-PARTY-NOTICES.md')
 
 /** Fail with a message that says how to fix it. */
 function fail(message) {
@@ -35,7 +39,7 @@ function fail(message) {
   process.exit(1)
 }
 
-for (const file of [assetPath, manifestPath]) {
+for (const file of [assetPath, manifestPath, noticesSource, noticesServed]) {
   if (!fs.existsSync(file)) fail(`${path.relative(root, file)} is missing.`)
 }
 
@@ -60,6 +64,13 @@ if (declared[1] !== digest) {
 // were regenerated from it, so check the magic number too.
 if (bytes.subarray(0, 4).toString('binary') !== '\0asm') {
   fail('the committed .wasm does not start with the WebAssembly magic number.')
+}
+
+if (!fs.readFileSync(noticesSource).equals(fs.readFileSync(noticesServed))) {
+  fail(
+    'public/optimizer/THIRD-PARTY-NOTICES.md differs from ' +
+      'rust/optimizer/THIRD-PARTY-NOTICES.md.',
+  )
 }
 
 const kb = (bytes.length / 1024).toFixed(1)

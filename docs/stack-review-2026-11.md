@@ -143,8 +143,12 @@ promises cross the boundary. They do not here — JSON in, JSON out.
   There is no advisory in the gap either. Upgrading it would be work on code
   that already has a removal date. Revisit only if a bug or advisory forces it.
 - **`lint-staged` 17.6.0 → 17.6.1.** Trivial.
-- **The crate's license.** `rust/optimizer/Cargo.toml` says `MIT`; the project
-  is `BSD-3-Clause-Clear`. Probably unintended, but it is the owner's call.
+- **The crate's license. Done.** It said `MIT` while the project is Clear BSD.
+  It is now `BSD-3-Clause-Clear AND MIT AND BSD-3-Clause`: the project's
+  license plus those of the code ported into it, DNAChisel (MIT) and NumPy's
+  MT19937. Their notices, which the old field did not carry either, are in
+  `rust/optimizer/THIRD-PARTY-NOTICES.md` and are served beside the `.wasm`,
+  since every browser that loads it receives a binary copy.
 
 ## Remove
 

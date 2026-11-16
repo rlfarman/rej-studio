@@ -21,6 +21,7 @@ BUILT="$CRATE_DIR/target/$TARGET/release/rej_optimizer.wasm"
 ASSET_DIR="$ROOT/public/optimizer"
 ASSET="$ASSET_DIR/rej-optimizer.wasm"
 MANIFEST="$ROOT/src/features/design-tool/workers/optimizer-asset.generated.ts"
+NOTICES="$CRATE_DIR/optimizer/THIRD-PARTY-NOTICES.md"
 
 if ! command -v cargo >/dev/null 2>&1; then
   if [[ -x "$HOME/.cargo/bin/cargo" ]]; then
@@ -41,6 +42,9 @@ bytes="$(stat -c %s "$BUILT")"
 
 mkdir -p "$ASSET_DIR" "$(dirname "$MANIFEST")"
 cp "$BUILT" "$ASSET"
+# The module contains code under BSD-style licenses that require their notices
+# to travel with binary copies, and every browser that loads it gets one.
+cp "$NOTICES" "$ASSET_DIR/THIRD-PARTY-NOTICES.md"
 
 # The digest is the cache key: public/ is served without a content hash in the
 # filename, so the worker appends ?v=<digest> to make a new build a new URL.

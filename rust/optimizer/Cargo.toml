@@ -2,7 +2,10 @@
 name = "rej-optimizer"
 version = "0.1.0"
 edition = "2024"
-license = "MIT"
+# The project's Clear BSD License, plus the licenses of the code ported into
+# this crate: DNAChisel (MIT) and NumPy's MT19937 (BSD-3-Clause, with MIT
+# terms for rk_interval). THIRD-PARTY-NOTICES.md says which files are which.
+license = "BSD-3-Clause-Clear AND MIT AND BSD-3-Clause"
 description = "RNA End-Joining sequence design optimizer (port of python/algorithm.py)"
 # Shipped as a .wasm asset, never to crates.io. Also lets cargo-deny skip
 # license checks on this crate itself (deny.toml: licenses.private).
