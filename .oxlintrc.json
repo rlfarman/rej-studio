@@ -24,7 +24,6 @@
   "ignorePatterns": [
     "coverage/**",
     ".next/**",
-    ".source/**",
     ".claude/worktrees/**",
     ".worktrees/**",
     ".vercel/**",

@@ -11,6 +11,7 @@ const RECORD: RunRecord = {
   record_version: 1,
   started_at: '2026-11-16T09:30:00Z',
   duration_seconds: 12.34,
+  seed: 20261116,
   input: { sha256: 'ab'.repeat(32), length: 1875 },
   options: { codon_optimize: 'h_sapiens', enforce_gc: true, split_point: 900 },
   versions: {
@@ -36,7 +37,9 @@ describe('the run record on screen', () => {
     expect(facts.getByText('2026-11-16T09:30:00.000Z')).toBeTruthy()
     expect(facts.getByText('12.34 s')).toBeTruthy()
     expect(facts.getByText(/1,875 nt/)).toBeTruthy()
-    expect(facts.getByText(new RegExp(`SHA-256 ${'ab'.repeat(32)}`))).toBeTruthy()
+    expect(
+      facts.getByText(new RegExp(`SHA-256 ${'ab'.repeat(32)}`)),
+    ).toBeTruthy()
     expect(facts.getByText('abc123def456')).toBeTruthy()
     expect(facts.getByText('3.2.16')).toBeTruthy()
   })
@@ -69,7 +72,9 @@ describe('the run record on screen', () => {
     const rows = within(table as HTMLElement).getAllByRole('row')
     // A header row plus one per option.
     expect(rows).toHaveLength(4)
-    expect(within(table as HTMLElement).getByText('codon_optimize')).toBeTruthy()
+    expect(
+      within(table as HTMLElement).getByText('codon_optimize'),
+    ).toBeTruthy()
     expect(within(table as HTMLElement).getByText('h_sapiens')).toBeTruthy()
     expect(within(table as HTMLElement).getByText('true')).toBeTruthy()
     expect(within(table as HTMLElement).getByText('900')).toBeTruthy()
@@ -89,7 +94,9 @@ describe('the run record on screen', () => {
       screen.getByRole('button', { name: 'Copy the run record as JSON' }),
     ).toBeTruthy()
     expect(
-      screen.getByRole('button', { name: 'Download the run record as a JSON file' }),
+      screen.getByRole('button', {
+        name: 'Download the run record as a JSON file',
+      }),
     ).toBeTruthy()
     expect(
       screen.getByRole('button', { name: 'Copy the methods paragraph' }),

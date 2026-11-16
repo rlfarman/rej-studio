@@ -8,6 +8,7 @@ const RECORD: RunRecord = {
   record_version: 1,
   started_at: '2026-11-16T09:30:00Z',
   duration_seconds: 12.34,
+  seed: 20261116,
   input: { sha256: 'a'.repeat(64), length: 1875 },
   options: {
     codon_optimize: 'h_sapiens',
@@ -121,7 +122,9 @@ describe('the methods paragraph', () => {
       }),
     )
 
-    expect(text).toContain('Run provenance: algorithm build abc123def456; Python 3.14.10.')
+    expect(text).toContain(
+      'Run provenance: algorithm build abc123def456; Python 3.14.10.',
+    )
     expect(text).not.toContain('commit')
     expect(text).not.toContain('corpus')
   })

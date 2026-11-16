@@ -20,6 +20,7 @@ def record(**overrides):
         "options": dict(OPTIONS),
         "started_at": STARTED_AT,
         "duration_seconds": 1.2345,
+        "seed": 12345,
     }
     params.update(overrides)
     return build_run_record(**params)
@@ -124,13 +125,29 @@ def test_record_is_json_serialisable():
     assert json.loads(json.dumps(record()))["input"]["length"] == 9
 
 
-def test_a_run_is_reproducible_so_there_is_no_seed_to_record():
-    """The optimizer consumes no randomness, which is why the record has no seed.
+class TestSeed:
+    def test_records_the_seed_the_run_used(self):
+        assert record(seed=42)["seed"] == 42
 
-    The record would be misleading if a run could not be repeated from it. This
-    runs the same input under different global RNG states and checks the output
-    is identical. If this ever fails, the algorithm has gained a random element
-    and the record needs a seed to stay honest.
+    def test_keeps_the_requested_seed_out_of_the_options(self):
+        # The caller's "seed" is usually None, because the backend derives one.
+        # The seed that was actually used is the field above, so recording both
+        # would mean recording a null beside the real answer.
+        options = dict(OPTIONS) | {"seed": None}
+
+        result = record(options=options, seed=7)
+
+        assert "seed" not in result["options"]
+        assert result["seed"] == 7
+
+
+def test_a_recorded_run_can_be_repeated_from_its_seed():
+    """The record is only worth citing if a run can be repeated from it.
+
+    DNAChisel's mutation sampling draws on the global RNGs, so the algorithm
+    seeds them per run and reports the seed it used. This submits the same
+    sequence twice with that seed, from different global RNG states, and checks
+    the design is identical both times.
     """
     import random
 
@@ -140,7 +157,7 @@ def test_a_run_is_reproducible_so_there_is_no_seed_to_record():
 
     cds = "ATGGAGGAGCCGCAGTCAGATCCTAGCGTCGAGCCCCCTCTGAGTCAGGAAACATTTTCAGACCTATGGAAACTACTT"
     options = {
-        "codon_optimize": "h_sapiens",
+        "codon_optimize": "human",
         "remove_cryptic_ss": True,
         "minimize_CpGs": True,
         "reduce_kmer_complexity": True,
@@ -150,14 +167,18 @@ def test_a_run_is_reproducible_so_there_is_no_seed_to_record():
         "split_point": 39,
         "ensure_wggw": True,
         "wggw_threshold": 30,
+        "seed": 4242,
     }
 
     outputs = []
-    for seed in (1, 999):
-        random.seed(seed)
-        np.random.seed(seed)
+    seeds = []
+    for noise in (1, 999):
+        random.seed(noise)
+        np.random.seed(noise)
         result = process_single_request_json(CDS=cds, name="t", OPTIONS=dict(options))
         outputs.append((result["optimized_sequence"], result["seq5"], result["seq3"]))
+        seeds.append(result["run_record"]["seed"])
 
     assert outputs[0] == outputs[1]
     assert outputs[0][0], "the optimizer returned nothing"
+    assert seeds == [4242, 4242]

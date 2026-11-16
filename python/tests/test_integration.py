@@ -2,6 +2,10 @@
 
 These tests use real DNAChisel with a short 90bp CDS to exercise the
 full optimization and splitting pipeline without excessive runtime.
+
+Objectives-on runs are covered explicitly (with and without a progress
+callback): running everything through all-objectives-off options is what let
+a broken logger swap ship — it only fails when an objective exists.
 """
 
 import re
@@ -9,10 +13,14 @@ import re
 import pytest
 
 from python.algorithm import (
+    OptimizationError,
     apply_explicit_wggw_site,
+    derive_seed,
     insert_wggw_motif,
     optimize_and_split,
     process_single_request_json,
+    resolve_seed,
+    resolve_split_point,
     runOptimization,
 )
 
@@ -47,6 +55,7 @@ FULL_OPTIONS = {
     "minimize_CpGs": True,
     "minimize_CpGs_weight": 1.0,
     "reduce_kmer_complexity": True,
+    "reduce_kmer_complexity_k": 10,
     "reduce_kmer_complexity_weight": 1.0,
     "enforce_gc": True,
     "stim_5": False,
@@ -54,6 +63,21 @@ FULL_OPTIONS = {
     "split_point": 45,
     "ensure_wggw": True,
     "wggw_threshold": 300,
+}
+
+# One objective at a time, so a failure points at the objective that broke.
+OBJECTIVE_OPTION_SETS = {
+    "codon_optimize": {"codon_optimize": "human", "enforce_gc": True},
+    "minimize_CpGs": {"minimize_CpGs": True},
+    "remove_cryptic_ss": {"remove_cryptic_ss": True},
+    "reduce_kmer_complexity": {"reduce_kmer_complexity": True, "reduce_kmer_complexity_k": 10},
+    "all": {
+        "codon_optimize": "human",
+        "minimize_CpGs": True,
+        "remove_cryptic_ss": True,
+        "reduce_kmer_complexity": True,
+        "enforce_gc": True,
+    },
 }
 
 
@@ -79,19 +103,25 @@ class TestRunOptimization:
         assert isinstance(obj_before, str)
         assert isinstance(obj_after, str)
 
-    def test_with_codon_optimization(self):
-        # CodonOptimize adds objectives that require DNAChisel's logger.
-        # runOptimization already wires this up, but with a short sequence
-        # and only codon optimization, the solver may encounter edge cases.
-        # Use enforce_gc alongside to give the solver enough room.
-        opts = {**FAST_OPTIONS, "codon_optimize": "human", "enforce_gc": True}
-        try:
-            optimized, _, _ = runOptimization(TEST_CDS, opts)
-            assert len(optimized) == len(TEST_CDS)
-        except AttributeError:
-            # DNAChisel version may have logger compatibility issues
-            # with CodonOptimize on very short sequences
-            pytest.skip("DNAChisel CodonOptimize logger incompatibility")
+    @pytest.mark.parametrize("objective", sorted(OBJECTIVE_OPTION_SETS))
+    @pytest.mark.parametrize("with_progress", [False, True], ids=["no_progress", "with_progress"])
+    def test_runs_with_objectives_enabled(self, objective, with_progress):
+        """Both progress paths have to work.
+
+        Without a callback the problem keeps the proglog logger DNAChisel
+        built; with one it gets our bridge. Assigning the literal "bar"
+        instead used to raise AttributeError inside optimize() for every run
+        that had an objective.
+        """
+        fractions: list[float] = []
+        on_progress = (lambda frac, stage: fractions.append(frac)) if with_progress else None
+        opts = {**FAST_OPTIONS, **OBJECTIVE_OPTION_SETS[objective]}
+        optimized, _, _ = runOptimization(TEST_CDS, opts, on_progress=on_progress)
+        assert len(optimized) == len(TEST_CDS)
+        assert all(c in "ACGT" for c in optimized)
+        if with_progress:
+            assert fractions == sorted(fractions)
+            assert fractions[-1] > fractions[0]
 
     def test_with_gc_enforcement(self):
         opts = {**FAST_OPTIONS, "enforce_gc": True}
@@ -115,8 +145,15 @@ class TestRunOptimization:
                 f"Progress regressed: {fractions[i - 1]} -> {fractions[i]}"
             )
 
+    def test_null_split_point_falls_back_to_midpoint(self):
+        """The frontend sends an explicit null when the slider is untouched."""
+        assert resolve_split_point({"split_point": None}, 90) == 45
+        opts = {**FAST_OPTIONS, "split_point": None, "ensure_wggw": True}
+        _, _, _, _, optimized = optimize_and_split(TEST_CDS, opts)
+        assert len(optimized) == len(TEST_CDS)
 
-@pytest.mark.timeout(30)
+
+@pytest.mark.timeout(60)
 class TestOptimizeAndSplit:
     def test_produces_non_empty_fragments(self):
         opts = {**FAST_OPTIONS}
@@ -136,6 +173,40 @@ class TestOptimizeAndSplit:
         clean_seq3 = strip_design_placeholders(seq3)
         assert clean_seq5 + clean_seq3 == optimized
         assert optimized[opts["actual_split_point"] :] == clean_seq3
+
+    def test_full_options_run(self):
+        seq5, seq3, _, _, optimized = optimize_and_split(TEST_CDS, {**FULL_OPTIONS})
+        assert len(optimized) == len(TEST_CDS)
+        assert strip_design_placeholders(seq5) + strip_design_placeholders(seq3) == optimized
+
+    def test_raises_instead_of_returning_empty_strings(self, monkeypatch):
+        """A failure here used to serialize as a successful empty result."""
+
+        def boom(CDS, OPTIONS, on_progress=None):
+            raise RuntimeError("dnachisel exploded")
+
+        monkeypatch.setattr("python.algorithm.runOptimization", boom)
+        with pytest.raises(RuntimeError, match="dnachisel exploded"):
+            optimize_and_split(TEST_CDS, {**FAST_OPTIONS})
+
+    def test_raises_when_optimizer_returns_nothing(self, monkeypatch):
+        monkeypatch.setattr(
+            "python.algorithm.runOptimization",
+            lambda CDS, OPTIONS, on_progress=None: ("", "before", "after"),
+        )
+        with pytest.raises(OptimizationError, match="empty sequence"):
+            optimize_and_split(TEST_CDS, {**FAST_OPTIONS})
+
+    def test_handles_sequence_without_wggw_motif(self):
+        """No WGGW site anywhere: the design falls back to the requested
+        split point rather than failing."""
+        # Poly-lysine (AAA) + stop: no [AT]GG[AT] motif and no compatible
+        # dipeptide rewrite that keeps the translation.
+        cds = "ATG" + "AAA" * 20 + "TGA"
+        opts = {**FAST_OPTIONS, "split_point": 30, "ensure_wggw": True}
+        seq5, seq3, _, _, optimized = optimize_and_split(cds, opts)
+        assert len(optimized) == len(cds)
+        assert strip_design_placeholders(seq5) + strip_design_placeholders(seq3) == optimized
 
 
 @pytest.mark.timeout(30)
@@ -174,8 +245,21 @@ class TestInsertWggwMotif:
         assert info is not None
         assert info["split_position"] == 4
 
+    def test_rejects_explicit_site_that_no_longer_matches(self):
+        explicit_site = {
+            "position": 4,
+            "motif_start": 3,
+            "motif": "TGGA",
+            "hexamer_start": 1,
+            "original_codons": ["CCC", "GGA"],
+            "new_codons": ["AAT", "GGA"],
+            "new_hexamer": "AATGGA",
+        }
+        with pytest.raises(ValueError, match="no longer matches"):
+            apply_explicit_wggw_site("AATGGATGA", explicit_site, 4)
 
-@pytest.mark.timeout(60)
+
+@pytest.mark.timeout(120)
 class TestProcessSingleRequestJson:
     def test_returns_valid_result_dict(self):
         # Use FAST_OPTIONS to avoid CodonOptimize logger issues
@@ -218,3 +302,74 @@ class TestProcessSingleRequestJson:
             OPTIONS={**FAST_OPTIONS},
         )
         assert result["original_sequence"] == TEST_CDS
+
+    def test_rejects_ambiguous_nucleotides(self):
+        with pytest.raises(ValueError, match="only A, C, G, T"):
+            process_single_request_json(
+                CDS="ATG" + "N" * 6 + "TGA", name="N Test", OPTIONS={**FAST_OPTIONS}
+            )
+
+    def test_rejects_non_multiple_of_three(self):
+        with pytest.raises(ValueError, match="multiple of 3"):
+            process_single_request_json(CDS="ATGAAAT", name="Frame Test", OPTIONS={**FAST_OPTIONS})
+
+    def test_rejects_empty_sequence(self):
+        with pytest.raises(ValueError, match="empty"):
+            process_single_request_json(CDS="   ", name="Empty", OPTIONS={**FAST_OPTIONS})
+
+    def test_normalizes_rna_input(self):
+        rna = TEST_CDS.replace("T", "U")
+        result = process_single_request_json(CDS=rna, name="RNA Test", OPTIONS={**FAST_OPTIONS})
+        assert result["original_sequence"] == TEST_CDS
+
+
+@pytest.mark.timeout(180)
+class TestReproducibility:
+    def test_same_inputs_produce_the_same_design(self):
+        """Objectives on, no seed supplied: the derived seed has to make the
+        run reproducible, otherwise two identical submissions disagree."""
+        opts = {**FULL_OPTIONS}
+        first = process_single_request_json(CDS=TEST_CDS, name="Seed", OPTIONS=opts)
+        second = process_single_request_json(CDS=TEST_CDS, name="Seed", OPTIONS=opts)
+        assert first["seed"] == second["seed"]
+        assert first["optimized_sequence"] == second["optimized_sequence"]
+        assert (first["seq5"], first["seq3"]) == (second["seq5"], second["seq3"])
+
+    def test_explicit_seed_is_echoed_and_honoured(self):
+        opts = {**FULL_OPTIONS, "seed": 1234}
+        first = process_single_request_json(CDS=TEST_CDS, name="Seed", OPTIONS=opts)
+        second = process_single_request_json(CDS=TEST_CDS, name="Seed", OPTIONS=opts)
+        assert first["seed"] == 1234
+        assert first["optimized_sequence"] == second["optimized_sequence"]
+
+    def test_derived_seed_depends_on_inputs(self):
+        base = derive_seed(TEST_CDS, {**FULL_OPTIONS})
+        assert base == derive_seed(TEST_CDS, {**FULL_OPTIONS})
+        assert base != derive_seed(TEST_CDS[:-3] + "TAA", {**FULL_OPTIONS})
+        assert base != derive_seed(TEST_CDS, {**FULL_OPTIONS, "minimize_CpGs": False})
+
+    def test_supplied_seed_does_not_change_derivation(self):
+        """The derived seed ignores `seed`, so adding one doesn't change what
+        an unseeded request would have produced."""
+        assert derive_seed(TEST_CDS, {**FULL_OPTIONS}) == derive_seed(
+            TEST_CDS, {**FULL_OPTIONS, "seed": 99}
+        )
+        assert resolve_seed(TEST_CDS, {**FULL_OPTIONS, "seed": 99}) == 99
+
+
+@pytest.mark.timeout(300)
+class TestLongSequence:
+    def test_handles_a_long_cds(self):
+        """A CDS at the long end of what the UI accepts still completes and
+        keeps its translation."""
+        from dnachisel import biotools
+
+        # ~3 kb of real-looking coding sequence: repeat the test CDS body
+        # (no internal stops) and cap it with a stop codon.
+        body = TEST_CDS[:-3] * 37
+        cds = body + "TGA"
+        assert len(cds) % 3 == 0
+        opts = {**FAST_OPTIONS, "enforce_gc": True, "split_point": len(cds) // 2}
+        result = process_single_request_json(CDS=cds, name="Long", OPTIONS=opts)
+        assert len(result["optimized_sequence"]) == len(cds)
+        assert biotools.translate(result["optimized_sequence"]) == biotools.translate(cds)

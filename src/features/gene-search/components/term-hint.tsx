@@ -26,27 +26,29 @@ export function TermHint({ label, hint, className }: TermHintProps) {
 
   return (
     <Tooltip open={open} onOpenChange={setOpen}>
-      <TooltipTrigger asChild>
-        <button
-          type="button"
-          aria-label={label}
-          // Radix closes the tooltip on trigger pointerdown/click; prevent
-          // that so a tap can open it. Stop propagation so the click doesn't
-          // also sort a column or expand a table row.
-          onPointerDown={(e) => e.preventDefault()}
-          onClick={(e) => {
-            e.preventDefault()
-            e.stopPropagation()
-            setOpen((o) => !o)
-          }}
-          className={cn(
-            'text-muted-foreground hover:text-foreground focus-visible:ring-ring inline-flex size-6 shrink-0 items-center justify-center rounded-full transition-colors focus-visible:ring-2 focus-visible:outline-none',
-            className,
-          )}
-        >
-          <Info className="size-3.5" aria-hidden="true" />
-        </button>
-      </TooltipTrigger>
+      <TooltipTrigger
+        render={
+          <button
+            type="button"
+            aria-label={label}
+            // Radix closes the tooltip on trigger pointerdown/click; prevent
+            // that so a tap can open it. Stop propagation so the click doesn't
+            // also sort a column or expand a table row.
+            onPointerDown={(e) => e.preventDefault()}
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              setOpen((o) => !o)
+            }}
+            className={cn(
+              'text-muted-foreground hover:text-foreground focus-visible:ring-ring inline-flex size-6 shrink-0 items-center justify-center rounded-full transition-colors focus-visible:ring-2 focus-visible:outline-none',
+              className,
+            )}
+          >
+            <Info className="size-3.5" aria-hidden="true" />
+          </button>
+        }
+      />
       <TooltipContent className="max-w-64 text-left leading-snug text-balance">
         {hint}
       </TooltipContent>

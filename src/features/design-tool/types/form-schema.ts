@@ -22,7 +22,12 @@ export type SequenceType = 'dna' | 'protein'
 
 const PROTEIN_RE = /^[ACDEFGHIKLMNPQRSTVWYacdefghiklmnpqrstvwy*]+$/
 
-const dnaSequenceSchema = z
+/**
+ * Full CDS validation: character set, length, frame, start/stop codons and
+ * no premature stops. Exported so the job server action can apply exactly
+ * the same rules as the form instead of a weaker regex.
+ */
+export const dnaSequenceSchema = z
   .string()
   .nonempty(designToolCopy.validation.dna.required)
   .regex(/^[ACGTUacgtu]+$/, designToolCopy.validation.dna.invalidNucleotides)
@@ -113,6 +118,19 @@ export const validationSchema = z
     spliceJunctionPositions: z.array(z.number().int().min(1)).min(1).max(2),
   })
   .superRefine((data, ctx) => {
+    // The optimizer accepts exactly one split point and answers 422 for
+    // more, so block the submission here instead of letting the backend
+    // reject it. The multi-split UI (NEXT_PUBLIC_ENABLE_MULTI_SPLIT) can
+    // still add a second position — this is what tells the user why it
+    // won't run.
+    if (data.spliceJunctionPositions.length > 1) {
+      ctx.addIssue({
+        path: ['spliceJunctionPositions', 1],
+        code: z.ZodIssueCode.custom,
+        message: designToolCopy.validation.singleSplitOnly,
+      })
+    }
+
     // Validate the active sequence field based on sequenceType
     if (data.sequenceType === 'dna') {
       const result = dnaSequenceSchema.safeParse(data.codingSequence)

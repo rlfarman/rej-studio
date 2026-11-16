@@ -1,6 +1,5 @@
 'use client'
 
-import { useMemo } from 'react'
 import {
   DiagBadge,
   startCodonCheck,
@@ -26,23 +25,15 @@ export function IsoformValidationBadges({
 }: IsoformValidationBadgesProps) {
   const seq = codingSequence.toUpperCase()
 
-  const checks = useMemo(() => {
-    const required = [startCodonCheck(seq), stopCodonCheck(seq)]
-
-    const m3 = multipleOf3Check(seq)
-    if (m3) required.push(m3)
-    const inv = invalidCharsCheck(seq)
-    if (inv) required.push(inv)
-
-    const premature = prematureStopCheck(seq)
-    if (premature) required.push(premature)
-    const homopolymer = homopolymerCheck(seq)
-    if (homopolymer) required.push(homopolymer)
-    const tandem = tandemRepeatCheck(seq)
-    if (tandem) required.push(tandem)
-
-    return required
-  }, [seq])
+  const checks = [
+    startCodonCheck(seq),
+    stopCodonCheck(seq),
+    multipleOf3Check(seq),
+    invalidCharsCheck(seq),
+    prematureStopCheck(seq),
+    homopolymerCheck(seq),
+    tandemRepeatCheck(seq),
+  ].filter((check) => check !== null)
 
   return (
     <div className="flex flex-wrap gap-2">

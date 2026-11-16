@@ -1,7 +1,6 @@
 'use client'
-import { useSyncExternalStore } from 'react'
+import { Suspense, useSyncExternalStore } from 'react'
 import { GeneSearchShell } from '@/app/_components/gene-search-shell'
-import { searchGenes } from '@/features/gene-search/api/genes'
 import { usePathname } from 'next/navigation'
 import {
   Tooltip,
@@ -11,7 +10,6 @@ import {
 import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar'
 import { BrandMark } from '@/components/brand-mark'
 import { commonCopy } from '@/copy/common'
-import { HeaderHelpButton } from '@/features/onboarding/components/help-button'
 import { cn } from '@/lib/utils'
 
 const HIDE_AFTER = 80
@@ -130,23 +128,14 @@ function pageContextLabel(pathname: string): string | null {
 }
 
 export function Header() {
-  const pathname = usePathname()
-  const isHomePage = pathname === '/'
-  // Home and /genes each render their own search box, so the header trigger
-  // would be a second search on the page.
-  const pageHasSearch = isHomePage || pathname === '/genes'
-  const { state, isMobile } = useSidebar()
-  const sidebarLabel =
-    state === 'expanded' ? commonCopy.sidebar.close : commonCopy.sidebar.open
   const { scrolled, isHidden } = useMainScroll()
-
-  const geneSymbolMatch = pathname.match(/\/genes\/([^/]+)/)
-  const geneSymbol = geneSymbolMatch ? geneSymbolMatch[1] : undefined
-  const contextLabel = pageContextLabel(pathname)
 
   return (
     <header
-      aria-hidden={isHidden || undefined}
+      // Slid away on scroll-down. `inert` drops it from the tab order and the
+      // accessibility tree together; aria-hidden alone left its buttons
+      // focusable while invisible.
+      inert={isHidden}
       className={cn(
         'sticky top-0 z-10 grid grid-cols-[1fr_auto_1fr] items-center gap-2 px-3 sm:px-4 md:px-6',
         'border-b transition-[height,margin-top,opacity,background-color,border-color] duration-200 ease-out motion-reduce:transition-none',
@@ -156,11 +145,47 @@ export function Header() {
         isHidden && 'pointer-events-none -mt-12 opacity-0',
       )}
     >
+      {/* usePathname() suspends while a route with a dynamic param
+          prerenders. The fallback is the same header without the
+          page-specific bits, so the static shell keeps the sidebar trigger
+          and the search. */}
+      <Suspense
+        fallback={<HeaderContent pathname={null} scrolled={scrolled} />}
+      >
+        <HeaderForPathname scrolled={scrolled} />
+      </Suspense>
+    </header>
+  )
+}
+
+function HeaderForPathname({ scrolled }: { scrolled: boolean }) {
+  return <HeaderContent pathname={usePathname()} scrolled={scrolled} />
+}
+
+function HeaderContent({
+  pathname,
+  scrolled,
+}: {
+  /** Null while the URL isn't known yet (prerender fallback). */
+  pathname: string | null
+  scrolled: boolean
+}) {
+  const isHomePage = pathname === '/'
+  // Home and /genes each render their own search box, so the header trigger
+  // would be a second search on the page.
+  const pageHasSearch = isHomePage || pathname === '/genes'
+  const { state, isMobile } = useSidebar()
+  const sidebarLabel =
+    state === 'expanded' ? commonCopy.sidebar.close : commonCopy.sidebar.open
+  const contextLabel = pathname === null ? null : pageContextLabel(pathname)
+
+  return (
+    <>
       <div className="flex min-w-0 items-center gap-2">
         <Tooltip>
-          <TooltipTrigger asChild>
-            <SidebarTrigger size="lg" aria-label={sidebarLabel} />
-          </TooltipTrigger>
+          <TooltipTrigger
+            render={<SidebarTrigger size="lg" aria-label={sidebarLabel} />}
+          ></TooltipTrigger>
           <TooltipContent>{sidebarLabel}</TooltipContent>
         </Tooltip>
         {/* On phones the sidebar (and its logo) is hidden behind the
@@ -180,17 +205,12 @@ export function Header() {
         )}
       </div>
       <div className="flex justify-center">
-        {!pageHasSearch && (
-          <GeneSearchShell
-            searchGenes={searchGenes}
-            defaultQuery={geneSymbol}
-            isDialog
-          />
-        )}
+        {/* Opens empty: pre-filling the current gene made typing "kras" on
+            /genes/BRCA1 search for "BRCA1kras". */}
+        {!pageHasSearch && <GeneSearchShell isDialog />}
       </div>
-      <div className="flex items-center justify-end">
-        <HeaderHelpButton />
-      </div>
-    </header>
+      {/* Empty right column keeps the search centered in the 1fr/auto/1fr grid. */}
+      <div />
+    </>
   )
 }

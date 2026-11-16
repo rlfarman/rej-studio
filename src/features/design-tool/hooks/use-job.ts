@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import {
   submitJob as submitJobAction,
@@ -13,6 +13,9 @@ import {
 import type { ProcessResult } from '@/features/design-tool/types/process-result'
 import type { FormValues } from '@/features/design-tool/types/form-schema'
 import { trackEvent } from '@/lib/analytics'
+import { designToolCopy } from '@/features/design-tool/copy'
+
+const copy = designToolCopy.jobErrors
 
 type JobStatus = 'idle' | 'submitting' | EntryStatus
 
@@ -37,6 +40,15 @@ interface UseJobReturn {
 
 const JOB_PARAM = 'job'
 
+// Failed submissions never reached the backend, so they have no backend id.
+// They still get a history entry (so "Run again" survives a reload) under a
+// locally generated id, which is never written to the URL and never polled.
+const LOCAL_FAILURE_PREFIX = 'local-fail-'
+
+function isLocalFailureId(id: string): boolean {
+  return id.startsWith(LOCAL_FAILURE_PREFIX)
+}
+
 // Shallow URL update — avoids re-running the server component (unlike
 // router.replace), so form state is preserved during submission.
 function writeJobToUrl(jobId: string | null) {
@@ -60,11 +72,12 @@ export function useJob({
   const entry = useJobHistory(
     (s) => s.entries.find((e) => e.id === jobId) ?? null,
   )
+  const progress = useJobHistory((s) => (jobId ? s.progressById[jobId] : null))
 
-  const setJobId = useCallback((next: string | null) => {
+  const setJobId = (next: string | null, { shareable = true } = {}) => {
     setJobIdState(next)
-    writeJobToUrl(next)
-  }, [])
+    if (shareable) writeJobToUrl(next)
+  }
 
   // If the caller seeded an initialJobId but we have no history entry for it
   // (e.g. a shared URL from another device, or history was cleared), create
@@ -80,32 +93,50 @@ export function useJob({
 
   const submitMutation = useMutation({
     mutationFn: async (values: FormValues) => {
-      const result = await submitJobAction(buildJobParams(values))
-      return { ...result, values }
+      const outcome = await submitJobAction(buildJobParams(values))
+      return { outcome, values }
     },
     onMutate: () => {
       setJobId(null)
     },
-    onSuccess: ({ jobId: newJobId, result, values }) => {
+    onSuccess: ({ outcome, values }) => {
+      if (!outcome.ok) {
+        // Expected failure (rate limit, backend down, invalid input). Record
+        // it so the run shows up in Recent jobs and "Run again" still works
+        // after a reload, then surface it through the normal error path.
+        const id = `${LOCAL_FAILURE_PREFIX}${crypto.randomUUID()}`
+        upsertEntry({
+          id,
+          status: 'failed',
+          error: outcome.error,
+          formValues: values,
+        })
+        setJobId(id, { shareable: false })
+        trackEvent({
+          event: 'job_failed',
+          job_id: id,
+          error_code: outcome.error.code,
+        })
+        return
+      }
+
+      const { jobId: newJobId, result } = outcome.data
       if (result) {
         // Local backend: synchronous result. Record as completed immediately.
         upsertEntry({
           id: newJobId,
           status: 'completed',
-          result: result as unknown as ProcessResult,
+          result,
           formValues: values,
         })
       } else {
         // Modal backend: pending. The global watcher will poll and upgrade.
+        upsertEntry({ id: newJobId, status: 'running', formValues: values })
         // Seed a small initial progress so the bar appears immediately —
-        // otherwise we wait ~2s for the first poll before anything shows.
-        upsertEntry({
-          id: newJobId,
-          status: 'running',
-          formValues: values,
-          progress: 0.03,
-          stage: 'Starting',
-        })
+        // otherwise we wait for the first poll before anything shows.
+        useJobHistory
+          .getState()
+          .setProgress(newJobId, { progress: 0.03, stage: 'Starting' })
       }
       setJobId(newJobId)
       trackEvent({ event: 'job_submit', job_id: newJobId })
@@ -114,26 +145,30 @@ export function useJob({
 
   const cancelMutation = useMutation({
     mutationFn: async (id: string) => cancelJobAction(id),
-    onSuccess: (data, id) => {
+    onSuccess: (outcome, id) => {
       // The watcher will also observe this on its next poll, but updating
       // eagerly gives an instant UI response.
       upsertEntry({
         id,
         status: 'cancelled',
-        error: data.error
-          ? { ...data.error, code: data.error.code as JobError['code'] }
-          : { code: 'cancelled', message: 'Cancelled', retriable: true },
+        error: (outcome.ok ? outcome.data.error : outcome.error) ?? {
+          code: 'cancelled',
+          message: copy.cancelled,
+          retriable: true,
+        },
       })
     },
   })
 
-  const cancelJob = useCallback(async () => {
-    if (!jobId) return
+  const cancelJob = async () => {
+    if (!jobId || isLocalFailureId(jobId)) return
     await cancelMutation.mutateAsync(jobId)
-  }, [jobId, cancelMutation])
+  }
 
-  // Derive unified status/result/error. Submit-in-flight and submit-errored
-  // states come from the mutation; everything after that reads the entry.
+  // Derive unified status/result/error. Submit-in-flight comes from the
+  // mutation; everything after that reads the entry, including failures
+  // (which are recorded as entries above). A thrown mutation error is a bug
+  // rather than an expected failure, so it gets the generic message.
   let status: JobStatus = 'idle'
   let result: ProcessResult | null = null
   let error: JobError | null = null
@@ -142,26 +177,16 @@ export function useJob({
     status = 'submitting'
   } else if (submitMutation.isError) {
     status = 'failed'
-    error = {
-      code: 'network',
-      message:
-        submitMutation.error instanceof Error
-          ? submitMutation.error.message
-          : 'Failed to submit job',
-      retriable: true,
-    }
+    error = { code: 'unknown', message: copy.unknown, retriable: true }
   } else if (entry) {
     status = entry.status
     result = entry.result
     error = entry.error
   }
 
-  const submitJob = useCallback(
-    async (values: FormValues) => {
-      await submitMutation.mutateAsync(values)
-    },
-    [submitMutation],
-  )
+  const submitJob = async (values: FormValues) => {
+    await submitMutation.mutateAsync(values)
+  }
 
   return {
     submitJob,
@@ -171,8 +196,8 @@ export function useJob({
     result,
     error,
     formValues: entry?.formValues ?? null,
-    progress: entry?.progress,
-    stage: entry?.stage,
+    progress: progress?.progress,
+    stage: progress?.stage,
     isLoading: status === 'submitting' || status === 'running',
   }
 }

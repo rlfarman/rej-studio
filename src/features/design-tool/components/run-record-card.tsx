@@ -54,7 +54,7 @@ function formatOptionValue(value: unknown): string {
   return JSON.stringify(value) ?? String(value)
 }
 
-export function factsFrom(record: RunRecord): Fact[] {
+function factsFrom(record: RunRecord): Fact[] {
   const { fields } = copy
   const facts: Fact[] = [
     { label: fields.startedAt, value: formatStartedAt(record.started_at) },
@@ -66,6 +66,7 @@ export function factsFrom(record: RunRecord): Fact[] {
         record.input.sha256,
       ),
     },
+    { label: fields.seed, value: String(record.seed) },
     { label: fields.algorithm, value: record.versions.algorithm_sha256 },
   ]
 

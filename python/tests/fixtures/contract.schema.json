@@ -1,0 +1,890 @@
+{
+  "options": {
+    "$defs": {
+      "SelectedWggwSite": {
+        "additionalProperties": false,
+        "description": "A WGGW-capable codon rewrite the user picked in the splice slider.",
+        "properties": {
+          "hexamer_start": {
+            "minimum": 1,
+            "title": "Hexamer Start",
+            "type": "integer"
+          },
+          "motif": {
+            "maxLength": 16,
+            "minLength": 1,
+            "title": "Motif",
+            "type": "string"
+          },
+          "motif_start": {
+            "minimum": 0,
+            "title": "Motif Start",
+            "type": "integer"
+          },
+          "new_codons": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "New Codons",
+            "type": "array"
+          },
+          "new_hexamer": {
+            "maxLength": 6,
+            "minLength": 6,
+            "title": "New Hexamer",
+            "type": "string"
+          },
+          "original_codons": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Original Codons",
+            "type": "array"
+          },
+          "position": {
+            "minimum": 0,
+            "title": "Position",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "position",
+          "motif_start",
+          "motif",
+          "hexamer_start",
+          "original_codons",
+          "new_codons",
+          "new_hexamer"
+        ],
+        "title": "SelectedWggwSite",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "description": "Optimization options.\n\n``extra=\"forbid\"`` is deliberate: an unknown key used to be dropped\nsilently, which is how a second splice junction (``split_points``) could\nbe requested and ignored. A 422 naming the key is better than a design\nthat quietly isn't what was asked for. Adding a frontend option therefore\nmeans adding it here too.",
+    "properties": {
+      "codon_optimize": {
+        "anyOf": [
+          {
+            "enum": ["human", "mouse"],
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Codon Optimize"
+      },
+      "codon_optimize_weight": {
+        "default": 1.0,
+        "maximum": 100.0,
+        "minimum": 0.0,
+        "title": "Codon Optimize Weight",
+        "type": "number"
+      },
+      "enforce_gc": {
+        "default": true,
+        "title": "Enforce Gc",
+        "type": "boolean"
+      },
+      "ensure_wggw": {
+        "default": true,
+        "title": "Ensure Wggw",
+        "type": "boolean"
+      },
+      "induce_optimal_ss": {
+        "default": false,
+        "title": "Induce Optimal Ss",
+        "type": "boolean"
+      },
+      "minimize_CpGs": {
+        "default": true,
+        "title": "Minimize Cpgs",
+        "type": "boolean"
+      },
+      "minimize_CpGs_weight": {
+        "default": 1.0,
+        "maximum": 100.0,
+        "minimum": 0.0,
+        "title": "Minimize Cpgs Weight",
+        "type": "number"
+      },
+      "reduce_kmer_complexity": {
+        "default": true,
+        "title": "Reduce Kmer Complexity",
+        "type": "boolean"
+      },
+      "reduce_kmer_complexity_k": {
+        "default": 10,
+        "maximum": 100,
+        "minimum": 6,
+        "title": "Reduce Kmer Complexity K",
+        "type": "integer"
+      },
+      "reduce_kmer_complexity_weight": {
+        "default": 1.0,
+        "maximum": 100.0,
+        "minimum": 0.0,
+        "title": "Reduce Kmer Complexity Weight",
+        "type": "number"
+      },
+      "remove_cryptic_ss": {
+        "default": true,
+        "title": "Remove Cryptic Ss",
+        "type": "boolean"
+      },
+      "remove_cryptic_ss_weight": {
+        "default": 1.0,
+        "maximum": 100.0,
+        "minimum": 0.0,
+        "title": "Remove Cryptic Ss Weight",
+        "type": "number"
+      },
+      "seed": {
+        "anyOf": [
+          {
+            "maximum": 4294967295,
+            "minimum": 0,
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Seed"
+      },
+      "selected_wggw_site": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/SelectedWggwSite"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "selected_wggw_sites": {
+        "anyOf": [
+          {
+            "items": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/SelectedWggwSite"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Selected Wggw Sites"
+      },
+      "split_point": {
+        "anyOf": [
+          {
+            "minimum": 0,
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Split Point"
+      },
+      "split_points": {
+        "anyOf": [
+          {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Split Points"
+      },
+      "stim_3": {
+        "default": true,
+        "title": "Stim 3",
+        "type": "boolean"
+      },
+      "stim_5": {
+        "default": true,
+        "title": "Stim 5",
+        "type": "boolean"
+      },
+      "wggw_threshold": {
+        "default": 300,
+        "maximum": 50000,
+        "minimum": 0,
+        "title": "Wggw Threshold",
+        "type": "integer"
+      }
+    },
+    "title": "ProcessOptions",
+    "type": "object"
+  },
+  "request": {
+    "$defs": {
+      "ProcessOptions": {
+        "additionalProperties": false,
+        "description": "Optimization options.\n\n``extra=\"forbid\"`` is deliberate: an unknown key used to be dropped\nsilently, which is how a second splice junction (``split_points``) could\nbe requested and ignored. A 422 naming the key is better than a design\nthat quietly isn't what was asked for. Adding a frontend option therefore\nmeans adding it here too.",
+        "properties": {
+          "codon_optimize": {
+            "anyOf": [
+              {
+                "enum": ["human", "mouse"],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Codon Optimize"
+          },
+          "codon_optimize_weight": {
+            "default": 1.0,
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Codon Optimize Weight",
+            "type": "number"
+          },
+          "enforce_gc": {
+            "default": true,
+            "title": "Enforce Gc",
+            "type": "boolean"
+          },
+          "ensure_wggw": {
+            "default": true,
+            "title": "Ensure Wggw",
+            "type": "boolean"
+          },
+          "induce_optimal_ss": {
+            "default": false,
+            "title": "Induce Optimal Ss",
+            "type": "boolean"
+          },
+          "minimize_CpGs": {
+            "default": true,
+            "title": "Minimize Cpgs",
+            "type": "boolean"
+          },
+          "minimize_CpGs_weight": {
+            "default": 1.0,
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Minimize Cpgs Weight",
+            "type": "number"
+          },
+          "reduce_kmer_complexity": {
+            "default": true,
+            "title": "Reduce Kmer Complexity",
+            "type": "boolean"
+          },
+          "reduce_kmer_complexity_k": {
+            "default": 10,
+            "maximum": 100,
+            "minimum": 6,
+            "title": "Reduce Kmer Complexity K",
+            "type": "integer"
+          },
+          "reduce_kmer_complexity_weight": {
+            "default": 1.0,
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Reduce Kmer Complexity Weight",
+            "type": "number"
+          },
+          "remove_cryptic_ss": {
+            "default": true,
+            "title": "Remove Cryptic Ss",
+            "type": "boolean"
+          },
+          "remove_cryptic_ss_weight": {
+            "default": 1.0,
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Remove Cryptic Ss Weight",
+            "type": "number"
+          },
+          "seed": {
+            "anyOf": [
+              {
+                "maximum": 4294967295,
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Seed"
+          },
+          "selected_wggw_site": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SelectedWggwSite"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "selected_wggw_sites": {
+            "anyOf": [
+              {
+                "items": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/$defs/SelectedWggwSite"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Selected Wggw Sites"
+          },
+          "split_point": {
+            "anyOf": [
+              {
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Split Point"
+          },
+          "split_points": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Split Points"
+          },
+          "stim_3": {
+            "default": true,
+            "title": "Stim 3",
+            "type": "boolean"
+          },
+          "stim_5": {
+            "default": true,
+            "title": "Stim 5",
+            "type": "boolean"
+          },
+          "wggw_threshold": {
+            "default": 300,
+            "maximum": 50000,
+            "minimum": 0,
+            "title": "Wggw Threshold",
+            "type": "integer"
+          }
+        },
+        "title": "ProcessOptions",
+        "type": "object"
+      },
+      "SelectedWggwSite": {
+        "additionalProperties": false,
+        "description": "A WGGW-capable codon rewrite the user picked in the splice slider.",
+        "properties": {
+          "hexamer_start": {
+            "minimum": 1,
+            "title": "Hexamer Start",
+            "type": "integer"
+          },
+          "motif": {
+            "maxLength": 16,
+            "minLength": 1,
+            "title": "Motif",
+            "type": "string"
+          },
+          "motif_start": {
+            "minimum": 0,
+            "title": "Motif Start",
+            "type": "integer"
+          },
+          "new_codons": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "New Codons",
+            "type": "array"
+          },
+          "new_hexamer": {
+            "maxLength": 6,
+            "minLength": 6,
+            "title": "New Hexamer",
+            "type": "string"
+          },
+          "original_codons": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Original Codons",
+            "type": "array"
+          },
+          "position": {
+            "minimum": 0,
+            "title": "Position",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "position",
+          "motif_start",
+          "motif",
+          "hexamer_start",
+          "original_codons",
+          "new_codons",
+          "new_hexamer"
+        ],
+        "title": "SelectedWggwSite",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "description": "A single optimization request.",
+    "properties": {
+      "CDS": {
+        "title": "Cds",
+        "type": "string"
+      },
+      "corpus_version": {
+        "anyOf": [
+          {
+            "maxLength": 200,
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Corpus Version"
+      },
+      "name": {
+        "title": "Name",
+        "type": "string"
+      },
+      "options": {
+        "$ref": "#/$defs/ProcessOptions",
+        "default": {
+          "codon_optimize": null,
+          "codon_optimize_weight": 1.0,
+          "enforce_gc": true,
+          "ensure_wggw": true,
+          "induce_optimal_ss": false,
+          "minimize_CpGs": true,
+          "minimize_CpGs_weight": 1.0,
+          "reduce_kmer_complexity": true,
+          "reduce_kmer_complexity_k": 10,
+          "reduce_kmer_complexity_weight": 1.0,
+          "remove_cryptic_ss": true,
+          "remove_cryptic_ss_weight": 1.0,
+          "seed": null,
+          "selected_wggw_site": null,
+          "selected_wggw_sites": null,
+          "split_point": null,
+          "split_points": null,
+          "stim_3": true,
+          "stim_5": true,
+          "wggw_threshold": 300
+        }
+      }
+    },
+    "required": ["CDS", "name"],
+    "title": "ProcessRequest",
+    "type": "object"
+  },
+  "result": {
+    "$defs": {
+      "ObjectiveEvaluationEntry": {
+        "properties": {
+          "locations": {
+            "default": [],
+            "items": {
+              "$ref": "#/$defs/ObjectiveLocation"
+            },
+            "title": "Locations",
+            "type": "array"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "objective": {
+            "title": "Objective",
+            "type": "string"
+          },
+          "passes": {
+            "title": "Passes",
+            "type": "boolean"
+          },
+          "score": {
+            "title": "Score",
+            "type": "number"
+          }
+        },
+        "required": ["objective", "passes", "score", "message"],
+        "title": "ObjectiveEvaluationEntry",
+        "type": "object"
+      },
+      "ObjectiveLocation": {
+        "properties": {
+          "end": {
+            "title": "End",
+            "type": "integer"
+          },
+          "start": {
+            "title": "Start",
+            "type": "integer"
+          },
+          "strand": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Strand"
+          }
+        },
+        "required": ["start", "end"],
+        "title": "ObjectiveLocation",
+        "type": "object"
+      },
+      "ObjectivesReport": {
+        "properties": {
+          "entries": {
+            "default": [],
+            "items": {
+              "$ref": "#/$defs/ObjectiveEvaluationEntry"
+            },
+            "title": "Entries",
+            "type": "array"
+          },
+          "total_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Total Score"
+          }
+        },
+        "title": "ObjectivesReport",
+        "type": "object"
+      },
+      "RunRecord": {
+        "description": "What this run was, in enough detail to repeat or cite it.\n\nBuilt in `python/run_record.py`; every field is a fact about the run.",
+        "properties": {
+          "corpus_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Corpus Version"
+          },
+          "duration_seconds": {
+            "title": "Duration Seconds",
+            "type": "number"
+          },
+          "input": {
+            "$ref": "#/$defs/RunRecordInput"
+          },
+          "options": {
+            "additionalProperties": true,
+            "title": "Options",
+            "type": "object"
+          },
+          "record_version": {
+            "title": "Record Version",
+            "type": "integer"
+          },
+          "seed": {
+            "title": "Seed",
+            "type": "integer"
+          },
+          "started_at": {
+            "title": "Started At",
+            "type": "string"
+          },
+          "versions": {
+            "$ref": "#/$defs/RunRecordVersions"
+          }
+        },
+        "required": [
+          "record_version",
+          "started_at",
+          "duration_seconds",
+          "seed",
+          "input",
+          "options",
+          "versions"
+        ],
+        "title": "RunRecord",
+        "type": "object"
+      },
+      "RunRecordInput": {
+        "properties": {
+          "length": {
+            "title": "Length",
+            "type": "integer"
+          },
+          "sha256": {
+            "title": "Sha256",
+            "type": "string"
+          }
+        },
+        "required": ["sha256", "length"],
+        "title": "RunRecordInput",
+        "type": "object"
+      },
+      "RunRecordVersions": {
+        "properties": {
+          "algorithm_sha256": {
+            "title": "Algorithm Sha256",
+            "type": "string"
+          },
+          "commit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Commit"
+          },
+          "dnachisel": {
+            "title": "Dnachisel",
+            "type": "string"
+          },
+          "python": {
+            "title": "Python",
+            "type": "string"
+          }
+        },
+        "required": ["algorithm_sha256", "dnachisel", "python"],
+        "title": "RunRecordVersions",
+        "type": "object"
+      },
+      "WggwSiteInfo": {
+        "properties": {
+          "distance_from_split": {
+            "title": "Distance From Split",
+            "type": "integer"
+          },
+          "motif": {
+            "title": "Motif",
+            "type": "string"
+          },
+          "new_codons": {
+            "items": {
+              "type": "string"
+            },
+            "title": "New Codons",
+            "type": "array"
+          },
+          "original_codons": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Original Codons",
+            "type": "array"
+          },
+          "position": {
+            "title": "Position",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "position",
+          "motif",
+          "distance_from_split",
+          "original_codons",
+          "new_codons"
+        ],
+        "title": "WggwSiteInfo",
+        "type": "object"
+      }
+    },
+    "properties": {
+      "name": {
+        "title": "Name",
+        "type": "string"
+      },
+      "objectives_after": {
+        "title": "Objectives After",
+        "type": "string"
+      },
+      "objectives_before": {
+        "title": "Objectives Before",
+        "type": "string"
+      },
+      "objectives_report_after": {
+        "$ref": "#/$defs/ObjectivesReport",
+        "default": {
+          "entries": [],
+          "total_score": null
+        }
+      },
+      "objectives_report_before": {
+        "$ref": "#/$defs/ObjectivesReport",
+        "default": {
+          "entries": [],
+          "total_score": null
+        }
+      },
+      "optimized_sequence": {
+        "title": "Optimized Sequence",
+        "type": "string"
+      },
+      "original_sequence": {
+        "title": "Original Sequence",
+        "type": "string"
+      },
+      "processing_time_seconds": {
+        "title": "Processing Time Seconds",
+        "type": "number"
+      },
+      "run_record": {
+        "$ref": "#/$defs/RunRecord"
+      },
+      "seed": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Seed"
+      },
+      "seq3": {
+        "title": "Seq3",
+        "type": "string"
+      },
+      "seq5": {
+        "title": "Seq5",
+        "type": "string"
+      },
+      "split_point": {
+        "title": "Split Point",
+        "type": "integer"
+      },
+      "used_wggw_as_split": {
+        "title": "Used Wggw As Split",
+        "type": "boolean"
+      },
+      "wggw_info": {
+        "anyOf": [
+          {
+            "additionalProperties": {
+              "$ref": "#/$defs/WggwSiteInfo"
+            },
+            "type": "object"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Wggw Info"
+      }
+    },
+    "required": [
+      "name",
+      "original_sequence",
+      "optimized_sequence",
+      "seq5",
+      "seq3",
+      "split_point",
+      "used_wggw_as_split",
+      "objectives_before",
+      "objectives_after",
+      "processing_time_seconds",
+      "run_record"
+    ],
+    "title": "ProcessResult",
+    "type": "object"
+  }
+}

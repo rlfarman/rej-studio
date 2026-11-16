@@ -30,31 +30,17 @@ export function LoginForm({ returnTo, hasError = false }: LoginFormProps) {
       />
 
       {/* Frosted glass card */}
-      <div
-        className="border-border/50 bg-card/75 relative z-10 w-full max-w-sm rounded-2xl border p-8 shadow-2xl shadow-black/8 backdrop-blur-2xl"
-        style={{ ['--stagger' as string]: 0 }}
-      >
+      <div className="border-border/50 bg-card/75 relative z-10 w-full max-w-sm rounded-2xl border p-8 shadow-2xl shadow-black/8 backdrop-blur-2xl">
         {/* Overline */}
-        <p
-          className="type-overline text-primary fade-up-stagger mb-6"
-          style={{ ['--stagger' as string]: 0 }}
-        >
-          Private Preview
-        </p>
+        <p className="type-overline text-primary mb-6">Private Preview</p>
 
         {/* Title */}
-        <h1
-          className="type-page-title text-foreground fade-up-stagger"
-          style={{ ['--stagger' as string]: 1 }}
-        >
+        <h1 className="type-page-title text-foreground">
           {authCopy.login.title}
         </h1>
 
         {/* Description */}
-        <p
-          className="text-muted-foreground fade-up-stagger mt-2 text-sm leading-relaxed"
-          style={{ ['--stagger' as string]: 2 }}
-        >
+        <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
           {authCopy.login.description}
         </p>
 
@@ -68,10 +54,7 @@ export function LoginForm({ returnTo, hasError = false }: LoginFormProps) {
             <input type="hidden" name="return_to" value={returnTo} />
           ) : null}
 
-          <div
-            className="fade-up-stagger flex flex-col gap-2"
-            style={{ ['--stagger' as string]: 3 }}
-          >
+          <div className="flex flex-col gap-2">
             <Label htmlFor="password">{authCopy.login.passwordLabel}</Label>
 
             {/* Wrapper provides the drawn-on underline focus indicator */}
@@ -99,10 +82,7 @@ export function LoginForm({ returnTo, hasError = false }: LoginFormProps) {
             ) : null}
           </div>
 
-          <div
-            className="fade-up-stagger"
-            style={{ ['--stagger' as string]: 4 }}
-          >
+          <div>
             <Button
               type="submit"
               className="relative w-full overflow-hidden"

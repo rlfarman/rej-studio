@@ -1,3 +1,4 @@
+import { sql } from 'drizzle-orm'
 import { pgTable, text, integer, index, customType } from 'drizzle-orm/pg-core'
 
 // Custom type for Postgres tsvector columns. Drizzle doesn't have a built-in
@@ -28,9 +29,25 @@ export const genes = pgTable(
   },
   (table) => [
     index('idx_genes_symbol').on(table.symbol),
-    index('idx_genes_name').on(table.name),
+    // Gene pages look symbols up case-insensitively (/genes/tp53 → TP53).
+    index('idx_genes_symbol_lower').on(sql`lower(${table.symbol})`),
     index('idx_genes_species').on(table.species),
     index('idx_genes_search_vector').using('gin', table.searchVector),
+    // Trigram indexes serve the substring search, `lower(col) LIKE '%q%'`,
+    // which a btree can't. They need the pg_trgm extension, which migration
+    // 0001 creates (Neon and PGlite both ship it).
+    index('idx_genes_symbol_trgm').using(
+      'gin',
+      sql`lower(${table.symbol}) gin_trgm_ops`,
+    ),
+    index('idx_genes_name_trgm').using(
+      'gin',
+      sql`lower(${table.name}) gin_trgm_ops`,
+    ),
+    index('idx_genes_alternate_symbols_trgm').using(
+      'gin',
+      sql`lower(${table.alternateSymbols}) gin_trgm_ops`,
+    ),
   ],
 )
 
@@ -49,11 +66,7 @@ export const isoforms = pgTable(
     proteinSequence: text('protein_sequence').notNull().default(''),
     species: text('species').notNull(),
   },
-  (table) => [
-    index('idx_isoforms_gene_id').on(table.geneId),
-    index('idx_isoforms_species').on(table.species),
-    index('idx_isoforms_cds_length').on(table.codingSequenceLength),
-  ],
+  (table) => [index('idx_isoforms_gene_id').on(table.geneId)],
 )
 
 export type SelectIsoform = typeof isoforms.$inferSelect

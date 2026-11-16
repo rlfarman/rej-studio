@@ -18,8 +18,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.9,
     },
     // design-tool is disallowed in robots.txt (functional tool, not content).
-    // Docs are hidden for now (src/app/docs/layout.tsx returns 404), so
-    // they aren't listed either.
   ]
 
   // While the site is password-gated, crawlers only ever reach the login

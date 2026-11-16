@@ -63,7 +63,9 @@ function formatStartedAt(startedAt: string): string | null {
 }
 
 function formatDuration(seconds: number): string {
-  return seconds < 1 ? `${Math.round(seconds * 1000)} ms` : `${seconds.toFixed(1)} s`
+  return seconds < 1
+    ? `${Math.round(seconds * 1000)} ms`
+    : `${seconds.toFixed(1)} s`
 }
 
 /** The optimization steps that were switched on, in the order they are listed. */
@@ -118,6 +120,11 @@ export function buildMethodsParagraph(record: RunRecord): string {
     when
       ? `The run was performed on ${when} and took ${formatDuration(record.duration_seconds)}.`
       : `The run took ${formatDuration(record.duration_seconds)}.`,
+  )
+
+  sentences.push(
+    `Optimization used random seed ${record.seed}; the same sequence and ` +
+      `options submitted with that seed reproduce this design.`,
   )
 
   const provenance = [

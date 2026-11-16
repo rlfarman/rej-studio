@@ -10,10 +10,11 @@ Every field here is a fact about the run. Nothing is inferred, and nothing is
 summarised: the summary that the app shows is built from these fields, not the
 other way round.
 
-Reproducibility: the optimizer consumes no randomness, so the same sequence and
-the same options give the same output. There is therefore no seed to record.
-That was verified by running identical inputs under different global RNG states
-and comparing the output; see `test_run_record.py`.
+Reproducibility: DNAChisel's mutation sampling reaches for the global RNGs, so
+the algorithm seeds them per run (`resolve_seed`/`apply_seed` in
+`algorithm.py`) and the seed it used is recorded here. Replaying the same
+sequence, the same options and the same seed reproduces the same design, which
+is what makes a recorded run worth citing.
 """
 
 from __future__ import annotations
@@ -33,7 +34,9 @@ RUN_RECORD_VERSION = 1
 
 #: Keys the algorithm writes back into its options dict as it works. They are
 #: results, not inputs, and they are reported elsewhere, so they are kept out
-#: of the record's `options`.
+#: of the record's `options`. "seed" is left out for a different reason: the
+#: caller's value is often None, and the seed the run actually used is recorded
+#: as a field of its own.
 _INTERNAL_OPTION_KEYS = frozenset(
     {
         "actual_split_point",
@@ -41,6 +44,7 @@ _INTERNAL_OPTION_KEYS = frozenset(
         "explicit_wggw_main",
         "objectives_report_after",
         "objectives_report_before",
+        "seed",
         "used_wggw_as_split",
         "wggw_info",
     }
@@ -92,6 +96,7 @@ def build_run_record(
     options: dict[str, Any],
     started_at: datetime,
     duration_seconds: float,
+    seed: int,
     corpus_version: str | None = None,
 ) -> dict[str, Any]:
     """Describe one design run.
@@ -101,6 +106,8 @@ def build_run_record(
         options: The options as applied, after validation and defaults.
         started_at: When the run began, timezone-aware.
         duration_seconds: How long it took.
+        seed: The seed the run actually used, supplied or derived. Submitting
+            the same sequence and options with this seed repeats the design.
         corpus_version: The gene corpus the input came from, when it came from
             one. A pasted sequence has no corpus, and the field is omitted.
     """
@@ -108,6 +115,7 @@ def build_run_record(
         "record_version": RUN_RECORD_VERSION,
         "started_at": started_at.astimezone(UTC).isoformat().replace("+00:00", "Z"),
         "duration_seconds": round(duration_seconds, 3),
+        "seed": seed,
         "input": {
             "sha256": sequence_digest(cds),
             "length": len(cds.strip()),

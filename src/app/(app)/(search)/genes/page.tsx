@@ -5,10 +5,8 @@ import {
   GeneSearchResults,
   GeneSearchResultsLoading,
 } from '@/features/gene-search/components/gene-search-results'
-import {
-  GeneSearchPageForm,
-  searchPageHref,
-} from '@/features/gene-search/components/gene-search-page-form'
+import { GeneSearchPageForm } from '@/features/gene-search/components/gene-search-page-form'
+import { searchPageHref } from '@/features/gene-search/utils/search-href'
 import { geneSearchCopy } from '@/features/gene-search/copy'
 import { PageTitle } from '@/components/page-title'
 import { isSpeciesFilter } from '@/lib/bio/species'
@@ -17,21 +15,19 @@ import type { SpeciesFilter } from '@/lib/bio/species'
 const copy = geneSearchCopy.searchPage
 
 export const metadata: Metadata = {
-  title: 'Search Genes',
-  description:
-    'Search by gene symbol, name, or disease across human and mouse genomes. Browse isoforms and download optimized sequences.',
+  title: copy.metadataTitle,
+  description: copy.metadataDescription,
   alternates: { canonical: '/genes' },
   openGraph: {
-    title: 'Search Genes',
-    description:
-      'Search by gene symbol, name, or disease across human and mouse genomes.',
+    title: copy.metadataTitle,
+    description: copy.ogDescription,
     url: '/genes',
     images: [
       {
-        url: '/api/og?title=Search+by+symbol%2C%0Aname%2C+or+disease&section=Gene+Search&description=Human+%26+Mouse+%C2%B7+Full-text+search+%C2%B7+Pre-optimized+sequences&url=rejstudio.com/genes',
+        url: '/api/og?title=Search+by+symbol%2C%0Aname%2C+or+alias&section=Gene+Search&description=Human+%26+Mouse+%C2%B7+Full-text+search+%C2%B7+Pre-optimized+sequences&url=rejstudio.com/genes',
         width: 1200,
         height: 630,
-        alt: 'Gene Search — REJ Studio',
+        alt: copy.ogImageAlt,
       },
     ],
   },

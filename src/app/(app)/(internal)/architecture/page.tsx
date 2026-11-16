@@ -244,12 +244,12 @@ export default function ArchitecturePage() {
               />
               <ServiceBox
                 name="design-tool"
-                tech="Server Actions + polling"
+                tech="Server Action submit + route-handler polling"
                 details={[
-                  'Job submit → Modal',
+                  'Job submit → Modal (bearer token)',
                   'Idempotency (SHA-256)',
-                  'Circuit breaker',
-                  'Dead letter queue',
+                  'Circuit breaker (transient errors)',
+                  'Zod-checked backend contract',
                 ]}
                 variant="accent"
               />
@@ -405,7 +405,8 @@ export default function ArchitecturePage() {
                   • <span className="font-mono">circuit:modal</span> — breaker
                 </div>
                 <div>
-                  • <span className="font-mono">dlq:jobs</span> — dead letters
+                  • <span className="font-mono">inflight-job:*</span> — job →
+                  idempotency key, cleared on cancel/failure
                 </div>
                 <div>
                   • <span className="font-mono">health:db_latency</span> —
@@ -534,7 +535,7 @@ export default function ArchitecturePage() {
               <div className="mb-1 font-semibold">Gene Search</div>
               <div className="text-muted-foreground space-y-0.5">
                 <div>1. User types query → 250ms debounce</div>
-                <div>2. Server Action → Neon (FTS + LIKE)</div>
+                <div>2. GET /api/genes/search → Neon (FTS + trigram LIKE)</div>
                 <div>3. Results stream via RSC</div>
                 <div>4. React Query caches 30s</div>
               </div>
@@ -545,7 +546,10 @@ export default function ArchitecturePage() {
                 <div>1. Form validated (Zod) → Server Action</div>
                 <div>2. Rate limit → circuit check → idempotency</div>
                 <div>3. POST to Modal /jobs → call_id returned</div>
-                <div>4. Client polls GET /jobs/:id until complete</div>
+                <div>
+                  4. Client polls GET /api/jobs/:id (route handler → Modal)
+                  until complete
+                </div>
               </div>
             </div>
             <div>
@@ -564,7 +568,7 @@ export default function ArchitecturePage() {
                 <div>• Redis down → in-memory fallback</div>
                 <div>• Modal down → circuit trips after 5 failures</div>
                 <div>• Circuit resets after 30s half-open probe</div>
-                <div>• Failed jobs → DLQ (capped at 50)</div>
+                <div>• Failed or cancelled jobs can be rerun at once</div>
               </div>
             </div>
           </div>

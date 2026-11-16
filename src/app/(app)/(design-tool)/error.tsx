@@ -7,23 +7,25 @@ import { appCopy } from '@/copy/app'
 
 export default function DesignToolError({
   error,
-  reset,
+  retry,
 }: {
-  error: Error & { digest?: string }
-  reset: () => void
+  error: unknown
+  retry: () => void
 }) {
   return (
     <ErrorState
       error={error}
-      reset={reset}
+      retry={retry}
       boundary="design-tool"
       title={appCopy.errorBoundary.designTool.title}
       description={appCopy.errorBoundary.designTool.description}
       secondaryAction={
-        <Button asChild variant="outline">
-          <Link href="/genes">
-            {appCopy.errorBoundary.designTool.backToSearch}
-          </Link>
+        <Button
+          variant="outline"
+          nativeButton={false}
+          render={<Link href="/genes" />}
+        >
+          {appCopy.errorBoundary.designTool.backToSearch}
         </Button>
       }
     />

@@ -3,8 +3,26 @@
 These tests ensure the frontend and backend agree on the shape of shared
 types. If a field is added/removed/renamed on one side, this test catches
 the drift at CI time before it surfaces as a runtime bug.
+
+Two committed fixtures back this up (see `regenerate_fixtures.py`):
+
+* `fixtures/process-result.json` — a real successful run, validated against
+  the result model here and shared with the TypeScript side.
+* `fixtures/contract.schema.json` — the JSON Schema of the request and
+  result models, so any field or bound change has to be regenerated
+  deliberately rather than slipping through.
+
+Regenerate both with:
+
+    uv run python -m python.tests.regenerate_fixtures
 """
 
+import json
+from pathlib import Path
+
+import pytest
+
+from python.contracts import ProcessOptions, ProcessRequest
 from python.index import (
     ObjectiveEvaluationEntry,
     ObjectiveLocation,
@@ -15,6 +33,11 @@ from python.index import (
     RunRecordVersions,
     WggwSiteInfo,
 )
+
+FIXTURES_DIR = Path(__file__).parent / "fixtures"
+RESULT_FIXTURE = FIXTURES_DIR / "process-result.json"
+SCHEMA_FIXTURE = FIXTURES_DIR / "contract.schema.json"
+REGENERATE_HINT = "Run `uv run python -m python.tests.regenerate_fixtures` and commit the diff."
 
 
 def _field_names(model) -> set[str]:
@@ -41,6 +64,9 @@ TS_PROCESS_RESULT_FIELDS = {
     "objectives_report_after",
     "wggw_info",
     "processing_time_seconds",
+    # The seed the run used, so a design can be reproduced. The TS
+    # ProcessResult interface needs `seed?: number | null` to match.
+    "seed",
     "run_record",
 }
 
@@ -48,6 +74,7 @@ TS_RUN_RECORD_FIELDS = {
     "record_version",
     "started_at",
     "duration_seconds",
+    "seed",
     "input",
     "options",
     "versions",
@@ -123,6 +150,7 @@ class TestProcessResultContract:
                 "record_version": 1,
                 "started_at": "2026-11-16T09:30:00Z",
                 "duration_seconds": 1.23,
+                "seed": 12345,
                 "input": {"sha256": "0" * 64, "length": 9},
                 "options": {"split_point": 6},
                 "versions": {
@@ -135,6 +163,8 @@ class TestProcessResultContract:
         result = ProcessResult(**payload)
         assert result.name == "Test"
         assert result.split_point == 6
+        # seed is optional so an older payload still validates.
+        assert result.seed is None
 
 
 class TestRunRecordContract:
@@ -186,3 +216,68 @@ class TestWggwSiteInfoContract:
         }
         info = WggwSiteInfo(**payload)
         assert info.motif == "TGGA"
+
+
+@pytest.fixture(scope="module")
+def fixture_payload() -> dict:
+    assert RESULT_FIXTURE.exists(), f"{RESULT_FIXTURE} is missing. {REGENERATE_HINT}"
+    return json.loads(RESULT_FIXTURE.read_text())
+
+
+@pytest.fixture(scope="module")
+def committed_schema() -> dict:
+    assert SCHEMA_FIXTURE.exists(), f"{SCHEMA_FIXTURE} is missing. {REGENERATE_HINT}"
+    return json.loads(SCHEMA_FIXTURE.read_text())
+
+
+class TestProcessResultFixture:
+    """The committed output of a real run, shared with the TypeScript side."""
+
+    def test_validates_against_the_result_model(self, fixture_payload):
+        result = ProcessResult(**fixture_payload)
+        assert result.optimized_sequence
+        assert result.seq5
+        assert result.seed is not None
+
+    def test_field_set_matches_the_model(self, fixture_payload):
+        """Catches a model field added or renamed without regenerating."""
+        assert set(fixture_payload) == _field_names(ProcessResult), REGENERATE_HINT
+
+    def test_describes_a_successful_run_with_objectives(self, fixture_payload):
+        """A fixture produced with every objective off wouldn't prove much."""
+        result = ProcessResult(**fixture_payload)
+        assert len(result.optimized_sequence) == len(result.original_sequence)
+        assert result.objectives_report_before.entries
+        assert result.objectives_report_after.entries
+        after = result.objectives_report_after.total_score
+        before = result.objectives_report_before.total_score
+        assert after is not None and before is not None
+        assert after > before, "the fixture should show the optimizer improving the score"
+
+    def test_fragments_reconstruct_the_optimized_sequence(self, fixture_payload):
+        result = ProcessResult(**fixture_payload)
+        clean = (result.seq5 + result.seq3).replace("[REJ5]", "").replace("[REJ3]", "")
+        clean = clean.replace("[STIMINTRON]", "")
+        assert clean == result.optimized_sequence
+
+
+class TestSchemaDrift:
+    """The exported JSON Schema is the cross-language source of truth for the
+    request options and the result shape."""
+
+    def test_request_schema_is_current(self, committed_schema):
+        assert committed_schema["request"] == ProcessRequest.model_json_schema(), REGENERATE_HINT
+
+    def test_options_schema_is_current(self, committed_schema):
+        assert committed_schema["options"] == ProcessOptions.model_json_schema(), REGENERATE_HINT
+
+    def test_result_schema_is_current(self, committed_schema):
+        assert committed_schema["result"] == ProcessResult.model_json_schema(), REGENERATE_HINT
+
+    def test_options_schema_documents_its_bounds(self, committed_schema):
+        """The bounds are the point of the model — if they vanish, the schema
+        test should say so."""
+        options = committed_schema["options"]["properties"]
+        assert options["codon_optimize_weight"]["maximum"] == 100.0
+        assert options["reduce_kmer_complexity_k"]["minimum"] == 6
+        assert committed_schema["options"]["additionalProperties"] is False

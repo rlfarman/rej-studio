@@ -12,6 +12,7 @@ const RUN_RECORD: RunRecord = {
   record_version: 1,
   started_at: '2026-11-16T09:30:00Z',
   duration_seconds: 12.34,
+  seed: 20261116,
   input: { sha256: 'ab'.repeat(32), length: 9 },
   options: { codon_optimize: 'h_sapiens', split_point: 6 },
   versions: {

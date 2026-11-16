@@ -22,28 +22,28 @@ afterEach(() => cleanup())
 describe('DesignToolError', () => {
   it('renders design tool error message', () => {
     const error = new Error('crash')
-    const reset = vi.fn()
+    const retry = vi.fn()
     const { container } = render(
-      <DesignToolError error={error} reset={reset} />,
+      <DesignToolError error={error} retry={retry} />,
     )
     expect(container.textContent).toContain('Design tool error')
   })
 
-  it('calls reset when Try Again is clicked', () => {
+  it('calls retry when Try Again is clicked', () => {
     const error = new Error('crash')
-    const reset = vi.fn()
+    const retry = vi.fn()
     const { getAllByText } = render(
-      <DesignToolError error={error} reset={reset} />,
+      <DesignToolError error={error} retry={retry} />,
     )
     fireEvent.click(getAllByText('Try again')[0])
-    expect(reset).toHaveBeenCalledTimes(1)
+    expect(retry).toHaveBeenCalledTimes(1)
   })
 
   it('has a Back to Search link', () => {
     const error = new Error('crash')
-    const reset = vi.fn()
+    const retry = vi.fn()
     const { container } = render(
-      <DesignToolError error={error} reset={reset} />,
+      <DesignToolError error={error} retry={retry} />,
     )
     const link = container.querySelector('a[href="/genes"]')
     expect(link).not.toBeNull()

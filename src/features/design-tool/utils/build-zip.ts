@@ -59,9 +59,10 @@ function buildSequencesText(result: ProcessResult): string {
 }
 
 /**
- * Build the ZIP client-side from an already-computed ProcessResult.
- * Mirrors the format of the original /api/py/process endpoint, plus the run
- * record, so an exported result can be repeated or cited without the app.
+ * Build the ZIP client-side from an already-computed ProcessResult: a report
+ * file and a sequences file, as the old server-side zip endpoint produced
+ * before it was removed, plus the run record, so an exported result can be
+ * repeated or cited without the app.
  */
 export function buildResultsZipBytes(
   result: ProcessResult,
