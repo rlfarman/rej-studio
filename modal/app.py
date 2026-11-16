@@ -53,14 +53,17 @@ app = modal.App("rej-studio")
 
 project_root = Path(__file__).parent.parent
 
-# Install the compiled lock (every package pinned, transitive ones included)
-# so the image only changes when the lock does. An unpinned list was resolved
-# once when Modal first built the layer, then silently re-resolved to whatever
-# was newest the next time the image definition changed. Python 3.11 matches
-# python-ci.yml and the lock's pip-compile header.
+# Install from uv.lock (every package pinned, transitive ones included) so the
+# image only changes when the lock does. `uv sync --frozen` runs inside the
+# image with the repo-root pyproject.toml + uv.lock. Modal doesn't pass
+# --no-dev itself, so do it here: ruff/pyright/pytest stay out of production,
+# and the `deploy` group (the Modal client) isn't requested either.
+# Python 3.13 matches pyproject's requires-python, CI and the dev Dockerfile.
+# UV_VERSION matches the uv used to write the lock (and setup-uv in CI).
+UV_VERSION = "0.13.8"
 image = (
-    modal.Image.debian_slim(python_version="3.11")
-    .pip_install_from_requirements(str(project_root / "python" / "requirements.txt"))
+    modal.Image.debian_slim(python_version="3.13")
+    .uv_sync(str(project_root), extra_options="--no-dev", uv_version=UV_VERSION)
     .add_local_file(project_root / "python" / "algorithm.py", remote_path="/root/algorithm.py")
     .add_local_file(project_root / "python" / "telemetry.py", remote_path="/root/telemetry.py")
 )

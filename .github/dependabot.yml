@@ -56,13 +56,11 @@ updates:
           - 'prettier-plugin-*'
           - '@tanstack/*'
 
-  - package-ecosystem: 'pip'
-    # The requirements live in python/ (runtime + dev locks, compiled with
-    # pip-compile from the .in files) and modal/ (deploy client). There is no
-    # requirements file at the root, so `directory: '/'` found nothing.
-    directories:
-      - '/python'
-      - '/modal'
+  - package-ecosystem: 'uv'
+    # Python dependencies (runtime, dev and the Modal deploy client) are
+    # declared in the root pyproject.toml and locked in uv.lock; Dependabot
+    # updates both.
+    directory: '/'
     schedule:
       interval: 'weekly'
     open-pull-requests-limit: 5

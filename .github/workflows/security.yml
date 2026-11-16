@@ -38,19 +38,22 @@ jobs:
         run: pnpm audit --prod --audit-level high
 
   # pip-audit uses PyPI's advisory DB (PYSEC + OSV feed) — no GitHub code
-  # scanning. Runs against runtime + Modal requirements.
+  # scanning. Audits the runtime dependencies (what the Modal image installs)
+  # exported from uv.lock with hashes, so pip-audit checks the exact pins
+  # without resolving or installing anything. (`uv audit` exists but is still
+  # experimental.)
   pip-audit:
     name: pip-audit
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
         with:
-          python-version: '3.11'
-      - name: Install pip-audit
-        run: pip install pip-audit
-      - name: Audit python/requirements.txt
-        run: pip-audit -r python/requirements.txt --strict
+          version: '0.13.8'
+      - name: Export runtime dependencies from uv.lock
+        run: uv export --frozen --no-dev --no-emit-project --format requirements-txt -o "$RUNNER_TEMP/requirements.txt"
+      - name: Audit runtime dependencies
+        run: uvx --from pip-audit==2.10.1 pip-audit -r "$RUNNER_TEMP/requirements.txt" --strict --disable-pip
 
   # SBOM generation — attached as a workflow artifact on every main push.
   # Gives us a reproducible snapshot of what was shipped, usable for
@@ -66,9 +69,9 @@ jobs:
         with:
           node-version: '24'
           cache: 'pnpm'
-      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
         with:
-          python-version: '3.11'
+          version: '0.13.8'
       - run: pnpm install --frozen-lockfile
       - name: Generate npm SBOM (CycloneDX)
         # cdxgen supports pnpm natively; cyclonedx-npm only works with npm's lockfile
@@ -76,9 +79,10 @@ jobs:
         env:
           NODE_OPTIONS: '--max-old-space-size=4096'
       - name: Generate Python SBOM (CycloneDX)
+        # Runtime dependencies (what the Modal image installs), from uv.lock.
         run: |
-          pip install cyclonedx-bom
-          cyclonedx-py requirements python/requirements.txt -o sbom-python.cdx.json
+          uv export --frozen --no-dev --no-emit-project --no-hashes --format requirements-txt -o "$RUNNER_TEMP/requirements.txt"
+          uvx --from cyclonedx-bom==8.0.1 cyclonedx-py requirements "$RUNNER_TEMP/requirements.txt" -o sbom-python.cdx.json
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: sbom

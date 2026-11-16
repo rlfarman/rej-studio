@@ -4,19 +4,19 @@ This directory contains the Modal app that runs gene optimization jobs asynchron
 
 ## Setup
 
-1. Install the pinned Modal CLI (plus the runtime lock, which `app.py` imports at deploy time) and authenticate:
+1. Install the runtime dependencies (which `app.py` imports at deploy time) plus the pinned Modal client from the `deploy` dependency group, then authenticate:
 
 ```bash
-pip install -r python/requirements.txt -r modal/requirements.txt
-modal setup
+uv sync --group deploy
+uv run modal setup
 ```
 
-The image installs `python/requirements.txt`, a lock compiled from `python/requirements.in` with `pip-compile` on Python 3.11. To change a dependency, edit the `.in` file and regenerate the lock rather than editing it by hand.
+Dependencies live in the repo-root `pyproject.toml` and are pinned in `uv.lock`. The image is built from that same lock with `Image.uv_sync` (runtime dependencies only, on Python 3.13), so production changes only when the lock does. To change a dependency, use `uv add` / `uv lock --upgrade-package <name>` rather than editing `uv.lock` by hand. `uv_sync` needs Modal image builder version 2025.06 or newer (Modal workspace settings); older builders require `modal` itself in the installed dependencies.
 
 2. Deploy (the algorithm is sourced from `python/algorithm.py` automatically):
 
 ```bash
-modal deploy modal/app.py
+uv run modal deploy modal/app.py
 ```
 
 After deploying, Modal will print the web endpoint URL. Set this as `MODAL_API_URL` in your `.env.local`:

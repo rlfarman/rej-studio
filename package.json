@@ -14,7 +14,7 @@
     "sha256": "5dc0f5283dfc34cbc7d441ee2c469ce16ae9ff0e164334842216c10ffcec57ff"
   },
   "scripts": {
-    "fastapi-dev": "source venv/bin/activate && pip install -r python/requirements.txt && python3 -m uvicorn python.index:app --reload",
+    "fastapi-dev": "uv run uvicorn python.index:app --reload",
     "next-dev": "next dev",
     "dev": "concurrently \"pnpm next-dev\" \"pnpm fastapi-dev\"",
     "db:build": "python3 scripts/build-db.py",
