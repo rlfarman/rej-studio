@@ -6,9 +6,6 @@ import path from 'path'
 // In production, the Python backend runs on Modal and is called directly from
 // server actions (see src/features/design-tool/api/jobs.ts) — no rewrites.
 const nextConfig: NextConfig = {
-  // Emit standalone output for Docker production builds (see docker/prod.Dockerfile).
-  // Gated behind DOCKER_BUILD to avoid changing Vercel/CF deploy behavior.
-  ...(process.env.DOCKER_BUILD === 'true' && { output: 'standalone' }),
   cacheComponents: true,
   // Prefetch one reusable App Shell per route instead of one prefetch per
   // visible link. Requires cacheComponents; becomes the default in Next 17.
@@ -19,13 +16,8 @@ const nextConfig: NextConfig = {
   // port (experimental.turbopackRustReactCompiler) is still experimental.
   reactCompiler: true,
   experimental: {
-    optimizePackageImports: [
-      'lucide-react',
-      '@radix-ui/react-icons',
-      '@tanstack/react-query',
-      'react-hook-form',
-      'date-fns',
-    ],
+    // lucide-react is already in Next's built-in list.
+    optimizePackageImports: ['@tanstack/react-query', 'react-hook-form'],
   },
   // PGlite uses native/WASM modules that must not be bundled by webpack/turbopack.
   serverExternalPackages: ['@electric-sql/pglite'],
@@ -85,8 +77,8 @@ const nextConfig: NextConfig = {
           key: 'X-Permitted-Cross-Domain-Policies',
           value: 'none',
         },
-        // CSP is set per-request in proxy.ts with a unique nonce.
-        // Do not add a static CSP header here — it would conflict.
+        // The Content-Security-Policy is set in proxy.ts (production only).
+        // Don't add one here: browsers enforce every CSP header they get.
       ],
     },
   ],
@@ -97,8 +89,7 @@ const nextConfig: NextConfig = {
   ],
   rewrites: async () => {
     if (process.env.NODE_ENV === 'development') {
-      // LOCAL_API_URL defaults to localhost; in Docker it points to the
-      // fastapi service (e.g. http://fastapi:8000).
+      // LOCAL_API_URL overrides where uvicorn listens (default localhost).
       const pyBackend = process.env.LOCAL_API_URL ?? 'http://127.0.0.1:8000'
       return [
         {
