@@ -17,8 +17,8 @@ export async function register() {
   // wrong — not silently on the first request.
   await import('@/lib/env')
 
-  // Sentry server-side init. The client config is loaded automatically by
-  // @sentry/nextjs via sentry.client.config.ts.
+  // Sentry server-side init. The browser SDK is initialized in
+  // instrumentation-client.ts, which Next loads on the client.
   if (process.env.NEXT_PUBLIC_SENTRY_DSN) {
     if (process.env.NEXT_RUNTIME === 'nodejs') {
       await import('./sentry.server.config')

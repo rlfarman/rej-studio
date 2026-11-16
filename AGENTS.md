@@ -6,7 +6,7 @@ REJ Studio is a bioinformatics web app for RNA End-Joining sequence design. User
 
 ## Architecture
 
-- **Next.js 16 (App Router)** — Frontend and server actions. All user-facing routes live under the `(app)` group, which contains `(search)` for gene browsing, `(design-tool)` for the optimization form, and `(internal)` for non-indexed pages (e.g. `/architecture`). Fumadocs powers `/docs`. Frontend source lives under `src/`.
+- **Next.js 16 (App Router)** — Frontend and server actions. All user-facing routes live under the `(app)` group, which contains `(search)` for gene browsing, `(design-tool)` for the optimization form, and `(internal)` for non-indexed pages (e.g. `/architecture`). Frontend source lives under `src/`.
 - **Bulletproof-react structure** — Code is organized into `src/features/<feature>/` (self-contained: `api/`, `components/`, `hooks/`, `stores/`, `types/`, `utils/`) plus shared layers (`src/components/`, `src/lib/`, `src/hooks/`, `src/stores/`). Cross-feature imports and shared→feature imports are forbidden by ESLint (`import/no-restricted-paths`).
 - **FastAPI (Python)** — Runs the DNA optimization algorithm. Canonical code lives in `python/`. Single endpoint: `POST /api/py/process`. In development, Next.js proxies `/api/py/*` to a local uvicorn at `localhost:8000`. In production Python does NOT run on Vercel — it's deployed to Modal and called directly from server actions. `COMPUTE_BACKEND=modal` is required in prod on every host; the local backend is dev-only.
 - **Postgres + Drizzle ORM** — Read-only gene/isoform/sequence data. Production uses Neon over HTTP via `@neondatabase/serverless`. Local dev and CI fall back to PGlite (embedded Postgres) when `DATABASE_URL` is empty, a `file:` path, or `memory://` — full Postgres compatibility including `tsvector` and GIN indexes. Driver selection is in `src/drizzle/db.ts`; schema is in `src/drizzle/schema.ts`. On first PGlite boot, `initPglite()` auto-applies `src/drizzle/migrations/0000_initial.sql` and loads the committed sample seed (`data/sample-genes.jsonl` + `data/sample-isoforms.jsonl`, 24 genes / 228 isoforms with real CDS) so gene search and the design-tool optimizer work end-to-end with zero setup. Run `pnpm db:fetch` to swap the sample seed for the full prebuilt corpus tarball pinned in `package.json` (downloaded from a GitHub Release, SHA-256 verified).
@@ -17,26 +17,26 @@ REJ Studio is a bioinformatics web app for RNA End-Joining sequence design. User
 
 ## Key Directories
 
-| Path                     | Purpose                                                                                                         |
-| ------------------------ | --------------------------------------------------------------------------------------------------------------- |
-| `src/app/`               | Next.js pages, layouts, and route-specific `_components/` (App Router). User-facing routes nest under `(app)/`. |
-| `src/features/`          | Self-contained feature modules (`gene-search`, `design-tool`, `onboarding`); server actions here                |
-| `src/components/ui/`     | shadcn/ui primitives                                                                                            |
-| `src/components/bio/`    | Bio-domain widgets (species select, diagnostic badges, DNA icon)                                                |
-| `src/components/`        | Generic shared widgets (top-level)                                                                              |
-| `src/lib/bio/`           | Bio-domain utilities (species types, FASTA, sequence utils, reverse translation, design suitability)            |
-| `src/lib/analytics/`     | GTM / Web Vitals helpers                                                                                        |
-| `src/lib/`               | Generic shared utilities (`cn`, motion, file download, rate-limit, env, logger, retry) at the top level         |
-| `src/hooks/`             | Generic shared React hooks                                                                                      |
-| `src/stores/`            | Shared Zustand stores (e.g. species filter)                                                                     |
-| `src/copy/`              | Shared user-facing copy (`errors.ts`, `common.ts`, `app.ts`). Feature copy lives in `src/features/<f>/copy.ts`  |
-| `src/drizzle/`           | DB schema, client, migrations (`schema.ts`, `db.ts`, `migrations/`)                                             |
-| `src/proxy.ts`           | Next.js middleware — session gate, CSRF and body-size checks, CSP                                               |
-| `src/instrumentation.ts` | OpenTelemetry bootstrap + Sentry server/edge init                                                               |
-| `python/`                | FastAPI Python backend (`index.py`, `algorithm.py`); dependencies in the root `pyproject.toml` + `uv.lock`      |
-| `modal/`                 | Modal deployment for the Python backend (production compute)                                                    |
-| `scripts/`               | Dev tooling — worktree bootstrap, DB build/load, bundle-size checks, schema verify, type generation             |
-| `.github/workflows/`     | CI — lint/type-check/test, Python CI, DB CI, Lighthouse, Modal deploy, release-please, security, uptime         |
+| Path                     | Purpose                                                                                                            |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------ |
+| `src/app/`               | Next.js pages, layouts, and route-specific `_components/` (App Router). User-facing routes nest under `(app)/`.    |
+| `src/features/`          | Self-contained feature modules (`gene-search`, `design-tool`, `disease-associations`, `auth`); server actions here |
+| `src/components/ui/`     | shadcn/ui primitives                                                                                               |
+| `src/components/bio/`    | Bio-domain widgets (species select, diagnostic badges, DNA icon)                                                   |
+| `src/components/`        | Generic shared widgets (top-level)                                                                                 |
+| `src/lib/bio/`           | Bio-domain utilities (species types, FASTA, sequence utils, reverse translation, design suitability)               |
+| `src/lib/analytics/`     | GTM / Web Vitals helpers                                                                                           |
+| `src/lib/`               | Generic shared utilities (`cn`, file download, rate-limit, env, logger, retry) at the top level                    |
+| `src/hooks/`             | Generic shared React hooks                                                                                         |
+| `src/stores/`            | Shared Zustand stores (e.g. species filter)                                                                        |
+| `src/copy/`              | Shared user-facing copy (`errors.ts`, `common.ts`, `app.ts`). Feature copy lives in `src/features/<f>/copy.ts`     |
+| `src/drizzle/`           | DB schema, client, migrations (`schema.ts`, `db.ts`, `migrations/`)                                                |
+| `src/proxy.ts`           | Next.js middleware — session gate, CSRF and body-size checks, CSP                                                  |
+| `src/instrumentation.ts` | OpenTelemetry bootstrap + Sentry server/edge init                                                                  |
+| `python/`                | FastAPI Python backend (`index.py`, `algorithm.py`); dependencies in the root `pyproject.toml` + `uv.lock`         |
+| `modal/`                 | Modal deployment for the Python backend (production compute)                                                       |
+| `scripts/`               | Dev tooling — worktree bootstrap, DB build/load, bundle-size checks, schema verify, type generation                |
+| `.github/workflows/`     | CI — lint/type-check/test, Python CI, DB CI, Lighthouse, Modal deploy, release-please, security, uptime            |
 
 ## Development Commands
 
@@ -71,7 +71,7 @@ pnpm db:studio    # Browse DB in Drizzle Studio (local.drizzle.studio)
 
 ## User-Facing Copy
 
-User-facing strings (headings, descriptions, toasts, validation messages, tour content, error pages, button labels, aria-labels with real text) are centralized in typed objects rather than inlined in JSX:
+User-facing strings (headings, descriptions, toasts, validation messages, error pages, button labels, aria-labels with real text) are centralized in typed objects rather than inlined in JSX:
 
 - **Feature-owned copy** lives in `src/features/<feature>/copy.ts` and is consumed only from within that feature.
 - **Shared copy** lives in `src/copy/` (`errors.ts`, `common.ts`, `app.ts`) for strings used by ≥2 features or by app chrome.
@@ -120,7 +120,7 @@ For seeding a Neon database (production), the same `db:build`/`db:push`/`db:uplo
 - **Public / client** — `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_GTM_ID`.
 - **Observability** — `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_*`, `OTEL_EXPORTER_OTLP_*`, `OTEL_SERVICE_NAME`.
 - **Optional features** — `HEALTH_AUTH_TOKEN`, `MAINTENANCE_MESSAGE`, `UPSTASH_REDIS_REST_*`, `BLOB_READ_WRITE_TOKEN`.
-- **Build-time** — `GIT_COMMIT_SHA`, `NEXT_PUBLIC_GITHUB_{OWNER,REPO,BRANCH}`.
+- **Build-time** — `GIT_COMMIT_SHA`.
 
 Local dev needs nothing to boot (PGlite + in-memory rate limit fill in). Production requires at minimum a Neon `DATABASE_URL` and `COMPUTE_BACKEND=modal` with `MODAL_API_URL`.
 

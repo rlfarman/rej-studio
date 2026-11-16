@@ -8,6 +8,7 @@ export const geneSearchCopy = {
     placeholder: 'Gene symbol, name, or disease',
     placeholderMobile: 'Search genes…',
     opening: (symbol: string) => `Opening ${symbol}…`,
+    searching: (query: string) => `Searching for ${query}…`,
     retry: 'Retry',
     examplesLabel: 'Try',
     examplesAria: 'Example genes',

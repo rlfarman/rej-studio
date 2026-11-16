@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useDebounce } from 'use-debounce'
+import { useDebouncedCallback } from 'use-debounce'
 import {
   keepPreviousData,
   useQuery,
@@ -26,14 +26,28 @@ export function useGeneSearch({
   defaultQuery,
 }: UseGeneSearchProps) {
   const queryClient = useQueryClient()
-  const [query, setQuery] = useState(defaultQuery ?? '')
-  const [debouncedQuery] = useDebounce(query, 250)
+  const [query, setQueryState] = useState(defaultQuery ?? '')
+  const [debouncedQuery, setDebouncedQuery] = useState(defaultQuery ?? '')
+  const debounce = useDebouncedCallback(setDebouncedQuery, 250)
   const { species } = useSpeciesContext()
+
+  const setQuery = (next: string) => {
+    setQueryState(next)
+    debounce(next)
+  }
+
+  // For a picked value (an example gene) there are no further keystrokes to
+  // wait for, so skip the debounce and search right away.
+  const searchNow = (next: string) => {
+    debounce.cancel()
+    setQueryState(next)
+    setDebouncedQuery(next)
+  }
 
   const trimmed = debouncedQuery.trim()
   const enabled = trimmed.length > 0
 
-  const { data, isFetching, isError } = useQuery({
+  const { data, isFetching, isError, isPlaceholderData } = useQuery({
     queryKey: ['gene-search', trimmed, species],
     queryFn: () => searchGenes(trimmed, species),
     enabled,
@@ -69,12 +83,20 @@ export function useGeneSearch({
     })
   }, [queryClient, trimmed, species])
 
+  const pendingQuery = query.trim()
+
   return {
     query,
     setQuery,
-    hasSearched: enabled && data !== undefined,
+    searchNow,
+    // True once the current query has its own results — not the previous
+    // query's, which `keepPreviousData` keeps on screen while it loads.
+    hasSearched: enabled && data !== undefined && !isPlaceholderData,
     searchResults: data?.results ?? EMPTY_RESULTS,
-    isLoading: enabled && isFetching,
+    // Covers the debounce window too, so the UI can show "Searching…" the
+    // moment the user types instead of after the request starts.
+    isLoading:
+      pendingQuery.length > 0 && (pendingQuery !== trimmed || isFetching),
     error,
     retry,
   }

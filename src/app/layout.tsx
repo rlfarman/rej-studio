@@ -7,7 +7,6 @@ import { GoogleTagManager } from '@/components/google-tag-manager'
 import { AnalyticsPageview } from '@/components/analytics-pageview'
 import { AnalyticsProperties } from '@/components/analytics-properties'
 import { WebVitals } from '@/components/web-vitals'
-import { ConsoleGreeting } from '@/components/console-greeting'
 import { Suspense } from 'react'
 import { AuthGate } from '@/features/auth/components/auth-gate'
 
@@ -95,7 +94,6 @@ export default function RootLayout({
           </QueryProvider>
         </ThemeProvider>
         <WebVitals />
-        <ConsoleGreeting />
         <GoogleTagManager />
       </body>
     </html>

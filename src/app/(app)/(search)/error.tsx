@@ -21,8 +21,12 @@ export default function SearchError({
       title={appCopy.errorBoundary.search.title}
       description={appCopy.errorBoundary.search.description}
       secondaryAction={
-        <Button asChild variant="outline">
-          <Link href="/">{commonCopy.actions.goHome}</Link>
+        <Button
+          variant="outline"
+          nativeButton={false}
+          render={<Link href="/" />}
+        >
+          {commonCopy.actions.goHome}
         </Button>
       }
     />

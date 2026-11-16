@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState, useTransition } from 'react'
+import { useRef, useState, useTransition } from 'react'
 import { CommandDialog } from '@/components/ui/command'
 import { useRouter } from 'next/navigation'
 import { type SearchGenesResult } from '@/features/gene-search/api/genes'
@@ -16,6 +16,7 @@ import type {
   JobSearchItem,
 } from '@/features/gene-search/types/domain-types'
 import { trackEvent } from '@/lib/analytics'
+import { useSearchShortcut } from '@/hooks/use-search-shortcut'
 import { geneSearchCopy } from '../copy'
 
 interface GeneSearchProperties {
@@ -44,6 +45,7 @@ export function GeneSearch({
   const {
     query,
     setQuery,
+    searchNow,
     hasSearched,
     searchResults,
     isLoading,
@@ -86,17 +88,17 @@ export function GeneSearch({
     onSelectJob?.(entry.id)
   }
 
-  useEffect(() => {
-    const down = (e: KeyboardEvent) => {
-      if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault()
-        setIsOpen((isOpen) => !isOpen)
-      }
+  // ⌘K toggles the palette; on a page with the inline search (home), it
+  // focuses that box instead.
+  const inputRef = useRef<HTMLInputElement>(null)
+  useSearchShortcut(() => {
+    if (isDialog) {
+      setIsOpen((isOpen) => !isOpen)
+    } else {
+      inputRef.current?.focus()
+      inputRef.current?.select()
     }
-
-    document.addEventListener('keydown', down)
-    return () => document.removeEventListener('keydown', down)
-  }, [])
+  })
 
   if (isDialog) {
     return (
@@ -121,6 +123,7 @@ export function GeneSearch({
           <GeneSearchCommand
             query={query}
             setQuery={setQuery}
+            searchNow={searchNow}
             hasSearched={hasSearched}
             searchResults={searchResults}
             isLoading={isLoading}
@@ -143,6 +146,9 @@ export function GeneSearch({
     <GeneSearchCommand
       query={query}
       setQuery={setQuery}
+      searchNow={searchNow}
+      inputRef={inputRef}
+      shortcutHint
       hasSearched={hasSearched}
       searchResults={searchResults}
       isLoading={isLoading}

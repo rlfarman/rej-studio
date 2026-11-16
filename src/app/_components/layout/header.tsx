@@ -11,7 +11,6 @@ import {
 import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar'
 import { BrandMark } from '@/components/brand-mark'
 import { commonCopy } from '@/copy/common'
-import { HeaderHelpButton } from '@/features/onboarding/components/help-button'
 import { cn } from '@/lib/utils'
 
 const HIDE_AFTER = 80
@@ -158,9 +157,9 @@ export function Header() {
     >
       <div className="flex min-w-0 items-center gap-2">
         <Tooltip>
-          <TooltipTrigger asChild>
-            <SidebarTrigger size="lg" aria-label={sidebarLabel} />
-          </TooltipTrigger>
+          <TooltipTrigger
+            render={<SidebarTrigger size="lg" aria-label={sidebarLabel} />}
+          ></TooltipTrigger>
           <TooltipContent>{sidebarLabel}</TooltipContent>
         </Tooltip>
         {/* On phones the sidebar (and its logo) is hidden behind the
@@ -188,9 +187,8 @@ export function Header() {
           />
         )}
       </div>
-      <div className="flex items-center justify-end">
-        <HeaderHelpButton />
-      </div>
+      {/* Empty right column keeps the search centered in the 1fr/auto/1fr grid. */}
+      <div />
     </header>
   )
 }

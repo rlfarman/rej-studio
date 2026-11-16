@@ -27,28 +27,28 @@ export function RecentGenes() {
       renderItem={(gene) => (
         <SidebarMenuItem>
           <SidebarMenuButton
-            asChild
             size="sm"
             className="h-auto items-start py-1.5 [&>svg]:size-3"
+            render={
+              <Link
+                href={geneHref(gene.symbol, gene.species)}
+                prefetch
+                className="flex items-start gap-2"
+              />
+            }
           >
-            <Link
-              href={geneHref(gene.symbol, gene.species)}
-              prefetch
-              className="flex items-start gap-2"
-            >
-              {gene.species && (
-                <SpeciesIcon
-                  species={gene.species}
-                  className="text-muted-foreground group-hover/menu-button:text-sidebar-accent-foreground mt-0.5 flex-shrink-0"
-                />
-              )}
-              <div className="flex min-w-0 flex-1 flex-col gap-0.5 leading-tight">
-                <span className="font-mono font-medium">{gene.symbol}</span>
-                <span className="text-muted-foreground group-hover/menu-button:text-sidebar-accent-foreground type-nano line-clamp-2 pr-5">
-                  {gene.name}
-                </span>
-              </div>
-            </Link>
+            {gene.species && (
+              <SpeciesIcon
+                species={gene.species}
+                className="text-muted-foreground group-hover/menu-button:text-sidebar-accent-foreground mt-0.5 flex-shrink-0"
+              />
+            )}
+            <div className="flex min-w-0 flex-1 flex-col gap-0.5 leading-tight">
+              <span className="font-mono font-medium">{gene.symbol}</span>
+              <span className="text-muted-foreground group-hover/menu-button:text-sidebar-accent-foreground type-nano line-clamp-2 pr-5">
+                {gene.name}
+              </span>
+            </div>
           </SidebarMenuButton>
           <SidebarMenuAction
             showOnHover

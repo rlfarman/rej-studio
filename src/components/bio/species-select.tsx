@@ -37,7 +37,13 @@ export function SpeciesSelect({
         : copy.allSpecies
 
   return (
-    <Select onValueChange={handleSpeciesChange} value={species}>
+    <Select
+      value={species}
+      // Base UI reports null when a select is cleared; this one never is.
+      onValueChange={(value) => {
+        if (value !== null) handleSpeciesChange(value)
+      }}
+    >
       <SelectTrigger
         aria-label={speciesLabel}
         className="hover:bg-accent z-10 w-fit cursor-pointer gap-2 border-none font-semibold shadow-none"

@@ -3,7 +3,6 @@
 import { useMemo } from 'react'
 import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
-import { m } from 'motion/react'
 import { cn } from '@/lib/utils'
 import {
   assessDesignSuitability,
@@ -82,7 +81,7 @@ export function IsoformLengthChart({ isoforms }: Props) {
       </div>
 
       <ul className="space-y-1">
-        {rows.map((row, i) => {
+        {rows.map((row) => {
           const cfg = getSuitabilityConfig(row.suitability)
           return (
             <li key={row.id}>
@@ -99,16 +98,9 @@ export function IsoformLengthChart({ isoforms }: Props) {
                   <span className="sm:hidden">…{row.id.slice(-6)}</span>
                 </span>
                 <div className="bg-muted/30 relative h-3 overflow-hidden rounded-sm">
-                  <m.div
-                    className={cn('h-full origin-left', cfg.fillClass)}
+                  <div
+                    className={cn('h-full', cfg.fillClass)}
                     style={{ width: `${pct(row.length)}%` }}
-                    initial={{ scaleX: 0, opacity: 0.6 }}
-                    animate={{ scaleX: 1, opacity: 1 }}
-                    transition={{
-                      duration: 0.6,
-                      delay: Math.min(i * 0.04, 0.4),
-                      ease: [0.16, 1, 0.3, 1],
-                    }}
                   />
                   {model.thresholds.map((limit) => (
                     <div

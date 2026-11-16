@@ -8,13 +8,12 @@ import IsoformTable, {
 import { IsoformSummary } from '@/features/gene-search/components/isoform-summary'
 import { IsoformLengthChart } from '@/features/gene-search/components/isoform-length-chart'
 import { IsoformIdentityMatrix } from '@/features/gene-search/components/isoform-identity-matrix'
-import { Suspense, ViewTransition } from 'react'
+import { Suspense } from 'react'
 import { FavoriteGeneButton } from '@/features/gene-search/components/favorite-gene-button'
 import { GeneJsonLd } from '@/features/gene-search/components/gene-jsonld'
 import { GeneBreadcrumbJsonLd } from '@/features/gene-search/components/gene-breadcrumb-jsonld'
 import { SpeciesSync } from '@/features/gene-search/components/species-sync'
 import { TrackOnMount } from '@/components/track-on-mount'
-import { GeneDetailTour } from '@/features/onboarding/components/gene-detail-tour'
 import { findBySymbol } from '@/features/disease-associations/api/associations'
 import { GenePhenotypes } from '@/features/disease-associations/components/gene-phenotypes'
 import type { AssociationRow } from '@/features/disease-associations/types'
@@ -137,11 +136,7 @@ async function IsoformSection({
 async function FavoriteSlot(props: Props) {
   const gene = await resolveGene(props)
   if (!gene) return null
-  return (
-    <span data-tour="gene-favorite">
-      <FavoriteGeneButton gene={gene} />
-    </span>
-  )
+  return <FavoriteGeneButton gene={gene} />
 }
 
 /**
@@ -236,7 +231,6 @@ export default async function GeneSymbolPage(props: Props) {
 
   return (
     <>
-      <GeneDetailTour />
       <div className="flex flex-col gap-5 pt-6 md:pt-10">
         <header className="flex flex-col gap-1">
           <div className="flex items-center gap-3">
@@ -250,9 +244,7 @@ export default async function GeneSymbolPage(props: Props) {
           </Suspense>
         </header>
         <Suspense fallback={<IsoformTableLoading />}>
-          <ViewTransition enter="suspense-reveal" default="none">
-            <GeneIsoforms {...props} />
-          </ViewTransition>
+          <GeneIsoforms {...props} />
         </Suspense>
       </div>
     </>

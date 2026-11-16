@@ -22,8 +22,12 @@ export default function ErrorPage({
       description={appCopy.errorBoundary.description}
       detail={appCopy.errorBoundary.reassurance}
       secondaryAction={
-        <Button asChild variant="outline">
-          <Link href="/">{commonCopy.actions.goHome}</Link>
+        <Button
+          variant="outline"
+          nativeButton={false}
+          render={<Link href="/" />}
+        >
+          {commonCopy.actions.goHome}
         </Button>
       }
     />

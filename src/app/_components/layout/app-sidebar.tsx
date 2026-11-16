@@ -56,17 +56,19 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader>
         <SidebarMenuPrimitive>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild size="lg" tooltip="REJ Studio">
-              <Link href="/">
-                <div className="bg-spark text-spark-foreground flex aspect-square size-8 items-center justify-center rounded-md">
-                  <Dna className="size-4" />
-                </div>
-                <div className="grid flex-1 text-left leading-tight opacity-0 transition-opacity duration-150 group-data-[state=expanded]:opacity-100 group-data-[state=expanded]:delay-200 [[data-mobile=true]_&]:opacity-100">
-                  <span className="font-display truncate text-base font-semibold">
-                    REJ Studio
-                  </span>
-                </div>
-              </Link>
+            <SidebarMenuButton
+              size="lg"
+              tooltip="REJ Studio"
+              render={<Link href="/" />}
+            >
+              <div className="bg-spark text-spark-foreground flex aspect-square size-8 items-center justify-center rounded-md">
+                <Dna className="size-4" />
+              </div>
+              <div className="grid flex-1 text-left leading-tight opacity-0 transition-opacity duration-150 group-data-[state=expanded]:opacity-100 group-data-[state=expanded]:delay-200 [[data-mobile=true]_&]:opacity-100">
+                <span className="font-display truncate text-base font-semibold">
+                  REJ Studio
+                </span>
+              </div>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenuPrimitive>
@@ -76,46 +78,37 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenuPrimitive>
             <SidebarMenuItem>
               <SidebarMenuButton
-                asChild
                 isActive={pathname === '/'}
                 tooltip="Home"
+                render={<Link href="/" />}
               >
-                <Link href="/">
-                  <Home />
-                  <span>Home</span>
-                </Link>
+                <Home />
+                <span>Home</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton
-                asChild
                 isActive={pathname.startsWith('/design-tool')}
                 tooltip="Design Tool"
+                render={<Link href="/design-tool" />}
               >
-                <Link href="/design-tool">
-                  <WandSparkles />
-                  <span>Design Tool</span>
-                </Link>
+                <WandSparkles />
+                <span>Design Tool</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
-            <SidebarMenuItem data-tour="nav-disease">
+            <SidebarMenuItem>
               <SidebarMenuButton
-                asChild
                 isActive={pathname.startsWith('/disease-associations')}
                 tooltip="Disease-Associated Genes"
+                render={<Link href="/disease-associations" />}
               >
-                <Link href="/disease-associations">
-                  <Activity />
-                  <span>Disease-Associated Genes</span>
-                </Link>
+                <Activity />
+                <span>Disease-Associated Genes</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenuPrimitive>
         </SidebarGroup>
-        <div
-          data-tour="sidebar-history"
-          className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto opacity-0 transition-opacity duration-150 group-data-[collapsible=icon]:max-h-0 group-data-[collapsible=icon]:overflow-hidden group-data-[state=expanded]:opacity-100 group-data-[state=expanded]:delay-200 [[data-mobile=true]_&]:max-h-none [[data-mobile=true]_&]:opacity-100"
-        >
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto opacity-0 transition-opacity duration-150 group-data-[collapsible=icon]:max-h-0 group-data-[collapsible=icon]:overflow-hidden group-data-[state=expanded]:opacity-100 group-data-[state=expanded]:delay-200 [[data-mobile=true]_&]:max-h-none [[data-mobile=true]_&]:opacity-100">
           {/* Each history section renders only when it has items; one quiet
               line stands in for all three when everything is empty. */}
           <FavoriteGenes />
@@ -132,29 +125,32 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarFooter>
         <SidebarMenuPrimitive>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild tooltip="Pfaff Lab | Salk Institute">
-              <a
-                href="https://pfaff.salk.edu/"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Image
-                  src="/branding/SalkLogo-WCB-K.png"
-                  alt="Salk Institute"
-                  width={16}
-                  height={16}
-                  className="block size-4 object-contain dark:hidden"
-                />
-                <Image
-                  src="/branding/SalkLogo-WCB-W.png"
-                  alt="Salk Institute"
-                  width={16}
-                  height={16}
-                  className="hidden size-4 object-contain dark:block"
-                />
-                <span>Pfaff Lab | Salk Institute</span>
-              </a>
-            </SidebarMenuButton>
+            <SidebarMenuButton
+              tooltip="Pfaff Lab | Salk Institute"
+              render={
+                <a
+                  href="https://pfaff.salk.edu/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Image
+                    src="/branding/SalkLogo-WCB-K.png"
+                    alt="Salk Institute"
+                    width={16}
+                    height={16}
+                    className="block size-4 object-contain dark:hidden"
+                  />
+                  <Image
+                    src="/branding/SalkLogo-WCB-W.png"
+                    alt="Salk Institute"
+                    width={16}
+                    height={16}
+                    className="hidden size-4 object-contain dark:block"
+                  />
+                  <span>Pfaff Lab | Salk Institute</span>
+                </a>
+              }
+            />
           </SidebarMenuItem>
         </SidebarMenuPrimitive>
         <SidebarMenu />

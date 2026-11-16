@@ -84,7 +84,7 @@ export async function GeneSearchResults({
         {pageCopy.resultCount(results.length)}
       </p>
       <ul className="divide-border divide-y border-y">
-        {results.map((gene, i) => {
+        {results.map((gene) => {
           const match = matchedField(gene, query)
           const speciesName = isSpecies(gene.species)
             ? SPECIES_DISPLAY_NAME[gene.species]
@@ -92,8 +92,7 @@ export async function GeneSearchResults({
           return (
             <li
               key={gene.id}
-              className="fade-up-stagger group/gene-row hover:bg-accent/40 flex items-center gap-2 transition-colors"
-              style={{ '--stagger': i } as React.CSSProperties}
+              className="group/gene-row hover:bg-accent/40 flex items-center gap-2 transition-colors"
             >
               <Link
                 href={geneHref(
@@ -122,18 +121,24 @@ export async function GeneSearchResults({
                 </span>
               </Link>
               {gene.matchedIsoformId && (
-                <Button asChild variant="ghost" size="sm" className="shrink-0">
-                  <Link
-                    href={`/design-tool?isoform=${gene.matchedIsoformId}`}
-                    aria-label={geneSearchCopy.command.customizeAria(
-                      gene.matchedIsoformId,
-                    )}
-                  >
-                    <WandSparkles className="size-3.5" />
-                    <span className="hidden sm:inline">
-                      {geneSearchCopy.command.customize}
-                    </span>
-                  </Link>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="shrink-0"
+                  nativeButton={false}
+                  render={
+                    <Link
+                      href={`/design-tool?isoform=${gene.matchedIsoformId}`}
+                      aria-label={geneSearchCopy.command.customizeAria(
+                        gene.matchedIsoformId,
+                      )}
+                    />
+                  }
+                >
+                  <WandSparkles className="size-3.5" />
+                  <span className="hidden sm:inline">
+                    {geneSearchCopy.command.customize}
+                  </span>
                 </Button>
               )}
             </li>

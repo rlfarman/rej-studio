@@ -30,8 +30,6 @@ export const commonCopy = {
     importUserData: 'Import user data',
     exportData: 'Export data',
     importData: 'Import data',
-    restartTours: 'Restart tours',
-    toursReset: 'Tours will reappear on your next visit.',
     seedData: 'Seed data',
     clearSeedData: 'Clear seed data',
     seedResult: (favorites: number, recents: number, jobs: number) =>

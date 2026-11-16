@@ -46,11 +46,11 @@ export function DiagBadge({ status, label, tooltip }: DiagBadgeProps) {
 
   return (
     <Tooltip>
-      <TooltipTrigger asChild>
-        <Badge variant={variant} className="gap-1 select-none">
-          <Icon className={`size-3 ${iconColor}`} />
-          {label}
-        </Badge>
+      <TooltipTrigger
+        render={<Badge variant={variant} className="gap-1 select-none" />}
+      >
+        <Icon className={`size-3 ${iconColor}`} />
+        {label}
       </TooltipTrigger>
       <TooltipContent>{tooltip}</TooltipContent>
     </Tooltip>

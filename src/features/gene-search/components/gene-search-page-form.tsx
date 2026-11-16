@@ -6,6 +6,11 @@ import { SpeciesIcon } from '@/components/bio/species-icon'
 import type { SpeciesFilter } from '@/lib/bio/species'
 import { cn } from '@/lib/utils'
 import { geneSearchCopy } from '../copy'
+import {
+  SearchShortcutFocus,
+  SearchShortcutHint,
+} from '@/components/search-shortcut'
+import { SEARCH_SHORTCUT_ARIA } from '@/lib/search-shortcut'
 
 const copy = geneSearchCopy.searchPage
 
@@ -31,8 +36,8 @@ interface GeneSearchPageFormProps {
 /**
  * The search page's only search box. A plain GET form, so it works before
  * hydration and the URL stays the source of truth (shareable, back/forward).
- * As-you-type search lives in the header's ⌘K / Ctrl+K palette; repeating it
- * here is what used to show every result twice.
+ * The header's as-you-type palette is hidden on this page, so ⌘K / Ctrl+K
+ * focuses this box instead.
  */
 export function GeneSearchPageForm({
   query,
@@ -57,8 +62,11 @@ export function GeneSearchPageForm({
             placeholder={geneSearchCopy.command.placeholder}
             autoComplete="off"
             spellCheck={false}
-            className="h-11 pl-9"
+            aria-keyshortcuts={SEARCH_SHORTCUT_ARIA}
+            className="h-11 pl-9 md:pr-16"
           />
+          <SearchShortcutHint className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2" />
+          <SearchShortcutFocus targetId="gene-query" />
         </div>
         {species !== 'both' && (
           <input type="hidden" name="species" value={species} />

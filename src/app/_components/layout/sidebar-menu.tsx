@@ -5,7 +5,6 @@ import { useTheme } from 'next-themes'
 import {
   Download,
   Eraser,
-  GraduationCap,
   Monitor,
   Moon,
   Settings,
@@ -30,9 +29,7 @@ import {
   SidebarMenu as SidebarMenuPrimitive,
   SidebarMenuItem,
   SidebarMenuButton,
-  useSidebar,
 } from '@/components/ui/sidebar'
-import { useOnboarding } from '@/features/onboarding/stores/onboarding-store'
 import { commonCopy } from '@/copy/common'
 import { errorsCopy } from '@/copy/errors'
 
@@ -48,8 +45,6 @@ export function SidebarMenu() {
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const resetAllTours = useOnboarding((s) => s.resetAllTours)
-  const { isMobile, setOpenMobile } = useSidebar()
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- detecting client-side mount
@@ -81,22 +76,26 @@ export function SidebarMenu() {
         onChange={handleImport}
       />
       <SidebarMenuPrimitive>
-        <SidebarMenuItem data-tour="nav-settings">
+        <SidebarMenuItem>
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <SidebarMenuButton tooltip={menuCopy.settings}>
-                <Settings />
-                <span>{menuCopy.settings}</span>
-              </SidebarMenuButton>
+            <DropdownMenuTrigger
+              render={<SidebarMenuButton tooltip={menuCopy.settings} />}
+            >
+              <Settings />
+              <span>{menuCopy.settings}</span>
             </DropdownMenuTrigger>
             <DropdownMenuContent side="top" align="start">
               {mounted && (
                 <>
-                  <DropdownMenuLabel>{menuCopy.theme.label}</DropdownMenuLabel>
+                  {/* Base UI requires a menu label inside its group; this also
+                      labels the radio group for screen readers. */}
                   <DropdownMenuRadioGroup
                     value={theme}
                     onValueChange={setTheme}
                   >
+                    <DropdownMenuLabel>
+                      {menuCopy.theme.label}
+                    </DropdownMenuLabel>
                     {THEMES.map(({ value, label, icon: Icon }) => (
                       <DropdownMenuRadioItem key={value} value={value}>
                         <Icon className="text-foreground h-4 w-4" />
@@ -114,17 +113,6 @@ export function SidebarMenu() {
               <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>
                 <Upload className="text-foreground h-4 w-4" />
                 {menuCopy.importData}
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => {
-                  resetAllTours()
-                  if (isMobile) setOpenMobile(false)
-                  toast.success(menuCopy.toursReset)
-                }}
-              >
-                <GraduationCap className="text-foreground h-4 w-4" />
-                {menuCopy.restartTours}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem

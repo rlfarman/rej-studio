@@ -152,7 +152,7 @@ Features are self-contained modules (`api/`, `components/`, `hooks/`, `stores/`,
 
 - **`POST /api/py/process`** — Accepts a coding sequence and optimization options, returns a ZIP containing a report and optimized sequences.
 
-Swagger docs are available at `/docs` in development.
+Swagger docs are available at `/api/py/docs` in development.
 
 In production, Python runs on [Modal](https://modal.com) and is called from Next.js server actions — not served alongside the frontend. Set `COMPUTE_BACKEND=modal` and `MODAL_API_URL` in production.
 

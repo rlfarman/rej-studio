@@ -179,23 +179,22 @@ export function GeneSplitterForm({
         {showForm && (
           <>
             {/* ── Input + split point ── */}
-            <Card
-              className="fade-up-stagger"
-              style={{ '--stagger': 0 } as React.CSSProperties}
-            >
+            <Card>
               <CardHeader>
-                <CardTitle asChild>
-                  <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">
-                    {copy.title}
-                  </h1>
-                </CardTitle>
+                <CardTitle
+                  render={
+                    <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">
+                      {copy.title}
+                    </h1>
+                  }
+                />
                 <CardDescription>{copy.description}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div data-tour="dt-sequence">
+                <div>
                   <CustomizationOptions />
                 </div>
-                <div className="flex flex-col gap-2" data-tour="dt-splicer">
+                <div className="flex flex-col gap-2">
                   <div className="flex flex-wrap items-center gap-1.5">
                     <p className="text-sm font-medium">
                       {copy.spliceJunctionLabel}
@@ -213,22 +212,15 @@ export function GeneSplitterForm({
             </Card>
 
             {/* ── Objectives (summarized; expand to customize) ── */}
-            <Card
-              className="fade-up-stagger"
-              style={{ '--stagger': 1 } as React.CSSProperties}
-              data-tour="dt-optimization"
-            >
-              <CardContent className="py-5">
+            <Card>
+              <CardContent>
                 <DesignObjectives />
               </CardContent>
             </Card>
 
             {/* Sticky so the primary action stays in reach on a long form,
                 and within thumb reach on a phone. */}
-            <div
-              className="bg-background/85 border-border supports-[backdrop-filter]:bg-background/70 sticky bottom-0 z-20 -mx-1 flex flex-wrap items-center justify-between gap-3 rounded-t-lg border-t px-4 py-3 backdrop-blur"
-              data-tour="dt-submit"
-            >
+            <div className="bg-background/85 border-border supports-[backdrop-filter]:bg-background/70 sticky bottom-0 z-20 -mx-1 flex flex-wrap items-center justify-between gap-3 rounded-t-lg border-t px-4 py-3 backdrop-blur">
               <RunSummary />
               <SubmitButton
                 isJobRunning={job.isLoading}
@@ -240,7 +232,7 @@ export function GeneSplitterForm({
         )}
 
         {result && (
-          <div className="fade-up">
+          <div>
             <ResultsPanel
               result={result}
               optionsUsed={formatOptionsForReport(methods.getValues())}

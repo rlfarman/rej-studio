@@ -223,30 +223,32 @@ export default function IsoformTable({
 
   return (
     <>
-      <Table data-tour="isoform-table">
+      <Table>
         <TableHeader>
           <TableRow>
             <TableHead className="w-11 min-w-11 p-0">
               <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    type="button"
-                    onClick={toggleExpandAll}
-                    aria-expanded={allExpanded}
-                    className="hover:text-foreground focus-visible:ring-ring text-muted-foreground flex h-full w-full items-center justify-center transition-colors focus-visible:ring-2 focus-visible:outline-none"
-                    aria-label={
-                      allExpanded
-                        ? 'Collapse all isoforms'
-                        : 'Expand all isoforms'
-                    }
-                  >
-                    {allExpanded ? (
-                      <ChevronDown className="size-4" />
-                    ) : (
-                      <ChevronRight className="size-4" />
-                    )}
-                  </button>
-                </TooltipTrigger>
+                <TooltipTrigger
+                  render={
+                    <button
+                      type="button"
+                      onClick={toggleExpandAll}
+                      aria-expanded={allExpanded}
+                      className="hover:text-foreground focus-visible:ring-ring text-muted-foreground flex h-full w-full items-center justify-center transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                      aria-label={
+                        allExpanded
+                          ? 'Collapse all isoforms'
+                          : 'Expand all isoforms'
+                      }
+                    >
+                      {allExpanded ? (
+                        <ChevronDown className="size-4" />
+                      ) : (
+                        <ChevronRight className="size-4" />
+                      )}
+                    </button>
+                  }
+                />
                 <TooltipContent>
                   {allExpanded ? 'Collapse all' : 'Expand all'}
                 </TooltipContent>
@@ -447,10 +449,7 @@ function IsoformRow({
           </Badge>
         </TableCell>
         <TableCell className="py-1" onClick={(e) => e.stopPropagation()}>
-          <div
-            className="flex items-center justify-end gap-1"
-            data-tour="isoform-actions"
-          >
+          <div className="flex items-center justify-end gap-1">
             {/* Quick actions appear on row hover or keyboard focus (and stay
                 on the expanded or linked row) instead of repeating two labels
                 on every row. They're icon buttons with tooltips so the column
@@ -465,17 +464,74 @@ function IsoformRow({
               )}
             >
               <Tooltip>
-                <TooltipTrigger asChild>
+                <TooltipTrigger
+                  render={
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="size-9"
+                      nativeButton={false}
+                      render={
+                        <a
+                          href={preOptimizedZipUrl(isoform.id)}
+                          download={`${isoform.id}_v1.0.zip`}
+                          aria-label={copy.downloadAria(isoform.id)}
+                          onClick={() =>
+                            trackEvent({
+                              event: 'precomputed_download',
+                              isoform_id: isoform.id,
+                            })
+                          }
+                        />
+                      }
+                    />
+                  }
+                >
+                  <PackageOpen className="size-4" />
+                </TooltipTrigger>
+                <TooltipContent>{copy.downloadLong}</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger
+                  render={
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="size-9"
+                      nativeButton={false}
+                      render={
+                        <Link
+                          href={`/design-tool?isoform=${isoform.id}`}
+                          aria-label={copy.customizeAria(isoform.id)}
+                        />
+                      }
+                    />
+                  }
+                >
+                  <WandSparkles className="size-4" />
+                </TooltipTrigger>
+                <TooltipContent>{copy.customizeLong}</TooltipContent>
+              </Tooltip>
+            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={
                   <Button
                     variant="ghost"
                     size="icon"
                     className="size-9"
-                    asChild
-                  >
+                    aria-label={copy.moreAria(isoform.id)}
+                  />
+                }
+              >
+                <MoreHorizontal className="size-4" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  render={
                     <a
                       href={preOptimizedZipUrl(isoform.id)}
                       download={`${isoform.id}_v1.0.zip`}
-                      aria-label={copy.downloadAria(isoform.id)}
                       onClick={() =>
                         trackEvent({
                           event: 'precomputed_download',
@@ -484,62 +540,15 @@ function IsoformRow({
                       }
                     >
                       <PackageOpen className="size-4" />
+                      {copy.downloadLong}
                     </a>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>{copy.downloadLong}</TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="size-9"
-                    asChild
-                  >
-                    <Link
-                      href={`/design-tool?isoform=${isoform.id}`}
-                      aria-label={copy.customizeAria(isoform.id)}
-                    >
-                      <WandSparkles className="size-4" />
-                    </Link>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>{copy.customizeLong}</TooltipContent>
-              </Tooltip>
-            </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="size-9"
-                  aria-label={copy.moreAria(isoform.id)}
+                  }
+                />
+                <DropdownMenuItem
+                  render={<Link href={`/design-tool?isoform=${isoform.id}`} />}
                 >
-                  <MoreHorizontal className="size-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem asChild>
-                  <a
-                    href={preOptimizedZipUrl(isoform.id)}
-                    download={`${isoform.id}_v1.0.zip`}
-                    onClick={() =>
-                      trackEvent({
-                        event: 'precomputed_download',
-                        isoform_id: isoform.id,
-                      })
-                    }
-                  >
-                    <PackageOpen className="size-4" />
-                    {copy.downloadLong}
-                  </a>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href={`/design-tool?isoform=${isoform.id}`}>
-                    <WandSparkles className="size-4" />
-                    {copy.customizeLong}
-                  </Link>
+                  <WandSparkles className="size-4" />
+                  {copy.customizeLong}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
@@ -575,16 +584,18 @@ function IsoformRow({
                   {copy.downloadFasta}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <a
-                    href={`https://ensembl.org/id/${isoform.id}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <ExternalLink className="size-4" />
-                    {copy.viewEnsembl}
-                  </a>
-                </DropdownMenuItem>
+                <DropdownMenuItem
+                  render={
+                    <a
+                      href={`https://ensembl.org/id/${isoform.id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <ExternalLink className="size-4" />
+                      {copy.viewEnsembl}
+                    </a>
+                  }
+                />
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -638,34 +649,43 @@ function ExpandedDetails({
           collapsed rows can stay quiet. Labeled on every screen size. */}
       <div className="flex flex-col gap-3 sm:flex-row sm:gap-6">
         <div className="flex max-w-xs flex-col items-start gap-1.5">
-          <Button size="sm" asChild>
-            <Link
-              href={`/design-tool?isoform=${isoform.id}`}
-              aria-label={copy.customizeAria(isoform.id)}
-            >
-              <WandSparkles className="size-4" />
-              {copy.customizeLong}
-            </Link>
+          <Button
+            size="sm"
+            nativeButton={false}
+            render={
+              <Link
+                href={`/design-tool?isoform=${isoform.id}`}
+                aria-label={copy.customizeAria(isoform.id)}
+              />
+            }
+          >
+            <WandSparkles className="size-4" />
+            {copy.customizeLong}
           </Button>
           <p className="text-muted-foreground text-xs">{copy.customizeHint}</p>
         </div>
         <div className="flex max-w-xs flex-col items-start gap-1.5">
-          <Button size="sm" variant="outline" asChild>
-            <a
-              href={preOptimizedZipUrl(isoform.id)}
-              download={`${isoform.id}_v1.0.zip`}
-              aria-label={copy.downloadAria(isoform.id)}
-              onClick={() =>
-                trackEvent({
-                  event: 'precomputed_download',
-                  isoform_id: isoform.id,
-                })
-              }
-            >
-              <PackageOpen className="size-4" />
-              {copy.downloadLong}
-            </a>
-          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            nativeButton={false}
+            render={
+              <a
+                href={preOptimizedZipUrl(isoform.id)}
+                download={`${isoform.id}_v1.0.zip`}
+                aria-label={copy.downloadAria(isoform.id)}
+                onClick={() =>
+                  trackEvent({
+                    event: 'precomputed_download',
+                    isoform_id: isoform.id,
+                  })
+                }
+              >
+                <PackageOpen className="size-4" />
+                {copy.downloadLong}
+              </a>
+            }
+          />
           <p className="text-muted-foreground text-xs">{copy.downloadHint}</p>
         </div>
       </div>

@@ -2,8 +2,6 @@
 import { Button } from '@/components/ui/button'
 import { Star } from 'lucide-react'
 import { useFavoriteGenes } from '@/features/gene-search/stores/favorite-genes-store'
-import { AnimatePresence, m } from 'motion/react'
-import { popSpring } from '@/lib/motion'
 import type { SavedGene } from '@/features/gene-search/types/domain-types'
 import { trackEvent } from '@/lib/analytics'
 import { geneSearchCopy } from '../copy'
@@ -42,20 +40,11 @@ export function FavoriteGeneButton({ gene }: FavoriteButtonProps) {
           : geneSearchCopy.favoriteButton.add
       }
     >
-      <AnimatePresence mode="wait" initial={false}>
-        <m.div
-          key={isFavorite ? 'filled' : 'empty'}
-          initial={{ scale: 0.8 }}
-          animate={{ scale: 1 }}
-          transition={popSpring}
-        >
-          <Star
-            className={`size-5 transition-colors duration-200 ${
-              isFavorite ? 'fill-warning text-warning' : 'text-muted-foreground'
-            }`}
-          />
-        </m.div>
-      </AnimatePresence>
+      <Star
+        className={`size-5 transition-colors duration-200 ${
+          isFavorite ? 'fill-warning text-warning' : 'text-muted-foreground'
+        }`}
+      />
     </Button>
   )
 }

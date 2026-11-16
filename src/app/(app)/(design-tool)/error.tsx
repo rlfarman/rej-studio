@@ -20,10 +20,12 @@ export default function DesignToolError({
       title={appCopy.errorBoundary.designTool.title}
       description={appCopy.errorBoundary.designTool.description}
       secondaryAction={
-        <Button asChild variant="outline">
-          <Link href="/genes">
-            {appCopy.errorBoundary.designTool.backToSearch}
-          </Link>
+        <Button
+          variant="outline"
+          nativeButton={false}
+          render={<Link href="/genes" />}
+        >
+          {appCopy.errorBoundary.designTool.backToSearch}
         </Button>
       }
     />

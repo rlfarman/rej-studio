@@ -144,6 +144,55 @@ describe('useGeneSearch', () => {
     expect(lastCall[0]).toBe('BRCA')
   })
 
+  // --- Pending state ---
+
+  it('reports loading during the debounce window, before any request', () => {
+    const { result } = renderHook(
+      () => useGeneSearch({ searchGenes: mockSearchGenes }),
+      { wrapper: createWrapper() },
+    )
+    act(() => result.current.setQuery('TP53'))
+
+    expect(mockSearchGenes).not.toHaveBeenCalled()
+    expect(result.current.isLoading).toBe(true)
+    expect(result.current.hasSearched).toBe(false)
+  })
+
+  it('searchNow skips the debounce', async () => {
+    const { result } = renderHook(
+      () => useGeneSearch({ searchGenes: mockSearchGenes }),
+      { wrapper: createWrapper() },
+    )
+    act(() => result.current.searchNow('TP53'))
+
+    expect(result.current.query).toBe('TP53')
+    // Well inside the 250ms debounce.
+    await waitFor(
+      () => expect(mockSearchGenes).toHaveBeenCalledWith('TP53', 'both'),
+      { timeout: 100 },
+    )
+  })
+
+  it("doesn't count the previous query's results as searched", async () => {
+    const gene = { id: '1', symbol: 'TP53', name: 'TP53', species: 'human' }
+    mockSearchGenes.mockResolvedValueOnce({ results: [gene] })
+    const { result } = renderHook(
+      () => useGeneSearch({ searchGenes: mockSearchGenes }),
+      { wrapper: createWrapper() },
+    )
+    act(() => result.current.searchNow('TP53'))
+    await waitFor(() => expect(result.current.hasSearched).toBe(true))
+
+    // Next query never resolves, so the previous results stay as placeholder.
+    mockSearchGenes.mockReturnValueOnce(new Promise(() => {}))
+    act(() => result.current.searchNow('KRAS'))
+    await waitFor(() => expect(mockSearchGenes).toHaveBeenCalledTimes(2))
+
+    expect(result.current.searchResults).toEqual([gene])
+    expect(result.current.hasSearched).toBe(false)
+    expect(result.current.isLoading).toBe(true)
+  })
+
   // --- Cache behavior ---
 
   it('uses cached results on second render with same query', async () => {

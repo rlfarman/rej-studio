@@ -32,6 +32,8 @@ import { useSpeciesContext } from '@/stores/species-store'
 import type { SpeciesFilter } from '@/lib/bio/species'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { geneSearchCopy } from '../copy'
+import { SearchShortcutHint } from '@/components/search-shortcut'
+import { SEARCH_SHORTCUT_ARIA } from '@/lib/search-shortcut'
 
 const copy = geneSearchCopy.command
 
@@ -68,9 +70,9 @@ function SpeciesToggle() {
 
 /**
  * First-run hint inside the empty palette: a few well-known genes to try,
- * instead of a sentence that restates the placeholder. Picking one fills the
- * query (so the results show how search works) and returns focus to the input
- * so arrow keys reach the results.
+ * instead of a sentence that restates the placeholder. Picking one searches
+ * for it right away (so the results show how search works) and returns focus
+ * to the input so arrow keys reach the results.
  */
 function ExampleGenes({ onPick }: { onPick: (symbol: string) => void }) {
   return (
@@ -122,9 +124,35 @@ function useDelayedTrue(flag: boolean, delayMs: number) {
   return delayed
 }
 
+function SearchingRow({
+  query,
+  className,
+}: {
+  query: string
+  className?: string
+}) {
+  return (
+    <div
+      role="status"
+      className={cn(
+        'text-muted-foreground flex items-center gap-2 px-4 py-3 text-sm',
+        className,
+      )}
+    >
+      <Loader2 className="size-4 shrink-0 animate-spin" aria-hidden />
+      <span className="truncate">{copy.searching(query.trim())}</span>
+    </div>
+  )
+}
+
 interface GeneSearchInputProps {
   query: string
   setQuery: (query: string) => void
+  /** Sets the query and searches immediately, skipping the typing debounce. */
+  searchNow: (query: string) => void
+  inputRef?: React.Ref<HTMLInputElement>
+  /** Show the ⌘K hint (inline search; the dialog is already open). */
+  shortcutHint?: boolean
   hasSearched: boolean
   searchResults: GeneSearchResult[]
   isLoading: boolean
@@ -235,6 +263,9 @@ function JobRow({ entry, query, onSelect }: JobRowProps) {
 export function GeneSearchCommand({
   query,
   setQuery,
+  searchNow,
+  inputRef,
+  shortcutHint = false,
   hasSearched,
   searchResults,
   isLoading,
@@ -310,23 +341,29 @@ export function GeneSearchCommand({
   const hasAnySuggestions = hasFavoriteGenes || hasRecentGenes || hasJobs
   const hasResults = hasAnySuggestions || hasGeneResults
 
-  // Single-source state resolution. The key insight: while the user is
-  // typing and waiting for the first query to settle, we keep showing
-  // whatever was visible before (suggestions or prior results) rather
-  // than blanking the body. With `keepPreviousData` in the hook,
-  // `searchResults` stays populated across keystrokes, and `hasSearched`
-  // only flips to true once a query has resolved at least once.
+  // Single-source state resolution. Anything already worth showing (matching
+  // favorites/recents/jobs, or the previous query's results that
+  // `keepPreviousData` holds while the next one loads) stays on screen. With
+  // nothing to show, a query always gets an explicit state: searching, then
+  // results, no matches, or an error. The example genes only appear for an
+  // empty query; they used to linger while a query was pending, so picking
+  // one looked like nothing had happened.
   //
   // A gene-search error only hides the whole panel when there's nothing
   // else to show. If the user has matching favorites/recents/jobs, we still
   // render those and surface the gene error inline.
-  const content: 'error' | 'results' | 'no-results' | 'prompt' = hasResults
-    ? 'results'
-    : error
-      ? 'error'
-      : hasQuery && hasSearched && !isLoading
-        ? 'no-results'
-        : 'prompt'
+  const content: 'error' | 'results' | 'no-results' | 'searching' | 'prompt' =
+    hasResults
+      ? 'results'
+      : !hasQuery
+        ? 'prompt'
+        : isLoading
+          ? 'searching'
+          : error
+            ? 'error'
+            : hasSearched
+              ? 'no-results'
+              : 'searching'
 
   // Defer dimming the result list ~180ms so fast queries never flicker.
   const showLoader = useDelayedTrue(isLoading, 180)
@@ -339,7 +376,10 @@ export function GeneSearchCommand({
       shouldFilter={false}
     >
       <CommandInput
+        ref={inputRef}
         aria-label={copy.inputAria}
+        aria-keyshortcuts={shortcutHint ? SEARCH_SHORTCUT_ARIA : undefined}
+        endAddon={shortcutHint ? <SearchShortcutHint /> : undefined}
         placeholder={isMobile ? copy.placeholderMobile : copy.placeholder}
         className="border-0 text-base ring-0 outline-0 focus:border-0 focus:ring-0 active:border-0 active:ring-0 sm:text-sm"
         value={isNavigating && pendingGene ? pendingGene.symbol : query}
@@ -393,11 +433,12 @@ export function GeneSearchCommand({
           {content === 'prompt' && (
             <ExampleGenes
               onPick={(symbol) => {
-                setQuery(symbol)
+                searchNow(symbol)
                 setShowList(true)
               }}
             />
           )}
+          {content === 'searching' && <SearchingRow query={query} />}
           {content === 'no-results' && (
             <div className="py-6 text-center text-sm transition-opacity duration-200">
               {geneSearchCopy.results.noMatches(query)}{' '}
@@ -507,26 +548,27 @@ export function GeneSearchCommand({
                         </div>
                         {gene.matchedIsoformId && (
                           <Button
-                            asChild
                             variant="ghost"
                             size="sm"
                             className="ml-auto h-7 px-2"
                             onClick={(e) => e.stopPropagation()}
                             onMouseDown={(e) => e.stopPropagation()}
+                            nativeButton={false}
+                            render={
+                              <Link
+                                href={`/design-tool?isoform=${gene.matchedIsoformId}`}
+                                aria-label={copy.customizeAria(
+                                  gene.matchedIsoformId,
+                                )}
+                                onClick={() => {
+                                  setIsOpen(false)
+                                  setShowList(false)
+                                }}
+                              />
+                            }
                           >
-                            <Link
-                              href={`/design-tool?isoform=${gene.matchedIsoformId}`}
-                              aria-label={copy.customizeAria(
-                                gene.matchedIsoformId,
-                              )}
-                              onClick={() => {
-                                setIsOpen(false)
-                                setShowList(false)
-                              }}
-                            >
-                              {copy.customize}
-                              <ExternalLink className="size-3.5" />
-                            </Link>
+                            {copy.customize}
+                            <ExternalLink className="size-3.5" />
                           </Button>
                         )}
                       </CommandItem>
@@ -549,6 +591,13 @@ export function GeneSearchCommand({
                 </div>
               )}
             </CommandList>
+          )}
+          {/* Saved genes or jobs can match before the gene search returns;
+              say the search is still running rather than implying those are
+              all the results. Outside the listbox, which may only hold
+              options and groups. */}
+          {content === 'results' && isLoading && !hasGeneResults && (
+            <SearchingRow query={query} className="border-t" />
           )}
         </>
       )}

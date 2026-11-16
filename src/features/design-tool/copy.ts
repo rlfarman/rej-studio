@@ -118,7 +118,6 @@ export const designToolCopy = {
     },
     advanced: {
       label: 'Advanced: objective weights',
-      hint: 'Relative importance of each objective, 0–100. Higher values pull the designer harder toward that objective when they conflict. Defaults to 1 for every objective — equal weighting.',
     },
     help: {
       codonOptimize:
@@ -156,8 +155,9 @@ export const designToolCopy = {
     },
   },
   weights: {
-    label: 'Weight',
-    inputAria: 'Weight',
+    hint: 'Relative importance of each objective, 0–100. Higher values pull the designer harder toward that objective when they conflict. Defaults to 1 for every objective — equal weighting.',
+    /** Shown next to an objective's name while that objective is turned off. */
+    off: '(off)',
   },
   splitPoint: {
     preselected: (bp: string) =>
@@ -305,12 +305,6 @@ export const designToolCopy = {
     },
   },
   aav: {
-    preflight: {
-      single: 'Single AAV',
-      dual: 'Dual vector',
-      dualTight: 'Dual vector (tight)',
-      exceeds: 'Over AAV limit',
-    },
     results: {
       heading: 'AAV packaging estimate',
       fiveVector: '5′ vector',

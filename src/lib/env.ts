@@ -125,13 +125,6 @@ const clientSchema = z
     // serving the wrong URL. In dev, defaults to https://rejstudio.com.
     NEXT_PUBLIC_SITE_URL: z.string().url().optional(),
 
-    // GitHub repository info for "edit this page" links, nav buttons, etc.
-    // All three are optional — when unset, GitHub-linked UI hides itself.
-    // Fallbacks to Vercel build-time vars are applied in parseEnv().
-    NEXT_PUBLIC_GITHUB_OWNER: z.string().optional(),
-    NEXT_PUBLIC_GITHUB_REPO: z.string().optional(),
-    NEXT_PUBLIC_GITHUB_BRANCH: z.string().optional(),
-
     // Feature flag: enable the experimental multi-split (two split points)
     // UI in the design tool. Hidden by default for the preview release; the
     // data layer already supports two positions. Client code reads this
@@ -150,25 +143,8 @@ const clientSchema = z
   })
 
 function parseEnv() {
-  // Fill in GitHub repo config from Vercel's build-time git vars when the
-  // explicit NEXT_PUBLIC_GITHUB_* values aren't set.
-  const envWithGitFallbacks = {
-    ...process.env,
-    NEXT_PUBLIC_GITHUB_OWNER:
-      process.env.NEXT_PUBLIC_GITHUB_OWNER ??
-      process.env.VERCEL_GIT_REPO_OWNER ??
-      undefined,
-    NEXT_PUBLIC_GITHUB_REPO:
-      process.env.NEXT_PUBLIC_GITHUB_REPO ??
-      process.env.VERCEL_GIT_REPO_SLUG ??
-      undefined,
-    NEXT_PUBLIC_GITHUB_BRANCH:
-      process.env.NEXT_PUBLIC_GITHUB_BRANCH ??
-      process.env.VERCEL_GIT_COMMIT_REF ??
-      undefined,
-  }
-  const serverResult = serverSchema.safeParse(envWithGitFallbacks)
-  const clientResult = clientSchema.safeParse(envWithGitFallbacks)
+  const serverResult = serverSchema.safeParse(process.env)
+  const clientResult = clientSchema.safeParse(process.env)
 
   if (!serverResult.success || !clientResult.success) {
     const issues = [
