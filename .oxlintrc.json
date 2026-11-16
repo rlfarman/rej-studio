@@ -1,8 +1,18 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   // Oxlint is the fast first pass of `pnpm lint`. ESLint still runs after it
-  // for what Oxlint can't do (the feature-boundary import rules); rules
-  // covered here are switched off in ESLint by eslint-plugin-oxlint.
+  // for what Oxlint can't do (the feature-boundary import rules and the
+  // react-hook-form watch() guard: oxlint 1.93 implements neither
+  // import/no-restricted-paths nor no-restricted-syntax); rules covered here
+  // are switched off in ESLint by eslint-plugin-oxlint.
+  //
+  // typeAware turns on rules that need type information (no-floating-promises,
+  // no-base-to-string, no-misused-spread, …) through oxlint-tsgolint, which
+  // runs on the TypeScript 7 compiler. typescript-eslint cannot run against
+  // TypeScript 7, so before this the repo had no type-aware lint at all.
+  "options": {
+    "typeAware": true
+  },
   "plugins": [
     "typescript",
     "unicorn",

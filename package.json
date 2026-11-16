@@ -100,6 +100,7 @@
     "lint-staged": "^17.6.0",
     "openapi-typescript": "^7.13.0",
     "oxlint": "^1.93.0",
+    "oxlint-tsgolint": "7.0.2007",
     "postcss": "^8.5.33",
     "prettier": "^3.10.1",
     "prettier-plugin-tailwindcss": "~0.8.1",
