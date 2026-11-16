@@ -30,7 +30,7 @@ export function LoginForm({ returnTo, hasError = false }: LoginFormProps) {
       />
 
       {/* Frosted glass card */}
-      <div className="border-border/50 bg-card/75 relative z-10 w-full max-w-sm rounded-2xl border p-8 shadow-2xl shadow-black/8 backdrop-blur-2xl">
+      <div className="border-border/50 bg-card/75 relative z-10 w-full max-w-sm rounded-[min(var(--radius-4xl),24px)] border p-8 shadow-2xl shadow-black/8 backdrop-blur-2xl">
         {/* Overline */}
         <p className="type-overline text-primary mb-6">Private Preview</p>
 
@@ -57,19 +57,16 @@ export function LoginForm({ returnTo, hasError = false }: LoginFormProps) {
           <div className="flex flex-col gap-2">
             <Label htmlFor="password">{authCopy.login.passwordLabel}</Label>
 
-            {/* Wrapper provides the drawn-on underline focus indicator */}
-            <div className="login-input-wrapper">
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                required
-                autoFocus
-                aria-invalid={hasError || undefined}
-                aria-describedby={hasError ? 'login-error' : undefined}
-              />
-            </div>
+            <Input
+              id="password"
+              name="password"
+              type="password"
+              autoComplete="current-password"
+              required
+              autoFocus
+              aria-invalid={hasError || undefined}
+              aria-describedby={hasError ? 'login-error' : undefined}
+            />
 
             {hasError ? (
               <p

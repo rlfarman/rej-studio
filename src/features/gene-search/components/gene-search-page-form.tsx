@@ -77,7 +77,7 @@ export function GeneSearchPageForm({
               href={searchPageHref(query, value)}
               aria-current={active ? 'page' : undefined}
               className={cn(
-                'focus-visible:ring-ring flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none',
+                'focus-visible:ring-ring flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none',
                 active
                   ? 'bg-accent text-accent-foreground'
                   : 'text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground',

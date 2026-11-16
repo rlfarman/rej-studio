@@ -1,6 +1,6 @@
 import 'server-only'
 import { getDb } from '@/drizzle/db'
-import { SelectGene, genes, isoforms } from '@/drizzle/schema'
+import { genes, isoforms } from '@/drizzle/schema'
 import { and, sql, eq, type SQL } from 'drizzle-orm'
 import type { AnyPgColumn } from 'drizzle-orm/pg-core'
 import {
@@ -9,7 +9,20 @@ import {
 } from '@/features/gene-search/utils/ensembl-regex'
 import { escapeLikePattern } from '@/features/gene-search/utils/like-pattern'
 import { cacheLife, cacheTag } from 'next/cache'
+import { getServerCorpus } from './static-gene-data'
+import type {
+  GeneSearchPage,
+  GeneSearchResult,
+  SimilarGene,
+} from '@/features/gene-search/types/search'
 
+// Two backends sit behind these functions. When a static corpus is
+// configured (corpus/gene-data-url.ts: always in development and tests,
+// in production only once NEXT_PUBLIC_GENE_DATA_URL is set), each function
+// answers from it, ranking the same way as the SQL below
+// (corpus/search-index.ts mirrors each query). Otherwise they query
+// Postgres exactly as before, which is what production runs today.
+//
 // Tag all gene/isoform query caches so the entire gene corpus can be
 // invalidated in one call (`revalidateTag('genes')`) after a reseed, without
 // tracking every query variant we ever cached.
@@ -25,19 +38,6 @@ import { cacheLife, cacheTag } from 'next/cache'
 //   unique keystroke prefixes. Remote writes there would cost more than
 //   the rare hit saves.
 const GENES_CACHE_TAG = 'genes'
-
-export type GeneSearchResult = Pick<
-  SelectGene,
-  'id' | 'name' | 'symbol' | 'species'
-> & {
-  matchedIsoformId?: string
-}
-
-export interface GeneSearchPage {
-  results: GeneSearchResult[]
-  /** More genes matched than `limit`; the caller should say so. */
-  truncated: boolean
-}
 
 const geneSearchColumns = {
   id: genes.id,
@@ -71,6 +71,9 @@ export async function fetchGenesBySearch(
   'use cache'
   cacheTag(GENES_CACHE_TAG)
   cacheLife({ revalidate: 3600 })
+
+  const corpus = getServerCorpus()
+  if (corpus) return corpus.searchGenes(trimmedQuery, species, limit)
 
   const db = await getDb()
 
@@ -154,10 +157,13 @@ export async function fetchGenesBySearch(
 export async function fetchGeneBySymbol(
   symbol: string,
   species: string | undefined,
-) {
+): Promise<GeneSearchResult | null> {
   'use cache: remote'
   cacheTag(GENES_CACHE_TAG)
   cacheLife('max')
+
+  const corpus = getServerCorpus()
+  if (corpus) return (await corpus.loadIndex()).geneBySymbol(symbol, species)
 
   const symbolMatch = sql`lower(${genes.symbol}) = ${symbol.toLowerCase()}`
   const speciesMatch =
@@ -190,6 +196,9 @@ export async function fetchAllGeneSymbols(): Promise<
   cacheTag(GENES_CACHE_TAG)
   cacheLife('max')
 
+  const corpus = getServerCorpus()
+  if (corpus) return (await corpus.loadIndex()).allSymbols()
+
   const db = await getDb()
   return db.select({ symbol: genes.symbol, species: genes.species }).from(genes)
 }
@@ -203,10 +212,13 @@ export async function fetchAllGeneSymbols(): Promise<
  */
 export async function fetchSimilarGenes(
   lowerSymbol: string,
-): Promise<{ symbol: string; species: string }[]> {
+): Promise<SimilarGene[]> {
   'use cache'
   cacheTag(GENES_CACHE_TAG)
   cacheLife({ revalidate: 3600 })
+
+  const corpus = getServerCorpus()
+  if (corpus) return corpus.similarGenes(lowerSymbol)
 
   const escaped = escapeLikePattern(lowerSymbol)
   const prefix = `${escaped}%`

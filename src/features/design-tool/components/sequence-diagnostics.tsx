@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
-import { useFormContext } from 'react-hook-form'
+import { useFormContext, useWatch } from 'react-hook-form'
 import { FormValues } from '../types/form-schema'
 import {
   DiagBadge,
@@ -15,8 +15,8 @@ import {
 } from '@/components/bio/diag-badge'
 
 export function SequenceDiagnostics() {
-  const { watch } = useFormContext<FormValues>()
-  const codingSequence = watch('codingSequence')
+  const { control } = useFormContext<FormValues>()
+  const codingSequence = useWatch({ control, name: 'codingSequence' })
 
   const seq = codingSequence?.toUpperCase() ?? ''
 
@@ -43,7 +43,7 @@ export function SequenceDiagnostics() {
   if (!diagnostics) return null
 
   return (
-    <div className="bg-muted/50 flex flex-wrap gap-2 rounded-lg border p-3">
+    <div className="bg-muted/50 flex flex-wrap gap-2 rounded-2xl border p-3">
       {diagnostics.checks.map((check) => (
         <DiagBadge key={check.label} {...check} />
       ))}

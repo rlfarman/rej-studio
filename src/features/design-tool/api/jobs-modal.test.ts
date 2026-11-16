@@ -30,10 +30,12 @@ vi.mock('@/lib/upstash', () => ({
 const mockFetch = vi.fn()
 vi.stubGlobal('fetch', mockFetch)
 
-// Mock crypto.subtle.digest — hash only the payload, so identical inputs
-// collide (that's what the idempotency key is for) and different ones don't.
+// A stand-in for exactly what jobs.ts uses: subtle.digest for the
+// idempotency key, hashing only the payload so identical inputs collide and
+// different ones don't, and randomUUID for inline job ids. Nothing else is
+// carried over — spreading globalThis.crypto would not help, since Crypto's
+// methods live on its prototype and a spread copies none of them.
 vi.stubGlobal('crypto', {
-  ...globalThis.crypto,
   subtle: {
     digest: vi.fn(async (_algo: string, data: BufferSource) => {
       const bytes = data instanceof Uint8Array ? data : new Uint8Array(0)

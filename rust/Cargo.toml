@@ -1,0 +1,24 @@
+[workspace]
+members = ["optimizer"]
+resolver = "3"
+
+# Lints the project opts into beyond the defaults, shared by CI, local clippy
+# and rust-analyzer. CI still runs clippy with `-D warnings`, which turns every
+# remaining warning into an error there; denying all warnings here instead
+# would fail local builds over an unused variable mid-edit.
+#
+# Both entries are about the wasm ABI in optimizer/src/lib.rs, the crate's only
+# unsafe code. Its contract with the JavaScript host is invisible to the
+# compiler, so each unsafe operation is spelled out and says why it is sound.
+[workspace.lints.rust]
+unsafe_op_in_unsafe_fn = "deny"
+
+[workspace.lints.clippy]
+undocumented_unsafe_blocks = "deny"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
