@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 // Set NODE_ENV to development so local backend is allowed
 ;(process.env as Record<string, string>).NODE_ENV = 'development'

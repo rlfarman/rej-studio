@@ -254,12 +254,8 @@ describe('submitting a design', () => {
     ['a sequence with an internal stop', { sequence: 'ATGTAAAAATAA' }],
     ['letters that are not nucleotides', { sequence: 'ATGXYZTAA' }],
     ['a split point past the end', { sequence: CDS, split_point: 99_999 }],
-  ])('refuses %s, rather than fixing it', async (_case, overrides) => {
-    const result = await call('submit_design', {
-      name: 'bad',
-      sequence: CDS,
-      ...overrides,
-    })
+  ])('refuses %s, rather than fixing it', async (_case, args) => {
+    const result = await call('submit_design', { name: 'bad', ...args })
 
     expect(result.isError).toBe(true)
     expect(said(result)).toContain('cannot be run')
