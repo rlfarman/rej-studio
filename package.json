@@ -76,7 +76,7 @@
     "eslint-config-next": "^16.4.6",
     "fflate": "^0.8.3",
     "fumadocs-core": "^16.7.14",
-    "fumadocs-mdx": "^14.2.13",
+    "fumadocs-mdx": "^15.6.2",
     "fumadocs-ui": "^16.7.14",
     "lucide-react": "^1.7.0",
     "motion": "^12.38.0",
