@@ -10,6 +10,7 @@ import type {
   BackendProcessResult,
   objectiveEvaluationEntrySchema,
   objectivesReportSchema,
+  runRecordSchema,
   wggwSiteInfoSchema,
 } from '@/features/design-tool/types/backend-contract'
 import type { z } from 'zod'
@@ -19,4 +20,5 @@ export type ObjectiveEvaluationEntry = z.infer<
   typeof objectiveEvaluationEntrySchema
 >
 export type ObjectivesReport = z.infer<typeof objectivesReportSchema>
+export type RunRecord = z.infer<typeof runRecordSchema>
 export type ProcessResult = BackendProcessResult

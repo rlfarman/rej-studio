@@ -634,6 +634,44 @@
   "optimized_sequence": "ATGAGGAAGCTGGACTCTGAGGATGACCTGGAGAGGCTGAAAGCCACCCTGGAAGGAGTGGACTCTGTCATCACTGACTGA",
   "original_sequence": "ATGCGTAAGCTGGACTCCGAAGACGATCTGGAACGTCTGAAAGCGACCCTGGAAGGCGTTGACTCCGTGATCACCGATTGA",
   "processing_time_seconds": 0.0,
+  "run_record": {
+    "corpus_version": null,
+    "duration_seconds": 0.031,
+    "input": {
+      "length": 81,
+      "sha256": "fd125526f98402a082c213093db38a54720b4bc020106cdc2d094bfcefca63bb"
+    },
+    "options": {
+      "codon_optimize": "human",
+      "codon_optimize_weight": 1.0,
+      "enforce_gc": true,
+      "ensure_wggw": true,
+      "induce_optimal_ss": false,
+      "minimize_CpGs": true,
+      "minimize_CpGs_weight": 1.0,
+      "reduce_kmer_complexity": true,
+      "reduce_kmer_complexity_k": 10,
+      "reduce_kmer_complexity_weight": 1.0,
+      "remove_cryptic_ss": true,
+      "remove_cryptic_ss_weight": 1.0,
+      "selected_wggw_site": null,
+      "selected_wggw_sites": null,
+      "split_point": 45,
+      "split_points": null,
+      "stim_3": false,
+      "stim_5": false,
+      "wggw_threshold": 300
+    },
+    "record_version": 1,
+    "seed": 20261116,
+    "started_at": "2026-11-16T16:52:31.569180Z",
+    "versions": {
+      "algorithm_sha256": "85b3640072d3",
+      "commit": null,
+      "dnachisel": "3.2.16",
+      "python": "3.14.10"
+    }
+  },
   "seed": 20261116,
   "seq3": "[REJ3]GAAGGAGTGGACTCTGTCATCACTGACTGA",
   "seq5": "ATGAGGAAGCTGGACTCTGAGGATGACCTGGAGAGGCTGAAAGCCACCCTG[REJ5]",

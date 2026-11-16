@@ -6,6 +6,8 @@ import {
   findRestrictionSites,
   type RestrictionHit,
 } from '@/lib/bio/restriction-sites'
+import { ChartDataTable } from '@/components/chart-data-table'
+import { designToolCopy } from '../copy'
 
 interface Props {
   original: string
@@ -128,6 +130,22 @@ export function RestrictionSiteMap({ original, optimized }: Props) {
           />
         ))}
       </div>
+
+      <ChartDataTable
+        storageKey="restriction-sites"
+        caption={designToolCopy.results.charts.restrictionSites.caption}
+        columns={designToolCopy.results.charts.restrictionSites.columns}
+        rows={rows.map((row) => [
+          row.enzyme,
+          row.before.length,
+          row.after.length,
+          row.added,
+          row.removed,
+          // The positions themselves: the map shows where, this says exactly where.
+          row.after.map((hit) => hit.position).join(' ') || '\u2014',
+        ])}
+        csvFilename="restriction-sites.csv"
+      />
     </div>
   )
 }
