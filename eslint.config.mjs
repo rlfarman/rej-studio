@@ -35,7 +35,16 @@ const sharedLayerZones = SHARED_LAYERS.map((layer) => ({
 
 const config = [
   {
-    ignores: ['coverage/**', '.claude/worktrees/', '.worktrees/', '.vercel/'],
+    // .venv/ and venv/ are Python environments (uv sync); pyright ships
+    // bundled JS there that isn't ours to lint.
+    ignores: [
+      'coverage/**',
+      '.claude/worktrees/',
+      '.worktrees/',
+      '.vercel/',
+      '.venv/',
+      'venv/',
+    ],
   },
   ...nextConfig,
   {

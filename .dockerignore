@@ -4,6 +4,7 @@ node_modules
 .drizzle
 .claude
 venv
+.venv
 __pycache__
 *.pem
 .env
