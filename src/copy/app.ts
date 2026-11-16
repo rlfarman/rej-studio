@@ -48,5 +48,17 @@ export const appCopy = {
   sidebar: {
     historyHint:
       'Starred genes, recent searches, and design jobs will show up here.',
+    nav: {
+      home: 'Home',
+      designTool: 'Design Tool',
+      diseaseAssociations: 'Disease-Associated Genes',
+    },
+    lab: 'Pfaff Lab | Salk Institute',
+    salkLogoAlt: 'Salk Institute',
+  },
+  loading: {
+    page: 'Loading page',
+    gene: 'Loading gene…',
+    geneAria: 'Loading gene',
   },
 } as const

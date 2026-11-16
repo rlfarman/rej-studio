@@ -1,5 +1,6 @@
 import { Suspense } from 'react'
 import { Header } from '@/app/_components/layout/header'
+import { PageLoading } from '@/app/_components/layout/page-loading'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { AppSidebar } from '@/app/_components/layout/app-sidebar'
@@ -7,22 +8,21 @@ import { MaintenanceBanner } from '@/components/maintenance-banner'
 
 // Sidebar state persists in localStorage; an inline script in the root
 // layout (src/app/layout.tsx) applies it to <html> before hydration, so
-// the layout no longer needs `cookies()` to SSR the correct initial state.
+// the layout needs no `cookies()` and the whole shell prerenders.
 //
-// The shell still streams under one Suspense boundary because `AppSidebar`,
-// and `Header` both call `usePathname()`, and under Next 16
-// `cacheComponents` any request-time data (including dynamic route params
-// reached by child pages) must live below a Suspense boundary. Matching
-// the pre-refactor structure keeps it predictable — Next prerenders the
-// static HTML frame (html/body/theme/query providers) and streams the
-// interactive shell at request time.
-function AppShell({
+// `AppSidebar` and `Header` read `usePathname()`, which suspends while a
+// route with a dynamic param (/genes/[symbol]) prerenders. Each keeps that
+// read in its own small Suspense boundary with a same-shaped fallback, so
+// the sidebar, header and page frame are in the static shell instead of
+// waiting behind one boundary with no fallback. The page slot gets its own
+// boundary too, for pages that read request data at their top level.
+export default function AppGroupLayout({
   children,
-  maintenanceMessage,
 }: {
   children: React.ReactNode
-  maintenanceMessage: string | undefined
 }) {
+  const maintenanceMessage = process.env.MAINTENANCE_MESSAGE?.trim()
+
   return (
     // Tooltips only appear inside the app shell; providing them here keeps
     // Base UI's tooltip and floating-ui out of the login and error pages.
@@ -41,24 +41,12 @@ function AppShell({
             id="main-content"
             className="relative flex h-full w-full flex-1 flex-col overflow-auto"
           >
-            <div className="flex-1">{children}</div>
+            <div className="flex-1">
+              <Suspense fallback={<PageLoading />}>{children}</Suspense>
+            </div>
           </main>
         </SidebarInset>
       </SidebarProvider>
     </TooltipProvider>
-  )
-}
-
-export default function AppGroupLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
-  const maintenanceMessage = process.env.MAINTENANCE_MESSAGE?.trim()
-
-  return (
-    <Suspense fallback={null}>
-      <AppShell maintenanceMessage={maintenanceMessage}>{children}</AppShell>
-    </Suspense>
   )
 }
