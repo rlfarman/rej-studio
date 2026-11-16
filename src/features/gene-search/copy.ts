@@ -5,7 +5,9 @@ export const geneSearchCopy = {
   },
   command: {
     inputAria: 'Search genes',
-    placeholder: 'Gene symbol, name, or disease',
+    // Search covers symbols, names, aliases and Ensembl IDs, not diseases;
+    // the no-match state points disease searches at the associations page.
+    placeholder: 'Gene symbol, name, or Ensembl ID',
     placeholderMobile: 'Search genes…',
     opening: (symbol: string) => `Opening ${symbol}…`,
     searching: (query: string) => `Searching for ${query}…`,
@@ -17,6 +19,7 @@ export const geneSearchCopy = {
     recentGenes: 'Recent genes',
     recentJobs: 'Recent jobs',
     genes: 'Genes',
+    seeAll: (query: string) => `See all results for “${query}”`,
     customize: 'Customize',
     customizeAria: (id: string) => `Customize ${id}`,
     speciesOptions: {
@@ -25,19 +28,45 @@ export const geneSearchCopy = {
       mouse: 'Mouse',
     },
   },
+  /** Messages for GET /api/genes/search failures, shown in the palette. */
+  searchErrors: {
+    invalid:
+      'That search couldn’t be read. Queries can be up to 200 characters.',
+    unauthenticated: 'Your session has expired. Sign in again to search.',
+    rateLimited: (seconds: number) =>
+      `Too many searches. Try again in ${seconds}s.`,
+    unavailable: 'Search is temporarily unavailable.',
+    network: 'Search failed. Please try again.',
+  },
   /** First-run hint: genes present in both the sample seed and production. */
   exampleGenes: ['TP53', 'BRCA1', 'CFTR', 'EGFR'],
   searchPage: {
+    metadataTitle: 'Search Genes',
+    metadataDescription:
+      'Search by gene symbol, name, alias, or Ensembl ID across human and mouse genomes. Browse isoforms and download optimized sequences.',
+    ogDescription:
+      'Search by gene symbol, name, alias, or Ensembl ID across human and mouse genomes.',
+    ogImageAlt: 'Gene Search — REJ Studio',
     title: 'Search genes',
     resultsTitle: (query: string) => `Results for “${query}”`,
     inputLabel: 'Search genes',
     submit: 'Search',
     speciesLabel: 'Species',
     resultCount: (n: number) => (n === 1 ? '1 gene' : `${n} genes`),
+    truncated: (n: number) =>
+      `Showing the first ${n} matches. Add more of the name or symbol to narrow them down.`,
+    loading: 'Searching…',
   },
   results: {
     errorSuffix: 'Try again in a moment.',
+    rateLimited: 'Too many searches in a short time.',
     noMatches: (query: string) => `No genes match “${query}”.`,
+    noMatchesInSpecies: (query: string, species: string) =>
+      `No ${species.toLowerCase()} genes match “${query}”.`,
+    searchAllSpecies: 'Search all species',
+    didYouMean: 'Did you mean',
+    diseasePrompt: 'Searching for a disease?',
+    diseaseLink: 'Browse disease-associated genes',
     enterCustom: 'Enter a custom sequence instead.',
     matched: {
       symbol: 'Matched on symbol',
@@ -49,6 +78,14 @@ export const geneSearchCopy = {
   },
   isoformTable: {
     actionsHeader: 'Actions',
+    expandAll: 'Expand all',
+    collapseAll: 'Collapse all',
+    expandAllAria: 'Expand all isoforms',
+    collapseAllAria: 'Collapse all isoforms',
+    expandRowAria: (id: string) => `Expand ${id} details`,
+    collapseRowAria: (id: string) => `Collapse ${id} details`,
+    empty: 'No isoforms are indexed for this gene yet.',
+    loadingAria: 'Loading isoforms',
     downloadLong: 'Download pre-optimized sequences',
     downloadAria: (id: string) =>
       `Download pre-optimized sequences for ${id} (ZIP)`,
@@ -92,14 +129,47 @@ export const geneSearchCopy = {
     },
     termAria: (term: string) => `What is ${term}?`,
   },
+  splitPreview: {
+    none: 'No WGGW-capable junctions found — this sequence cannot be split by REJ.',
+    bestSplit: 'Best REJ split:',
+    atBp: 'at bp',
+    inducible: (changes: number) =>
+      `(inducible; ${changes} bp change${changes === 1 ? '' : 's'})`,
+    balance: {
+      balanced: 'balanced',
+      moderate: 'moderate',
+      imbalanced: 'imbalanced',
+    },
+    fragment: (end: '5′' | '3′', bp: string) => `${end} AAV: ${bp} bp`,
+    fits: 'fits',
+    overLimit: 'over limit',
+    overhead: (bp: string) => `(includes ${bp} bp ITR/promoter/polyA overhead)`,
+    alternatives: 'Alternatives:',
+    alternativesHint:
+      'Next balanced WGGW-capable candidates — adjust to these in the design tool if the best one doesn’t fit AAV.',
+    alternativeTitle: (
+      motif: string,
+      position: string,
+      five: string,
+      three: string,
+      fromCenter: string,
+    ) =>
+      `${motif} at bp ${position} · 5′ ${five} bp / 3′ ${three} bp · ${fromCenter} bp from center`,
+    overLimitHint: 'One fragment + AAV overhead exceeds ~4,700 bp',
+  },
   lengthChart: {
     title: 'CDS length vs. AAV capacity',
     capacityLabel: (bp: string) => `${bp} bp`,
     unit: 'bp',
   },
   favoriteButton: {
+    label: (symbol: string) => `Favorite ${symbol}`,
     remove: 'Remove from favorites',
     add: 'Add to favorites',
+  },
+  genePage: {
+    loading: 'Loading gene…',
+    loadingAria: 'Loading gene',
   },
   recentGenesPanel: {
     label: 'Recent searches',
@@ -117,5 +187,8 @@ export const geneSearchCopy = {
       'Identity estimated from shared prefix + suffix of protein sequences. Pairs ≥95% share most coding content — consider optimizing one per cluster.',
     legendAria: 'Identity scale',
     rowHeader: 'Isoform',
+    jumpTo: (id: string) => `Jump to ${id}`,
+    cellLabel: (pct: string, a: string, b: string) =>
+      `${pct}% identity between ${a} and ${b}`,
   },
 } as const

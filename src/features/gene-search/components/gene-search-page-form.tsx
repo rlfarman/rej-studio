@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { SpeciesIcon } from '@/components/bio/species-icon'
 import type { SpeciesFilter } from '@/lib/bio/species'
 import { cn } from '@/lib/utils'
+import { searchPageHref } from '@/features/gene-search/utils/search-href'
 import { geneSearchCopy } from '../copy'
 import {
   SearchShortcutFocus,
@@ -19,14 +20,6 @@ const SPECIES: { value: SpeciesFilter; label: string }[] = [
   { value: 'human', label: geneSearchCopy.command.speciesOptions.human },
   { value: 'mouse', label: geneSearchCopy.command.speciesOptions.mouse },
 ]
-
-export function searchPageHref(query: string, species: SpeciesFilter) {
-  const params = new URLSearchParams()
-  if (query) params.set('q', query)
-  if (species !== 'both') params.set('species', species)
-  const qs = params.toString()
-  return qs ? `/genes?${qs}` : '/genes'
-}
 
 interface GeneSearchPageFormProps {
   query: string

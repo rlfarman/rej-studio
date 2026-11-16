@@ -1,27 +1,22 @@
-'use server'
-
+import 'server-only'
 import {
   fetchGenesBySearch,
   fetchGeneBySymbol,
   fetchSimilarGenes,
 } from '@/features/gene-search/api/gene-queries'
-import type { GeneSearchResult } from '@/features/gene-search/api/gene-queries'
+import type {
+  SearchGenesResult,
+  SearchRequest,
+  SimilarGene,
+} from '@/features/gene-search/types/search'
 import { speciesFilterSchema, type SpeciesFilter } from '@/lib/bio/species'
 import { z } from 'zod'
 import { headers } from 'next/headers'
 import { createUpstashRateLimiter } from '@/lib/upstash'
 import { createLogger } from '@/lib/logger'
-import { requireSession } from '@/lib/auth/require-session'
 
-// NOTE: GeneSearchResult is NOT re-exported from this 'use server' file.
-// Turbopack treats all exports from server action files as server actions,
-// which fails for type-only exports. Import GeneSearchResult directly from
-// '@/features/gene-search/api/gene-queries' instead.
-
-export interface SearchGenesResult {
-  results: GeneSearchResult[]
-  error?: string
-}
+// Server-only reads. Nothing here is a server action: the command palette
+// searches through GET /api/genes/search, and pages call these directly.
 
 const log = createLogger('gene-search')
 
@@ -33,53 +28,76 @@ const searchLimiter = createUpstashRateLimiter({
   windowMs: 60_000,
 })
 
-// Defense-in-depth: server actions are reachable from any caller (client, other
-// server code), so re-validate inputs at the boundary even though call-sites
-// pass typed values. A hostile client can construct arbitrary payloads.
-const searchGenesInput = z.object({
-  query: z.string().max(200),
-  species: speciesFilterSchema.default('both'),
-})
-
 const geneSymbolInput = z.object({
   symbol: z.string().min(1).max(100),
   species: speciesFilterSchema.optional(),
 })
 
-export async function searchGenes(
-  query: string,
-  species: SpeciesFilter = 'both',
-): Promise<SearchGenesResult> {
-  const parsed = searchGenesInput.parse({ query, species })
-  const trimmedQuery = parsed.query.trim()
-  if (trimmedQuery.length === 0) return { results: [] }
+/** Thrown when the search query itself fails (database down, etc.). */
+export class SearchUnavailableError extends Error {
+  constructor(options?: ErrorOptions) {
+    super('Gene search is unavailable.', options)
+    this.name = 'SearchUnavailableError'
+  }
+}
 
-  await requireSession()
+export type RateLimitOutcome =
+  { ok: true } | { ok: false; retryAfterSeconds: number }
 
+/** Spend one search from the caller's per-IP budget. */
+export async function checkSearchRateLimit(): Promise<RateLimitOutcome> {
   const hdrs = await headers()
   const ip = hdrs.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
   const { ok: allowed, resetMs } = await searchLimiter.check(ip)
   if (!allowed) {
-    const retrySeconds = Math.ceil(resetMs / 1000)
-    throw new Error(`Too many search requests. Please wait ${retrySeconds}s.`)
+    return { ok: false, retryAfterSeconds: Math.ceil(resetMs / 1000) }
+  }
+  return { ok: true }
+}
+
+// "Did you mean" only makes sense for something shaped like a symbol, not
+// for a phrase such as a disease name.
+const SYMBOL_LIKE = /^[\w.-]{2,20}$/
+
+/**
+ * Search genes by symbol, name, alias or Ensembl ID. Expects input already
+ * validated against `searchRequestSchema`. Throws `SearchUnavailableError`
+ * when the database query fails, so callers can tell "no matches" apart
+ * from "search is broken".
+ */
+export async function searchGenes({
+  q,
+  species,
+  limit,
+}: SearchRequest): Promise<SearchGenesResult> {
+  const query = q.trim()
+  if (query.length === 0) {
+    return { results: [], truncated: false, suggestions: [] }
   }
 
   try {
-    const results = await fetchGenesBySearch(trimmedQuery, parsed.species)
+    const { results, truncated } = await fetchGenesBySearch(
+      query,
+      species,
+      limit,
+    )
+    const suggestions =
+      results.length === 0 && SYMBOL_LIKE.test(query)
+        ? await findSimilarGenes(query)
+        : []
     // Structured search analytics — log query, species filter, and result
     // count so we can understand what users search for. No PII (IP is not
     // included); the query itself is gene/disease terminology, not personal.
     log.info('search', {
-      query: trimmedQuery,
-      species: parsed.species,
+      query,
+      species,
       resultCount: results.length,
+      truncated,
     })
-    return { results }
+    return { results, truncated, suggestions }
   } catch (err) {
-    log.error('search query failed', err, { query: trimmedQuery })
-    // Return empty results with an error flag instead of crashing — the UI
-    // can distinguish "no matches" from "search is broken" and show a warning.
-    return { results: [], error: 'Search is temporarily unavailable.' }
+    log.error('search query failed', err, { query })
+    throw new SearchUnavailableError({ cause: err })
   }
 }
 
@@ -89,19 +107,21 @@ export async function getGeneBySymbol(symbol: string, species?: SpeciesFilter) {
 }
 
 /**
- * Find genes with symbols similar to the given input. Used for "did you mean?"
- * suggestions on the 404 page. Uses prefix matching and LIKE patterns to find
- * close matches without requiring pg_trgm.
+ * Find genes with symbols similar to the given input, for "did you mean?"
+ * suggestions on the 404 page and on empty searches. Never throws: a
+ * suggestion lookup failing shouldn't take the page down with it.
  */
-export async function findSimilarGenes(
-  symbol: string,
-): Promise<{ symbol: string; species: string }[]> {
-  const cleaned = symbol.trim().toUpperCase().slice(0, 20)
+export async function findSimilarGenes(symbol: string): Promise<SimilarGene[]> {
+  const cleaned = symbol.trim().toLowerCase().slice(0, 20)
   if (cleaned.length === 0) return []
 
   try {
     return await fetchSimilarGenes(cleaned)
-  } catch {
+  } catch (err) {
+    log.warn('similar-gene lookup failed', {
+      symbol: cleaned,
+      error: err instanceof Error ? err.message : String(err),
+    })
     return []
   }
 }

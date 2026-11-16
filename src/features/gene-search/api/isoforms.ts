@@ -1,5 +1,4 @@
-'use server'
-
+import 'server-only'
 import { cache } from 'react'
 import {
   fetchIsoformsByGene,
@@ -7,8 +6,9 @@ import {
 } from '@/features/gene-search/api/isoform-queries'
 import { z } from 'zod'
 
-// Ensembl gene/transcript IDs are bounded strings. Validate length + type
-// at the server-action boundary even though call-sites pass typed values.
+// Server-only reads used by server components; not server actions.
+// Ensembl gene/transcript IDs are bounded strings, so callers that pass URL
+// input get validated here.
 const geneIdSchema = z.string().min(1).max(100)
 const isoformIdSchema = z.string().min(1).max(100)
 

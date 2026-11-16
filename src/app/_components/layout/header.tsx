@@ -1,7 +1,6 @@
 'use client'
 import { useSyncExternalStore } from 'react'
 import { GeneSearchShell } from '@/app/_components/gene-search-shell'
-import { searchGenes } from '@/features/gene-search/api/genes'
 import { usePathname } from 'next/navigation'
 import {
   Tooltip,
@@ -180,11 +179,7 @@ export function Header() {
       </div>
       <div className="flex justify-center">
         {!pageHasSearch && (
-          <GeneSearchShell
-            searchGenes={searchGenes}
-            defaultQuery={geneSymbol}
-            isDialog
-          />
+          <GeneSearchShell defaultQuery={geneSymbol} isDialog />
         )}
       </div>
       {/* Empty right column keeps the search centered in the 1fr/auto/1fr grid. */}
