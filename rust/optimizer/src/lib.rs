@@ -663,8 +663,9 @@ mod tests {
         assert!(stages.iter().any(|stage| stage == "Finalizing"));
         // Numbered while optimizing, as Python reports it.
         assert!(
-            stages.iter().any(|stage| stage.starts_with("Optimizing sequence (")
-                && stage.ends_with("/32)")),
+            stages
+                .iter()
+                .any(|stage| stage.starts_with("Optimizing sequence (") && stage.ends_with("/32)")),
             "no numbered optimizing stage in {stages:?}"
         );
         assert!(
