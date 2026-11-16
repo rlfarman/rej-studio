@@ -17,14 +17,35 @@ import { RecentGenes } from '@/features/gene-search/components/recent-genes-pane
 import { RecentJobs } from '@/features/design-tool/components/recent-jobs-panel'
 import { JobWatcher } from '@/features/design-tool/components/job-watcher'
 import { SidebarMenu } from '@/app/_components/layout/sidebar-menu'
-import type { JobHistoryEntry } from '@/features/design-tool/hooks/use-job-history'
+import {
+  useJobHistory,
+  type JobHistoryEntry,
+} from '@/features/design-tool/hooks/use-job-history'
+import { useFavoriteGenes } from '@/features/gene-search/stores/favorite-genes-store'
+import { useRecentGenes } from '@/features/gene-search/stores/recent-genes-store'
 import { Home, WandSparkles, Activity } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
+import { useSyncExternalStore } from 'react'
+import { appCopy } from '@/copy/app'
+
+const noopSubscribe = () => () => {}
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const router = useRouter()
   const pathname = usePathname()
+  const favoriteCount = useFavoriteGenes((s) => s.favoriteGenes.length)
+  const recentCount = useRecentGenes((s) => s.recentGenes.length)
+  const jobCount = useJobHistory((s) => s.entries.length)
+  // History lives in localStorage, so the server always renders it empty.
+  // Only decide "nothing here yet" after hydration, or the hint would flash
+  // (and mismatch) for anyone with saved history.
+  const hydrated = useSyncExternalStore(
+    noopSubscribe,
+    () => true,
+    () => false,
+  )
+  const hasHistory = favoriteCount + recentCount + jobCount > 0
 
   function handleSelectJob(entry: JobHistoryEntry) {
     router.push(`/design-tool?job=${entry.id}`)
@@ -95,9 +116,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           data-tour="sidebar-history"
           className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto opacity-0 transition-opacity duration-150 group-data-[collapsible=icon]:max-h-0 group-data-[collapsible=icon]:overflow-hidden group-data-[state=expanded]:opacity-100 group-data-[state=expanded]:delay-200 [[data-mobile=true]_&]:max-h-none [[data-mobile=true]_&]:opacity-100"
         >
+          {/* Each history section renders only when it has items; one quiet
+              line stands in for all three when everything is empty. */}
           <FavoriteGenes />
           <RecentGenes />
-          <RecentJobs onSelectJob={handleSelectJob} />
+          {jobCount > 0 && <RecentJobs onSelectJob={handleSelectJob} />}
+          {hydrated && !hasHistory && (
+            <p className="text-muted-foreground px-4 py-3 text-xs leading-relaxed">
+              {appCopy.sidebar.historyHint}
+            </p>
+          )}
         </div>
       </SidebarContent>
       <JobWatcher />

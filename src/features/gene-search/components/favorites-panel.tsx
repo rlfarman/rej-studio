@@ -23,7 +23,6 @@ export function FavoriteGenes() {
       persistKey="sidebar:favorites:open"
       items={favoriteGenes}
       getItemKey={(gene) => gene.id}
-      emptyMessage={copy.empty}
       renderItem={(gene) => (
         <SidebarMenuItem>
           <SidebarMenuButton

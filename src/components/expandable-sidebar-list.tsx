@@ -51,7 +51,11 @@ interface ExpandableSidebarListProps<T> {
   items: readonly T[]
   getItemKey: (item: T) => string
   renderItem: (item: T) => ReactNode
-  emptyMessage: string
+  /**
+   * Shown when the list is empty. Omit it to hide the whole section instead,
+   * so empty history sections don't stack up as a column of "nothing here".
+   */
+  emptyMessage?: string
   onClear?: () => void
   collapsedCount?: number
   expandedMax?: number
@@ -99,6 +103,8 @@ export function ExpandableSidebarList<T>({
   const hasItems = items.length > 0
   const showClear = hasItems && onClear !== undefined
   const sectionId = `sidebar-section-${label.toLowerCase().replace(/\s+/g, '-')}`
+
+  if (!hasItems && emptyMessage === undefined) return null
 
   return (
     <SidebarGroup>
