@@ -189,26 +189,38 @@ describe('validationSchema — protein input', () => {
   })
 })
 
-describe('validationSchema — splice position order', () => {
-  it('accepts two ascending splice positions', () => {
+describe('validationSchema — splice positions', () => {
+  it('accepts a single split point', () => {
     expect(
       parse({
         codingSequence: 'ATGAAAAAATGA',
-        spliceJunctionPositions: [3, 6],
+        spliceJunctionPositions: [6],
       }).success,
     ).toBe(true)
   })
 
-  it('rejects positions that are not strictly ascending', () => {
+  // The optimizer takes one split_point and answers 422 for more, so a
+  // second position is blocked in the form rather than at the backend.
+  it('rejects a second split point', () => {
+    const result = parse({
+      codingSequence: 'ATGAAAAAATGA',
+      spliceJunctionPositions: [3, 6],
+    })
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      expect(result.error.issues.map((i) => i.path)).toContainEqual([
+        'spliceJunctionPositions',
+        1,
+      ])
+      expect(result.error.issues[0].message).toMatch(/one split point/i)
+    }
+  })
+
+  it('still rejects positions that are not strictly ascending', () => {
     const result = parse({
       codingSequence: 'ATGAAAAAATGA',
       spliceJunctionPositions: [6, 6],
     })
     expect(result.success).toBe(false)
-    if (!result.success) {
-      expect(result.error.issues.map((i) => i.path)).toEqual([
-        ['spliceJunctionPositions', 1],
-      ])
-    }
   })
 })
