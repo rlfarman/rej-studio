@@ -224,23 +224,16 @@ and local. Today the endpoint calls Modal, where a design really does take
 minutes, so making `submit_design` synchronous now would be a regression. It
 lands when the endpoint moves to the Worker, after steps 1 and 2.
 
-## Budget: the free tier
+## Budget: Workers Paid, $5/month
 
-Decided November 2026: stay on Cloudflare's free plan. The static app, the
-corpus in R2 (10 GB, 10M reads/month, egress free) and Access (free up to 50
-users) all fit within it.
-
-The free plan allows **10 ms of CPU per Worker request**, so nothing on
-Cloudflare can run a design. Two consequences:
-
-- **Closeable cloud designs** (below) are out. The browser-side safety net
-  covers the common case: finish notifications, a warning before closing,
-  and re-running an interrupted design.
-- **MCP `submit_design` cannot run inline** in the MCP Worker. The read-only
-  tools (`search_genes`, `get_gene`) can stay, as long as each request stays
-  within 10 ms of CPU. That rules out parsing the whole search index per
-  request, so the index has to be sharded small enough for a Worker to read
-  only what it needs. How agents get designs is an open question below.
+Decided November 2026. The free plan's 10 ms of CPU per request can't run a
+design, and agents must be able to do everything inside their own harness,
+not be sent to the web app. Workers Paid allows up to 5 minutes of CPU per
+request. That restores the inline MCP design (`submit_design` runs the Rust
+WebAssembly in the Worker and returns the finished design as a tool result)
+and makes closeable cloud designs (below) possible. Everything else stays
+within the included allowances: static asset requests are free, the corpus
+fits R2's free tier, and Access is free up to 50 users.
 
 ## Designs you can close the tab on
 
@@ -325,40 +318,12 @@ away), Zaraz (GTM goes away).
 
 Verify before committing:
 
-0. **How should agents run designs on the free tier?** Candidates: (a) run
-   the optimizer inside the MCP Apps view, in the agent host's sandboxed
-   iframe; (b) drop `submit_design` and have agents link the user to the web
-   app; (c) pay $5/month for Workers Paid only if agent designs prove worth
-   it.
-
-   Option (a), researched November 2026 against `@modelcontextprotocol/ext-apps`
-   2.0.4 and the 2026-01-26 and draft specs:
-
-   - **Returning a result works,** through `ui/message` (triggers a model
-     turn) and `ui/update-model-context` (silent, seen on the next turn).
-     Both are in the stable spec, and both are capabilities each host must
-     advertise; some hosts don't. App-provided tools (the model calling a
-     tool implemented in the view, which would be the clean way) are in the
-     **draft only**.
-   - **WebAssembly is blocked.** The spec has hosts build the view's CSP as
-     `script-src 'self' 'unsafe-inline' <resource domains>`, with no
-     `'wasm-unsafe-eval'`, so a compliant host cannot compile the `.wasm`.
-     Workers are effectively unavailable too.
-   - **A plain-JavaScript build works.** Binaryen's wasm2js, after lowering
-     bulk-memory, sign-ext and saturating float-to-int, turns the same module
-     into JavaScript: 2.6 MB, or 228 KB brotli. Designs are identical to
-     Python. It's about 10× slower than WebAssembly and runs on the view's
-     main thread: 0.4 s for 600 bp, 2.3 s for 1,182 bp, 13.7 s for 3,633 bp,
-     versus 0.04, 0.15 and 1.4 s for the `.wasm`.
-   - **It only works where views render.** Headless agents and API clients
-     never mount the view, so the design never runs; `submit_design` would
-     still need a fallback such as a web-app link.
-
-   So (a) is possible but second-class: UI hosts only, minutes-scale for the
-   big genes, and the result arrives as a message rather than a tool result.
-   A sensible combination is (b) everywhere, plus (a) where the host supports
-   it, feature-detecting real WebAssembly first in case a host is looser
-   than the spec.
+0. ~~How should agents run designs on the free tier?~~ **Resolved: Workers
+   Paid,** so they run inline in the MCP Worker. For the record, before that
+   decision we researched running designs inside an MCP Apps view instead.
+   The spec's CSP forbids WebAssembly there; a wasm2js build worked, giving
+   identical designs about 10x slower, but only in hosts that render views.
+   It isn't needed now.
 
 1. **Does Cloudflare count Access "users" as provisioned identities or active
    ones?** Decides whether the free tier really covers the lab.
