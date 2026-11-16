@@ -39,7 +39,10 @@ describe('session', () => {
   it('rejects a token with a tampered signature', async () => {
     const token = await signSession(60)
     const [payload, sig] = token.split('.')
-    const tampered = `${payload}.${sig.slice(0, -2)}XX`
+    // Change the first character: all 6 of its bits are significant. The
+    // last base64url character of a 32-byte signature carries only 4, so
+    // overwriting the tail occasionally left the decoded bytes unchanged.
+    const tampered = `${payload}.${sig[0] === 'A' ? 'B' : 'A'}${sig.slice(1)}`
     expect(await verifySession(tampered)).toBeNull()
   })
 
