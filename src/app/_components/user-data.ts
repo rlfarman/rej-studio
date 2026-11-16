@@ -18,6 +18,7 @@ import {
 } from '@/features/design-tool/hooks/use-job-history'
 import type { ProcessResult } from '@/features/design-tool/types/process-result'
 import type { FormValues } from '@/features/design-tool/types/form-schema'
+import { jobErrorSchema } from '@/features/design-tool/types/backend-contract'
 
 const EXPORT_VERSION = 1
 // Backups hold at most 50 jobs (the history's own cap), each with full
@@ -61,20 +62,8 @@ const jobEntrySchema = z.object({
     .refine((s) => !Number.isNaN(Date.parse(s)), 'Invalid date'),
   status: z.enum(['running', 'completed', 'failed', 'cancelled']),
   result: processResultSchema.nullable(),
-  error: z
-    .object({
-      code: z.enum([
-        'timeout',
-        'not_found',
-        'cancelled',
-        'backend',
-        'network',
-        'unknown',
-      ]),
-      message: z.string().max(2000),
-      retriable: z.boolean(),
-    })
-    .nullable(),
+  // Same codes as the live job pipeline, so new codes need no edit here.
+  error: jobErrorSchema.extend({ message: z.string().max(2000) }).nullable(),
   formValues: formValuesSchema.optional(),
   progress: z.number().min(0).max(1).optional(),
   stage: z.string().max(100).optional(),

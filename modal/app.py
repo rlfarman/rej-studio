@@ -81,7 +81,7 @@ runtime_secret = modal.Secret.from_name("rej-studio-runtime")
 # image with the repo-root pyproject.toml + uv.lock. Modal doesn't pass
 # --no-dev itself, so do it here: ruff/pyright/pytest stay out of production,
 # and the `deploy` group (the Modal client) isn't requested either.
-# Python 3.14 matches pyproject's requires-python, CI and the dev Dockerfile.
+# Python 3.14 matches pyproject's requires-python and CI.
 # uv_sync and Python 3.14 both need image builder 2025.06+; deploys pin
 # MODAL_IMAGE_BUILDER_VERSION=2026.10 (see modal-deploy.yml / modal/README.md).
 # UV_VERSION matches the uv used to write the lock (and setup-uv in CI).
@@ -288,7 +288,7 @@ web_app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
 
 # OpenTelemetry — auto-instruments FastAPI routes. No-ops when
 # OTEL_EXPORTER_OTLP_ENDPOINT is not set. In production, set the env var
-# in the Modal secret so traces ship to Axiom alongside the Next.js ones.
+# in the Modal secret (rej-studio-runtime) to ship traces to an OTLP backend.
 try:
     sys.path.insert(0, "/root")
     from telemetry import init_telemetry

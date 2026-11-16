@@ -5,6 +5,7 @@ import { getDb } from '@/drizzle/db'
 import { env } from '@/lib/env'
 import { createUpstashRateLimiter, redis } from '@/lib/upstash'
 import { withCors } from '@/lib/api-cors'
+import { getClientIp } from '@/lib/client-ip'
 import { timingSafeEqual } from '@/lib/auth/session'
 
 // Rate limit: 20 requests per minute per IP.
@@ -157,8 +158,11 @@ async function checkModal(): Promise<Check> {
 export async function GET() {
   const hdrs = await headers()
   const origin = hdrs.get('origin')
-  const ip = hdrs.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
-  const { ok: allowed, remaining, resetMs } = await limiter.check(ip)
+  const {
+    ok: allowed,
+    remaining,
+    resetMs,
+  } = await limiter.check(getClientIp(hdrs))
 
   if (!allowed) {
     const retryAfter = Math.ceil(resetMs / 1000)

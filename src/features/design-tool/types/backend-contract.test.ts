@@ -1,12 +1,11 @@
 /**
  * Contract tests against the Python side.
  *
- * `__fixtures__/process-result.json` is a byte-copy of
- * `python/tests/fixtures/process-result.json` — the real output of a seeded
- * run, regenerated on the backend by
- * `uv run python -m python.tests.regenerate_fixtures`. If the Python models
- * move, this test fails here too instead of the drift showing up as
- * `undefined` in the results panel.
+ * Reads `python/tests/fixtures/process-result.json` directly — the real
+ * output of a seeded run, regenerated on the backend by
+ * `uv run python -m python.tests.regenerate_fixtures` — so there's one copy
+ * of the contract. If the Python models move, this test fails here too
+ * instead of the drift showing up as `undefined` in the results panel.
  */
 import { describe, expect, it } from 'vitest'
 import {
@@ -14,7 +13,7 @@ import {
   processOptionsSchema,
   processResultSchema,
 } from './backend-contract'
-import realResult from './__fixtures__/process-result.json'
+import realResult from '../../../../python/tests/fixtures/process-result.json'
 
 const BASE_OPTIONS = {
   codon_optimize: 'human',

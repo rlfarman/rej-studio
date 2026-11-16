@@ -10,7 +10,7 @@
 // runtime). The local FastAPI backend is a dev-only convenience.
 
 import { z } from 'zod'
-import { headers } from 'next/headers'
+import { getRequestRateLimitKey } from '@/lib/client-ip'
 import { createUpstashRateLimiter } from '@/lib/upstash'
 import { createLogger } from '@/lib/logger'
 import { requireSession } from '@/lib/auth/require-session'
@@ -99,9 +99,10 @@ export async function submitJob(
     )
   }
 
-  const hdrs = await headers()
-  const ip = hdrs.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
-  const { ok: allowed, resetMs } = await submitLimiter.check(ip)
+  // Per session when signed in (a lab shares one IP), otherwise per IP.
+  const { ok: allowed, resetMs } = await submitLimiter.check(
+    await getRequestRateLimitKey(),
+  )
   if (!allowed) {
     return jobError(
       'rate_limited',
@@ -122,7 +123,6 @@ export async function submitJob(
     cdsLength: validated.data.CDS.length,
     options: Object.keys(validated.data.options),
     submitLatencyMs: Math.round(performance.now() - startMs),
-    ip,
   })
   return outcome
 }

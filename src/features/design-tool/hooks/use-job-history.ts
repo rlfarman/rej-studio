@@ -14,7 +14,7 @@ const MAX_ENTRIES = 50
 
 // Prefix for all seed-demo entries. Used by JobWatcher to skip polling the
 // backend for seeded running jobs (they have no backend counterpart), by
-// data-transfer to exclude seeded rows from user exports, and by the
+// the user-data export to exclude seeded rows from backups, and by the
 // "Clear seed data" action to identify which entries to drop.
 const SEED_ID_PREFIX = 'seed-'
 

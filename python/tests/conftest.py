@@ -22,7 +22,13 @@ def modal_app():
     Skips when the Modal client isn't installed (`uv sync` without
     `--group deploy`); CI installs it so these tests always run there.
     """
-    pytest.importorskip("modal", reason="Modal client not installed (uv sync --group deploy)")
+    modal = pytest.importorskip(
+        "modal", reason="Modal client not installed (uv sync --group deploy)"
+    )
+    # Without the client, `import modal` still succeeds: the repo's own modal/
+    # directory resolves as a namespace package. Only the real client has App.
+    if not hasattr(modal, "App"):
+        pytest.skip("Modal client not installed (uv sync --group deploy)")
     if "modal_app" in sys.modules:
         return sys.modules["modal_app"]
     spec = importlib.util.spec_from_file_location("modal_app", MODAL_APP_PATH)
