@@ -28,9 +28,11 @@ jobs:
           lockfile_changed=false
           manifest_changed=false
           echo "$changed" | grep -qx 'pnpm-lock.yaml' && lockfile_changed=true || true
-          echo "$changed" | grep -qx 'package.json' && manifest_changed=true || true
+          # Overrides and build allowlists live in pnpm-workspace.yaml (pnpm 11+
+          # no longer reads the "pnpm" field in package.json), so it counts too.
+          echo "$changed" | grep -qxE 'package.json|pnpm-workspace.yaml' && manifest_changed=true || true
           if [ "$lockfile_changed" = "true" ] && [ "$manifest_changed" = "false" ]; then
-            echo "::error::pnpm-lock.yaml changed but package.json did not."
+            echo "::error::pnpm-lock.yaml changed but neither package.json nor pnpm-workspace.yaml did."
             echo "::error::This usually means a transitive dep was swapped without updating manifests."
             echo "::error::If intentional (e.g. bumping a vulnerable transitive), add a note in the PR body."
             exit 1
