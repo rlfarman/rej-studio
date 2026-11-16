@@ -120,7 +120,7 @@ For seeding a Neon database (production), the same `db:build`/`db:migrate`/`db:u
 `.env.example` is the source of truth — consult it when adding new config. Variables group by purpose:
 
 - **Core** — `DATABASE_URL` (omit for PGlite dev), `COMPUTE_BACKEND`, `MODAL_API_URL`, `MODAL_API_TOKEN` (bearer token for the Modal API; must equal `JOB_API_TOKEN` in the Modal secret), `LOCAL_API_URL`.
-- **Auth** — `BASIC_AUTH_PASSWORD`, `SESSION_SECRET` (32+ chars, required with the password), `BYPASS_AUTH` (dev only); `BASIC_AUTH_USER` is accepted but unused.
+- **Auth** — `BASIC_AUTH_PASSWORD`, `SESSION_SECRET` (32+ chars, required with the password), `BYPASS_AUTH` (dev only).
 - **Public / client** — `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_GTM_ID`.
 - **Observability** — `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_*`.
 - **Optional features** — `HEALTH_AUTH_TOKEN`, `MAINTENANCE_MESSAGE`, `UPSTASH_REDIS_REST_*`, `NEXT_PUBLIC_ENABLE_MULTI_SPLIT`.

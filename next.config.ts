@@ -30,10 +30,12 @@ const nextConfig: NextConfig = {
   env: {
     // Baked at build-time so /api/version can report exactly which deploy is
     // running. Vercel sets VERCEL_GIT_COMMIT_SHA automatically; for CF/self-
-    // host, pass GIT_COMMIT_SHA in the build command.
+    // host, pass GIT_COMMIT_SHA in the build command. `||`, not `??`: a blank
+    // GIT_COMMIT_SHA (an empty Vercel variable once shadowed Vercel's own SHA
+    // this way) means unset, as it does in src/lib/env.ts.
     GIT_COMMIT_SHA:
-      process.env.GIT_COMMIT_SHA ??
-      process.env.VERCEL_GIT_COMMIT_SHA ??
+      process.env.GIT_COMMIT_SHA ||
+      process.env.VERCEL_GIT_COMMIT_SHA ||
       'unknown',
     BUILD_TIMESTAMP: new Date().toISOString(),
   },

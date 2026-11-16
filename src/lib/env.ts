@@ -39,9 +39,7 @@ const serverSchema = z
 
     // Shared-password auth for the site. Gate only engages when
     // BASIC_AUTH_PASSWORD is set; SESSION_SECRET is then required so we can
-    // sign the session cookie. BASIC_AUTH_USER is accepted for back-compat
-    // with the prior basic-auth setup but no longer read.
-    BASIC_AUTH_USER: z.string().optional(),
+    // sign the session cookie.
     BASIC_AUTH_PASSWORD: z.string().optional(),
     SESSION_SECRET: z.string().min(32).optional(),
 
@@ -55,11 +53,6 @@ const serverSchema = z
     SENTRY_ORG: z.string().optional(),
     SENTRY_PROJECT: z.string().optional(),
     SENTRY_AUTH_TOKEN: z.string().optional(),
-
-    // OpenTelemetry — vendor-neutral. Axiom, Grafana, Honeycomb, etc.
-    OTEL_EXPORTER_OTLP_ENDPOINT: z.url().optional(),
-    OTEL_EXPORTER_OTLP_HEADERS: z.string().optional(),
-    OTEL_SERVICE_NAME: z.string().optional(),
   })
   .superRefine((data, ctx) => {
     // Production guardrails.
