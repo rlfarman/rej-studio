@@ -64,8 +64,8 @@ pnpm db:generate  # Write a migration for schema.ts changes (commit it with the 
 pnpm db:upload    # Load JSONL into $DATABASE_URL via Drizzle (dialect-neutral)
 pnpm db:studio    # Browse DB in Drizzle Studio (local.drizzle.studio)
 pnpm wasm:build   # Build the Rust optimizer and install it in public/ (needs Rust)
-pnpm wasm:verify  # Fail if the committed .wasm is stale (runs in CI)
-pnpm wasm:smoke   # Run the built .wasm through Node against the parity fixtures
+pnpm wasm:verify  # Check the committed .wasm matches its digest manifest
+pnpm wasm:smoke   # Run the committed .wasm through Node against the parity fixtures
 ```
 
 ## Toolchain

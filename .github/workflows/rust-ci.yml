@@ -22,8 +22,8 @@ permissions:
   contents: read
 
 env:
-  # Pinned so a toolchain release cannot change the committed .wasm out from
-  # under the digest check below.
+  # Pinned so the parity suite and the committed .wasm are built by a known
+  # compiler rather than whatever rustup resolves that week.
   RUST_VERSION: '1.100.0'
   WASM_TARGET: wasm32-unknown-unknown
 
@@ -36,6 +36,8 @@ jobs:
       pull-requests: read # paths-filter lists a PR's files through the API
     outputs:
       rust: ${{ steps.filter.outputs.rust }}
+      wasm_source: ${{ steps.filter.outputs.wasm_source }}
+      wasm_asset: ${{ steps.filter.outputs.wasm_asset }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -55,7 +57,18 @@ jobs:
               # The Python optimizer is the thing the port is checked against,
               # so a change there has to re-run parity too.
               - 'python/**'
+              - 'scripts/check-wasm-asset.mjs'
               - '.github/workflows/rust-ci.yml'
+            # What actually compiles into the .wasm. Tests and fixtures are
+            # excluded: they change expectations, not the shipped module.
+            wasm_source:
+              - 'rust/Cargo.toml'
+              - 'rust/Cargo.lock'
+              - 'rust/optimizer/Cargo.toml'
+              - 'rust/optimizer/src/**'
+            wasm_asset:
+              - 'public/optimizer/**'
+              - 'src/features/design-tool/workers/optimizer-asset.generated.ts'
 
   test:
     name: Tests, format and lint
@@ -103,6 +116,20 @@ jobs:
         with:
           persist-credentials: false
 
+      # The gap the byte comparison was meant to close: optimizer source
+      # edited, committed .wasm left behind. Caught by what the PR touches
+      # rather than by rebuilding, so it cannot fail for a host difference.
+      - name: Optimizer source changed without rebuilding the asset
+        if: >-
+          needs.changes.outputs.wasm_source == 'true' &&
+          needs.changes.outputs.wasm_asset != 'true'
+        run: |
+          echo "::error::rust/optimizer/src changed but the committed" \
+            ".wasm did not. Run 'pnpm wasm:build' and commit" \
+            "public/optimizer/rej-optimizer.wasm together with" \
+            "src/features/design-tool/workers/optimizer-asset.generated.ts."
+          exit 1
+
       - name: Install Rust
         run: |
           rustup toolchain install "${RUST_VERSION}" --profile minimal
@@ -119,13 +146,28 @@ jobs:
           node-version-file: .nvmrc
 
       # public/optimizer/rej-optimizer.wasm is committed so `pnpm build` needs
-      # no Rust toolchain. This rebuilds and compares digests, so a stale asset
-      # fails rather than shipping an optimizer that no longer matches rust/.
-      - name: Committed .wasm matches the source
-        run: ./scripts/build-optimizer-wasm.sh --check
+      # no Rust toolchain, and the worker cache-busts it with the digest in
+      # optimizer-asset.generated.ts. This checks the two still agree.
+      #
+      # There is no rebuild-and-compare-bytes step: the same source, toolchain
+      # and lockfile produce different .wasm bytes on different hosts, so that
+      # check failed on honest commits. The two steps below cover the same
+      # ground without depending on reproducible builds — the committed module
+      # has to pass the fixtures, and a source change has to touch the asset.
+      - name: Committed asset is self-consistent
+        run: node scripts/check-wasm-asset.mjs
 
-      # Runs the built module through Node against the same fixtures: the
-      # designs must match Python's, progress must arrive and advance, and a
-      # bad request must come back as an error rather than a crash.
-      - name: Smoke test
-        run: node scripts/wasm-smoke.mjs rust/target/${{ env.WASM_TARGET }}/release/rej_optimizer.wasm
+      # The module users actually download, run through Node against the
+      # fixtures: designs must match Python's, progress must arrive and
+      # advance, and a bad request must come back as an error, not a crash.
+      # A stale asset fails here as soon as it designs a different sequence.
+      - name: Smoke test the committed module
+        run: node scripts/wasm-smoke.mjs public/optimizer/rej-optimizer.wasm
+
+      # And the same from a fresh build, so the source in rust/ is known to
+      # still produce a working module even when the asset is untouched.
+      - name: Smoke test a fresh build
+        run: |
+          ./scripts/build-optimizer-wasm.sh
+          node scripts/wasm-smoke.mjs \
+            "rust/target/${WASM_TARGET}/release/rej_optimizer.wasm"

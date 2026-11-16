@@ -2,11 +2,16 @@
 # Build the Rust optimizer for the browser and install it as a static asset.
 #
 # The .wasm is committed to public/ so `pnpm build` works on Vercel without a
-# Rust toolchain. `pnpm wasm:verify` rebuilds and compares, so a stale asset
-# fails CI instead of silently shipping old optimizer behaviour.
+# Rust toolchain.
 #
-#   ./scripts/build-optimizer-wasm.sh          build, install, report sizes
-#   ./scripts/build-optimizer-wasm.sh --check  fail if the committed copy is stale
+#   ./scripts/build-optimizer-wasm.sh   build, install, report sizes
+#
+# There is deliberately no digest-comparison mode. Two machines building the
+# same source with the same toolchain and lockfile do not produce identical
+# bytes, so "rebuild and compare hashes" fails for reasons that have nothing
+# to do with the code. CI checks the committed artifact by behaviour instead
+# (`pnpm wasm:smoke`), and separately refuses a change to rust/ that does not
+# update the artifact.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -16,9 +21,6 @@ BUILT="$CRATE_DIR/target/$TARGET/release/rej_optimizer.wasm"
 ASSET_DIR="$ROOT/public/optimizer"
 ASSET="$ASSET_DIR/rej-optimizer.wasm"
 MANIFEST="$ROOT/src/features/design-tool/workers/optimizer-asset.generated.ts"
-
-check_only=false
-[[ "${1:-}" == "--check" ]] && check_only=true
 
 if ! command -v cargo >/dev/null 2>&1; then
   if [[ -x "$HOME/.cargo/bin/cargo" ]]; then
@@ -36,23 +38,6 @@ echo "Building the optimizer for $TARGET..."
 digest="$(sha256sum "$BUILT" | cut -d' ' -f1)"
 bytes="$(stat -c %s "$BUILT")"
 
-if $check_only; then
-  if [[ ! -f "$ASSET" ]]; then
-    echo "error: $ASSET is missing. Run ./scripts/build-optimizer-wasm.sh" >&2
-    exit 1
-  fi
-  committed="$(sha256sum "$ASSET" | cut -d' ' -f1)"
-  if [[ "$committed" != "$digest" ]]; then
-    echo "error: the committed optimizer .wasm is stale." >&2
-    echo "       committed: $committed" >&2
-    echo "       rebuilt:   $digest" >&2
-    echo "       Run ./scripts/build-optimizer-wasm.sh and commit the result." >&2
-    exit 1
-  fi
-  echo "The committed optimizer .wasm matches the source ($digest)."
-  exit 0
-fi
-
 mkdir -p "$ASSET_DIR" "$(dirname "$MANIFEST")"
 cp "$BUILT" "$ASSET"
 
@@ -61,8 +46,8 @@ cp "$BUILT" "$ASSET"
 cat > "$MANIFEST" <<EOF
 // GENERATED FILE — do not edit by hand.
 // Produced by scripts/build-optimizer-wasm.sh alongside
-// public/optimizer/rej-optimizer.wasm. \`pnpm wasm:verify\` checks the two
-// are still in step.
+// public/optimizer/rej-optimizer.wasm. \`pnpm wasm:verify\` checks the digest
+// below still matches that file.
 
 /** Where the worker fetches the optimizer from. */
 export const OPTIMIZER_WASM_PATH = '/optimizer/rej-optimizer.wasm'

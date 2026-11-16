@@ -168,14 +168,32 @@ with no network calls beyond fetching the module once.
 ### Keeping the committed .wasm honest
 
 `public/optimizer/rej-optimizer.wasm` is committed so `pnpm build` works
-without a Rust toolchain. `pnpm wasm:verify` rebuilds and compares digests, so
-a stale asset fails rather than silently shipping old optimizer behaviour.
+without a Rust toolchain. That means a stale asset is possible — source edited,
+module not rebuilt — and three cheap checks rule it out:
 
 ```bash
 pnpm wasm:build     # build and install the asset
-pnpm wasm:verify    # fail if the committed copy is stale
-pnpm wasm:smoke     # run it through Node and check against the fixtures
+pnpm wasm:verify    # the .wasm and its digest manifest agree
+pnpm wasm:smoke     # run the committed module against the fixtures
 ```
+
+`wasm:smoke` is the one that matters: it designs the fixture genes with the
+committed module and compares against what Python produced, so an asset that
+has fallen behind the source fails as soon as it designs a different sequence.
+
+It is tempting to rebuild in CI and compare digests instead, and the first
+version of this did. It does not work: the same source, toolchain and
+lockfile produce **different `.wasm` bytes on different machines**. CI and a
+local WSL2 box on identical `rustc 1.100.0 (0ef1bc386 2026-11-09)`, with the
+same `Cargo.lock`, built modules whose digests differed; the same tree
+rebuilt locally from a different directory, clean, matched. So the check
+failed on honest commits while saying nothing about behaviour.
+
+Whether two such modules _behave_ the same is what `wasm:smoke` answers, and
+CI now runs it against both the committed asset and a module built fresh on
+the runner. The staleness case the digest check was really aimed at is caught
+directly instead: if a PR touches `rust/optimizer/src/` and leaves
+`public/optimizer/` alone, the build fails and says to run `pnpm wasm:build`.
 
 ## Next steps
 

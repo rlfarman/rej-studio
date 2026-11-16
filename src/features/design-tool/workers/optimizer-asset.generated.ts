@@ -1,7 +1,7 @@
 // GENERATED FILE — do not edit by hand.
 // Produced by scripts/build-optimizer-wasm.sh alongside
-// public/optimizer/rej-optimizer.wasm. `pnpm wasm:verify` checks the two
-// are still in step.
+// public/optimizer/rej-optimizer.wasm. `pnpm wasm:verify` checks the digest
+// below still matches that file.
 
 /** Where the worker fetches the optimizer from. */
 export const OPTIMIZER_WASM_PATH = '/optimizer/rej-optimizer.wasm'
