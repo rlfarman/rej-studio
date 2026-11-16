@@ -1,4 +1,5 @@
 import { cookies, headers } from 'next/headers'
+import { connection } from 'next/server'
 import { isAuthGateActive } from '@/lib/auth/gate'
 import { SESSION_COOKIE_NAME, verifySession } from '@/lib/auth/session'
 import { LoginForm } from '@/features/auth/components/login-form'
@@ -18,6 +19,9 @@ export async function AuthGate({ children }: { children: React.ReactNode }) {
   if (!isAuthGateActive()) return <>{children}</>
 
   const token = (await cookies()).get(SESSION_COOKIE_NAME)?.value
+  // verifySession checks expiry against Date.now(), which Cache Components
+  // only allows once the render is explicitly request-time.
+  await connection()
   const session = await verifySession(token)
   if (session) return <>{children}</>
 
