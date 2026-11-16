@@ -33,9 +33,9 @@ A web application for RNA End-Joining sequence design and optimization. Scientis
 
 ### Prerequisites
 
-- Node.js 24+
-- Python 3.11+
-- pnpm (any recent version — `packageManager` field handles the rest)
+- Node.js 26 (see `.nvmrc`)
+- pnpm 12 (`npm install -g pnpm@12`; the `packageManager` field pins the exact version)
+- [uv](https://docs.astral.sh/uv/) — installs the Python version pinned in `.python-version` for the FastAPI backend
 
 ### Setup
 
@@ -43,9 +43,7 @@ A web application for RNA End-Joining sequence design and optimization. Scientis
 
    ```bash
    pnpm install
-   python3 -m venv venv
-   source venv/bin/activate
-   pip install -r python/requirements.txt
+   uv sync
    ```
 
 2. **Configure environment**
@@ -84,29 +82,32 @@ pnpm fastapi-dev   # FastAPI only
 ### Verify everything works
 
 ```bash
-pnpm verify        # lint + format + type-check + knip + build
+pnpm verify        # lint + type-check + unit tests (also the pre-push hook)
+pnpm test:e2e      # Playwright smoke tests (gated next dev on :3000)
 ```
 
 ## Scripts
 
-| Command             | Description                          |
-| ------------------- | ------------------------------------ |
-| `pnpm dev`          | Start Next.js + FastAPI concurrently |
-| `pnpm build`        | Production build (Vercel target)     |
-| `pnpm start`        | Start production server              |
-| `pnpm lint`         | Run ESLint                           |
-| `pnpm lint:fix`     | Auto-fix lint issues                 |
-| `pnpm format`       | Format with Prettier                 |
-| `pnpm format:check` | Check formatting without writing     |
-| `pnpm type-check`   | TypeScript type checking             |
-| `pnpm knip`         | Find unused exports, deps, and files |
-| `pnpm verify`       | Run all checks + build               |
-| `pnpm analyze`      | Build with bundle analyzer           |
-| `pnpm db:build`     | Emit JSONL seed from source CSV      |
-| `pnpm db:push`      | Create/update tables from schema.ts  |
-| `pnpm db:upload`    | Load JSONL into the DB via Drizzle   |
-| `pnpm db:studio`    | Browse DB with Drizzle Studio        |
-| `pnpm doctor`       | Check local dev environment health   |
+| Command                   | Description                          |
+| ------------------------- | ------------------------------------ |
+| `pnpm dev`                | Start Next.js + FastAPI concurrently |
+| `pnpm build`              | Production build (Vercel target)     |
+| `pnpm start`              | Start production server              |
+| `pnpm lint`               | Run Oxlint, then ESLint              |
+| `pnpm lint:fix`           | Auto-fix lint issues                 |
+| `pnpm format`             | Format with Prettier                 |
+| `pnpm format:check`       | Check formatting without writing     |
+| `pnpm type-check`         | Type check with TypeScript 7         |
+| `pnpm test`               | Run unit tests (Vitest)              |
+| `pnpm test:e2e`           | Run Playwright smoke tests           |
+| `pnpm knip`               | Find unused exports, deps, and files |
+| `pnpm verify`             | Lint + type-check + unit tests       |
+| `ANALYZE=true pnpm build` | Build with bundle analyzer           |
+| `pnpm db:build`           | Emit JSONL seed from source CSV      |
+| `pnpm db:push`            | Create/update tables from schema.ts  |
+| `pnpm db:upload`          | Load JSONL into the DB via Drizzle   |
+| `pnpm db:studio`          | Browse DB with Drizzle Studio        |
+| `pnpm doctor`             | Check local dev environment health   |
 
 ## Project Structure
 
