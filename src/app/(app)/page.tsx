@@ -1,11 +1,10 @@
 import Link from 'next/link'
 import { GeneSearchShell } from '@/app/_components/gene-search-shell'
 import { searchGenes } from '@/features/gene-search/api/genes'
-import { ArrowRight, Dna } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 import { Hero, HeroItem } from '@/app/_components/hero'
 import { HomeTour } from '@/features/onboarding/components/home-tour'
 import { PageTitle } from '@/components/page-title'
-import { Button } from '@/components/ui/button'
 import type { Metadata } from 'next'
 import { appCopy } from '@/copy/app'
 
@@ -28,43 +27,39 @@ export const metadata: Metadata = {
   },
 }
 
+/**
+ * Search-first home. Left-aligned and set in the upper third rather than an
+ * icon-over-centered-question stack, so the search sits where the eye lands
+ * and the example genes inside it double as the first-run hint.
+ */
 export default function HomePage() {
   return (
-    <div className="flex min-h-full flex-col items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
+    <div className="mx-auto w-full max-w-3xl px-4 pt-[clamp(2.5rem,14vh,8rem)] pb-16 sm:px-6">
       <Hero>
-        <div className="mx-auto w-full max-w-2xl text-center">
-          <HeroItem
-            index={0}
-            className="text-muted-foreground mb-6 flex items-center justify-center"
-          >
-            <Dna className="size-7 [animation:gentle-breath_4s_ease-in-out_infinite] [animation-delay:800ms] motion-reduce:animate-none" />
-          </HeroItem>
-          <HeroItem index={1}>
-            <PageTitle className="text-primary">
-              {appCopy.home.searchPrompt}
-            </PageTitle>
-          </HeroItem>
-          <HeroItem index={2} className="mt-3">
-            <div
-              className="text-muted-foreground flex flex-wrap items-center justify-center gap-x-2 gap-y-3 text-base"
-              data-tour="home-design-link"
-            >
-              <span>{appCopy.home.searchSubcopy}</span>
-              <Button asChild size="sm" className="h-8 rounded-full px-4">
-                <Link href="/design-tool">
-                  {appCopy.home.designLink}
-                  <ArrowRight className="size-3.5" />
-                </Link>
-              </Button>
-            </div>
-          </HeroItem>
-        </div>
-        <HeroItem
-          index={3}
-          className="mx-auto mt-10 w-full max-w-2xl"
-          data-tour="home-search"
-        >
+        <HeroItem index={0}>
+          <p className="type-overline text-muted-foreground mb-3">
+            {appCopy.home.eyebrow}
+          </p>
+        </HeroItem>
+        <HeroItem index={1}>
+          <PageTitle className="text-primary max-w-[20ch] text-balance">
+            {appCopy.home.searchPrompt}
+          </PageTitle>
+        </HeroItem>
+        <HeroItem index={2} className="mt-8" data-tour="home-search">
           <GeneSearchShell searchGenes={searchGenes} />
+        </HeroItem>
+        <HeroItem index={3} className="mt-5" data-tour="home-design-link">
+          <p className="text-muted-foreground text-sm">
+            {appCopy.home.ownSequence}{' '}
+            <Link
+              href="/design-tool"
+              className="text-foreground focus-visible:ring-ring inline-flex items-center gap-1 rounded-sm font-medium underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:outline-none"
+            >
+              {appCopy.home.designLink}
+              <ArrowRight className="size-3.5" aria-hidden="true" />
+            </Link>
+          </p>
         </HeroItem>
       </Hero>
       <HomeTour />

@@ -29,8 +29,13 @@ export const appCopy = {
     ogTitle: 'RNA End-Joining sequence design',
     ogDescription:
       'Search genes, browse isoforms, and design optimized RNA End-Joining sequences.',
+    eyebrow: 'RNA end-joining sequence design',
     searchPrompt: 'What gene are you optimizing?',
-    searchSubcopy: 'Search by symbol, name, or disease — or',
-    designLink: 'Design a Custom Sequence',
+    ownSequence: 'Have your own sequence?',
+    designLink: 'Open the design tool',
+  },
+  sidebar: {
+    historyHint:
+      'Starred genes, recent searches, and design jobs will show up here.',
   },
 } as const
