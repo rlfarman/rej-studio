@@ -31,6 +31,8 @@ import {
   TICK_CLICK_THRESHOLD_PX,
 } from './splice-slider/constants'
 import { spliceTone } from './splice-slider/tones'
+import { pickDefaultWggwSite } from '../utils/default-wggw-site'
+import { designToolCopy } from '../copy'
 import type {
   CodonRole,
   SequenceContext,
@@ -174,12 +176,29 @@ export function SpliceSliderContext({
     return next
   }, [activeSitePositionsRaw, spliceCount])
 
+  // An unset splice shows the WGGW site nearest its caret rather than an
+  // empty inspector. The backend already relocates the split to a motif near
+  // the requested position when no site is sent (`ensure_wggw`), so this
+  // surfaces the motif and its synonymous rewrites for review instead of
+  // hiding the decision. Derived during render — no effect, so there's no
+  // state write to sync.
   const selectedSites = useMemo(
     () =>
-      activeSitePositions.map(
-        (pos) => wggwSites.find((s) => s.position === pos) ?? null,
+      activeSitePositions.map((pos, i) =>
+        pos !== null
+          ? (wggwSites.find((s) => s.position === pos) ?? null)
+          : pickDefaultWggwSite(wggwSites, positions[i] ?? midpoint),
       ),
-    [activeSitePositions, wggwSites],
+    [activeSitePositions, wggwSites, positions, midpoint],
+  )
+  // Which splices are showing a derived site rather than one the user chose,
+  // so the inspector can say so.
+  const defaultedSiteFlags = useMemo(
+    () =>
+      activeSitePositions.map(
+        (pos, i) => pos === null && selectedSites[i] !== null,
+      ),
+    [activeSitePositions, selectedSites],
   )
   const selectedSiteIndices = selectedSites.map((site) =>
     site ? wggwSites.findIndex((s) => s.position === site.position) : -1,
@@ -686,7 +705,7 @@ export function SpliceSliderContext({
                         'bg-background inline-flex min-w-max cursor-grab touch-none items-center rounded-md border px-2 py-0.5 font-mono text-xs font-semibold whitespace-nowrap tabular-nums shadow-sm transition-all active:cursor-grabbing',
                         isActive
                           ? cn('ring-2', tone.caretRing, tone.text)
-                          : 'text-muted-foreground/80 opacity-70',
+                          : 'text-muted-foreground opacity-70',
                         recentlyAssignedSplice === idx &&
                           'animate-[pulse_0.6s_ease-out_1]',
                       )}
@@ -730,7 +749,7 @@ export function SpliceSliderContext({
             aria-valuenow={activePosition}
             aria-valuetext={`bp ${activePosition.toLocaleString()} of ${seqLen.toLocaleString()}`}
             onPointerDown={handleTrackPointerDown}
-            className="focus-visible:ring-ring bg-background/80 relative h-16 cursor-ew-resize touch-none rounded-lg border select-none focus:outline-none focus-visible:ring-2"
+            className="focus-visible:ring-ring bg-background/80 relative h-18 cursor-ew-resize touch-none rounded-lg border select-none focus:outline-none focus-visible:ring-2"
           >
             <div className="absolute inset-x-0 top-0 z-10 flex h-11 overflow-hidden rounded-t-lg">
               {buildSegments(positions, seqLen).map((seg, i, arr) => {
@@ -778,7 +797,7 @@ export function SpliceSliderContext({
             <div
               ref={wggwStripRef}
               role="presentation"
-              className="bg-background/70 absolute inset-x-0 bottom-0 h-5 cursor-pointer overflow-hidden rounded-b-lg border-t"
+              className="bg-background/70 absolute inset-x-0 bottom-0 h-7 cursor-pointer overflow-hidden rounded-b-lg border-t"
               // Parent-routed tick selection: compute clicked bp from
               // clientX and pick the nearest WGGW site within a small
               // pixel threshold. Avoids the prior bug where overlapping
@@ -861,11 +880,11 @@ export function SpliceSliderContext({
                     className={cn(
                       'pointer-events-none absolute top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full transition-all',
                       isSelected
-                        ? cn(spliceTone(selectedAt).tickBg, 'h-4 w-1.5')
+                        ? cn(spliceTone(selectedAt).tickBg, 'h-5 w-1.5')
                         : cn(
                             'bg-marker',
-                            'h-3 w-1',
-                            'data-[tick-hovered=true]:ring-foreground/30 data-[tick-hovered=true]:z-10 data-[tick-hovered=true]:h-4 data-[tick-hovered=true]:w-1.5 data-[tick-hovered=true]:ring-1',
+                            'h-4 w-1',
+                            'data-[tick-hovered=true]:ring-foreground/30 data-[tick-hovered=true]:z-10 data-[tick-hovered=true]:h-5 data-[tick-hovered=true]:w-1.5 data-[tick-hovered=true]:ring-1',
                           ),
                     )}
                     style={{ left: `${x}%` }}
@@ -949,6 +968,7 @@ export function SpliceSliderContext({
               }
               sequence={sequence}
               selectedSite={selectedSites[idx]}
+              isDefaultedSite={defaultedSiteFlags[idx] ?? false}
               selectedSiteIndex={selectedSiteIndices[idx] ?? -1}
               totalSites={wggwSites.length}
               species={species}
@@ -1358,7 +1378,7 @@ function CodonCard({
           aria-hidden="true"
         />
       )}
-      <div className="text-muted-foreground/75 pointer-events-none absolute top-0 left-0 z-10 w-max -translate-x-1/2 text-[9px] leading-3 tabular-nums">
+      <div className="text-muted-foreground pointer-events-none absolute top-0 left-0 z-10 w-max -translate-x-1/2 text-[10px] leading-3 tabular-nums">
         {codon.start.toLocaleString()}
       </div>
       <div
@@ -1548,6 +1568,7 @@ function motifOutlineClass({
 function Inspector({
   sequence,
   selectedSite,
+  isDefaultedSite = false,
   selectedSiteIndex,
   totalSites,
   species,
@@ -1567,6 +1588,8 @@ function Inspector({
 }: {
   sequence: string
   selectedSite: WggwSiteCandidate | null
+  /** True when the site was derived from the caret, not chosen by the user. */
+  isDefaultedSite?: boolean
   selectedSiteIndex: number
   totalSites: number
   species: 'none' | 'human' | 'mouse'
@@ -1653,9 +1676,16 @@ function Inspector({
           {headerLeft}
           {removeButton}
         </div>
-        <div className="flex flex-1 items-center justify-center">
-          <p className="text-muted-foreground/80 text-center text-sm leading-relaxed">
-            Select a split point motif above
+        <div className="flex flex-1 flex-col items-center justify-center gap-1 px-4 text-center">
+          <p className="text-foreground/80 text-sm font-medium">
+            {totalSites === 0
+              ? designToolCopy.splitPoint.noSitesShort
+              : designToolCopy.splitPoint.emptyTitle}
+          </p>
+          <p className="text-muted-foreground text-xs leading-relaxed">
+            {totalSites === 0
+              ? designToolCopy.splitPoint.noSites
+              : designToolCopy.splitPoint.emptyBody}
           </p>
         </div>
       </div>
@@ -1694,7 +1724,7 @@ function Inspector({
                 <span className="text-foreground font-medium">
                   {selectedSiteIndex >= 0 ? selectedSiteIndex + 1 : 0}
                 </span>
-                <span className="text-muted-foreground/70">/{totalSites}</span>
+                <span className="text-muted-foreground">/{totalSites}</span>
               </>
             }
             canPrev={canPrevSite}
@@ -1705,12 +1735,20 @@ function Inspector({
         </div>
       </div>
 
+      {isDefaultedSite && (
+        <p className="text-muted-foreground -mt-1 text-xs leading-relaxed">
+          {designToolCopy.splitPoint.preselected(
+            selectedSite.position.toLocaleString(),
+          )}
+        </p>
+      )}
+
       <div className="space-y-3">
         <div className="space-y-1.5">
           <div className="text-muted-foreground flex items-center justify-between text-[10px] font-semibold tracking-[0.08em] uppercase">
             <span>Synonymous rewrites</span>
             {selectedSite.rewriteOptions.length > 1 && (
-              <span className="text-muted-foreground/70 normal-case">
+              <span className="text-muted-foreground normal-case">
                 {selectedRewriteIndex + 1} of{' '}
                 {selectedSite.rewriteOptions.length}
               </span>
@@ -1761,10 +1799,10 @@ function Inspector({
                         className="grid font-mono text-[12px] leading-none"
                         style={{ gridTemplateColumns: 'repeat(7, 1ch)' }}
                       >
-                        <span className="text-muted-foreground/80 col-start-2 text-center font-medium">
+                        <span className="text-muted-foreground col-start-2 text-center font-medium">
                           {translateCodon(option.newCodons[0]) ?? '?'}
                         </span>
-                        <span className="text-muted-foreground/80 col-start-6 text-center font-medium">
+                        <span className="text-muted-foreground col-start-6 text-center font-medium">
                           {translateCodon(option.newCodons[1]) ?? '?'}
                         </span>
                       </span>
@@ -2066,7 +2104,7 @@ function ShortcutHint({
   return (
     <div
       className={cn(
-        'text-muted-foreground/70 hidden flex-wrap items-center gap-x-3 gap-y-1 text-[10px] transition-opacity md:flex',
+        'text-muted-foreground hidden flex-wrap items-center gap-x-3 gap-y-1 text-[10px] transition-opacity md:flex',
         active ? 'opacity-100' : 'pointer-events-none opacity-0',
       )}
       aria-hidden={!active}

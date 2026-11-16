@@ -4,33 +4,40 @@ import type { FieldPathByValue } from 'react-hook-form'
 import { FormItem, FormControl } from '@/components/ui/form'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Badge } from '@/components/ui/badge'
-import { HelpLink } from '@/components/ui/help-link'
+import { FieldHelp } from './field-help'
 import { cn } from '@/lib/utils'
 import { FormValues } from '../types/form-schema'
 
 type BoolField = FieldPathByValue<FormValues, boolean>
 
-interface ToggleCardProperties {
+interface ObjectiveToggleProperties {
   name: BoolField
   label: string
   description?: string
   badge?: string
-  /** Docs URL shown on a small "?" icon at the edge of the card. */
-  helpHref?: string
+  /** Plain-language explanation shown in a keyboard-reachable tooltip. */
+  help?: string
   children?: React.ReactNode
-  /** Rendered below the description only when the toggle is checked. */
+  /** Rendered at the row's trailing edge only when the toggle is checked. */
   activeChildren?: React.ReactNode
 }
 
+/**
+ * One objective row.
+ *
+ * Deliberately borderless: these sit inside a bordered section, and a border
+ * per row made the form read as cards-inside-cards. Separation comes from the
+ * parent's dividers, and the checked state from a subtle tint instead.
+ */
 export function ToggleCard({
   name,
   label,
   description,
   badge,
-  helpHref,
+  help,
   children,
   activeChildren,
-}: ToggleCardProperties) {
+}: ObjectiveToggleProperties) {
   const { control } = useFormContext<FormValues>()
   return (
     <Controller
@@ -42,15 +49,13 @@ export function ToggleCard({
           <FormItem className="gap-0">
             <div
               className={cn(
-                'flex flex-row items-center gap-2.5 rounded-lg border px-3 py-2.5 transition-colors',
-                checked
-                  ? 'border-primary/40 bg-primary/5'
-                  : 'hover:bg-muted/50',
+                'flex flex-row items-center gap-2.5 rounded-md px-2 py-2.5 transition-colors',
+                checked ? 'bg-primary/[0.04]' : 'hover:bg-muted/40',
               )}
             >
               <label
                 htmlFor={name}
-                className="flex flex-1 cursor-pointer flex-row items-center gap-2.5"
+                className="flex min-w-0 flex-1 cursor-pointer flex-row items-center gap-2.5"
               >
                 <FormControl>
                   <Checkbox
@@ -60,8 +65,8 @@ export function ToggleCard({
                     className="self-center"
                   />
                 </FormControl>
-                <div className="flex-1 space-y-0.5 self-center">
-                  <div className="flex flex-wrap items-center gap-2">
+                <div className="min-w-0 flex-1 space-y-0.5 self-center">
+                  <div className="flex flex-wrap items-center gap-1.5">
                     <span className="text-sm leading-none font-medium">
                       {label}
                     </span>
@@ -70,6 +75,7 @@ export function ToggleCard({
                         {badge}
                       </Badge>
                     ) : null}
+                    {help ? <FieldHelp topic={label}>{help}</FieldHelp> : null}
                   </div>
                   {description ? (
                     <p className="text-muted-foreground text-xs leading-snug">
@@ -90,13 +96,6 @@ export function ToggleCard({
                   {activeChildren}
                 </div>
               ) : null}
-              {helpHref && (
-                <HelpLink
-                  href={helpHref}
-                  topic={label}
-                  className="-mt-1 -mr-1"
-                />
-              )}
             </div>
           </FormItem>
         )
