@@ -224,6 +224,24 @@ and local. Today the endpoint calls Modal, where a design really does take
 minutes, so making `submit_design` synchronous now would be a regression. It
 lands when the endpoint moves to the Worker, after steps 1 and 2.
 
+## Budget: the free tier
+
+Decided November 2026: stay on Cloudflare's free plan. The static app, the
+corpus in R2 (10 GB, 10M reads/month, egress free) and Access (free up to 50
+users) all fit within it.
+
+The free plan allows **10 ms of CPU per Worker request**, so nothing on
+Cloudflare can run a design. Two consequences:
+
+- **Closeable cloud designs** (below) are out. The browser-side safety net
+  covers the common case: finish notifications, a warning before closing,
+  and re-running an interrupted design.
+- **MCP `submit_design` cannot run inline** in the MCP Worker. The read-only
+  tools (`search_genes`, `get_gene`) can stay, as long as each request stays
+  within 10 ms of CPU. That rules out parsing the whole search index per
+  request, so the index has to be sharded small enough for a Worker to read
+  only what it needs. How agents get designs is an open question below.
+
 ## Designs you can close the tab on
 
 In the browser, a design runs in a Web Worker. It keeps running when the tab
@@ -306,6 +324,12 @@ away), Zaraz (GTM goes away).
 ## Open questions
 
 Verify before committing:
+
+0. **How should agents run designs on the free tier?** Candidates: (a) run
+   the wasm optimizer inside the MCP Apps view in the agent host's sandboxed
+   iframe, if MCP Apps lets a view hand a result back to the model; (b) drop
+   `submit_design` and have agents link the user to the web app; (c) pay
+   $5/month for Workers Paid only if agent designs prove worth it.
 
 1. **Does Cloudflare count Access "users" as provisioned identities or active
    ones?** Decides whether the free tier really covers the lab.
