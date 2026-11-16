@@ -51,7 +51,15 @@ vi.stubGlobal('crypto', {
   randomUUID: () => 'test-uuid-1234',
 })
 
-import { submitJob, getJobStatus, cancelJob } from './jobs'
+import {
+  runCancelJob as cancelJob,
+  runJobStatus as getJobStatus,
+  runSubmitJob,
+} from './jobs-core'
+
+/** The core takes the caller from whoever authorized it; the tests supply one. */
+const submitJob = (params: Parameters<typeof runSubmitJob>[0]) =>
+  runSubmitJob(params, { key: 'test', label: 'test' })
 
 const VALID_PARAMS = {
   CDS: 'ATGAAATGA',

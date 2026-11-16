@@ -43,6 +43,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^7.0.6",
+    "@modelcontextprotocol/server": "2.4.0",
     "@neondatabase/serverless": "^1.2.1",
     "@next/third-parties": "^16.4.6",
     "@opentelemetry/auto-instrumentations-node": "^0.83.1",
@@ -101,6 +102,7 @@
     "@commitlint/config-conventional": "^21.2.4",
     "@commitlint/types": "^21.2.3",
     "@electric-sql/pglite": "^0.4.3",
+    "@modelcontextprotocol/client": "2.4.0",
     "@next/bundle-analyzer": "^16.4.6",
     "@playwright/test": "1.65.1",
     "@storybook/addon-themes": "^10.6.7",
