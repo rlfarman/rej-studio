@@ -195,6 +195,23 @@ the runner. The staleness case the digest check was really aimed at is caught
 directly instead: if a PR touches `rust/optimizer/src/` and leaves
 `public/optimizer/` alone, the build fails and says to run `pnpm wasm:build`.
 
+### Making these required on main
+
+`Rust tests, format and lint` and `WebAssembly build and smoke test` are
+**not** in the Protect main ruleset yet, deliberately. Add them only once
+`.github/workflows/rust-ci.yml` is on `main`.
+
+A required check that never reports is never satisfied, and for
+`pull_request` GitHub takes the workflow from the PR's merge ref. While the
+workflow exists only on a feature branch, no PR to `main` can report these
+two — so requiring them early blocks every open PR to `main` instead of
+protecting anything.
+
+Both jobs are `if:`-gated on the path filter and report `skipped` when Rust
+is untouched, which _does_ satisfy a requirement — the same arrangement
+`Pytest` and `Ruff (lint + format)` already rely on. The hazard is the
+workflow not running at all, not the jobs skipping.
+
 ## Next steps
 
 Step 1 of [docs/cloudflare-migration.md](../docs/cloudflare-migration.md),
