@@ -71,6 +71,10 @@ export const designToolCopy = {
     notFound: 'No longer available',
     failed: 'Job failed',
     unknown: 'Something went wrong — try running again.',
+    browserUnsupported:
+      'This browser can’t run the designer on its own. Try a current version of Chrome, Firefox, Safari or Edge.',
+    browserFailed:
+      'The designer stopped unexpectedly in your browser. Running again usually works.',
   },
   draft: {
     restored: 'Restored your unsaved draft.',

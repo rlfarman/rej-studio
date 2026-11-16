@@ -34,6 +34,7 @@ REJ Studio is a bioinformatics web app for RNA End-Joining sequence design. User
 | `src/proxy.ts`           | Next.js middleware — session gate, CSRF and body-size checks, CSP                                                  |
 | `src/instrumentation.ts` | Env validation at boot + Sentry server/edge init                                                                   |
 | `python/`                | FastAPI Python backend (`index.py`, `algorithm.py`); dependencies in the root `pyproject.toml` + `uv.lock`         |
+| `rust/`                  | Rust port of the optimizer, built to WebAssembly so designs can run in the browser (see `rust/README.md`)          |
 | `modal/`                 | Modal deployment for the Python backend (production compute)                                                       |
 | `scripts/`               | Dev tooling — worktree bootstrap, DB build/load, bundle-size checks, schema verify, type generation                |
 | `.github/workflows/`     | CI (tests, build + bundle budgets, Storybook, zizmor), security, DB/Python CI, Lighthouse, deploys                 |
@@ -61,6 +62,9 @@ pnpm db:migrate   # Apply the committed migrations (src/drizzle/migrations) to $
 pnpm db:generate  # Write a migration for schema.ts changes (commit it with the schema)
 pnpm db:upload    # Load JSONL into $DATABASE_URL via Drizzle (dialect-neutral)
 pnpm db:studio    # Browse DB in Drizzle Studio (local.drizzle.studio)
+pnpm wasm:build   # Build the Rust optimizer and install it in public/ (needs Rust)
+pnpm wasm:verify  # Fail if the committed .wasm is stale (runs in CI)
+pnpm wasm:smoke   # Run the built .wasm through Node against the parity fixtures
 ```
 
 ## Toolchain
@@ -123,7 +127,7 @@ For seeding a Neon database (production), the same `db:build`/`db:migrate`/`db:u
 - **Auth** — `BASIC_AUTH_PASSWORD`, `SESSION_SECRET` (32+ chars, required with the password), `BYPASS_AUTH` (dev only).
 - **Public / client** — `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_GTM_ID`.
 - **Observability** — `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_*`.
-- **Optional features** — `HEALTH_AUTH_TOKEN`, `MAINTENANCE_MESSAGE`, `UPSTASH_REDIS_REST_*`, `NEXT_PUBLIC_ENABLE_MULTI_SPLIT`.
+- **Optional features** — `HEALTH_AUTH_TOKEN`, `MAINTENANCE_MESSAGE`, `UPSTASH_REDIS_REST_*`, `NEXT_PUBLIC_ENABLE_MULTI_SPLIT`, `NEXT_PUBLIC_ENABLE_BROWSER_OPTIMIZER` (run the optimizer in a Web Worker instead of calling the compute backend).
 - **Build-time** — `GIT_COMMIT_SHA`.
 
 Local dev needs nothing to boot (PGlite + in-memory rate limit fill in). Production requires at minimum a Neon `DATABASE_URL` and `COMPUTE_BACKEND=modal` with `MODAL_API_URL` and `MODAL_API_TOKEN`, plus `BASIC_AUTH_PASSWORD` and `SESSION_SECRET` to keep the gate on.
@@ -182,7 +186,7 @@ Shared Claude Code permissions, deny rules, and sandbox config live in `.agents/
 - **Adding a server action**: Place it in the owning feature's `api/` folder (e.g. `src/features/gene-search/api/`). Import `db` from `@/drizzle/db`.
 - **Adding a new feature**: Create `src/features/<name>/` with the standard subfolders. ESLint boundary rules apply automatically (no config changes needed).
 - **Adding shared code**: If used by ≥2 features, decide by domain: bio-specific → `src/lib/bio/` or `src/components/bio/`; generic → `src/lib/` or `src/components/`.
-- **Modifying the optimization algorithm**: Edit `python/algorithm.py`. The FastAPI endpoint is in `python/index.py`. In production this runs on Modal (see `modal/app.py`); `.github/workflows/modal-deploy.yml` redeploys it when the change merges to `main`.
+- **Modifying the optimization algorithm**: Edit `python/algorithm.py`. The FastAPI endpoint is in `python/index.py`. In production this runs on Modal (see `modal/app.py`); `.github/workflows/modal-deploy.yml` redeploys it when the change merges to `main`. **There is a second implementation** — the Rust port in `rust/` that runs in the browser — so an algorithm change must be made in both, or the two will disagree. Regenerate the parity fixtures (`scripts/gen-parity-fixtures.py`) and run `cd rust && cargo test`; the tests compare the two directly. See `rust/README.md`.
 - **Database schema changes**: Edit `src/drizzle/schema.ts`, run `pnpm db:generate` and commit the new SQL in `src/drizzle/migrations/` (DB CI fails if `schema.ts` and the migrations disagree), then `pnpm db:migrate` against each database. Update `scripts/build-db.py` too if the JSONL shape changes, then `pnpm db:build && pnpm db:upload`.
 - **Switching DB backend**: Edit `src/drizzle/client.ts` and the connection driver — it's a 5-file change.
 

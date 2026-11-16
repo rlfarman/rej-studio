@@ -9,9 +9,35 @@
 
 import fs from 'node:fs'
 
-export async function loadOptimizer(wasmPath) {
-  const { instance } = await WebAssembly.instantiate(fs.readFileSync(wasmPath), {})
-  const { alloc, dealloc, process: processRequest, free_response, memory } = instance.exports
+export async function loadOptimizer(wasmPath, onProgress) {
+  // The module calls back into env.report_progress as it works; a host that
+  // does not supply it cannot instantiate the module at all.
+  let memoryRef = null
+  const imports = {
+    env: {
+      report_progress(fraction, stagePointer, stageLength) {
+        if (!onProgress || !memoryRef) return
+        const bytes = new Uint8Array(
+          memoryRef.buffer,
+          stagePointer,
+          stageLength,
+        )
+        onProgress(fraction, new TextDecoder().decode(bytes))
+      },
+    },
+  }
+  const { instance } = await WebAssembly.instantiate(
+    fs.readFileSync(wasmPath),
+    imports,
+  )
+  const {
+    alloc,
+    dealloc,
+    process: processRequest,
+    free_response,
+    memory,
+  } = instance.exports
+  memoryRef = memory
 
   return function design(request) {
     const payload = new TextEncoder().encode(JSON.stringify(request))

@@ -270,7 +270,12 @@ impl Problem {
     }
 
     /// Step 2: improve each objective in turn.
-    pub fn optimize(&mut self, rng: &mut NumpyRng, mut on_progress: impl FnMut(f64, &str)) {
+    ///
+    /// `on_progress` receives `(fraction done, objective index, objective
+    /// count)`. It reports position rather than a label because the wording
+    /// shown to a user belongs with the rest of the app's copy, not in the
+    /// solver.
+    pub fn optimize(&mut self, rng: &mut NumpyRng, mut on_progress: impl FnMut(f64, usize, usize)) {
         let objectives: Vec<Spec> = self
             .objectives
             .iter()
@@ -280,7 +285,7 @@ impl Problem {
         let total = objectives.len();
 
         for (index, objective) in objectives.iter().enumerate() {
-            on_progress(index as f64 / total.max(1) as f64, &objective.label());
+            on_progress(index as f64 / total.max(1) as f64, index, total);
             self.optimize_objective(objective, rng);
         }
     }
@@ -518,7 +523,7 @@ mod tests {
         let mut problem = problem_for(CDS);
         let mut rng = NumpyRng::seed(1234);
         problem.resolve_constraints(&mut rng).unwrap();
-        problem.optimize(&mut rng, |_, _| {});
+        problem.optimize(&mut rng, |_, _, _| {});
         assert_eq!(translate(&problem.sequence), translate(CDS));
         assert_eq!(problem.sequence.len(), CDS.len());
     }
@@ -531,7 +536,7 @@ mod tests {
         let mut problem = problem_for(CDS);
         let mut rng = NumpyRng::seed(1234);
         problem.resolve_constraints(&mut rng).unwrap();
-        problem.optimize(&mut rng, |_, _| {});
+        problem.optimize(&mut rng, |_, _, _| {});
 
         let after = problem.objective_score(&problem.sequence);
         assert!(after >= baseline, "score regressed: {baseline} -> {after}");
@@ -542,7 +547,7 @@ mod tests {
         let mut problem = problem_for(CDS);
         let mut rng = NumpyRng::seed(99);
         problem.resolve_constraints(&mut rng).unwrap();
-        problem.optimize(&mut rng, |_, _| {});
+        problem.optimize(&mut rng, |_, _, _| {});
         for constraint in problem.checkable() {
             let evaluation = constraint.evaluate(&problem.sequence);
             assert!(
@@ -578,7 +583,7 @@ mod tests {
         );
         let mut rng = NumpyRng::seed(5);
         problem.resolve_constraints(&mut rng).unwrap();
-        problem.optimize(&mut rng, |_, _| {});
+        problem.optimize(&mut rng, |_, _, _| {});
         assert_eq!(&problem.sequence[9..15], &CDS[9..15]);
     }
 
@@ -588,7 +593,7 @@ mod tests {
             let mut problem = problem_for(CDS);
             let mut rng = NumpyRng::seed(seed);
             problem.resolve_constraints(&mut rng).unwrap();
-            problem.optimize(&mut rng, |_, _| {});
+            problem.optimize(&mut rng, |_, _, _| {});
             problem.sequence
         };
         assert_eq!(run(2026), run(2026));
@@ -600,7 +605,7 @@ mod tests {
         let mut rng = NumpyRng::seed(1);
         problem.resolve_constraints(&mut rng).unwrap();
         let mut seen: Vec<f64> = Vec::new();
-        problem.optimize(&mut rng, |fraction, _| seen.push(fraction));
+        problem.optimize(&mut rng, |fraction, _, _| seen.push(fraction));
         assert_eq!(seen.len(), problem.objectives.len());
         assert!(seen.windows(2).all(|pair| pair[0] <= pair[1]));
     }

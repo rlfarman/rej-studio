@@ -21,6 +21,15 @@ const SEED_ID_PREFIX = 'seed-'
 export function isSeedId(id: string): boolean {
   return id.startsWith(SEED_ID_PREFIX)
 }
+
+// Prefix for designs computed in this browser. They have no backend job, so
+// JobWatcher must not poll them and they are never written to the URL — the
+// result exists only on this device.
+export const BROWSER_ID_PREFIX = 'browser-'
+
+export function isBrowserJobId(id: string): boolean {
+  return id.startsWith(BROWSER_ID_PREFIX)
+}
 // How long to keep an entry stuck in the running state before we assume the
 // poll was abandoned (tab closed, Modal call_id expired) and drop it.
 const STALE_RUNNING_TTL_MS = 24 * 60 * 60 * 1000

@@ -122,6 +122,11 @@ const clientSchema = z
     // data layer already supports two positions. Client code reads this
     // directly via process.env (see features/design-tool/utils/feature-flags.ts).
     NEXT_PUBLIC_ENABLE_MULTI_SPLIT: z.enum(['true', 'false']).optional(),
+
+    // Feature flag: run the optimizer in a Web Worker rather than on the
+    // compute backend. Client code reads it directly via process.env (see
+    // features/design-tool/utils/feature-flags.ts).
+    NEXT_PUBLIC_ENABLE_BROWSER_OPTIMIZER: z.enum(['true', 'false']).optional(),
   })
   .superRefine((data, ctx) => {
     if (isProd && !data.NEXT_PUBLIC_SITE_URL) {

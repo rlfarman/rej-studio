@@ -1,11 +1,19 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import {
   submitJob as submitJobAction,
   cancelJob as cancelJobAction,
 } from '@/features/design-tool/api/jobs'
+import {
+  browserOptimizerSupported,
+  designInBrowser,
+  warmOptimizerWorker,
+} from '@/features/design-tool/api/browser-optimizer'
+import { BROWSER_OPTIMIZER_ENABLED } from '@/features/design-tool/utils/feature-flags'
 import { buildJobParams } from '@/features/design-tool/utils/form-handler'
 import {
+  BROWSER_ID_PREFIX,
+  isBrowserJobId,
   useJobHistory,
   type JobStatus as EntryStatus,
   type JobError,
@@ -62,10 +70,38 @@ function writeJobToUrl(jobId: string | null) {
   window.history.replaceState(null, '', url.toString())
 }
 
+/**
+ * Whether this run should happen in the browser.
+ *
+ * Both the flag and real browser support are required; without support the
+ * compute backend still serves the request, so an old browser degrades
+ * rather than breaks.
+ */
+function useBrowserOptimizer(): boolean {
+  const [supported, setSupported] = useState(false)
+  useEffect(() => {
+    if (!BROWSER_OPTIMIZER_ENABLED) return
+    // Checked after mount: the server cannot know what the browser supports,
+    // and deciding during render would risk a hydration mismatch.
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- browser capability is an external system, only knowable on the client
+    setSupported(browserOptimizerSupported())
+    // Start the download now, while the user is still entering a sequence.
+    warmOptimizerWorker()
+  }, [])
+  return supported
+}
+
 export function useJob({
   initialJobId = null,
 }: UseJobOptions = {}): UseJobReturn {
   const [jobId, setJobIdState] = useState<string | null>(initialJobId)
+  const runsInBrowser = useBrowserOptimizer()
+  // The in-flight browser run, if any. Cancel aborts it (there is no
+  // server-side job to cancel), and a thrown mutation settles its entry.
+  const browserRunRef = useRef<{
+    id: string
+    controller: AbortController
+  } | null>(null)
   // Selector-scoped reads so this hook only re-renders when the specific
   // entry it cares about changes.
   const upsertEntry = useJobHistory((s) => s.upsertEntry)
@@ -93,13 +129,89 @@ export function useJob({
 
   const submitMutation = useMutation({
     mutationFn: async (values: FormValues) => {
-      const outcome = await submitJobAction(buildJobParams(values))
-      return { outcome, values }
+      const params = buildJobParams(values)
+      if (!runsInBrowser) {
+        return {
+          kind: 'server' as const,
+          outcome: await submitJobAction(params),
+          values,
+        }
+      }
+
+      // In-browser: the design runs here, so there is no job to poll. A local
+      // id carries progress and the finished result through the same history
+      // entry the backend path uses.
+      const id = `${BROWSER_ID_PREFIX}${crypto.randomUUID()}`
+      const controller = new AbortController()
+      browserRunRef.current = { id, controller }
+
+      upsertEntry({ id, status: 'running', formValues: values })
+      useJobHistory
+        .getState()
+        .setProgress(id, { progress: 0.02, stage: 'Starting' })
+      setJobId(id, { shareable: false })
+
+      try {
+        const outcome = await designInBrowser(params, {
+          signal: controller.signal,
+          onProgress: (progress, stage) =>
+            useJobHistory.getState().setProgress(id, { progress, stage }),
+        })
+        return { kind: 'browser' as const, outcome, values, browserJobId: id }
+      } finally {
+        browserRunRef.current = null
+      }
     },
     onMutate: () => {
       setJobId(null)
     },
-    onSuccess: ({ outcome, values }) => {
+    onError: () => {
+      const run = browserRunRef.current
+      if (!run) return
+      upsertEntry({
+        id: run.id,
+        status: 'failed',
+        error: { code: 'unknown', message: copy.unknown, retriable: true },
+      })
+      browserRunRef.current = null
+    },
+    onSuccess: (submission) => {
+      const { values } = submission
+
+      // A browser run already has its history entry (created when the design
+      // started, so progress had somewhere to go); settle that one in place
+      // rather than creating a second.
+      if (submission.kind === 'browser') {
+        // Destructured inside the branch so `outcome` narrows with `kind`.
+        const { browserJobId, outcome } = submission
+        if (outcome.ok) {
+          upsertEntry({
+            id: browserJobId,
+            status: 'completed',
+            result: outcome.data,
+            formValues: values,
+          })
+          trackEvent({ event: 'job_submit', job_id: browserJobId })
+          return
+        }
+        const cancelled = outcome.error.code === 'cancelled'
+        upsertEntry({
+          id: browserJobId,
+          status: cancelled ? 'cancelled' : 'failed',
+          error: outcome.error,
+          formValues: values,
+        })
+        if (!cancelled) {
+          trackEvent({
+            event: 'job_failed',
+            job_id: browserJobId,
+            error_code: outcome.error.code,
+          })
+        }
+        return
+      }
+
+      const { outcome } = submission
       if (!outcome.ok) {
         // Expected failure (rate limit, backend down, invalid input). Record
         // it so the run shows up in Recent jobs and "Run again" still works
@@ -161,7 +273,13 @@ export function useJob({
   })
 
   const cancelJob = async () => {
-    if (!jobId || isLocalFailureId(jobId)) return
+    // A browser run has no server-side job: aborting terminates the worker,
+    // and the submit path records the cancellation.
+    if (browserRunRef.current) {
+      browserRunRef.current.controller.abort()
+      return
+    }
+    if (!jobId || isLocalFailureId(jobId) || isBrowserJobId(jobId)) return
     await cancelMutation.mutateAsync(jobId)
   }
 
@@ -173,15 +291,15 @@ export function useJob({
   let result: ProcessResult | null = null
   let error: JobError | null = null
 
-  if (submitMutation.isPending) {
-    status = 'submitting'
-  } else if (submitMutation.isError) {
+  if (submitMutation.isError) {
     status = 'failed'
     error = { code: 'unknown', message: copy.unknown, retriable: true }
   } else if (entry) {
     status = entry.status
     result = entry.result
     error = entry.error
+  } else if (submitMutation.isPending) {
+    status = 'submitting'
   }
 
   const submitJob = async (values: FormValues) => {

@@ -77,6 +77,10 @@ const GC_MAX: f64 = 0.60;
 /// Default k for the k-mer uniqueness objective.
 const DEFAULT_KMER_K: usize = 10;
 
+/// Progress caption for the optimization phase, matching python/algorithm.py
+/// so the UI reads the same whichever backend ran the design.
+const OPTIMIZING_STAGE: &str = "Optimizing sequence";
+
 #[derive(Debug)]
 pub enum OptimizeError {
     /// The caller's input cannot be designed from.
@@ -276,9 +280,12 @@ pub fn process(
     let objectives_before = problem.objectives_text_summary();
     let report_before = build_report(&problem);
 
-    on_progress(0.45, "Optimizing sequence");
-    problem.optimize(&mut rng, |fraction, stage| {
-        on_progress(0.45 + 0.42 * fraction, stage);
+    on_progress(0.45, OPTIMIZING_STAGE);
+    problem.optimize(&mut rng, |fraction, index, total| {
+        // Same wording the Python backend reports, so the progress caption
+        // reads the same whichever one ran the design.
+        let stage = format!("{OPTIMIZING_STAGE} ({}/{total})", (index + 1).min(total));
+        on_progress(0.45 + 0.42 * fraction, &stage);
     });
 
     on_progress(0.92, "Finalizing");
@@ -446,11 +453,11 @@ struct JsonRequest {
 ///
 /// Errors come back as `{"error": "..."}` rather than a panic, so a bad
 /// request from the UI is reported instead of tearing down the worker.
-pub fn process_json(request: &str) -> String {
+pub fn process_json(request: &str, on_progress: impl FnMut(f64, &str)) -> String {
     let parsed: Result<JsonRequest, _> = serde_json::from_str(request);
     let response = match parsed {
         Err(error) => serde_json::json!({ "error": format!("invalid request: {error}") }),
-        Ok(request) => match process(&request.cds, &request.name, &request.options, |_, _| {}) {
+        Ok(request) => match process(&request.cds, &request.name, &request.options, on_progress) {
             Ok(result) => serde_json::to_value(result)
                 .unwrap_or_else(|error| serde_json::json!({ "error": error.to_string() })),
             Err(error) => serde_json::json!({ "error": error.to_string() }),
@@ -472,9 +479,23 @@ pub fn process_json(request: &str) -> String {
 //      little-endian length followed by that many UTF-8 bytes.
 //   3. `free_response(ptr)` once the response has been copied out, and
 //      `dealloc(ptr, len)` for the request buffer.
+//
+// The host must also supply one import, `env.report_progress`, which the
+// optimizer calls as it works. A design can take seconds to minutes, so
+// without it the progress bar would sit still for the whole run.
 #[cfg(target_arch = "wasm32")]
 mod wasm_abi {
     use super::process_json;
+
+    // Declared against the "env" module, which is what a plain
+    // `{ env: { report_progress } }` imports object supplies.
+    #[link(wasm_import_module = "env")]
+    unsafe extern "C" {
+        /// Host callback: `(fraction in 0..1, pointer to a UTF-8 stage label,
+        /// its length)`. The bytes are only valid for the duration of the
+        /// call, so the host must copy anything it keeps.
+        fn report_progress(fraction: f64, stage_pointer: *const u8, stage_len: usize);
+    }
 
     /// Reserve `len` bytes for the caller to write a request into.
     #[unsafe(no_mangle)]
@@ -505,7 +526,11 @@ mod wasm_abi {
     pub unsafe extern "C" fn process(pointer: *const u8, len: usize) -> *mut u8 {
         let request = unsafe { std::slice::from_raw_parts(pointer, len) };
         let response = match std::str::from_utf8(request) {
-            Ok(request) => process_json(request),
+            Ok(request) => process_json(request, |fraction, stage| {
+                // Hand the label over as a pointer into our own memory; the
+                // host copies it out before returning.
+                unsafe { report_progress(fraction, stage.as_ptr(), stage.len()) };
+            }),
             Err(_) => r#"{"error":"request was not valid UTF-8"}"#.to_string(),
         };
 
@@ -620,6 +645,32 @@ mod tests {
         assert!(fractions.windows(2).all(|pair| pair[0] <= pair[1]));
         assert!(fractions.first().is_some_and(|first| *first <= 0.05));
         assert!(fractions.last().is_some_and(|last| *last >= 0.9));
+    }
+
+    #[test]
+    fn progress_stages_read_the_way_the_python_backend_words_them() {
+        // The caption is shown to the user verbatim, so it must be the same
+        // phrasing whichever backend ran the design — never a raw objective
+        // label like "AvoidPattern[0-81(+)](pattern:CG)".
+        let mut stages: Vec<String> = Vec::new();
+        process(CDS, "test", &options(), |_, stage| {
+            stages.push(stage.to_string())
+        })
+        .unwrap();
+
+        assert!(stages.iter().any(|stage| stage == "Checking sequence"));
+        assert!(stages.iter().any(|stage| stage == "Resolving constraints"));
+        assert!(stages.iter().any(|stage| stage == "Finalizing"));
+        // Numbered while optimizing, as Python reports it.
+        assert!(
+            stages.iter().any(|stage| stage.starts_with("Optimizing sequence (")
+                && stage.ends_with("/32)")),
+            "no numbered optimizing stage in {stages:?}"
+        );
+        assert!(
+            !stages.iter().any(|stage| stage.contains('[')),
+            "a raw objective label leaked into the progress stages: {stages:?}"
+        );
     }
 
     #[test]
