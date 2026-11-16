@@ -1,19 +1,28 @@
-import { lstatSync } from 'node:fs'
+import { existsSync, lstatSync } from 'node:fs'
 import { execSync } from 'node:child_process'
 
-// Check once per invocation whether ruff is available. Contributors who
-// haven't activated their venv or installed ruff yet still commit cleanly —
-// they just miss the Python formatter locally (CI would catch it).
-let ruffAvailable
-const hasRuff = () => {
-  if (ruffAvailable !== undefined) return ruffAvailable
+const onPath = (bin) => {
   try {
-    execSync('command -v ruff', { stdio: 'ignore' })
-    ruffAvailable = true
+    execSync(`command -v ${bin}`, { stdio: 'ignore' })
+    return true
   } catch {
-    ruffAvailable = false
+    return false
   }
-  return ruffAvailable
+}
+
+// How to run ruff, decided once per invocation. Prefer the project's locked
+// ruff through uv (uv sync installs it from pyproject.toml/uv.lock); fall
+// back to a ruff on PATH. Contributors with neither still commit cleanly,
+// they just miss the local Python formatter (CI's Python job catches it).
+let ruffCommand
+const getRuff = () => {
+  if (ruffCommand === undefined) {
+    if (existsSync('pyproject.toml') && onPath('uv'))
+      ruffCommand = 'uv run ruff'
+    else if (onPath('ruff')) ruffCommand = 'ruff'
+    else ruffCommand = null
+  }
+  return ruffCommand
 }
 
 // `.claude/launch.json` and `.claude/skills` are symlinks into `.agents/`.
@@ -34,7 +43,11 @@ export default {
   '*.{js,jsx,ts,tsx,mjs,cjs}': (files) => {
     const real = realFiles(files).map(quote).join(' ')
     if (!real) return []
-    return [`eslint --fix ${real}`, `prettier --write ${real}`]
+    return [
+      `oxlint --fix ${real}`,
+      `eslint --fix ${real}`,
+      `prettier --write ${real}`,
+    ]
   },
   '*.{json,md,css,yml,yaml}': (files) => {
     const real = realFiles(files).map(quote).join(' ')
@@ -44,7 +57,8 @@ export default {
   '*.py': (files) => {
     const real = realFiles(files).map(quote).join(' ')
     if (!real) return []
-    if (!hasRuff()) return []
-    return [`ruff format ${real}`, `ruff check --fix ${real}`]
+    const ruff = getRuff()
+    if (!ruff) return []
+    return [`${ruff} format ${real}`, `${ruff} check --fix ${real}`]
   },
 }

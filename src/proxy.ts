@@ -12,8 +12,12 @@ export const config = {
      * - favicon.ico, sitemap.xml, robots.txt (metadata files)
      * - monitoring (Sentry tunnel)
      * - api/og (opengraph images — must be crawlable without auth)
+     * - static image and font files from public/ (e.g. /branding/*.png).
+     *   The image optimizer fetches these internally without the visitor's
+     *   cookies, so gating them broke next/image (the sidebar logo) for
+     *   signed-in users too. They carry no gene data.
      */
-    '/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|monitoring|api/og).*)',
+    '/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|monitoring|api/og|.*\\.(?:png|jpe?g|gif|webp|avif|svg|ico|woff2?)$).*)',
   ],
 }
 

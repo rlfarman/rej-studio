@@ -54,7 +54,7 @@ The three lists of types must stay in sync.
 
 ## Pre-commit formatting
 
-A `pre-commit` hook runs `eslint --fix` and `prettier --write` on staged files via `lint-staged`. This keeps formatting consistent without running the whole repo through the linter on every commit.
+A `pre-commit` hook runs `oxlint --fix`, `eslint --fix` and `prettier --write` on staged JS/TS files (and `ruff` through `uv run` on staged Python files) via `lint-staged`. This keeps formatting consistent without running the whole repo through the linter on every commit.
 
 ## Emergency bypass
 
@@ -82,6 +82,7 @@ The following jobs should be configured as **required status checks** on `main` 
 | `Type Check`                | `ci.yml`               | ✅ required   |
 | `Knip`                      | `ci.yml`               | ✅ required   |
 | `Build`                     | `ci.yml`               | ✅ required   |
+| `E2E (Playwright)`          | `ci.yml`               | ⚠️ advisory   |
 | `pnpm audit`                | `security.yml`         | ✅ required   |
 | `pip-audit`                 | `security.yml`         | ✅ required   |
 | `Lockfile drift`            | `lock-file-policy.yml` | ⚠️ advisory   |
@@ -103,4 +104,4 @@ To enable: repo Settings → Rules → Rulesets → Protect main → "Require st
 
 ## Locally reproducing CI
 
-Run `pnpm verify` to reproduce the CI gates (lint, format check, type check, knip, build) in one command before pushing. The `pre-push` hook also runs `pnpm verify` automatically.
+Run `pnpm verify` (lint, type check, unit tests) before pushing; the `pre-push` hook runs it automatically. CI also runs `pnpm format:check`, `pnpm knip`, `pnpm build` and `pnpm test:e2e`, so run those too when you touch formatting, exports, build config or user flows.

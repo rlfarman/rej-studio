@@ -33,7 +33,7 @@ REJ Studio is a bioinformatics web app for RNA End-Joining sequence design. User
 | `src/drizzle/`           | DB schema, client, migrations (`schema.ts`, `db.ts`, `migrations/`)                                             |
 | `src/proxy.ts`           | Next.js middleware — session gate, CSRF and body-size checks, CSP                                               |
 | `src/instrumentation.ts` | OpenTelemetry bootstrap + Sentry server/edge init                                                               |
-| `python/`                | FastAPI Python backend (`index.py`, `algorithm.py`, `requirements.txt`)                                         |
+| `python/`                | FastAPI Python backend (`index.py`, `algorithm.py`); dependencies in the root `pyproject.toml` + `uv.lock`      |
 | `modal/`                 | Modal deployment for the Python backend (production compute)                                                    |
 | `scripts/`               | Dev tooling — worktree bootstrap, DB build/load, bundle-size checks, schema verify, type generation             |
 | `.github/workflows/`     | CI — lint/type-check/test, Python CI, DB CI, Lighthouse, Modal deploy, release-please, security, uptime         |
@@ -43,20 +43,31 @@ REJ Studio is a bioinformatics web app for RNA End-Joining sequence design. User
 ```bash
 pnpm dev          # Start Next.js + FastAPI concurrently
 pnpm build        # Production build (Vercel target)
-pnpm lint         # ESLint
+pnpm lint         # Oxlint, then ESLint (feature-boundary rules)
 pnpm lint:fix     # Auto-fix lint
 pnpm format       # Prettier
-pnpm type-check   # TypeScript check
+pnpm type-check   # TypeScript 7 (native compiler) type check
 pnpm test         # Run vitest (one-shot)
 pnpm test:watch   # Run vitest in watch mode
 pnpm test:coverage # Run vitest with coverage
+pnpm test:e2e     # Playwright smoke tests (starts a gated `next dev` on :3000)
 pnpm verify       # lint + type-check + test (pre-push gate)
+uv sync           # Python env (.venv) for the FastAPI backend, from uv.lock
 pnpm storybook    # Storybook dev server on :6006
 pnpm db:build     # Emit neutral JSONL seed from source CSV (data/*.jsonl)
 pnpm db:push      # Create/update tables in $DATABASE_URL from schema.ts
 pnpm db:upload    # Load JSONL into $DATABASE_URL via Drizzle (dialect-neutral)
 pnpm db:studio    # Browse DB in Drizzle Studio (local.drizzle.studio)
 ```
+
+## Toolchain
+
+- **Node.js 26 LTS** — pinned by `.nvmrc` and `engines` in `package.json` (Vercel follows `engines`). CI uses the same.
+- **pnpm 12** — pinned by `packageManager`. pnpm 11+ ignores the `"pnpm"` field in `package.json`; its settings live in `pnpm-workspace.yaml`: the `catalog` (versions shared with the overrides), the security `overrides`, and `allowBuilds` (dependency install scripts are blocked unless listed). pnpm 12 also refuses packages published less than a day ago by default, so a just-released version may not install until the next day.
+- **TypeScript** — two versions on purpose. `typescript` (6.x) is the library that Next, typescript-eslint, knip and Storybook load; `typescript-native` is TypeScript 7 (the Go compiler), used only by `pnpm type-check` because it's ~6× faster. TypeScript 7.0 has no stable programmatic API yet; once 7.1 ships one and the tools support it, drop the alias.
+- **Lint** — Oxlint (`.oxlintrc.json`) runs first and owns the React Hooks / React Compiler, Next.js and jsx-a11y rules; ESLint (`eslint.config.mjs`) runs after it for the `import/no-restricted-paths` boundaries. `eslint-plugin-oxlint` turns off the ESLint rules Oxlint covers. Keep `eslint-disable` comments using the original rule names (`react-hooks/...`, `@next/next/...`); Oxlint honors them and reports stale ones.
+- **React Compiler** — enabled (`reactCompiler: true` in `next.config.ts`), so components get automatic memoization; prefer plain code over hand-written `useMemo`/`useCallback`.
+- **Python** — managed with [uv](https://docs.astral.sh/uv/): `uv sync` creates `.venv` from `uv.lock` using the interpreter in `.python-version`; run tools with `uv run` (e.g. `uv run pytest`).
 
 ## User-Facing Copy
 
@@ -77,7 +88,7 @@ User-facing strings (headings, descriptions, toasts, validation messages, tour c
 - Server actions co-located with the feature that owns them (e.g. `src/features/gene-search/api/genes.ts`).
 - Form validation with Zod schemas (see `src/features/design-tool/types/form-schema.ts`). The design tool form supports both DNA and protein input; `sequenceType` controls conditional validation.
 - Tailwind CSS for styling. No CSS modules.
-- ESLint + Prettier for formatting (config in `eslint.config.mjs`, `prettier.config.mjs`).
+- Oxlint + ESLint for linting (`.oxlintrc.json`, `eslint.config.mjs`) and Prettier for formatting (`prettier.config.mjs`).
 - ESLint enforces feature boundaries: features cannot import from each other, and shared layers (`src/components`, `src/lib`, `src/hooks`, `src/stores`) cannot import from features or app. Features auto-discovered from `src/features/` at config load.
 
 ## Database
@@ -123,9 +134,11 @@ This repo enforces [Conventional Commits](https://www.conventionalcommits.org/en
 
 Drizzle has an integration test at `src/drizzle/queries.integration.test.ts` that runs against PGlite — it needs no real DB.
 
+[Playwright](https://playwright.dev) smoke tests live in `e2e/` (`pnpm test:e2e`). They start `next dev` with the password gate on and the in-memory sample data, sign in once (`e2e/auth.setup.ts`), and check the gate plus the main signed-in pages. Assert on roles and data rather than copy. The server uses port 3000, so stop a local `pnpm dev` first; first-time setup needs `pnpm exec playwright install chromium`.
+
 ## Working in Git Worktrees
 
-Claude agents often run in git worktrees at `.claude/worktrees/<name>/`. A fresh worktree contains only tracked files — it has no `node_modules/`, no `venv/`, and no `.env` (all gitignored), so the app cannot start until it's bootstrapped.
+Claude agents often run in git worktrees at `.claude/worktrees/<name>/`. A fresh worktree contains only tracked files — it has no `node_modules/`, no `.venv/`, and no `.env` (all gitignored), so the app cannot start until it's bootstrapped.
 
 **Before running or building the app in a worktree, run:**
 
@@ -133,7 +146,7 @@ Claude agents often run in git worktrees at `.claude/worktrees/<name>/`. A fresh
 ./scripts/bootstrap-worktree.sh
 ```
 
-This symlinks `.env` and `venv/` from the main repo and runs `pnpm install` in the worktree.
+This symlinks `.env` from the main repo, creates the Python environment with `uv sync`, and runs `pnpm install` in the worktree.
 
 **Always use absolute paths or paths relative to the worktree root** — do not assume the working directory is the main repo. When in doubt, `pwd` first. Edits, commits, and commands must happen inside the worktree (`.claude/worktrees/<name>/`), not the main repo at the project root.
 
@@ -164,3 +177,13 @@ Shared Claude Code permissions, deny rules, and sandbox config live in `.agents/
 - **Modifying the optimization algorithm**: Edit `python/algorithm.py`. The FastAPI endpoint is in `python/index.py`. In production this runs on Modal (see `modal/app.py`), so redeploy Modal after changes.
 - **Database schema changes**: Edit `src/drizzle/schema.ts`, update `scripts/build-db.py` if the JSONL shape needs to change, then `pnpm db:build && pnpm db:push && pnpm db:upload`.
 - **Switching DB backend**: Edit `src/drizzle/db.ts` and the connection driver — it's a 5-file change.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+## This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

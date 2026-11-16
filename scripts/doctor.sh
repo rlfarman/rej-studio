@@ -2,7 +2,7 @@
 # Diagnose the local dev environment.
 #
 # Verifies that all the moving parts the app depends on are present and
-# reachable: node/pnpm/python versions, venv, .env vars, Neon connectivity.
+# reachable: node/pnpm/uv versions, the Python env, .env vars, Neon connectivity.
 # Prints one line per check with ✓/✗ and exits non-zero if any fail.
 set -uo pipefail
 
@@ -33,10 +33,10 @@ section "Runtime versions"
 
 if command -v node >/dev/null 2>&1; then
   node_version="$(node --version | sed 's/^v//')"
-  if version_ge "$node_version" "24.0.0"; then
-    ok "node $node_version (>= 24.0.0)"
+  if version_ge "$node_version" "26.0.0"; then
+    ok "node $node_version (>= 26.0.0)"
   else
-    bad "node $node_version — need >= 24.0.0 (see package.json engines)"
+    bad "node $node_version — need >= 26.0.0 (see .nvmrc and package.json engines)"
   fi
 else
   bad "node not found on PATH"
@@ -44,24 +44,22 @@ fi
 
 if command -v pnpm >/dev/null 2>&1; then
   pnpm_version="$(pnpm --version)"
-  if version_ge "$pnpm_version" "9.12.0"; then
-    ok "pnpm $pnpm_version (>= 9.12.0)"
+  if version_ge "$pnpm_version" "12.0.0"; then
+    ok "pnpm $pnpm_version (>= 12.0.0)"
   else
-    warn "pnpm $pnpm_version — package.json pins 9.12.3, may drift"
+    warn "pnpm $pnpm_version — package.json pins pnpm 12 (packageManager); run: npm install -g pnpm@12"
   fi
 else
-  bad "pnpm not found on PATH — install with: corepack enable && corepack prepare pnpm@9.12.3 --activate"
+  # Node 25+ no longer bundles corepack, so install pnpm directly.
+  bad "pnpm not found on PATH — install with: npm install -g pnpm@12"
 fi
 
-if command -v python3 >/dev/null 2>&1; then
-  py_version="$(python3 --version 2>&1 | awk '{print $2}')"
-  if version_ge "$py_version" "3.11.0"; then
-    ok "python3 $py_version (>= 3.11.0)"
-  else
-    warn "python3 $py_version — Modal image uses 3.11, local may diverge"
-  fi
+# The Python backend runs through uv, which installs the interpreter pinned
+# in .python-version (the same one CI and the Modal image use).
+if command -v uv >/dev/null 2>&1; then
+  ok "uv $(uv --version 2>&1 | awk '{print $2}') (Python $(cat .python-version 2>/dev/null || echo '?') from .python-version)"
 else
-  warn "python3 not found — needed for fastapi-dev"
+  warn "uv not found — needed for fastapi-dev; install from https://docs.astral.sh/uv/"
 fi
 
 # --- Project bootstrap -----------------------------------------------------
@@ -73,19 +71,10 @@ else
   bad "node_modules/ missing — run: pnpm install"
 fi
 
-if [ -e "$ROOT/venv" ]; then
-  if [ -L "$ROOT/venv" ]; then
-    target="$(readlink "$ROOT/venv")"
-    if [ -d "$target" ]; then
-      ok "venv/ (symlink to $target)"
-    else
-      bad "venv/ is a broken symlink -> $target"
-    fi
-  else
-    ok "venv/ present"
-  fi
+if [ -d "$ROOT/.venv" ]; then
+  ok ".venv/ present (uv)"
 else
-  warn "venv/ missing — run: python3 -m venv venv && source venv/bin/activate && pip install -r python/requirements.txt"
+  warn ".venv/ missing — run: uv sync"
 fi
 
 if [ -e "$ROOT/.env" ]; then

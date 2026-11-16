@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
 import nextConfig from 'eslint-config-next'
 import reactHooks from 'eslint-plugin-react-hooks'
+import oxlint from 'eslint-plugin-oxlint'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
@@ -36,6 +37,13 @@ const sharedLayerZones = SHARED_LAYERS.map((layer) => ({
 const config = [
   {
     ignores: ['coverage/**', '.claude/worktrees/', '.worktrees/', '.vercel/'],
+  },
+  {
+    // The React Hooks and Next rules now run in Oxlint, which honors the
+    // existing eslint-disable comments and reports stale ones itself
+    // (`oxlint --report-unused-disable-directives` in `pnpm lint`). ESLint
+    // would flag those same comments as unused, so it stays quiet here.
+    linterOptions: { reportUnusedDisableDirectives: 'off' },
   },
   ...nextConfig,
   {
@@ -73,6 +81,11 @@ const config = [
       'import/no-anonymous-default-export': 'off',
     },
   },
+  // Oxlint runs first in `pnpm lint` (see .oxlintrc.json). Switch off the
+  // ESLint rules it already covers so each problem is reported once and
+  // ESLint only does what Oxlint can't (the import-boundary rules above).
+  // Keep this last so it overrides the configs before it.
+  ...oxlint.buildFromOxlintConfigFile('./.oxlintrc.json'),
 ]
 
 export default config

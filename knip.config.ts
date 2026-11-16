@@ -23,8 +23,6 @@ const config: KnipConfig = {
     'tailwindcss-animate',
     // Used by scripts/generate-api-types.sh via npx
     'openapi-typescript',
-    // Browser automation for agents (playwright-cli skill); never imported
-    'playwright',
   ],
   ignoreBinaries: ['pip', 'python3'],
 }
