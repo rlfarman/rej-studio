@@ -22,7 +22,7 @@ interface CellDelta {
 
 /**
  * Per-codon preference delta (after − before) for a species. Green =
- * became more preferred, red = became less preferred, muted = unchanged.
+ * became more preferred (blue), less preferred (orange), muted = unchanged.
  * Makes the optimizer's work visible codon-by-codon.
  */
 export function CodonDeltaStrip({ original, optimized, species }: Props) {
@@ -102,12 +102,14 @@ export function CodonDeltaStrip({ original, optimized, species }: Props) {
           if (d === null) {
             color = 'transparent'
           } else if (d > 0.05) {
-            // Improvement: emerald, intensity scaled by magnitude.
-            color = `rgba(16, 185, 129, ${0.3 + Math.min(Math.abs(d), 1) * 0.7})`
+            // Improvement: blue, intensity scaled by magnitude. Blue/orange
+            // (not green/red) so the scale survives red-green color blindness.
+            color = `color-mix(in oklch, var(--chart-1) ${Math.round((0.3 + Math.min(Math.abs(d), 1) * 0.7) * 100)}%, transparent)`
           } else if (d < -0.05) {
-            color = `rgba(239, 68, 68, ${0.3 + Math.min(Math.abs(d), 1) * 0.7})`
+            color = `color-mix(in oklch, var(--chart-2) ${Math.round((0.3 + Math.min(Math.abs(d), 1) * 0.7) * 100)}%, transparent)`
           } else {
-            color = 'rgba(148, 163, 184, 0.25)' // slate-400/25 = unchanged
+            color =
+              'color-mix(in oklch, var(--muted-foreground) 25%, transparent)'
           }
           return (
             <div
@@ -125,7 +127,7 @@ export function CodonDeltaStrip({ original, optimized, species }: Props) {
       </div>
       <div className="text-muted-foreground type-micro flex items-center gap-1">
         <span>regressed</span>
-        <span className="h-2 flex-1 rounded-sm bg-gradient-to-r from-red-500/70 via-slate-400/25 to-emerald-500/70" />
+        <span className="from-chart-2/70 via-muted-foreground/25 to-chart-1/70 h-2 flex-1 rounded-sm bg-gradient-to-r" />
         <span>improved</span>
       </div>
     </div>

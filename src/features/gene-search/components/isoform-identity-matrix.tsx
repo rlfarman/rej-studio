@@ -7,6 +7,7 @@ import { Grid3x3 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useSpeciesContext } from '@/stores/species-store'
 import type { IsoformListItem } from '@/features/gene-search/types/domain-types'
+import { geneSearchCopy } from '@/features/gene-search/copy'
 
 interface Props {
   isoforms: IsoformListItem[]
@@ -120,7 +121,7 @@ export function IsoformIdentityMatrix({ isoforms }: Props) {
           className="flex items-center gap-2 font-sans text-sm font-medium"
         >
           <Grid3x3 className="text-muted-foreground size-4" />
-          Pairwise identity
+          {geneSearchCopy.identityMatrix.title}
         </h2>
         <Legend />
       </div>
@@ -128,9 +129,7 @@ export function IsoformIdentityMatrix({ isoforms }: Props) {
       <div className="-mx-4 overflow-x-auto px-4">
         <table className="border-separate border-spacing-[2px] text-left">
           <caption className="sr-only">
-            Pairwise protein identity between isoforms. Rows and columns use the
-            same numbering; each cell is the identity between that row and that
-            column.
+            {geneSearchCopy.identityMatrix.caption}
           </caption>
           <thead>
             <tr>
@@ -164,9 +163,7 @@ export function IsoformIdentityMatrix({ isoforms }: Props) {
       </div>
 
       <p className="text-muted-foreground type-nano max-w-prose">
-        Identity estimated from shared prefix + suffix of protein sequences.
-        Pairs ≥95% share most coding content — consider optimizing one per
-        cluster.
+        {geneSearchCopy.identityMatrix.footnote}
       </p>
     </section>
   )
@@ -175,7 +172,7 @@ export function IsoformIdentityMatrix({ isoforms }: Props) {
 function Legend() {
   return (
     <ul
-      aria-label="Identity scale"
+      aria-label={geneSearchCopy.identityMatrix.legendAria}
       className="text-muted-foreground type-nano flex flex-wrap items-center gap-x-3 gap-y-1"
     >
       {BINS.map((bin) => (

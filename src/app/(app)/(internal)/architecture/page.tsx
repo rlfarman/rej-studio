@@ -340,7 +340,7 @@ export default function ArchitecturePage() {
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-sm">
-                <Badge className="bg-chart-2/10 text-chart-2 border-chart-2/20 type-micro border font-mono">
+                <Badge className="bg-chart-2/10 text-foreground border-chart-2/20 type-micro border font-mono">
                   DB
                 </Badge>
                 Neon (Postgres)
@@ -376,7 +376,7 @@ export default function ArchitecturePage() {
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-sm">
-                <Badge className="bg-chart-4/10 text-chart-4 border-chart-4/20 type-micro border font-mono">
+                <Badge className="bg-chart-4/10 text-foreground border-chart-4/20 type-micro border font-mono">
                   Cache
                 </Badge>
                 Upstash Redis
@@ -417,7 +417,7 @@ export default function ArchitecturePage() {
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-sm">
-                <Badge className="bg-chart-1/10 text-chart-1 border-chart-1/20 type-micro border font-mono">
+                <Badge className="bg-chart-1/10 text-foreground border-chart-1/20 type-micro border font-mono">
                   Compute
                 </Badge>
                 Modal
@@ -495,19 +495,19 @@ export default function ArchitecturePage() {
           <div>
             <div className="type-overline mb-2">Observability Stack</div>
             <div className="flex flex-wrap gap-2">
-              <Badge className="bg-chart-5/10 text-chart-5 border-chart-5/20 type-micro border">
+              <Badge className="bg-chart-5/10 text-foreground border-chart-5/20 type-micro border">
                 Sentry — errors
               </Badge>
-              <Badge className="bg-chart-2/10 text-chart-2 border-chart-2/20 type-micro border">
+              <Badge className="bg-chart-2/10 text-foreground border-chart-2/20 type-micro border">
                 OpenTelemetry — traces
               </Badge>
-              <Badge className="bg-chart-3/10 text-chart-3 border-chart-3/20 type-micro border">
+              <Badge className="bg-chart-3/10 text-foreground border-chart-3/20 type-micro border">
                 GTM + GA4 — analytics
               </Badge>
-              <Badge className="bg-chart-4/10 text-chart-4 border-chart-4/20 type-micro border">
+              <Badge className="bg-chart-4/10 text-foreground border-chart-4/20 type-micro border">
                 Structured logs — stdout
               </Badge>
-              <Badge className="bg-chart-1/10 text-chart-1 border-chart-1/20 type-micro border">
+              <Badge className="bg-chart-1/10 text-foreground border-chart-1/20 type-micro border">
                 CSP reports — /api/csp-report
               </Badge>
             </div>

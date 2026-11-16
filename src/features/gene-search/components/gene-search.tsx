@@ -1,9 +1,10 @@
 'use client'
-import { useEffect, useState, useSyncExternalStore, useTransition } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 import { CommandDialog } from '@/components/ui/command'
 import { useRouter } from 'next/navigation'
 import { type SearchGenesResult } from '@/features/gene-search/api/genes'
 import { Button } from '@/components/ui/button'
+import { Kbd, ModKey } from '@/components/ui/kbd'
 import { SearchIcon } from 'lucide-react'
 import { useGeneSearch } from '@/features/gene-search/hooks/use-gene-search'
 import { GeneSearchCommand } from './gene-search-command'
@@ -28,18 +29,6 @@ interface GeneSearchProperties {
   // `GeneSearch` doesn't need to cross the feature boundary into `design-tool`.
   jobs?: JobSearchItem[]
   onSelectJob?: (id: string) => void
-}
-
-function subscribeToPlatformStore() {
-  return () => {}
-}
-
-function getPlatformSnapshot() {
-  return /Mac|iPod|iPhone|iPad/.test(window.navigator.userAgent)
-}
-
-function getPlatformServerSnapshot() {
-  return false
 }
 
 const EMPTY_JOBS: JobSearchItem[] = []
@@ -69,11 +58,6 @@ export function GeneSearch({
   const [, startTransition] = useTransition()
   const { recentGenes, addRecentGene } = useRecentGenes()
   const { favoriteGenes } = useFavoriteGenes()
-  const isMac = useSyncExternalStore(
-    subscribeToPlatformStore,
-    getPlatformSnapshot,
-    getPlatformServerSnapshot,
-  )
 
   const handleSelect = (gene: SavedGene) => {
     addRecentGene(gene)
@@ -128,9 +112,9 @@ export function GeneSearch({
           </div>
           <p className="text-muted-foreground group-hover:text-accent-foreground hidden text-sm md:block">
             {geneSearchCopy.trigger.kbdHintPrefix}{' '}
-            <kbd className="bg-muted text-muted-foreground group-hover:bg-accent-foreground/10 group-hover:text-accent-foreground type-micro pointer-events-none inline-flex h-5 items-center gap-1 rounded border px-1.5 font-mono font-medium opacity-100 select-none">
-              <span className="text-xs">{isMac ? '⌘' : 'Ctrl+'}</span>K
-            </kbd>
+            <Kbd>
+              <ModKey /> K
+            </Kbd>
           </p>
         </Button>
         <CommandDialog open={isOpen} onOpenChange={setIsOpen}>

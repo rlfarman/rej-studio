@@ -58,8 +58,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenuItem>
             <SidebarMenuButton asChild size="lg" tooltip="REJ Studio">
               <Link href="/">
-                <div className="flex aspect-square size-8 items-center justify-center">
-                  <Dna className="size-5" />
+                <div className="bg-spark text-spark-foreground flex aspect-square size-8 items-center justify-center rounded-md">
+                  <Dna className="size-4" />
                 </div>
                 <div className="grid flex-1 text-left leading-tight opacity-0 transition-opacity duration-150 group-data-[state=expanded]:opacity-100 group-data-[state=expanded]:delay-200 [[data-mobile=true]_&]:opacity-100">
                   <span className="font-display truncate text-base font-semibold">

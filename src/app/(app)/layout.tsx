@@ -4,7 +4,6 @@ import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { AppSidebar } from '@/app/_components/layout/app-sidebar'
 import { MaintenanceBanner } from '@/components/maintenance-banner'
 import { WelcomeDialog } from '@/features/onboarding/components/welcome-dialog'
-import { HelpButton } from '@/features/onboarding/components/help-button'
 import { GuidedTourRunner } from '@/features/onboarding/components/guided-tour-runner'
 import { TourRingOverlay } from '@/features/onboarding/components/tour-ring-overlay'
 
@@ -44,7 +43,6 @@ function AppShell({
           <div className="flex-1">{children}</div>
         </main>
         <WelcomeDialog />
-        <HelpButton />
         <GuidedTourRunner />
         <TourRingOverlay />
       </SidebarInset>

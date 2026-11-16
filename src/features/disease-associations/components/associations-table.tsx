@@ -50,7 +50,14 @@ export function AssociationsTable({
       <Table aria-label={diseaseAssociationsCopy.table.ariaLabel}>
         <TableHeader>
           <TableRow className="bg-muted/50 hover:bg-muted/50">
-            <TableHead className="w-[96px] px-4">
+            <TableHead
+              className="w-[96px] px-4"
+              aria-sort={ariaSortFor(
+                'symbol',
+                headerProps.sortKey,
+                headerProps.sortDir,
+              )}
+            >
               <SortHeader
                 label={diseaseAssociationsCopy.table.columns.symbol}
                 column="symbol"
@@ -67,7 +74,14 @@ export function AssociationsTable({
             <TableHead className="w-[220px] px-4">
               {diseaseAssociationsCopy.table.columns.inheritance}
             </TableHead>
-            <TableHead className="w-[132px] px-4 text-right whitespace-nowrap">
+            <TableHead
+              className="w-[132px] px-4 text-right whitespace-nowrap"
+              aria-sort={ariaSortFor(
+                'cds',
+                headerProps.sortKey,
+                headerProps.sortDir,
+              )}
+            >
               <SortHeader
                 label={diseaseAssociationsCopy.table.columns.largestCds}
                 column="cds"
@@ -145,6 +159,16 @@ function firstPhenotypeLabel(row: AssociationRow): string {
     : name
 }
 
+/** Value for the column header's aria-sort (it must sit on the header cell). */
+function ariaSortFor(
+  column: SortKey,
+  sortKey: SortKey,
+  sortDir: SortDir,
+): 'ascending' | 'descending' | 'none' {
+  if (sortKey !== column) return 'none'
+  return sortDir === 'asc' ? 'ascending' : 'descending'
+}
+
 type SortHeaderProps = {
   label: string
   column: SortKey
@@ -186,12 +210,6 @@ function SortHeader({
   params.set('dir', nextDir)
   const href = `?${params.toString()}`
 
-  const ariaSort = active
-    ? sortDir === 'asc'
-      ? 'ascending'
-      : 'descending'
-    : 'none'
-
   const Icon = active ? (sortDir === 'asc' ? ArrowUp : ArrowDown) : ArrowUpDown
 
   return (
@@ -199,7 +217,6 @@ function SortHeader({
       href={href}
       scroll={false}
       replace
-      aria-sort={ariaSort}
       className={cn(
         'hover:text-foreground inline-flex items-center gap-1 transition-colors',
         align === 'right' && 'flex-row-reverse',

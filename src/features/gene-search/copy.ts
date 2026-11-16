@@ -108,4 +108,12 @@ export const geneSearchCopy = {
     label: 'Favorites',
     removeAria: (symbol: string) => `Remove ${symbol} from favorites`,
   },
+  identityMatrix: {
+    title: 'Pairwise identity',
+    caption:
+      'Pairwise protein identity between isoforms. Rows and columns use the same numbering; each cell is the identity between that row and that column.',
+    footnote:
+      'Identity estimated from shared prefix + suffix of protein sequences. Pairs ≥95% share most coding content — consider optimizing one per cluster.',
+    legendAria: 'Identity scale',
+  },
 } as const

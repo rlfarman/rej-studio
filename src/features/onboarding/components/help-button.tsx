@@ -37,12 +37,3 @@ export function HeaderHelpButton() {
     </Tooltip>
   )
 }
-
-/**
- * The old floating button, still mounted by src/app/(app)/layout.tsx.
- * Help now lives in the header (HeaderHelpButton), so this renders nothing.
- * Remove it and its <HelpButton /> in the layout once that file can change.
- */
-export function HelpButton() {
-  return null
-}
