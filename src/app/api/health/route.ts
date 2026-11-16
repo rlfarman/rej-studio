@@ -7,6 +7,7 @@ import { createUpstashRateLimiter, redis } from '@/lib/upstash'
 import { withCors } from '@/lib/api-cors'
 import { getClientIp } from '@/lib/client-ip'
 import { timingSafeEqual } from '@/lib/auth/session'
+import { probeGeneData } from '@/features/gene-search/api/static-gene-data'
 
 // Rate limit: 20 requests per minute per IP.
 const limiter = createUpstashRateLimiter({
@@ -98,7 +99,10 @@ interface HealthResponse {
   timestamp: string
   version: string
   checks: {
+    /** Postgres; skipped when genes come from the static corpus. */
     database: Check
+    /** The static gene corpus; skipped when genes come from Postgres. */
+    geneData: Check
     modal: Check
   }
 }
@@ -120,6 +124,21 @@ async function checkDatabase(): Promise<Check> {
     return {
       status: 'fail',
       latencyMs: ms,
+      error: err instanceof Error ? err.message : 'unknown error',
+    }
+  }
+}
+
+async function checkGeneData(): Promise<Check> {
+  const start = performance.now()
+  try {
+    const result = await probeGeneData()
+    if (!result) return { status: 'skipped' }
+    return { status: 'ok', latencyMs: Math.round(performance.now() - start) }
+  } catch (err) {
+    return {
+      status: 'fail',
+      latencyMs: Math.round(performance.now() - start),
       error: err instanceof Error ? err.message : 'unknown error',
     }
   }
@@ -198,15 +217,22 @@ export async function GET() {
     )
   }
 
-  const [database, modal] = await Promise.all([checkDatabase(), checkModal()])
+  // The database only matters while genes still come from it.
+  const [geneData, modal] = await Promise.all([checkGeneData(), checkModal()])
+  const database: Check =
+    geneData.status === 'skipped'
+      ? await checkDatabase()
+      : { status: 'skipped' }
 
-  const degraded = database.status === 'fail' || modal.status === 'fail'
+  const degraded = [database, geneData, modal].some(
+    (check) => check.status === 'fail',
+  )
 
   const body: HealthResponse = {
     status: degraded ? 'degraded' : 'ok',
     timestamp: new Date().toISOString(),
     version: process.env.npm_package_version ?? 'unknown',
-    checks: { database, modal },
+    checks: { database, geneData, modal },
   }
 
   return withCors(

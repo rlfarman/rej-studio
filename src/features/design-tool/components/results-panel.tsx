@@ -61,12 +61,17 @@ import { CodonDeltaStrip } from './codon-delta-strip'
 import { AavResults } from './aav-size-estimator'
 import { SplitBar } from '@/components/bio/split-bar'
 import { ObjectivesSummary } from './objectives-output'
+import { ObjectiveReplay } from './objective-replay'
 import { formatFasta } from '@/lib/bio/fasta'
 import { downloadTextFile } from '@/lib/download-file'
 import { isSpecies } from '@/lib/bio/species'
 import type { DesignToolSpecies } from '@/features/design-tool/types/species-options'
 import { computeGcPercent, countCpG } from '@/lib/bio/sequence-utils'
 import { deriveKeyMetrics } from '@/features/design-tool/utils/objective-metrics'
+import {
+  buildObjectiveSteps,
+  countOutcomes,
+} from '@/features/design-tool/utils/objective-steps'
 import { SPECIES_DISPLAY_NAME } from '@/lib/bio/species'
 import { toCodons } from '@/lib/bio/genetic-code'
 import {
@@ -185,7 +190,7 @@ function MetricsStrip({ result }: { result: ProcessResult }) {
   const showCai = stats.keyAfter.caiScore !== null
 
   return (
-    <div className="bg-border grid grid-cols-1 gap-px overflow-hidden rounded-lg border sm:grid-cols-2 lg:grid-cols-4">
+    <div className="bg-border grid grid-cols-1 gap-px overflow-hidden rounded-2xl border sm:grid-cols-2 lg:grid-cols-4">
       <MetricCell
         label="Score"
         before={stats.before.totalScore}
@@ -258,10 +263,10 @@ function renderSequenceWithIntrons(sequence: string) {
               <span
                 className={
                   isStim
-                    ? 'bg-accent text-accent-foreground cursor-help rounded px-1 font-semibold'
+                    ? 'bg-accent text-accent-foreground cursor-help rounded-sm px-1 font-semibold'
                     : isFive
-                      ? 'text-info-soft bg-info/15 dark:text-info cursor-help rounded px-1 font-semibold'
-                      : 'bg-primary/15 text-primary dark:text-primary-foreground dark:bg-primary/40 cursor-help rounded px-1 font-semibold'
+                      ? 'text-info-soft bg-info/15 dark:text-info cursor-help rounded-sm px-1 font-semibold'
+                      : 'bg-primary/15 text-primary dark:text-primary-foreground dark:bg-primary/40 cursor-help rounded-sm px-1 font-semibold'
                 }
               />
             }
@@ -289,7 +294,7 @@ function SequenceCard({
   const justCopied = isCopied('fasta') || isCopied('seq')
   const displayLength = sequence.replace(INTRON_MARKER_RE, '').length
   return (
-    <div className="bg-muted/30 space-y-2 rounded-lg border p-3">
+    <div className="bg-muted/30 space-y-2 rounded-2xl border p-3">
       <div className="flex flex-wrap items-center justify-between gap-1.5">
         <div className="flex items-center gap-1.5">
           <span className="text-xs font-medium">{label}</span>
@@ -345,7 +350,7 @@ function SequenceCard({
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-      <pre className="bg-muted max-h-40 overflow-auto rounded-md p-2.5 font-mono text-xs break-all whitespace-pre-wrap">
+      <pre className="bg-muted max-h-40 overflow-auto rounded-xl p-2.5 font-mono text-xs break-all whitespace-pre-wrap">
         {renderSequenceWithIntrons(sequence)}
       </pre>
     </div>
@@ -425,7 +430,7 @@ function WggwTable({
     stim3: resultsCopy.wggwTable.stim3,
   }
   return (
-    <div className="overflow-auto rounded-md border">
+    <div className="overflow-auto rounded-2xl border">
       <Table>
         <TableHeader>
           <TableRow>
@@ -517,6 +522,21 @@ function ResultsPanelImpl({ result, optionsUsed, species }: ResultsPanelProps) {
     const total = after.passedCount + after.failedCount
     if (total === 0) return undefined
     return resultsCopy.summaries.objectivesPassed(after.passedCount, total)
+  })()
+
+  const changedSummary = (() => {
+    const counts = countOutcomes(
+      buildObjectiveSteps(
+        result.objectives_report_before,
+        result.objectives_report_after,
+      ),
+    )
+    // Every outcome the replay would show, so the collapsed row never reads
+    // as "nothing happened" when something did. Objectives that simply held
+    // are not news and are left out; a row with none of these has nothing to
+    // open it for, and gets no summary at all.
+    const summary = resultsCopy.summaries.changed(counts)
+    return summary || undefined
   })()
 
   const junctionSummary = resultsCopy.summaries.junction(
@@ -640,6 +660,17 @@ function ResultsPanelImpl({ result, optionsUsed, species }: ResultsPanelProps) {
               <WggwTable wggwInfo={result.wggw_info} />
             </ExpandableRow>
           )}
+          <ExpandableRow
+            title={resultsCopy.sections.replay}
+            icon={TrendingUp}
+            summary={changedSummary}
+          >
+            <ObjectiveReplay
+              reportBefore={result.objectives_report_before}
+              reportAfter={result.objectives_report_after}
+              sequenceLength={result.optimized_sequence.length}
+            />
+          </ExpandableRow>
           <ExpandableRow
             title={resultsCopy.sections.objectivesReport}
             icon={ClipboardCheck}

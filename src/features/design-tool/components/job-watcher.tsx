@@ -8,6 +8,7 @@ import {
 } from '@/features/design-tool/api/job-status-client'
 import {
   useJobHistory,
+  isBrowserJobId,
   isSeedId,
 } from '@/features/design-tool/hooks/use-job-history'
 import type { JobError } from '@/features/design-tool/hooks/use-job-history'
@@ -50,7 +51,10 @@ export function JobWatcher() {
   // of the demo.
   const runningIds = useJobHistory((s) =>
     s.entries
-      .filter((e) => e.status === 'running' && !isSeedId(e.id))
+      .filter(
+        (e) =>
+          e.status === 'running' && !isSeedId(e.id) && !isBrowserJobId(e.id),
+      )
       .map((e) => e.id)
       .join(','),
   )

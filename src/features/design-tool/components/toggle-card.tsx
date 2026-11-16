@@ -46,7 +46,7 @@ export function ToggleCard({
           <FormItem className="gap-0">
             <div
               className={cn(
-                'flex flex-row items-center gap-2.5 rounded-md px-2 py-2.5 transition-colors',
+                'flex flex-row items-center gap-2.5 rounded-xl px-2 py-2.5 transition-colors',
                 checked ? 'bg-primary/[0.04]' : 'hover:bg-muted/40',
               )}
             >

@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { Card, CardContent } from '@/components/ui/card'
 import {
   Table,
   TableBody,
@@ -13,6 +14,7 @@ import { cn } from '@/lib/utils'
 import { formatInheritanceLabel, type AssociationRow } from '../types'
 import { diseaseAssociationsCopy } from '../copy'
 import { rowBuckets, type SortDir, type SortKey } from '../api/associations'
+import { Skeleton } from '@/components/ui/skeleton'
 
 type Props = {
   rows: AssociationRow[]
@@ -37,9 +39,11 @@ export function AssociationsTable({
 }: Props) {
   if (rows.length === 0) {
     return (
-      <div className="bg-card text-muted-foreground rounded-lg border p-6 text-center text-sm shadow-sm">
-        {diseaseAssociationsCopy.table.empty}
-      </div>
+      <Card>
+        <CardContent className="text-muted-foreground text-center">
+          {diseaseAssociationsCopy.table.empty}
+        </CardContent>
+      </Card>
     )
   }
 
@@ -49,7 +53,7 @@ export function AssociationsTable({
   // the numeric columns off-screen. Text columns wrap (names clamp to two
   // lines); the CDS column stays on one line.
   return (
-    <div className="bg-card overflow-hidden rounded-lg border shadow-sm">
+    <Card className="gap-0 py-0">
       <Table aria-label={diseaseAssociationsCopy.table.ariaLabel}>
         <TableHeader>
           <TableRow className="bg-muted/50 hover:bg-muted/50">
@@ -150,7 +154,7 @@ export function AssociationsTable({
           })}
         </TableBody>
       </Table>
-    </div>
+    </Card>
   )
 }
 
@@ -160,21 +164,21 @@ const SKELETON_ROWS = 8
 export function AssociationsTableSkeleton() {
   return (
     <div aria-hidden className="flex flex-col gap-6">
-      <div className="bg-muted h-3 w-24 animate-pulse rounded" />
-      <div className="bg-card overflow-hidden rounded-lg border shadow-sm">
+      <Skeleton className="h-3 w-24" />
+      <Card className="gap-0 py-0">
         <div className="bg-muted/50 h-10 border-b" />
         {Array.from({ length: SKELETON_ROWS }, (_, i) => (
           <div
             key={i}
             className="flex h-12 items-center gap-6 border-b px-4 last:border-0"
           >
-            <div className="bg-muted h-4 w-14 animate-pulse rounded" />
-            <div className="bg-muted h-4 flex-1 animate-pulse rounded" />
-            <div className="bg-muted hidden h-4 w-40 animate-pulse rounded sm:block" />
-            <div className="bg-muted h-4 w-16 animate-pulse rounded" />
+            <Skeleton className="h-4 w-14" />
+            <Skeleton className="h-4 flex-1" />
+            <Skeleton className="hidden h-4 w-40 sm:block" />
+            <Skeleton className="h-4 w-16" />
           </div>
         ))}
-      </div>
+      </Card>
     </div>
   )
 }

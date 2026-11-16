@@ -131,7 +131,7 @@ export function IsoformSplitPreview({
           {alternatives.map((c, i) => (
             <span
               key={c.position}
-              className="rounded-sm border px-1.5 py-0.5 font-mono tabular-nums"
+              className="rounded-full border px-1.5 py-0.5 font-mono tabular-nums"
               title={copy.alternativeTitle(
                 c.motif,
                 c.position.toLocaleString(),

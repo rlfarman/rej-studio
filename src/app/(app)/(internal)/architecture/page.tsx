@@ -85,7 +85,7 @@ function ServiceBox({
   }[variant]
 
   return (
-    <div className={`rounded-lg p-3 ${bg}`}>
+    <div className={`rounded-2xl p-3 ${bg}`}>
       <div className="mb-0.5 text-sm font-semibold">{name}</div>
       <div className="text-muted-foreground type-nano font-mono">{tech}</div>
       {details && (
@@ -110,7 +110,7 @@ export default function ArchitecturePage() {
       role="region"
       tabIndex={0}
       aria-labelledby="architecture-title"
-      className="focus-visible:ring-ring mx-auto max-w-5xl space-y-6 rounded-md p-6 outline-none focus-visible:ring-2"
+      className="focus-visible:ring-ring mx-auto max-w-5xl space-y-6 rounded-2xl p-6 outline-none focus-visible:ring-2"
     >
       <div>
         <PageTitle id="architecture-title">REJ Studio — Architecture</PageTitle>
@@ -476,7 +476,7 @@ export default function ArchitecturePage() {
             {/* Vercel path */}
             <div className="space-y-2">
               <div className="text-sm font-semibold">Vercel</div>
-              <div className="bg-muted/50 type-nano space-y-1 rounded-lg p-3">
+              <div className="bg-muted/50 type-nano space-y-1 rounded-xl p-3">
                 <div className="flex items-center gap-2">
                   <Badge variant="secondary" className="text-[9px]">
                     Edge

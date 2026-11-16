@@ -80,7 +80,7 @@ export function IsoformLengthChart({ isoforms }: Props) {
               <Link
                 href={buildHref(row.id)}
                 scroll={false}
-                className="group hover:bg-muted/40 focus-visible:ring-ring type-micro -mx-1 grid grid-cols-[5.5rem_1fr_3.5rem] items-center gap-2 rounded-sm px-1 py-1 transition-colors focus-visible:ring-2 focus-visible:outline-none sm:grid-cols-[8rem_1fr_2rem_4rem]"
+                className="group hover:bg-muted/40 focus-visible:ring-ring type-micro -mx-1 grid grid-cols-[5.5rem_1fr_3.5rem] items-center gap-2 rounded-lg px-1 py-1 transition-colors focus-visible:ring-2 focus-visible:outline-none sm:grid-cols-[8rem_1fr_2rem_4rem]"
                 aria-label={`${row.id}, ${row.length.toLocaleString()} base pairs, ${cfg.label}`}
               >
                 {/* On phones only the transcript suffix fits; the full ID is

@@ -14,6 +14,7 @@ import {
 import { DNASplicer } from './dna-splicer'
 import { Form } from '@/components/ui/form'
 import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 import type { DesignToolSpecies } from '@/features/design-tool/types/species-options'
 import { validationSchema, FormValues } from '../types/form-schema'
 import { formatOptionsForReport } from '../utils/form-handler'
@@ -22,6 +23,7 @@ import { useFormDraft } from '@/features/design-tool/hooks/use-form-draft'
 import { CustomizationOptions } from './customization-options'
 import { DesignObjectives } from './optimization-options'
 import { SubmitButton } from './submit-button'
+import { FinishNotificationOptIn } from './finish-notification-opt-in'
 import { FieldHelp } from './field-help'
 import { RunSummary } from './run-summary'
 import { ResultsPanel } from './results-panel'
@@ -63,7 +65,9 @@ export function GeneSplitterForm({
 
   const methods = useForm<FormValues>({
     resolver: zodResolver(validationSchema),
-    mode: 'onBlur',
+    // First check on blur, then on every change: with 'onBlur' an error
+    // stayed up after the sequence was fixed, until the next blur.
+    mode: 'onTouched',
     defaultValues: {
       sequenceType: 'dna' as const,
       removeCrypticSpliceSites: true,
@@ -99,7 +103,7 @@ export function GeneSplitterForm({
   })
 
   // Hydrate the form from a resumed URL job's stored formValues — once they
-  // appear in history (localStorage isn't populated on first render).
+  // appear in history (it loads from IndexedDB after the first render).
   // Guards against validation drift: if the schema has changed since this
   // job was saved, `safeParse` will reject, and we drop back to defaults
   // rather than silently loading an invalid form.
@@ -152,7 +156,9 @@ export function GeneSplitterForm({
       .catch(() => {})
   }
 
-  const showForm = job.status === 'idle' || isEditing
+  // While a resumed job's entry is still loading, the job is neither new nor
+  // missing: show a placeholder rather than flashing an empty form.
+  const showForm = (job.status === 'idle' && !job.isRestoring) || isEditing
   const isRunning = job.status === 'submitting' || job.status === 'running'
   // 'submitting' is the brief window while the POST is in flight; treat it
   // as running for header/placeholder purposes so the UI doesn't blank out.
@@ -190,6 +196,13 @@ export function GeneSplitterForm({
             onEdit={() => setIsEditing(true)}
             onRerun={handleRerun}
             onCancel={isRunning ? job.cancelJob : undefined}
+          />
+        )}
+
+        {!showForm && job.isRestoring && (
+          <Skeleton
+            aria-hidden
+            className="h-[28rem] rounded-[min(var(--radius-4xl),24px)]"
           />
         )}
 
@@ -270,13 +283,17 @@ export function GeneSplitterForm({
 
             {/* Sticky so the primary action stays in reach on a long form,
                 and within thumb reach on a phone. */}
-            <div className="bg-background/85 border-border supports-[backdrop-filter]:bg-background/70 sticky bottom-0 z-20 -mx-1 flex flex-wrap items-center justify-between gap-3 rounded-t-lg border-t px-4 py-3 backdrop-blur">
+            <div className="bg-background/85 border-border supports-[backdrop-filter]:bg-background/70 sticky bottom-0 z-20 -mx-1 flex flex-wrap items-center justify-between gap-3 rounded-t-2xl border-t px-4 py-3 backdrop-blur">
               <RunSummary />
-              <SubmitButton
-                isJobRunning={job.isLoading}
-                isJobComplete={job.status === 'completed'}
-                stage={job.stage}
-              />
+              <div className="flex flex-wrap items-center gap-2">
+                {/* Only browser runs can finish unseen in a background tab. */}
+                {job.runsInBrowser && <FinishNotificationOptIn />}
+                <SubmitButton
+                  isJobRunning={job.isLoading}
+                  isJobComplete={job.status === 'completed'}
+                  stage={job.stage}
+                />
+              </div>
             </div>
           </>
         )}

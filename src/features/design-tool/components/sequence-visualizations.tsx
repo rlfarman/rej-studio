@@ -118,7 +118,7 @@ function GcContentTrack({ original, optimized, splitPoint }: Props) {
           </span>
         </div>
       </div>
-      <div className="bg-muted/30 overflow-hidden rounded-md border">
+      <div className="bg-muted/30 overflow-hidden rounded-2xl border">
         <svg
           viewBox={`0 0 1000 ${CHART_HEIGHT}`}
           preserveAspectRatio="none"
@@ -224,7 +224,7 @@ function ChangeDensityTrack({ original, optimized, splitPoint }: Props) {
         </span>
       </div>
       <div
-        className="bg-muted/30 grid h-16 items-end gap-px rounded-md border p-1"
+        className="bg-muted/30 grid h-16 items-end gap-px rounded-xl border p-1"
         style={{ gridTemplateColumns: `repeat(${bins.length}, 1fr)` }}
       >
         {bins.map((bin, i) => {

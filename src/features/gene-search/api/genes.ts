@@ -4,10 +4,11 @@ import {
   fetchGeneBySymbol,
   fetchSimilarGenes,
 } from '@/features/gene-search/api/gene-queries'
-import type {
-  SearchGenesResult,
-  SearchRequest,
-  SimilarGene,
+import {
+  isSymbolLike,
+  type SearchGenesResult,
+  type SearchRequest,
+  type SimilarGene,
 } from '@/features/gene-search/types/search'
 import { speciesFilterSchema, type SpeciesFilter } from '@/lib/bio/species'
 import { z } from 'zod'
@@ -15,8 +16,11 @@ import { getRequestRateLimitKey } from '@/lib/client-ip'
 import { createUpstashRateLimiter } from '@/lib/upstash'
 import { createLogger } from '@/lib/logger'
 
-// Server-only reads. Nothing here is a server action: the command palette
-// searches through GET /api/genes/search, and pages call these directly.
+// Server-only reads. Nothing here is a server action: pages call these
+// directly, and with Postgres behind them the command palette searches
+// through GET /api/genes/search. With a static corpus the palette and the
+// /genes page search in the browser instead (corpus/client.ts), so the
+// rate limit below only guards the Postgres path.
 
 const log = createLogger('gene-search')
 
@@ -56,10 +60,6 @@ export async function checkSearchRateLimit(): Promise<RateLimitOutcome> {
   return { ok: true }
 }
 
-// "Did you mean" only makes sense for something shaped like a symbol, not
-// for a phrase such as a disease name.
-const SYMBOL_LIKE = /^[\w.-]{2,20}$/
-
 /**
  * Search genes by symbol, name, alias or Ensembl ID. Expects input already
  * validated against `searchRequestSchema`. Throws `SearchUnavailableError`
@@ -83,7 +83,7 @@ export async function searchGenes({
       limit,
     )
     const suggestions =
-      results.length === 0 && SYMBOL_LIKE.test(query)
+      results.length === 0 && isSymbolLike(query)
         ? await findSimilarGenes(query)
         : []
     // Structured search analytics — log query, species filter, and result

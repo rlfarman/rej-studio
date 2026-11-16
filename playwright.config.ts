@@ -45,6 +45,16 @@ export default defineConfig({
       dependencies: ['setup'],
       use: { ...devices['Desktop Chrome'], storageState: STORAGE_STATE },
     },
+    {
+      // The in-browser optimizer is off by default, so this project turns it
+      // on for its own server. Designing a real gene in WebAssembly takes
+      // longer than a page load, hence the raised timeout.
+      name: 'browser-optimizer',
+      testMatch: /browser-optimizer\.spec\.ts/,
+      dependencies: ['setup'],
+      timeout: 180_000,
+      use: { ...devices['Desktop Chrome'], storageState: STORAGE_STATE },
+    },
   ],
   webServer: {
     command: `pnpm exec next dev --port ${E2E_PORT}`,
@@ -56,6 +66,10 @@ export default defineConfig({
       DATABASE_URL: 'memory://',
       BASIC_AUTH_PASSWORD: E2E_PASSWORD,
       SESSION_SECRET: E2E_SESSION_SECRET,
+      // browser-optimizer.spec.ts needs this on; the other projects assert
+      // the default backend path, which this does not change for them
+      // because they never submit a design.
+      NEXT_PUBLIC_ENABLE_BROWSER_OPTIMIZER: 'true',
     },
   },
 })
