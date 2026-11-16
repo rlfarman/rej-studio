@@ -78,7 +78,7 @@ export default function RootLayout({
           <QueryProvider>
             <a
               href="#main-content"
-              className="focus:bg-background focus:text-foreground focus:ring-ring sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:rounded-md focus:px-4 focus:py-2 focus:shadow-md focus:ring-2"
+              className="focus:bg-background focus:text-foreground focus:ring-ring sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:rounded-2xl focus:px-4 focus:py-2 focus:shadow-md focus:ring-2"
             >
               Skip to content
             </a>

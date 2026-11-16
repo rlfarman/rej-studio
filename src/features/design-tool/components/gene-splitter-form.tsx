@@ -272,7 +272,7 @@ export function GeneSplitterForm({
 
             {/* Sticky so the primary action stays in reach on a long form,
                 and within thumb reach on a phone. */}
-            <div className="bg-background/85 border-border supports-[backdrop-filter]:bg-background/70 sticky bottom-0 z-20 -mx-1 flex flex-wrap items-center justify-between gap-3 rounded-t-lg border-t px-4 py-3 backdrop-blur">
+            <div className="bg-background/85 border-border supports-[backdrop-filter]:bg-background/70 sticky bottom-0 z-20 -mx-1 flex flex-wrap items-center justify-between gap-3 rounded-t-2xl border-t px-4 py-3 backdrop-blur">
               <RunSummary />
               <SubmitButton
                 isJobRunning={job.isLoading}

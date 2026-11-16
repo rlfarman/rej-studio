@@ -102,7 +102,7 @@ export function IsoformIdentityMatrix({ isoforms }: Props) {
   return (
     <section
       aria-labelledby="identity-matrix-title"
-      className="mb-4 space-y-4 rounded-md border p-4"
+      className="mb-4 space-y-4 rounded-2xl border p-4"
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2

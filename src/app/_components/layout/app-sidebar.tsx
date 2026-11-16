@@ -136,7 +136,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 tooltip={commonCopy.brandName}
                 render={<Link href="/" />}
               >
-                <div className="bg-spark text-spark-foreground flex aspect-square size-8 items-center justify-center rounded-md">
+                <div className="bg-spark text-spark-foreground flex aspect-square size-8 items-center justify-center rounded-xl">
                   <Dna className="size-4" />
                 </div>
                 <div className="grid flex-1 text-left leading-tight opacity-0 transition-opacity duration-150 group-data-[state=expanded]:opacity-100 group-data-[state=expanded]:delay-200 [[data-mobile=true]_&]:opacity-100">

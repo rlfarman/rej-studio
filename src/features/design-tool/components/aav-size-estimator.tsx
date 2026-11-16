@@ -37,7 +37,7 @@ export function AavResults({ seq5Length, seq3Length }: AavResultsProps) {
     <div className="space-y-3">
       <span className="text-sm font-medium">{copy.results.heading}</span>
       <div className="grid grid-cols-2 gap-2">
-        <div className="bg-muted/50 flex flex-col rounded-lg border p-3">
+        <div className="bg-muted/50 flex flex-col rounded-2xl border p-3">
           <span className="text-muted-foreground text-xs font-medium">
             {copy.results.fiveVector}
           </span>
@@ -68,7 +68,7 @@ export function AavResults({ seq5Length, seq3Length }: AavResultsProps) {
             {AAV_OVERHEAD_BP.toLocaleString()} overhead
           </span>
         </div>
-        <div className="bg-muted/50 flex flex-col rounded-lg border p-3">
+        <div className="bg-muted/50 flex flex-col rounded-2xl border p-3">
           <span className="text-muted-foreground text-xs font-medium">
             {copy.results.threeVector}
           </span>

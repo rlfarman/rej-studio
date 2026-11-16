@@ -40,7 +40,7 @@ function SearchError({ message }: { message: string }) {
   return (
     <div
       role="alert"
-      className="text-destructive-foreground bg-destructive/10 flex flex-col items-start gap-2 rounded-lg p-4 text-sm"
+      className="text-destructive-foreground bg-destructive/10 flex flex-col items-start gap-2 rounded-2xl p-4 text-sm"
     >
       <span>
         {message} {copy.errorSuffix}
@@ -142,7 +142,7 @@ export async function GeneSearchResults({
                   gene.species,
                   gene.matchedIsoformId,
                 )}
-                className="focus-visible:ring-ring grid min-w-0 flex-1 grid-cols-[5rem_1fr] items-baseline gap-x-4 gap-y-1 rounded-sm px-2 py-3 focus-visible:ring-2 focus-visible:outline-none sm:grid-cols-[7rem_1fr]"
+                className="focus-visible:ring-ring grid min-w-0 flex-1 grid-cols-[5rem_1fr] items-baseline gap-x-4 gap-y-1 rounded-xl px-2 py-3 focus-visible:ring-2 focus-visible:outline-none sm:grid-cols-[7rem_1fr]"
               >
                 <span className="truncate font-mono text-sm font-semibold">
                   <HighlightMatch text={gene.symbol} query={query} />

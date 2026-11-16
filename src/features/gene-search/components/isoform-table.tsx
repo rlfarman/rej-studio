@@ -67,6 +67,7 @@ import {
   type IsoformSortKey,
 } from '@/features/gene-search/utils/isoform-sort'
 import { geneSearchCopy } from '../copy'
+import { Skeleton } from '@/components/ui/skeleton'
 
 const copy = geneSearchCopy.isoformTable
 const terms = geneSearchCopy.terms
@@ -329,7 +330,7 @@ function IsoformRow({
               e.stopPropagation()
               onToggleExpanded(isoform.id)
             }}
-            className="text-muted-foreground hover:text-foreground focus-visible:ring-ring flex size-11 items-center justify-center rounded-sm focus-visible:ring-2 focus-visible:outline-none"
+            className="text-muted-foreground hover:text-foreground focus-visible:ring-ring flex size-11 items-center justify-center rounded-full focus-visible:ring-2 focus-visible:outline-none"
             aria-expanded={isExpanded}
             aria-controls={
               isExpanded ? `isoform-row-${isoform.id}-details` : undefined
@@ -760,28 +761,28 @@ export function IsoformTableLoading() {
       className="flex flex-col gap-3"
     >
       <div className="flex h-8 items-center gap-6" aria-hidden>
-        <div className="bg-muted h-4 w-24 animate-pulse rounded-md" />
-        <div className="bg-muted h-4 w-36 animate-pulse rounded-md" />
-        <div className="bg-muted hidden h-4 w-40 animate-pulse rounded-md sm:block" />
+        <Skeleton className="h-4 w-24" />
+        <Skeleton className="h-4 w-36" />
+        <Skeleton className="hidden h-4 w-40 sm:block" />
       </div>
       <div aria-hidden>
         <div className="flex h-10 items-center gap-4 border-b px-2">
-          <div className="bg-muted h-3.5 w-7 animate-pulse rounded" />
-          <div className="bg-muted h-3.5 w-40 animate-pulse rounded" />
-          <div className="bg-muted h-3.5 w-16 animate-pulse rounded" />
-          <div className="bg-muted hidden h-3.5 w-16 animate-pulse rounded sm:block" />
-          <div className="bg-muted hidden h-3.5 w-12 animate-pulse rounded sm:block" />
+          <Skeleton className="h-3.5 w-7" />
+          <Skeleton className="h-3.5 w-40" />
+          <Skeleton className="h-3.5 w-16" />
+          <Skeleton className="hidden h-3.5 w-16 sm:block" />
+          <Skeleton className="hidden h-3.5 w-12 sm:block" />
         </div>
         {Array.from({ length: SKELETON_ROWS }, (_, i) => (
           <div
             key={i}
             className="flex h-11 items-center gap-4 border-b px-2 last:border-0"
           >
-            <div className="bg-muted size-4 animate-pulse rounded" />
-            <div className="bg-muted h-4 w-36 animate-pulse rounded" />
-            <div className="bg-muted h-4 w-16 animate-pulse rounded" />
-            <div className="bg-muted hidden h-4 w-16 animate-pulse rounded sm:block" />
-            <div className="bg-muted hidden h-4 w-12 animate-pulse rounded sm:block" />
+            <Skeleton className="size-4 rounded-full" />
+            <Skeleton className="h-4 w-36" />
+            <Skeleton className="h-4 w-16" />
+            <Skeleton className="hidden h-4 w-16 sm:block" />
+            <Skeleton className="hidden h-4 w-12 sm:block" />
           </div>
         ))}
       </div>

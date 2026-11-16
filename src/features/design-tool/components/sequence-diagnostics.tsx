@@ -43,7 +43,7 @@ export function SequenceDiagnostics() {
   if (!diagnostics) return null
 
   return (
-    <div className="bg-muted/50 flex flex-wrap gap-2 rounded-lg border p-3">
+    <div className="bg-muted/50 flex flex-wrap gap-2 rounded-2xl border p-3">
       {diagnostics.checks.map((check) => (
         <DiagBadge key={check.label} {...check} />
       ))}

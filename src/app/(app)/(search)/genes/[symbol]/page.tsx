@@ -27,6 +27,7 @@ import {
   parseSpeciesParam,
   type Species,
 } from '@/lib/bio/species'
+import { Skeleton } from '@/components/ui/skeleton'
 
 type SearchParams = Record<string, string | string[] | undefined>
 
@@ -234,20 +235,11 @@ async function GeneIsoforms(props: Props) {
 function GeneHeaderSkeleton() {
   return (
     <>
-      <div
-        aria-hidden
-        className="bg-muted h-5 w-56 animate-pulse rounded-md md:h-6"
-      />
+      <Skeleton aria-hidden className="h-5 w-56 md:h-6" />
       <div className="flex items-center gap-3">
-        <div
-          aria-hidden
-          className="bg-muted h-4 w-32 animate-pulse rounded-md"
-        />
+        <Skeleton aria-hidden className="h-4 w-32" />
         <span className="text-border">·</span>
-        <div
-          aria-hidden
-          className="bg-muted h-5 w-20 animate-pulse rounded-md"
-        />
+        <Skeleton aria-hidden className="h-5 w-20" />
       </div>
     </>
   )

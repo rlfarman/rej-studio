@@ -73,7 +73,7 @@ function highlightMatches(text: string, query: string) {
     i % 2 === 1 ? (
       <mark
         key={i}
-        className="bg-warning/30 dark:bg-warning/25 dark:text-foreground rounded-[2px] px-0.5 text-inherit"
+        className="bg-warning/30 dark:bg-warning/25 dark:text-foreground rounded-sm px-0.5 text-inherit"
       >
         {p}
       </mark>
@@ -192,7 +192,7 @@ function EntryRow({
           diff.scoreDelta !== 0 && (
             <span
               className={cn(
-                'rounded-sm px-1 py-0 font-mono text-[9px] font-semibold tabular-nums',
+                'rounded-full px-1 py-0 font-mono text-[9px] font-semibold tabular-nums',
                 diff.scoreDelta > 0
                   ? 'bg-success/15 text-success-soft'
                   : 'bg-danger/15 text-danger-soft',
@@ -238,7 +238,7 @@ function ComparisonPanel({
   const isAfter = label === 'After'
 
   return (
-    <div className="bg-muted/40 flex flex-col overflow-hidden rounded-md border">
+    <div className="bg-muted/40 flex flex-col overflow-hidden rounded-2xl border">
       <div className="bg-muted/60 flex items-center justify-between border-b px-2.5 py-1.5">
         <span className="type-overline">{label}</span>
         <CopyButton
@@ -363,7 +363,7 @@ function ComparisonPanel({
             {isAfter && scoreDelta !== null && (
               <span
                 className={cn(
-                  'type-micro rounded-sm px-1.5 py-0.5 font-semibold tabular-nums',
+                  'type-micro rounded-full px-1.5 py-0.5 font-semibold tabular-nums',
                   scoreDelta > 0.001
                     ? 'bg-success/15 text-success-soft'
                     : scoreDelta < -0.001
@@ -591,7 +591,7 @@ function classifyRawLine(raw: string): {
 function RawReportView({ text }: { text: string }) {
   if (!text.trim()) {
     return (
-      <div className="bg-muted text-muted-foreground rounded-md p-3 text-xs italic">
+      <div className="bg-muted text-muted-foreground rounded-xl p-3 text-xs italic">
         No objectives measured
       </div>
     )
@@ -599,7 +599,7 @@ function RawReportView({ text }: { text: string }) {
   const lines = text.split('\n')
   const width = String(lines.length).length
   return (
-    <div className="bg-muted type-nano max-h-64 overflow-auto rounded-md font-mono">
+    <div className="bg-muted type-nano max-h-64 overflow-auto rounded-xl font-mono">
       <div>
         {lines.map((raw, i) => {
           const { depth, cleaned, status } = classifyRawLine(raw)
@@ -799,7 +799,7 @@ export function ObjectivesSummary({
                       type="button"
                       aria-label="Clear filter"
                       onClick={() => setSearch('')}
-                      className="text-muted-foreground hover:text-foreground absolute top-1/2 right-1.5 -translate-y-1/2 rounded-sm p-0.5"
+                      className="text-muted-foreground hover:text-foreground absolute top-1/2 right-1.5 -translate-y-1/2 rounded-full p-0.5"
                     >
                       <X className="size-3.5" />
                     </button>

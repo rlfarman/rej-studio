@@ -30,7 +30,7 @@ export function LoginForm({ returnTo, hasError = false }: LoginFormProps) {
       />
 
       {/* Frosted glass card */}
-      <div className="border-border/50 bg-card/75 relative z-10 w-full max-w-sm rounded-2xl border p-8 shadow-2xl shadow-black/8 backdrop-blur-2xl">
+      <div className="border-border/50 bg-card/75 relative z-10 w-full max-w-sm rounded-[min(var(--radius-4xl),24px)] border p-8 shadow-2xl shadow-black/8 backdrop-blur-2xl">
         {/* Overline */}
         <p className="type-overline text-primary mb-6">Private Preview</p>
 

@@ -41,7 +41,7 @@ function SequenceTypeToggle({
     <div
       role="radiogroup"
       aria-label={copy.typeToggleAria}
-      className="bg-muted inline-flex gap-0.5 rounded-lg p-0.5"
+      className="bg-muted inline-flex gap-0.5 rounded-2xl p-0.5"
     >
       {options.map((opt) => {
         const Icon = opt.icon
@@ -54,7 +54,7 @@ function SequenceTypeToggle({
             aria-checked={isActive}
             onClick={() => onChange(opt.value)}
             className={cn(
-              'inline-flex items-center gap-1.5 rounded-md px-3 py-1 text-sm font-medium transition-colors',
+              'inline-flex items-center gap-1.5 rounded-xl px-3 py-1 text-sm font-medium transition-colors',
               isActive
                 ? 'bg-primary text-primary-foreground shadow-sm'
                 : 'text-muted-foreground hover:text-foreground',
@@ -317,8 +317,9 @@ export function CodingSequenceInput() {
                 aria-hidden="true"
                 className={cn(
                   sharedTextStyles,
-                  'pointer-events-none absolute inset-0 overflow-hidden rounded-md border border-transparent',
-                  'text-foreground',
+                  // The field's fill lives here, behind the transparent
+                  // textarea, so it doesn't tint the highlighted bases.
+                  'bg-input/50 text-foreground pointer-events-none absolute inset-0 overflow-hidden rounded-2xl border border-transparent',
                 )}
               >
                 {activeValue ? (
@@ -345,12 +346,11 @@ export function CodingSequenceInput() {
                 onScroll={syncScroll}
                 className={cn(
                   sharedTextStyles,
-                  'border-input placeholder:text-muted-foreground selection:bg-primary/30 relative flex w-full min-w-0 rounded-md border bg-transparent shadow-xs transition-[color,box-shadow] outline-none disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
-                  'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
-                  'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
-                  isProtein
-                    ? 'caret-foreground resize-y'
-                    : 'caret-foreground resize-y text-transparent',
+                  // Same look as the Textarea primitive.
+                  'placeholder:text-muted-foreground selection:bg-primary/30 caret-foreground relative flex w-full min-w-0 resize-y rounded-2xl border border-transparent transition-[color,box-shadow] duration-200 outline-none disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
+                  'focus-visible:border-ring focus-visible:ring-ring/30 focus-visible:ring-3',
+                  'aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 aria-invalid:ring-3',
+                  isProtein ? 'bg-input/50' : 'bg-transparent text-transparent',
                 )}
               />
             </FormControl>

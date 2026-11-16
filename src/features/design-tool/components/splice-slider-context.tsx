@@ -687,7 +687,7 @@ export function SpliceSliderContext({
                         disabled={!canPrev}
                         title="Previous WGGW site"
                         aria-label="Previous WGGW site"
-                        className="text-foreground/55 hover:text-foreground inline-flex size-4 items-center justify-center rounded transition-colors disabled:pointer-events-none disabled:opacity-30"
+                        className="text-foreground/55 hover:text-foreground inline-flex size-4 items-center justify-center rounded-full transition-colors disabled:pointer-events-none disabled:opacity-30"
                       >
                         <ChevronLeft className="size-3" strokeWidth={2.5} />
                       </button>
@@ -697,7 +697,7 @@ export function SpliceSliderContext({
                       onPointerDown={(e) => startDrag(idx, e, false)}
                       title={`Split point at bp ${pos.toLocaleString()} — drag to move`}
                       className={cn(
-                        'bg-background inline-flex min-w-max cursor-grab touch-none items-center rounded-md border px-2 py-0.5 font-mono text-xs font-semibold whitespace-nowrap tabular-nums shadow-sm transition-all active:cursor-grabbing',
+                        'bg-background inline-flex min-w-max cursor-grab touch-none items-center rounded-full border px-2 py-0.5 font-mono text-xs font-semibold whitespace-nowrap tabular-nums shadow-sm transition-all active:cursor-grabbing',
                         isActive
                           ? cn('ring-2', tone.caretRing, tone.text)
                           : 'text-muted-foreground opacity-70',
@@ -724,7 +724,7 @@ export function SpliceSliderContext({
                         disabled={!canNext}
                         title="Next WGGW site"
                         aria-label="Next WGGW site"
-                        className="text-foreground/55 hover:text-foreground inline-flex size-4 items-center justify-center rounded transition-colors disabled:pointer-events-none disabled:opacity-30"
+                        className="text-foreground/55 hover:text-foreground inline-flex size-4 items-center justify-center rounded-full transition-colors disabled:pointer-events-none disabled:opacity-30"
                       >
                         <ChevronRight className="size-3" strokeWidth={2.5} />
                       </button>
@@ -744,9 +744,9 @@ export function SpliceSliderContext({
             aria-valuenow={activePosition}
             aria-valuetext={`bp ${activePosition.toLocaleString()} of ${seqLen.toLocaleString()}`}
             onPointerDown={handleTrackPointerDown}
-            className="focus-visible:ring-ring bg-background/80 relative h-18 cursor-ew-resize touch-none rounded-lg border select-none focus:outline-none focus-visible:ring-2"
+            className="focus-visible:ring-ring bg-background/80 relative h-18 cursor-ew-resize touch-none rounded-2xl border select-none focus:outline-none focus-visible:ring-2"
           >
-            <div className="absolute inset-x-0 top-0 z-10 flex h-11 overflow-hidden rounded-t-lg">
+            <div className="absolute inset-x-0 top-0 z-10 flex h-11 overflow-hidden rounded-t-2xl">
               {buildSegments(positions, seqLen).map((seg, i, arr) => {
                 // Segments are colored by which splice "owns" them: the 5′
                 // segment uses splice 1's tone; with a 2nd splice the 3′
@@ -792,7 +792,7 @@ export function SpliceSliderContext({
             <div
               ref={wggwStripRef}
               role="presentation"
-              className="bg-background/70 absolute inset-x-0 bottom-0 h-7 cursor-pointer overflow-hidden rounded-b-lg border-t"
+              className="bg-background/70 absolute inset-x-0 bottom-0 h-7 cursor-pointer overflow-hidden rounded-b-2xl border-t"
               // Parent-routed tick selection: compute clicked bp from
               // clientX and pick the nearest WGGW site within a small
               // pixel threshold. Avoids the prior bug where overlapping
@@ -1042,12 +1042,12 @@ function Toolbar({
   const isSequence = queryMode === 'sequence'
   const isBp = queryMode === 'bp'
   return (
-    <div className="bg-background/25 flex w-full items-center gap-2 rounded-sm px-1 py-0.5">
+    <div className="bg-background/25 flex w-full items-center gap-2 rounded-xl px-1 py-0.5">
       <div className="flex min-w-0 flex-1 items-center gap-1">
         <span className="text-muted-foreground text-[10px] font-medium tracking-[0.08em] uppercase">
           Go to
         </span>
-        <div className="bg-background flex h-7 min-w-0 flex-1 items-center gap-1 rounded-md border px-1.5">
+        <div className="bg-background flex h-7 min-w-0 flex-1 items-center gap-1 rounded-2xl border px-1.5">
           <input
             type="text"
             inputMode={isBp ? 'numeric' : 'text'}
@@ -1079,7 +1079,7 @@ function Toolbar({
                 onClick={onSearchPrev}
                 disabled={searchMatchCount === 0}
                 title="Previous match (Shift+Enter)"
-                className="text-muted-foreground hover:text-foreground inline-flex size-5 items-center justify-center rounded disabled:opacity-30"
+                className="text-muted-foreground hover:text-foreground inline-flex size-5 items-center justify-center rounded-full disabled:opacity-30"
               >
                 <ChevronLeft className="size-3" />
               </button>
@@ -1088,7 +1088,7 @@ function Toolbar({
                 onClick={onSearchNext}
                 disabled={searchMatchCount === 0}
                 title="Next match (Enter)"
-                className="text-muted-foreground hover:text-foreground inline-flex size-5 items-center justify-center rounded disabled:opacity-30"
+                className="text-muted-foreground hover:text-foreground inline-flex size-5 items-center justify-center rounded-full disabled:opacity-30"
               >
                 <ChevronRight className="size-3" />
               </button>
@@ -1306,7 +1306,7 @@ function LocalSequenceView({
       ref={stripRef}
       role="group"
       aria-label="Sequence context around WGGW split site"
-      className="bg-muted/40 type-nano [scrollbar-width:none] overflow-x-auto rounded-lg border px-5 py-1 font-mono leading-none [-ms-overflow-style:none] sm:py-2 [&::-webkit-scrollbar]:hidden"
+      className="bg-muted/40 type-nano [scrollbar-width:none] overflow-x-auto rounded-2xl border px-5 py-1 font-mono leading-none [-ms-overflow-style:none] sm:py-2 [&::-webkit-scrollbar]:hidden"
       onPointerLeave={() => setHoveredSitePosition(null)}
     >
       <div className="flex items-stretch">
@@ -1615,7 +1615,7 @@ function Inspector({
   // In multi-split mode the inactive cards dim and gain a hover affordance
   // so it's clear which splice is being edited.
   const cardClass = cn(
-    'flex min-h-[280px] min-w-0 flex-col gap-4 rounded-lg border px-4 pt-4 pb-3 text-xs transition-all',
+    'flex min-h-[280px] min-w-0 flex-col gap-4 rounded-2xl border px-4 pt-4 pb-3 text-xs transition-all',
     isMulti
       ? isActive
         ? cn('bg-muted/40 cursor-pointer shadow-sm ring-2', tone?.caretRing)
@@ -1784,7 +1784,7 @@ function Inspector({
                     aria-label={titleParts.join(' · ')}
                     title={titleParts.join(' · ')}
                     className={cn(
-                      'inline-flex shrink-0 items-center gap-2 rounded-md border px-2.5 py-1.5 font-mono text-[12px] transition-colors',
+                      'inline-flex shrink-0 items-center gap-2 rounded-full border px-2.5 py-1.5 font-mono text-[12px] transition-colors',
                       active
                         ? 'border-primary bg-primary/10 text-primary'
                         : 'text-muted-foreground hover:border-primary/30 hover:bg-background/60',
@@ -1924,7 +1924,7 @@ function RewriteRow({ children }: { children: ReactNode }) {
 
 function Kbd({ children }: { children: ReactNode }) {
   return (
-    <kbd className="bg-background text-foreground type-micro inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded border px-1 font-mono font-semibold">
+    <kbd className="bg-background text-foreground type-micro inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-lg border px-1 font-mono font-semibold">
       {children}
     </kbd>
   )

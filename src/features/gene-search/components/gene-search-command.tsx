@@ -57,7 +57,7 @@ function SpeciesToggle() {
           type="button"
           onClick={() => handleSpeciesChange(value)}
           aria-pressed={species === value}
-          className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
+          className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition-colors ${
             species === value
               ? 'bg-accent text-accent-foreground'
               : 'text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground'
@@ -369,10 +369,7 @@ export function GeneSearchCommand({
   const isNavigating = Boolean(pendingGene)
 
   return (
-    <Command
-      className="rounded-lg border md:min-w-[450px]"
-      shouldFilter={false}
-    >
+    <Command className="border md:min-w-[450px]" shouldFilter={false}>
       <CommandInput
         ref={inputRef}
         aria-label={copy.inputAria}

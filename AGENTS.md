@@ -91,6 +91,7 @@ User-facing strings (headings, descriptions, toasts, validation messages, error 
 - Server actions co-located with the feature that owns them (e.g. `src/features/gene-search/api/genes.ts`).
 - Form validation with Zod schemas (see `src/features/design-tool/types/form-schema.ts`). The design tool form supports both DNA and protein input; `sequenceType` controls conditional validation.
 - Tailwind CSS for styling. No CSS modules.
+- Corner radius follows the Rhea primitives by role. Use `Card` for cards (its radius is `rounded-[min(var(--radius-4xl),24px)]`). Bordered or filled panels inside a card are `rounded-2xl`, and boxes nested in a panel are `rounded-xl`. Controls (inputs, buttons, segmented-control tracks) are `rounded-2xl`; segments and hoverable rows are `rounded-xl`, dense table/chart rows `rounded-lg`. Chips, badges, icon-only buttons, progress bars and dots are `rounded-full`. Use `Skeleton` for loading bars. Inline text highlights and focus rings around plain text stay `rounded-sm`, and chart marks keep whatever they're drawn with.
 - Oxlint + ESLint for linting (`.oxlintrc.json`, `eslint.config.mjs`) and Prettier for formatting (`prettier.config.mjs`).
 - ESLint enforces feature boundaries: features cannot import from each other, and shared layers (`src/components`, `src/lib`, `src/hooks`, `src/stores`) cannot import from features or app. Features auto-discovered from `src/features/` at config load.
 
