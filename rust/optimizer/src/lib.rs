@@ -498,12 +498,15 @@ mod wasm_abi {
     }
 
     /// Reserve `len` bytes for the caller to write a request into.
+    ///
+    /// A zeroed boxed slice, not `Vec::with_capacity(len)`. A boxed slice's
+    /// allocation is exactly `len` bytes, which is all [`dealloc`] is told, so
+    /// it can rebuild the same allocation; `with_capacity` only promises *at
+    /// least* `len`. Zeroing means [`process`] never reads uninitialized memory
+    /// even if the host writes fewer bytes than it reserved.
     #[unsafe(no_mangle)]
     pub extern "C" fn alloc(len: usize) -> *mut u8 {
-        let mut buffer = Vec::<u8>::with_capacity(len);
-        let pointer = buffer.as_mut_ptr();
-        std::mem::forget(buffer);
-        pointer
+        Box::into_raw(vec![0u8; len].into_boxed_slice()).cast::<u8>()
     }
 
     /// Release a buffer obtained from [`alloc`].
@@ -513,53 +516,74 @@ mod wasm_abi {
     /// not already been freed.
     #[unsafe(no_mangle)]
     pub unsafe extern "C" fn dealloc(pointer: *mut u8, len: usize) {
-        if !pointer.is_null() {
-            drop(unsafe { Vec::from_raw_parts(pointer, 0, len) });
+        if pointer.is_null() {
+            return;
         }
+        // SAFETY: the caller guarantees `pointer` came from `alloc(len)` and
+        // has not been freed. `alloc` made it with `Box::into_raw` on a
+        // `Box<[u8]>` of exactly `len` bytes, so this rebuilds that box with
+        // the same pointer, length and layout, and drops it exactly once.
+        drop(unsafe { Box::from_raw(std::ptr::slice_from_raw_parts_mut(pointer, len)) });
     }
 
     /// Design a sequence. See the module comment for the calling sequence.
     ///
     /// # Safety
-    /// `pointer`/`len` must describe UTF-8 bytes the caller owns.
+    /// `pointer` must be non-null and valid for reads of `len` initialized
+    /// bytes for the whole call, with nothing writing to them meanwhile. A
+    /// buffer from `alloc(len)` qualifies. The bytes need not be valid UTF-8:
+    /// that is checked, and reported as an error response.
     #[unsafe(no_mangle)]
     pub unsafe extern "C" fn process(pointer: *const u8, len: usize) -> *mut u8 {
+        // SAFETY: the caller guarantees `pointer` is non-null and readable for
+        // `len` initialized bytes until we return (`alloc` zero-fills, so a
+        // buffer from it is initialized even where the host wrote nothing).
+        // `u8` has no alignment requirement, and `len` bytes inside a wasm32
+        // address space cannot exceed `isize::MAX`.
         let request = unsafe { std::slice::from_raw_parts(pointer, len) };
         let response = match std::str::from_utf8(request) {
             Ok(request) => process_json(request, |fraction, stage| {
-                // Hand the label over as a pointer into our own memory; the
-                // host copies it out before returning.
+                // SAFETY: `report_progress` is the host import declared above
+                // and takes only plain values. `stage` stays borrowed for the
+                // whole call, so the bytes it points at are valid while the
+                // host copies them, which its contract says it does before
+                // returning.
                 unsafe { report_progress(fraction, stage.as_ptr(), stage.len()) };
             }),
             Err(_) => r#"{"error":"request was not valid UTF-8"}"#.to_string(),
         };
 
-        // Length-prefixed so the caller can read it back without a second call.
+        // Length-prefixed so the caller can read it back without a second
+        // call, and boxed for the same reason as `alloc`: the allocation is
+        // exactly the framed length, which is all `free_response` can recover.
+        // `as u32` is lossless here: `usize` is 32 bits on wasm32.
         let bytes = response.into_bytes();
         let mut framed = Vec::with_capacity(4 + bytes.len());
         framed.extend_from_slice(&(bytes.len() as u32).to_le_bytes());
         framed.extend_from_slice(&bytes);
-        let pointer = framed.as_mut_ptr();
-        std::mem::forget(framed);
-        pointer
+        Box::into_raw(framed.into_boxed_slice()).cast::<u8>()
     }
 
     /// Release a response buffer returned by [`process`].
     ///
     /// # Safety
-    /// `pointer` must be a response pointer that has not already been freed.
+    /// `pointer` must be a response pointer from [`process`] that has not
+    /// already been freed.
     #[unsafe(no_mangle)]
     pub unsafe extern "C" fn free_response(pointer: *mut u8) {
         if pointer.is_null() {
             return;
         }
-        let length_bytes = unsafe { std::slice::from_raw_parts(pointer, 4) };
-        let len = u32::from_le_bytes(
-            length_bytes
-                .try_into()
-                .expect("four bytes of length prefix"),
-        ) as usize;
-        drop(unsafe { Vec::from_raw_parts(pointer, 4 + len, 4 + len) });
+        // SAFETY: every response from `process` starts with a 4-byte length
+        // prefix, and the caller guarantees the buffer is still live.
+        let prefix = unsafe { std::slice::from_raw_parts(pointer, 4) };
+        let len =
+            u32::from_le_bytes(prefix.try_into().expect("four bytes of length prefix")) as usize;
+        // SAFETY: `process` made this with `Box::into_raw` on a boxed slice of
+        // exactly `4 + len` bytes, `len` being the prefix just read, so this
+        // rebuilds that box with the same pointer, length and layout. The
+        // caller guarantees it has not been freed, so it is dropped once.
+        drop(unsafe { Box::from_raw(std::ptr::slice_from_raw_parts_mut(pointer, 4 + len)) });
     }
 }
 
