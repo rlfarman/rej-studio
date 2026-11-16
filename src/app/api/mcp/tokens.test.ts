@@ -38,7 +38,9 @@ describe('whether the endpoint exists at all', () => {
 describe('the token a request presents', () => {
   it('names the caller when the secret matches', () => {
     vi.stubEnv('MCP_TOKENS', `lab-agent:${SECRET}`)
-    expect(tokenFrom(request(`Bearer ${SECRET}`))).toEqual({ name: 'lab-agent' })
+    expect(tokenFrom(request(`Bearer ${SECRET}`))).toEqual({
+      name: 'lab-agent',
+    })
   })
 
   it('accepts the scheme however it is capitalised', () => {

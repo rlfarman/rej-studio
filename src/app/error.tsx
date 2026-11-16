@@ -8,22 +8,26 @@ import { commonCopy } from '@/copy/common'
 
 export default function ErrorPage({
   error,
-  reset,
+  retry,
 }: {
-  error: Error & { digest?: string }
-  reset: () => void
+  error: unknown
+  retry: () => void
 }) {
   return (
     <ErrorState
       standalone
       error={error}
-      reset={reset}
+      retry={retry}
       title={appCopy.errorBoundary.title}
       description={appCopy.errorBoundary.description}
       detail={appCopy.errorBoundary.reassurance}
       secondaryAction={
-        <Button asChild variant="outline">
-          <Link href="/">{commonCopy.actions.goHome}</Link>
+        <Button
+          variant="outline"
+          nativeButton={false}
+          render={<Link href="/" />}
+        >
+          {commonCopy.actions.goHome}
         </Button>
       }
     />

@@ -22,16 +22,27 @@ vi.mock('@/features/gene-search/api/gene-queries', () => ({
   fetchGenesBySearch: genes,
   fetchGeneBySymbol: vi.fn(async (symbol: string) =>
     symbol === 'TP53'
-      ? { id: 'ENSG00000141510', symbol: 'TP53', name: 'tumor protein p53', species: 'human' }
+      ? {
+          id: 'ENSG00000141510',
+          symbol: 'TP53',
+          name: 'tumor protein p53',
+          species: 'human',
+        }
       : null,
   ),
 }))
 vi.mock('@/features/gene-search/api/isoform-queries', () => ({
   fetchIsoformsByGene: isoforms,
 }))
-vi.mock('@/features/design-tool/api/jobs-core', () => ({
-  runSubmitJob: submitted,
-  runJobStatus: jobStatus,
+vi.mock('@/features/design-tool/api/job-backend', () => ({
+  submitToBackend: submitted,
+  fetchJobStatus: jobStatus,
+}))
+vi.mock('@/lib/upstash', () => ({
+  createUpstashRateLimiter: () => ({
+    check: async () => ({ ok: true, remaining: 9, resetMs: 60_000 }),
+  }),
+  redis: null,
 }))
 
 import { createRejStudioMcpServer } from './server'
@@ -41,7 +52,8 @@ const CDS = 'ATG' + 'AAA'.repeat(30) + 'TAA'
 
 async function connect() {
   const server = createRejStudioMcpServer({ name: 'test-agent' })
-  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair()
+  const [clientTransport, serverTransport] =
+    InMemoryTransport.createLinkedPair()
   const client = new Client({ name: 'test-client', version: '1.0.0' })
   await Promise.all([
     client.connect(clientTransport),
@@ -54,10 +66,10 @@ let connection: Awaited<ReturnType<typeof connect>>
 
 beforeEach(async () => {
   vi.clearAllMocks()
-  genes.mockResolvedValue([])
+  genes.mockResolvedValue({ results: [], truncated: false })
   isoforms.mockResolvedValue([])
-  submitted.mockResolvedValue({ jobId: 'job-1' })
-  jobStatus.mockResolvedValue({ status: 'not_found' })
+  submitted.mockResolvedValue({ ok: true, data: { jobId: 'job-1' } })
+  jobStatus.mockResolvedValue({ ok: true, data: { status: 'not_found' } })
   connection = await connect()
 })
 
@@ -109,9 +121,17 @@ describe('what an agent is offered', () => {
 
 describe('searching genes', () => {
   it('returns the matches as structured data', async () => {
-    genes.mockResolvedValue([
-      { id: 'ENSG00000141510', symbol: 'TP53', name: 'tumor protein p53', species: 'human' },
-    ])
+    genes.mockResolvedValue({
+      results: [
+        {
+          id: 'ENSG00000141510',
+          symbol: 'TP53',
+          name: 'tumor protein p53',
+          species: 'human',
+        },
+      ],
+      truncated: false,
+    })
 
     const result = await call('search_genes', { query: 'p53' })
 
@@ -124,7 +144,7 @@ describe('searching genes', () => {
           ensembl_gene_id: 'ENSG00000141510',
         },
       ],
-      total: 1,
+      truncated: false,
     })
   })
 
@@ -136,25 +156,29 @@ describe('searching genes', () => {
     expect(result.structuredContent).toBeUndefined()
   })
 
-  it('caps how much comes back, and says so', async () => {
-    genes.mockResolvedValue(
-      Array.from({ length: 40 }, (_, i) => ({
+  // The query itself caps the rows, so the tool reports what it was handed
+  // and passes the truncation flag on instead of claiming a total it never saw.
+  it('asks for a bounded page and says when more matched', async () => {
+    genes.mockResolvedValue({
+      results: Array.from({ length: 25 }, (_, i) => ({
         id: `ENSG${i}`,
         symbol: `GENE${i}`,
         name: 'a gene',
         species: 'human',
       })),
-    )
+      truncated: true,
+    })
 
     const result = await call('search_genes', { query: 'gene' })
     const structured = result.structuredContent as {
       results: unknown[]
-      total: number
+      truncated: boolean
     }
 
+    expect(genes).toHaveBeenCalledWith('gene', 'both', 25)
     expect(structured.results).toHaveLength(25)
-    expect(structured.total).toBe(40)
-    expect(said(result)).toContain('most relevant')
+    expect(structured.truncated).toBe(true)
+    expect(said(result)).toContain('narrow the query')
   })
 
   it('refuses a query the app would refuse, without searching', async () => {
@@ -204,17 +228,15 @@ describe('reading one gene', () => {
 
 describe('submitting a design', () => {
   it('runs the job and returns its id', async () => {
-    const result = await call('submit_design', { name: 'TP53 run', sequence: CDS })
+    const result = await call('submit_design', {
+      name: 'TP53 run',
+      sequence: CDS,
+    })
 
     expect(submitted).toHaveBeenCalledOnce()
-    const [params, caller] = submitted.mock.calls[0]
+    const [params] = submitted.mock.calls[0]
     expect(params.CDS).toBe(CDS)
     expect(params.name).toBe('TP53 run')
-    // Rate limited and logged under the token, not globally.
-    expect(caller).toEqual({
-      key: 'mcp:test-agent',
-      label: 'mcp token "test-agent"',
-    })
     expect(result.structuredContent).toEqual({
       job_id: 'job-1',
       status: 'running',
@@ -289,8 +311,8 @@ describe('submitting a design', () => {
 
   it('reports a result inline when the backend answered at once', async () => {
     submitted.mockResolvedValue({
-      jobId: 'job-2',
-      result: { optimized_sequence: CDS },
+      ok: true,
+      data: { jobId: 'job-2', result: { optimized_sequence: CDS } },
     })
 
     const result = await call('submit_design', { name: 'quick', sequence: CDS })
@@ -305,8 +327,11 @@ describe('submitting a design', () => {
 describe('collecting a design', () => {
   it('returns the result once it is done', async () => {
     jobStatus.mockResolvedValue({
-      status: 'completed',
-      result: { optimized_sequence: CDS, run_record: { record_version: 1 } },
+      ok: true,
+      data: {
+        status: 'completed',
+        result: { optimized_sequence: CDS, run_record: { record_version: 1 } },
+      },
     })
 
     const result = await call('get_design', { job_id: 'job-1' })
@@ -320,9 +345,12 @@ describe('collecting a design', () => {
 
   it('reports progress while it is still running', async () => {
     jobStatus.mockResolvedValue({
-      status: 'running',
-      progress: 0.45,
-      stage: 'Optimizing sequence',
+      ok: true,
+      data: {
+        status: 'running',
+        progress: 0.45,
+        stage: 'Optimizing sequence',
+      },
     })
 
     const result = await call('get_design', { job_id: 'job-1' })
@@ -341,14 +369,60 @@ describe('collecting a design', () => {
 
   it('reports a failure as a failure', async () => {
     jobStatus.mockResolvedValue({
-      status: 'failed',
-      error: { code: 'algo', message: 'optimization failed', retriable: false },
+      ok: true,
+      data: {
+        status: 'failed',
+        error: {
+          code: 'backend',
+          message: 'optimization failed',
+          retriable: false,
+        },
+      },
     })
 
     const result = await call('get_design', { job_id: 'job-1' })
 
     expect(result.isError).toBe(true)
     expect(said(result)).toContain('optimization failed')
+  })
+
+  // A backend that cannot be asked is not a job that does not exist. Saying
+  // "no such job" would send an agent off to resubmit a design that may well
+  // be running.
+  it('distinguishes an unreachable backend from a missing job', async () => {
+    jobStatus.mockResolvedValue({
+      ok: false,
+      error: {
+        code: 'network',
+        message: 'backend unreachable',
+        retriable: true,
+      },
+    })
+
+    const result = await call('get_design', { job_id: 'job-1' })
+
+    expect(result.isError).toBe(true)
+    expect(said(result)).toContain('could not be read')
+    expect(said(result)).not.toContain('No design with job id')
+  })
+})
+
+describe('when the backend refuses the submission', () => {
+  it('reports the reason instead of inventing a job id', async () => {
+    submitted.mockResolvedValue({
+      ok: false,
+      error: {
+        code: 'backend',
+        message: 'compute unavailable',
+        retriable: true,
+      },
+    })
+
+    const result = await call('submit_design', { name: 'nope', sequence: CDS })
+
+    expect(result.isError).toBe(true)
+    expect(said(result)).toContain('compute unavailable')
+    expect(result.structuredContent).not.toHaveProperty('job_id')
   })
 })
 
@@ -412,8 +486,8 @@ describe('the view a design is shown in', () => {
   it('still returns the result as data, for hosts with no view', async () => {
     await connectWithOrigin()
     jobStatus.mockResolvedValue({
-      status: 'completed',
-      result: { optimized_sequence: CDS },
+      ok: true,
+      data: { status: 'completed', result: { optimized_sequence: CDS } },
     })
 
     const result = await call('get_design', { job_id: 'job-1' })

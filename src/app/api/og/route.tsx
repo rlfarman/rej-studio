@@ -6,24 +6,28 @@ import {
   OG_FG,
   OG_MUTED,
   OG_PRIMARY,
-  loadDisplayFont,
-  loadSansFont,
 } from '@/lib/og-theme'
+import { OG_FONTS } from './_lib/fonts'
+import { ogSiteLabel, ogText, rateLimitOgRequest } from './_lib/request'
 
 export const size = { width: 1200, height: 630 }
 
+// Longest strings the layout holds. Pages pass these in the query string,
+// so anyone can; clamping keeps a crafted URL to a sane image.
+const MAX_TITLE = 80
+const MAX_DESCRIPTION = 160
+const MAX_SECTION = 32
+
 export async function GET(request: Request) {
+  const limited = await rateLimitOgRequest(request)
+  if (limited) return limited
+
   const { searchParams } = new URL(request.url)
 
-  const title = searchParams.get('title') ?? 'REJ Studio'
-  const description = searchParams.get('description') ?? ''
-  const section = searchParams.get('section')
-  const url = searchParams.get('url') ?? 'rejstudio.com'
-
-  const [displayFont, sansFont] = await Promise.all([
-    loadDisplayFont(),
-    loadSansFont(),
-  ])
+  const title = ogText(searchParams.get('title'), MAX_TITLE, 'REJ Studio')
+  const description = ogText(searchParams.get('description'), MAX_DESCRIPTION)
+  const section = ogText(searchParams.get('section'), MAX_SECTION)
+  const url = ogSiteLabel(searchParams.get('url'))
 
   return new ImageResponse(
     <div
@@ -144,20 +148,7 @@ export async function GET(request: Request) {
     </div>,
     {
       ...size,
-      fonts: [
-        {
-          name: 'Source Serif 4',
-          data: displayFont,
-          weight: 700,
-          style: 'normal',
-        },
-        {
-          name: 'Source Sans 3',
-          data: sansFont,
-          weight: 600,
-          style: 'normal',
-        },
-      ],
+      fonts: OG_FONTS,
       headers: {
         'Cache-Control':
           'public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400',

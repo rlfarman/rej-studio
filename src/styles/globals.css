@@ -1,12 +1,10 @@
 @import 'tailwindcss';
-@import '../features/onboarding/tour.css';
-@import 'fumadocs-ui/css/neutral.css';
-@import 'fumadocs-ui/css/preset.css';
-@source '../../node_modules/fumadocs-ui/dist/**/*.js';
-/*
-  ---break---
-*/
-@plugin 'tailwindcss-animate';
+/* Enter/exit animation utilities (animate-in, fade-in-0, …) used by the
+   shadcn primitives — the CSS-native successor to tailwindcss-animate. */
+@import 'tw-animate-css';
+/* shadcn's state variants (data-open:, data-checked:, …) used by the Rhea
+   components. */
+@import 'shadcn/tailwind.css';
 /*
   ---break---
 */
@@ -253,6 +251,14 @@ body {
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  /* Rhea scales the larger radii off --radius rather than Tailwind's fixed
+     defaults, so they track the base radius. */
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+  /* Component headings (card, dialog, sheet titles) stay in the UI sans;
+     the serif display face is reserved for page-level h1/h2. */
+  --font-heading: var(--font-sans);
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
@@ -362,98 +368,6 @@ body {
   letter-spacing: -0.01em;
 }
 
-/* Fade-up entrance — CSS-driven so it starts on first paint,
-   no JS hydration needed.
-   .fade-up        — single element entrance (no stagger)
-   .fade-up-stagger — staggered entrance, set --stagger (0-based index) per child
-   .hero-stagger    — alias for homepage (legacy compat) */
-@keyframes fade-up {
-  from {
-    opacity: 0;
-    translate: 0 12px;
-  }
-  to {
-    opacity: 1;
-    translate: 0 0;
-  }
-}
-
-.fade-up {
-  animation: fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-.fade-up-stagger {
-  --stagger: 0;
-  animation: fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1)
-    calc(var(--stagger) * 80ms) both;
-}
-
-.hero-stagger {
-  --stagger: 0;
-  animation: fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1)
-    calc(var(--stagger) * 60ms) both;
-}
-
-/* Align Fumadocs sidebar with the app sidebar. */
-#nd-docs-layout {
-  --fd-sidebar-width: 0px;
-}
-
-@media (min-width: 768px) {
-  #nd-docs-layout {
-    --fd-sidebar-width: 256px;
-  }
-}
-
-#nd-sidebar {
-  --color-fd-card: var(--sidebar);
-  --color-fd-foreground: var(--sidebar-foreground);
-  --color-fd-muted-foreground: var(--sidebar-foreground);
-  --color-fd-accent: var(--sidebar-accent);
-  --color-fd-accent-foreground: var(--sidebar-accent-foreground);
-  --color-fd-border: var(--sidebar-border);
-  --color-fd-primary: var(--sidebar-accent-foreground);
-}
-
-.dark #nd-sidebar {
-  --color-fd-muted-foreground: oklch(0.7 0 0);
-}
-
-/* Match Fumadocs page background to the app background. */
-#nd-docs-layout {
-  --color-fd-background: var(--background);
-}
-
-/* View Transitions — crossfade on full-layout changes (e.g. app ↔ docs). */
-::view-transition-old(root) {
-  animation: vt-fade-out 150ms ease-in both;
-}
-
-::view-transition-new(root) {
-  animation: vt-fade-in 200ms ease-out 100ms both;
-}
-
-/* Suspense reveal — content fading in after async data resolves. */
-::view-transition-old(.suspense-reveal) {
-  animation: none;
-}
-
-::view-transition-new(.suspense-reveal) {
-  animation: fade-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-@keyframes vt-fade-out {
-  to {
-    opacity: 0;
-  }
-}
-
-@keyframes vt-fade-in {
-  from {
-    opacity: 0;
-  }
-}
-
 /* Progress-bar shimmer sweep — signals activity even when width is static. */
 @keyframes shimmer {
   0% {
@@ -482,21 +396,6 @@ body {
   }
   100% {
     transform: translateX(100%);
-  }
-}
-
-/* Slow breath — a barely-there 4s pulse for idle focal elements (landing
-   hero icon). Amplitude is intentionally tiny so it reads as "alive" in
-   peripheral vision without asking for attention. */
-@keyframes gentle-breath {
-  0%,
-  100% {
-    transform: scale(1);
-    opacity: 0.85;
-  }
-  50% {
-    transform: scale(1.06);
-    opacity: 1;
   }
 }
 
@@ -636,10 +535,8 @@ body {
   }
 }
 
-/* Honor reduced-motion globally for idle/infinite decorative animations.
-   Keep functional motion (view-transitions, fade-up) enabled — it's brief
-   and conveys state change. This blanket rule kills scanning/breathing
-   effects that would otherwise run forever. */
+/* Honor reduced-motion globally: kills scanning/breathing effects that would
+   otherwise run forever, and shortens transitions to effectively instant. */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

@@ -7,17 +7,20 @@ export const config = {
   matcher: [
     /*
      * Match all request paths except:
-     * - _next/static (static files)
-     * - _next/image (image optimization)
-     * - favicon.ico, sitemap.xml, robots.txt (metadata files)
+     * - _next/static, _next/image (build assets and the image optimizer)
+     * - branding/ (the only folder in public/; the image optimizer fetches
+     *   these internally without the visitor's cookies, so gating them broke
+     *   next/image for signed-in users too. They carry no gene data.)
      * - monitoring (Sentry tunnel)
-     * - api/og (opengraph images — must be crawlable without auth)
-     * - static image and font files from public/ (e.g. /branding/*.png).
-     *   The image optimizer fetches these internally without the visitor's
-     *   cookies, so gating them broke next/image (the sidebar logo) for
-     *   signed-in users too. They carry no gene data.
+     * - api/og (opengraph images — must be crawlable without auth; the
+     *   routes validate their input and rate-limit themselves)
+     * - favicon.ico, sitemap.xml, robots.txt (metadata files)
+     *
+     * Exclusions are anchored to whole path segments. Excluding by file
+     * extension instead (`.*\\.png$`) also skipped dynamic routes, so
+     * /genes/TP53.png rendered the gene page with no session and no CSP.
      */
-    '/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|monitoring|api/og|.*\\.(?:png|jpe?g|gif|webp|avif|svg|ico|woff2?)$).*)',
+    '/((?!(?:_next/static|_next/image|branding|monitoring|api/og)(?:/|$)|(?:favicon\\.ico|sitemap\\.xml|robots\\.txt)$).*)',
   ],
 }
 
@@ -39,8 +42,10 @@ const MAX_BODY_BYTES = 256 * 1024
 // page URLs). Gating only in the root layout is not enough: Next still renders
 // the page segment and streams its RSC payload (gene data included) next to
 // the login form, and each of those renders queries the database.
-// robots.txt, sitemap.xml, favicon.ico, /monitoring and /api/og are excluded
-// by the matcher above, so they stay public too.
+// robots.txt, sitemap.xml, favicon.ico, /branding, /monitoring and /api/og
+// are excluded by the matcher above, so they stay public too. The icon and
+// manifest routes are listed so browsers and the OS can fetch them for the
+// login page and installed-app tiles.
 const PUBLIC_PATHS = [
   '/login',
   '/api/login',
@@ -93,17 +98,36 @@ function rejectUnauthenticated(req: NextRequest): NextResponse {
   return NextResponse.redirect(loginUrl)
 }
 
-function buildCsp(): string {
+/**
+ * Content-Security-Policy for production responses.
+ *
+ * Scripts keep 'unsafe-inline': a nonce would force every page to render
+ * dynamically, and the prerendered static shells (Cache Components / PPR)
+ * can't carry a per-request nonce. See the Next.js CSP guide.
+ *
+ * Third-party hosts are the minimum the browser itself talks to:
+ * - Google Tag Manager / GA4: Google's documented hosts for GA4.
+ * - Sentry: none. The SDK is bundled, and events go through the same-origin
+ *   /monitoring tunnel (`tunnelRoute` in next.config.ts).
+ * - Modal: none. Only server actions call the optimizer, never the browser.
+ *
+ * `upgrade-insecure-requests` is only sent over https: on a plain-http
+ * production server (`next start` on localhost, as Lighthouse CI runs it)
+ * it would rewrite same-origin asset URLs to https and break the page.
+ */
+function buildCsp({ https }: { https: boolean }): string {
   return [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://*.sentry.io",
+    "script-src 'self' 'unsafe-inline' https://*.googletagmanager.com",
     "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' data: blob: https://www.googletagmanager.com",
+    "img-src 'self' data: blob: https://*.google-analytics.com https://*.googletagmanager.com",
     "font-src 'self'",
-    "connect-src 'self' https://*.sentry.io https://www.google-analytics.com https://*.modal.run",
+    "connect-src 'self' https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com",
+    "object-src 'none'",
     "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self'",
+    ...(https ? ['upgrade-insecure-requests'] : []),
     'report-uri /api/csp-report',
     'report-to csp-endpoint',
   ].join('; ')
@@ -127,20 +151,19 @@ export async function proxy(req: NextRequest) {
     }
   }
 
-  // --- CSP nonce (production only) ---
-  // CSP is skipped in development because:
-  // 1. React dev mode requires eval() which CSP blocks
-  // 2. Next.js applies x-nonce to <Script> tags server-side, but browsers
-  //    strip nonce attributes from the DOM (HTML spec), causing hydration
-  //    mismatches that cannot be fixed without patching Next.js itself
+  // --- CSP (production only) ---
+  // Skipped in development: React's dev build needs eval(), which the
+  // policy blocks, and dev servers run on plain http.
   const isDev = process.env.NODE_ENV === 'development'
   const requestHeaders = new Headers(req.headers)
 
-  // Expose pathname to server components (read via next/headers) so the
-  // root layout can build a return_to link when rendering the login gate.
+  // Expose the pathname to server components (read via next/headers): the
+  // gene not-found page recovers the requested symbol from it.
   requestHeaders.set('x-pathname', req.nextUrl.pathname)
 
-  const csp = isDev ? undefined : buildCsp()
+  const csp = isDev
+    ? undefined
+    : buildCsp({ https: req.nextUrl.protocol === 'https:' })
 
   // --- Session gate ---
   if (isAuthGateActive() && !isPublicPath(req.nextUrl.pathname)) {

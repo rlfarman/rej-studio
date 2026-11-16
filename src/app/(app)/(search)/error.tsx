@@ -8,21 +8,25 @@ import { commonCopy } from '@/copy/common'
 
 export default function SearchError({
   error,
-  reset,
+  retry,
 }: {
-  error: Error & { digest?: string }
-  reset: () => void
+  error: unknown
+  retry: () => void
 }) {
   return (
     <ErrorState
       error={error}
-      reset={reset}
+      retry={retry}
       boundary="search"
       title={appCopy.errorBoundary.search.title}
       description={appCopy.errorBoundary.search.description}
       secondaryAction={
-        <Button asChild variant="outline">
-          <Link href="/">{commonCopy.actions.goHome}</Link>
+        <Button
+          variant="outline"
+          nativeButton={false}
+          render={<Link href="/" />}
+        >
+          {commonCopy.actions.goHome}
         </Button>
       }
     />

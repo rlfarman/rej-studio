@@ -73,30 +73,34 @@ Hooks install automatically when you run `pnpm install` (via husky's `prepare` s
 
 ## Required status checks
 
-The following jobs should be configured as **required status checks** on `main` in the "Protect main" ruleset (Settings → Rules → Rulesets → Protect main → Require status checks to pass):
+Configure these as **required status checks** on `main` in the "Protect main" ruleset (Settings → Rules → Rulesets → Protect main → Require status checks to pass). The names are the job names GitHub shows on a PR:
 
-| Check                       | Workflow               | Blocks merge? |
-| --------------------------- | ---------------------- | ------------- |
-| `Lint`                      | `ci.yml`               | ✅ required   |
-| `Format`                    | `ci.yml`               | ✅ required   |
-| `Type Check`                | `ci.yml`               | ✅ required   |
-| `Knip`                      | `ci.yml`               | ✅ required   |
-| `Build`                     | `ci.yml`               | ✅ required   |
-| `E2E (Playwright)`          | `ci.yml`               | ⚠️ advisory   |
-| `pnpm audit`                | `security.yml`         | ✅ required   |
-| `pip-audit`                 | `security.yml`         | ✅ required   |
-| `Lockfile drift`            | `lock-file-policy.yml` | ⚠️ advisory   |
-| `Ruff (lint + format)`      | `python-ci.yml`        | ✅ required   |
-| `Pyright`                   | `python-ci.yml`        | ⚠️ advisory   |
-| `Schema drift + migrations` | `db-ci.yml`            | ✅ required   |
-| `Commitlint`                | `conventions.yml`      | ⚠️ advisory   |
-| `PR Title`                  | `conventions.yml`      | ⚠️ advisory   |
-| `Branch Name`               | `conventions.yml`      | ⚠️ advisory   |
-| `Lighthouse CI`             | `lighthouse.yml`       | ⚠️ advisory   |
+| Check                               | Workflow               | Blocks merge? |
+| ----------------------------------- | ---------------------- | ------------- |
+| `Lint`                              | `ci.yml`               | ✅ required   |
+| `Format`                            | `ci.yml`               | ✅ required   |
+| `Type Check`                        | `ci.yml`               | ✅ required   |
+| `Knip`                              | `ci.yml`               | ✅ required   |
+| `Test`                              | `ci.yml`               | ✅ required   |
+| `Build`                             | `ci.yml`               | ✅ required   |
+| `Storybook`                         | `ci.yml`               | ✅ required   |
+| `Workflow Security (zizmor)`        | `ci.yml`               | ✅ required   |
+| `Dependency Review`                 | `security.yml`         | ✅ required   |
+| `pnpm audit`                        | `security.yml`         | ✅ required   |
+| `pip-audit`                         | `security.yml`         | ✅ required   |
+| `Schema drift + migrations`         | `db-ci.yml`            | ✅ required   |
+| `E2E (Playwright)`                  | `ci.yml`               | ⚠️ advisory   |
+| `PR Comments`                       | `ci.yml`               | ⚠️ advisory   |
+| `Lockfile drift`                    | `lock-file-policy.yml` | ⚠️ advisory   |
+| `Lighthouse CI`                     | `lighthouse.yml`       | ⚠️ advisory   |
+| `Commitlint`                        | `conventions.yml`      | ⚠️ advisory   |
+| `PR Title (Conventional Commits)`   | `conventions.yml`      | ⚠️ advisory   |
+| `Branch Name (Conventional Branch)` | `conventions.yml`      | ⚠️ advisory   |
+| Python CI jobs                      | `python-ci.yml`        | ⚠️ advisory   |
 
-The `ci.yml` jobs use `dorny/paths-filter` and are skipped for docs-only PRs; GitHub treats skipped required checks as passing. `python-ci.yml` and `db-ci.yml` are path-filtered too.
+Only require checks whose workflow runs on every PR. A workflow skipped by an `on.paths` filter never reports, so a required check from it stays pending and blocks the merge. A job skipped by an `if:` condition reports success instead. That's why `ci.yml` and `db-ci.yml` filter paths inside the workflow (`dorny/paths-filter`) and docs-only PRs pass their checks. `python-ci.yml` still filters at the workflow level, so its jobs stay advisory until it does the same.
 
-All GitHub Action uses are pinned to commit SHAs (not tags) to prevent tag-reassignment attacks. When updating actions via Dependabot, the pinned SHA will be bumped automatically.
+All GitHub Action uses are pinned to commit SHAs (not tags) to prevent tag-reassignment attacks; Dependabot bumps the pins (after a 7-day cooldown), and the zizmor job flags unpinned or mismatched ones. Workflows reference the shared setup action with the self-repository syntax (`uses: $/.github/actions/setup`).
 
 Secrets are covered by GitHub secret scanning with push protection (repo Settings → Code security), which replaced the old Gitleaks workflow.
 
@@ -104,4 +108,4 @@ To enable: repo Settings → Rules → Rulesets → Protect main → "Require st
 
 ## Locally reproducing CI
 
-Run `pnpm verify` (lint, type check, unit tests) before pushing; the `pre-push` hook runs it automatically. CI also runs `pnpm format:check`, `pnpm knip`, `pnpm build` and `pnpm test:e2e`, so run those too when you touch formatting, exports, build config or user flows.
+Run `pnpm verify` (lint, type check, unit tests) before pushing; the `pre-push` hook runs it automatically. CI also runs `pnpm format:check`, `pnpm knip`, `pnpm build` (then `node scripts/bundle-size.mjs` for the bundle budgets), `pnpm build-storybook --test` and `pnpm test:e2e`, so run those too when you touch formatting, exports, build config, stories or user flows. For the workflows, `uvx zizmor .github` runs the same audit as CI.

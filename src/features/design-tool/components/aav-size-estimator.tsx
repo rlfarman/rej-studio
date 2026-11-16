@@ -1,20 +1,11 @@
 'use client'
 
 import { Badge } from '@/components/ui/badge'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
 import { PackageCheck, PackageX, Package } from 'lucide-react'
 import { AAV_OVERHEAD_BP, AAV_PACKAGING_LIMIT } from '@/lib/bio/aav'
 import { designToolCopy } from '../copy'
 
 const copy = designToolCopy.aav
-
-interface AavPreflightProps {
-  sequenceLength: number
-}
 
 interface AavResultsProps {
   seq5Length: number
@@ -31,55 +22,6 @@ function StatusIcon({ status }: { status: 'fits' | 'tight' | 'too-large' }) {
   if (status === 'fits') return <PackageCheck className="size-3.5" />
   if (status === 'tight') return <Package className="size-3.5" />
   return <PackageX className="size-3.5" />
-}
-
-/**
- * Preflight version: shown in the diagnostics area based on input sequence length.
- */
-export function AavPreflight({ sequenceLength }: AavPreflightProps) {
-  if (sequenceLength === 0) return null
-
-  const singleTotal = sequenceLength + AAV_OVERHEAD_BP
-  const singleStatus = sizeStatus(singleTotal)
-  const halfSeq = Math.ceil(sequenceLength / 2)
-  const dualPerVector = halfSeq + AAV_OVERHEAD_BP
-  const dualStatus = sizeStatus(dualPerVector)
-
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <Badge
-          variant={
-            singleStatus === 'fits'
-              ? 'secondary'
-              : dualStatus === 'fits'
-                ? 'outline'
-                : 'destructive'
-          }
-          className="gap-1 select-none"
-        >
-          <StatusIcon status={singleStatus === 'fits' ? 'fits' : dualStatus} />
-          {singleStatus === 'fits'
-            ? copy.preflight.single
-            : dualStatus === 'fits'
-              ? copy.preflight.dual
-              : dualStatus === 'tight'
-                ? copy.preflight.dualTight
-                : copy.preflight.exceeds}
-        </Badge>
-      </TooltipTrigger>
-      <TooltipContent className="max-w-64 text-xs">
-        <p>
-          Estimated total: ~{singleTotal.toLocaleString()} bp (sequence + ~
-          {AAV_OVERHEAD_BP.toLocaleString()} bp overhead).
-        </p>
-        <p>AAV limit: ~{AAV_PACKAGING_LIMIT.toLocaleString()} bp.</p>
-        {singleStatus !== 'fits' && (
-          <p>Dual vector: ~{dualPerVector.toLocaleString()} bp per half.</p>
-        )}
-      </TooltipContent>
-    </Tooltip>
-  )
 }
 
 /**

@@ -109,28 +109,31 @@ export function ExpandableSidebarList<T>({
   return (
     <SidebarGroup>
       <div className="bg-sidebar sticky top-0 z-10 flex items-center justify-between gap-1">
-        <SidebarGroupLabel asChild className="min-w-0 flex-1 shrink">
-          <button
-            type="button"
-            onClick={toggleOpen}
-            aria-expanded={open}
-            aria-controls={sectionId}
-            className="flex w-full min-w-0 items-center gap-1.5 text-left"
-          >
-            <ChevronRight
-              className={cn(
-                'size-3 flex-shrink-0 transition-transform duration-150',
-                open && 'rotate-90',
+        <SidebarGroupLabel
+          className="min-w-0 flex-1 shrink"
+          render={
+            <button
+              type="button"
+              onClick={toggleOpen}
+              aria-expanded={open}
+              aria-controls={sectionId}
+              className="flex w-full min-w-0 items-center gap-1.5 text-left"
+            >
+              <ChevronRight
+                className={cn(
+                  'size-3 flex-shrink-0 transition-transform duration-150',
+                  open && 'rotate-90',
+                )}
+              />
+              <span className="truncate">{label}</span>
+              {hasItems && (
+                <span className="text-muted-foreground type-micro ml-auto font-mono tabular-nums">
+                  {items.length}
+                </span>
               )}
-            />
-            <span className="truncate">{label}</span>
-            {hasItems && (
-              <span className="text-muted-foreground type-micro ml-auto font-mono tabular-nums">
-                {items.length}
-              </span>
-            )}
-          </button>
-        </SidebarGroupLabel>
+            </button>
+          }
+        />
         {showClear && open && (
           <Button
             variant="ghost"

@@ -27,23 +27,25 @@ interface FieldHelpProps {
 export function FieldHelp({ topic, children, className }: FieldHelpProps) {
   return (
     <Tooltip>
-      <TooltipTrigger asChild>
-        <button
-          type="button"
-          aria-label={`What is ${topic}?`}
-          // Inside a <label>, a click would otherwise toggle the checkbox.
-          onClick={(e) => {
-            e.preventDefault()
-            e.stopPropagation()
-          }}
-          className={cn(
-            'text-muted-foreground hover:text-foreground focus-visible:ring-ring inline-flex size-5 shrink-0 cursor-help items-center justify-center rounded-md transition-colors focus-visible:ring-2 focus-visible:outline-hidden',
-            className,
-          )}
-        >
-          <CircleHelp className="size-3.5" aria-hidden />
-        </button>
-      </TooltipTrigger>
+      <TooltipTrigger
+        render={
+          <button
+            type="button"
+            aria-label={`What is ${topic}?`}
+            // Inside a <label>, a click would otherwise toggle the checkbox.
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+            }}
+            className={cn(
+              'text-muted-foreground hover:text-foreground focus-visible:ring-ring inline-flex size-5 shrink-0 cursor-help items-center justify-center rounded-md transition-colors focus-visible:ring-2 focus-visible:outline-hidden',
+              className,
+            )}
+          >
+            <CircleHelp className="size-3.5" aria-hidden />
+          </button>
+        }
+      />
       <TooltipContent side="top" sideOffset={4} className="max-w-xs">
         {children}
       </TooltipContent>

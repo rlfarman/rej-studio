@@ -5,13 +5,13 @@ import {
   SidebarMenuItem,
 } from '@/components/ui/sidebar'
 import {
+  isSeedId,
   useJobHistory,
   type JobHistoryEntry,
 } from '@/features/design-tool/hooks/use-job-history'
 import { cancelJob as cancelJobAction } from '@/features/design-tool/api/jobs'
 import { ExpandableSidebarList } from '@/components/expandable-sidebar-list'
 import { Loader2, CircleAlert, X } from 'lucide-react'
-import { AnimatePresence, m } from 'motion/react'
 import { designToolCopy } from '../copy'
 
 const copy = designToolCopy.recentJobs
@@ -37,9 +37,20 @@ export function RecentJobs({ onSelectJob }: RecentJobsProps) {
   // Selector-scoped reads so this component only re-renders when the
   // relevant slice changes, not on every unrelated store mutation.
   const entries = useJobHistory((s) => s.entries)
+  const progressById = useJobHistory((s) => s.progressById)
   const clearHistory = useJobHistory((s) => s.clearHistory)
   const removeEntry = useJobHistory((s) => s.removeEntry)
   const upsertEntry = useJobHistory((s) => s.upsertEntry)
+
+  // Clearing the list must not leave workers running and billing: cancel
+  // every running job (best effort) before dropping the entries.
+  const handleClear = () => {
+    for (const id of useJobHistory.getState().getRunningIds()) {
+      if (isSeedId(id)) continue
+      void cancelJobAction(id).catch(() => {})
+    }
+    clearHistory()
+  }
 
   // X on a running entry cancels the backend job (eagerly marking it
   // cancelled in the store) rather than silently dismissing while the
@@ -67,17 +78,18 @@ export function RecentJobs({ onSelectJob }: RecentJobsProps) {
       persistKey="sidebar:recent-jobs:open"
       items={entries}
       getItemKey={(entry) => entry.id}
-      onClear={clearHistory}
+      onClear={handleClear}
       emptyMessage={copy.empty}
       menuAriaLabel={copy.menuAria}
       renderItem={(entry) => {
         const isError =
           entry.status === 'failed' || entry.status === 'cancelled'
+        const progress = progressById[entry.id]
         const subline =
           entry.status === 'running'
-            ? (entry.stage ??
-              (entry.progress !== undefined
-                ? `${Math.round(entry.progress * 100)}%`
+            ? (progress?.stage ??
+              (progress?.progress !== undefined
+                ? `${Math.round(progress.progress * 100)}%`
                 : copy.running))
             : isError && entry.error
               ? entry.error.message
@@ -99,31 +111,20 @@ export function RecentJobs({ onSelectJob }: RecentJobsProps) {
                 <span className="line-clamp-2 pr-5 font-medium">
                   {entry.name}
                 </span>
-                <div className="relative min-h-[14px] pr-5">
-                  <AnimatePresence mode="wait" initial={false}>
-                    <m.span
-                      key={subline}
-                      initial={{ opacity: 0, y: 3 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -3 }}
-                      transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                      className="text-muted-foreground group-hover/menu-button:text-sidebar-accent-foreground type-nano line-clamp-2 block"
-                    >
-                      {subline}
-                    </m.span>
-                  </AnimatePresence>
-                </div>
-                {entry.status === 'running' && entry.progress !== undefined && (
-                  <div className="bg-sidebar-border mt-1 h-0.5 w-full overflow-hidden rounded-full">
-                    <m.div
-                      className="bg-primary h-full origin-left"
-                      initial={false}
-                      animate={{ scaleX: Math.max(0.02, entry.progress) }}
-                      transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-                      style={{ width: '100%' }}
-                    />
-                  </div>
-                )}
+                <span className="text-muted-foreground group-hover/menu-button:text-sidebar-accent-foreground type-nano line-clamp-2 block min-h-[14px] pr-5">
+                  {subline}
+                </span>
+                {entry.status === 'running' &&
+                  progress?.progress !== undefined && (
+                    <div className="bg-sidebar-border mt-1 h-0.5 w-full overflow-hidden rounded-full">
+                      <div
+                        className="bg-primary h-full w-full origin-left transition-transform duration-700 ease-out"
+                        style={{
+                          transform: `scaleX(${Math.max(0.02, progress.progress)})`,
+                        }}
+                      />
+                    </div>
+                  )}
               </div>
             </SidebarMenuButton>
             <SidebarMenuAction

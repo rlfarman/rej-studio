@@ -18,8 +18,8 @@ export default function NotFoundPage() {
       description={appCopy.notFound.detail}
       actions={
         <>
-          <Button asChild>
-            <Link href="/">{commonCopy.actions.goHome}</Link>
+          <Button nativeButton={false} render={<Link href="/" />}>
+            {commonCopy.actions.goHome}
           </Button>
           <Button variant="outline" onClick={() => router.back()}>
             {commonCopy.actions.goBack}

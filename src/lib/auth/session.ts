@@ -5,13 +5,20 @@
  * round-trip on read — middleware verifies the signature and expiry and that's
  * it. Uses Web Crypto so the same code runs in Edge middleware, Node route
  * handlers, and tests.
+ *
+ * The signing key is derived from SESSION_SECRET *and* the shared password,
+ * so rotating BASIC_AUTH_PASSWORD signs everyone out. Keyed on the secret
+ * alone, a cookie issued under the old password stayed valid for its full
+ * week.
  */
 
 export const SESSION_COOKIE_NAME = 'rej_session'
 export const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 7 // 1 week
 
-type SessionPayload = {
+export type Session = {
   v: 1
+  /** Random per-sign-in id; keys rate limits for signed-in callers. */
+  sid: string
   exp: number
 }
 
@@ -34,16 +41,6 @@ function fromBase64Url(str: string): Uint8Array<ArrayBuffer> {
   return bytes
 }
 
-async function importKey(secret: string): Promise<CryptoKey> {
-  return crypto.subtle.importKey(
-    'raw',
-    encoder.encode(secret),
-    { name: 'HMAC', hash: 'SHA-256' },
-    false,
-    ['sign', 'verify'],
-  )
-}
-
 function getSecret(): string {
   const secret = process.env.SESSION_SECRET
   if (!secret || secret.length < 32) {
@@ -54,15 +51,57 @@ function getSecret(): string {
   return secret
 }
 
+function getPassword(): string {
+  const password = process.env.BASIC_AUTH_PASSWORD
+  if (!password) {
+    throw new Error(
+      'BASIC_AUTH_PASSWORD is not set; sessions only exist while the password gate is on.',
+    )
+  }
+  return password
+}
+
+/**
+ * HMAC key derived with HKDF-SHA256 from SESSION_SECRET, salted with a hash
+ * of the current password, so a cookie signed under an old password fails
+ * verification once the password changes.
+ */
+async function signingKey(): Promise<CryptoKey> {
+  const secret = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(getSecret()),
+    'HKDF',
+    false,
+    ['deriveKey'],
+  )
+  const salt = await crypto.subtle.digest(
+    'SHA-256',
+    encoder.encode(getPassword()),
+  )
+  return crypto.subtle.deriveKey(
+    {
+      name: 'HKDF',
+      hash: 'SHA-256',
+      salt,
+      info: encoder.encode('rej-studio session v1'),
+    },
+    secret,
+    { name: 'HMAC', hash: 'SHA-256', length: 256 },
+    false,
+    ['sign', 'verify'],
+  )
+}
+
 export async function signSession(
   ttlSeconds: number = SESSION_MAX_AGE_SECONDS,
 ): Promise<string> {
-  const payload: SessionPayload = {
+  const payload: Session = {
     v: 1,
+    sid: crypto.randomUUID(),
     exp: Math.floor(Date.now() / 1000) + ttlSeconds,
   }
   const payloadB64 = toBase64Url(encoder.encode(JSON.stringify(payload)))
-  const key = await importKey(getSecret())
+  const key = await signingKey()
   const sig = new Uint8Array(
     await crypto.subtle.sign('HMAC', key, encoder.encode(payloadB64)),
   )
@@ -71,13 +110,13 @@ export async function signSession(
 
 export async function verifySession(
   cookieValue: string | undefined,
-): Promise<SessionPayload | null> {
+): Promise<Session | null> {
   if (!cookieValue) return null
   const parts = cookieValue.split('.')
   if (parts.length !== 2) return null
   const [payloadB64, sigB64] = parts
   try {
-    const key = await importKey(getSecret())
+    const key = await signingKey()
     const ok = await crypto.subtle.verify(
       'HMAC',
       key,
@@ -87,11 +126,12 @@ export async function verifySession(
     if (!ok) return null
     const payload = JSON.parse(
       new TextDecoder().decode(fromBase64Url(payloadB64)),
-    ) as SessionPayload
+    ) as Partial<Session>
     if (payload.v !== 1) return null
+    if (typeof payload.sid !== 'string' || payload.sid === '') return null
     if (typeof payload.exp !== 'number') return null
     if (payload.exp < Math.floor(Date.now() / 1000)) return null
-    return payload
+    return { v: 1, sid: payload.sid, exp: payload.exp }
   } catch {
     return null
   }

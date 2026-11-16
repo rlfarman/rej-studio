@@ -6,40 +6,40 @@ REJ Studio is a bioinformatics web app for RNA End-Joining sequence design. User
 
 ## Architecture
 
-- **Next.js 16 (App Router)** — Frontend and server actions. All user-facing routes live under the `(app)` group, which contains `(search)` for gene browsing, `(design-tool)` for the optimization form, and `(internal)` for non-indexed pages (e.g. `/architecture`). Fumadocs powers `/docs`. Frontend source lives under `src/`.
+- **Next.js 16 (App Router)** — Frontend and server actions. All user-facing routes live under the `(app)` group, which contains `(search)` for gene browsing, `(design-tool)` for the optimization form, and `(internal)` for non-indexed pages (e.g. `/architecture`). Frontend source lives under `src/`.
 - **Bulletproof-react structure** — Code is organized into `src/features/<feature>/` (self-contained: `api/`, `components/`, `hooks/`, `stores/`, `types/`, `utils/`) plus shared layers (`src/components/`, `src/lib/`, `src/hooks/`, `src/stores/`). Cross-feature imports and shared→feature imports are forbidden by ESLint (`import/no-restricted-paths`).
 - **FastAPI (Python)** — Runs the DNA optimization algorithm. Canonical code lives in `python/`. Single endpoint: `POST /api/py/process`. In development, Next.js proxies `/api/py/*` to a local uvicorn at `localhost:8000`. In production Python does NOT run on Vercel — it's deployed to Modal and called directly from server actions. `COMPUTE_BACKEND=modal` is required in prod on every host; the local backend is dev-only.
-- **Postgres + Drizzle ORM** — Read-only gene/isoform/sequence data. Production uses Neon over HTTP via `@neondatabase/serverless`. Local dev and CI fall back to PGlite (embedded Postgres) when `DATABASE_URL` is empty, a `file:` path, or `memory://` — full Postgres compatibility including `tsvector` and GIN indexes. Driver selection is in `src/drizzle/db.ts`; schema is in `src/drizzle/schema.ts`. On first PGlite boot, `initPglite()` auto-applies `src/drizzle/migrations/0000_initial.sql` and loads the committed sample seed (`data/sample-genes.jsonl` + `data/sample-isoforms.jsonl`, 24 genes / 228 isoforms with real CDS) so gene search and the design-tool optimizer work end-to-end with zero setup. Run `pnpm db:fetch` to swap the sample seed for the full prebuilt corpus tarball pinned in `package.json` (downloaded from a GitHub Release, SHA-256 verified).
-- **shadcn/ui + Radix UI** — Component library. UI primitives live in `src/components/ui/`. Config in `components.json`.
+- **Postgres + Drizzle ORM** — Read-only gene/isoform/sequence data. Production uses Neon over HTTP via `@neondatabase/serverless`. Local dev and CI fall back to PGlite (embedded Postgres) when `DATABASE_URL` is empty, a `file:` path, or `memory://` — full Postgres compatibility including `tsvector` and GIN indexes. Driver selection is in `src/drizzle/client.ts`; app code imports it through `src/drizzle/db.ts`, which adds `import 'server-only'` (CLI scripts import `client.ts` directly). Schema is in `src/drizzle/schema.ts`. On first PGlite boot, `initPglite()` loads the `pg_trgm` extension, applies the committed migrations in `src/drizzle/migrations/`, and loads the committed sample seed (`data/sample-genes.jsonl` + `data/sample-isoforms.jsonl`, 24 genes / 228 isoforms with real CDS) so gene search and the design-tool optimizer work end-to-end with zero setup. Run `pnpm db:fetch` to swap the sample seed for the full prebuilt corpus tarball pinned in `package.json` (downloaded from a GitHub Release, SHA-256 verified).
+- **shadcn/ui on Base UI** — Component library: shadcn's `base-rhea` style, built on Base UI (`@base-ui/react`), with lucide icons. UI primitives live in `src/components/ui/`. Config in `components.json`.
 - **Zustand** — Global client state (favorites, recent genes, species filter) lives in `src/stores/` (shared) or `src/features/<feature>/stores/` (feature-owned).
-- **Auth** — Shared-password session gate enforced in the proxy (`src/proxy.ts`). Engages when `BASIC_AUTH_PASSWORD` is set (with `SESSION_SECRET`); skip locally with `BYPASS_AUTH=true` (dev only). Without a session, page loads redirect to `/login?return_to=…` and API calls and server actions get 401; the paths that stay public are `PUBLIC_PATHS` plus the matcher exclusions. Client-invoked server actions also call `requireSession()` (`src/lib/auth/require-session.ts`), since actions are public endpoints. The root-layout `AuthGate` is only a backstop: it can't stop a page segment from rendering. `/api/health` is public but runs DB/Modal checks only with `HEALTH_AUTH_TOKEN`.
+- **Auth** — Shared-password session gate enforced in the proxy (`src/proxy.ts`). Engages when `BASIC_AUTH_PASSWORD` is set (with `SESSION_SECRET`); skip locally with `BYPASS_AUTH=true` (dev only). Without a session, page loads redirect to `/login?return_to=…` and API calls and server actions get 401; the paths that stay public are `PUBLIC_PATHS` plus the matcher exclusions. Client-invoked server actions also call `requireSession()` (`src/lib/auth/require-session.ts`), since actions are public endpoints. The proxy is the only page gate; the app shell renders static sidebar/header Suspense boundaries. Sessions are bound to the password, so changing `BASIC_AUTH_PASSWORD` signs everyone out. `/api/health` is public but runs DB/Modal checks only with `HEALTH_AUTH_TOKEN`.
 - **MCP (agent access)** — `/api/mcp` serves four tools (`search_genes`, `get_gene`, `submit_design`, `get_design`) to a visitor's own AI assistant, defined in `src/app/api/mcp/server.ts`. They do only what the browser can: `submit_design` runs the form's own Zod schema (`design-tool/types/form-schema.ts`) and `buildJobParams`, so validation and the options mapping have one definition. Access is by named bearer token (`MCP_TOKENS`, parsed in `app/api/mcp/tokens.ts`); with none configured the route 404s, and it is in `PUBLIC_PATHS` because it carries its own auth. No CORS headers, deliberately. Tool descriptions and the server instructions are prompts read by other models: say what a tool returns and when to use it, and keep "not on record" honest rather than implied.
 - **MCP Apps (views in a chat host)** — `get_design` carries `_meta.ui.resourceUri`, and `app/api/mcp/ui/design-view.ts` is the HTML shown for a finished design. It is one self-contained document that loads exactly one script, `/mcp/app-bridge.js`, which `scripts/copy-mcp-app-bridge.mjs` copies out of `@modelcontextprotocol/ext-apps` on install and before each build (gitignored). That asset is served with `Access-Control-Allow-Origin: *` from `next.config.ts` and is in `PUBLIC_PATHS`: the view runs on the host's origin and has no session, and a module script is fetched with CORS, so without both it cannot load. The view renders only what the tool result contains; the tool always returns structured content too, which is what hosts without the extension show. The view is registered only when `NEXT_PUBLIC_SITE_URL` is set, because its CSP must name an origin.
-- **Job actions vs. the work** — `design-tool/api/jobs-core.ts` runs a job and takes a `JobCaller` (rate-limit key and log label); it does not authorize. `design-tool/api/jobs.ts` is the `'use server'` wrapper that calls `requireSession()` and supplies the browser's IP; the MCP route supplies its token instead. Put new work in the core, and authorization in the caller.
-- **Observability** — Sentry (`sentry.*.config.ts`), OpenTelemetry (`src/instrumentation.ts`, vendor-neutral OTLP), and Google Tag Manager (`NEXT_PUBLIC_GTM_ID`) ship Web Vitals to the dataLayer. Upstash Redis powers distributed rate limiting (`src/lib/rate-limit.ts`), falling back to in-memory when unconfigured.
+- **Job actions vs. the work** — `design-tool/api/job-backend.ts` runs a job: backend routing, the circuit breaker, idempotency, and submit/status/cancel. It authorizes nothing and reads no request, so both callers share it — `design-tool/api/jobs.ts` is the `'use server'` wrapper that checks the session and rate-limits per request, and `app/api/mcp/server.ts` calls the same functions and rate-limits per token. Put new work in `job-backend.ts`, and authorization in the caller.
+- **Observability** — Sentry (`instrumentation-client.ts`, `src/sentry.*.config.ts`, loaded from `src/instrumentation.ts`) handles errors and traces; it registers its own OpenTelemetry provider, so there's no separate OTel SDK on the Next.js side. Google Tag Manager (`NEXT_PUBLIC_GTM_ID`) ships Web Vitals to the dataLayer. Upstash Redis powers distributed rate limiting (`src/lib/rate-limit.ts`), falling back to in-memory when unconfigured.
 
 ## Key Directories
 
-| Path                     | Purpose                                                                                                         |
-| ------------------------ | --------------------------------------------------------------------------------------------------------------- |
-| `src/app/`               | Next.js pages, layouts, and route-specific `_components/` (App Router). User-facing routes nest under `(app)/`. |
-| `src/features/`          | Self-contained feature modules (`gene-search`, `design-tool`, `onboarding`); server actions here                |
-| `src/components/ui/`     | shadcn/ui primitives                                                                                            |
-| `src/components/bio/`    | Bio-domain widgets (species select, diagnostic badges, DNA icon)                                                |
-| `src/components/`        | Generic shared widgets (top-level)                                                                              |
-| `src/lib/bio/`           | Bio-domain utilities (species types, FASTA, sequence utils, reverse translation, design suitability)            |
-| `src/lib/analytics/`     | GTM / Web Vitals helpers                                                                                        |
-| `src/lib/`               | Generic shared utilities (`cn`, motion, file download, rate-limit, env, logger, retry) at the top level         |
-| `src/hooks/`             | Generic shared React hooks                                                                                      |
-| `src/stores/`            | Shared Zustand stores (e.g. species filter)                                                                     |
-| `src/copy/`              | Shared user-facing copy (`errors.ts`, `common.ts`, `app.ts`). Feature copy lives in `src/features/<f>/copy.ts`  |
-| `src/drizzle/`           | DB schema, client, migrations (`schema.ts`, `db.ts`, `migrations/`)                                             |
-| `src/proxy.ts`           | Next.js middleware — session gate, CSRF and body-size checks, CSP                                               |
-| `src/instrumentation.ts` | OpenTelemetry bootstrap + Sentry server/edge init                                                               |
-| `python/`                | FastAPI Python backend (`index.py`, `algorithm.py`); dependencies in the root `pyproject.toml` + `uv.lock`      |
-| `modal/`                 | Modal deployment for the Python backend (production compute)                                                    |
-| `scripts/`               | Dev tooling — worktree bootstrap, DB build/load, bundle-size checks, schema verify, type generation             |
-| `.github/workflows/`     | CI — lint/type-check/test, Python CI, DB CI, Lighthouse, Modal deploy, release-please, security, uptime         |
+| Path                     | Purpose                                                                                                            |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------ |
+| `src/app/`               | Next.js pages, layouts, and route-specific `_components/` (App Router). User-facing routes nest under `(app)/`.    |
+| `src/features/`          | Self-contained feature modules (`gene-search`, `design-tool`, `disease-associations`, `auth`); server actions here |
+| `src/components/ui/`     | shadcn/ui primitives                                                                                               |
+| `src/components/bio/`    | Bio-domain widgets (species select, diagnostic badges, DNA icon)                                                   |
+| `src/components/`        | Generic shared widgets (top-level)                                                                                 |
+| `src/lib/bio/`           | Bio-domain utilities (species types, FASTA, sequence utils, reverse translation, design suitability)               |
+| `src/lib/analytics/`     | GTM / Web Vitals helpers                                                                                           |
+| `src/lib/`               | Generic shared utilities (`cn`, file download, rate-limit, env, logger, retry) at the top level                    |
+| `src/hooks/`             | Generic shared React hooks                                                                                         |
+| `src/stores/`            | Shared Zustand stores (e.g. species filter)                                                                        |
+| `src/copy/`              | Shared user-facing copy (`errors.ts`, `common.ts`, `app.ts`). Feature copy lives in `src/features/<f>/copy.ts`     |
+| `src/drizzle/`           | DB schema, client, migrations (`schema.ts`, `db.ts`, `migrations/`)                                                |
+| `src/proxy.ts`           | Next.js middleware — session gate, CSRF and body-size checks, CSP                                                  |
+| `src/instrumentation.ts` | Env validation at boot + Sentry server/edge init                                                                   |
+| `python/`                | FastAPI Python backend (`index.py`, `algorithm.py`); dependencies in the root `pyproject.toml` + `uv.lock`         |
+| `modal/`                 | Modal deployment for the Python backend (production compute)                                                       |
+| `scripts/`               | Dev tooling — worktree bootstrap, DB build/load, bundle-size checks, schema verify, type generation                |
+| `.github/workflows/`     | CI (tests, build + bundle budgets, Storybook, zizmor), security, DB/Python CI, Lighthouse, deploys                 |
 
 ## Development Commands
 
@@ -57,8 +57,11 @@ pnpm test:e2e     # Playwright smoke tests (starts a gated `next dev` on :3000)
 pnpm verify       # lint + type-check + test (pre-push gate)
 uv sync           # Python env (.venv) for the FastAPI backend, from uv.lock
 pnpm storybook    # Storybook dev server on :6006
+pnpm next analyze # Explore the client/server bundles (Turbopack bundle analyzer)
+pnpm build-storybook --test # What CI's Storybook job runs
 pnpm db:build     # Emit neutral JSONL seed from source CSV (data/*.jsonl)
-pnpm db:push      # Create/update tables in $DATABASE_URL from schema.ts
+pnpm db:migrate   # Apply the committed migrations (src/drizzle/migrations) to $DATABASE_URL
+pnpm db:generate  # Write a migration for schema.ts changes (commit it with the schema)
 pnpm db:upload    # Load JSONL into $DATABASE_URL via Drizzle (dialect-neutral)
 pnpm db:studio    # Browse DB in Drizzle Studio (local.drizzle.studio)
 ```
@@ -74,7 +77,7 @@ pnpm db:studio    # Browse DB in Drizzle Studio (local.drizzle.studio)
 
 ## User-Facing Copy
 
-User-facing strings (headings, descriptions, toasts, validation messages, tour content, error pages, button labels, aria-labels with real text) are centralized in typed objects rather than inlined in JSX:
+User-facing strings (headings, descriptions, toasts, validation messages, error pages, button labels, aria-labels with real text) are centralized in typed objects rather than inlined in JSX:
 
 - **Feature-owned copy** lives in `src/features/<feature>/copy.ts` and is consumed only from within that feature.
 - **Shared copy** lives in `src/copy/` (`errors.ts`, `common.ts`, `app.ts`) for strings used by ≥2 features or by app chrome.
@@ -106,26 +109,26 @@ App code uses dialect-neutral SQL (Drizzle query builder + `LOWER(col) LIKE '%x%
 
 **Maintainer-only — publishing a new corpus version:**
 
-1. Build a fresh `data/local.db/` from Neon (e.g. via `pnpm db:build && pnpm db:push && pnpm db:upload` against `drizzle/transcript_metadata.csv`, or by snapshotting Neon directly).
+1. Build a fresh `data/local.db/` from Neon (e.g. via `pnpm db:build && pnpm db:migrate && pnpm db:upload` against `drizzle/transcript_metadata.csv`, or by snapshotting Neon directly).
 2. `tar czf rej-corpus-vN.tar.gz -C data local.db && shasum -a 256 rej-corpus-vN.tar.gz`
 3. `gh release create corpus-vN --title "Corpus vN" --notes "…"` (creates the release with no asset).
 4. `gh release upload corpus-vN rej-corpus-vN.tar.gz` (upload separately — uploading at create time has hit `HTTP 400` for ~250 MB assets).
 5. Bump `package.json`'s `corpus.{version,tag,asset,sha256}` and open a PR. Contributors pick up the new version on next `pnpm db:fetch`.
 
-For seeding a Neon database (production), the same `db:build`/`db:push`/`db:upload` pipeline still works against `$DATABASE_URL`.
+For seeding a Neon database (production), the same `db:build`/`db:migrate`/`db:upload` pipeline works against `$DATABASE_URL`. New or updated databases always get their schema from `pnpm db:migrate`; `pnpm db:push` syncs `schema.ts` directly and skips the migration files, so keep it for throwaway prototyping.
 
 ## Environment Variables
 
 `.env.example` is the source of truth — consult it when adding new config. Variables group by purpose:
 
-- **Core** — `DATABASE_URL` (omit for PGlite dev), `COMPUTE_BACKEND`, `MODAL_API_URL`, `LOCAL_API_URL`.
-- **Auth** — `BASIC_AUTH_USER`, `BASIC_AUTH_PASSWORD`, `BYPASS_AUTH`.
+- **Core** — `DATABASE_URL` (omit for PGlite dev), `COMPUTE_BACKEND`, `MODAL_API_URL`, `MODAL_API_TOKEN` (bearer token for the Modal API; must equal `JOB_API_TOKEN` in the Modal secret), `LOCAL_API_URL`.
+- **Auth** — `BASIC_AUTH_PASSWORD`, `SESSION_SECRET` (32+ chars, required with the password), `BYPASS_AUTH` (dev only); `BASIC_AUTH_USER` is accepted but unused.
 - **Public / client** — `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_GTM_ID`.
-- **Observability** — `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_*`, `OTEL_EXPORTER_OTLP_*`, `OTEL_SERVICE_NAME`.
-- **Optional features** — `HEALTH_AUTH_TOKEN`, `MAINTENANCE_MESSAGE`, `UPSTASH_REDIS_REST_*`, `BLOB_READ_WRITE_TOKEN`.
-- **Build-time** — `GIT_COMMIT_SHA`, `NEXT_PUBLIC_GITHUB_{OWNER,REPO,BRANCH}`.
+- **Observability** — `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_*`.
+- **Optional features** — `HEALTH_AUTH_TOKEN`, `MAINTENANCE_MESSAGE`, `UPSTASH_REDIS_REST_*`, `NEXT_PUBLIC_ENABLE_MULTI_SPLIT`.
+- **Build-time** — `GIT_COMMIT_SHA`.
 
-Local dev needs nothing to boot (PGlite + in-memory rate limit fill in). Production requires at minimum a Neon `DATABASE_URL` and `COMPUTE_BACKEND=modal` with `MODAL_API_URL`.
+Local dev needs nothing to boot (PGlite + in-memory rate limit fill in). Production requires at minimum a Neon `DATABASE_URL` and `COMPUTE_BACKEND=modal` with `MODAL_API_URL` and `MODAL_API_TOKEN`, plus `BASIC_AUTH_PASSWORD` and `SESSION_SECRET` to keep the gate on.
 
 ## Commits & Branches
 
@@ -136,6 +139,10 @@ This repo enforces [Conventional Commits](https://www.conventionalcommits.org/en
 [Vitest](https://vitest.dev) is configured (`vitest.config.ts`). Tests are co-located with the code they cover (`*.test.ts` / `*.test.tsx`) across features, lib, stores, and components. Run `pnpm test` (one-shot), `pnpm test:watch`, or `pnpm test:coverage`. The `pnpm verify` script chains lint + type-check + test and is the standard pre-push gate.
 
 Drizzle has an integration test at `src/drizzle/queries.integration.test.ts` that runs against PGlite — it needs no real DB.
+
+Server modules `import 'server-only'`. Vitest aliases it to Next's empty module (`vitest.config.ts`), and tsx scripts that reach them run with `--conditions=react-server` (see the `db:*` scripts); without either, the package throws on import.
+
+Storybook stories live next to their components (`*.stories.tsx`); CI builds them with `pnpm build-storybook --test`.
 
 [Playwright](https://playwright.dev) smoke tests live in `e2e/` (`pnpm test:e2e`). They start `next dev` with the password gate on and the in-memory sample data, sign in once (`e2e/auth.setup.ts`), and check the gate plus the main signed-in pages. Assert on roles and data rather than copy. The server uses port 3000, so stop a local `pnpm dev` first; first-time setup needs `pnpm exec playwright install chromium`.
 
@@ -173,13 +180,13 @@ Shared Claude Code permissions, deny rules, and sandbox config live in `.agents/
 
 ## Common Tasks
 
-- **Adding a new UI primitive**: Use `npx shadcn@latest add <component>`. Components go in `src/components/ui/`.
+- **Adding a new UI primitive**: Use `pnpm exec shadcn add <component>` (the pinned CLI, which reads the `base-rhea` style from `components.json`). Components go in `src/components/ui/`.
 - **Adding a server action**: Place it in the owning feature's `api/` folder (e.g. `src/features/gene-search/api/`). Import `db` from `@/drizzle/db`.
 - **Adding a new feature**: Create `src/features/<name>/` with the standard subfolders. ESLint boundary rules apply automatically (no config changes needed).
 - **Adding shared code**: If used by ≥2 features, decide by domain: bio-specific → `src/lib/bio/` or `src/components/bio/`; generic → `src/lib/` or `src/components/`.
-- **Modifying the optimization algorithm**: Edit `python/algorithm.py`. The FastAPI endpoint is in `python/index.py`. In production this runs on Modal (see `modal/app.py`), so redeploy Modal after changes.
-- **Database schema changes**: Edit `src/drizzle/schema.ts`, update `scripts/build-db.py` if the JSONL shape needs to change, then `pnpm db:build && pnpm db:push && pnpm db:upload`.
-- **Switching DB backend**: Edit `src/drizzle/db.ts` and the connection driver — it's a 5-file change.
+- **Modifying the optimization algorithm**: Edit `python/algorithm.py`. The FastAPI endpoint is in `python/index.py`. In production this runs on Modal (see `modal/app.py`); `.github/workflows/modal-deploy.yml` redeploys it when the change merges to `main`.
+- **Database schema changes**: Edit `src/drizzle/schema.ts`, run `pnpm db:generate` and commit the new SQL in `src/drizzle/migrations/` (DB CI fails if `schema.ts` and the migrations disagree), then `pnpm db:migrate` against each database. Update `scripts/build-db.py` too if the JSONL shape changes, then `pnpm db:build && pnpm db:upload`.
+- **Switching DB backend**: Edit `src/drizzle/client.ts` and the connection driver — it's a 5-file change.
 
 <!-- BEGIN:nextjs-agent-rules -->
 
