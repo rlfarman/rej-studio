@@ -24,6 +24,7 @@
     "db:push": "drizzle-kit push",
     "db:upload": "tsx --conditions=react-server --env-file=.env scripts/load-db.ts",
     "db:fetch": "tsx scripts/fetch-corpus.ts",
+    "corpus:build": "tsx scripts/build-gene-corpus.ts",
     "db:reset": "rm -rf data/local.db",
     "db:studio": "drizzle-kit studio",
     "build": "next build",

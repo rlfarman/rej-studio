@@ -3,9 +3,13 @@ import { getDb } from '@/drizzle/db'
 import { genes, isoforms } from '@/drizzle/schema'
 import { count, eq } from 'drizzle-orm'
 import { cacheLife, cacheTag } from 'next/cache'
+import type { IsoformListItem } from '@/features/gene-search/types/domain-types'
+import { getServerCorpus } from './static-gene-data'
 
 /**
- * Cached isoform queries. Gene/isoform data is read-only (only changes on
+ * Cached isoform queries, answered from the static corpus when one is
+ * configured and from Postgres otherwise (see the backend note in
+ * gene-queries.ts). Gene/isoform data is read-only (only changes on
  * re-seed), so these use the shared remote cache with the 'max' lifetime
  * (see the cache-tier note in gene-queries.ts) and are tagged 'genes' so a
  * reseed can invalidate everything via `revalidateTag('genes')`.
@@ -13,10 +17,25 @@ import { cacheLife, cacheTag } from 'next/cache'
 
 const GENES_CACHE_TAG = 'genes'
 
-export async function fetchIsoformsByGene(geneId: string) {
+interface IsoformWithGene {
+  isoform: {
+    id: string
+    species: string
+    geneId: string
+    codingSequence: string
+  }
+  gene: { id: string; name: string; symbol: string }
+}
+
+export async function fetchIsoformsByGene(
+  geneId: string,
+): Promise<IsoformListItem[]> {
   'use cache: remote'
   cacheTag(GENES_CACHE_TAG)
   cacheLife('max')
+
+  const corpus = getServerCorpus()
+  if (corpus) return (await corpus.geneFile(geneId))?.isoforms ?? []
 
   const db = await getDb()
   return db
@@ -44,6 +63,15 @@ export async function fetchIsoformSummaryByGene(
   cacheTag(GENES_CACHE_TAG)
   cacheLife('max')
 
+  const corpus = getServerCorpus()
+  if (corpus) {
+    const isoforms = (await corpus.geneFile(geneId))?.isoforms ?? []
+    return {
+      isoformCount: isoforms.length,
+      species: [...new Set(isoforms.map((isoform) => isoform.species))].sort(),
+    }
+  }
+
   const db = await getDb()
   const rows = await db
     .select({ species: isoforms.species, count: count() })
@@ -58,10 +86,29 @@ export async function fetchIsoformSummaryByGene(
   }
 }
 
-export async function fetchIsoformAndGeneByIsoformId(isoformId: string) {
+export async function fetchIsoformAndGeneByIsoformId(
+  isoformId: string,
+): Promise<IsoformWithGene | undefined> {
   'use cache: remote'
   cacheTag(GENES_CACHE_TAG)
   cacheLife('max')
+
+  const corpus = getServerCorpus()
+  if (corpus) {
+    const geneId = await corpus.geneIdOfTranscript(isoformId)
+    const gene = geneId ? await corpus.geneFile(geneId) : null
+    const isoform = gene?.isoforms.find(({ id }) => id === isoformId)
+    if (!gene || !isoform) return undefined
+    return {
+      isoform: {
+        id: isoform.id,
+        species: isoform.species,
+        geneId: gene.id,
+        codingSequence: isoform.codingSequence,
+      },
+      gene: { id: gene.id, name: gene.name, symbol: gene.symbol },
+    }
+  }
 
   const db = await getDb()
   const [result] = await db

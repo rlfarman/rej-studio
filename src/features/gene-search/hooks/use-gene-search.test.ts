@@ -20,7 +20,16 @@ vi.mock('@/lib/analytics', () => ({
   trackEvent: mockTrackEvent,
 }))
 
+// The API path by default; the in-browser tests at the end swap in a corpus.
+const { mockGetBrowserCorpus } = vi.hoisted(() => ({
+  mockGetBrowserCorpus: vi.fn(),
+}))
+vi.mock('../corpus/gene-data-url', () => ({
+  getBrowserCorpus: mockGetBrowserCorpus,
+}))
+
 import { useGeneSearch } from './use-gene-search'
+import { sampleCorpus } from '../corpus/test-utils'
 
 function createClient() {
   return new QueryClient({ defaultOptions: { queries: { retry: false } } })
@@ -56,6 +65,7 @@ const gene = { id: '1', symbol: 'BRCA1', name: 'BRCA1', species: 'human' }
 describe('useGeneSearch', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockGetBrowserCorpus.mockReturnValue(null)
     speciesRef.current = 'both'
     mockFetch.mockImplementation(async () => jsonResponse(okBody()))
     vi.stubGlobal('fetch', mockFetch)
@@ -344,5 +354,40 @@ describe('useGeneSearch', () => {
     expect(
       mockTrackEvent.mock.calls.some((c) => c[0]?.event === 'gene_search'),
     ).toBe(false)
+  })
+
+  // --- In-browser search (static corpus) ---
+
+  describe('with a static corpus', () => {
+    beforeEach(() => {
+      mockGetBrowserCorpus.mockReturnValue(sampleCorpus())
+    })
+
+    it('searches the corpus without calling the API', async () => {
+      const { result } = renderHook(
+        () => useGeneSearch({ defaultQuery: 'brca' }),
+        { wrapper: createWrapper() },
+      )
+      await waitFor(() => expect(result.current.hasSearched).toBe(true))
+      expect(
+        result.current.searchResults.map((g) => `${g.symbol}/${g.species}`),
+      ).toEqual(['BRCA1/human', 'BRCA2/human', 'BRCA1/mouse', 'BRCA2/mouse'])
+      expect(result.current.error).toBeNull()
+      expect(mockFetch).not.toHaveBeenCalled()
+    })
+
+    it('applies the species filter and suggests similar symbols', async () => {
+      speciesRef.current = 'mouse'
+      const { result } = renderHook(
+        () => useGeneSearch({ defaultQuery: 'BRCA3' }),
+        { wrapper: createWrapper() },
+      )
+      await waitFor(() => expect(result.current.hasSearched).toBe(true))
+      expect(result.current.searchResults).toEqual([])
+      expect(result.current.suggestions[0]).toEqual({
+        symbol: 'BRCA1',
+        species: 'human',
+      })
+    })
   })
 })

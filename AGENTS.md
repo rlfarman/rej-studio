@@ -123,6 +123,12 @@ App code uses dialect-neutral SQL (Drizzle query builder + `LOWER(col) LIKE '%x%
 
 For seeding a Neon database (production), the same `db:build`/`db:migrate`/`db:upload` pipeline works against `$DATABASE_URL`. New or updated databases always get their schema from `pnpm db:migrate`; `pnpm db:push` syncs `schema.ts` directly and skips the migration files, so keep it for throwaway prototyping.
 
+**Gene data as a static corpus (replacing the database).** Gene and isoform data can be served as a static, versioned set of files (`src/features/gene-search/corpus/format.ts`): `index.json` (searchable fields, columnar), `genes/<id>.json`, `transcripts/<n>.json` and `symbols/<key>.json`. Build it from the JSONL seed with `pnpm corpus:build`. By default it builds the committed sample into `public/gene-data/sample`; for the full corpus, pass `--genes … --isoforms … --version vN --out <dir>`. Versions are immutable: publish a new one rather than rebuilding. `NEXT_PUBLIC_GENE_DATA_URL` points at one version, as an absolute URL or a `/path` under `public/`.
+
+- **When it's unset,** dev and tests use the sample, and production keeps reading Postgres until the corpus is hosted (R2).
+- **When it's set,** the palette and `/genes` search in the browser, and server pages read through `gene-queries.ts` / `isoform-queries.ts`. `corpus/search-index.ts` ports the Postgres ranking exactly; `corpus/text-search.ts` implements Postgres's `'simple'` parser and `ts_rank`.
+- **After changing the seed or the format,** rerun `pnpm corpus:build --force` and commit `public/gene-data/sample`. `corpus/build.test.ts` checks it byte for byte.
+
 ## Environment Variables
 
 `.env.example` is the source of truth — consult it when adding new config. Variables group by purpose:

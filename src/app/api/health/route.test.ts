@@ -2,10 +2,16 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { headers } from 'next/headers'
 
-const { mockExecute } = vi.hoisted(() => ({ mockExecute: vi.fn() }))
+const { mockExecute, mockProbeGeneData } = vi.hoisted(() => ({
+  mockExecute: vi.fn(),
+  mockProbeGeneData: vi.fn(),
+}))
 
 vi.mock('@/drizzle/db', () => ({
   getDb: vi.fn(async () => ({ execute: mockExecute })),
+}))
+vi.mock('@/features/gene-search/api/static-gene-data', () => ({
+  probeGeneData: mockProbeGeneData,
 }))
 vi.mock('@/lib/upstash', () => ({
   createUpstashRateLimiter: () => ({
@@ -28,6 +34,9 @@ describe('GET /api/health', () => {
   beforeEach(() => {
     mockExecute.mockReset()
     mockExecute.mockResolvedValue([])
+    // Genes from Postgres unless a test says otherwise.
+    mockProbeGeneData.mockReset()
+    mockProbeGeneData.mockResolvedValue(null)
   })
   afterEach(() => {
     vi.unstubAllEnvs()
@@ -62,5 +71,27 @@ describe('GET /api/health', () => {
     const res = await GET()
     expect(mockExecute).toHaveBeenCalledOnce()
     expect((await res.json()).checks).toBeDefined()
+  })
+
+  it('checks the static corpus instead of the database when genes come from it', async () => {
+    vi.stubEnv('NODE_ENV', 'development')
+    mockProbeGeneData.mockResolvedValue('ok')
+    withAuthorization()
+    const body = await (await GET()).json()
+    expect(mockExecute).not.toHaveBeenCalled()
+    expect(body.checks.database.status).toBe('skipped')
+    expect(body.checks.geneData.status).toBe('ok')
+  })
+
+  it('reports degraded when the static corpus is unreachable', async () => {
+    vi.stubEnv('NODE_ENV', 'development')
+    mockProbeGeneData.mockRejectedValue(new Error('HTTP 503'))
+    withAuthorization()
+    const res = await GET()
+    expect(res.status).toBe(503)
+    expect((await res.json()).checks.geneData).toMatchObject({
+      status: 'fail',
+      error: 'HTTP 503',
+    })
   })
 })

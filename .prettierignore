@@ -17,3 +17,7 @@ pnpm-lock.yaml
 # Generated parity fixtures for the Rust optimizer (produced by
 # scripts/gen-parity-fixtures.py, compared byte-for-byte in tests)
 rust/optimizer/tests/fixtures
+
+# Static gene corpus built by `pnpm corpus:build` (checked byte-for-byte
+# against a rebuild in corpus/build.test.ts)
+public/gene-data
