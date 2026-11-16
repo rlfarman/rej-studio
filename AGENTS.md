@@ -35,6 +35,7 @@ REJ Studio is a bioinformatics web app for RNA End-Joining sequence design. User
 | `src/instrumentation.ts` | Env validation at boot + Sentry server/edge init                                                                   |
 | `python/`                | FastAPI Python backend (`index.py`, `algorithm.py`); dependencies in the root `pyproject.toml` + `uv.lock`         |
 | `rust/`                  | Rust port of the optimizer, built to WebAssembly so designs can run in the browser (see `rust/README.md`)          |
+| `docs/`                  | Longer-form plans and decisions (e.g. `cloudflare-migration.md`)                                                   |
 | `modal/`                 | Modal deployment for the Python backend (production compute)                                                       |
 | `scripts/`               | Dev tooling — worktree bootstrap, DB build/load, bundle-size checks, schema verify, type generation                |
 | `.github/workflows/`     | CI (tests, build + bundle budgets, Storybook, zizmor), security, DB/Python CI, Lighthouse, deploys                 |

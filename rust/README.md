@@ -179,6 +179,9 @@ pnpm wasm:smoke     # run it through Node and check against the fixtures
 
 ## Next steps
 
+Step 1 of [docs/cloudflare-migration.md](../docs/cloudflare-migration.md),
+which is where this port leads: retiring the server entirely.
+
 1. Compare the two backends on real designs before changing the default.
 2. Once the browser path is the default, the Modal deployment, the job API,
    polling, the circuit breaker and the submit rate limit all become dead
