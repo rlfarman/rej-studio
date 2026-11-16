@@ -159,11 +159,49 @@ const SCRIPT = `
     $("sequence").classList.toggle("empty", sequence.length === 0);
   }
 
+  /**
+   * A design with no result yet: still running, failed, or a job the backend
+   * could not be asked about. The view is attached to every get_design call,
+   * not only the ones that finished, so it has to say which — leaving
+   * "Waiting for the result…" under text that says the design failed is the
+   * one thing it must not do.
+   */
+  function renderWithoutResult(payload) {
+    const status = payload?.status;
+    const stage = payload?.stage;
+    const error = payload?.error?.message;
+    const job = payload?.job_id ? "Design " + payload.job_id : "Design";
+
+    $("name").textContent = job;
+    if (status === "failed" || (error && status !== "running")) {
+      $("summary").textContent = error
+        ? "This design did not finish: " + error
+        : "This design did not finish.";
+    } else if (status) {
+      $("summary").textContent =
+        "Still " + status + (stage ? " \\u2014 " + stage : "") +
+        ". Nothing to show until it finishes.";
+    } else {
+      $("summary").textContent = "No design to show.";
+    }
+
+    // Hide the parts that would otherwise sit at their placeholder dashes and
+    // read as measurements of something.
+    $("objectives-wrap").hidden = true;
+    $("sequence").textContent = "No sequence yet.";
+    $("sequence").classList.add("empty");
+  }
+
   const app = new App({ name: "REJ Studio design", version: "1.0.0" });
   app.ontoolresult = (toolResult) => {
     // The structured result is what the tool returns; the text beside it is
     // the same thing said in a sentence, for a host that shows only text.
-    render(toolResult?.structuredContent?.result ?? null);
+    const payload = toolResult?.structuredContent;
+    if (payload?.result) {
+      render(payload.result);
+    } else {
+      renderWithoutResult(payload);
+    }
   };
   app.connect();
 `

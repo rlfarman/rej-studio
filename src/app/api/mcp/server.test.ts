@@ -481,6 +481,13 @@ describe('the view a design is shown in', () => {
 
     const { resources } = await connection.client.listResources()
     expect(resources).toHaveLength(0)
+
+    // And does not point at one either: a host that followed the metadata
+    // would ask for a resource this server does not serve and get an error,
+    // where it would otherwise have shown the structured result.
+    const { tools } = await connection.client.listTools()
+    const getDesign = tools.find((tool) => tool.name === 'get_design')
+    expect(getDesign?._meta?.ui).toBeUndefined()
   })
 
   it('still returns the result as data, for hosts with no view', async () => {
