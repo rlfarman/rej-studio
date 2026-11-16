@@ -1,18 +1,19 @@
 /**
- * Post a coverage summary comment on the PR.
+ * Print a coverage summary for the PR comment.
  *
  * Reads coverage/coverage-summary.json (produced by vitest --coverage with
- * the 'json-summary' reporter) and formats a concise markdown table.
+ * the 'json-summary' reporter) and prints a concise markdown table to stdout.
+ * The first line is a hidden marker so CI updates one comment per PR instead
+ * of adding a new one on every push. Prints nothing when there's no summary.
  *
- * Usage: node scripts/comment-coverage.mjs
- * Env: GH_TOKEN, GITHUB_SHA (set by GitHub Actions)
+ * Usage: node scripts/comment-coverage.mjs > coverage.md
  */
 import { readFileSync, existsSync } from 'node:fs'
 
 const SUMMARY_PATH = 'coverage/coverage-summary.json'
 
 if (!existsSync(SUMMARY_PATH)) {
-  console.log('No coverage summary found — skipping comment.')
+  console.error('No coverage summary found — skipping comment.')
   process.exit(0)
 }
 
@@ -20,13 +21,14 @@ const summary = JSON.parse(readFileSync(SUMMARY_PATH, 'utf-8'))
 const total = summary.total
 
 if (!total) {
-  console.log('Coverage summary has no "total" key — skipping.')
+  console.error('Coverage summary has no "total" key — skipping.')
   process.exit(0)
 }
 
 const pct = (metric) => total[metric]?.pct ?? 0
 
-const body = `### 🧪 Test Coverage
+const body = `<!-- coverage-report -->
+### 🧪 Test Coverage
 
 | Metric | Coverage |
 |--------|----------|

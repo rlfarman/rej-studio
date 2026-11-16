@@ -2,13 +2,22 @@
 # package.json is ignored.
 
 # Dependency install scripts are blocked unless listed here (pnpm 10+).
-# esbuild: validates its platform binary. @sentry/cli: fetches the CLI that
-# uploads source maps at build time. protobufjs: postinstall only prints a
-# version notice, so it stays off.
+# esbuild: validates its platform binary.
 allowBuilds:
-  '@sentry/cli': true
   esbuild: true
-  protobufjs: false
+
+# Refuse a package version with weaker publish trust evidence (trusted
+# publisher > provenance > none) than an earlier release of the same package,
+# the usual sign of a hijacked maintainer account. Checked when resolving and,
+# by default, against every lockfile entry on install. Exempt specific
+# versions with trustPolicyExclude (name@version selectors) only after
+# checking why the evidence dropped.
+trustPolicy: no-downgrade
+trustPolicyExclude:
+  # 3.x maintenance release, published by the same maintainer the day after
+  # 4.3.3 (which had provenance) without provenance. eslint-config-next still
+  # asks for ^3.
+  - 'eslint-import-resolver-typescript@3.10.1'
 
 # Versions shared by package.json and the overrides below, so a transitive
 # copy (e.g. typescript-eslint's typescript, or @types/react pulled in by a
@@ -24,8 +33,6 @@ overrides:
   '@types/react': 'catalog:'
   '@types/react-dom': 'catalog:'
   'typescript-eslint>typescript': 'catalog:'
-  'protobufjs': '^7.6.1'
-  '@grpc/grpc-js@^1.0.0': '^1.14.5'
   'brace-expansion@^1.0.0': '^1.1.20'
   'brace-expansion@^2.0.0': '^2.1.6'
   'brace-expansion@^5.0.0': '^5.0.11'
@@ -35,4 +42,3 @@ overrides:
   'shell-quote@^1.0.0': '^1.9.0'
   'smol-toml@^1.0.0': '^1.7.1'
   'source-map-js@^1.0.0': '^1.2.2'
-  'ws@^7.0.0': '^7.5.11'

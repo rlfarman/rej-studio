@@ -18,16 +18,16 @@ A web application for RNA End-Joining sequence design and optimization. Scientis
 
 ## Tech Stack
 
-| Layer         | Technology                                                         |
-| ------------- | ------------------------------------------------------------------ |
-| Frontend      | Next.js 16 (App Router), React 19, TypeScript 6, Tailwind CSS 4    |
-| UI            | shadcn/ui, Radix UI, cmdk (command palette)                        |
-| State         | React Query (server state), Zustand (client state)                 |
-| Backend       | FastAPI (Python) with DNAChisel, deployed on Modal                 |
-| Database      | Neon (Postgres) via HTTP driver, Drizzle ORM                       |
-| Cache/Infra   | Upstash Redis (rate limiting, circuit breaker, idempotency, DLQ)   |
-| Hosting       | Vercel (Next.js) + Modal (Python)                                  |
-| Observability | Sentry (errors), OpenTelemetry (traces), Google Analytics (vitals) |
+| Layer         | Technology                                                       |
+| ------------- | ---------------------------------------------------------------- |
+| Frontend      | Next.js 16 (App Router), React 19, TypeScript 6, Tailwind CSS 4  |
+| UI            | shadcn/ui (base-rhea style on Base UI), cmdk (command palette)   |
+| State         | React Query (server state), Zustand (client state)               |
+| Backend       | FastAPI (Python) with DNAChisel, deployed on Modal               |
+| Database      | Neon (Postgres) via HTTP driver, Drizzle ORM                     |
+| Cache/Infra   | Upstash Redis (rate limiting, circuit breaker, idempotency, DLQ) |
+| Hosting       | Vercel (Next.js) + Modal (Python)                                |
+| Observability | Sentry (errors, traces), Google Analytics (vitals)               |
 
 ## Getting Started
 
@@ -46,19 +46,19 @@ A web application for RNA End-Joining sequence design and optimization. Scientis
    uv sync
    ```
 
-2. **Configure environment**
+2. **Configure environment** (optional for local development)
 
    ```bash
    cp .env.example .env
    ```
 
-   At minimum, set `DATABASE_URL` (Neon Postgres connection string). For production, also set `COMPUTE_BACKEND=modal`, `MODAL_API_URL`, and `NEXT_PUBLIC_SITE_URL`. Optionally add `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` for distributed rate limiting (falls back to in-memory without them). See `.env.example` for all available options.
+   Local development needs no configuration: with `DATABASE_URL` empty the app uses an embedded PGlite database seeded with 24 sample genes (`pnpm db:fetch` swaps in the full corpus), and design jobs go to the local FastAPI server. Production needs a Neon `DATABASE_URL`, `COMPUTE_BACKEND=modal`, `MODAL_API_URL`, `MODAL_API_TOKEN` and `NEXT_PUBLIC_SITE_URL`. Optionally add `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` for distributed rate limiting (falls back to in-memory without them). See `.env.example` for all available options.
 
-3. **Populate the database** (first time only)
+3. **Populate a Postgres database** (first time only; not needed for PGlite)
 
    ```bash
    pnpm db:build      # emit data/genes.jsonl + data/isoforms.jsonl from source CSV
-   pnpm db:push       # create tables in $DATABASE_URL from schema.ts
+   pnpm db:migrate    # create the tables in $DATABASE_URL from the committed migrations
    pnpm db:upload     # load JSONL via Drizzle
    ```
 
@@ -88,42 +88,47 @@ pnpm test:e2e      # Playwright smoke tests (gated next dev on :3000)
 
 ## Scripts
 
-| Command                   | Description                          |
-| ------------------------- | ------------------------------------ |
-| `pnpm dev`                | Start Next.js + FastAPI concurrently |
-| `pnpm build`              | Production build (Vercel target)     |
-| `pnpm start`              | Start production server              |
-| `pnpm lint`               | Run Oxlint, then ESLint              |
-| `pnpm lint:fix`           | Auto-fix lint issues                 |
-| `pnpm format`             | Format with Prettier                 |
-| `pnpm format:check`       | Check formatting without writing     |
-| `pnpm type-check`         | Type check with TypeScript 7         |
-| `pnpm test`               | Run unit tests (Vitest)              |
-| `pnpm test:e2e`           | Run Playwright smoke tests           |
-| `pnpm knip`               | Find unused exports, deps, and files |
-| `pnpm verify`             | Lint + type-check + unit tests       |
-| `ANALYZE=true pnpm build` | Build with bundle analyzer           |
-| `pnpm db:build`           | Emit JSONL seed from source CSV      |
-| `pnpm db:push`            | Create/update tables from schema.ts  |
-| `pnpm db:upload`          | Load JSONL into the DB via Drizzle   |
-| `pnpm db:studio`          | Browse DB with Drizzle Studio        |
-| `pnpm doctor`             | Check local dev environment health   |
+| Command             | Description                          |
+| ------------------- | ------------------------------------ |
+| `pnpm dev`          | Start Next.js + FastAPI concurrently |
+| `pnpm build`        | Production build (Vercel target)     |
+| `pnpm start`        | Start production server              |
+| `pnpm lint`         | Run Oxlint, then ESLint              |
+| `pnpm lint:fix`     | Auto-fix lint issues                 |
+| `pnpm format`       | Format with Prettier                 |
+| `pnpm format:check` | Check formatting without writing     |
+| `pnpm type-check`   | Type check with TypeScript 7         |
+| `pnpm test`         | Run unit tests (Vitest)              |
+| `pnpm test:e2e`     | Run Playwright smoke tests           |
+| `pnpm knip`         | Find unused exports, deps, and files |
+| `pnpm verify`       | Lint + type-check + unit tests       |
+| `pnpm next analyze` | Explore the client/server bundles    |
+| `pnpm db:build`     | Emit JSONL seed from source CSV      |
+| `pnpm db:migrate`   | Apply committed migrations to the DB |
+| `pnpm db:generate`  | Write a migration for schema changes |
+| `pnpm db:upload`    | Load JSONL into the DB via Drizzle   |
+| `pnpm db:studio`    | Browse DB with Drizzle Studio        |
+| `pnpm doctor`       | Check local dev environment health   |
 
 ## Project Structure
 
 ```
 src/
 ├── app/                          # Next.js pages and layouts (App Router)
-│   ├── (search)/                 # Gene search & detail pages
-│   │   └── genes/[symbol]/       # Gene detail with isoforms, OG image
-│   ├── (design-tool)/            # Sequence design tool
-│   └── api/                      # API routes (health, version, auth)
+│   ├── (app)/                    # Signed-in app shell
+│   │   ├── (search)/genes/       # Gene search and gene detail ([symbol])
+│   │   ├── (design-tool)/        # Sequence design tool
+│   │   └── (internal)/           # Unlisted pages (architecture, disease associations)
+│   ├── login/                    # Password gate
+│   └── api/                      # API routes (health, version, login/logout, OG images, CSP reports)
 ├── features/                     # Self-contained feature modules
 │   ├── gene-search/              # Search API, components, hooks, stores
-│   └── design-tool/              # Job submission, form, results
+│   ├── design-tool/              # Job submission, form, results
+│   ├── disease-associations/     # Gene-disease association tables
+│   └── auth/                     # Login form and session gate
 ├── components/                   # Shared UI components
 │   ├── ui/                       # shadcn/ui primitives
-│   └── bio/                      # Bio-domain widgets (species icon, DNA icon)
+│   └── bio/                      # Bio-domain widgets (species icon, GC sparkline, split bar)
 ├── lib/                          # Shared utilities
 │   ├── bio/                      # Bio-domain utils (species, FASTA, sequences)
 │   └── analytics/                # Typed event tracking and consent
@@ -164,7 +169,7 @@ The frontend deploys to **Vercel**:
 pnpm build         # Production build
 ```
 
-The Python backend deploys separately to **Modal**. See `modal/` and the CI workflows in `.github/workflows/modal-deploy.yml`.
+The Python backend deploys separately to **Modal**: `.github/workflows/modal-deploy.yml` deploys on pushes to `main` that touch the backend, and can be run by hand (`gh workflow run modal-deploy.yml`). See `modal/README.md`.
 
 ## Infrastructure
 
@@ -197,8 +202,7 @@ Set `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` to enable. Without t
 
 ## Observability
 
-- **Sentry** — Client and server error tracking. Set `NEXT_PUBLIC_SENTRY_DSN` to enable.
-- **OpenTelemetry** — Vendor-neutral distributed tracing. Set `OTEL_EXPORTER_OTLP_ENDPOINT` to ship traces (e.g. to Axiom).
+- **Sentry** — Client and server error tracking and tracing. Set `NEXT_PUBLIC_SENTRY_DSN` to enable.
 - **Google Analytics** — Web Vitals (LCP, CLS, INP) reporting via GTM. Set `NEXT_PUBLIC_GTM_ID`.
 - **Structured logging** — JSON output in production (stdout/stderr), human-readable in dev. See `src/lib/logger.ts`.
 
@@ -206,11 +210,15 @@ Set `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` to enable. Without t
 
 GitHub Actions runs on every PR and push to `main`:
 
-- **Lint**, **Format**, **Type Check**, **Knip** (unused code)
-- **Build** with bundle-size budget enforcement and PR comments
-- **Lighthouse CI** — Performance, accessibility, and SEO audits
-- **Dependency Review** — License and vulnerability checks on PRs
-- **Python CI** — Lint and type-check the FastAPI backend
+- **CI** — Lint, Format, Type Check, Knip (unused code), Test (Vitest, with a coverage comment), E2E (Playwright smoke tests), Storybook (test build), and Workflow Security (zizmor).
+- **Build** — production build with per-route first-load JS budgets (gzip), compared against `main` and reported in a PR comment (`scripts/bundle-size.mjs`).
+- **Security** — Dependency Review on PRs, `pnpm audit` and `pip-audit` (also weekly), and CycloneDX SBOMs on `main`.
+- **DB CI** — applies the committed migrations to PGlite, checks `schema.ts` against them, and verifies constraints.
+- **Python CI** — `uv.lock` check, Ruff, Pytest and Pyright for the FastAPI backend.
+- **Lighthouse CI** — performance, accessibility, and SEO audits of `/`.
+- **Conventions** — PR title, commit messages, and branch names (advisory).
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md#required-status-checks) for which checks block merging.
 
 ## Contributing
 
