@@ -19,36 +19,24 @@ import {
   jobStatusResponseSchema,
   jobSubmitResponseSchema,
   processResultSchema,
-  type BackendJobError,
   type BackendProcessResult,
-  type JobErrorCode,
   type JobStatusResponse,
 } from '@/features/design-tool/types/backend-contract'
+import {
+  jobError,
+  type JobActionResult,
+  type JobError,
+} from '@/features/design-tool/types/job-result'
 import type { ProcessOptions } from '@/features/design-tool/types/backend-contract'
 import { designToolCopy } from '@/features/design-tool/copy'
 
 const log = createLogger('jobs')
 const copy = designToolCopy.jobErrors
 
-/** Same shape the backend sends (see `jobErrorSchema`). */
-export type JobError = BackendJobError
-
-/**
- * Expected failures are returned, not thrown: Next replaces thrown
- * server-action messages with a generic digest in production, which would
- * turn "wait 12s" into "An error occurred in the Server Components render".
- * Only bugs throw.
- */
-export type JobActionResult<T> =
-  { ok: true; data: T } | { ok: false; error: JobError }
-
-export function jobError(
-  code: JobErrorCode,
-  message: string,
-  retriable: boolean,
-): { ok: false; error: JobError } {
-  return { ok: false, error: { code, message, retriable } }
-}
+// Re-exported for server callers. The definitions live in types/job-result
+// so the in-browser optimizer can return the same shape without dragging
+// this module's server-only imports into the client bundle.
+export { jobError, type JobActionResult }
 
 export interface BackendJobParams {
   CDS: string
@@ -61,13 +49,9 @@ export interface BackendJobParams {
 type ComputeBackend = 'modal' | 'local'
 
 export function getComputeBackend(): ComputeBackend {
-  const value = env.COMPUTE_BACKEND
-  if (value === 'modal') return 'modal'
-  if (value && value !== 'local') {
-    throw new Error(
-      `Invalid COMPUTE_BACKEND: "${value}". Expected "modal", "local", or unset.`,
-    )
-  }
+  // Any other value is rejected when env.ts parses the environment at boot
+  // (z.enum(['modal', 'local'])), so only these cases reach here.
+  if (env.COMPUTE_BACKEND === 'modal') return 'modal'
   if (process.env.NODE_ENV !== 'development') {
     throw new Error(
       'COMPUTE_BACKEND=modal is required in production. The local FastAPI backend is dev-only.',

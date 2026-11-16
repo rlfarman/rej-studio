@@ -57,12 +57,16 @@ const serverSchema = z
   .superRefine((data, ctx) => {
     // Production guardrails.
     if (isProd) {
-      if (!data.DATABASE_URL || !data.DATABASE_URL.startsWith('postgres')) {
+      // Gene data comes from Postgres until a static corpus is configured.
+      if (
+        !process.env.NEXT_PUBLIC_GENE_DATA_URL &&
+        (!data.DATABASE_URL || !data.DATABASE_URL.startsWith('postgres'))
+      ) {
         ctx.addIssue({
           path: ['DATABASE_URL'],
           code: 'custom',
           message:
-            'DATABASE_URL must be a Postgres connection string in production (PGlite is dev-only).',
+            'DATABASE_URL must be a Postgres connection string in production (PGlite is dev-only), unless NEXT_PUBLIC_GENE_DATA_URL points at a static gene corpus.',
         })
       }
       if (data.COMPUTE_BACKEND !== 'modal') {
@@ -122,6 +126,24 @@ const clientSchema = z
     // data layer already supports two positions. Client code reads this
     // directly via process.env (see features/design-tool/utils/feature-flags.ts).
     NEXT_PUBLIC_ENABLE_MULTI_SPLIT: z.enum(['true', 'false']).optional(),
+
+    // Feature flag: run the optimizer in a Web Worker rather than on the
+    // compute backend. Client code reads it directly via process.env (see
+    // features/design-tool/utils/feature-flags.ts).
+    NEXT_PUBLIC_ENABLE_BROWSER_OPTIMIZER: z.enum(['true', 'false']).optional(),
+
+    // Base URL of one version of the static gene corpus (built by
+    // `pnpm corpus:build`): an absolute URL, or a path served from public/.
+    // Unset, development uses the committed sample and production keeps
+    // reading Postgres. Read directly via process.env (see
+    // features/gene-search/corpus/gene-data-url.ts).
+    NEXT_PUBLIC_GENE_DATA_URL: z
+      .string()
+      .regex(
+        /^(https?:\/\/|\/)/,
+        'Expected an http(s) URL or a path starting with "/".',
+      )
+      .optional(),
   })
   .superRefine((data, ctx) => {
     if (isProd && !data.NEXT_PUBLIC_SITE_URL) {

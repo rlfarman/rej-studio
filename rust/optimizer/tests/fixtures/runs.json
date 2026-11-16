@@ -1,0 +1,130 @@
+[
+ {
+  "achieved_score": -3.5549122763192473,
+  "name": "cds_seeded",
+  "options": {
+   "codon_optimize": "human",
+   "codon_optimize_weight": 1.0,
+   "enforce_gc": true,
+   "ensure_wggw": true,
+   "minimize_CpGs": true,
+   "minimize_CpGs_weight": 1.0,
+   "reduce_kmer_complexity": true,
+   "reduce_kmer_complexity_weight": 1.0,
+   "remove_cryptic_ss": true,
+   "remove_cryptic_ss_weight": 1.0,
+   "seed": 20261116,
+   "selected_wggw_site": null,
+   "split_point": 45,
+   "stim_3": false,
+   "stim_5": false,
+   "wggw_threshold": 0
+  },
+  "result": {
+   "optimized_sequence": "ATGAGGAAGCTGGACTCTGAGGATGACCTGGAGAGGCTGAAAGCCACCCTGGAAGGAGTGGACTCTGTCATCACTGACTGA",
+   "seed": 20261116,
+   "seq3": "[REJ3]GAAGGAGTGGACTCTGTCATCACTGACTGA",
+   "seq5": "ATGAGGAAGCTGGACTCTGAGGATGACCTGGAGAGGCTGAAAGCCACCCTG[REJ5]",
+   "split_point": 51,
+   "used_wggw_as_split": false,
+   "wggw_info": {
+    "main": {
+     "distance_from_split": 4,
+     "motif": "TGGA",
+     "new_codons": [
+      "CTG",
+      "GAA"
+     ],
+     "original_codons": [
+      "CTG",
+      "GAG"
+     ],
+     "position": 49
+    }
+   }
+  },
+  "sequence": "ATGCGTAAGCTGGACTCCGAAGACGATCTGGAACGTCTGAAAGCGACCCTGGAAGGCGTTGACTCCGTGATCACCGATTGA",
+  "starting_score": -17.90429499505543
+ },
+ {
+  "achieved_score": -3.5549122763192473,
+  "name": "cds_other_seed",
+  "options": {
+   "codon_optimize": "human",
+   "codon_optimize_weight": 1.0,
+   "enforce_gc": true,
+   "ensure_wggw": true,
+   "minimize_CpGs": true,
+   "minimize_CpGs_weight": 1.0,
+   "reduce_kmer_complexity": true,
+   "reduce_kmer_complexity_weight": 1.0,
+   "remove_cryptic_ss": true,
+   "remove_cryptic_ss_weight": 1.0,
+   "seed": 7,
+   "selected_wggw_site": null,
+   "split_point": 45,
+   "stim_3": false,
+   "stim_5": false,
+   "wggw_threshold": 0
+  },
+  "result": {
+   "optimized_sequence": "ATGAGGAAGCTGGACTCTGAGGATGACCTGGAGAGGCTGAAAGCCACCCTGGAAGGAGTGGACTCTGTCATCACTGACTGA",
+   "seed": 7,
+   "seq3": "[REJ3]GAAGGAGTGGACTCTGTCATCACTGACTGA",
+   "seq5": "ATGAGGAAGCTGGACTCTGAGGATGACCTGGAGAGGCTGAAAGCCACCCTG[REJ5]",
+   "split_point": 51,
+   "used_wggw_as_split": false,
+   "wggw_info": {
+    "main": {
+     "distance_from_split": 4,
+     "motif": "TGGA",
+     "new_codons": [
+      "CTG",
+      "GAA"
+     ],
+     "original_codons": [
+      "CTG",
+      "GAG"
+     ],
+     "position": 49
+    }
+   }
+  },
+  "sequence": "ATGCGTAAGCTGGACTCCGAAGACGATCTGGAACGTCTGAAAGCGACCCTGGAAGGCGTTGACTCCGTGATCACCGATTGA",
+  "starting_score": -17.90429499505543
+ },
+ {
+  "achieved_score": -14.605375998626648,
+  "name": "repetitive_seeded",
+  "options": {
+   "codon_optimize": "human",
+   "codon_optimize_weight": 1.0,
+   "enforce_gc": true,
+   "ensure_wggw": true,
+   "minimize_CpGs": true,
+   "minimize_CpGs_weight": 1.0,
+   "reduce_kmer_complexity": true,
+   "reduce_kmer_complexity_k": 8,
+   "reduce_kmer_complexity_weight": 1.0,
+   "remove_cryptic_ss": true,
+   "remove_cryptic_ss_weight": 1.0,
+   "seed": 99,
+   "selected_wggw_site": null,
+   "split_point": null,
+   "stim_3": false,
+   "stim_5": false,
+   "wggw_threshold": 0
+  },
+  "result": {
+   "optimized_sequence": "ATGCGGGATCCTGAGAGGGATCCAGAGAGAGATCCCGAAAGGGACCCTGAGCGAGACCCAGAGCGTGATCCGGAGTAA",
+   "seed": 99,
+   "seq3": "[REJ3]AGGGACCCTGAGCGAGACCCAGAGCGTGATCCGGAGTAA",
+   "seq5": "ATGCGGGATCCTGAGAGGGATCCAGAGAGAGATCCCGAA[REJ5]",
+   "split_point": 39,
+   "used_wggw_as_split": false,
+   "wggw_info": null
+  },
+  "sequence": "ATGCGCGATCCGGAACGCGATCCGGAACGCGATCCGGAACGCGATCCGGAACGCGATCCGGAACGCGATCCGGAATAA",
+  "starting_score": -93.67959433304897
+ }
+]

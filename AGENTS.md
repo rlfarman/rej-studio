@@ -34,6 +34,8 @@ REJ Studio is a bioinformatics web app for RNA End-Joining sequence design. User
 | `src/proxy.ts`           | Next.js middleware — session gate, CSRF and body-size checks, CSP                                                  |
 | `src/instrumentation.ts` | Env validation at boot + Sentry server/edge init                                                                   |
 | `python/`                | FastAPI Python backend (`index.py`, `algorithm.py`); dependencies in the root `pyproject.toml` + `uv.lock`         |
+| `rust/`                  | Rust port of the optimizer, built to WebAssembly so designs can run in the browser (see `rust/README.md`)          |
+| `docs/`                  | Longer-form plans and decisions (e.g. `cloudflare-migration.md`)                                                   |
 | `modal/`                 | Modal deployment for the Python backend (production compute)                                                       |
 | `scripts/`               | Dev tooling — worktree bootstrap, DB build/load, bundle-size checks, schema verify, type generation                |
 | `.github/workflows/`     | CI (tests, build + bundle budgets, Storybook, zizmor), security, DB/Python CI, Lighthouse, deploys                 |
@@ -61,6 +63,9 @@ pnpm db:migrate   # Apply the committed migrations (src/drizzle/migrations) to $
 pnpm db:generate  # Write a migration for schema.ts changes (commit it with the schema)
 pnpm db:upload    # Load JSONL into $DATABASE_URL via Drizzle (dialect-neutral)
 pnpm db:studio    # Browse DB in Drizzle Studio (local.drizzle.studio)
+pnpm wasm:build   # Build the Rust optimizer and install it in public/ (needs Rust)
+pnpm wasm:verify  # Check the committed .wasm matches its digest manifest
+pnpm wasm:smoke   # Run the committed .wasm through Node against the parity fixtures
 ```
 
 ## Toolchain
@@ -68,9 +73,10 @@ pnpm db:studio    # Browse DB in Drizzle Studio (local.drizzle.studio)
 - **Node.js 26 LTS** — pinned by `.nvmrc` and `engines` in `package.json` (Vercel follows `engines`). CI uses the same.
 - **pnpm 12** — pinned by `packageManager`. pnpm 11+ ignores the `"pnpm"` field in `package.json`; its settings live in `pnpm-workspace.yaml`: the `catalog` (versions shared with the overrides), the security `overrides`, and `allowBuilds` (dependency install scripts are blocked unless listed). pnpm 12 also refuses packages published less than a day ago by default, so a just-released version may not install until the next day.
 - **TypeScript** — two versions on purpose. `typescript` (6.x) is the library that Next, typescript-eslint, knip and Storybook load; `typescript-native` is TypeScript 7 (the Go compiler), used only by `pnpm type-check` because it's ~6× faster. TypeScript 7.0 has no stable programmatic API yet; once 7.1 ships one and the tools support it, drop the alias.
-- **Lint** — Oxlint (`.oxlintrc.json`) runs first and owns the React Hooks / React Compiler, Next.js and jsx-a11y rules; ESLint (`eslint.config.mjs`) runs after it for the `import/no-restricted-paths` boundaries. `eslint-plugin-oxlint` turns off the ESLint rules Oxlint covers. Keep `eslint-disable` comments using the original rule names (`react-hooks/...`, `@next/next/...`); Oxlint honors them and reports stale ones.
+- **Lint** — Oxlint (`.oxlintrc.json`) runs first and owns the React Hooks / React Compiler, Next.js and jsx-a11y rules, plus type-aware rules (`no-floating-promises`, `no-base-to-string`, `no-misused-spread`, …) through `oxlint-tsgolint` on the TypeScript 7 compiler (`options.typeAware`). ESLint (`eslint.config.mjs`) runs after it only for what Oxlint lacks: the `import/no-restricted-paths` feature boundaries and the `no-restricted-syntax` guard against react-hook-form's `watch()`. `eslint-plugin-oxlint` turns off the ESLint rules Oxlint covers. Keep `eslint-disable` comments using the original rule names (`react-hooks/...`, `@next/next/...`); Oxlint honors them and reports stale ones. Spread on sequence strings is flagged by `no-misused-spread`: use `split('')`, which also counts the same UTF-16 units as `indexOf`.
 - **React Compiler** — enabled (`reactCompiler: true` in `next.config.ts`), so components get automatic memoization; prefer plain code over hand-written `useMemo`/`useCallback`.
-- **Python** — managed with [uv](https://docs.astral.sh/uv/): `uv sync` creates `.venv` from `uv.lock` using the interpreter in `.python-version`; run tools with `uv run` (e.g. `uv run pytest`).
+- **Python** — managed with [uv](https://docs.astral.sh/uv/): `uv sync` creates `.venv` from `uv.lock` using the interpreter in `.python-version`; run tools with `uv run` (e.g. `uv run pytest`). Slated for removal once the browser optimizer serves production; see `docs/stack-review-2026-11.md`.
+- **Rust** — pinned by `rust/rust-toolchain.toml` (version, clippy, rustfmt, the `wasm32-unknown-unknown` target); `(cd rust && rustup toolchain install)` installs exactly that, and CI does the same. Only needed for `pnpm wasm:build`: the `.wasm` is committed. Lint levels live in `[workspace.lints]` in `rust/Cargo.toml`; CI adds `-D warnings` and also clippy-checks the wasm32 build, because the unsafe ABI in `rust/optimizer/src/lib.rs` is `cfg(target_arch = "wasm32")` and a native run never compiles it. Every `unsafe` block needs a `// SAFETY:` comment. Dependencies are policed by `rust/deny.toml` (`cargo deny check`, in the Security workflow).
 
 ## User-Facing Copy
 
@@ -92,6 +98,8 @@ User-facing strings (headings, descriptions, toasts, validation messages, error 
 - Form validation with Zod schemas (see `src/features/design-tool/types/form-schema.ts`). The design tool form supports both DNA and protein input; `sequenceType` controls conditional validation.
 - Tailwind CSS for styling. No CSS modules.
 - Corner radius follows the Rhea primitives by role. Use `Card` for cards (its radius is `rounded-[min(var(--radius-4xl),24px)]`). Bordered or filled panels inside a card are `rounded-2xl`, and boxes nested in a panel are `rounded-xl`. Controls (inputs, buttons, segmented-control tracks) are `rounded-2xl`; segments and hoverable rows are `rounded-xl`, dense table/chart rows `rounded-lg`. Chips, badges, icon-only buttons, progress bars and dots are `rounded-full`. Use `Skeleton` for loading bars. Inline text highlights and focus rings around plain text stay `rounded-sm`, and chart marks keep whatever they're drawn with.
+- **Design history lives in IndexedDB**, not localStorage: `src/features/design-tool/hooks/use-job-history.ts` persists through `idb-keyval` (`utils/job-history-storage.ts`, database `rej-studio-job-history`). It loads asynchronously, so gate UI on `useJobHistoryHydrated()` (or `await whenJobHistoryHydrated()` outside React) before treating history as empty; in tests, await it before writing to the store (`fake-indexeddb` is loaded in `src/test/setup.ts`). The store holds writes until the first load, migrates the old `rej-studio:job-history` localStorage key once, and falls back to localStorage, then memory. Small preferences (favorites, recents, species filter, sidebar state, form drafts) stay in localStorage on purpose.
+- **In-browser runs** hold a Web Lock (`rej-studio:browser-run:<id>`) and a `beforeunload` guard until they settle (`utils/browser-run-guard.ts`). `BrowserRuns` in the app shell marks running browser entries whose lock is free as interrupted and offers a re-run. Finish notifications (`utils/finish-notification.ts`) fire only while the page is hidden, and permission is requested only from the opt-in button.
 - Oxlint + ESLint for linting (`.oxlintrc.json`, `eslint.config.mjs`) and Prettier for formatting (`prettier.config.mjs`).
 - ESLint enforces feature boundaries: features cannot import from each other, and shared layers (`src/components`, `src/lib`, `src/hooks`, `src/stores`) cannot import from features or app. Features auto-discovered from `src/features/` at config load.
 
@@ -115,6 +123,12 @@ App code uses dialect-neutral SQL (Drizzle query builder + `LOWER(col) LIKE '%x%
 
 For seeding a Neon database (production), the same `db:build`/`db:migrate`/`db:upload` pipeline works against `$DATABASE_URL`. New or updated databases always get their schema from `pnpm db:migrate`; `pnpm db:push` syncs `schema.ts` directly and skips the migration files, so keep it for throwaway prototyping.
 
+**Gene data as a static corpus (replacing the database).** Gene and isoform data can be served as a static, versioned set of files (`src/features/gene-search/corpus/format.ts`): `index.json` (searchable fields, columnar), `genes/<id>.json`, `transcripts/<n>.json` and `symbols/<key>.json`. Build it from the JSONL seed with `pnpm corpus:build`. By default it builds the committed sample into `public/gene-data/sample`; for the full corpus, pass `--genes … --isoforms … --version vN --out <dir>`. Versions are immutable: publish a new one rather than rebuilding. `NEXT_PUBLIC_GENE_DATA_URL` points at one version, as an absolute URL or a `/path` under `public/`.
+
+- **When it's unset,** dev and tests use the sample, and production keeps reading Postgres until the corpus is hosted (R2).
+- **When it's set,** the palette and `/genes` search in the browser, and server pages read through `gene-queries.ts` / `isoform-queries.ts`. `corpus/search-index.ts` ports the Postgres ranking exactly; `corpus/text-search.ts` implements Postgres's `'simple'` parser and `ts_rank`.
+- **After changing the seed or the format,** rerun `pnpm corpus:build --force` and commit `public/gene-data/sample`. `corpus/build.test.ts` checks it byte for byte.
+
 ## Environment Variables
 
 `.env.example` is the source of truth — consult it when adding new config. Variables group by purpose:
@@ -123,7 +137,7 @@ For seeding a Neon database (production), the same `db:build`/`db:migrate`/`db:u
 - **Auth** — `BASIC_AUTH_PASSWORD`, `SESSION_SECRET` (32+ chars, required with the password), `BYPASS_AUTH` (dev only).
 - **Public / client** — `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_GTM_ID`.
 - **Observability** — `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_*`.
-- **Optional features** — `HEALTH_AUTH_TOKEN`, `MAINTENANCE_MESSAGE`, `UPSTASH_REDIS_REST_*`, `NEXT_PUBLIC_ENABLE_MULTI_SPLIT`.
+- **Optional features** — `HEALTH_AUTH_TOKEN`, `MAINTENANCE_MESSAGE`, `UPSTASH_REDIS_REST_*`, `NEXT_PUBLIC_ENABLE_MULTI_SPLIT`, `NEXT_PUBLIC_ENABLE_BROWSER_OPTIMIZER` (run the optimizer in a Web Worker instead of calling the compute backend).
 - **Build-time** — `GIT_COMMIT_SHA`.
 
 Local dev needs nothing to boot (PGlite + in-memory rate limit fill in). Production requires at minimum a Neon `DATABASE_URL` and `COMPUTE_BACKEND=modal` with `MODAL_API_URL` and `MODAL_API_TOKEN`, plus `BASIC_AUTH_PASSWORD` and `SESSION_SECRET` to keep the gate on.
@@ -182,7 +196,7 @@ Shared Claude Code permissions, deny rules, and sandbox config live in `.agents/
 - **Adding a server action**: Place it in the owning feature's `api/` folder (e.g. `src/features/gene-search/api/`). Import `db` from `@/drizzle/db`.
 - **Adding a new feature**: Create `src/features/<name>/` with the standard subfolders. ESLint boundary rules apply automatically (no config changes needed).
 - **Adding shared code**: If used by ≥2 features, decide by domain: bio-specific → `src/lib/bio/` or `src/components/bio/`; generic → `src/lib/` or `src/components/`.
-- **Modifying the optimization algorithm**: Edit `python/algorithm.py`. The FastAPI endpoint is in `python/index.py`. In production this runs on Modal (see `modal/app.py`); `.github/workflows/modal-deploy.yml` redeploys it when the change merges to `main`.
+- **Modifying the optimization algorithm**: Edit `python/algorithm.py`. The FastAPI endpoint is in `python/index.py`. In production this runs on Modal (see `modal/app.py`); `.github/workflows/modal-deploy.yml` redeploys it when the change merges to `main`. **There is a second implementation** — the Rust port in `rust/` that runs in the browser — so an algorithm change must be made in both, or the two will disagree. Regenerate the parity fixtures (`scripts/gen-parity-fixtures.py`) and run `cd rust && cargo test`; the tests compare the two directly. See `rust/README.md`.
 - **Database schema changes**: Edit `src/drizzle/schema.ts`, run `pnpm db:generate` and commit the new SQL in `src/drizzle/migrations/` (DB CI fails if `schema.ts` and the migrations disagree), then `pnpm db:migrate` against each database. Update `scripts/build-db.py` too if the JSONL shape changes, then `pnpm db:build && pnpm db:upload`.
 - **Switching DB backend**: Edit `src/drizzle/client.ts` and the connection driver — it's a 5-file change.
 

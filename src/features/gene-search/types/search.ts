@@ -1,6 +1,5 @@
 import { z } from 'zod'
 import { speciesFilterSchema } from '@/lib/bio/species'
-import type { GeneSearchResult } from '@/features/gene-search/api/gene-queries'
 
 /**
  * Search request/response shapes shared by the server (route handler, search
@@ -22,6 +21,30 @@ export const searchRequestSchema = z.object({
 })
 
 export type SearchRequest = z.infer<typeof searchRequestSchema>
+
+/** One gene in a search result. */
+export interface GeneSearchResult {
+  id: string
+  name: string
+  symbol: string
+  species: string
+  /** Set when the query was a transcript id: the transcript it matched. */
+  matchedIsoformId?: string
+}
+
+export interface GeneSearchPage {
+  results: GeneSearchResult[]
+  /** More genes matched than `limit`; the caller should say so. */
+  truncated: boolean
+}
+
+// "Did you mean" only makes sense for something shaped like a symbol, not
+// for a phrase such as a disease name.
+const SYMBOL_LIKE = /^[\w.-]{2,20}$/
+
+export function isSymbolLike(query: string): boolean {
+  return SYMBOL_LIKE.test(query)
+}
 
 export interface SimilarGene {
   symbol: string

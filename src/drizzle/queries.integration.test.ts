@@ -17,6 +17,11 @@ let testDb: Awaited<ReturnType<typeof getTestDb>>
 vi.mock('@/drizzle/db', () => ({
   getDb: async () => (await getTestDb()).db,
 }))
+// Development and tests default to the static sample corpus; these tests
+// cover the Postgres branch of the same functions.
+vi.mock('@/features/gene-search/api/static-gene-data', () => ({
+  getServerCorpus: () => null,
+}))
 
 // Import queries AFTER the mock is set up
 const {

@@ -145,10 +145,11 @@ describe('useFormDraft', () => {
   })
 
   it('survives a storage write that throws', async () => {
-    const setItem = Storage.prototype.setItem
-    Storage.prototype.setItem = () => {
-      throw new DOMException('nope', 'QuotaExceededError')
-    }
+    const setItem = vi
+      .spyOn(Storage.prototype, 'setItem')
+      .mockImplementation(() => {
+        throw new DOMException('nope', 'QuotaExceededError')
+      })
     try {
       const { result } = renderDraft()
       act(() => {
@@ -159,19 +160,20 @@ describe('useFormDraft', () => {
         'ATGAAATGA',
       )
     } finally {
-      Storage.prototype.setItem = setItem
+      setItem.mockRestore()
     }
   })
 
   it('clearDraft tolerates unavailable storage', () => {
-    const removeItem = Storage.prototype.removeItem
-    Storage.prototype.removeItem = () => {
-      throw new Error('blocked')
-    }
+    const removeItem = vi
+      .spyOn(Storage.prototype, 'removeItem')
+      .mockImplementation(() => {
+        throw new Error('blocked')
+      })
     try {
       expect(() => clearDraft('new')).not.toThrow()
     } finally {
-      Storage.prototype.removeItem = removeItem
+      removeItem.mockRestore()
     }
   })
 })
