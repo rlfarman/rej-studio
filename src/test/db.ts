@@ -7,12 +7,7 @@
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
-import type {
-  genes,
-  isoforms,
-  SelectGene,
-  SelectIsoform,
-} from '@/drizzle/schema'
+import type { SelectGene, SelectIsoform } from '@/drizzle/schema'
 
 // Dynamic imports because PGlite is ESM-only and heavy.
 let testDb: Awaited<ReturnType<typeof createPGliteDb>> | null = null

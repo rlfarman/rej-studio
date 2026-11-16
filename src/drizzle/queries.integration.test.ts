@@ -6,15 +6,7 @@
  * a trigger or manual update — we test the LIKE fallback that fires when
  * search_vector is null.
  */
-import {
-  afterAll,
-  afterEach,
-  beforeAll,
-  describe,
-  expect,
-  it,
-  vi,
-} from 'vitest'
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 import { cleanDb, getTestDb, seedGenes, seedIsoforms } from '@/test/db'
 import { makeGene, makeIsoform, resetFixtureCounters } from '@/test/fixtures'
 

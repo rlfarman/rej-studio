@@ -2,7 +2,7 @@
  * Tests for the Modal backend path in the jobs server action.
  * Separate file from jobs.test.ts to isolate the env mock (COMPUTE_BACKEND=modal).
  */
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 // Set NODE_ENV to development to bypass production check
 ;(process.env as Record<string, string>).NODE_ENV = 'development'

@@ -306,23 +306,6 @@ export function findInvalidChars(seq: string): string[] {
 // Splice-junction helpers
 // ---------------------------------------------------------------------------
 
-/** Local GC % in a window centered on `position` (1-based cut). */
-function localGcAt(seq: string, position: number, window = 40): number {
-  const len = seq.length
-  if (len === 0) return 0
-  const half = Math.floor(window / 2)
-  const start = Math.max(0, position - half)
-  const end = Math.min(len, position + half)
-  let gc = 0
-  const upper = seq.toUpperCase()
-  for (let i = start; i < end; i++) {
-    const c = upper[i]
-    if (c === 'G' || c === 'C') gc++
-  }
-  const w = end - start
-  return w > 0 ? (gc / w) * 100 : 0
-}
-
 interface WggwCandidate {
   /** 1-based cut position at the motif midpoint (between bases 2 and 3). */
   position: number
@@ -436,7 +419,7 @@ export function segmentSequence(seq: string): SequenceSegment[] {
   const len = seq.length
 
   // 1. Default everything to normal
-  const types: HighlightType[] = new Array(len).fill('normal')
+  const types = Array.from({ length: len }, (): HighlightType => 'normal')
 
   // 2. Mark remainder (trailing chars when not multiple of 3)
   const rem = len % 3

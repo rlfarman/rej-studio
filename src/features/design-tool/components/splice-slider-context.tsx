@@ -33,11 +33,7 @@ import {
 import { spliceTone } from './splice-slider/tones'
 import { pickDefaultWggwSite } from '../utils/default-wggw-site'
 import { designToolCopy } from '../copy'
-import type {
-  CodonRole,
-  SequenceContext,
-  WggwSiteCandidate,
-} from './splice-slider/types'
+import type { SequenceContext, WggwSiteCandidate } from './splice-slider/types'
 import {
   applyRewriteToSequence,
   buildAminoAcidGuide,
@@ -46,7 +42,6 @@ import {
   buildSequenceContext,
   buildSplitContext,
   findSequenceMatches,
-  formatMotifSplit,
   getEditedPositions,
   groupWggwSites,
   nearestSiteIndex,
@@ -1786,6 +1781,7 @@ function Inspector({
                     key={`${option.newHexamer}-${originalIndex}`}
                     onClick={() => onSelectRewrite(originalIndex)}
                     aria-pressed={active}
+                    aria-label={titleParts.join(' · ')}
                     title={titleParts.join(' · ')}
                     className={cn(
                       'inline-flex shrink-0 items-center gap-2 rounded-md border px-2.5 py-1.5 font-mono text-[12px] transition-colors',
@@ -2042,53 +2038,6 @@ function SequenceRowText({
         </Fragment>
       ))}
     </div>
-  )
-}
-
-function HighlightedSequence({
-  text,
-  highlightStart,
-  highlightEnd,
-  editedIndexes = [],
-  separatorIndexes = [],
-}: {
-  text: string
-  highlightStart: number
-  highlightEnd: number
-  editedIndexes?: number[]
-  separatorIndexes?: number[]
-}) {
-  let baseIndex = 0
-  const editedSet = new Set(editedIndexes)
-
-  return (
-    <>
-      {[...text].map((char, index) => {
-        if (
-          (separatorIndexes.includes(baseIndex) && char === ' ') ||
-          char === '|'
-        ) {
-          return <span key={`${char}-${index}`}>{char}</span>
-        }
-
-        const isHighlighted =
-          baseIndex >= highlightStart && baseIndex < highlightEnd
-        const isEdited = editedSet.has(baseIndex)
-        baseIndex++
-
-        return (
-          <span
-            key={`${char}-${index}`}
-            className={cn(
-              isHighlighted && 'bg-marker/15 font-semibold',
-              isEdited && 'text-primary',
-            )}
-          >
-            {char}
-          </span>
-        )
-      })}
-    </>
   )
 }
 

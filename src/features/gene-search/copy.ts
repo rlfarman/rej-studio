@@ -115,5 +115,6 @@ export const geneSearchCopy = {
     footnote:
       'Identity estimated from shared prefix + suffix of protein sequences. Pairs ≥95% share most coding content — consider optimizing one per cluster.',
     legendAria: 'Identity scale',
+    rowHeader: 'Isoform',
   },
 } as const

@@ -338,7 +338,6 @@ export default function IsoformTable({
                 gcPercent={m.gcPercent}
                 cpgCount={m.cpgCount}
                 wggwCount={m.wggwCount}
-                suitability={m.suitability}
                 suitConfig={m.suitConfig}
                 cdsId={cdsId}
                 fastaId={fastaId}
@@ -361,7 +360,6 @@ function IsoformRow({
   gcPercent,
   cpgCount,
   wggwCount,
-  suitability,
   suitConfig,
   cdsId,
   fastaId,
@@ -375,7 +373,6 @@ function IsoformRow({
   gcPercent: number
   cpgCount: number
   wggwCount: number
-  suitability: ReturnType<typeof assessDesignSuitability>
   suitConfig: ReturnType<typeof getSuitabilityConfig>
   cdsId: string
   fastaId: string
@@ -609,7 +606,6 @@ function IsoformRow({
                   gcPercent={gcPercent}
                   cpgCount={cpgCount}
                   wggwCount={wggwCount}
-                  suitability={suitability}
                   suitConfig={suitConfig}
                 />
               </div>
@@ -626,14 +622,12 @@ function ExpandedDetails({
   gcPercent,
   cpgCount,
   wggwCount,
-  suitability,
   suitConfig,
 }: {
   isoform: IsoformListItem
   gcPercent: number
   cpgCount: number
   wggwCount: number
-  suitability: ReturnType<typeof assessDesignSuitability>
   suitConfig: ReturnType<typeof getSuitabilityConfig>
 }) {
   const needsSplit = isoform.codingSequenceLength > 4700

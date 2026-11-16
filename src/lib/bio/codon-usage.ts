@@ -152,10 +152,6 @@ const TABLES: Record<Species, CodonFreq> = {
   mouse: MOUSE,
 }
 
-function getCodonUsage(species: Species): CodonFreq {
-  return TABLES[species]
-}
-
 /**
  * Relative codon preference within its amino-acid synonymous group:
  * returns a value in [0, 1] where 1 = most-preferred synonymous codon

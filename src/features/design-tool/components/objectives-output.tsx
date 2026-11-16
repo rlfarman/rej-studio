@@ -33,9 +33,7 @@ function parseObjectiveString(objective: string): ParsedObjective {
   //   "MaximizeCAI[0-1500](species=h_sapiens)"
   //   "AvoidPattern[0-1500](pattern:CG)"
   //   "UniquifyAllKmers[0-1500](k:10)"
-  const locMatch = objective.match(
-    /^([^\[(]+)(?:\[([^\]]+)\])?(?:\(([^)]*)\))?/,
-  )
+  const locMatch = objective.match(/^([^[(]+)(?:\[([^\]]+)\])?(?:\(([^)]*)\))?/)
   if (!locMatch) {
     return {
       name: objective,

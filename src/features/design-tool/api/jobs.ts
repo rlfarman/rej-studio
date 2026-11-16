@@ -219,21 +219,6 @@ async function recordDeadLetter(entry: DeadLetterEntry) {
   if (dlqLocal.length > MAX_DLQ) dlqLocal.shift()
 }
 
-/** Expose DLQ for the health/admin endpoint. */
-async function getDeadLetterQueue(): Promise<readonly DeadLetterEntry[]> {
-  if (redis) {
-    try {
-      const items = await redis.lrange(DLQ_KEY, 0, MAX_DLQ - 1)
-      return items.map((item) =>
-        typeof item === 'string' ? JSON.parse(item) : (item as DeadLetterEntry),
-      )
-    } catch {
-      // Redis unavailable — fall through to local
-    }
-  }
-  return dlqLocal
-}
-
 // --- Backend routing ---
 
 type ComputeBackend = 'modal' | 'local'

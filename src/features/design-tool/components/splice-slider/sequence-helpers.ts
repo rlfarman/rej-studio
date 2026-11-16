@@ -395,7 +395,3 @@ export function roleStylesFor(role: CodonRole): {
       }
   }
 }
-
-export function formatMotifSplit(motif: string) {
-  return `${motif.slice(0, 2)}|${motif.slice(2)}`
-}

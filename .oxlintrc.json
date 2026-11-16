@@ -51,7 +51,9 @@
 
     // Same severities as eslint-config-next.
     "nextjs/no-img-element": "warn",
-    "nextjs/no-before-interactive-script-outside-document": "warn",
+    // App Router: beforeInteractive scripts belong in the root layout, which
+    // is where GoogleTagManager renders; the rule only knows pages/_document.
+    "nextjs/no-before-interactive-script-outside-document": "off",
 
     // Off for good: test-style preferences, an intentional pattern, and a
     // false positive TypeScript already covers.
@@ -65,14 +67,23 @@
     // Flags members of conditional (browser-only) exports such as
     // Sentry.replayIntegration; tsc already checks namespace members.
     "import/namespace": "off",
-
-    // Off until the code is fixed (follow-ups; each fails today in feature,
-    // component or lib code). Turn back on once clean.
-    "jsx-a11y/prefer-tag-over-role": "off",
-    "jsx-a11y/anchor-has-content": "off",
-    "jsx-a11y/control-has-associated-label": "off",
-    "no-unused-vars": "off",
-    "no-useless-escape": "off",
-    "unicorn/no-new-array": "off"
-  }
+    // The ARIA roles in use are deliberate: role="status" live regions,
+    // role="img" on composite charts built from many elements, and the
+    // custom slider/segmented controls in the design tool. The suggested
+    // native tags (<output>, <img>, <input>) would change semantics or
+    // styling, so this stays off by decision, not as debt.
+    "jsx-a11y/prefer-tag-over-role": "off"
+  },
+  "overrides": [
+    {
+      // ImageResponse renders this JSX to a PNG; next/image isn't available
+      // (or meaningful) there, so <img> is correct.
+      "files": [
+        "src/app/icon.tsx",
+        "src/app/apple-icon.tsx",
+        "src/app/api/og/**"
+      ],
+      "rules": { "nextjs/no-img-element": "off" }
+    }
+  ]
 }

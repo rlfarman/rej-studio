@@ -133,7 +133,11 @@ export function IsoformIdentityMatrix({ isoforms }: Props) {
           </caption>
           <thead>
             <tr>
-              <td className="bg-card sticky left-0 z-10" />
+              <th scope="col" className="bg-card sticky left-0 z-10">
+                <span className="sr-only">
+                  {geneSearchCopy.identityMatrix.rowHeader}
+                </span>
+              </th>
               {ids.map((id, j) => (
                 <th
                   key={`col-${id}`}

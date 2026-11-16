@@ -17,14 +17,6 @@ export const softSpring: Transition = {
   damping: 25,
 }
 
-/** Staggered entrance for hero-style layouts */
-const staggerContainer: Variants = {
-  hidden: {},
-  visible: {
-    transition: { staggerChildren: 0.06 },
-  },
-}
-
 export const fadeUp: Variants = {
   hidden: { opacity: 0, y: 12 },
   visible: {

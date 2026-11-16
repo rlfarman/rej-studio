@@ -21,8 +21,8 @@ export function GoogleTagManager() {
 
   return (
     <>
-      {/* Consent defaults must load before GTM evaluates tags — beforeInteractive is intentional. */}
-      {/* eslint-disable-next-line @next/next/no-before-interactive-script-outside-document */}
+      {/* Consent defaults must load before GTM evaluates tags — beforeInteractive is intentional
+          (and valid here: this renders from the root layout). */}
       <Script
         id="gtm-consent-defaults"
         strategy="beforeInteractive"
