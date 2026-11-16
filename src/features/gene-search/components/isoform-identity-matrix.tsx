@@ -16,6 +16,26 @@ const MAX_ISOFORMS = 16
 const MIN_ISOFORMS = 2
 
 /**
+ * Identity bins, lowest to highest. Ordinal, so they map onto the single-hue
+ * `seq-*` ramp (colorblind-safe: they differ in lightness, not hue). The top
+ * bin is the actionable one: pairs that similar share most coding content.
+ */
+const BINS = [
+  { min: 0, label: '<50%', className: 'bg-seq-1' },
+  { min: 50, label: '50–75%', className: 'bg-seq-2' },
+  { min: 75, label: '75–90%', className: 'bg-seq-3' },
+  { min: 90, label: '90–95%', className: 'bg-seq-4' },
+  { min: 95, label: '≥95%', className: 'bg-seq-5' },
+] as const
+
+function binFor(pct: number) {
+  for (let i = BINS.length - 1; i >= 0; i--) {
+    if (pct >= BINS[i].min) return BINS[i]
+  }
+  return BINS[0]
+}
+
+/**
  * Compute % protein-sequence identity between two isoforms using end-anchored
  * prefix/suffix overlap. Most isoforms differ by exon inclusion, so they share
  * large contiguous blocks at the start and end — this catches those cases
@@ -52,6 +72,11 @@ function proteinIdentity(a: string, b: string): number {
  * Identity is computed as prefix+suffix match / longer protein length.
  * This is a fast proxy, not a full alignment — good enough to cluster
  * isoforms by similarity but not for exact percent identity claims.
+ *
+ * Rendered as a real table: numbered columns match the numbered row
+ * headers (no rotated or truncated labels), row headers stay pinned while
+ * the grid scrolls horizontally on narrow screens, and every visible cell
+ * carries its value for screen readers and as a hover title.
  */
 export function IsoformIdentityMatrix({ isoforms }: Props) {
   const { species } = useSpeciesContext()
@@ -85,114 +110,139 @@ export function IsoformIdentityMatrix({ isoforms }: Props) {
   if (ids.length < MIN_ISOFORMS) return null
 
   return (
-    <div className="mb-4 space-y-3 rounded-md border p-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-sm font-medium">
+    <section
+      aria-labelledby="identity-matrix-title"
+      className="mb-4 space-y-4 rounded-md border p-4"
+    >
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2
+          id="identity-matrix-title"
+          className="flex items-center gap-2 font-sans text-sm font-medium"
+        >
           <Grid3x3 className="text-muted-foreground size-4" />
           Pairwise identity
-        </div>
-        <div className="text-muted-foreground type-micro flex items-center gap-2">
-          <span>0%</span>
-          <span className="h-2 w-20 rounded-sm bg-gradient-to-r from-slate-200 via-amber-400 to-emerald-600 dark:from-slate-800" />
-          <span>100%</span>
-        </div>
+        </h2>
+        <Legend />
       </div>
 
-      <div className="overflow-x-auto pt-8">
-        <div
-          className="inline-grid gap-[1px] text-[9px]"
-          style={{
-            gridTemplateColumns: `minmax(7rem, max-content) repeat(${ids.length}, minmax(1.25rem, 1fr))`,
-          }}
-        >
-          {/* header row: blank corner + column labels (last 4 chars; full ID on hover) */}
-          <div />
-          {ids.map((id) => (
-            <div
-              key={`col-${id}`}
-              className="text-muted-foreground relative font-mono"
-              title={id}
-            >
-              <span className="absolute bottom-0 left-1/2 origin-bottom-left -translate-x-1/2 rotate-[-60deg] whitespace-nowrap">
-                …{id.slice(-4)}
-              </span>
-            </div>
-          ))}
-
-          {rows.map((row, i) => (
-            <Row
-              key={ids[i]}
-              id={ids[i]}
-              values={row}
-              i={i}
-              href={buildHref(ids[i])}
-            />
-          ))}
-        </div>
+      <div className="-mx-4 overflow-x-auto px-4">
+        <table className="border-separate border-spacing-[2px] text-left">
+          <caption className="sr-only">
+            Pairwise protein identity between isoforms. Rows and columns use the
+            same numbering; each cell is the identity between that row and that
+            column.
+          </caption>
+          <thead>
+            <tr>
+              <td className="bg-card sticky left-0 z-10" />
+              {ids.map((id, j) => (
+                <th
+                  key={`col-${id}`}
+                  scope="col"
+                  title={id}
+                  className="text-muted-foreground type-micro w-5 min-w-5 pb-1 text-center font-medium tabular-nums"
+                >
+                  <span aria-hidden>{j + 1}</span>
+                  <span className="sr-only">{id}</span>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row, i) => (
+              <Row
+                key={ids[i]}
+                index={i}
+                id={ids[i]}
+                ids={ids}
+                values={row}
+                href={buildHref(ids[i])}
+              />
+            ))}
+          </tbody>
+        </table>
       </div>
 
-      <p className="text-muted-foreground type-micro leading-relaxed">
+      <p className="text-muted-foreground type-nano max-w-prose">
         Identity estimated from shared prefix + suffix of protein sequences.
         Pairs ≥95% share most coding content — consider optimizing one per
         cluster.
       </p>
-    </div>
+    </section>
+  )
+}
+
+function Legend() {
+  return (
+    <ul
+      aria-label="Identity scale"
+      className="text-muted-foreground type-nano flex flex-wrap items-center gap-x-3 gap-y-1"
+    >
+      {BINS.map((bin) => (
+        <li key={bin.label} className="flex items-center gap-1.5">
+          <span
+            aria-hidden
+            className={cn('size-3 rounded-[3px]', bin.className)}
+          />
+          {bin.label}
+        </li>
+      ))}
+    </ul>
   )
 }
 
 function Row({
+  index,
   id,
+  ids,
   values,
-  i,
   href,
 }: {
+  index: number
   id: string
+  ids: string[]
   values: number[]
-  i: number
   href: string
 }) {
   return (
-    <>
-      <Link
-        href={href}
-        scroll={false}
-        className="text-muted-foreground hover:text-foreground focus-visible:text-foreground pr-2 text-right font-mono whitespace-nowrap hover:underline focus-visible:outline-none"
-        title={`Jump to ${id}`}
+    <tr>
+      <th
+        scope="row"
+        className="bg-card sticky left-0 z-10 pr-3 text-right font-normal whitespace-nowrap"
       >
-        {id}
-      </Link>
+        <Link
+          href={href}
+          scroll={false}
+          className="text-muted-foreground hover:text-foreground focus-visible:ring-ring/50 type-nano inline-flex items-baseline gap-2 rounded-sm font-mono outline-none hover:underline focus-visible:ring-[3px]"
+          title={`Jump to ${id}`}
+        >
+          <span className="text-foreground font-sans font-medium tabular-nums">
+            {index + 1}
+          </span>
+          {/* Phones get the distinguishing tail so the grid keeps its width;
+              the full ID stays in the title and for screen readers. */}
+          <span className="hidden sm:inline">{id}</span>
+          <span className="sm:hidden" aria-hidden>
+            …{id.slice(-6)}
+          </span>
+          <span className="sr-only sm:hidden">{id}</span>
+        </Link>
+      </th>
       {values.map((v, j) => {
-        // Upper triangle only — mirror suppressed to reduce visual noise.
-        const hidden = j > i
+        // Lower triangle + diagonal only; the mirror would repeat every value.
+        if (j > index) return <td key={j} aria-hidden className="size-5" />
+        const bin = binFor(v)
+        const label = `${v.toFixed(1)}% identity between ${id} and ${ids[j]}`
         return (
-          <div
+          <td
             key={j}
-            className={cn(
-              'aspect-square min-h-4 min-w-4',
-              hidden && 'opacity-0',
-            )}
-            style={{
-              backgroundColor: hidden ? 'transparent' : identityColor(v),
-            }}
-            title={hidden ? undefined : `${v.toFixed(1)}% identity`}
-          />
+            title={label}
+            className={cn('size-5 min-w-5 rounded-[3px]', bin.className)}
+          >
+            <span className="sr-only">{`${v.toFixed(0)}%`}</span>
+          </td>
         )
       })}
-    </>
+    </tr>
   )
-}
-
-function identityColor(pct: number): string {
-  // 0–50% → slate, 50–85% → amber, 85–100% → emerald. Alpha ramps with
-  // magnitude so the diagonal (100%) is most saturated.
-  if (pct >= 85) {
-    const a = 0.4 + ((pct - 85) / 15) * 0.55
-    return `rgba(16, 185, 129, ${a})` // emerald
-  }
-  if (pct >= 50) {
-    const a = 0.25 + ((pct - 50) / 35) * 0.5
-    return `rgba(234, 179, 8, ${a})` // amber
-  }
-  const a = 0.15 + (pct / 50) * 0.3
-  return `rgba(148, 163, 184, ${a})` // slate
 }
