@@ -143,7 +143,8 @@ type JobHeaderStatus = 'running' | 'completed' | 'failed' | 'cancelled'
 
 interface JobHeaderProps {
   name: string
-  sequenceLength: number
+  /** null when there's no local record of this job — the chip is hidden. */
+  sequenceLength: number | null
   species: DesignToolSpecies
   status: JobHeaderStatus
   processingTimeSeconds?: number | null
@@ -247,9 +248,11 @@ export function JobHeader({
                 <div className="truncate text-sm font-semibold">
                   {name || copy.untitled}
                 </div>
-                <span className="text-muted-foreground text-xs tabular-nums">
-                  · {sequenceLength.toLocaleString()} bp
-                </span>
+                {sequenceLength != null && (
+                  <span className="text-muted-foreground text-xs tabular-nums">
+                    · {sequenceLength.toLocaleString()} bp
+                  </span>
+                )}
                 {speciesLabel && (
                   <span className="text-muted-foreground text-xs">
                     · {speciesLabel}
