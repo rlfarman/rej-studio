@@ -1475,7 +1475,7 @@ def process_single_request(CDS, name, OPTIONS, results_folder="/tmp/results"):
         return error_report, None
 
 
-def process_single_request_json(CDS, name, OPTIONS, on_progress=None):
+def process_single_request_json(CDS, name, OPTIONS, on_progress=None, corpus_version=None):
     """
     Process a single coding sequence and return structured results as a dict.
     Created for the web application JSON API.
@@ -1484,13 +1484,23 @@ def process_single_request_json(CDS, name, OPTIONS, on_progress=None):
         CDS: The coding sequence string to process
         name: Name identifier for the sequence
         OPTIONS: Optimization options dictionary
+        on_progress: Optional callback(fraction, stage) for progress reporting
+        corpus_version: The gene corpus the sequence came from, when it came
+            from one. Recorded in the run record; see run_record.py.
 
     Returns:
-        dict: Structured results including sequences, objectives, and WGGW info
+        dict: Structured results including sequences, objectives, WGGW info and
+            a run record describing the run (see run_record.py)
     """
     import time as _time
+    from datetime import UTC, datetime
+
+    from .run_record import build_run_record
 
     start = _time.monotonic()
+    started_at = datetime.now(UTC)
+    # Recorded before the algorithm writes its own working keys into a copy.
+    options_as_applied = dict(OPTIONS)
 
     # Clean up the input sequence
     CDS = CDS.strip().upper()
@@ -1547,6 +1557,13 @@ def process_single_request_json(CDS, name, OPTIONS, on_progress=None):
         or {"entries": [], "total_score": None},
         "wggw_info": wggw_info,
         "processing_time_seconds": round(elapsed, 2),
+        "run_record": build_run_record(
+            cds=CDS,
+            options=options_as_applied,
+            started_at=started_at,
+            duration_seconds=elapsed,
+            corpus_version=corpus_version,
+        ),
     }
 
 

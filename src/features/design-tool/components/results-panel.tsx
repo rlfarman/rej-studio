@@ -62,6 +62,7 @@ import { CodonDeltaStrip } from './codon-delta-strip'
 import { AavResults } from './aav-size-estimator'
 import { SplitBar } from '@/components/bio/split-bar'
 import { ObjectivesSummary } from './objectives-output'
+import { RunRecordCard } from './run-record-card'
 import { formatFasta } from '@/lib/bio/fasta'
 import { downloadTextFile } from '@/lib/download-file'
 import { isSpecies } from '@/lib/bio/species'
@@ -667,6 +668,15 @@ function ResultsPanelImpl({ result, optionsUsed, species }: ResultsPanelProps) {
                 textBefore={result.objectives_before}
                 textAfter={result.objectives_after}
               />
+            </ExpandableRow>
+            <ExpandableRow
+              title={resultsCopy.sections.runRecord}
+              icon={FileText}
+              summary={
+                result.run_record ? resultsCopy.runRecord.summary : undefined
+              }
+            >
+              <RunRecordCard record={result.run_record} name={result.name} />
             </ExpandableRow>
           </div>
         </CardContent>

@@ -13,6 +13,7 @@ import { env } from '@/lib/env'
 import { withRetry, isTransientError } from '@/lib/retry'
 import { createLogger } from '@/lib/logger'
 import { requireSession } from '@/lib/auth/require-session'
+import { getCorpusVersion } from './corpus-version'
 
 const log = createLogger('jobs')
 
@@ -280,6 +281,13 @@ export async function submitJob(
   const optionKeys = Object.keys(validated.options)
   const startMs = performance.now()
 
+  // Sent to the backend for the run record, and kept out of the idempotency
+  // key, which identifies the work itself.
+  const payload = JSON.stringify({
+    ...validated,
+    corpus_version: await getCorpusVersion(),
+  })
+
   if (backend === 'modal') {
     // Circuit breaker
     if ((await circuitCheck()).tripped) {
@@ -302,7 +310,7 @@ export async function submitJob(
           const response = await fetch(`${getModalUrl()}/jobs`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(validated),
+            body: payload,
             signal: AbortSignal.timeout(30_000),
           })
           if (!response.ok) {
@@ -344,7 +352,7 @@ export async function submitJob(
   const response = await fetch(`${getLocalApiUrl()}/api/py/process-json`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(validated),
+    body: payload,
   })
   if (!response.ok) {
     const detail = await response.json().catch(() => ({}))

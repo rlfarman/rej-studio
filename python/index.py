@@ -2,6 +2,7 @@ import io
 import os
 import re
 import zipfile
+from typing import Any
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import StreamingResponse
@@ -51,6 +52,9 @@ class ProcessRequest(BaseModel):
     CDS: str  # Coding sequence
     name: str  # Name identifier for the output files
     options: ProcessOptions
+    # The gene corpus the sequence came from, when the caller knows it. Goes
+    # into the run record; a pasted sequence has none.
+    corpus_version: str | None = None
 
     @field_validator("CDS")
     @classmethod
@@ -150,6 +154,33 @@ class ObjectivesReport(BaseModel):
     total_score: float | None = None
 
 
+class RunRecordInput(BaseModel):
+    sha256: str
+    length: int
+
+
+class RunRecordVersions(BaseModel):
+    algorithm_sha256: str
+    dnachisel: str
+    python: str
+    commit: str | None = None
+
+
+class RunRecord(BaseModel):
+    """What this run was, in enough detail to repeat or cite it.
+
+    Built in `run_record.py`; every field is a fact about the run.
+    """
+
+    record_version: int
+    started_at: str
+    duration_seconds: float
+    input: RunRecordInput
+    options: dict[str, Any]
+    versions: RunRecordVersions
+    corpus_version: str | None = None
+
+
 class ProcessResult(BaseModel):
     name: str
     original_sequence: str
@@ -164,6 +195,7 @@ class ProcessResult(BaseModel):
     objectives_report_after: ObjectivesReport = ObjectivesReport()
     wggw_info: dict[str, WggwSiteInfo] | None = None
     processing_time_seconds: float
+    run_record: RunRecord
 
 
 @app.post("/api/py/process-json", response_model=ProcessResult)
@@ -173,6 +205,7 @@ def process_gene_json(request: ProcessRequest):
             CDS=request.CDS,
             name=request.name,
             OPTIONS=request.options.model_dump(),
+            corpus_version=request.corpus_version,
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing gene: {str(e)}") from e

@@ -1,5 +1,6 @@
 import { zipSync, strToU8 } from 'fflate'
 import type { ProcessResult } from '@/features/design-tool/types/process-result'
+import { buildMethodsParagraph } from '@/features/design-tool/utils/methods-paragraph'
 
 /** Build the report text from a ProcessResult. */
 function buildReportText(result: ProcessResult, optionsUsed: string): string {
@@ -37,7 +38,19 @@ function buildReportText(result: ProcessResult, optionsUsed: string): string {
 
   text += `\nProcessing Time: ${result.processing_time_seconds}s\n`
 
+  // The methods paragraph and the machine-readable record travel with the
+  // report, so an exported result can be repeated or cited without the app.
+  if (result.run_record) {
+    text += `\nMethods:\n${buildMethodsParagraph(result.run_record)}\n`
+    text += `\nSee ${runRecordFilename(result.name)} for the full run record.\n`
+  }
+
   return text
+}
+
+/** What the run record is called inside the ZIP. */
+function runRecordFilename(name: string): string {
+  return `${name.replace(/[^\w\-. ]/g, '_')}_run_record.json`
 }
 
 /** Build the sequences text from a ProcessResult. */
@@ -46,19 +59,34 @@ function buildSequencesText(result: ProcessResult): string {
 }
 
 /**
- * Build a ZIP blob client-side from an already-computed ProcessResult.
- * Mirrors the format of the original /api/py/process endpoint.
+ * Build the ZIP client-side from an already-computed ProcessResult.
+ * Mirrors the format of the original /api/py/process endpoint, plus the run
+ * record, so an exported result can be repeated or cited without the app.
  */
-function buildResultsZip(result: ProcessResult, optionsUsed: string): Blob {
+export function buildResultsZipBytes(
+  result: ProcessResult,
+  optionsUsed: string,
+): Uint8Array {
   const safeName = result.name.replace(/[^\w\-. ]/g, '_')
 
   const reportText = buildReportText(result, optionsUsed)
   const sequencesText = buildSequencesText(result)
 
-  const zipped = zipSync({
+  const files: Record<string, Uint8Array> = {
     [`${safeName}_report.txt`]: strToU8(reportText),
     [`${safeName}_sequences.txt`]: strToU8(sequencesText),
-  })
+  }
+  if (result.run_record) {
+    files[runRecordFilename(result.name)] = strToU8(
+      JSON.stringify(result.run_record, null, 2),
+    )
+  }
+
+  return zipSync(files)
+}
+
+function buildResultsZip(result: ProcessResult, optionsUsed: string): Blob {
+  const zipped = buildResultsZipBytes(result, optionsUsed)
 
   return new Blob([zipped.buffer as ArrayBuffer], { type: 'application/zip' })
 }

@@ -179,6 +179,7 @@ def run_job(params: dict) -> dict:
             name=params["name"],
             OPTIONS=params["options"],
             on_progress=on_progress,
+            corpus_version=params.get("corpus_version"),
         )
         _close_stage(time.monotonic())
         _log(
@@ -270,6 +271,9 @@ class JobRequest(BaseModel):
     CDS: str
     name: str
     options: dict[str, Any]
+    # The gene corpus the sequence came from, when the caller knows it. Goes
+    # into the run record; a pasted sequence has none.
+    corpus_version: str | None = None
 
     @field_validator("CDS")
     @classmethod
