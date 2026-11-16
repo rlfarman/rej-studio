@@ -2,11 +2,8 @@ import { GENETIC_CODE } from './genetic-code'
 import { getRelativePreference } from './codon-usage'
 import type { Species } from './species'
 
-/** Standard amino acid single-letter codes (excludes stop `*`). */
-export const AMINO_ACIDS = new Set('ACDEFGHIKLMNPQRSTVWY')
-
 /** Valid characters in a protein sequence input (AAs + stop). */
-export const PROTEIN_CHARS = /^[ACDEFGHIKLMNPQRSTVWY*]+$/i
+const PROTEIN_CHARS = /^[ACDEFGHIKLMNPQRSTVWY*]+$/i
 
 /**
  * Build a reverse lookup: amino acid → list of DNA codons that encode it.

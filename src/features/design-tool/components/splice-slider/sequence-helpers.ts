@@ -119,7 +119,7 @@ export function nearestSiteIndex(
   return bestIdx
 }
 
-export function dedupeRewriteOptions(options: WggwRecodingOption[]) {
+function dedupeRewriteOptions(options: WggwRecodingOption[]) {
   const seen = new Set<string>()
   return options.filter((option) => {
     const key = `${option.motif}|${option.newHexamer}|${option.motifOffset}`

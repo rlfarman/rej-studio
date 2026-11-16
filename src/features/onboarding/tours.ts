@@ -8,7 +8,7 @@ export interface TourDefinition {
   steps: DriveStep[]
 }
 
-export interface GuidedStep extends DriveStep {
+interface GuidedStep extends DriveStep {
   route: string
 }
 
@@ -17,7 +17,7 @@ const copy = onboardingCopy.tours
 // Gene used as the sample during the guided walkthrough. Picked for stable
 // presence across dev/prod seeds and because it's commonly referenced in the
 // existing copy ("try ATM or TP53").
-export const GUIDED_SAMPLE_GENE = 'TP53'
+const GUIDED_SAMPLE_GENE = 'TP53'
 
 export const guidedTour: GuidedStep[] = [
   {
