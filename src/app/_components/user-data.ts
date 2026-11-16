@@ -3,9 +3,11 @@
 // feature owns its store; this app-level module composes them, like
 // seed-data.ts does for the demo data.
 //
-// Import goes through each store's own API rather than writing localStorage
-// directly: the stores are already hydrated, so a raw localStorage write was
-// overwritten by the next store update and the import was lost.
+// Import goes through each store's own API rather than writing storage
+// directly: the stores are already hydrated, so a raw storage write was
+// overwritten by the next store update and the import was lost. Both wait for
+// the design history to load (it is read from IndexedDB asynchronously), so
+// an export can't miss jobs and an import counts against the full history.
 import { z } from 'zod'
 import { downloadTextFile } from '@/lib/download-file'
 import { useFavoriteGenes } from '@/features/gene-search/stores/favorite-genes-store'
@@ -14,6 +16,7 @@ import type { SavedGene } from '@/features/gene-search/types/domain-types'
 import {
   isSeedId,
   useJobHistory,
+  whenJobHistoryHydrated,
   type JobHistoryEntry,
 } from '@/features/design-tool/hooks/use-job-history'
 import type { ProcessResult } from '@/features/design-tool/types/process-result'
@@ -71,7 +74,7 @@ const jobEntrySchema = z.object({
 }) satisfies z.ZodType<JobHistoryEntry>
 
 // Each section mirrors a store's zustand-persist payload (`{ state, version }`)
-// under its localStorage key, the format backups have always used, so files
+// under its storage key, the format backups have always used, so files
 // exported by earlier versions still import.
 const persisted = <T extends z.ZodType>(state: T) =>
   z.object({ state, version: z.number().optional() })
@@ -129,7 +132,8 @@ export function buildBackup(now = new Date()): Backup {
   }
 }
 
-export function exportUserData() {
+export async function exportUserData() {
+  await whenJobHistoryHydrated()
   const now = new Date()
   downloadTextFile(
     `rej-studio-backup-${now.toISOString().slice(0, 10)}.json`,
@@ -205,5 +209,6 @@ export async function importUserData(file: File): Promise<ImportResult> {
 
   const parsed = backupSchema.safeParse(raw)
   if (!parsed.success) return { ok: false, reason: 'invalid' }
+  await whenJobHistoryHydrated()
   return { ok: true, added: applyBackup(parsed.data) }
 }

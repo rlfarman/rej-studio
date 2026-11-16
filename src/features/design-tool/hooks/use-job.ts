@@ -15,6 +15,7 @@ import {
   BROWSER_ID_PREFIX,
   isBrowserJobId,
   useJobHistory,
+  useJobHistoryHydrated,
   type JobStatus as EntryStatus,
   type JobError,
 } from '@/features/design-tool/hooks/use-job-history'
@@ -44,6 +45,12 @@ interface UseJobReturn {
   progress: number | undefined
   stage: string | undefined
   isLoading: boolean
+  /**
+   * True while a resumed job's entry may still be loading from storage
+   * (history hydrates asynchronously). Callers should show neither the
+   * empty form nor "not found" until it clears.
+   */
+  isRestoring: boolean
 }
 
 const JOB_PARAM = 'job'
@@ -109,6 +116,7 @@ export function useJob({
     (s) => s.entries.find((e) => e.id === jobId) ?? null,
   )
   const progress = useJobHistory((s) => (jobId ? s.progressById[jobId] : null))
+  const historyHydrated = useJobHistoryHydrated()
 
   const setJobId = (next: string | null, { shareable = true } = {}) => {
     setJobIdState(next)
@@ -117,15 +125,17 @@ export function useJob({
 
   // If the caller seeded an initialJobId but we have no history entry for it
   // (e.g. a shared URL from another device, or history was cleared), create
-  // a running stub so the global watcher picks it up and polls.
+  // a running stub so the global watcher picks it up and polls. Only once
+  // the history has loaded: before that every id looks missing, and the stub
+  // would poll (or overwrite) a job that is already settled.
   useEffect(() => {
-    if (!initialJobId) return
+    if (!initialJobId || !historyHydrated) return
     const existing = useJobHistory.getState().getEntry(initialJobId)
     if (!existing) {
       upsertEntry({ id: initialJobId, status: 'running' })
     }
-    // upsertEntry is stable; only the id matters here.
-  }, [initialJobId]) // eslint-disable-line react-hooks/exhaustive-deps
+    // upsertEntry is stable; only the id and the load matter here.
+  }, [initialJobId, historyHydrated]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const submitMutation = useMutation({
     mutationFn: async (values: FormValues) => {
@@ -317,5 +327,7 @@ export function useJob({
     progress: progress?.progress,
     stage: progress?.stage,
     isLoading: status === 'submitting' || status === 'running',
+    isRestoring:
+      !historyHydrated && jobId !== null && jobId === initialJobId && !entry,
   }
 }

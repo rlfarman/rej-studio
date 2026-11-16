@@ -1,15 +1,24 @@
 'use client'
 
+import { useSyncExternalStore } from 'react'
 import { create } from 'zustand'
 import { persist, type PersistStorage } from 'zustand/middleware'
 import type { ProcessResult } from '@/features/design-tool/types/process-result'
 import type { JobErrorCode } from '@/features/design-tool/types/backend-contract'
 import type { FormValues } from '@/features/design-tool/types/form-schema'
+import {
+  createJobHistoryStorage,
+  type PersistedJobHistory,
+} from '@/features/design-tool/utils/job-history-storage'
 import { createLogger } from '@/lib/logger'
 
 const log = createLogger('job-history')
 
+// The persist key: the IndexedDB key, the old localStorage key the history
+// migrates from, the cross-tab channel name, and a section of user-data
+// backups.
 const STORAGE_KEY = 'rej-studio:job-history'
+const PERSIST_VERSION = 0
 const MAX_ENTRIES = 50
 
 // Prefix for all seed-demo entries. Used by JobWatcher to skip polling the
@@ -67,7 +76,7 @@ export interface JobHistoryEntry {
 /**
  * Live progress for an in-flight job. Kept OUT of the persisted slice: a
  * backend progress tick every ~500ms used to rewrite all 50 entries —
- * including full results and form values — to localStorage.
+ * including full results and form values — to storage.
  */
 interface JobProgress {
   progress?: number
@@ -98,82 +107,121 @@ interface JobHistoryState {
   getRunningIds: () => string[]
 }
 
-type PersistedState = Pick<JobHistoryState, 'entries'>
+// ── Hydration ────────────────────────────────────────────────────────────
+// The history is read from IndexedDB (see job-history-storage.ts), which is
+// async: the store starts empty and fills in a moment later. Until then it
+// holds back writes, since writing the not-yet-loaded state would overwrite
+// the saved history, and the UI uses useJobHistoryHydrated() to tell "still
+// loading" from "empty". Only the first load counts: a cross-tab reload swaps
+// the history in place, and treating it as loading would flash the UI.
+let hydrated = false
+// A change was made (or stale entries swept) before the history loaded;
+// write the merged result once it has.
+let writeHeldBack = false
+// The saved history could not be read. Writing would replace data we never
+// saw, so this session stays in memory.
+let readFailed = false
+const hydrationListeners = new Set<() => void>()
 
-/**
- * localStorage, with the two failure modes the plain JSON storage ignores:
- *
- *  - reads/writes throw in private windows or with site data blocked, so
- *    every call is guarded;
- *  - a history of 50 full results can exceed the ~5MB quota, so a
- *    QuotaExceededError retries with a slimmed payload (oldest results
- *    dropped first, then oldest entries) instead of losing the write.
- */
-function createJobHistoryStorage(): PersistStorage<PersistedState> | undefined {
-  // No window on the server (and Node 26 warns if its own localStorage is
-  // touched during SSR), so persistence is simply off there.
-  try {
-    if (typeof window === 'undefined' || !window.localStorage) return undefined
-  } catch {
-    return undefined
-  }
-  return {
-    getItem: (name) => {
-      try {
-        const raw = window.localStorage.getItem(name)
-        return raw ? JSON.parse(raw) : null
-      } catch {
-        return null
-      }
-    },
-    setItem: (name, value) => {
-      const entries = value.state.entries
-      // Successively smaller payloads: full, results dropped from the
-      // oldest half, results dropped entirely, then only the newest 10.
-      const attempts: PersistedState[] = [
-        { entries },
-        { entries: dropResults(entries, Math.ceil(entries.length / 2)) },
-        { entries: dropResults(entries, 0) },
-        { entries: dropResults(entries, 0).slice(0, 10) },
-      ]
-      for (const attempt of attempts) {
-        try {
-          window.localStorage.setItem(
-            name,
-            JSON.stringify({ ...value, state: attempt }),
-          )
-          return
-        } catch (err) {
-          if (!isQuotaError(err)) return // blocked storage — nothing to retry
-        }
-      }
-      log.warn('could not persist job history — storage quota exceeded')
-    },
-    removeItem: (name) => {
-      try {
-        window.localStorage.removeItem(name)
-      } catch {
-        // Storage unavailable — nothing to clean up.
-      }
-    },
+function subscribeHydration(onChange: () => void) {
+  hydrationListeners.add(onChange)
+  return () => {
+    hydrationListeners.delete(onChange)
   }
 }
 
-function isQuotaError(err: unknown): boolean {
-  return (
-    err instanceof DOMException &&
-    (err.name === 'QuotaExceededError' ||
-      err.name === 'NS_ERROR_DOM_QUOTA_REACHED')
+/** Whether the saved history has loaded. Always false during SSR. */
+export function useJobHistoryHydrated(): boolean {
+  return useSyncExternalStore(
+    subscribeHydration,
+    () => hydrated,
+    () => false,
   )
 }
 
-/** Strips `result` from every entry at or after `keepResultsBefore`. */
-function dropResults(
-  entries: JobHistoryEntry[],
-  keepResultsBefore: number,
+/** Resolves once the saved history has loaded. Client only. */
+export function whenJobHistoryHydrated(): Promise<void> {
+  if (hydrated) return Promise.resolve()
+  return new Promise((resolve) => {
+    const unsubscribe = subscribeHydration(() => {
+      unsubscribe()
+      resolve()
+    })
+  })
+}
+
+// Cross-tab sync: after a write lands, tell the other tabs to reload, so
+// every open tab converges on the same history. Without this, a job submitted
+// in Tab A is invisible to Tab B, and two tabs can race to poll and clobber
+// each other's writes. IndexedDB has no equivalent of localStorage's
+// `storage` event; a channel never delivers to its own sender.
+const channel =
+  typeof window !== 'undefined' && typeof BroadcastChannel !== 'undefined'
+    ? new BroadcastChannel(STORAGE_KEY)
+    : null
+
+const storage = createJobHistoryStorage({
+  maxEntries: MAX_ENTRIES,
+  onWrite: () => channel?.postMessage('written'),
+})
+
+const gatedStorage: PersistStorage<PersistedJobHistory> | undefined =
+  storage && {
+    ...storage,
+    // Returns nothing on purpose: persist hands setItem's return value back
+    // from every store setter, and a promise there turns callers' sync
+    // callbacks (an act() in tests, an onProgress handler) into async ones.
+    // The storage handles its own write failures.
+    setItem: (name, value) => {
+      if (hydrated && !readFailed) {
+        void storage.setItem(name, value)
+      } else if (!hydrated) {
+        writeHeldBack = true
+      }
+    },
+  }
+
+function finishHydration(entries: JobHistoryEntry[], error: unknown) {
+  if (hydrated) return
+  if (error) {
+    readFailed = true
+    log.warn('could not read job history — keeping this session in memory', {
+      error: error instanceof Error ? error.message : 'unknown',
+    })
+  }
+  hydrated = true
+  if (writeHeldBack && !readFailed) {
+    void storage?.setItem(STORAGE_KEY, {
+      state: { entries },
+      version: PERSIST_VERSION,
+    })
+  }
+  writeHeldBack = false
+  for (const listener of hydrationListeners) listener()
+}
+
+/** Drops running entries older than the TTL: tabs closed mid-poll. */
+function sweepStaleRunning(entries: JobHistoryEntry[]): JobHistoryEntry[] {
+  const cutoff = Date.now() - STALE_RUNNING_TTL_MS
+  return entries.filter(
+    (e) => e.status !== 'running' || new Date(e.createdAt).getTime() >= cutoff,
+  )
+}
+
+/**
+ * Entries changed in this tab before the history loaded (a run submitted in
+ * the first instant, an import) go on top of the saved ones, and win an id
+ * collision, being the newer.
+ */
+function mergeEntries(
+  memory: JobHistoryEntry[],
+  saved: JobHistoryEntry[],
 ): JobHistoryEntry[] {
-  return entries.map((entry, i) =>
-    i < keepResultsBefore ? entry : { ...entry, result: null },
+  if (memory.length === 0) return saved
+  const known = new Set(memory.map((e) => e.id))
+  return [...memory, ...saved.filter((e) => !known.has(e.id))].slice(
+    0,
+    MAX_ENTRIES,
   )
 }
 
@@ -253,21 +301,23 @@ export const useJobHistory = create<JobHistoryState>()(
     }),
     {
       name: STORAGE_KEY,
-      storage: createJobHistoryStorage(),
-      partialize: (state) => ({ entries: state.entries }),
-      // Sweep stale running entries on rehydrate. Orphans come from tabs
-      // closed mid-poll; after the TTL we assume they'll never resolve.
-      onRehydrateStorage: () => (state) => {
-        if (!state) return
-        const cutoff = Date.now() - STALE_RUNNING_TTL_MS
-        const fresh = state.entries.filter((e) => {
-          if (e.status !== 'running') return true
-          return new Date(e.createdAt).getTime() >= cutoff
-        })
-        if (fresh.length !== state.entries.length) {
-          state.entries = fresh
-        }
+      version: PERSIST_VERSION,
+      storage: gatedStorage,
+      partialize: (state): PersistedJobHistory => ({ entries: state.entries }),
+      merge: (persisted, current) => {
+        const raw = (persisted as Partial<PersistedJobHistory> | undefined)
+          ?.entries
+        const saved = Array.isArray(raw) ? raw : []
+        // Orphans come from tabs closed mid-poll; after the TTL we assume
+        // they'll never resolve.
+        const fresh = sweepStaleRunning(saved)
+        // Another tab wrote, and its copy is the latest.
+        if (hydrated) return { ...current, entries: fresh }
+        if (fresh.length !== saved.length) writeHeldBack = true
+        return { ...current, entries: mergeEntries(current.entries, fresh) }
       },
+      onRehydrateStorage: () => (state, error) =>
+        finishHydration(state?.entries ?? [], error),
     },
   ),
 )
@@ -279,13 +329,6 @@ function omit<T>(record: Record<string, T>, key: string): Record<string, T> {
   return next
 }
 
-// Cross-tab sync: when another tab writes to our localStorage key, rehydrate
-// so every open tab converges on the same history. Without this, a job
-// submitted in Tab A is invisible to Tab B, and two tabs can race to poll
-// and clobber each other's writes.
-if (typeof window !== 'undefined') {
-  window.addEventListener('storage', (event) => {
-    if (event.key !== STORAGE_KEY || event.newValue === null) return
-    void useJobHistory.persist.rehydrate()
-  })
-}
+channel?.addEventListener('message', () => {
+  if (hydrated) void useJobHistory.persist.rehydrate()
+})

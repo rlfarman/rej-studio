@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 
 // The in-browser optimizer, end to end through the real UI.
 //
@@ -76,4 +76,85 @@ test('a design made in the browser stays on this device', async ({ page }) => {
 
   // It is still recorded locally, so Recent jobs and "Run again" work.
   await expect(page.getByText(/recent jobs/i).first()).toBeVisible()
+})
+
+// Design history lives in IndexedDB (localStorage tops out around 5 MB, and
+// each entry carries full sequences). Reads the stored history's job names.
+async function storedJobNames(page: Page): Promise<string[] | null> {
+  return page.evaluate(
+    () =>
+      new Promise<string[] | null>((resolve, reject) => {
+        const open = indexedDB.open('rej-studio-job-history')
+        open.onerror = () => reject(open.error)
+        open.onsuccess = () => {
+          const db = open.result
+          const get = db
+            .transaction('keyval', 'readonly')
+            .objectStore('keyval')
+            .get('rej-studio:job-history')
+          get.onerror = () => reject(get.error)
+          get.onsuccess = () => {
+            const value = get.result as
+              { state: { entries: { name: string }[] } } | undefined
+            db.close()
+            resolve(value ? value.state.entries.map((e) => e.name) : null)
+          }
+        }
+      }),
+  )
+}
+
+test('a design survives a reload, stored in IndexedDB', async ({ page }) => {
+  await page.goto(GENE_PAGE)
+  await expect(page.locator('textarea').first()).toHaveValue(/^ATG[ACGT]+$/i)
+  const name = await page.locator('input[name="name"]').inputValue()
+
+  await page.getByRole('button', { name: /run designer/i }).click()
+  await expect(page.getByText(/split after base/i).first()).toBeVisible({
+    timeout: 120_000,
+  })
+  await expect.poll(() => storedJobNames(page)).toContain(name)
+
+  await page.reload()
+  await expect(page.getByText(name).first()).toBeVisible()
+  expect(
+    await page.evaluate(() => localStorage.getItem('rej-studio:job-history')),
+  ).toBeNull()
+})
+
+test('an old localStorage history moves to IndexedDB', async ({ page }) => {
+  await page.goto('/')
+  await page.evaluate(() => {
+    const now = new Date().toISOString()
+    localStorage.setItem(
+      'rej-studio:job-history',
+      JSON.stringify({
+        version: 0,
+        state: {
+          entries: [
+            {
+              id: 'legacy-job-1',
+              name: 'Legacy design',
+              sequenceLength: 9,
+              createdAt: now,
+              status: 'failed',
+              result: null,
+              error: {
+                code: 'unknown',
+                message: 'Old failure',
+                retriable: true,
+              },
+            },
+          ],
+        },
+      }),
+    )
+  })
+
+  await page.reload()
+  await expect(page.getByText('Legacy design').first()).toBeVisible()
+  await expect.poll(() => storedJobNames(page)).toEqual(['Legacy design'])
+  expect(
+    await page.evaluate(() => localStorage.getItem('rej-studio:job-history')),
+  ).toBeNull()
 })

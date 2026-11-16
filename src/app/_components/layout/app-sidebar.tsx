@@ -20,6 +20,7 @@ import { JobWatcher } from '@/features/design-tool/components/job-watcher'
 import { SidebarMenu } from '@/app/_components/layout/sidebar-menu'
 import {
   useJobHistory,
+  useJobHistoryHydrated,
   type JobHistoryEntry,
 } from '@/features/design-tool/hooks/use-job-history'
 import { useFavoriteGenes } from '@/features/gene-search/stores/favorite-genes-store'
@@ -102,14 +103,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const favoriteCount = useFavoriteGenes((s) => s.favoriteGenes.length)
   const recentCount = useRecentGenes((s) => s.recentGenes.length)
   const jobCount = useJobHistory((s) => s.entries.length)
-  // History lives in localStorage, so the server always renders it empty.
+  // History lives in the browser, so the server always renders it empty.
   // Only decide "nothing here yet" after hydration, or the hint would flash
-  // (and mismatch) for anyone with saved history.
-  const hydrated = useSyncExternalStore(
+  // (and mismatch) for anyone with saved history. Favorites and recents are
+  // in localStorage and ready on mount; design history loads from IndexedDB
+  // a moment later, so it gets its own signal.
+  const mounted = useSyncExternalStore(
     noopSubscribe,
     () => true,
     () => false,
   )
+  const jobsHydrated = useJobHistoryHydrated()
+  const hydrated = mounted && jobsHydrated
   const hasHistory = favoriteCount + recentCount + jobCount > 0
 
   function handleSelectJob(entry: JobHistoryEntry) {

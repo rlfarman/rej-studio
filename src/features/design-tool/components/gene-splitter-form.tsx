@@ -14,6 +14,7 @@ import {
 import { DNASplicer } from './dna-splicer'
 import { Form } from '@/components/ui/form'
 import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 import type { DesignToolSpecies } from '@/features/design-tool/types/species-options'
 import { validationSchema, FormValues } from '../types/form-schema'
 import { formatOptionsForReport } from '../utils/form-handler'
@@ -101,7 +102,7 @@ export function GeneSplitterForm({
   })
 
   // Hydrate the form from a resumed URL job's stored formValues — once they
-  // appear in history (localStorage isn't populated on first render).
+  // appear in history (it loads from IndexedDB after the first render).
   // Guards against validation drift: if the schema has changed since this
   // job was saved, `safeParse` will reject, and we drop back to defaults
   // rather than silently loading an invalid form.
@@ -154,7 +155,9 @@ export function GeneSplitterForm({
       .catch(() => {})
   }
 
-  const showForm = job.status === 'idle' || isEditing
+  // While a resumed job's entry is still loading, the job is neither new nor
+  // missing: show a placeholder rather than flashing an empty form.
+  const showForm = (job.status === 'idle' && !job.isRestoring) || isEditing
   const isRunning = job.status === 'submitting' || job.status === 'running'
   // 'submitting' is the brief window while the POST is in flight; treat it
   // as running for header/placeholder purposes so the UI doesn't blank out.
@@ -192,6 +195,13 @@ export function GeneSplitterForm({
             onEdit={() => setIsEditing(true)}
             onRerun={handleRerun}
             onCancel={isRunning ? job.cancelJob : undefined}
+          />
+        )}
+
+        {!showForm && job.isRestoring && (
+          <Skeleton
+            aria-hidden
+            className="h-[28rem] rounded-[min(var(--radius-4xl),24px)]"
           />
         )}
 
