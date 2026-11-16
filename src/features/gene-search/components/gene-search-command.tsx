@@ -7,7 +7,7 @@ import {
   CommandSeparator,
 } from '@/components/ui/command'
 import Link from 'next/link'
-import type { GeneSearchResult } from '@/features/gene-search/api/gene-queries'
+import type { GeneSearchResult } from '@/features/gene-search/types/search'
 import type { SimilarGene } from '@/features/gene-search/types/search'
 import { SpeciesIcon } from '@/components/bio/species-icon'
 import { TruncatedText } from '@/components/truncated-text'
