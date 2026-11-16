@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import {
   Loader2,
   Check,
@@ -101,16 +101,26 @@ export function RunningPlaceholder({
  */
 function useSmoothedProgress(target: number | null): number | null {
   const [displayed, setDisplayed] = React.useState<number | null>(target)
+  const [prevTarget, setPrevTarget] = React.useState(target)
   const targetRef = React.useRef(target)
+
+  // When a new poll lands, snap during render (React's "adjust state when a
+  // prop changes" pattern): clear on null, jump up when the target moves past
+  // the displayed value. The effect below only runs the creep animation.
+  if (target !== prevTarget) {
+    setPrevTarget(target)
+    setDisplayed(
+      target === null
+        ? null
+        : displayed === null || target > displayed
+          ? target
+          : displayed,
+    )
+  }
 
   React.useEffect(() => {
     targetRef.current = target
-    if (target === null) {
-      setDisplayed(null)
-      return
-    }
-    // Snap up to the real target when it jumps forward.
-    setDisplayed((prev) => (prev === null || target > prev ? target : prev))
+    if (target === null) return
 
     let raf = 0
     let lastTick = performance.now()
@@ -162,14 +172,16 @@ function StatusDot({ status }: { status: JobHeaderStatus }) {
   // Fire a one-shot bloom only on the running → completed transition, not
   // when the component mounts onto an already-completed job (e.g. loading
   // a past job from history). Keyed so the animation restarts cleanly.
-  const prevStatus = useRef<JobHeaderStatus>(status)
+  // Tracked during render rather than in an effect, so the bloom starts in
+  // the same render as the status change.
+  const [prevStatus, setPrevStatus] = useState<JobHeaderStatus>(status)
   const [celebrateKey, setCelebrateKey] = useState(0)
-  useEffect(() => {
-    if (prevStatus.current === 'running' && status === 'completed') {
-      setCelebrateKey((k) => k + 1) // eslint-disable-line react-hooks/set-state-in-effect
+  if (status !== prevStatus) {
+    setPrevStatus(status)
+    if (prevStatus === 'running' && status === 'completed') {
+      setCelebrateKey((k) => k + 1)
     }
-    prevStatus.current = status
-  }, [status])
+  }
 
   const classes = cn(
     'relative flex size-7 shrink-0 items-center justify-center rounded-full',

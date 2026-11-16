@@ -1,5 +1,5 @@
 import type { MetadataRoute } from 'next'
-import { OG_BG, OG_BRAND } from '@/lib/og-theme'
+import { OG_BG, OG_FG } from '@/lib/og-theme'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
@@ -10,7 +10,7 @@ export default function manifest(): MetadataRoute.Manifest {
     start_url: '/genes',
     display: 'standalone',
     background_color: OG_BG,
-    theme_color: OG_BRAND,
+    theme_color: OG_FG,
     icons: [
       {
         src: '/api/icon?size=192',

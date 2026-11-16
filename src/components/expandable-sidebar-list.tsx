@@ -1,5 +1,5 @@
 'use client'
-import { Fragment, useEffect, useState, type ReactNode } from 'react'
+import { Fragment, useState, useSyncExternalStore, type ReactNode } from 'react'
 import { ChevronRight } from 'lucide-react'
 import {
   SidebarGroup,
@@ -12,6 +12,39 @@ import { cn } from '@/lib/utils'
 
 const DEFAULT_COLLAPSED_COUNT = 3
 const DEFAULT_EXPANDED_MAX = 15
+
+// Persisted open/closed state is read from localStorage through
+// useSyncExternalStore: the server snapshot (null → `defaultOpen`) keeps SSR
+// and hydration in agreement, and the stored value takes over right after
+// hydration — without a setState inside an effect. Writes dispatch this event
+// so every list sharing a key re-reads the store.
+const OPEN_STATE_EVENT = 'expandable-sidebar-list:open-state'
+
+function subscribeToOpenState(onChange: () => void) {
+  window.addEventListener(OPEN_STATE_EVENT, onChange)
+  return () => window.removeEventListener(OPEN_STATE_EVENT, onChange)
+}
+
+function readStoredOpen(persistKey: string | undefined): boolean | null {
+  if (!persistKey) return null
+  try {
+    const stored = window.localStorage.getItem(persistKey)
+    return stored === null ? null : stored === '1'
+  } catch {
+    return null // localStorage unavailable
+  }
+}
+
+/** Returns false when localStorage is unavailable, so callers can fall back. */
+function writeStoredOpen(persistKey: string, open: boolean): boolean {
+  try {
+    window.localStorage.setItem(persistKey, open ? '1' : '0')
+  } catch {
+    return false
+  }
+  window.dispatchEvent(new Event(OPEN_STATE_EVENT))
+  return true
+}
 
 interface ExpandableSidebarListProps<T> {
   label: string
@@ -43,30 +76,19 @@ export function ExpandableSidebarList<T>({
   defaultOpen = true,
 }: ExpandableSidebarListProps<T>) {
   const [expanded, setExpanded] = useState(false)
-  const [open, setOpen] = useState(defaultOpen)
-
-  useEffect(() => {
-    if (!persistKey) return
-    try {
-      const stored = window.localStorage.getItem(persistKey)
-      if (stored !== null) setOpen(stored === '1')
-    } catch {
-      /* localStorage unavailable */
-    }
-  }, [persistKey])
+  // Used when nothing is persisted (no key, no stored value, or no storage).
+  const [localOpen, setLocalOpen] = useState(defaultOpen)
+  const storedOpen = useSyncExternalStore(
+    subscribeToOpenState,
+    () => readStoredOpen(persistKey),
+    () => null,
+  )
+  const open = storedOpen ?? localOpen
 
   const toggleOpen = () => {
-    setOpen((prev) => {
-      const next = !prev
-      if (persistKey) {
-        try {
-          window.localStorage.setItem(persistKey, next ? '1' : '0')
-        } catch {
-          /* localStorage unavailable */
-        }
-      }
-      return next
-    })
+    const next = !open
+    if (persistKey && writeStoredOpen(persistKey, next)) return
+    setLocalOpen(next)
   }
 
   const hiddenCount = items.length - collapsedCount

@@ -1,7 +1,7 @@
 // Splice tone palettes. Splice 1 uses primary, Splice 2 uses marker; the
 // fields cover the surfaces each splice paints (caret, cuts, base
 // highlights, segment fills, ring colors, tinted text).
-export const SPLICE_TONES: Array<{
+const SPLICE_TONES: Array<{
   caret: string
   caretRing: string
   border: string

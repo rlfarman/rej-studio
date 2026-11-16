@@ -41,10 +41,10 @@ steering away from patterns you don't want and toward patterns you do.
 
 REJ Studio exposes two kinds of rules:
 
-| Type | Behavior | Example |
-|---|---|---|
-| **Hard constraint** | Must be satisfied. If the solver can't meet it, the constraint is reported as violated. | GC content (35-60%) |
-| **Soft objective** | Should be minimized, weighted against other objectives. | CpG minimization, cryptic splice removal, k-mer complexity, codon adaptation |
+| Type                | Behavior                                                                                | Example                                                                      |
+| ------------------- | --------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| **Hard constraint** | Must be satisfied. If the solver can't meet it, the constraint is reported as violated. | GC content (35-60%)                                                          |
+| **Soft objective**  | Should be minimized, weighted against other objectives.                                 | CpG minimization, cryptic splice removal, k-mer complexity, codon adaptation |
 
 Hard constraints always take priority. When the solver can't satisfy a
 hard constraint given the soft objectives, it satisfies the hard
@@ -64,6 +64,7 @@ compromises landed.
 ## What the optimizer can and cannot do
 
 **Can:**
+
 - Swap synonymous codons (same protein, different DNA).
 - Penalize and generally avoid sequence motifs (cryptic splice
   donors/acceptors, repeated 10-mers, CpG dinucleotides).
@@ -72,6 +73,7 @@ compromises landed.
   downstream synthesis.
 
 **Cannot:**
+
 - Change the encoded protein. Every codon swap is synonymous.
 - Insert an actual intron sequence — it emits a `[STIMINTRON]`
   placeholder that you substitute at synthesis time.

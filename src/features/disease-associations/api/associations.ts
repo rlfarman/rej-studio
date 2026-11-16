@@ -11,11 +11,6 @@ const data = associations as AssociationData
 
 export const getAssociations = cache((): AssociationRow[] => data.rows)
 
-export const findByEnsemblId = cache(
-  (ensemblGeneId: string): AssociationRow | undefined =>
-    data.rows.find((r) => r.ensemblGeneId === ensemblGeneId),
-)
-
 export const findBySymbol = cache(
   (symbol: string): AssociationRow | undefined => {
     const q = symbol.toUpperCase()
@@ -27,7 +22,7 @@ export const findBySymbol = cache(
  * Map a free-form OMIM inheritance string (e.g. "X-linked dominant") to one of
  * the coarse buckets the explorer filters on. Returns null if unrecognized.
  */
-export function bucketInheritance(term: string): InheritanceBucket | null {
+function bucketInheritance(term: string): InheritanceBucket | null {
   const t = term.toLowerCase()
   if (t.includes('x-linked')) return 'X-linked'
   if (t.includes('y-linked')) return 'Y-linked'
@@ -50,7 +45,7 @@ export function rowBuckets(row: AssociationRow): Set<InheritanceBucket> {
   return buckets
 }
 
-export type AssociationFilters = {
+type AssociationFilters = {
   query?: string
   inheritance?: InheritanceBucket[]
 }
