@@ -2,10 +2,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { NextRequest } from 'next/server'
 
+const limiterCheck = vi.hoisted(() =>
+  vi.fn(async (_key: string) => ({ ok: true, remaining: 4, resetMs: 60_000 })),
+)
 vi.mock('@/lib/upstash', () => ({
-  createUpstashRateLimiter: () => ({
-    check: vi.fn(async () => ({ ok: true, remaining: 4, resetMs: 60_000 })),
-  }),
+  createUpstashRateLimiter: () => ({ check: limiterCheck }),
   redis: null,
 }))
 
@@ -13,12 +14,20 @@ import { POST } from './route'
 
 const ORIGIN = 'https://rejstudio.com'
 
-function login(password: string, returnTo?: string) {
+function login(
+  password: string,
+  returnTo?: string,
+  headers?: Record<string, string>,
+) {
   const form = new FormData()
   form.set('password', password)
   if (returnTo !== undefined) form.set('return_to', returnTo)
   return POST(
-    new NextRequest(`${ORIGIN}/api/login`, { method: 'POST', body: form }),
+    new NextRequest(`${ORIGIN}/api/login`, {
+      method: 'POST',
+      body: form,
+      headers,
+    }),
   )
 }
 
@@ -29,6 +38,21 @@ describe('POST /api/login', () => {
   })
   afterEach(() => {
     vi.unstubAllEnvs()
+    limiterCheck.mockClear()
+  })
+
+  it('rate-limits by the trusted hop, not a client-supplied one', async () => {
+    await login('hunter2', undefined, {
+      'x-forwarded-for': '6.6.6.6, 203.0.113.7',
+    })
+    expect(limiterCheck).toHaveBeenCalledWith('203.0.113.7')
+  })
+
+  it('returns 429 once the limit is hit', async () => {
+    limiterCheck.mockResolvedValueOnce({ ok: false, remaining: 0, resetMs: 1 })
+    const res = await login('hunter2')
+    expect(res.status).toBe(429)
+    expect(res.headers.get('set-cookie')).toBeNull()
   })
 
   it('redirects to return_to and sets the session cookie', async () => {

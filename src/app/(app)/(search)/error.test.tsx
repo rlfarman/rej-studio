@@ -22,23 +22,23 @@ afterEach(() => cleanup())
 describe('SearchError', () => {
   it('renders search-specific error message', () => {
     const error = new Error('db down')
-    const reset = vi.fn()
-    const { container } = render(<SearchError error={error} reset={reset} />)
+    const retry = vi.fn()
+    const { container } = render(<SearchError error={error} retry={retry} />)
     expect(container.textContent).toContain('Search unavailable')
   })
 
-  it('calls reset when Try Again is clicked', () => {
+  it('calls retry when Try Again is clicked', () => {
     const error = new Error('db down')
-    const reset = vi.fn()
-    const { getAllByText } = render(<SearchError error={error} reset={reset} />)
+    const retry = vi.fn()
+    const { getAllByText } = render(<SearchError error={error} retry={retry} />)
     fireEvent.click(getAllByText('Try again')[0])
-    expect(reset).toHaveBeenCalledTimes(1)
+    expect(retry).toHaveBeenCalledTimes(1)
   })
 
   it('has a Go Home link', () => {
     const error = new Error('db down')
-    const reset = vi.fn()
-    const { container } = render(<SearchError error={error} reset={reset} />)
+    const retry = vi.fn()
+    const { container } = render(<SearchError error={error} retry={retry} />)
     const link = container.querySelector('a[href="/"]')
     expect(link).not.toBeNull()
   })

@@ -22,7 +22,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu'
-import { exportUserData, importUserData } from '@/lib/data-transfer'
+import { exportUserData, importUserData } from '@/app/_components/user-data'
 import { seedUserData, clearSeedUserData } from '@/app/_components/seed-data'
 import { toast } from 'sonner'
 import {
@@ -52,17 +52,33 @@ export function SidebarMenu() {
   }, [])
 
   async function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
+    const input = e.currentTarget
+    const file = input.files?.[0]
+    // Clear it so picking the same file again still fires onChange.
+    input.value = ''
     if (!file) return
+
+    const importCopy = errorsCopy.importUserData
     try {
-      const { imported } = await importUserData(file)
-      toast.success(errorsCopy.importUserData.success(imported))
-    } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : errorsCopy.importUserData.failure,
-      )
+      const result = await importUserData(file)
+      if (!result.ok) {
+        toast.error(
+          result.reason === 'too-large'
+            ? importCopy.tooLarge
+            : importCopy.invalid,
+        )
+        return
+      }
+      const { favorites, recents, jobs } = result.added
+      if (favorites + recents + jobs === 0) {
+        toast.info(importCopy.nothingNew)
+      } else {
+        toast.success(importCopy.success(favorites, recents, jobs))
+      }
+    } catch {
+      // e.g. localStorage is full or blocked.
+      toast.error(importCopy.failure)
     }
-    e.target.value = ''
   }
 
   return (

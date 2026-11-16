@@ -678,13 +678,19 @@ function SidebarMenuButton({
     }
   }
 
+  // The label is already visible unless the desktop sidebar is collapsed to
+  // icons. Disable the tooltip then, rather than only hiding its popup: a
+  // hidden tooltip still opened on focus and swallowed the first Escape, so
+  // closing the mobile sidebar sheet took two presses.
+  const tooltipDisabled = state !== 'collapsed' || isMobile
+
   return (
-    <Tooltip>
+    <Tooltip disabled={tooltipDisabled}>
       {comp}
       <TooltipContent
         side="right"
         align="center"
-        hidden={state !== 'collapsed' || isMobile}
+        hidden={tooltipDisabled}
         {...tooltip}
       />
     </Tooltip>
