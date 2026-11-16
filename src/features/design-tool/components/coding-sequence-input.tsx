@@ -1,6 +1,6 @@
 'use client'
-import { useCallback, useRef } from 'react'
-import { useFormContext } from 'react-hook-form'
+import { useRef } from 'react'
+import { useFormContext, useWatch } from 'react-hook-form'
 import {
   FormField,
   FormItem,
@@ -70,13 +70,17 @@ function SequenceTypeToggle({
 }
 
 export function CodingSequenceInput() {
-  const { control, watch, setValue, clearErrors } = useFormContext<FormValues>()
-  const sequenceType = watch('sequenceType') ?? 'dna'
+  const { control, getValues, setValue, clearErrors } =
+    useFormContext<FormValues>()
+  // useWatch, not watch(): the React Compiler memoizes watch() calls (the
+  // function's identity never changes), so the highlight layer kept showing
+  // the old sequence while the transparent textarea underneath changed.
+  const [watchedType, dnaValue, proteinValue, species] = useWatch({
+    control,
+    name: ['sequenceType', 'codingSequence', 'proteinSequence', 'species'],
+  })
+  const sequenceType = watchedType ?? 'dna'
   const isProtein = sequenceType === 'protein'
-
-  const dnaValue = watch('codingSequence')
-  const proteinValue = watch('proteinSequence')
-  const species = watch('species')
 
   const activeValue = isProtein ? proteinValue : dnaValue
   const length = activeValue?.length ?? 0
@@ -85,185 +89,167 @@ export function CodingSequenceInput() {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const backdropRef = useRef<HTMLDivElement>(null)
 
-  const syncScroll = useCallback(() => {
+  const syncScroll = () => {
     if (textareaRef.current && backdropRef.current) {
       backdropRef.current.scrollTop = textareaRef.current.scrollTop
       backdropRef.current.scrollLeft = textareaRef.current.scrollLeft
     }
-  }, [])
+  }
 
-  const applyReverseTranslation = useCallback(
-    (protein: string) => {
-      if (!isSpecies(species)) return
-      try {
-        const dna = reverseTranslate(protein, species as Species)
-        const points = pickDefaultSplitPoints(dna)
-        setValue('codingSequence', dna, { shouldValidate: false })
-        setValue('spliceJunctionPositions', points, {
+  const applyReverseTranslation = (protein: string) => {
+    if (!isSpecies(species)) return
+    try {
+      const dna = reverseTranslate(protein, species as Species)
+      const points = pickDefaultSplitPoints(dna)
+      setValue('codingSequence', dna, { shouldValidate: false })
+      setValue('spliceJunctionPositions', points, {
+        shouldValidate: false,
+      })
+      setValue(
+        'selectedWggwSites',
+        points.map(() => null),
+        {
           shouldValidate: false,
-        })
-        setValue(
-          'selectedWggwSites',
-          points.map(() => null),
-          {
-            shouldValidate: false,
-          },
-        )
-        setValue('sequenceType', 'dna', { shouldValidate: false })
-      } catch {
-        setValue('codingSequence', '', { shouldValidate: false })
-      }
-    },
-    [species, setValue],
-  )
-
-  const applyCleanedSequence = useCallback(
-    (text: string, source: string) => {
-      const detected = detectSequenceType(text)
-      const detectedIsProtein = detected === 'protein'
-
-      let textToClean = text
-      let ignoredSequences = 0
-      if (text.includes('>')) {
-        const fastaEntries = parseFasta(text).filter(
-          (e) => e.sequence.length > 0,
-        )
-        if (fastaEntries.length > 1) {
-          ignoredSequences = fastaEntries.length - 1
-          const first = fastaEntries[0]
-          textToClean = first.header
-            ? `>${first.header}\n${first.sequence}`
-            : first.sequence
-        }
-      }
-
-      const { cleaned, removedChars, removedHeaders } = cleanSequence(
-        textToClean,
-        detected,
+        },
       )
+      setValue('sequenceType', 'dna', { shouldValidate: false })
+    } catch {
+      setValue('codingSequence', '', { shouldValidate: false })
+    }
+  }
 
-      if (cleaned.length === 0) {
-        toast.error(
-          detectedIsProtein ? copy.noValidAminoAcids : copy.noValidNucleotides,
-        )
-        return
+  const applyCleanedSequence = (text: string, source: string) => {
+    const detected = detectSequenceType(text)
+    const detectedIsProtein = detected === 'protein'
+
+    let textToClean = text
+    let ignoredSequences = 0
+    if (text.includes('>')) {
+      const fastaEntries = parseFasta(text).filter((e) => e.sequence.length > 0)
+      if (fastaEntries.length > 1) {
+        ignoredSequences = fastaEntries.length - 1
+        const first = fastaEntries[0]
+        textToClean = first.header
+          ? `>${first.header}\n${first.sequence}`
+          : first.sequence
       }
+    }
 
-      const modeSwitched = detected !== sequenceType
-      if (modeSwitched) {
-        setValue('sequenceType', detected)
-        clearErrors(['codingSequence', 'proteinSequence', 'species'])
-        if (detectedIsProtein && species === 'none') {
-          setValue('species', 'human', { shouldValidate: false })
-        }
-      }
+    const { cleaned, removedChars, removedHeaders } = cleanSequence(
+      textToClean,
+      detected,
+    )
 
-      const field = detectedIsProtein ? 'proteinSequence' : 'codingSequence'
-      setValue(field as keyof FormValues, cleaned, { shouldValidate: true })
+    if (cleaned.length === 0) {
+      toast.error(
+        detectedIsProtein ? copy.noValidAminoAcids : copy.noValidNucleotides,
+      )
+      return
+    }
 
-      if (!detectedIsProtein) {
-        const points = pickDefaultSplitPoints(cleaned)
-        setValue('spliceJunctionPositions', points, {
-          shouldValidate: true,
-        })
-        setValue(
-          'selectedWggwSites',
-          points.map(() => null),
-          {
-            shouldValidate: false,
-          },
-        )
-        // Clear the protein field so switching back doesn't show stale input
-        if (modeSwitched) {
-          setValue('proteinSequence', '', { shouldValidate: false })
-        }
-      } else {
-        setValue('codingSequence', '', { shouldValidate: false })
-      }
-
-      const charType = detectedIsProtein
-        ? copy.charTypeNonAminoAcid
-        : copy.charTypeNonNucleotide
-      const parts: string[] = []
-      if (ignoredSequences > 0)
-        parts.push(copy.usedFirstSequence(ignoredSequences))
-      if (removedHeaders > 0) parts.push(copy.headersStripped(removedHeaders))
-      if (removedChars > 0)
-        parts.push(copy.charsRemoved(removedChars, charType))
-
-      if (parts.length > 0) {
-        toast.info(copy.cleanedSummary(source, parts.join(', ')))
-      }
-    },
-    [setValue, clearErrors, sequenceType, species],
-  )
-
-  const handlePaste = useCallback(
-    (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
-      const text = e.clipboardData.getData('text')
-      const hasHeaders = text.includes('>')
-      const letters = text.replace(/\s/g, '')
-      const seqChars =
-        letters.match(/[ACDEFGHIKLMNPQRSTUVWYacdefghiklmnpqrstuvwy*]/g)
-          ?.length ?? 0
-      const looksLikeSequence =
-        letters.length >= 6 && seqChars / letters.length > 0.8
-      if (hasHeaders || looksLikeSequence) {
-        e.preventDefault()
-        applyCleanedSequence(text, copy.pasteSource)
-      }
-    },
-    [applyCleanedSequence],
-  )
-
-  const handleFileUpload = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0]
-      if (!file) return
-
-      const reader = new FileReader()
-      reader.onload = () => {
-        const text = reader.result as string
-        const entries = parseFasta(text)
-
-        if (entries.length > 0 && entries[0].header) {
-          const currentName = watch('name')
-          if (!currentName) {
-            setValue('name', entries[0].header.slice(0, 250))
-          }
-        }
-
-        applyCleanedSequence(text, copy.fastaSource)
-      }
-      reader.readAsText(file)
-      e.target.value = ''
-    },
-    [applyCleanedSequence, setValue, watch],
-  )
-
-  const handleSequenceTypeChange = useCallback(
-    (newType: SequenceType) => {
-      if (newType === sequenceType) return
-      setValue('sequenceType', newType)
+    const modeSwitched = detected !== sequenceType
+    if (modeSwitched) {
+      setValue('sequenceType', detected)
       clearErrors(['codingSequence', 'proteinSequence', 'species'])
-
-      if (newType === 'protein') {
-        if (species === 'none') {
-          setValue('species', 'human', { shouldValidate: false })
-        }
-        const dna = (dnaValue ?? '').toUpperCase().replace(/U/g, 'T')
-        if (dna.length >= 3) {
-          const protein = translate(dna).replace(/\*+$/, '')
-          setValue('proteinSequence', protein, { shouldValidate: false })
-        }
-      } else {
-        setValue('codingSequence', '', { shouldValidate: false })
+      if (detectedIsProtein && species === 'none') {
+        setValue('species', 'human', { shouldValidate: false })
       }
-    },
-    [sequenceType, setValue, clearErrors, dnaValue, species],
-  )
+    }
 
-  const handleReverseTranslate = useCallback(() => {
+    const field = detectedIsProtein ? 'proteinSequence' : 'codingSequence'
+    setValue(field as keyof FormValues, cleaned, { shouldValidate: true })
+
+    if (!detectedIsProtein) {
+      const points = pickDefaultSplitPoints(cleaned)
+      setValue('spliceJunctionPositions', points, {
+        shouldValidate: true,
+      })
+      setValue(
+        'selectedWggwSites',
+        points.map(() => null),
+        {
+          shouldValidate: false,
+        },
+      )
+      // Clear the protein field so switching back doesn't show stale input
+      if (modeSwitched) {
+        setValue('proteinSequence', '', { shouldValidate: false })
+      }
+    } else {
+      setValue('codingSequence', '', { shouldValidate: false })
+    }
+
+    const charType = detectedIsProtein
+      ? copy.charTypeNonAminoAcid
+      : copy.charTypeNonNucleotide
+    const parts: string[] = []
+    if (ignoredSequences > 0)
+      parts.push(copy.usedFirstSequence(ignoredSequences))
+    if (removedHeaders > 0) parts.push(copy.headersStripped(removedHeaders))
+    if (removedChars > 0) parts.push(copy.charsRemoved(removedChars, charType))
+
+    if (parts.length > 0) {
+      toast.info(copy.cleanedSummary(source, parts.join(', ')))
+    }
+  }
+
+  const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    const text = e.clipboardData.getData('text')
+    const hasHeaders = text.includes('>')
+    const letters = text.replace(/\s/g, '')
+    const seqChars =
+      letters.match(/[ACDEFGHIKLMNPQRSTUVWYacdefghiklmnpqrstuvwy*]/g)?.length ??
+      0
+    const looksLikeSequence =
+      letters.length >= 6 && seqChars / letters.length > 0.8
+    if (hasHeaders || looksLikeSequence) {
+      e.preventDefault()
+      applyCleanedSequence(text, copy.pasteSource)
+    }
+  }
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = () => {
+      const text = reader.result as string
+      const entries = parseFasta(text)
+
+      if (entries.length > 0 && entries[0].header) {
+        const currentName = getValues('name')
+        if (!currentName) {
+          setValue('name', entries[0].header.slice(0, 250))
+        }
+      }
+
+      applyCleanedSequence(text, copy.fastaSource)
+    }
+    reader.readAsText(file)
+    e.target.value = ''
+  }
+
+  const handleSequenceTypeChange = (newType: SequenceType) => {
+    if (newType === sequenceType) return
+    setValue('sequenceType', newType)
+    clearErrors(['codingSequence', 'proteinSequence', 'species'])
+
+    if (newType === 'protein') {
+      if (species === 'none') {
+        setValue('species', 'human', { shouldValidate: false })
+      }
+      const dna = (dnaValue ?? '').toUpperCase().replace(/U/g, 'T')
+      if (dna.length >= 3) {
+        const protein = translate(dna).replace(/\*+$/, '')
+        setValue('proteinSequence', protein, { shouldValidate: false })
+      }
+    } else {
+      setValue('codingSequence', '', { shouldValidate: false })
+    }
+  }
+
+  const handleReverseTranslate = () => {
     const protein = (proteinValue ?? '').toUpperCase().replace(/\s/g, '')
     if (!protein) {
       toast.error(copy.reverseTranslateProteinRequired)
@@ -274,7 +260,7 @@ export function CodingSequenceInput() {
       return
     }
     applyReverseTranslation(protein)
-  }, [applyReverseTranslation, proteinValue, species])
+  }
 
   const activeField = isProtein ? 'proteinSequence' : 'codingSequence'
   const fileAccept = isProtein ? '.fasta,.fa,.faa,.txt' : '.fasta,.fa,.fna,.txt'
@@ -321,25 +307,28 @@ export function CodingSequenceInput() {
               onChange={handleFileUpload}
             />
           </div>
-          <FormControl>
-            <div className="relative min-h-[6.5rem]">
-              {!isProtein && (
-                <div
-                  ref={backdropRef}
-                  aria-hidden="true"
-                  className={cn(
-                    sharedTextStyles,
-                    'pointer-events-none absolute inset-0 overflow-hidden rounded-md border border-transparent',
-                    'text-foreground',
-                  )}
-                >
-                  {activeValue ? (
-                    <SequenceHighlight sequence={activeValue} />
-                  ) : (
-                    <span className="text-transparent">placeholder</span>
-                  )}
-                </div>
-              )}
+          {/* The highlight layer sits behind a transparent textarea. FormControl
+              wraps the textarea itself so the label, aria-invalid and the
+              error description land on the field, not on this wrapper. */}
+          <div className="relative min-h-[6.5rem]">
+            {!isProtein && (
+              <div
+                ref={backdropRef}
+                aria-hidden="true"
+                className={cn(
+                  sharedTextStyles,
+                  'pointer-events-none absolute inset-0 overflow-hidden rounded-md border border-transparent',
+                  'text-foreground',
+                )}
+              >
+                {activeValue ? (
+                  <SequenceHighlight sequence={activeValue} />
+                ) : (
+                  <span className="text-transparent">placeholder</span>
+                )}
+              </div>
+            )}
+            <FormControl>
               <textarea
                 placeholder={
                   isProtein ? copy.placeholderProtein : copy.placeholderDna
@@ -350,9 +339,7 @@ export function CodingSequenceInput() {
                 onChange={field.onChange}
                 ref={(el) => {
                   field.ref(el)
-                  ;(
-                    textareaRef as React.MutableRefObject<HTMLTextAreaElement | null>
-                  ).current = el
+                  textareaRef.current = el
                 }}
                 onPaste={handlePaste}
                 onScroll={syncScroll}
@@ -366,8 +353,8 @@ export function CodingSequenceInput() {
                     : 'caret-foreground resize-y text-transparent',
                 )}
               />
-            </div>
-          </FormControl>
+            </FormControl>
+          </div>
           <FormMessage />
           {isProtein && (
             <Button

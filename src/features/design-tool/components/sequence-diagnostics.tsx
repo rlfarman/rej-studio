@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
-import { useFormContext } from 'react-hook-form'
+import { useFormContext, useWatch } from 'react-hook-form'
 import { FormValues } from '../types/form-schema'
 import {
   DiagBadge,
@@ -15,8 +15,8 @@ import {
 } from '@/components/bio/diag-badge'
 
 export function SequenceDiagnostics() {
-  const { watch } = useFormContext<FormValues>()
-  const codingSequence = watch('codingSequence')
+  const { control } = useFormContext<FormValues>()
+  const codingSequence = useWatch({ control, name: 'codingSequence' })
 
   const seq = codingSequence?.toUpperCase() ?? ''
 

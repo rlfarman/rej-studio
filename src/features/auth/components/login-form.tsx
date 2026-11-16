@@ -57,19 +57,16 @@ export function LoginForm({ returnTo, hasError = false }: LoginFormProps) {
           <div className="flex flex-col gap-2">
             <Label htmlFor="password">{authCopy.login.passwordLabel}</Label>
 
-            {/* Wrapper provides the drawn-on underline focus indicator */}
-            <div className="login-input-wrapper">
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                required
-                autoFocus
-                aria-invalid={hasError || undefined}
-                aria-describedby={hasError ? 'login-error' : undefined}
-              />
-            </div>
+            <Input
+              id="password"
+              name="password"
+              type="password"
+              autoComplete="current-password"
+              required
+              autoFocus
+              aria-invalid={hasError || undefined}
+              aria-describedby={hasError ? 'login-error' : undefined}
+            />
 
             {hasError ? (
               <p

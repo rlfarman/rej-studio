@@ -21,9 +21,11 @@ const formCopy = designToolCopy.form
 const CODON_OPTIMIZATION_CHECKBOX_ID = 'codon-optimization-enabled'
 
 function CodonOptimizationRow() {
-  const { watch, setValue } = useFormContext<FormValues>()
-  const species = watch('species')
-  const sequenceType = watch('sequenceType')
+  const { control, setValue } = useFormContext<FormValues>()
+  const [species, sequenceType] = useWatch({
+    control,
+    name: ['species', 'sequenceType'],
+  })
   const enabled = isSpecies(species)
   const isProtein = sequenceType === 'protein'
   const selectableSpecies = DESIGN_TOOL_SPECIES_OPTIONS.filter(

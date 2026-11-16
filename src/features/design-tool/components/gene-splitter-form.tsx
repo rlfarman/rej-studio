@@ -63,7 +63,9 @@ export function GeneSplitterForm({
 
   const methods = useForm<FormValues>({
     resolver: zodResolver(validationSchema),
-    mode: 'onBlur',
+    // First check on blur, then on every change: with 'onBlur' an error
+    // stayed up after the sequence was fixed, until the next blur.
+    mode: 'onTouched',
     defaultValues: {
       sequenceType: 'dna' as const,
       removeCrypticSpliceSites: true,

@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { useFormContext } from 'react-hook-form'
+import { useFormContext, useWatch } from 'react-hook-form'
 import { FormValues, type SelectedWggwSite } from '../types/form-schema'
 import { SpliceSliderContext } from './splice-slider-context'
 
@@ -10,11 +10,15 @@ import { SpliceSliderContext } from './splice-slider-context'
 const NO_POSITIONS: number[] = []
 
 export function DNASplicer() {
-  const { setValue, watch } = useFormContext<FormValues>()
-  const codingSequence = watch('codingSequence') ?? ''
+  const { control, setValue } = useFormContext<FormValues>()
+  const [watchedSequence, watchedPositions, species] = useWatch({
+    control,
+    name: ['codingSequence', 'spliceJunctionPositions', 'species'],
+  })
+  const codingSequence = watchedSequence ?? ''
   const seqLength = codingSequence.length || 1
 
-  const positions = watch('spliceJunctionPositions') ?? NO_POSITIONS
+  const positions = watchedPositions ?? NO_POSITIONS
 
   const prevSeqLengthRef = React.useRef(seqLength)
   const prevPositionsRef = React.useRef<number[]>(
@@ -83,7 +87,7 @@ export function DNASplicer() {
     <SpliceSliderContext
       sequence={codingSequence}
       positions={positions.length ? positions : [Math.floor(seqLength / 2)]}
-      species={watch('species') ?? 'none'}
+      species={species ?? 'none'}
       onPositionsChange={setPositions}
       onSelectionChange={setSelectedSites}
     />
