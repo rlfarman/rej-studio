@@ -1,7 +1,6 @@
 'use client'
 import { Suspense, useSyncExternalStore } from 'react'
 import { GeneSearchShell } from '@/app/_components/gene-search-shell'
-import { searchGenes } from '@/features/gene-search/api/genes'
 import { usePathname } from 'next/navigation'
 import {
   Tooltip,
@@ -208,9 +207,7 @@ function HeaderContent({
       <div className="flex justify-center">
         {/* Opens empty: pre-filling the current gene made typing "kras" on
             /genes/BRCA1 search for "BRCA1kras". */}
-        {!pageHasSearch && (
-          <GeneSearchShell searchGenes={searchGenes} isDialog />
-        )}
+        {!pageHasSearch && <GeneSearchShell isDialog />}
       </div>
       {/* Empty right column keeps the search centered in the 1fr/auto/1fr grid. */}
       <div />

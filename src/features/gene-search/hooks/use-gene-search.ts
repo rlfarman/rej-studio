@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useDebouncedCallback } from 'use-debounce'
 import {
   keepPreviousData,
@@ -6,25 +6,59 @@ import {
   useQueryClient,
 } from '@tanstack/react-query'
 import type { GeneSearchResult } from '@/features/gene-search/api/gene-queries'
-import type { SearchGenesResult } from '@/features/gene-search/api/genes'
+import {
+  SEARCH_LIMITS,
+  type SearchGenesResult,
+  type SimilarGene,
+} from '@/features/gene-search/types/search'
 import type { SpeciesFilter } from '@/lib/bio/species'
 import { useSpeciesContext } from '@/stores/species-store'
 import { trackEvent } from '@/lib/analytics'
+import { geneSearchCopy } from '../copy'
 
 interface UseGeneSearchProps {
-  searchGenes: (
-    content: string,
-    species?: SpeciesFilter,
-  ) => Promise<SearchGenesResult>
   defaultQuery?: string
 }
 
-const EMPTY_RESULTS: GeneSearchResult[] = []
+/** A search response, or the message for an expected failure (4xx/5xx). */
+type GeneSearchData = SearchGenesResult & { error: string | null }
 
-export function useGeneSearch({
-  searchGenes,
-  defaultQuery,
-}: UseGeneSearchProps) {
+const EMPTY_RESULTS: GeneSearchResult[] = []
+const EMPTY_SUGGESTIONS: SimilarGene[] = []
+
+/**
+ * Fetch one palette search. `signal` comes from TanStack Query, which aborts
+ * the request when the query key changes, so a stale keystroke's search
+ * stops instead of queueing ahead of the current one. Expected failures
+ * (rate limit, signed out, backend down) resolve with their message; only
+ * network failures throw.
+ */
+async function fetchGeneSearch(
+  query: string,
+  species: SpeciesFilter,
+  signal: AbortSignal,
+): Promise<GeneSearchData> {
+  const params = new URLSearchParams({
+    q: query,
+    species,
+    limit: String(SEARCH_LIMITS.palette),
+  })
+  const res = await fetch(`/api/genes/search?${params}`, {
+    signal,
+    headers: { accept: 'application/json' },
+  })
+  const body: unknown = await res.json().catch(() => null)
+
+  if (res.ok && body) return { ...(body as SearchGenesResult), error: null }
+
+  const message =
+    body && typeof (body as { error?: unknown }).error === 'string'
+      ? (body as { error: string }).error
+      : geneSearchCopy.searchErrors.network
+  return { results: [], truncated: false, suggestions: [], error: message }
+}
+
+export function useGeneSearch({ defaultQuery }: UseGeneSearchProps = {}) {
   const queryClient = useQueryClient()
   const [query, setQueryState] = useState(defaultQuery ?? '')
   const [debouncedQuery, setDebouncedQuery] = useState(defaultQuery ?? '')
@@ -46,12 +80,15 @@ export function useGeneSearch({
 
   const trimmed = debouncedQuery.trim()
   const enabled = trimmed.length > 0
+  const queryKey = ['gene-search', trimmed, species] as const
 
   const { data, isFetching, isError, isPlaceholderData } = useQuery({
-    queryKey: ['gene-search', trimmed, species],
-    queryFn: () => searchGenes(trimmed, species),
+    queryKey,
+    queryFn: ({ signal }) => fetchGeneSearch(trimmed, species, signal),
     enabled,
-    staleTime: 30_000,
+    // A failed search shouldn't be served from cache when the user comes
+    // back to the same query; results are good for 30s.
+    staleTime: (q) => (q.state.data?.error ? 0 : 30_000),
     // Keep the previous query's results mounted while a new query loads, so
     // the list doesn't blank out between keystrokes. Pairs with a delayed
     // inline loader in the input to avoid flash-of-loading on fast queries.
@@ -61,7 +98,8 @@ export function useGeneSearch({
   // Track completed searches (fires once per unique query+species+results).
   const lastTrackedQuery = useRef('')
   useEffect(() => {
-    if (!data || !trimmed || trimmed === lastTrackedQuery.current) return
+    if (!data || data.error || !trimmed) return
+    if (trimmed === lastTrackedQuery.current) return
     lastTrackedQuery.current = trimmed
     trackEvent({
       event: 'gene_search',
@@ -71,17 +109,15 @@ export function useGeneSearch({
     })
   }, [data, trimmed, species])
 
-  // Distinguish between: network error (isError), server-side DB error
-  // (data.error), and genuine empty results (data.results.length === 0).
+  // Distinguish between: network error (isError), an expected server-side
+  // failure (data.error), and genuine empty results (data.results empty).
   const error = isError
-    ? 'Search failed. Please try again.'
+    ? geneSearchCopy.searchErrors.network
     : (data?.error ?? null)
 
-  const retry = useCallback(() => {
-    queryClient.invalidateQueries({
-      queryKey: ['gene-search', trimmed, species],
-    })
-  }, [queryClient, trimmed, species])
+  const retry = () => {
+    queryClient.invalidateQueries({ queryKey })
+  }
 
   const pendingQuery = query.trim()
 
@@ -93,6 +129,8 @@ export function useGeneSearch({
     // query's, which `keepPreviousData` keeps on screen while it loads.
     hasSearched: enabled && data !== undefined && !isPlaceholderData,
     searchResults: data?.results ?? EMPTY_RESULTS,
+    truncated: data?.truncated ?? false,
+    suggestions: data?.suggestions ?? EMPTY_SUGGESTIONS,
     // Covers the debounce window too, so the UI can show "Searching…" the
     // moment the user types instead of after the request starts.
     isLoading:

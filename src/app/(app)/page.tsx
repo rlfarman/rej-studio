@@ -1,6 +1,5 @@
 import Link from 'next/link'
 import { GeneSearchShell } from '@/app/_components/gene-search-shell'
-import { searchGenes } from '@/features/gene-search/api/genes'
 import { ArrowRight } from 'lucide-react'
 import { PageTitle } from '@/components/page-title'
 import type { Metadata } from 'next'
@@ -40,7 +39,7 @@ export default function HomePage() {
         {appCopy.home.searchPrompt}
       </PageTitle>
       <div className="mt-8 w-full text-left">
-        <GeneSearchShell searchGenes={searchGenes} />
+        <GeneSearchShell />
       </div>
       <p className="text-muted-foreground mt-5 text-sm">
         {appCopy.home.ownSequence}{' '}

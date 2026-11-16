@@ -2,27 +2,26 @@
 
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
-import { type SpeciesFilter, isSpeciesFilter } from '@/lib/bio/species'
+import type { SpeciesFilter } from '@/lib/bio/species'
 import { trackEvent } from '@/lib/analytics'
 
+/**
+ * The species filter the user picked for search (the command palette's
+ * All / Human / Mouse toggle), remembered across visits.
+ *
+ * Only an explicit choice writes it. Pages with their own species, such as a
+ * gene page or /genes?species=, keep it in their URL instead: visiting a
+ * mouse gene must not quietly narrow the next search to mouse.
+ */
 interface SpeciesState {
   species: SpeciesFilter
-  setSpecies: (value: SpeciesFilter) => void
   handleSpeciesChange: (value: SpeciesFilter) => void
-}
-
-// Read initial value from URL query string if present (overrides persisted value).
-function readSpeciesFromQuery(): SpeciesFilter | null {
-  if (typeof window === 'undefined') return null
-  const fromQuery = new URLSearchParams(window.location.search).get('species')
-  return fromQuery && isSpeciesFilter(fromQuery) ? fromQuery : null
 }
 
 export const useSpeciesStore = create<SpeciesState>()(
   persist(
     (set, get) => ({
       species: 'both',
-      setSpecies: (value) => set({ species: value }),
       handleSpeciesChange: (value) => {
         const previous = get().species
         set({ species: value })
@@ -31,26 +30,19 @@ export const useSpeciesStore = create<SpeciesState>()(
           species: value,
           previous_species: previous,
         })
-        if (typeof window !== 'undefined') {
-          const url = new URL(window.location.href)
-          url.searchParams.set('species', value)
-          window.history.pushState({}, '', url.toString())
-        }
       },
     }),
     {
       name: 'species',
+      // v0 also saved the species of every gene page visited, so a stored
+      // value may not be a choice the user made. Start everyone at 'both'.
+      version: 1,
+      migrate: () => ({ species: 'both' }),
       // window.localStorage, not the bare global: Node 26 defines its own
       // localStorage and warns when it's touched during SSR. On the server
       // `window` is undefined, createJSONStorage catches that, and the store
       // simply doesn't persist there.
       storage: createJSONStorage(() => window.localStorage),
-      // After rehydration, let URL query param override persisted state.
-      onRehydrateStorage: () => (state) => {
-        if (!state) return
-        const fromQuery = readSpeciesFromQuery()
-        if (fromQuery) state.species = fromQuery
-      },
     },
   ),
 )

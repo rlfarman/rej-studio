@@ -8,14 +8,16 @@ import {
 } from '@/components/ui/command'
 import Link from 'next/link'
 import type { GeneSearchResult } from '@/features/gene-search/api/gene-queries'
+import type { SimilarGene } from '@/features/gene-search/types/search'
 import { SpeciesIcon } from '@/components/bio/species-icon'
 import { TruncatedText } from '@/components/truncated-text'
 import { HighlightMatch } from '@/features/gene-search/utils/highlight-match'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
 import {
   CircleAlert,
   ClockIcon,
+  ArrowRight,
   ExternalLink,
   Loader2,
   RefreshCwIcon,
@@ -29,9 +31,10 @@ import type {
   JobSearchItem,
 } from '@/features/gene-search/types/domain-types'
 import { useSpeciesContext } from '@/stores/species-store'
-import type { SpeciesFilter } from '@/lib/bio/species'
+import { SPECIES_DISPLAY_NAME, type SpeciesFilter } from '@/lib/bio/species'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { geneSearchCopy } from '../copy'
+import { SearchEmptyState } from './search-empty-state'
 import { SearchShortcutHint } from '@/components/search-shortcut'
 import { SEARCH_SHORTCUT_ARIA } from '@/lib/search-shortcut'
 
@@ -155,6 +158,12 @@ interface GeneSearchInputProps {
   shortcutHint?: boolean
   hasSearched: boolean
   searchResults: GeneSearchResult[]
+  /** More genes matched than the palette shows. */
+  truncated: boolean
+  /** "Did you mean" symbols for an empty search. */
+  suggestions: SimilarGene[]
+  /** Open the full results page for the current query. */
+  onSeeAll: () => void
   isLoading: boolean
   setIsOpen: (isLoading: boolean) => void
   handleSelect: (gene: SavedGene) => void
@@ -268,6 +277,9 @@ export function GeneSearchCommand({
   shortcutHint = false,
   hasSearched,
   searchResults,
+  truncated,
+  suggestions,
+  onSeeAll,
   isLoading,
   setIsOpen,
   handleSelect,
@@ -280,7 +292,7 @@ export function GeneSearchCommand({
   pendingGene,
 }: GeneSearchInputProps) {
   const [showList, setShowList] = useState(true)
-  const { species } = useSpeciesContext()
+  const { species, handleSpeciesChange } = useSpeciesContext()
   const isMobile = useIsMobile()
 
   const internalHandleSelect = (gene: SavedGene) => {
@@ -299,40 +311,26 @@ export function GeneSearchCommand({
   // suggestion preview so the palette doesn't dominate the screen.
   const perGroupLimit = hasQuery ? 10 : 3
 
-  const displayedFavorites = useMemo(() => {
-    const speciesFiltered =
-      species === 'both'
-        ? favoriteGenes
-        : favoriteGenes.filter((g) => g.species === species)
-    return speciesFiltered
-      .filter((g) => geneMatches(g, trimmedQuery))
-      .slice(0, perGroupLimit)
-  }, [favoriteGenes, species, trimmedQuery, perGroupLimit])
+  const inSpecies = (g: SavedGene) =>
+    species === 'both' || g.species === species
 
-  const displayedRecents = useMemo(() => {
-    const favIds = new Set(displayedFavorites.map((g) => g.id))
-    const speciesFiltered =
-      species === 'both'
-        ? recentGenes
-        : recentGenes.filter((g) => g.species === species)
-    return speciesFiltered
-      .filter((g) => !favIds.has(g.id) && geneMatches(g, trimmedQuery))
-      .slice(0, perGroupLimit)
-  }, [recentGenes, species, trimmedQuery, perGroupLimit, displayedFavorites])
+  const displayedFavorites = favoriteGenes
+    .filter((g) => inSpecies(g) && geneMatches(g, trimmedQuery))
+    .slice(0, perGroupLimit)
 
-  const displayedJobs = useMemo(
-    () =>
-      jobs.filter((j) => jobMatches(j, trimmedQuery)).slice(0, perGroupLimit),
-    [jobs, trimmedQuery, perGroupLimit],
-  )
+  const favIds = new Set(displayedFavorites.map((g) => g.id))
+  const displayedRecents = recentGenes
+    .filter(
+      (g) => inSpecies(g) && !favIds.has(g.id) && geneMatches(g, trimmedQuery),
+    )
+    .slice(0, perGroupLimit)
 
-  const displayedGeneResults = useMemo(() => {
-    const seenIds = new Set([
-      ...displayedFavorites.map((g) => g.id),
-      ...displayedRecents.map((g) => g.id),
-    ])
-    return searchResults.filter((g) => !seenIds.has(g.id))
-  }, [searchResults, displayedFavorites, displayedRecents])
+  const displayedJobs = jobs
+    .filter((j) => jobMatches(j, trimmedQuery))
+    .slice(0, perGroupLimit)
+
+  const seenIds = new Set([...favIds, ...displayedRecents.map((g) => g.id)])
+  const displayedGeneResults = searchResults.filter((g) => !seenIds.has(g.id))
 
   const hasFavoriteGenes = displayedFavorites.length > 0
   const hasRecentGenes = displayedRecents.length > 0
@@ -440,19 +438,29 @@ export function GeneSearchCommand({
           )}
           {content === 'searching' && <SearchingRow query={query} />}
           {content === 'no-results' && (
-            <div className="py-6 text-center text-sm transition-opacity duration-200">
-              {geneSearchCopy.results.noMatches(query)}{' '}
-              <Link
-                href="/design-tool"
-                className="text-primary font-medium underline underline-offset-4"
-                onClick={() => {
-                  setIsOpen(false)
-                  setShowList(false)
-                }}
-              >
-                {geneSearchCopy.results.enterCustom}
-              </Link>
-            </div>
+            <SearchEmptyState
+              className="items-center px-4 py-6 text-center"
+              query={query.trim()}
+              speciesLabel={
+                species === 'both' ? undefined : SPECIES_DISPLAY_NAME[species]
+              }
+              allSpeciesAction={
+                species === 'both' ? undefined : (
+                  <button
+                    type="button"
+                    onClick={() => handleSpeciesChange('both')}
+                    className="text-primary focus-visible:ring-ring rounded-sm font-medium underline underline-offset-4 focus-visible:ring-2 focus-visible:outline-none"
+                  >
+                    {geneSearchCopy.results.searchAllSpecies}
+                  </button>
+                )
+              }
+              suggestions={suggestions}
+              onNavigate={() => {
+                setIsOpen(false)
+                setShowList(false)
+              }}
+            />
           )}
 
           {/* CommandList (role="listbox") only when there are CommandItem children. */}
@@ -573,6 +581,14 @@ export function GeneSearchCommand({
                         )}
                       </CommandItem>
                     ))}
+                    {truncated && (
+                      <CommandItem value="see-all" onSelect={onSeeAll}>
+                        <ArrowRight className="text-muted-foreground h-4 w-4" />
+                        <span className="text-muted-foreground">
+                          {copy.seeAll(query.trim())}
+                        </span>
+                      </CommandItem>
+                    )}
                   </CommandGroup>
                 </>
               )}

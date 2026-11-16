@@ -1,6 +1,5 @@
 'use client'
 
-import { useMemo } from 'react'
 import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { cn } from '@/lib/utils'
@@ -8,7 +7,6 @@ import {
   assessDesignSuitability,
   getSuitabilityConfig,
 } from '@/lib/bio/design-suitability'
-import { useSpeciesContext } from '@/stores/species-store'
 import type { IsoformListItem } from '@/features/gene-search/types/domain-types'
 import { lengthChartModel } from '@/features/gene-search/utils/length-chart'
 import { geneSearchCopy } from '../copy'
@@ -25,7 +23,6 @@ interface Props {
  * genes it would just restate the table's CDS column.
  */
 export function IsoformLengthChart({ isoforms }: Props) {
-  const { species } = useSpeciesContext()
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
@@ -35,21 +32,15 @@ export function IsoformLengthChart({ isoforms }: Props) {
     return `${pathname}?${params.toString()}#isoform-row-${id}`
   }
 
-  const { rows, model } = useMemo(() => {
-    const filtered = isoforms
-      .filter((i) => {
-        if (!species || species === 'both') return true
-        return i.species.toLowerCase() === species
-      })
-      // Shortest first so the bars read as a ramp toward the limits.
-      .sort((a, b) => a.codingSequenceLength - b.codingSequenceLength)
-    const rows = filtered.map((i) => ({
+  const rows = [...isoforms]
+    // Shortest first so the bars read as a ramp toward the limits.
+    .sort((a, b) => a.codingSequenceLength - b.codingSequenceLength)
+    .map((i) => ({
       id: i.id,
       length: i.codingSequenceLength,
       suitability: assessDesignSuitability(i.codingSequence),
     }))
-    return { rows, model: lengthChartModel(rows) }
-  }, [isoforms, species])
+  const model = lengthChartModel(rows)
 
   if (!model.show) return null
 

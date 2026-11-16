@@ -1,10 +1,8 @@
 'use client'
 
-import { useMemo } from 'react'
 import { Download } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import { useSpeciesContext } from '@/stores/species-store'
 import { downloadTextFile } from '@/lib/download-file'
 import { trackEvent } from '@/lib/analytics'
 import {
@@ -36,49 +34,34 @@ const SUITABILITY_ORDER: Suitability[] = [
 ]
 
 export function IsoformSummary({ geneSymbol, isoforms }: IsoformSummaryProps) {
-  const { species } = useSpeciesContext()
+  if (isoforms.length === 0) return null
 
-  const filtered = useMemo(
-    () =>
-      isoforms.filter((i) => {
-        if (!species || species === 'both') return true
-        return i.species.toLowerCase() === species
-      }),
-    [species, isoforms],
-  )
+  const lengths = isoforms.map((i) => i.codingSequenceLength)
+  const stats = {
+    shortest: Math.min(...lengths),
+    longest: Math.max(...lengths),
+  }
 
-  const { stats, counts } = useMemo(() => {
-    if (filtered.length === 0) return { stats: null, counts: null }
-
-    const lengths = filtered.map((i) => i.codingSequenceLength)
-    const shortest = Math.min(...lengths)
-    const longest = Math.max(...lengths)
-
-    const counts: Record<Suitability, number> = {
-      'single-aav': 0,
-      'dual-aav': 0,
-      'triple-aav': 0,
-    }
-    for (const i of filtered) {
-      counts[assessDesignSuitability(i.codingSequence)]++
-    }
-
-    return { stats: { shortest, longest }, counts }
-  }, [filtered])
-
-  if (!stats || !counts) return null
+  const counts: Record<Suitability, number> = {
+    'single-aav': 0,
+    'dual-aav': 0,
+    'triple-aav': 0,
+  }
+  for (const i of isoforms) {
+    counts[assessDesignSuitability(i.codingSequence)]++
+  }
 
   const downloadAll = () => {
     downloadTextFile(
       isoformsFastaFilename(geneSymbol),
-      buildIsoformsFasta(geneSymbol, filtered),
+      buildIsoformsFasta(geneSymbol, isoforms),
     )
     trackEvent({ event: 'sequence_download', isoform_id: `${geneSymbol}:all` })
   }
 
   return (
     <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
-      <Stat label={copy.isoforms} value={String(filtered.length)} />
+      <Stat label={copy.isoforms} value={String(isoforms.length)} />
       <Stat
         label={copy.cdsRange}
         value={
@@ -116,7 +99,7 @@ export function IsoformSummary({ geneSymbol, isoforms }: IsoformSummaryProps) {
         size="sm"
         className="ml-auto"
         onClick={downloadAll}
-        aria-label={tableCopy.downloadAllFastaAria(filtered.length)}
+        aria-label={tableCopy.downloadAllFastaAria(isoforms.length)}
       >
         <Download className="size-4" />
         {tableCopy.downloadAllFasta}

@@ -1,4 +1,13 @@
-import { searchGenes } from '@/features/gene-search/api/genes'
+import {
+  checkSearchRateLimit,
+  searchGenes,
+  SearchUnavailableError,
+} from '@/features/gene-search/api/genes'
+import {
+  SEARCH_LIMITS,
+  type SearchGenesResult,
+} from '@/features/gene-search/types/search'
+import { searchPageHref } from '@/features/gene-search/utils/search-href'
 import {
   geneHref,
   isSpecies,
@@ -15,6 +24,7 @@ import {
   type MatchedField,
 } from '@/features/gene-search/utils/matched-field'
 import { SearchRetryButton } from './search-retry-button'
+import { SearchEmptyState } from './search-empty-state'
 import { geneSearchCopy } from '../copy'
 import { connection } from 'next/server'
 
@@ -24,6 +34,39 @@ const pageCopy = geneSearchCopy.searchPage
 interface GeneSearchResultsProps {
   query: string
   species: SpeciesFilter
+}
+
+function SearchError({ message }: { message: string }) {
+  return (
+    <div
+      role="alert"
+      className="text-destructive-foreground bg-destructive/10 flex flex-col items-start gap-2 rounded-lg p-4 text-sm"
+    >
+      <span>
+        {message} {copy.errorSuffix}
+      </span>
+      <SearchRetryButton />
+    </div>
+  )
+}
+
+/** Runs the search, mapping expected failures to a message. */
+async function runSearch(
+  query: string,
+  species: SpeciesFilter,
+): Promise<{ data: SearchGenesResult } | { error: string }> {
+  const rateLimit = await checkSearchRateLimit()
+  if (!rateLimit.ok) return { error: copy.rateLimited }
+  try {
+    return {
+      data: await searchGenes({ q: query, species, limit: SEARCH_LIMITS.page }),
+    }
+  } catch (err) {
+    if (err instanceof SearchUnavailableError) {
+      return { error: geneSearchCopy.searchErrors.unavailable }
+    }
+    throw err
+  }
 }
 
 function matchedLabel(match: MatchedField) {
@@ -48,40 +91,39 @@ export async function GeneSearchResults({
   // Searching rate-limits by wall-clock time (Date.now), so it must run at
   // request time; connection() marks that explicitly for Cache Components.
   await connection()
-  const { results, error } = await searchGenes(query, species)
+  const outcome = await runSearch(query, species)
+  if ('error' in outcome) return <SearchError message={outcome.error} />
 
-  if (error) {
-    return (
-      <div
-        role="alert"
-        className="text-destructive-foreground bg-destructive/10 flex flex-col items-start gap-2 rounded-lg p-4 text-sm"
-      >
-        <span>
-          {error} {copy.errorSuffix}
-        </span>
-        <SearchRetryButton />
-      </div>
-    )
-  }
+  const { results, truncated, suggestions } = outcome.data
 
   if (results.length === 0) {
     return (
-      <p className="text-muted-foreground text-sm">
-        {copy.noMatches(query)}{' '}
-        <Link
-          href="/design-tool"
-          className="text-primary font-medium underline underline-offset-4"
-        >
-          {copy.enterCustom}
-        </Link>
-      </p>
+      <SearchEmptyState
+        query={query}
+        speciesLabel={
+          species === 'both' ? undefined : SPECIES_DISPLAY_NAME[species]
+        }
+        allSpeciesAction={
+          species === 'both' ? undefined : (
+            <Link
+              href={searchPageHref(query, 'both')}
+              className="text-primary focus-visible:ring-ring rounded-sm font-medium underline underline-offset-4 focus-visible:ring-2 focus-visible:outline-none"
+            >
+              {copy.searchAllSpecies}
+            </Link>
+          )
+        }
+        suggestions={suggestions}
+      />
     )
   }
 
   return (
     <section aria-label={pageCopy.resultsTitle(query)}>
       <p className="text-muted-foreground mb-2 text-sm" aria-live="polite">
-        {pageCopy.resultCount(results.length)}
+        {truncated
+          ? pageCopy.truncated(results.length)
+          : pageCopy.resultCount(results.length)}
       </p>
       <ul className="divide-border divide-y border-y">
         {results.map((gene) => {
@@ -100,7 +142,6 @@ export async function GeneSearchResults({
                   gene.species,
                   gene.matchedIsoformId,
                 )}
-                prefetch
                 className="focus-visible:ring-ring grid min-w-0 flex-1 grid-cols-[5rem_1fr] items-baseline gap-x-4 gap-y-1 rounded-sm px-2 py-3 focus-visible:ring-2 focus-visible:outline-none sm:grid-cols-[7rem_1fr]"
               >
                 <span className="truncate font-mono text-sm font-semibold">
@@ -152,7 +193,7 @@ export async function GeneSearchResults({
 export function GeneSearchResultsLoading() {
   return (
     <p className="text-muted-foreground text-sm" aria-live="polite">
-      Loading…
+      {pageCopy.loading}
     </p>
   )
 }

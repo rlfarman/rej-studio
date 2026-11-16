@@ -14,7 +14,7 @@
  */
 
 import { sql } from 'drizzle-orm'
-import { getDb } from '../src/drizzle/db'
+import { getDb } from '../src/drizzle/client'
 import { genes, isoforms } from '../src/drizzle/schema'
 
 let failures = 0

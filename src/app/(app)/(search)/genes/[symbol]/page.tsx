@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { Badge } from '@/components/ui/badge'
 import { getGeneBySymbol } from '@/features/gene-search/api/genes'
 import { getIsoformsByGene } from '@/features/gene-search/api/isoforms'
@@ -12,7 +12,6 @@ import { Suspense } from 'react'
 import { FavoriteGeneButton } from '@/features/gene-search/components/favorite-gene-button'
 import { GeneJsonLd } from '@/features/gene-search/components/gene-jsonld'
 import { GeneBreadcrumbJsonLd } from '@/features/gene-search/components/gene-breadcrumb-jsonld'
-import { SpeciesSync } from '@/features/gene-search/components/species-sync'
 import { TrackOnMount } from '@/components/track-on-mount'
 import { findBySymbol } from '@/features/disease-associations/api/associations'
 import { GenePhenotypes } from '@/features/disease-associations/components/gene-phenotypes'
@@ -29,22 +28,50 @@ import {
   type Species,
 } from '@/lib/bio/species'
 
+type SearchParams = Record<string, string | string[] | undefined>
+
 type Props = {
   params: Promise<{ symbol: string }>
-  searchParams: Promise<{ species?: string; isoform?: string }>
+  searchParams: Promise<SearchParams>
 }
 
 const getCachedGeneBySymbol = cache(getGeneBySymbol)
 
+function firstParam(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value
+}
+
+/** The gene's URL with its canonical symbol casing, keeping every query param. */
+function canonicalHref(symbol: string, searchParams: SearchParams) {
+  const qs = new URLSearchParams()
+  for (const [key, value] of Object.entries(searchParams)) {
+    for (const v of [value ?? []].flat()) qs.append(key, v)
+  }
+  const query = qs.toString()
+  return `/genes/${encodeURIComponent(symbol)}${query ? `?${query}` : ''}`
+}
+
+/**
+ * Symbols are looked up case-insensitively, so /genes/tp53 finds TP53; a URL
+ * with any other casing redirects to the canonical one so there's a single
+ * address per gene (bookmarks, favorites, canonical metadata).
+ */
 async function resolveGene({ params, searchParams }: Props) {
   const { symbol } = await params
-  const { species } = await searchParams
-  return getCachedGeneBySymbol(symbol, parseSpeciesParam(species))
+  const query = await searchParams
+  const gene = await getCachedGeneBySymbol(
+    symbol,
+    parseSpeciesParam(firstParam(query.species)),
+  )
+  if (gene && gene.symbol !== symbol) {
+    redirect(canonicalHref(gene.symbol, query))
+  }
+  return gene
 }
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const { symbol } = await props.params
-  const { species } = await props.searchParams
+  const species = firstParam((await props.searchParams).species)
   const gene = await resolveGene(props)
 
   const displaySymbol = gene?.symbol ?? symbol
@@ -150,15 +177,15 @@ async function GeneHeaderMeta(props: Props) {
 
   return (
     <>
-      <SpeciesSync species={gene.species} />
       <GeneBreadcrumbJsonLd gene={gene} />
       <p className="text-muted-foreground text-sm md:text-base">{gene.name}</p>
       <div className="flex items-center gap-3">
+        {/* py-1/-my-1 grows the tap target to 24px without moving the row. */}
         <a
           href={`https://ensembl.org/id/${gene.id}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 font-mono text-xs transition-colors"
+          className="text-muted-foreground hover:text-foreground focus-visible:ring-ring -my-1 inline-flex min-h-6 items-center gap-1.5 rounded-sm py-1 font-mono text-xs transition-colors focus-visible:ring-2 focus-visible:outline-none"
         >
           {gene.id}
           <ExternalLink className="size-3" />
@@ -189,7 +216,7 @@ async function GeneIsoforms(props: Props) {
   const gene = await resolveGene(props)
   if (!gene) notFound()
 
-  const { isoform: highlightedIsoformId } = await props.searchParams
+  const highlightedIsoformId = firstParam((await props.searchParams).isoform)
   // Associations are human-only; key by symbol since /genes/<sym> may resolve to
   // mouse by default and mouse Ensembl IDs (ENSMUSG...) never match human data.
   const associationRow =

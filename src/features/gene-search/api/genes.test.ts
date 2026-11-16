@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 // Mock the query layer (tested separately in DB integration tests)
 vi.mock('@/features/gene-search/api/gene-queries', () => ({
@@ -7,11 +7,9 @@ vi.mock('@/features/gene-search/api/gene-queries', () => ({
   fetchSimilarGenes: vi.fn(),
 }))
 
-// Mock rate limiter to allow all by default
+const { mockCheck } = vi.hoisted(() => ({ mockCheck: vi.fn() }))
 vi.mock('@/lib/upstash', () => ({
-  createUpstashRateLimiter: () => ({
-    check: vi.fn(async () => ({ ok: true, remaining: 29, resetMs: 60000 })),
-  }),
+  createUpstashRateLimiter: () => ({ check: mockCheck }),
   redis: null,
 }))
 
@@ -20,78 +18,94 @@ import {
   fetchGeneBySymbol,
   fetchSimilarGenes,
 } from '@/features/gene-search/api/gene-queries'
-import { searchGenes, getGeneBySymbol, findSimilarGenes } from './genes'
+import {
+  checkSearchRateLimit,
+  findSimilarGenes,
+  getGeneBySymbol,
+  searchGenes,
+  SearchUnavailableError,
+} from './genes'
 
 const mockFetchBySearch = vi.mocked(fetchGenesBySearch)
 const mockFetchBySymbol = vi.mocked(fetchGeneBySymbol)
 const mockFetchSimilar = vi.mocked(fetchSimilarGenes)
 
+const gene = { id: 'ENSG1', symbol: 'BRCA1', name: 'BRCA1', species: 'human' }
+
 beforeEach(() => {
   vi.clearAllMocks()
-  mockFetchBySearch.mockResolvedValue([])
-  mockFetchBySymbol.mockResolvedValue(null as any)
+  mockFetchBySearch.mockResolvedValue({ results: [], truncated: false })
+  mockFetchBySymbol.mockResolvedValue(null as never)
   mockFetchSimilar.mockResolvedValue([])
+  mockCheck.mockResolvedValue({ ok: true, remaining: 29, resetMs: 60_000 })
 })
 
 describe('searchGenes', () => {
-  it('returns results for valid query', async () => {
-    const gene = {
-      id: 'ENSG1',
-      symbol: 'BRCA1',
-      name: 'BRCA1',
-      species: 'human',
-    }
-    mockFetchBySearch.mockResolvedValue([gene])
-    const result = await searchGenes('BRCA1')
-    expect(result.results).toEqual([gene])
-    expect(result.error).toBeUndefined()
+  const request = { q: 'BRCA1', species: 'both', limit: 6 } as const
+
+  it('returns results, the truncated flag, and no suggestions', async () => {
+    mockFetchBySearch.mockResolvedValue({ results: [gene], truncated: true })
+    const result = await searchGenes(request)
+    expect(result).toEqual({
+      results: [gene],
+      truncated: true,
+      suggestions: [],
+    })
+    expect(mockFetchBySearch).toHaveBeenCalledWith('BRCA1', 'both', 6)
+    expect(mockFetchSimilar).not.toHaveBeenCalled()
   })
 
-  it('returns empty for empty query without calling DB', async () => {
-    const result = await searchGenes('')
+  it('trims the query before searching', async () => {
+    await searchGenes({ ...request, q: '  BRCA1  ', species: 'human' })
+    expect(mockFetchBySearch).toHaveBeenCalledWith('BRCA1', 'human', 6)
+  })
+
+  it('returns empty for a whitespace-only query without calling the DB', async () => {
+    const result = await searchGenes({ ...request, q: '   ' })
     expect(result.results).toEqual([])
     expect(mockFetchBySearch).not.toHaveBeenCalled()
   })
 
-  it('returns empty for whitespace-only query', async () => {
-    const result = await searchGenes('   ')
-    expect(result.results).toEqual([])
-    expect(mockFetchBySearch).not.toHaveBeenCalled()
+  it('suggests similar symbols when nothing matched', async () => {
+    mockFetchSimilar.mockResolvedValue([{ symbol: 'BRCA1', species: 'human' }])
+    const result = await searchGenes({ ...request, q: 'BRAC1' })
+    expect(mockFetchSimilar).toHaveBeenCalledWith('brac1')
+    expect(result.suggestions).toEqual([{ symbol: 'BRCA1', species: 'human' }])
   })
 
-  it('rejects query over 200 chars', async () => {
-    await expect(searchGenes('A'.repeat(201))).rejects.toThrow()
+  it("doesn't suggest symbols for a phrase", async () => {
+    await searchGenes({ ...request, q: 'cystic fibrosis' })
+    expect(mockFetchSimilar).not.toHaveBeenCalled()
   })
 
-  it('returns error flag on DB failure', async () => {
+  it('throws SearchUnavailableError on DB failure', async () => {
     mockFetchBySearch.mockRejectedValue(new Error('DB down'))
-    const result = await searchGenes('BRCA1')
-    expect(result.results).toEqual([])
-    expect(result.error).toBe('Search is temporarily unavailable.')
+    await expect(searchGenes(request)).rejects.toBeInstanceOf(
+      SearchUnavailableError,
+    )
+  })
+})
+
+describe('checkSearchRateLimit', () => {
+  it('allows a request within budget', async () => {
+    expect(await checkSearchRateLimit()).toEqual({ ok: true })
+    expect(mockCheck).toHaveBeenCalledWith('127.0.0.1')
   })
 
-  it('passes species filter to query', async () => {
-    await searchGenes('BRCA1', 'human')
-    expect(mockFetchBySearch).toHaveBeenCalledWith('BRCA1', 'human')
-  })
-
-  it('defaults species to both', async () => {
-    await searchGenes('BRCA1')
-    expect(mockFetchBySearch).toHaveBeenCalledWith('BRCA1', 'both')
+  it('reports seconds until reset when over budget', async () => {
+    mockCheck.mockResolvedValue({ ok: false, remaining: 0, resetMs: 4_200 })
+    expect(await checkSearchRateLimit()).toEqual({
+      ok: false,
+      retryAfterSeconds: 5,
+    })
   })
 })
 
 describe('getGeneBySymbol', () => {
   it('returns gene for valid symbol', async () => {
-    const gene = {
-      id: 'ENSG1',
-      symbol: 'TP53',
-      name: 'Tumor Protein p53',
-      species: 'human',
-    }
     mockFetchBySymbol.mockResolvedValue(gene)
-    const result = await getGeneBySymbol('TP53')
-    expect(result).toEqual(gene)
+    expect(await getGeneBySymbol('brca1')).toEqual(gene)
+    expect(mockFetchBySymbol).toHaveBeenCalledWith('brca1', undefined)
   })
 
   it('rejects empty symbol', async () => {
@@ -122,23 +136,8 @@ describe('findSimilarGenes', () => {
     expect(result).toEqual([])
   })
 
-  it('truncates input to 20 chars', async () => {
+  it('lowercases and truncates input to 20 chars', async () => {
     await findSimilarGenes('A'.repeat(30))
-    expect(mockFetchSimilar).toHaveBeenCalledWith('A'.repeat(20))
-  })
-})
-
-describe('searchGenes auth gate', () => {
-  afterEach(() => {
-    vi.unstubAllEnvs()
-  })
-
-  it('rejects callers without a session when the gate is on', async () => {
-    vi.stubEnv('BASIC_AUTH_PASSWORD', 'hunter2')
-    vi.stubEnv('SESSION_SECRET', 'test-secret-that-is-at-least-32-chars-long')
-    await expect(searchGenes('BRCA1')).rejects.toThrow(
-      'Authentication required.',
-    )
-    expect(mockFetchBySearch).not.toHaveBeenCalled()
+    expect(mockFetchSimilar).toHaveBeenCalledWith('a'.repeat(20))
   })
 })
