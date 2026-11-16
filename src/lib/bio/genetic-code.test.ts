@@ -4,6 +4,7 @@ import {
   AMINO_ACID_NAMES,
   GENETIC_CODE,
   toCodons,
+  translate,
   translateCodon,
 } from './genetic-code'
 
@@ -97,5 +98,30 @@ describe('toCodons', () => {
 
   it('returns empty for <3 characters', () => {
     expect(toCodons('AT')).toEqual([])
+  })
+})
+
+// ---------------------------------------------------------------------------
+// translate
+// ---------------------------------------------------------------------------
+describe('translate', () => {
+  it('translates a full coding sequence including the stop', () => {
+    expect(translate('ATGAAATGA')).toBe('MK*')
+  })
+
+  it('accepts RNA and lowercase input', () => {
+    expect(translate('augaaauga')).toBe('MK*')
+  })
+
+  it('marks unrecognised codons as X', () => {
+    expect(translate('ATGNNNTAA')).toBe('MX*')
+  })
+
+  it('ignores trailing bases that do not form a full codon', () => {
+    expect(translate('ATGAAAT')).toBe('MK')
+  })
+
+  it('returns an empty string for sequences shorter than a codon', () => {
+    expect(translate('AT')).toBe('')
   })
 })

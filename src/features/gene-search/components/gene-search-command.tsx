@@ -333,6 +333,14 @@ export function GeneSearchCommand({
       ) : (
         <SpeciesToggle />
       )}
+      {/* cmdk's input always sets aria-controls to the list's id, and its own
+          attributes win over props, so keep an empty, hidden list mounted
+          whenever the real one isn't. Hidden, it isn't an empty listbox to
+          assistive tech, but the reference resolves (axe
+          aria-valid-attr-value, which failed Lighthouse CI). */}
+      {(isNavigating || !showList || content !== 'results') && (
+        <CommandList hidden />
+      )}
       {!isNavigating && showList && (
         <>
           {content === 'error' && (
