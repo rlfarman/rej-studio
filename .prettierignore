@@ -21,3 +21,9 @@ rust/optimizer/tests/fixtures
 # Static gene corpus built by `pnpm corpus:build` (checked byte-for-byte
 # against a rebuild in corpus/build.test.ts)
 public/gene-data
+
+# Build output and tool scratch directories that git ignores but Prettier
+# can't see: it reads only the root .gitignore, not rust/.gitignore, so
+# `pnpm format:check` failed for anyone who had built the Rust crate.
+rust/target
+.claude-preview
