@@ -1,3 +1,4 @@
+import 'server-only'
 import { z } from 'zod'
 
 /**
@@ -7,9 +8,22 @@ import { z } from 'zod'
  *   - Typos and missing vars fail fast at boot with a clear error
  *   - Types are derived from the schema (no `string | undefined` noise)
  *   - Dev-only vs. production-required is encoded in one place
+ *
+ * Server-only: the object includes secrets, so importing it from a Client
+ * Component fails the build. Client code reads NEXT_PUBLIC_* vars directly.
  */
 
 const isProd = process.env.NODE_ENV === 'production'
+
+// Treat `FOO=` in a .env file as unset rather than as an empty string.
+const optionalUrl = z.preprocess(
+  (v) => (v === '' ? undefined : v),
+  z.url().optional(),
+)
+const optionalString = z.preprocess(
+  (v) => (v === '' ? undefined : v),
+  z.string().optional(),
+)
 
 const serverSchema = z
   .object({
@@ -26,14 +40,12 @@ const serverSchema = z
     // Compute backend. In production, must be "modal". In dev, "local" (or
     // unset) falls through to the uvicorn dev server.
     COMPUTE_BACKEND: z.enum(['modal', 'local']).optional(),
-    MODAL_API_URL: z.preprocess(
-      (v) => (v === '' ? undefined : v),
-      z.string().url().optional(),
-    ),
-    LOCAL_API_URL: z.preprocess(
-      (v) => (v === '' ? undefined : v),
-      z.string().url().optional(),
-    ),
+    MODAL_API_URL: optionalUrl,
+    // Bearer token the server sends to the Modal endpoint, so the optimizer
+    // isn't callable by anyone who learns its URL. Optional for now; a
+    // production deploy without it logs a warning (see parseEnv).
+    MODAL_API_TOKEN: optionalString,
+    LOCAL_API_URL: optionalUrl,
 
     // Shared-password auth for the site. Gate only engages when
     // BASIC_AUTH_PASSWORD is set; SESSION_SECRET is then required so we can
@@ -42,9 +54,6 @@ const serverSchema = z
     BASIC_AUTH_USER: z.string().optional(),
     BASIC_AUTH_PASSWORD: z.string().optional(),
     SESSION_SECRET: z.string().min(32).optional(),
-
-    // Vercel Blob (optional — only needed when file uploads are used).
-    BLOB_READ_WRITE_TOKEN: z.string().optional(),
 
     // Maintenance banner — when set, shows amber banner site-wide.
     MAINTENANCE_MESSAGE: z.string().optional(),
@@ -58,7 +67,7 @@ const serverSchema = z
     SENTRY_AUTH_TOKEN: z.string().optional(),
 
     // OpenTelemetry — vendor-neutral. Axiom, Grafana, Honeycomb, etc.
-    OTEL_EXPORTER_OTLP_ENDPOINT: z.string().url().optional(),
+    OTEL_EXPORTER_OTLP_ENDPOINT: optionalUrl,
     OTEL_EXPORTER_OTLP_HEADERS: z.string().optional(),
     OTEL_SERVICE_NAME: z.string().optional(),
   })
@@ -68,7 +77,7 @@ const serverSchema = z
       if (!data.DATABASE_URL || !data.DATABASE_URL.startsWith('postgres')) {
         ctx.addIssue({
           path: ['DATABASE_URL'],
-          code: z.ZodIssueCode.custom,
+          code: 'custom',
           message:
             'DATABASE_URL must be a Postgres connection string in production (PGlite is dev-only).',
         })
@@ -76,7 +85,7 @@ const serverSchema = z
       if (data.COMPUTE_BACKEND !== 'modal') {
         ctx.addIssue({
           path: ['COMPUTE_BACKEND'],
-          code: z.ZodIssueCode.custom,
+          code: 'custom',
           message:
             'COMPUTE_BACKEND=modal is required in production (Vercel has no Python runtime).',
         })
@@ -84,7 +93,7 @@ const serverSchema = z
       if (!data.MODAL_API_URL) {
         ctx.addIssue({
           path: ['MODAL_API_URL'],
-          code: z.ZodIssueCode.custom,
+          code: 'custom',
           message:
             'MODAL_API_URL is required when COMPUTE_BACKEND=modal (production).',
         })
@@ -94,7 +103,7 @@ const serverSchema = z
     if (data.COMPUTE_BACKEND === 'modal' && !data.MODAL_API_URL) {
       ctx.addIssue({
         path: ['MODAL_API_URL'],
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         message: 'MODAL_API_URL is required when COMPUTE_BACKEND=modal.',
       })
     }
@@ -102,7 +111,7 @@ const serverSchema = z
     if (data.BASIC_AUTH_PASSWORD && !data.SESSION_SECRET) {
       ctx.addIssue({
         path: ['SESSION_SECRET'],
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         message:
           'SESSION_SECRET (32+ chars) is required when BASIC_AUTH_PASSWORD is set.',
       })
@@ -118,12 +127,12 @@ const clientSchema = z
       .optional(),
 
     // Sentry DSN (client-side). When unset, Sentry is not initialised.
-    NEXT_PUBLIC_SENTRY_DSN: z.string().url().optional(),
+    NEXT_PUBLIC_SENTRY_DSN: optionalUrl,
 
     // Canonical site URL for metadata, OG images, sitemap, and robots.txt.
     // Required in production to prevent hardcoded fallback from silently
     // serving the wrong URL. In dev, defaults to https://rejstudio.com.
-    NEXT_PUBLIC_SITE_URL: z.string().url().optional(),
+    NEXT_PUBLIC_SITE_URL: optionalUrl,
 
     // Feature flag: enable the experimental multi-split (two split points)
     // UI in the design tool. Hidden by default for the preview release; the
@@ -135,7 +144,7 @@ const clientSchema = z
     if (isProd && !data.NEXT_PUBLIC_SITE_URL) {
       ctx.addIssue({
         path: ['NEXT_PUBLIC_SITE_URL'],
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         message:
           'NEXT_PUBLIC_SITE_URL is required in production to ensure correct canonical URLs, OG images, and sitemap entries.',
       })
@@ -161,7 +170,17 @@ function parseEnv() {
     )
   }
 
-  return { ...serverResult.data, ...clientResult.data }
+  const env = { ...serverResult.data, ...clientResult.data }
+
+  // Warn rather than fail: the Modal endpoint can't require the token until
+  // every deploy sends one, and failing here would break those builds.
+  if (isProd && env.COMPUTE_BACKEND === 'modal' && !env.MODAL_API_TOKEN) {
+    console.warn(
+      '[env] MODAL_API_TOKEN is not set: requests to MODAL_API_URL are unauthenticated.',
+    )
+  }
+
+  return env
 }
 
 export const env = parseEnv()
