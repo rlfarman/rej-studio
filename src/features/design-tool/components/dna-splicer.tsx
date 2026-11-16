@@ -5,12 +5,16 @@ import { useFormContext } from 'react-hook-form'
 import { FormValues, type SelectedWggwSite } from '../types/form-schema'
 import { SpliceSliderContext } from './splice-slider-context'
 
+// Stable fallback so an unset field doesn't hand the effect below a new
+// array (and so a changed dependency) on every render.
+const NO_POSITIONS: number[] = []
+
 export function DNASplicer() {
   const { setValue, watch } = useFormContext<FormValues>()
   const codingSequence = watch('codingSequence') ?? ''
   const seqLength = codingSequence.length || 1
 
-  const positions = watch('spliceJunctionPositions') ?? []
+  const positions = watch('spliceJunctionPositions') ?? NO_POSITIONS
 
   const prevSeqLengthRef = React.useRef(seqLength)
   const prevPositionsRef = React.useRef<number[]>(
