@@ -4,6 +4,8 @@ import { useMemo } from 'react'
 import { toCodons } from '@/lib/bio/genetic-code'
 import { getRelativePreference } from '@/lib/bio/codon-usage'
 import { type Species } from '@/lib/bio/species'
+import { ChartDataTable } from '@/components/chart-data-table'
+import { designToolCopy } from '../copy'
 
 interface Props {
   original: string
@@ -18,6 +20,9 @@ interface CellDelta {
   before: number | null
   after: number | null
   delta: number | null
+  /** The codons themselves, so the table can name what changed. */
+  from: string
+  to: string
 }
 
 /**
@@ -52,7 +57,7 @@ export function CodonDeltaStrip({ original, optimized, species }: Props) {
         if (delta > 0.05) improvedCount++
         else if (delta < -0.05) regressedCount++
       }
-      cells.push({ idx: i, before: pb, after: pa, delta })
+      cells.push({ idx: i, before: pb, after: pa, delta, from: b, to: a })
     }
 
     return {
@@ -130,6 +135,23 @@ export function CodonDeltaStrip({ original, optimized, species }: Props) {
         <span className="from-chart-2/70 via-muted-foreground/25 to-chart-1/70 h-2 flex-1 rounded-sm bg-gradient-to-r" />
         <span>improved</span>
       </div>
+      {/* Only the codons that changed: an unchanged codon is not a data point
+          the reader is looking for, and there can be hundreds of them. */}
+      <ChartDataTable
+        storageKey="codon-delta"
+        caption={designToolCopy.results.charts.codonDelta.caption}
+        columns={designToolCopy.results.charts.codonDelta.columns}
+        rows={cells
+          .filter((cell) => cell.from !== cell.to)
+          .map((cell) => [
+            cell.idx + 1,
+            cell.from,
+            cell.before === null ? '\u2014' : Number((cell.before * 100).toFixed(1)),
+            cell.to,
+            cell.after === null ? '\u2014' : Number((cell.after * 100).toFixed(1)),
+          ])}
+        csvFilename="codon-usage-delta.csv"
+      />
     </div>
   )
 }

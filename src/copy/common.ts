@@ -1,4 +1,10 @@
 export const commonCopy = {
+  chartData: {
+    show: 'View as table',
+    hide: 'Hide table',
+    download: 'CSV',
+    downloadAria: (caption: string) => `Download ${caption} as CSV`,
+  },
   brandName: 'REJ Studio',
   sidebar: {
     open: 'Open sidebar',

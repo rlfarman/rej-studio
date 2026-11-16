@@ -2,6 +2,11 @@
 
 import { useMemo } from 'react'
 import { Activity, GitCompareArrows } from 'lucide-react'
+import {
+  type ChartCell,
+  ChartDataTable,
+} from '@/components/chart-data-table'
+import { designToolCopy } from '../copy'
 import { slidingGcContent, changeDensity } from '@/lib/bio/sequence-utils'
 
 interface Props {
@@ -19,10 +24,16 @@ const CHART_PAD_X = 4
 const CHART_PAD_Y = 8
 
 function GcContentTrack({ original, optimized, splitPoint }: Props) {
-  const { beforePath, afterPath, maxLen } = useMemo(() => {
+  const { beforePath, afterPath, maxLen, rows, windowSize } = useMemo(() => {
     const maxLen = Math.max(original.length, optimized.length)
     if (maxLen === 0) {
-      return { beforePath: '', afterPath: '', maxLen: 0 }
+      return {
+        beforePath: '',
+        afterPath: '',
+        maxLen: 0,
+        rows: [] as ChartCell[][],
+        windowSize: 0,
+      }
     }
     // Scale window with sequence length so short sequences still get detail.
     const windowSize = Math.max(30, Math.min(120, Math.round(maxLen / 25)))
@@ -43,10 +54,24 @@ function GcContentTrack({ original, optimized, splitPoint }: Props) {
         .join(' ')
     }
 
+    // The same samples the lines are drawn from, as rows. One table rather
+    // than two, because the point of the chart is the comparison.
+    const afterByPosition = new Map(after.map((point) => [point.position, point.gc]))
+    const rows: ChartCell[][] = before.map((point) => {
+      const optimizedGc = afterByPosition.get(point.position)
+      return [
+        point.position,
+        Number(point.gc.toFixed(1)),
+        optimizedGc === undefined ? '\u2014' : Number(optimizedGc.toFixed(1)),
+      ]
+    })
+
     return {
       beforePath: toPath(before),
       afterPath: toPath(after),
       maxLen,
+      rows,
+      windowSize,
     }
   }, [original, optimized])
 
@@ -139,6 +164,13 @@ function GcContentTrack({ original, optimized, splitPoint }: Props) {
           />
         </svg>
       </div>
+      <ChartDataTable
+        storageKey="sequence"
+        caption={designToolCopy.results.charts.gcContent.caption(windowSize)}
+        columns={designToolCopy.results.charts.gcContent.columns}
+        rows={rows}
+        csvFilename="gc-content.csv"
+      />
       <div className="text-muted-foreground type-micro flex justify-between tabular-nums">
         <span>0</span>
         <span>{Math.round(maxLen / 2).toLocaleString()}</span>
@@ -213,6 +245,20 @@ function ChangeDensityTrack({ original, optimized, splitPoint }: Props) {
         )}
         <span>3′ · {len.toLocaleString()} bp</span>
       </div>
+      <ChartDataTable
+        storageKey="sequence"
+        caption={designToolCopy.results.charts.changeDensity.caption}
+        columns={designToolCopy.results.charts.changeDensity.columns}
+        rows={bins.map((bin) => [
+          bin.start,
+          bin.end,
+          bin.changes,
+          bin.binSize > 0
+            ? Number(((bin.changes / bin.binSize) * 100).toFixed(1))
+            : 0,
+        ])}
+        csvFilename="change-density.csv"
+      />
     </div>
   )
 }
