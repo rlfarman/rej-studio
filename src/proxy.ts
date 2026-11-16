@@ -103,11 +103,18 @@ function rejectUnauthenticated(req: NextRequest): NextResponse {
  * - Sentry: none. The SDK is bundled, and events go through the same-origin
  *   /monitoring tunnel (`tunnelRoute` in next.config.ts).
  * - Modal: none. Only server actions call the optimizer, never the browser.
+ * - The static gene corpus, when NEXT_PUBLIC_GENE_DATA_URL points at
+ *   another origin (R2, a CDN): the browser downloads the search index.
  *
  * `upgrade-insecure-requests` is only sent over https: on a plain-http
  * production server (`next start` on localhost, as Lighthouse CI runs it)
  * it would rewrite same-origin asset URLs to https and break the page.
  */
+const GENE_DATA_ORIGIN = (() => {
+  const url = process.env.NEXT_PUBLIC_GENE_DATA_URL
+  return url && /^https?:\/\//.test(url) ? new URL(url).origin : null
+})()
+
 function buildCsp({ https }: { https: boolean }): string {
   return [
     "default-src 'self'",
@@ -115,7 +122,7 @@ function buildCsp({ https }: { https: boolean }): string {
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob: https://*.google-analytics.com https://*.googletagmanager.com",
     "font-src 'self'",
-    "connect-src 'self' https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com",
+    `connect-src 'self' https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com${GENE_DATA_ORIGIN ? ` ${GENE_DATA_ORIGIN}` : ''}`,
     "object-src 'none'",
     "frame-ancestors 'none'",
     "base-uri 'self'",

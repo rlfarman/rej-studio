@@ -133,7 +133,7 @@ export function CodonChanges({ original, optimized, splitPoint }: Props) {
           <summary className="text-muted-foreground cursor-pointer text-xs hover:underline">
             Show codon-by-codon diff ({changes.length})
           </summary>
-          <div className="mt-2 max-h-64 overflow-auto rounded-md border">
+          <div className="mt-2 max-h-64 overflow-auto rounded-2xl border">
             <table className="w-full min-w-[32rem] text-xs">
               <thead className="bg-muted/50 sticky top-0">
                 <tr className="text-left">

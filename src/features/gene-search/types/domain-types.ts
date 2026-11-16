@@ -1,6 +1,6 @@
-import type { SelectGene, SelectIsoform } from '@/drizzle/schema'
+import type { CorpusGene, CorpusIsoform } from '../corpus/format'
 
-export type SavedGene = Pick<SelectGene, 'id' | 'name' | 'symbol'> & {
+export type SavedGene = Pick<CorpusGene, 'id' | 'name' | 'symbol'> & {
   species?: string
   matchedIsoformId?: string
   // True when this entry was added by the seed-data demo action. Used to
@@ -9,15 +9,7 @@ export type SavedGene = Pick<SelectGene, 'id' | 'name' | 'symbol'> & {
   isSeed?: boolean
 }
 
-export type IsoformListItem = Pick<
-  SelectIsoform,
-  | 'id'
-  | 'codingSequence'
-  | 'proteinSequence'
-  | 'codingSequenceLength'
-  | 'proteinSequenceLength'
-  | 'species'
->
+export type IsoformListItem = CorpusIsoform
 
 // Minimal projection of a design-tool job used by the command palette. Kept
 // here (not imported from `design-tool`) so the gene-search feature stays

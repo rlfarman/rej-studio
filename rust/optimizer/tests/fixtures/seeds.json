@@ -1,0 +1,113 @@
+[
+ {
+  "name": "default",
+  "options": {
+   "codon_optimize": "human",
+   "codon_optimize_weight": 1.0,
+   "enforce_gc": true,
+   "ensure_wggw": true,
+   "minimize_CpGs": true,
+   "minimize_CpGs_weight": 1.0,
+   "reduce_kmer_complexity": true,
+   "reduce_kmer_complexity_weight": 1.0,
+   "remove_cryptic_ss": true,
+   "remove_cryptic_ss_weight": 1.0,
+   "selected_wggw_site": null,
+   "split_point": null,
+   "stim_3": false,
+   "stim_5": false,
+   "wggw_threshold": 0
+  },
+  "seed": 1405034237,
+  "sequence": "ATGCGTAAGCTGGACTCCGAAGACGATCTGGAACGTCTGAAAGCGACCCTGGAAGGCGTTGACTCCGTGATCACCGATTGA"
+ },
+ {
+  "name": "mouse",
+  "options": {
+   "codon_optimize": "mouse",
+   "codon_optimize_weight": 1.0,
+   "enforce_gc": true,
+   "ensure_wggw": true,
+   "minimize_CpGs": true,
+   "minimize_CpGs_weight": 1.0,
+   "reduce_kmer_complexity": true,
+   "reduce_kmer_complexity_weight": 1.0,
+   "remove_cryptic_ss": true,
+   "remove_cryptic_ss_weight": 1.0,
+   "selected_wggw_site": null,
+   "split_point": null,
+   "stim_3": false,
+   "stim_5": false,
+   "wggw_threshold": 0
+  },
+  "seed": 2483458553,
+  "sequence": "ATGCGTAAGCTGGACTCCGAAGACGATCTGGAACGTCTGAAAGCGACCCTGGAAGGCGTTGACTCCGTGATCACCGATTGA"
+ },
+ {
+  "name": "explicit_k",
+  "options": {
+   "codon_optimize": "human",
+   "codon_optimize_weight": 1.0,
+   "enforce_gc": true,
+   "ensure_wggw": true,
+   "minimize_CpGs": true,
+   "minimize_CpGs_weight": 1.0,
+   "reduce_kmer_complexity": true,
+   "reduce_kmer_complexity_k": 8,
+   "reduce_kmer_complexity_weight": 1.0,
+   "remove_cryptic_ss": true,
+   "remove_cryptic_ss_weight": 1.0,
+   "selected_wggw_site": null,
+   "split_point": null,
+   "stim_3": false,
+   "stim_5": false,
+   "wggw_threshold": 0
+  },
+  "seed": 3533376929,
+  "sequence": "ATGCGTAAGCTGGACTCCGAAGACGATCTGGAACGTCTGAAAGCGACCCTGGAAGGCGTTGACTCCGTGATCACCGATTGA"
+ },
+ {
+  "name": "split_and_stim",
+  "options": {
+   "codon_optimize": "human",
+   "codon_optimize_weight": 1.0,
+   "enforce_gc": true,
+   "ensure_wggw": true,
+   "minimize_CpGs": true,
+   "minimize_CpGs_weight": 1.0,
+   "reduce_kmer_complexity": true,
+   "reduce_kmer_complexity_weight": 1.0,
+   "remove_cryptic_ss": true,
+   "remove_cryptic_ss_weight": 1.0,
+   "selected_wggw_site": null,
+   "split_point": 45,
+   "stim_3": true,
+   "stim_5": true,
+   "wggw_threshold": 0
+  },
+  "seed": 3062606203,
+  "sequence": "ATGCGTAAGCTGGACTCCGAAGACGATCTGGAACGTCTGAAAGCGACCCTGGAAGGCGTTGACTCCGTGATCACCGATTGA"
+ },
+ {
+  "name": "repetitive",
+  "options": {
+   "codon_optimize": "human",
+   "codon_optimize_weight": 1.0,
+   "enforce_gc": true,
+   "ensure_wggw": true,
+   "minimize_CpGs": true,
+   "minimize_CpGs_weight": 1.0,
+   "reduce_kmer_complexity": true,
+   "reduce_kmer_complexity_weight": 1.0,
+   "remove_cryptic_ss": true,
+   "remove_cryptic_ss_weight": 1.0,
+   "selected_wggw_site": null,
+   "split_point": null,
+   "stim_3": false,
+   "stim_5": false,
+   "wggw_threshold": 0
+  },
+  "seed": 3816137309,
+  "sequence": "ATGCGCGATCCGGAACGCGATCCGGAACGCGATCCGGAACGCGATCCGGAACGCGATCCGGAACGCGATCCGGAATAA"
+ }
+]

@@ -122,7 +122,7 @@ export function SidebarMenu() {
                   <DropdownMenuSeparator />
                 </>
               )}
-              <DropdownMenuItem onClick={exportUserData}>
+              <DropdownMenuItem onClick={() => void exportUserData()}>
                 <Download className="text-foreground h-4 w-4" />
                 {menuCopy.exportData}
               </DropdownMenuItem>

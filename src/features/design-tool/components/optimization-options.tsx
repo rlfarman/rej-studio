@@ -21,9 +21,11 @@ const formCopy = designToolCopy.form
 const CODON_OPTIMIZATION_CHECKBOX_ID = 'codon-optimization-enabled'
 
 function CodonOptimizationRow() {
-  const { watch, setValue } = useFormContext<FormValues>()
-  const species = watch('species')
-  const sequenceType = watch('sequenceType')
+  const { control, setValue } = useFormContext<FormValues>()
+  const [species, sequenceType] = useWatch({
+    control,
+    name: ['species', 'sequenceType'],
+  })
   const enabled = isSpecies(species)
   const isProtein = sequenceType === 'protein'
   const selectableSpecies = DESIGN_TOOL_SPECIES_OPTIONS.filter(
@@ -45,7 +47,7 @@ function CodonOptimizationRow() {
   return (
     <div
       className={cn(
-        'flex flex-wrap items-center gap-2.5 rounded-md px-2 py-2.5 transition-colors',
+        'flex flex-wrap items-center gap-2.5 rounded-xl px-2 py-2.5 transition-colors',
         enabled ? 'bg-primary/[0.04]' : 'hover:bg-muted/40',
       )}
     >
@@ -94,7 +96,7 @@ function CodonOptimizationRow() {
               }
               onClick={() => setValue('species', value)}
               className={cn(
-                'flex items-center gap-1.5 rounded-md border px-2 py-1 text-[11px] font-medium transition-colors',
+                'flex items-center gap-1.5 rounded-full border px-2 py-1 text-[11px] font-medium transition-colors',
                 isActive
                   ? 'border-primary bg-primary/10 text-primary'
                   : 'bg-background text-muted-foreground hover:text-foreground hover:bg-muted/60',
@@ -232,7 +234,7 @@ export function DesignObjectives() {
               aria-expanded={showAdvanced}
               aria-controls={advancedId}
               onClick={() => setShowAdvanced((open) => !open)}
-              className="text-muted-foreground hover:text-foreground focus-visible:ring-ring inline-flex items-center gap-1.5 rounded-md text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-hidden"
+              className="text-muted-foreground hover:text-foreground focus-visible:ring-ring inline-flex items-center gap-1.5 rounded-sm text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-hidden"
             >
               <ChevronDown
                 aria-hidden

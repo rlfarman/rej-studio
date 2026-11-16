@@ -54,7 +54,7 @@ export function JunctionContext({
 
   return (
     <div className="space-y-2">
-      <div className="bg-muted/30 overflow-x-auto rounded-md border p-3">
+      <div className="bg-muted/30 overflow-x-auto rounded-2xl border p-3">
         <div className="flex items-center justify-center gap-0 font-mono text-sm">
           <span className="text-muted-foreground type-micro mr-2 tabular-nums">
             {leftStart.toLocaleString()}
@@ -84,7 +84,7 @@ export function JunctionContext({
       {wggwMotif && motifStartRel !== null && (
         <div className="text-muted-foreground type-micro">
           WGGW motif{' '}
-          <span className="bg-primary/20 text-primary rounded px-1 font-mono font-semibold">
+          <span className="bg-primary/20 text-primary rounded-sm px-1 font-mono font-semibold">
             {wggwMotif}
           </span>{' '}
           spans the junction.

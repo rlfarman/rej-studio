@@ -6,6 +6,9 @@
  */
 import { afterEach, vi } from 'vitest'
 import { cleanup } from '@testing-library/react'
+// happy-dom has no IndexedDB, which the design history is stored in. This
+// installs an in-memory implementation on the globals.
+import 'fake-indexeddb/auto'
 
 // Testing Library only registers its automatic cleanup when test globals are
 // enabled, and they're off in vitest.config.ts. Without this, hooks and

@@ -1,21 +1,39 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import {
   submitJob as submitJobAction,
   cancelJob as cancelJobAction,
 } from '@/features/design-tool/api/jobs'
+import {
+  browserOptimizerSupported,
+  designInBrowser,
+  warmOptimizerWorker,
+} from '@/features/design-tool/api/browser-optimizer'
+import { BROWSER_OPTIMIZER_ENABLED } from '@/features/design-tool/utils/feature-flags'
 import { buildJobParams } from '@/features/design-tool/utils/form-handler'
 import {
+  BROWSER_ID_PREFIX,
+  isBrowserJobId,
   useJobHistory,
+  useJobHistoryHydrated,
   type JobStatus as EntryStatus,
   type JobError,
 } from '@/features/design-tool/hooks/use-job-history'
 import type { ProcessResult } from '@/features/design-tool/types/process-result'
 import type { FormValues } from '@/features/design-tool/types/form-schema'
+import {
+  guardUnload,
+  holdRunLock,
+} from '@/features/design-tool/utils/browser-run-guard'
+import {
+  notifyRunSettled,
+  requestOpenJob,
+} from '@/features/design-tool/utils/finish-notification'
 import { trackEvent } from '@/lib/analytics'
 import { designToolCopy } from '@/features/design-tool/copy'
 
 const copy = designToolCopy.jobErrors
+const runCopy = designToolCopy.browserRun
 
 type JobStatus = 'idle' | 'submitting' | EntryStatus
 
@@ -36,6 +54,14 @@ interface UseJobReturn {
   progress: number | undefined
   stage: string | undefined
   isLoading: boolean
+  /** Whether new runs design in this browser rather than on the backend. */
+  runsInBrowser: boolean
+  /**
+   * True while a resumed job's entry may still be loading from storage
+   * (history hydrates asynchronously). Callers should show neither the
+   * empty form nor "not found" until it clears.
+   */
+  isRestoring: boolean
 }
 
 const JOB_PARAM = 'job'
@@ -62,10 +88,38 @@ function writeJobToUrl(jobId: string | null) {
   window.history.replaceState(null, '', url.toString())
 }
 
+/**
+ * Whether this run should happen in the browser.
+ *
+ * Both the flag and real browser support are required; without support the
+ * compute backend still serves the request, so an old browser degrades
+ * rather than breaks.
+ */
+function useBrowserOptimizer(): boolean {
+  const [supported, setSupported] = useState(false)
+  useEffect(() => {
+    if (!BROWSER_OPTIMIZER_ENABLED) return
+    // Checked after mount: the server cannot know what the browser supports,
+    // and deciding during render would risk a hydration mismatch.
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- browser capability is an external system, only knowable on the client
+    setSupported(browserOptimizerSupported())
+    // Start the download now, while the user is still entering a sequence.
+    warmOptimizerWorker()
+  }, [])
+  return supported
+}
+
 export function useJob({
   initialJobId = null,
 }: UseJobOptions = {}): UseJobReturn {
   const [jobId, setJobIdState] = useState<string | null>(initialJobId)
+  const runsInBrowser = useBrowserOptimizer()
+  // The in-flight browser run, if any. Cancel aborts it (there is no
+  // server-side job to cancel), and a thrown mutation settles its entry.
+  const browserRunRef = useRef<{
+    id: string
+    controller: AbortController
+  } | null>(null)
   // Selector-scoped reads so this hook only re-renders when the specific
   // entry it cares about changes.
   const upsertEntry = useJobHistory((s) => s.upsertEntry)
@@ -73,6 +127,24 @@ export function useJob({
     (s) => s.entries.find((e) => e.id === jobId) ?? null,
   )
   const progress = useJobHistory((s) => (jobId ? s.progressById[jobId] : null))
+  const historyHydrated = useJobHistoryHydrated()
+  // The job this hook is showing, for a notification click to tell whether
+  // the run is already on screen. Null once the form unmounts.
+  const shownJobIdRef = useRef<string | null>(null)
+  useEffect(() => {
+    shownJobIdRef.current = jobId
+    return () => {
+      shownJobIdRef.current = null
+    }
+  }, [jobId])
+
+  const openJob = (id: string) => {
+    if (shownJobIdRef.current === id) return
+    // The form that ran it is gone (the person navigated away): load the
+    // job from history. A browser run's id resolves only on this device,
+    // which is where the notification is.
+    requestOpenJob(id)
+  }
 
   const setJobId = (next: string | null, { shareable = true } = {}) => {
     setJobIdState(next)
@@ -81,25 +153,126 @@ export function useJob({
 
   // If the caller seeded an initialJobId but we have no history entry for it
   // (e.g. a shared URL from another device, or history was cleared), create
-  // a running stub so the global watcher picks it up and polls.
+  // a running stub so the global watcher picks it up and polls. Only once
+  // the history has loaded: before that every id looks missing, and the stub
+  // would poll (or overwrite) a job that is already settled.
   useEffect(() => {
-    if (!initialJobId) return
+    if (!initialJobId || !historyHydrated) return
     const existing = useJobHistory.getState().getEntry(initialJobId)
     if (!existing) {
       upsertEntry({ id: initialJobId, status: 'running' })
     }
-    // upsertEntry is stable; only the id matters here.
-  }, [initialJobId]) // eslint-disable-line react-hooks/exhaustive-deps
+    // upsertEntry is stable; only the id and the load matter here.
+  }, [initialJobId, historyHydrated]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const submitMutation = useMutation({
     mutationFn: async (values: FormValues) => {
-      const outcome = await submitJobAction(buildJobParams(values))
-      return { outcome, values }
+      const params = buildJobParams(values)
+      if (!runsInBrowser) {
+        return {
+          kind: 'server' as const,
+          outcome: await submitJobAction(params),
+          values,
+        }
+      }
+
+      // In-browser: the design runs here, so there is no job to poll. A local
+      // id carries progress and the finished result through the same history
+      // entry the backend path uses.
+      const id = `${BROWSER_ID_PREFIX}${crypto.randomUUID()}`
+      const controller = new AbortController()
+      browserRunRef.current = { id, controller }
+
+      upsertEntry({ id, status: 'running', formValues: values })
+      useJobHistory
+        .getState()
+        .setProgress(id, { progress: 0.02, stage: 'Starting' })
+      setJobId(id, { shareable: false })
+
+      const run = designInBrowser(params, {
+        signal: controller.signal,
+        onProgress: (progress, stage) =>
+          useJobHistory.getState().setProgress(id, { progress, stage }),
+      })
+      // The worker dies with the tab: warn before it closes, and hold a lock
+      // that tells other tabs this run is alive (BrowserRunRecovery).
+      const releaseUnload = guardUnload()
+      holdRunLock(id, run)
+      try {
+        const outcome = await run
+        return { kind: 'browser' as const, outcome, values, browserJobId: id }
+      } catch (err) {
+        // A thrown run (a bug, not an expected failure) still settles its
+        // entry, or it would read as running until the next load.
+        upsertEntry({
+          id,
+          status: 'failed',
+          error: { code: 'unknown', message: copy.unknown, retriable: true },
+        })
+        notifyRunSettled({
+          id,
+          title: runCopy.failedTitle,
+          body: runCopy.failedBody(values.name, copy.unknown),
+          onOpen: () => openJob(id),
+        })
+        throw err
+      } finally {
+        releaseUnload()
+        browserRunRef.current = null
+      }
     },
     onMutate: () => {
       setJobId(null)
     },
-    onSuccess: ({ outcome, values }) => {
+    onSuccess: (submission) => {
+      const { values } = submission
+
+      // A browser run already has its history entry (created when the design
+      // started, so progress had somewhere to go); settle that one in place
+      // rather than creating a second.
+      if (submission.kind === 'browser') {
+        // Destructured inside the branch so `outcome` narrows with `kind`.
+        const { browserJobId, outcome } = submission
+        if (outcome.ok) {
+          upsertEntry({
+            id: browserJobId,
+            status: 'completed',
+            result: outcome.data,
+            formValues: values,
+          })
+          trackEvent({ event: 'job_submit', job_id: browserJobId })
+          notifyRunSettled({
+            id: browserJobId,
+            title: runCopy.completedTitle,
+            body: runCopy.completedBody(values.name),
+            onOpen: () => openJob(browserJobId),
+          })
+          return
+        }
+        const cancelled = outcome.error.code === 'cancelled'
+        upsertEntry({
+          id: browserJobId,
+          status: cancelled ? 'cancelled' : 'failed',
+          error: outcome.error,
+          formValues: values,
+        })
+        if (!cancelled) {
+          trackEvent({
+            event: 'job_failed',
+            job_id: browserJobId,
+            error_code: outcome.error.code,
+          })
+          notifyRunSettled({
+            id: browserJobId,
+            title: runCopy.failedTitle,
+            body: runCopy.failedBody(values.name, outcome.error.message),
+            onOpen: () => openJob(browserJobId),
+          })
+        }
+        return
+      }
+
+      const { outcome } = submission
       if (!outcome.ok) {
         // Expected failure (rate limit, backend down, invalid input). Record
         // it so the run shows up in Recent jobs and "Run again" still works
@@ -161,7 +334,13 @@ export function useJob({
   })
 
   const cancelJob = async () => {
-    if (!jobId || isLocalFailureId(jobId)) return
+    // A browser run has no server-side job: aborting terminates the worker,
+    // and the submit path records the cancellation.
+    if (browserRunRef.current) {
+      browserRunRef.current.controller.abort()
+      return
+    }
+    if (!jobId || isLocalFailureId(jobId) || isBrowserJobId(jobId)) return
     await cancelMutation.mutateAsync(jobId)
   }
 
@@ -173,15 +352,15 @@ export function useJob({
   let result: ProcessResult | null = null
   let error: JobError | null = null
 
-  if (submitMutation.isPending) {
-    status = 'submitting'
-  } else if (submitMutation.isError) {
+  if (submitMutation.isError) {
     status = 'failed'
     error = { code: 'unknown', message: copy.unknown, retriable: true }
   } else if (entry) {
     status = entry.status
     result = entry.result
     error = entry.error
+  } else if (submitMutation.isPending) {
+    status = 'submitting'
   }
 
   const submitJob = async (values: FormValues) => {
@@ -199,5 +378,8 @@ export function useJob({
     progress: progress?.progress,
     stage: progress?.stage,
     isLoading: status === 'submitting' || status === 'running',
+    runsInBrowser,
+    isRestoring:
+      !historyHydrated && jobId !== null && jobId === initialJobId && !entry,
   }
 }

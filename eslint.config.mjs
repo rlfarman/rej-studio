@@ -34,6 +34,11 @@ const sharedLayerZones = SHARED_LAYERS.map((layer) => ({
   message: `Shared ${layer} cannot depend on features or app. The dependency direction is shared -> features -> app.`,
 }))
 
+// The React Compiler memoizes react-hook-form's watch() (its identity never
+// changes), so a component reading it renders stale values.
+const RHF_WATCH_MESSAGE =
+  "react-hook-form's watch() goes stale under the React Compiler. Use useWatch({ control, name }), or getValues() for a one-off read."
+
 const config = [
   {
     // .venv/ and venv/ are Python environments (uv sync); pyright ships
@@ -80,6 +85,22 @@ const config = [
                 'Features cannot depend on app. The dependency direction is shared -> features -> app.',
             },
           ],
+        },
+      ],
+      // Oxlint's react/incompatible-library only catches watch() on
+      // useForm(), not on useFormContext(), and the form fields read their
+      // values through the context.
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector:
+            "VariableDeclarator[init.callee.name=/^useForm(Context)?$/] > ObjectPattern > Property[key.name='watch']",
+          message: RHF_WATCH_MESSAGE,
+        },
+        {
+          selector:
+            "CallExpression[callee.type='MemberExpression'][callee.property.name='watch']",
+          message: RHF_WATCH_MESSAGE,
         },
       ],
     },

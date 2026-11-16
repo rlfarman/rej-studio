@@ -25,7 +25,12 @@ vi.mock('@/features/design-tool/api/job-status-client', async () => {
 })
 
 import { JobStatusError } from '@/features/design-tool/api/job-status-client'
-import { useJobHistory } from '@/features/design-tool/hooks/use-job-history'
+import { createStore, get } from 'idb-keyval'
+import {
+  useJobHistory,
+  whenJobHistoryHydrated,
+} from '@/features/design-tool/hooks/use-job-history'
+import { JOB_HISTORY_IDB } from '@/features/design-tool/utils/job-history-storage'
 import { JobWatcher } from './job-watcher'
 
 function Wrapper({ children }: { children: ReactNode }) {
@@ -58,8 +63,10 @@ const COMPLETED_RESULT = {
   processing_time_seconds: 2.5,
 }
 
-beforeEach(() => {
+beforeEach(async () => {
   vi.clearAllMocks()
+  // History loads from IndexedDB asynchronously and holds writes until then.
+  await whenJobHistoryHydrated()
   useJobHistory.setState({ entries: [], progressById: {} })
   localStorage.clear()
 })
@@ -180,7 +187,13 @@ describe('JobWatcher state machine', () => {
       })
     })
     expect(entry(id)!.status).toBe('running')
-    const persisted = localStorage.getItem('rej-studio:job-history') ?? ''
+    const persisted = JSON.stringify(
+      await get(
+        'rej-studio:job-history',
+        createStore(JOB_HISTORY_IDB.database, JOB_HISTORY_IDB.store),
+      ),
+    )
+    expect(persisted).toContain(id)
     expect(persisted).not.toContain('Optimizing')
   })
 

@@ -42,7 +42,7 @@ export function GenePhenotypes({ row, omimMim }: Props) {
         )}
       </header>
 
-      <ul className="flex flex-col divide-y rounded-md border">
+      <ul className="flex flex-col divide-y rounded-2xl border">
         {row.phenotypes.map((p, i) => (
           <li
             key={`${p.mim ?? 'nomim'}-${i}`}
