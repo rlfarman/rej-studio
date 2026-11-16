@@ -5,11 +5,13 @@ export const geneSearchCopy = {
   },
   command: {
     inputAria: 'Search genes',
-    placeholder: 'Search by gene symbol, name, or disease...',
+    placeholder: 'Gene symbol, name, or disease',
     placeholderMobile: 'Search genes…',
     opening: (symbol: string) => `Opening ${symbol}…`,
     retry: 'Retry',
-    promptEmpty: 'Search by gene symbol, name, or disease.',
+    examplesLabel: 'Try',
+    examplesAria: 'Example genes',
+    exampleAria: (symbol: string) => `Search for ${symbol}`,
     favorites: 'Favorites',
     recentGenes: 'Recent genes',
     recentJobs: 'Recent jobs',
@@ -22,10 +24,77 @@ export const geneSearchCopy = {
       mouse: 'Mouse',
     },
   },
+  /** First-run hint: genes present in both the sample seed and production. */
+  exampleGenes: ['TP53', 'BRCA1', 'CFTR', 'EGFR'],
+  searchPage: {
+    title: 'Search genes',
+    resultsTitle: (query: string) => `Results for “${query}”`,
+    inputLabel: 'Search genes',
+    submit: 'Search',
+    speciesLabel: 'Species',
+    resultCount: (n: number) => (n === 1 ? '1 gene' : `${n} genes`),
+  },
   results: {
     errorSuffix: 'Try again in a moment.',
     noMatches: (query: string) => `No genes match “${query}”.`,
     enterCustom: 'Enter a custom sequence instead.',
+    matched: {
+      symbol: 'Matched on symbol',
+      name: 'Matched on name',
+      alias: 'Matched on an alias or related term',
+      geneId: 'Matched on Ensembl gene ID',
+      transcript: (id: string) => `Matched on transcript ${id}`,
+    },
+  },
+  isoformTable: {
+    actionsHeader: 'Actions',
+    downloadLong: 'Download pre-optimized sequences',
+    downloadAria: (id: string) =>
+      `Download pre-optimized sequences for ${id} (ZIP)`,
+    downloadHint:
+      'Ready-made designs built with the default objectives, as a ZIP.',
+    customizeLong: 'Customize in the design tool',
+    customizeAria: (id: string) => `Customize ${id} in the design tool`,
+    customizeHint:
+      'Open this isoform in the design tool to pick your own objectives and split point.',
+    moreAria: (id: string) => `More actions for ${id}`,
+    copyCds: 'Copy CDS',
+    copyFasta: 'Copy FASTA',
+    copied: 'Copied!',
+    downloadFasta: 'Download FASTA',
+    viewEnsembl: 'View on Ensembl',
+    downloadAllFasta: 'Download FASTA',
+    downloadAllFastaAria: (n: number) =>
+      `Download all ${n} coding sequences as one FASTA file`,
+  },
+  summary: {
+    isoforms: 'Isoforms',
+    cdsRange: 'CDS range',
+    aavFit: 'AAV fit',
+  },
+  terms: {
+    gc: {
+      label: 'GC %',
+      hint: 'Share of G and C bases in the coding sequence. Very high or low GC can hurt synthesis and expression.',
+    },
+    cpg: {
+      label: 'CpG',
+      hint: 'Count of C-G dinucleotides. CpGs can trigger innate immune responses (TLR9) and DNA methylation, so therapeutic constructs usually want fewer.',
+    },
+    wggw: {
+      label: 'WGGW',
+      hint: 'Candidate split sites: AGGA, AGGT, TGGA, or TGGT motifs (W = A or T). RNA end-joining uses them to divide the CDS into 5′ and 3′ fragments.',
+    },
+    suitability: {
+      label: 'AAV fit',
+      hint: 'How many AAV vectors the CDS needs: Single under 4,000 bp, Dual under 8,000 bp, Triple above. Dual and triple designs are reassembled by RNA end-joining.',
+    },
+    termAria: (term: string) => `What is ${term}?`,
+  },
+  lengthChart: {
+    title: 'CDS length vs. AAV capacity',
+    capacityLabel: (bp: string) => `${bp} bp`,
+    unit: 'bp',
   },
   favoriteButton: {
     remove: 'Remove from favorites',
@@ -33,12 +102,10 @@ export const geneSearchCopy = {
   },
   recentGenesPanel: {
     label: 'Recent searches',
-    empty: 'No recent searches. Search for a gene to get started.',
     removeAria: (symbol: string) => `Remove ${symbol} from recent searches`,
   },
   favoritesPanel: {
     label: 'Favorites',
-    empty: 'No favorites yet. Star a gene to save it here.',
     removeAria: (symbol: string) => `Remove ${symbol} from favorites`,
   },
 } as const

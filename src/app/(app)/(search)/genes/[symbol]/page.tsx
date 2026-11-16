@@ -109,16 +109,22 @@ async function IsoformSection({
           isoform_count: isoforms.length,
         }}
       />
-      <IsoformSummary isoforms={isoforms} />
-      <IsoformTable
-        isoforms={isoforms}
-        highlightedIsoformId={highlightedIsoformId}
-      />
+      <div className="flex flex-col gap-3">
+        <IsoformSummary geneSymbol={gene.symbol} isoforms={isoforms} />
+        <IsoformTable
+          isoforms={isoforms}
+          highlightedIsoformId={highlightedIsoformId}
+        />
+      </div>
       {associationRow && <GenePhenotypes row={associationRow} />}
-      <section className="flex flex-col gap-6">
+      <div className="mt-6 flex min-w-0 flex-col gap-10">
         <IsoformLengthChart isoforms={isoforms} />
-        <IsoformIdentityMatrix isoforms={isoforms} />
-      </section>
+        {/* The matrix grows with isoform count; scroll it rather than let
+            it widen the page on small screens. */}
+        <div className="min-w-0 overflow-x-auto">
+          <IsoformIdentityMatrix isoforms={isoforms} />
+        </div>
+      </div>
     </>
   )
 }

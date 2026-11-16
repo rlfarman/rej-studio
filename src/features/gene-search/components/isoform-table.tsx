@@ -32,6 +32,7 @@ import {
   FileText,
   MoreHorizontal,
   PackageOpen,
+  WandSparkles,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
@@ -54,7 +55,17 @@ import {
 } from '@/lib/bio/sequence-utils'
 import { IsoformValidationBadges } from './isoform-validation-badges'
 import { IsoformSplitPreview } from './isoform-split-preview'
+import { TermHint } from './term-hint'
 import type { IsoformListItem } from '@/features/gene-search/types/domain-types'
+import { geneSearchCopy } from '../copy'
+
+const copy = geneSearchCopy.isoformTable
+const terms = geneSearchCopy.terms
+
+/** Pre-optimized sequence package for an isoform (static, built offline). */
+function preOptimizedZipUrl(isoformId: string) {
+  return `https://rej-seq-1.s3.us-west-004.backblazeb2.com/rej/v1.0/zips/${isoformId}_v1.0.zip`
+}
 
 interface IsoformListProps {
   isoforms: IsoformListItem[]
@@ -84,7 +95,9 @@ export default function IsoformTable({
   highlightedIsoformId,
 }: IsoformListProps) {
   const { species } = useSpeciesContext()
-  const { copy, isCopied } = useCopyToClipboard({ showToast: false })
+  const { copy: copyText, isCopied } = useCopyToClipboard({
+    showToast: false,
+  })
 
   const [sortKey, setSortKey] = useState<SortKey>('cdsLength')
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
@@ -269,7 +282,8 @@ export default function IsoformTable({
               className="hidden sm:table-cell"
             />
             <SortableHead
-              label="GC %"
+              label={terms.gc.label}
+              hint={terms.gc.hint}
               sortKey="gcPercent"
               currentKey={sortKey}
               direction={sortDirection}
@@ -277,7 +291,8 @@ export default function IsoformTable({
               className="hidden sm:table-cell"
             />
             <SortableHead
-              label="CpG"
+              label={terms.cpg.label}
+              hint={terms.cpg.hint}
               sortKey="cpg"
               currentKey={sortKey}
               direction={sortDirection}
@@ -285,7 +300,8 @@ export default function IsoformTable({
               className="hidden lg:table-cell"
             />
             <SortableHead
-              label="WGGW"
+              label={terms.wggw.label}
+              hint={terms.wggw.hint}
               sortKey="wggw"
               currentKey={sortKey}
               direction={sortDirection}
@@ -293,15 +309,16 @@ export default function IsoformTable({
               className="hidden lg:table-cell"
             />
             <SortableHead
-              label="Suitability"
+              label={terms.suitability.label}
+              hint={terms.suitability.hint}
               sortKey="suitability"
               currentKey={sortKey}
               direction={sortDirection}
               onSort={toggleSort}
               className="hidden lg:table-cell"
             />
-            <TableHead className="w-auto">
-              <span className="sr-only">Actions</span>
+            <TableHead className="w-px">
+              <span className="sr-only">{copy.actionsHeader}</span>
             </TableHead>
           </TableRow>
         </TableHeader>
@@ -326,7 +343,7 @@ export default function IsoformTable({
                 cdsId={cdsId}
                 fastaId={fastaId}
                 isCopied={isCopied}
-                copy={copy}
+                copyText={copyText}
                 onToggleExpanded={toggleExpanded}
               />
             )
@@ -349,7 +366,7 @@ function IsoformRow({
   cdsId,
   fastaId,
   isCopied,
-  copy,
+  copyText,
   onToggleExpanded,
 }: {
   isoform: IsoformListItem
@@ -363,7 +380,7 @@ function IsoformRow({
   cdsId: string
   fastaId: string
   isCopied: (id: string) => boolean
-  copy: (text: string, id: string) => void
+  copyText: (text: string, id: string) => void
   onToggleExpanded: (id: string) => void
 }) {
   const [ringVisible, setRingVisible] = useState(!!isHighlighted)
@@ -385,7 +402,7 @@ function IsoformRow({
       <TableRow
         id={`isoform-row-${isoform.id}`}
         className={cn(
-          'cursor-pointer transition-shadow duration-1000',
+          'group/row cursor-pointer transition-shadow duration-1000',
           ringVisible && 'ring-primary ring-2 ring-inset',
         )}
         onClick={() => onToggleExpanded(isoform.id)}
@@ -410,11 +427,11 @@ function IsoformRow({
           </button>
         </TableCell>
         <TableCell className="font-mono">{isoform.id}</TableCell>
-        <TableCell className="font-mono tabular-nums">
+        <TableCell className="font-mono whitespace-nowrap tabular-nums">
           {isoform.codingSequenceLength.toLocaleString()}{' '}
           <span className="text-muted-foreground text-xs">bp</span>
         </TableCell>
-        <TableCell className="hidden font-mono tabular-nums sm:table-cell">
+        <TableCell className="hidden font-mono whitespace-nowrap tabular-nums sm:table-cell">
           {isoform.proteinSequenceLength.toLocaleString()}{' '}
           <span className="text-muted-foreground text-xs">aa</span>
         </TableCell>
@@ -432,19 +449,84 @@ function IsoformRow({
             {suitConfig.label}
           </Badge>
         </TableCell>
-        <TableCell onClick={(e) => e.stopPropagation()}>
+        <TableCell className="py-1" onClick={(e) => e.stopPropagation()}>
           <div
             className="flex items-center justify-end gap-1"
             data-tour="isoform-actions"
           >
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="sm" asChild>
+            {/* Quick actions appear on row hover or keyboard focus (and stay
+                on the expanded or linked row) instead of repeating two labels
+                on every row. They're icon buttons with tooltips so the column
+                stays narrow; the labeled versions live in the menu and in the
+                expanded row. Coarse pointers can't hover, so they use the
+                menu. */}
+            <div
+              className={cn(
+                'hidden items-center gap-0.5 transition-opacity duration-150 sm:flex pointer-coarse:hidden',
+                'opacity-0 group-focus-within/row:opacity-100 group-hover/row:opacity-100',
+                (isExpanded || ringVisible) && 'opacity-100',
+              )}
+            >
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="size-9"
+                    asChild
+                  >
+                    <a
+                      href={preOptimizedZipUrl(isoform.id)}
+                      download={`${isoform.id}_v1.0.zip`}
+                      aria-label={copy.downloadAria(isoform.id)}
+                      onClick={() =>
+                        trackEvent({
+                          event: 'precomputed_download',
+                          isoform_id: isoform.id,
+                        })
+                      }
+                    >
+                      <PackageOpen className="size-4" />
+                    </a>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{copy.downloadLong}</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="size-9"
+                    asChild
+                  >
+                    <Link
+                      href={`/design-tool?isoform=${isoform.id}`}
+                      aria-label={copy.customizeAria(isoform.id)}
+                    >
+                      <WandSparkles className="size-4" />
+                    </Link>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{copy.customizeLong}</TooltipContent>
+              </Tooltip>
+            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-9"
+                  aria-label={copy.moreAria(isoform.id)}
+                >
+                  <MoreHorizontal className="size-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem asChild>
                   <a
-                    href={`https://rej-seq-1.s3.us-west-004.backblazeb2.com/rej/v1.0/zips/${isoform.id}_v1.0.zip`}
+                    href={preOptimizedZipUrl(isoform.id)}
                     download={`${isoform.id}_v1.0.zip`}
-                    className="hidden sm:inline-flex"
-                    aria-label={`Download precomputed ZIP for ${isoform.id}`}
                     onClick={() =>
                       trackEvent({
                         event: 'precomputed_download',
@@ -453,54 +535,32 @@ function IsoformRow({
                     }
                   >
                     <PackageOpen className="size-4" />
-                    <span className="hidden md:inline">Precomputed</span>
+                    {copy.downloadLong}
                   </a>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Download precomputed ZIP</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="sm" asChild>
-                  <Link
-                    href={`/design-tool?isoform=${isoform.id}`}
-                    aria-label={`Customize ${isoform.id} in design tool`}
-                  >
-                    <ExternalLink className="size-4" />
-                    <span className="hidden md:inline">Customize</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href={`/design-tool?isoform=${isoform.id}`}>
+                    <WandSparkles className="size-4" />
+                    {copy.customizeLong}
                   </Link>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Customize</TooltipContent>
-            </Tooltip>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="size-8"
-                  aria-label={`Actions for ${isoform.id}`}
-                >
-                  <MoreHorizontal className="size-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem
-                  onClick={() => copy(isoform.codingSequence, cdsId)}
+                  onClick={() => copyText(isoform.codingSequence, cdsId)}
                 >
                   <Copy className="size-4" />
-                  {isCopied(cdsId) ? 'Copied!' : 'Copy CDS'}
+                  {isCopied(cdsId) ? copy.copied : copy.copyCds}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() =>
-                    copy(
+                    copyText(
                       formatFasta(isoform.id, isoform.codingSequence),
                       fastaId,
                     )
                   }
                 >
                   <FileText className="size-4" />
-                  {isCopied(fastaId) ? 'Copied!' : 'Copy FASTA'}
+                  {isCopied(fastaId) ? copy.copied : copy.copyFasta}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => {
@@ -515,7 +575,7 @@ function IsoformRow({
                   }}
                 >
                   <Download className="size-4" />
-                  Download FASTA
+                  {copy.downloadFasta}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
@@ -525,7 +585,7 @@ function IsoformRow({
                     rel="noopener noreferrer"
                   >
                     <ExternalLink className="size-4" />
-                    View on Ensembl
+                    {copy.viewEnsembl}
                   </a>
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -580,6 +640,42 @@ function ExpandedDetails({
 
   return (
     <div className="space-y-4">
+      {/* The expanded row is where the two main actions are explained, so the
+          collapsed rows can stay quiet. Labeled on every screen size. */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:gap-6">
+        <div className="flex max-w-xs flex-col items-start gap-1.5">
+          <Button size="sm" asChild>
+            <Link
+              href={`/design-tool?isoform=${isoform.id}`}
+              aria-label={copy.customizeAria(isoform.id)}
+            >
+              <WandSparkles className="size-4" />
+              {copy.customizeLong}
+            </Link>
+          </Button>
+          <p className="text-muted-foreground text-xs">{copy.customizeHint}</p>
+        </div>
+        <div className="flex max-w-xs flex-col items-start gap-1.5">
+          <Button size="sm" variant="outline" asChild>
+            <a
+              href={preOptimizedZipUrl(isoform.id)}
+              download={`${isoform.id}_v1.0.zip`}
+              aria-label={copy.downloadAria(isoform.id)}
+              onClick={() =>
+                trackEvent({
+                  event: 'precomputed_download',
+                  isoform_id: isoform.id,
+                })
+              }
+            >
+              <PackageOpen className="size-4" />
+              {copy.downloadLong}
+            </a>
+          </Button>
+          <p className="text-muted-foreground text-xs">{copy.downloadHint}</p>
+        </div>
+      </div>
+
       <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs sm:hidden">
         <div>
           <dt className="text-muted-foreground">Protein</dt>
@@ -604,7 +700,7 @@ function ExpandedDetails({
           </dd>
         </div>
         <div className="col-span-2">
-          <dt className="text-muted-foreground">Suitability</dt>
+          <dt className="text-muted-foreground">{terms.suitability.label}</dt>
           <dd>
             <Badge className={cn('text-xs', suitConfig.badgeClass)}>
               {suitConfig.label}
@@ -626,7 +722,7 @@ function ExpandedDetails({
           </dd>
         </div>
         <div>
-          <dt className="text-muted-foreground">Suitability</dt>
+          <dt className="text-muted-foreground">{terms.suitability.label}</dt>
           <dd>
             <Badge className={cn('text-xs', suitConfig.badgeClass)}>
               {suitConfig.label}
@@ -649,6 +745,7 @@ function ExpandedDetails({
 
 function SortableHead({
   label,
+  hint,
   sortKey,
   currentKey,
   direction,
@@ -656,6 +753,8 @@ function SortableHead({
   className,
 }: {
   label: React.ReactNode
+  /** Plain-language explanation of a domain term, shown next to the label. */
+  hint?: string
   sortKey: SortKey
   currentKey: SortKey
   direction: SortDirection
@@ -665,24 +764,50 @@ function SortableHead({
   const isActive = currentKey === sortKey
 
   return (
-    <TableHead className={className}>
-      <button
-        type="button"
-        className="hover:text-foreground focus-visible:ring-ring inline-flex items-center gap-1 rounded-sm transition-colors focus-visible:ring-2 focus-visible:outline-none"
-        onClick={() => onSort(sortKey)}
-      >
-        {label}
-        {isActive ? (
-          direction === 'asc' ? (
-            <ArrowUp className="size-3.5" />
-          ) : (
-            <ArrowDown className="size-3.5" />
-          )
-        ) : (
-          <ArrowUpDown className="text-muted-foreground size-3.5" />
+    <TableHead className={cn('whitespace-nowrap', className)}>
+      <span className="inline-flex items-center gap-0.5">
+        <SortButton
+          label={label}
+          isActive={isActive}
+          direction={direction}
+          onClick={() => onSort(sortKey)}
+        />
+        {hint && typeof label === 'string' && (
+          <TermHint label={terms.termAria(label)} hint={hint} />
         )}
-      </button>
+      </span>
     </TableHead>
+  )
+}
+
+function SortButton({
+  label,
+  isActive,
+  direction,
+  onClick,
+}: {
+  label: React.ReactNode
+  isActive: boolean
+  direction: SortDirection
+  onClick: () => void
+}) {
+  return (
+    <button
+      type="button"
+      className="hover:text-foreground focus-visible:ring-ring inline-flex items-center gap-1 rounded-sm transition-colors focus-visible:ring-2 focus-visible:outline-none"
+      onClick={onClick}
+    >
+      {label}
+      {isActive ? (
+        direction === 'asc' ? (
+          <ArrowUp className="size-3.5" />
+        ) : (
+          <ArrowDown className="size-3.5" />
+        )
+      ) : (
+        <ArrowUpDown className="text-muted-foreground size-3.5" />
+      )}
+    </button>
   )
 }
 
