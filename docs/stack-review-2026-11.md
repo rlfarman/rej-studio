@@ -71,46 +71,48 @@ promises cross the boundary. They do not here — JSON in, JSON out.
 
 ## Add
 
-1. **`rust-toolchain.toml`** (highest value, ~5 minutes). Node is pinned by
-   `.nvmrc`, Python by `.python-version`; Rust is pinned **only** inside
-   `rust-ci.yml`'s `RUST_VERSION` env. A contributor gets whatever their rustup
-   default happens to be, and nothing local reproduces CI. Pin `channel =
-"1.100.0"` with `components = ["clippy", "rustfmt"]` and `targets =
-["wasm32-unknown-unknown"]`, then have CI install from the file and delete
-   the env var, so there is one source of truth. Omit the `rust-analyzer`
-   component — pinning it degrades editors that ship a newer one.
+### Done, 16 November
 
-2. **Type-aware linting** — `oxlint --type-aware` with `oxlint-tsgolint`. The
-   repo has **zero** type-aware rules today; `eslint-config-next` does not turn
-   them on and typescript-eslint cannot run against TypeScript 7. A trial run
-   found 13 issues, several real:
+1. **`rust/rust-toolchain.toml`.** Pins `1.100.0` with clippy, rustfmt and the
+   wasm target. CI installs from it with a bare `rustup toolchain install` and
+   the `RUST_VERSION` env var is gone, so the version lives in one place.
+   `pnpm doctor` now reports it.
 
-   - `src/features/gene-search/hooks/use-gene-search.ts:119` — floating promise
-     (`queryClient.invalidateQueries` unawaited in the `retry` handler).
-   - `src/components/bio/species-icon.tsx:8` — `species?: SpeciesFilter | string`
-     collapses to `string`, so the union constrains nothing. A real type-design
-     bug: the `SpeciesFilter` half is decorative.
-   - `src/app/api/login/route.ts:41-42` — `String(form.get('password') ?? '')`.
-     `FormData.get` returns `string | File | null`, so a `File` part stringifies
-     to `[object File]`. Mild — it simply fails to match rather than opening a
-     hole — but it should be a `typeof === 'string'` guard.
-   - Several `no-misused-spread` on strings (`[...sequence]`). Benign for ASCII
-     DNA; worth an explicit `allow` with a comment rather than silence.
+2. **Type-aware linting**, via `options.typeAware` in `.oxlintrc.json` and
+   `oxlint-tsgolint`. About a second for the whole repo, so it runs in the
+   pre-commit hook too. All 13 first-run findings are fixed. The one that most
+   changed my view is the splice slider indexing spread strings (code points)
+   against `indexOf` (UTF-16 code units). It only worked because the text is
+   ASCII, so `split('')` there fixes an inconsistency rather than quieting a
+   rule. The others: a `FormData` coercion on login, the decorative
+   `SpeciesFilter | string` union, an unreachable `COMPUTE_BACKEND` branch
+   (typed `never`), an unawaited `invalidateQueries`, and a test stub whose
+   `...globalThis.crypto` copied nothing.
 
-   This catches a class of bug nothing else in the pipeline looks for. It did
-   not uncover a crisis, and should not be sold as one.
+3. **`[workspace.lints]`.** The premise I gave above was off. Local clippy
+   showed the same warnings as CI, just not as errors, and CI keeps
+   `-D warnings` for that. The real gaps turned out to be different and
+   larger:
 
-3. **`[workspace.lints]` in `rust/Cargo.toml`.** Clippy's severity currently
-   lives only in CI's `cargo clippy --all-targets -- -D warnings`, so a local
-   `cargo clippy` is quieter than CI. Move it into the manifest with `[lints]
-workspace = true` in the crate, and local matches CI by construction.
+   - The crate's only unsafe code, the wasm ABI in `optimizer/src/lib.rs`, is
+     `cfg(target_arch = "wasm32")`. The native clippy run in CI **never
+     compiled it**. CI now also lints the wasm32 build.
+   - Writing the `SAFETY` comments that `undocumented_unsafe_blocks` requires
+     exposed two real soundness bugs. `dealloc` rebuilt a
+     `Vec::with_capacity(len)` buffer with capacity `len`, but `with_capacity`
+     only promises _at least_ `len`, so this was UB by the documented contract,
+     and the response buffer had the same shape. `process` could also read
+     memory `alloc` never initialized. Both buffers are now boxed slices
+     (allocation exactly equals length) and `alloc` zero-fills. Designs are
+     unchanged byte for byte.
 
-4. **`cargo-deny` in CI.** Rust is the only language here without a supply-chain
-   gate — JS has `pnpm audit` plus Dependency Review, Python has `pip-audit`,
-   Rust has nothing. Only three dependencies today (`serde`, `serde_json`,
-   `sha2`), so it is cheap now and stays cheap. Make it blocking, and add a
-   scheduled run: RUSTSEC advisories land without any commit, so a PR-only gate
-   never sees them.
+4. **`cargo-deny`**, in the Security workflow beside `pnpm audit` and
+   `pip-audit`. It runs on every PR, on main, and weekly. `rust/deny.toml` is
+   strict: advisories, unmaintained and yanked crates, duplicate versions,
+   crates.io only, and exactly MIT / Apache-2.0 / Unicode-3.0. Removing a
+   needed license fails it, so the policy is doing work.
+
+### Still open
 
 5. **Project-specific skills.** `.agents/skills/` holds 27 skills, all generic
    design and framework ones (`critique`, `typeset`, `next-best-practices`, …).
@@ -119,13 +121,14 @@ workspace = true` in the crate, and local matches CI by construction.
    every agent re-derives the multi-step workflows from prose. The three worth
    writing, in order:
 
-   - **Optimizer parity** — regenerate fixtures from Python, run the Rust parity
-     suite, rebuild the `.wasm`, commit artifact and manifest together. This is
-     the repo's most error-prone sequence and the one with the sharpest failure
-     mode (shipping an optimizer that designs different sequences).
-   - **Corpus publishing** — the maintainer-only release steps in `AGENTS.md`,
+   - **Optimizer parity**: regenerate fixtures, run the Rust parity suite,
+     rebuild the `.wasm`, and commit the artifact and manifest together. This
+     is the repo's most error-prone sequence, with the sharpest failure mode
+     (shipping an optimizer that designs different sequences). It shrinks if
+     Python goes; see below.
+   - **Corpus publishing**: the maintainer-only release steps in `AGENTS.md`,
      including the `gh release upload`-separately quirk for ~250 MB assets.
-   - **Feature scaffolding** — the `src/features/<name>/` layout plus the
+   - **Feature scaffolding**: the `src/features/<name>/` layout plus the
      boundary rules, so the ESLint failure is avoided rather than hit.
 
 6. **Criterion benchmarks** for the optimizer. `rust/optimizer/examples/bench.rs`
@@ -134,12 +137,14 @@ workspace = true` in the crate, and local matches CI by construction.
 
 ## Change
 
-- **`@electric-sql/pglite` 0.4.6 → 0.5.16.** A full minor behind, and it is what
-  every contributor and every CI job boots as the database. The most overdue
-  update in the tree.
+- ~~`@electric-sql/pglite` 0.4.6 → 0.5.16~~ **Withdrawn.** PGlite is a
+  devDependency used only for local dev and CI, and the Cloudflare plan deletes
+  it along with Neon and Drizzle when gene data moves to static files on R2.
+  There is no advisory in the gap either. Upgrading it would be work on code
+  that already has a removal date. Revisit only if a bug or advisory forces it.
 - **`lint-staged` 17.6.0 → 17.6.1.** Trivial.
-- Fix the `SpeciesFilter | string` union from finding 2 above regardless of
-  whether type-aware linting is adopted.
+- **The crate's license.** `rust/optimizer/Cargo.toml` says `MIT`; the project
+  is `BSD-3-Clause-Clear`. Probably unintended, but it is the owner's call.
 
 ## Remove
 
@@ -159,6 +164,51 @@ the Modal deployment, the FastAPI backend, and `openapi-typescript` with it. See
 
 Marginal: `auto-assign.yml` and `stale.yml` are 2 of 14 workflows doing
 multi-maintainer housekeeping on a single-maintainer repo.
+
+### Python, and why it should go entirely
+
+Python still has two jobs, and both should end.
+
+**It serves production today.** The browser optimizer sits behind
+`NEXT_PUBLIC_ENABLE_BROWSER_OPTIMIZER`, which is off by default
+(`src/features/design-tool/utils/feature-flags.ts`). Unless that is set in
+production, every design still runs in Python on Modal. Once the flag is on,
+the server is only a fallback for browsers without WebAssembly and module
+workers, which in 2026 means effectively none. Modal, FastAPI, `python/index.py`,
+`contracts.py`, `telemetry.py`, `modal/`, the job API and its polling can then
+all go. That is step 1 of the Cloudflare plan.
+
+**It is the specification.** The Rust port's fixtures come from running
+`python/algorithm.py` against real DNAChisel (`scripts/gen-parity-fixtures.py`,
+`scripts/gen-codon-tables.py`). This is the job people assume justifies keeping
+Python. It does not survive a close look:
+
+- **Nothing checks the two stay in step.** Rust CI re-runs on `python/**`, but
+  it replays the _committed_ fixtures. Python CI tests Python against its own
+  contract fixtures. Nothing compares Python's current output with what Rust
+  replays. So editing `algorithm.py` without regenerating leaves **both**
+  suites green while the implementations diverge.
+- **Once Rust serves, Rust is where changes happen.** Mirroring each one back
+  into Python means writing every algorithm change twice, in two languages,
+  for a reference nothing enforces.
+- **The fixtures already pin one DNAChisel.** The port reproduces two of its
+  quirks on purpose. The fixtures are a snapshot of a specific DNAChisel's
+  behaviour, and they should be named and kept as exactly that.
+
+Order of removal:
+
+1. Turn the flag on in production and watch real designs.
+2. Delete the server path: Modal, FastAPI, the job API, polling, the circuit
+   breaker and `openapi-typescript`.
+3. Freeze the fixtures as Rust-owned regression snapshots. Delete
+   `algorithm.py`, the generators, `pyproject.toml`/`uv.lock`, Python CI,
+   `pip-audit` and the Python half of the SBOM.
+4. The data scripts (`build-db.py`, `build-disease-associations.py`) feed the
+   database the R2 step replaces. Rewrite whatever survives in TypeScript —
+   `tsx` scripts already exist — so the repo ends on two toolchains, not three.
+
+Do step 3 once step 1 has run long enough that nobody would reach for Python to
+settle a disagreement about a design.
 
 ## Don't — things that look like upgrades and are not
 

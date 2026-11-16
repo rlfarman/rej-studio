@@ -197,9 +197,10 @@ directly instead: if a PR touches `rust/optimizer/src/` and leaves
 
 ### Making these required on main
 
-`Rust tests, format and lint` and `WebAssembly build and smoke test` are
-**not** in the Protect main ruleset yet, deliberately. Add them only once
-`.github/workflows/rust-ci.yml` is on `main`.
+`Rust tests, format and lint`, `WebAssembly build and smoke test` and
+`cargo deny` (in the Security workflow) are **not** in the Protect main
+ruleset yet, deliberately. Add them only once `.github/workflows/rust-ci.yml`
+and the `cargo-deny` job in `security.yml` are on `main`.
 
 A required check that never reports is never satisfied, and for
 `pull_request` GitHub takes the workflow from the PR's merge ref. While the
