@@ -38,6 +38,7 @@
     "test:e2e": "playwright test",
     "type-check": "node node_modules/typescript-native/bin/tsc --noEmit",
     "verify": "pnpm lint && pnpm type-check && pnpm test",
+    "doctor": "bash scripts/doctor.sh",
     "prepare": "husky",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"

@@ -21,7 +21,7 @@ A web application for RNA End-Joining sequence design and optimization. Scientis
 | Layer         | Technology                                                       |
 | ------------- | ---------------------------------------------------------------- |
 | Frontend      | Next.js 16 (App Router), React 19, TypeScript 6, Tailwind CSS 4  |
-| UI            | shadcn/ui, Radix UI, cmdk (command palette)                      |
+| UI            | shadcn/ui (base-rhea style on Base UI), cmdk (command palette)   |
 | State         | React Query (server state), Zustand (client state)               |
 | Backend       | FastAPI (Python) with DNAChisel, deployed on Modal               |
 | Database      | Neon (Postgres) via HTTP driver, Drizzle ORM                     |
@@ -46,15 +46,15 @@ A web application for RNA End-Joining sequence design and optimization. Scientis
    uv sync
    ```
 
-2. **Configure environment**
+2. **Configure environment** (optional for local development)
 
    ```bash
    cp .env.example .env
    ```
 
-   At minimum, set `DATABASE_URL` (Neon Postgres connection string). For production, also set `COMPUTE_BACKEND=modal`, `MODAL_API_URL`, and `NEXT_PUBLIC_SITE_URL`. Optionally add `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` for distributed rate limiting (falls back to in-memory without them). See `.env.example` for all available options.
+   Local development needs no configuration: with `DATABASE_URL` empty the app uses an embedded PGlite database seeded with 24 sample genes (`pnpm db:fetch` swaps in the full corpus), and design jobs go to the local FastAPI server. Production needs a Neon `DATABASE_URL`, `COMPUTE_BACKEND=modal`, `MODAL_API_URL`, `MODAL_API_TOKEN` and `NEXT_PUBLIC_SITE_URL`. Optionally add `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` for distributed rate limiting (falls back to in-memory without them). See `.env.example` for all available options.
 
-3. **Populate the database** (first time only)
+3. **Populate a Postgres database** (first time only; not needed for PGlite)
 
    ```bash
    pnpm db:build      # emit data/genes.jsonl + data/isoforms.jsonl from source CSV
@@ -115,16 +115,20 @@ pnpm test:e2e      # Playwright smoke tests (gated next dev on :3000)
 ```
 src/
 ├── app/                          # Next.js pages and layouts (App Router)
-│   ├── (search)/                 # Gene search & detail pages
-│   │   └── genes/[symbol]/       # Gene detail with isoforms, OG image
-│   ├── (design-tool)/            # Sequence design tool
-│   └── api/                      # API routes (health, version, auth)
+│   ├── (app)/                    # Signed-in app shell
+│   │   ├── (search)/genes/       # Gene search and gene detail ([symbol])
+│   │   ├── (design-tool)/        # Sequence design tool
+│   │   └── (internal)/           # Unlisted pages (architecture, disease associations)
+│   ├── login/                    # Password gate
+│   └── api/                      # API routes (health, version, login/logout, OG images, CSP reports)
 ├── features/                     # Self-contained feature modules
 │   ├── gene-search/              # Search API, components, hooks, stores
-│   └── design-tool/              # Job submission, form, results
+│   ├── design-tool/              # Job submission, form, results
+│   ├── disease-associations/     # Gene-disease association tables
+│   └── auth/                     # Login form and session gate
 ├── components/                   # Shared UI components
 │   ├── ui/                       # shadcn/ui primitives
-│   └── bio/                      # Bio-domain widgets (species icon, DNA icon)
+│   └── bio/                      # Bio-domain widgets (species icon, GC sparkline, split bar)
 ├── lib/                          # Shared utilities
 │   ├── bio/                      # Bio-domain utils (species, FASTA, sequences)
 │   └── analytics/                # Typed event tracking and consent
@@ -165,7 +169,7 @@ The frontend deploys to **Vercel**:
 pnpm build         # Production build
 ```
 
-The Python backend deploys separately to **Modal**. See `modal/` and the CI workflows in `.github/workflows/modal-deploy.yml`.
+The Python backend deploys separately to **Modal**: `.github/workflows/modal-deploy.yml` deploys on pushes to `main` that touch the backend, and can be run by hand (`gh workflow run modal-deploy.yml`). See `modal/README.md`.
 
 ## Infrastructure
 
@@ -206,11 +210,15 @@ Set `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` to enable. Without t
 
 GitHub Actions runs on every PR and push to `main`:
 
-- **Lint**, **Format**, **Type Check**, **Knip** (unused code)
-- **Build** with bundle-size budget enforcement and PR comments
-- **Lighthouse CI** — Performance, accessibility, and SEO audits
-- **Dependency Review** — License and vulnerability checks on PRs
-- **Python CI** — Lint and type-check the FastAPI backend
+- **CI** — Lint, Format, Type Check, Knip (unused code), Test (Vitest, with a coverage comment), E2E (Playwright smoke tests), Storybook (test build), and Workflow Security (zizmor).
+- **Build** — production build with per-route first-load JS budgets (gzip), compared against `main` and reported in a PR comment (`scripts/bundle-size.mjs`).
+- **Security** — Dependency Review on PRs, `pnpm audit` and `pip-audit` (also weekly), and CycloneDX SBOMs on `main`.
+- **DB CI** — applies the committed migrations to PGlite, checks `schema.ts` against them, and verifies constraints.
+- **Python CI** — `uv.lock` check, Ruff, Pytest and Pyright for the FastAPI backend.
+- **Lighthouse CI** — performance, accessibility, and SEO audits of `/`.
+- **Conventions** — PR title, commit messages, and branch names (advisory).
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md#required-status-checks) for which checks block merging.
 
 ## Contributing
 
