@@ -10,3 +10,6 @@ pnpm-lock.yaml
 
 # Vendored agent skills (third-party content, not ours to reformat)
 .agents/skills
+
+# Local Python test cache
+.pytest_cache

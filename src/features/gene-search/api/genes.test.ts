@@ -8,6 +8,10 @@ vi.mock('@/features/gene-search/api/gene-queries', () => ({
 }))
 
 const { mockCheck } = vi.hoisted(() => ({ mockCheck: vi.fn() }))
+// Keying (session vs IP) is tested in src/lib/client-ip.test.ts.
+vi.mock('@/lib/client-ip', () => ({
+  getRequestRateLimitKey: vi.fn(async () => 'ip:127.0.0.1'),
+}))
 vi.mock('@/lib/upstash', () => ({
   createUpstashRateLimiter: () => ({ check: mockCheck }),
   redis: null,
@@ -89,7 +93,7 @@ describe('searchGenes', () => {
 describe('checkSearchRateLimit', () => {
   it('allows a request within budget', async () => {
     expect(await checkSearchRateLimit()).toEqual({ ok: true })
-    expect(mockCheck).toHaveBeenCalledWith('127.0.0.1')
+    expect(mockCheck).toHaveBeenCalledWith('ip:127.0.0.1')
   })
 
   it('reports seconds until reset when over budget', async () => {

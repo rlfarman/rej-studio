@@ -28,7 +28,7 @@ export const appCopy = {
     title: (symbol: string) => `No gene matches “${symbol}”`,
     titleUnknown: 'Gene not found in our database',
     detail:
-      'Symbols are case-sensitive (TP53 for human, Trp53 for mouse), and some genes aren’t indexed yet.',
+      'Check the spelling: some genes aren’t indexed yet, and mouse symbols differ from human ones (Trp53 for TP53).',
     didYouMean: 'Did you mean',
     searchGenes: 'Search genes',
     customSequence: 'Enter a custom sequence',

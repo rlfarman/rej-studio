@@ -6,7 +6,7 @@ import type { Suitability } from '@/lib/bio/design-suitability'
  * no params.
  */
 
-export const ISOFORM_SORT_KEYS = [
+const ISOFORM_SORT_KEYS = [
   'enst',
   'cdsLength',
   'proteinLength',
@@ -17,7 +17,7 @@ export const ISOFORM_SORT_KEYS = [
 ] as const
 
 export type IsoformSortKey = (typeof ISOFORM_SORT_KEYS)[number]
-export type SortDirection = 'asc' | 'desc'
+type SortDirection = 'asc' | 'desc'
 
 export interface IsoformSort {
   key: IsoformSortKey

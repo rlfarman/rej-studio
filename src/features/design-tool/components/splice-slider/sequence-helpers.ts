@@ -390,7 +390,8 @@ export function roleStylesFor(role: CodonRole): {
     default:
       return {
         container: '',
-        aa: 'text-muted-foreground/70',
+        // Full muted color: /70 measured 3.1–3.3:1 at 10px (WCAG AA is 4.5).
+        aa: 'text-muted-foreground',
         base: 'text-muted-foreground',
       }
   }

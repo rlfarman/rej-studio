@@ -11,7 +11,7 @@ import type {
 } from '@/features/gene-search/types/search'
 import { speciesFilterSchema, type SpeciesFilter } from '@/lib/bio/species'
 import { z } from 'zod'
-import { headers } from 'next/headers'
+import { getRequestRateLimitKey } from '@/lib/client-ip'
 import { createUpstashRateLimiter } from '@/lib/upstash'
 import { createLogger } from '@/lib/logger'
 
@@ -46,9 +46,10 @@ export type RateLimitOutcome =
 
 /** Spend one search from the caller's per-IP budget. */
 export async function checkSearchRateLimit(): Promise<RateLimitOutcome> {
-  const hdrs = await headers()
-  const ip = hdrs.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
-  const { ok: allowed, resetMs } = await searchLimiter.check(ip)
+  // Per session when signed in (a lab shares one IP), otherwise per IP.
+  const { ok: allowed, resetMs } = await searchLimiter.check(
+    await getRequestRateLimitKey(),
+  )
   if (!allowed) {
     return { ok: false, retryAfterSeconds: Math.ceil(resetMs / 1000) }
   }
