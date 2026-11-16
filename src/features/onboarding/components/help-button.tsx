@@ -8,8 +8,16 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { useOnboarding } from '../stores/onboarding-store'
+import { onboardingCopy } from '../copy'
 
-export function HelpButton() {
+const copy = onboardingCopy.helpButton
+
+/**
+ * Help & tour entry point, rendered in the app header. It used to float in
+ * the bottom-right corner, where it covered table row menus and mobile
+ * content.
+ */
+export function HeaderHelpButton() {
   const openWelcome = useOnboarding((s) => s.openWelcome)
 
   return (
@@ -17,16 +25,24 @@ export function HelpButton() {
       <TooltipTrigger asChild>
         <Button
           type="button"
-          variant="outline"
+          variant="ghost"
           size="icon"
           onClick={openWelcome}
-          aria-label="Open help and tour"
-          className="bg-background fixed right-4 bottom-4 z-40 size-10 rounded-full shadow-md"
+          aria-label={copy.label}
         >
           <HelpCircle className="size-5" />
         </Button>
       </TooltipTrigger>
-      <TooltipContent side="left">Help &amp; tour</TooltipContent>
+      <TooltipContent side="bottom">{copy.tooltip}</TooltipContent>
     </Tooltip>
   )
+}
+
+/**
+ * The old floating button, still mounted by src/app/(app)/layout.tsx.
+ * Help now lives in the header (HeaderHelpButton), so this renders nothing.
+ * Remove it and its <HelpButton /> in the layout once that file can change.
+ */
+export function HelpButton() {
+  return null
 }

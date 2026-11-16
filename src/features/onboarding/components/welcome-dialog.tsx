@@ -10,6 +10,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
+import { Kbd, ModKey } from '@/components/ui/kbd'
 import { useOnboarding } from '../stores/onboarding-store'
 import { Dna, Search, FlaskConical, Download } from 'lucide-react'
 import { popSpring } from '@/lib/motion'
@@ -105,13 +106,21 @@ export function WelcomeDialog() {
                   <p className="text-sm leading-tight font-medium">
                     {feature.title}
                   </p>
-                  <p className="text-muted-foreground text-[13px] leading-snug">
+                  <p className="text-muted-foreground text-sm leading-snug">
                     {feature.description}
                   </p>
                 </div>
               </m.div>
             ))}
           </div>
+
+          <p className="text-muted-foreground mt-5 flex flex-wrap items-center gap-1.5 text-sm">
+            {copy.searchShortcut.before}
+            <Kbd>
+              <ModKey /> K
+            </Kbd>
+            {copy.searchShortcut.after}
+          </p>
 
           <DialogFooter className="mt-6">
             <Button variant="ghost" onClick={handleSkip}>
