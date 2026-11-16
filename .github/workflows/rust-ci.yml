@@ -71,7 +71,7 @@ jobs:
               - 'src/features/design-tool/workers/optimizer-asset.generated.ts'
 
   test:
-    name: Tests, format and lint
+    name: Rust tests, format and lint
     runs-on: ubuntu-latest
     needs: changes
     if: needs.changes.outputs.rust == 'true'
