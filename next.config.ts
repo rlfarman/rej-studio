@@ -17,7 +17,6 @@ const nextConfig: NextConfig = {
   ...(process.env.DOCKER_BUILD === 'true' && { output: 'standalone' }),
   cacheComponents: true,
   experimental: {
-    viewTransition: true,
     optimizePackageImports: [
       'motion',
       'lucide-react',
