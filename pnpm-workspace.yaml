@@ -10,12 +10,20 @@ allowBuilds:
   esbuild: true
   protobufjs: false
 
+# Versions shared by package.json and the overrides below, so a transitive
+# copy (e.g. typescript-eslint's typescript, or @types/react pulled in by a
+# library) always matches the direct dependency.
+catalog:
+  typescript: ^6.0.2
+  '@types/react': ^19.2.14
+  '@types/react-dom': ^19.2.3
+
 # Security pins for transitive dependencies (see the Dependabot alerts that
 # prompted them) plus the typescript-eslint/@types alignment.
 overrides:
-  '@types/react': '$@types/react'
-  '@types/react-dom': '$@types/react-dom'
-  'typescript-eslint>typescript': '$typescript'
+  '@types/react': 'catalog:'
+  '@types/react-dom': 'catalog:'
+  'typescript-eslint>typescript': 'catalog:'
   'protobufjs': '^7.6.1'
   '@grpc/grpc-js@^1.0.0': '^1.14.5'
   'brace-expansion@^1.0.0': '^1.1.20'

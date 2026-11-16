@@ -171,6 +171,12 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+catalogs:
+  default:
+    typescript:
+      specifier: ^6.0.2
+      version: 6.0.3
+
 overrides:
   '@types/react': ^19.2.14
   '@types/react-dom': ^19.2.3
@@ -340,7 +346,7 @@ importers:
         specifier: ^1.0.7
         version: 1.0.7(tailwindcss@4.2.4)
       typescript:
-        specifier: ^6.0.2
+        specifier: 'catalog:'
         version: 6.0.3
       use-debounce:
         specifier: ^10.0.4
