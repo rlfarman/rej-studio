@@ -114,8 +114,9 @@ export async function submitJob(
 
   const backend = getComputeBackend()
   const startMs = performance.now()
-  // The corpus the sequence came from is named here, where the database is
-  // reachable, and recorded by the backend in the run record.
+  // The dataset this deployment is serving is named here, where the database
+  // is reachable, and recorded by the backend in the run record. It is not a
+  // claim about where the sequence came from; see ./corpus-version.ts.
   const outcome = await submitToBackend({
     ...validated.data,
     corpus_version: await getCorpusVersion(),

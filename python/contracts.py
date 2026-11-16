@@ -170,8 +170,9 @@ class ProcessRequest(BaseModel):
     CDS: str
     name: str
     options: ProcessOptions = ProcessOptions()
-    # The gene corpus the sequence came from, when the caller knows it. Goes
-    # into the run record; a pasted sequence has none.
+    # The gene dataset the calling deployment is serving, when it knows its
+    # name. Goes into the run record as a fact about the deployment, not about
+    # where this sequence came from — the caller cannot tell.
     corpus_version: str | None = Field(default=None, max_length=200)
 
     @field_validator("CDS")

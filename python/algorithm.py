@@ -1051,8 +1051,9 @@ def process_single_request_json(CDS, name, OPTIONS, on_progress=None, corpus_ver
         OPTIONS: Optimization options dictionary. An optional "seed" makes the
             run reproducible; without one a seed is derived from the inputs.
         on_progress: Optional (fraction, stage) progress callback
-        corpus_version: The gene corpus the sequence came from, when it came
-            from one. Recorded in the run record; see run_record.py.
+        corpus_version: The gene dataset the calling deployment is serving,
+            when it knows its name. Recorded in the run record; see
+            run_record.py.
 
     Returns:
         dict: Structured results including sequences, objectives, WGGW info,

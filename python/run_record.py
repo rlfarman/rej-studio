@@ -108,8 +108,11 @@ def build_run_record(
         duration_seconds: How long it took.
         seed: The seed the run actually used, supplied or derived. Submitting
             the same sequence and options with this seed repeats the design.
-        corpus_version: The gene corpus the input came from, when it came from
-            one. A pasted sequence has no corpus, and the field is omitted.
+        corpus_version: The gene dataset the calling deployment was serving,
+            when it has been told its name. This is a fact about the
+            deployment, not about the input: a sequence pasted by hand carries
+            it too, because the caller cannot tell where a sequence came from.
+            Omitted when no dataset is named.
     """
     record: dict[str, Any] = {
         "record_version": RUN_RECORD_VERSION,

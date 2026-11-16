@@ -9,8 +9,12 @@
  * - The stamp `pnpm db:fetch` leaves in the local PGlite data directory, which
  *   names the prebuilt corpus release that was extracted there.
  *
- * With neither, the corpus is unknown and the record simply omits it. A
- * sequence pasted by hand has no corpus either way.
+ * With neither, the corpus is unknown and the record simply omits it.
+ *
+ * This says what the deployment was serving, not where a submitted sequence
+ * came from: the form accepts a pasted sequence and an edited one alike, and
+ * nothing downstream can tell them apart from an isoform's own CDS. The record
+ * is worded to match, so it never claims a sequence came out of the corpus.
  */
 export async function getCorpusVersion(): Promise<string | undefined> {
   const declared = process.env.CORPUS_VERSION?.trim()

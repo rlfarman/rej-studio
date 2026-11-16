@@ -138,7 +138,10 @@ describe('the methods paragraph', () => {
     )
 
     expect(text).toContain('commit 05a8be1')
-    expect(text).toContain('gene corpus v1')
+    // "loaded", because the record knows what the deployment was serving and
+    // not where the sequence came from.
+    expect(text).toContain('gene corpus v1 loaded')
+    expect(text).not.toMatch(/from (the )?gene corpus/)
   })
 
   it('claims nothing the record does not contain', () => {

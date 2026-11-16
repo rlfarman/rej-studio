@@ -108,10 +108,12 @@ class TestTiming:
 
 
 class TestCorpus:
-    def test_records_the_corpus_a_sequence_came_from(self):
+    def test_records_the_dataset_the_deployment_was_serving(self):
         assert record(corpus_version="v2")["corpus_version"] == "v2"
 
-    def test_omits_the_corpus_for_a_pasted_sequence(self):
+    def test_omits_the_corpus_when_no_dataset_is_named(self):
+        # The caller cannot tell where a sequence came from, so this field is
+        # about the deployment. Unnamed means absent, never guessed.
         assert "corpus_version" not in record()
 
 
@@ -141,22 +143,30 @@ class TestSeed:
         assert result["seed"] == 7
 
 
-def test_a_recorded_run_can_be_repeated_from_its_seed():
+class TestReproducibility:
     """The record is only worth citing if a run can be repeated from it.
 
-    DNAChisel's mutation sampling draws on the global RNGs, so the algorithm
-    seeds them per run and reports the seed it used. This submits the same
-    sequence twice with that seed, from different global RNG states, and checks
-    the design is identical both times.
+    These run the optimizer, because the claim is about the optimizer: that
+    DNAChisel's mutation sampling draws on the global RNGs, that seeding them
+    per run therefore decides the design, and that the recorded seed is enough
+    to get the same design back.
+
+    The sequence below is the shortest in the committed sample corpus whose
+    design actually depends on the seed (human CDKN2A isoform ENST00000497750,
+    315 nt). That choice is the whole point: on a short enough sequence the
+    optimizer reaches the same solution whatever the RNG does, so a test built
+    on one passes with the seeding deleted and proves nothing.
     """
-    import random
 
-    import numpy as np
+    CDS = (
+        "ATGATGATGGGCAGCGCCCGAGTGGCGGAGCTGCTGCTGCTCCACGGCGCGGAGCCCAACTGCGCCGACCCCGCC"
+        "ACTCTCACCCGACCCGTGCACGACGCTGCCCGGGAGGGCTTCCTGGACACGCTGGTGGTGCTGCACCGGGCCGGG"
+        "GCGCGGCTGGACGTGCGCGATGCCTGGGGCCGTCTGCCCGTGGACCTGGCTGAGGAGCTGGGCCATCGCGATGTC"
+        "GCACGGTACCTGCGCGCGGCTGCGGGGGGCACCAGAGGCAGTAACCATGCCCGCATAGATGCCGCGGAAGGTCCC"
+        "TCAGGTGAGGACTGA"
+    )
 
-    from python.algorithm import process_single_request_json
-
-    cds = "ATGGAGGAGCCGCAGTCAGATCCTAGCGTCGAGCCCCCTCTGAGTCAGGAAACATTTTCAGACCTATGGAAACTACTT"
-    options = {
+    OPTIONS = {
         "codon_optimize": "human",
         "remove_cryptic_ss": True,
         "minimize_CpGs": True,
@@ -164,21 +174,68 @@ def test_a_recorded_run_can_be_repeated_from_its_seed():
         "enforce_gc": True,
         "stim_5": False,
         "stim_3": False,
-        "split_point": 39,
         "ensure_wggw": True,
         "wggw_threshold": 30,
-        "seed": 4242,
     }
 
-    outputs = []
-    seeds = []
-    for noise in (1, 999):
+    @classmethod
+    def run_design(cls, options, noise):
+        """One design, from a deliberately disturbed global RNG state.
+
+        Whatever ran before leaves the global RNGs somewhere arbitrary. A run
+        that did not seed them would inherit that state, and these tests would
+        see it.
+        """
+        import random
+
+        import numpy as np
+
+        from python.algorithm import process_single_request_json
+
         random.seed(noise)
         np.random.seed(noise)
-        result = process_single_request_json(CDS=cds, name="t", OPTIONS=dict(options))
-        outputs.append((result["optimized_sequence"], result["seq5"], result["seq3"]))
-        seeds.append(result["run_record"]["seed"])
+        return process_single_request_json(CDS=cls.CDS, name="t", OPTIONS=dict(options))
 
-    assert outputs[0] == outputs[1]
-    assert outputs[0][0], "the optimizer returned nothing"
-    assert seeds == [4242, 4242]
+    def test_the_seed_decides_the_design(self):
+        # Why a seed is worth recording at all: a different one is a different
+        # design. If the algorithm stopped seeding the RNGs, or seeded them
+        # with a constant, these four runs would collapse into one answer.
+        designs = {
+            self.run_design(dict(self.OPTIONS, seed=seed), noise=12345)["optimized_sequence"]
+            for seed in (0, 1, 2, 3)
+        }
+
+        assert len(designs) == 4
+        assert all(designs), "the optimizer returned nothing"
+
+    def test_the_same_seed_repeats_the_design_whatever_ran_before(self):
+        options = dict(self.OPTIONS, seed=4242)
+
+        runs = [self.run_design(options, noise=noise) for noise in (1, 999, 55555)]
+
+        designs = {(run["optimized_sequence"], run["seq5"], run["seq3"]) for run in runs}
+        assert len(designs) == 1
+        assert {run["run_record"]["seed"] for run in runs} == {4242}
+
+    def test_a_derived_seed_is_also_stable(self):
+        # With no seed supplied the backend derives one from the inputs, so
+        # repeat submissions of the same request still agree.
+        runs = [self.run_design(self.OPTIONS, noise=noise) for noise in (1, 999)]
+
+        assert runs[0]["optimized_sequence"] == runs[1]["optimized_sequence"]
+        seeds = {run["run_record"]["seed"] for run in runs}
+        assert len(seeds) == 1
+        assert None not in seeds
+
+    def test_a_recorded_run_can_be_repeated_from_its_record(self):
+        # The promise the record makes: its options plus its seed, submitted
+        # again, give the design back. Nothing else from the record is needed —
+        # only the sequence, which the record identifies but does not carry.
+        first = self.run_design(self.OPTIONS, noise=7)
+        recorded = first["run_record"]
+
+        repeat = self.run_design(dict(recorded["options"], seed=recorded["seed"]), noise=424242)
+
+        assert repeat["optimized_sequence"] == first["optimized_sequence"]
+        assert repeat["seq5"] == first["seq5"]
+        assert repeat["seq3"] == first["seq3"]

@@ -154,9 +154,9 @@ export const runRecordSchema = z.object({
   options: z.record(z.string(), z.unknown()),
   versions: runRecordVersionsSchema,
   /**
-   * The gene corpus the sequence came from. Falsy for a pasted sequence, and
-   * for a database whose dataset the deployment has not named; see
-   * `api/corpus-version.ts`.
+   * The gene dataset the deployment was serving when the run happened — a
+   * fact about the deployment, not about where the sequence came from. Falsy
+   * when the dataset has not been named; see `api/corpus-version.ts`.
    */
   corpus_version: z.string().nullable().optional(),
 })

@@ -131,7 +131,11 @@ export function buildMethodsParagraph(record: RunRecord): string {
     `algorithm build ${versions.algorithm_sha256}`,
     versions.commit ? `commit ${versions.commit.slice(0, 7)}` : null,
     `Python ${versions.python}`,
-    record.corpus_version ? `gene corpus ${record.corpus_version}` : null,
+    // What the deployment was serving, not where the sequence came from: the
+    // record cannot tell, and a methods section must not imply it can.
+    record.corpus_version
+      ? `gene corpus ${record.corpus_version} loaded`
+      : null,
   ].filter((part): part is string => part !== null)
   sentences.push(`Run provenance: ${provenance.join('; ')}.`)
 

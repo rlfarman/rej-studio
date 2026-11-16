@@ -346,7 +346,9 @@ export const designToolCopy = {
         commit: 'Commit',
         dnachisel: 'DNAChisel',
         python: 'Python',
-        corpus: 'Gene corpus',
+        // The dataset the deployment was serving, which is not a claim about
+        // where this sequence came from.
+        corpus: 'Gene corpus loaded',
         options: 'Options applied',
       },
       optionsCount: (count: number) =>
