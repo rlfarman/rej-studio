@@ -38,6 +38,9 @@ TS_PROCESS_RESULT_FIELDS = {
     "objectives_report_after",
     "wggw_info",
     "processing_time_seconds",
+    # The seed the run used, so a design can be reproduced. The TS
+    # ProcessResult interface needs `seed?: number | null` to match.
+    "seed",
 }
 
 TS_OBJECTIVES_REPORT_FIELDS = {
@@ -97,6 +100,8 @@ class TestProcessResultContract:
         result = ProcessResult(**payload)
         assert result.name == "Test"
         assert result.split_point == 6
+        # seed is optional so an older payload still validates.
+        assert result.seed is None
 
 
 class TestObjectivesReportContract:

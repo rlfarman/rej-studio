@@ -1,17 +1,14 @@
 import contextlib
-import glob
-import os
+import hashlib
+import json
 import random
 import re
-import shutil
-import sys
 import threading
 import time
 from collections import defaultdict
-from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass
-from functools import partial
 
+import numpy as np
 from dnachisel import (
     AvoidChanges,
     AvoidPattern,
@@ -36,6 +33,14 @@ except Exception:  # pragma: no cover - defensive
 
         def __call__(self, *args, **kwargs):
             pass
+
+
+class OptimizationError(RuntimeError):
+    """The optimizer ran but could not produce a usable design.
+
+    Raised instead of returning empty strings: an empty sequence serializes
+    as a perfectly valid-looking "success" the frontend will happily show.
+    """
 
 
 class _MonotonicProgress:
@@ -211,22 +216,52 @@ def _progress_heartbeat(gate, frac_range, expected_seconds, idle_after=0.5):
         t.join(timeout=0.5)
 
 
-# A simple "tee" object for duplicating writes
-class Tee:
-    """Utility class to duplicate writes to multiple streams."""
+# --- Reproducibility -------------------------------------------------------
+# DNAChisel's mutation space sampling falls back to the unseeded global
+# numpy RNG, so two runs of the same request can return different designs.
+# Seeding both RNGs per job makes a run reproducible, and the seed is echoed
+# in the result so a design can be regenerated exactly.
+SEED_MODULUS = 2**32
 
-    def __init__(self, *streams):
-        self.streams = streams
 
-    def write(self, data):
-        """Write data to all streams."""
-        for s in self.streams:
-            s.write(data)
+def derive_seed(CDS, OPTIONS):
+    """Derive a stable seed from the inputs.
 
-    def flush(self):
-        """Flush all streams."""
-        for s in self.streams:
-            s.flush()
+    Same sequence + same options (ignoring any supplied seed) always yields
+    the same seed, so repeat submissions are reproducible without the caller
+    having to track one.
+    """
+    relevant = {k: v for k, v in sorted(OPTIONS.items()) if k != "seed"}
+    payload = json.dumps([CDS, relevant], sort_keys=True, default=str)
+    digest = hashlib.sha256(payload.encode("utf-8")).digest()
+    return int.from_bytes(digest[:4], "big") % SEED_MODULUS
+
+
+def resolve_seed(CDS, OPTIONS):
+    """Return the seed to use: the caller's if given, else a derived one."""
+    seed = OPTIONS.get("seed")
+    if seed is None:
+        return derive_seed(CDS, OPTIONS)
+    return int(seed) % SEED_MODULUS
+
+
+def apply_seed(seed):
+    """Seed every RNG DNAChisel might reach for."""
+    random.seed(seed)
+    np.random.seed(seed)
+
+
+def resolve_split_point(OPTIONS, sequence_length):
+    """The split point to design around, defaulting to the midpoint.
+
+    `OPTIONS.get("split_point", default)` isn't enough: the frontend sends an
+    explicit null when the user hasn't moved the splice slider, so the key is
+    present and the default never applies.
+    """
+    split_point = OPTIONS.get("split_point")
+    if split_point is None:
+        return sequence_length // 2
+    return int(split_point)
 
 
 # WGGW Motif Insertion Functions
@@ -659,7 +694,7 @@ def runOptimization(CDS, OPTIONS, on_progress=None):
         CDS, explicit_main_info, explicit_lock_region = apply_explicit_wggw_site(
             CDS,
             explicit_main_site,
-            OPTIONS.get("split_point", len(CDS) // 2),
+            resolve_split_point(OPTIONS, len(CDS)),
         )
         OPTIONS["explicit_wggw_main"] = explicit_main_info
     if explicit_lock_region is not None:
@@ -670,6 +705,12 @@ def runOptimization(CDS, OPTIONS, on_progress=None):
     # 'objective', 'constraint') to our on_progress callback, so the frontend
     # can show real sub-progress during the long `problem.optimize()` call
     # instead of sitting frozen at 45% for most of the run.
+    #
+    # Both loggers are None when no progress callback was supplied. "bar" is
+    # only ever a *constructor* argument — DNAChisel turns it into a proglog
+    # logger itself. Assigning the string to `problem.logger` afterwards
+    # replaces the real logger and makes optimize() fail on
+    # logger.iter_bar(), so the swap below is guarded.
     optimize_logger = (
         _ProgressBridgeLogger(
             gate=progress_gate,
@@ -677,7 +718,7 @@ def runOptimization(CDS, OPTIONS, on_progress=None):
             stage="Optimizing sequence",
         )
         if on_progress is not None
-        else "bar"
+        else None
     )
     resolve_logger = (
         _ProgressBridgeLogger(
@@ -686,14 +727,14 @@ def runOptimization(CDS, OPTIONS, on_progress=None):
             stage="Resolving constraints",
         )
         if on_progress is not None
-        else "bar"
+        else None
     )
 
     _emit(0.10, "Preparing constraints")
     problem = build_optimization_problem(
         CDS,
         OPTIONS,
-        logger=resolve_logger,
+        logger=resolve_logger if resolve_logger is not None else "bar",
         explicit_lock_region=explicit_lock_region,
     )
     _emit(0.15, "Resolving constraints")
@@ -702,9 +743,12 @@ def runOptimization(CDS, OPTIONS, on_progress=None):
     objectives_before = problem.objectives_text_summary()
     OPTIONS["objectives_report_before"] = build_objectives_report(problem)
     _emit(0.45, "Optimizing sequence")
-    # Swap in the optimize-phase logger. Some dnachisel versions look it up
-    # as problem.logger; this reassignment is safe either way.
-    problem.logger = optimize_logger  # type: ignore[assignment]
+    # Swap in the optimize-phase bridge, but only when there is one: the
+    # logger DNAChisel built for us stays in place otherwise.
+    if optimize_logger is not None:
+        # dnachisel's annotation only admits its own two logger classes, but
+        # any proglog ProgressBarLogger works at runtime.
+        problem.logger = optimize_logger  # type: ignore[assignment]
     # Also run a heartbeat thread as a safety net: if dnachisel doesn't emit
     # bar events frequently enough (short objective lists, tight loops,
     # different version internals), we still creep forward on wall-clock so
@@ -761,7 +805,7 @@ def insertSplitMarkers(optimized_sequence, OPTIONS):
     generate the 5' and 3' outputs.
     """
     CDSlen = len(optimized_sequence)
-    split_point = OPTIONS.get("split_point", CDSlen // 2)
+    split_point = resolve_split_point(OPTIONS, CDSlen)
     wggw_threshold = OPTIONS.get("wggw_threshold", 300)
 
     # Original protein sequence for verification
@@ -952,520 +996,48 @@ def optimize_and_split(CDS, OPTIONS, on_progress=None):
 
     Returns:
         tuple: (seq5, seq3, objectives_before, objectives_after, optimized_seq)
+
+    Raises:
+        OptimizationError: the optimizer finished but the design is unusable.
+        Anything DNAChisel raises propagates unchanged — callers turn it into
+        an error response. Returning empty strings here (as this used to) made
+        a failed run look like a successful empty design.
     """
-    try:
-        optimized_seq, objectives_before, objectives_after = runOptimization(
-            CDS, OPTIONS, on_progress=on_progress
-        )
-        split_result = insertSplitMarkers(optimized_seq, OPTIONS)
-        seq_with_markers = split_result.sequence_with_markers
-
-        # Check for numeric markers in sequence which could cause translation errors
-        if re.search(r"[^ACGT]", seq_with_markers):
-            # Count numeric markers
-            num_0_markers = seq_with_markers.count("0")
-            num_1_markers = seq_with_markers.count("1")
-            print(
-                f"Found {num_0_markers} main markers and {num_1_markers} stimulatory markers in sequence"
-            )
-
-        seq5, seq3 = replaceMarkersWithPlaceholders(seq_with_markers)
-        OPTIONS["actual_split_point"] = split_result.actual_split_point
-        try:
-            objectives_after, objectives_report_after = evaluate_objectives_for_sequence(
-                split_result.final_sequence,
-                OPTIONS,
-            )
-            OPTIONS["objectives_report_after"] = objectives_report_after
-        except Exception as report_error:
-            print(f"Warning: Final objective re-evaluation failed: {report_error}")
-
-        return seq5, seq3, objectives_before, objectives_after, split_result.final_sequence
-
-    except Exception as e:
-        print(f"Error in optimize_and_split: {str(e)}")
-        # Return empty values to indicate error
-        return "", "", "Error occurred", f"Error: {str(e)}", ""
-
-
-def process_gene(file_path, OPTIONS, results_folder="results"):
-    """
-    Process a single gene file.
-
-    Args:
-        file_path: Path to gene file
-        OPTIONS: Optimization options dictionary
-        results_folder: Folder to save output files
-
-    Returns:
-        tuple: (report_filename, sequences_filename)
-    """
-    try:
-        gene_name = os.path.splitext(os.path.basename(file_path))[0]
-        with open(file_path, encoding="utf-8") as f:
-            CDS = f.read().strip()
-
-        seq5, seq3, obj_before, obj_after, optimized_seq = optimize_and_split(CDS, OPTIONS)
-
-        # Prepare report text
-        report_text = f"Gene Name: {gene_name}\n"
-        report_text += "CDS:\n" + CDS + "\n\n"
-        report_text += "Options Used:\n" + str(OPTIONS) + "\n\n"
-        report_text += "Optimized Sequence (prior to splitting):\n" + optimized_seq + "\n\n"
-        report_text += "Objectives Summary (Before optimization):\n" + obj_before + "\n\n"
-        report_text += "Objectives Summary (After optimization):\n" + obj_after + "\n"
-
-        # Add WGGW information if available
-        if "wggw_info" in OPTIONS:
-            wggw_info_all = OPTIONS["wggw_info"]
-            report_text += "\nWGGW Motif Information:\n"
-
-            for site_type, info in wggw_info_all.items():
-                report_text += f"\n{site_type.upper()} Site:\n"
-                report_text += f"  Position: {info['position']}\n"
-                report_text += f"  Motif: {info['motif']}\n"
-                report_text += f"  Distance from split point: {info['distance_from_split']} bp\n"
-                report_text += f"  Original codons: {info['original_codons'][0]}|{info['original_codons'][1]}\n"
-                report_text += f"  New codons: {info['new_codons'][0]}|{info['new_codons'][1]}\n"
-
-                # Add specific location information for main/stim sites
-                if site_type == "main":
-                    main_location = info["position"] + 2  # Middle of GG
-                    report_text += f"  Main Split Location: {main_location}\n"
-                elif site_type == "stim5":
-                    stim5_location = info["position"] + 2  # Middle of GG
-                    report_text += f"  Stim5 Location: {stim5_location}\n"
-                elif site_type == "stim3":
-                    stim3_location = info["position"] + 2  # Middle of GG
-                    report_text += f"  Stim3 Location: {stim3_location}\n"
-
-            if "main" in wggw_info_all:
-                report_text += (
-                    f"\nUsed WGGW as main split point: {OPTIONS.get('used_wggw_as_split', False)}\n"
-                )
-
-        # Create results folder - use absolute path
-        results_folder = os.path.abspath(results_folder)
-        os.makedirs(results_folder, exist_ok=True)
-
-        # Write output files with explicit paths
-        report_filename = os.path.join(results_folder, f"optimization_report.{gene_name}.txt")
-        sequences_filename = os.path.join(results_folder, f"REJ.{gene_name}.txt")
-
-        # Verify the paths
-        print(f"Writing report to: {report_filename}")
-        print(f"Writing sequences to: {sequences_filename}")
-
-        with open(report_filename, "w", encoding="utf-8") as report_file:
-            report_file.write(report_text)
-
-        with open(sequences_filename, "w", encoding="utf-8") as seq_file:
-            seq_file.write("5' Sequence:\n" + seq5 + "\n\n3' Sequence:\n" + seq3)
-
-        # Verify files were created
-        if not os.path.exists(report_filename):
-            print(f"Warning: Failed to create report file: {report_filename}")
-        if not os.path.exists(sequences_filename):
-            print(f"Warning: Failed to create sequences file: {sequences_filename}")
-
-        return report_filename, sequences_filename
-
-    except Exception as e:
-        print(f"Error in process_gene: {str(e)}")
-        # Ensure the results folder exists even on error
-        os.makedirs(results_folder, exist_ok=True)
-        # Return placeholder filenames for error reporting
-        error_report = os.path.join(
-            results_folder, f"error_report.{os.path.basename(file_path)}.txt"
-        )
-        with open(error_report, "w", encoding="utf-8") as f:
-            f.write(f"Error processing {file_path}: {str(e)}\n")
-        return error_report, None
-
-
-def process_gene_silent(
-    file_path, OPTIONS, suppress_stderr=True, results_folder="results", logs_folder="logs"
-):
-    """
-    Process a gene with logging and error handling.
-
-    Args:
-        file_path: Path to gene file
-        OPTIONS: Optimization options dictionary
-        suppress_stderr: Whether to suppress standard error output
-        results_folder: Folder to save results
-        logs_folder: Folder to save logs
-
-    Returns:
-        tuple: (report_filename, sequences_filename, gene_name, sequence_length, elapsed_time)
-    """
-    start_time = time.time()
-
-    try:
-        with open(file_path, encoding="utf-8") as f:
-            CDS = f.read().strip()
-        seq_len = len(CDS)
-        gene_name = os.path.splitext(os.path.basename(file_path))[0]
-
-        # Dynamically set the split point
-        options_for_gene = OPTIONS.copy()
-        options_for_gene["split_point"] = seq_len // 2
-
-        # Convert to absolute paths
-        results_folder = os.path.abspath(results_folder)
-        logs_folder = os.path.abspath(logs_folder)
-
-        # Create logs folder
-        os.makedirs(logs_folder, exist_ok=True)
-        stdout_log_filename = os.path.join(logs_folder, f"{gene_name}_stdout.txt")
-        stderr_log_filename = os.path.join(logs_folder, f"{gene_name}_stderr.txt")
-
-        with (
-            open(stdout_log_filename, "w") as stdout_file,
-            open(stderr_log_filename, "w") as stderr_file,
-        ):
-            stderr_target = Tee(stderr_file, sys.stderr) if not suppress_stderr else stderr_file
-            with contextlib.redirect_stdout(stdout_file), contextlib.redirect_stderr(stderr_target):  # type: ignore[arg-type]
-                result = process_gene(file_path, options_for_gene, results_folder)
-
-        elapsed_time = time.time() - start_time
-
-        # Make sure the result contains valid filenames
-        if result is None or result[0] is None:
-            if not suppress_stderr:
-                print(f"Error: process_gene returned None for {gene_name}")
-            # Create a placeholder report file
-            error_report = os.path.join(results_folder, f"error_report.{gene_name}.txt")
-            with open(error_report, "w", encoding="utf-8") as f:
-                f.write(f"Error processing {file_path}: process_gene returned None\n")
-                f.write(f"Processing Time (seconds): {elapsed_time:.2f}\n")
-            return error_report, None, gene_name, seq_len, elapsed_time
-
-        # Append processing time information to the optimization report
-        report_filename = result[0]
-        try:
-            with open(report_filename, "a", encoding="utf-8") as report_file:
-                report_file.write(f"\nProcessing Time (seconds): {elapsed_time:.2f}\n")
-        except Exception as e:
-            if not suppress_stderr:
-                print(f"Warning: Could not append processing time to {report_filename}: {str(e)}")
-
-        return result + (gene_name, seq_len, elapsed_time)
-
-    except Exception as e:
-        elapsed_time = time.time() - start_time
-        if not suppress_stderr:
-            print(f"Error in process_gene_silent for {os.path.basename(file_path)}: {str(e)}")
-
-        # Ensure the results folder exists
-        os.makedirs(results_folder, exist_ok=True)
-
-        # Create an error report
-        gene_name = os.path.splitext(os.path.basename(file_path))[0]
-        error_report = os.path.join(results_folder, f"error_report.{gene_name}.txt")
-        with open(error_report, "w", encoding="utf-8") as f:
-            f.write(f"Error processing {file_path}: {str(e)}\n")
-            f.write(f"Processing Time (seconds): {elapsed_time:.2f}\n")
-
-        try:
-            with open(file_path, encoding="utf-8") as f:
-                CDS = f.read().strip()
-                seq_len = len(CDS)
-        except Exception:
-            seq_len = 0
-
-        return error_report, None, gene_name, seq_len, elapsed_time
-
-
-def check_file(file_path, results_folder="results"):
-    """
-    Check if a gene file qualifies for processing.
-
-    Returns the file_path if it qualifies; otherwise, returns None.
-    """
-    gene_name = os.path.splitext(os.path.basename(file_path))[0]
-    try:
-        with open(file_path, encoding="utf-8") as f:
-            CDS = f.read().strip()
-    except Exception:
-        return None
-
-    CDS = CDS.upper()
-    if "N" in CDS or (len(CDS) % 3 != 0):
-        error_folder = "coding_sequence_error"
-        os.makedirs(error_folder, exist_ok=True)
-        dest_path = os.path.join(error_folder, os.path.basename(file_path))
-        shutil.move(file_path, dest_path)
-        return None
-
-    report_filename = os.path.join(results_folder, f"optimization_report.{gene_name}.txt")
-    if os.path.exists(report_filename):
-        return None
-    return file_path
-
-
-def process_all_genes(
-    OPTIONS,
-    max_files=300,
-    suppress_stderr=True,
-    randomize=True,
-    skip_complex=True,
-    results_folder="results",
-    logs_folder="logs",
-):
-    """
-    Process multiple gene files in parallel with custom progress tracking.
-
-    Args:
-        OPTIONS: Optimization options dictionary
-        max_files: Maximum number of files to process
-        suppress_stderr: Whether to suppress standard error output
-        randomize: Whether to randomize file order
-        skip_complex: Whether to skip files that take too long
-        results_folder: Folder to save results
-        logs_folder: Folder to save logs
-
-    Returns:
-        list: Results from processing each gene
-    """
-    files = glob.glob(os.path.join("coding_sequences", "*.txt"))
-    if not files:
-        raise FileNotFoundError("No text files found in the 'coding_sequences' folder.")
-
-    # Create results folder
-    os.makedirs(results_folder, exist_ok=True)
-
-    # Filter files quietly with minimal output
-    print("Filtering files...")
-    files_to_process = []
-    for file_path in files:
-        result = check_file(file_path, results_folder)
-        if result is not None:
-            files_to_process.append(result)
-    print(f"Found {len(files_to_process)} files to process.")
-
-    if randomize:
-        random.shuffle(files_to_process)
-
-    files_to_process = files_to_process[:max_files]
-    num_files_to_process = len(files_to_process)
-
-    print(f"Processing {num_files_to_process} files...")
-
-    # Function to get completed files from results folder
-    def get_completed_files():
-        return set(glob.glob(os.path.join(results_folder, "optimization_report.*.txt")))
-
-    # Get initial set of files
-    initial_files = get_completed_files()
-
-    # Function to display progress based on file count
-    def display_progress():
-        current_files = get_completed_files()
-        new_files = current_files - initial_files
-        completed = len(new_files)
-
-        # Calculate progress percentage
-        progress = min(1.0, completed / num_files_to_process) if num_files_to_process > 0 else 0
-        percentage = progress * 100
-
-        # Calculate elapsed time
-        elapsed_time = time.time() - start_time
-
-        # Calculate estimated time remaining
-        if completed > 0:
-            avg_time_per_file = elapsed_time / completed
-            remaining_time = avg_time_per_file * (num_files_to_process - completed)
-        else:
-            remaining_time = 0
-
-        # Calculate processing rate (files per second)
-        rate = completed / elapsed_time if elapsed_time > 0 else 0
-
-        # Create progress bar
-        bar_length = 40
-        filled_length = int(bar_length * progress)
-        bar = "█" * filled_length + "░" * (bar_length - filled_length)
-
-        # Format times nicely
-        def format_time(seconds):
-            if seconds < 0 or seconds > 9999999:
-                return "???"
-            hours, remainder = divmod(int(seconds), 3600)
-            minutes, seconds = divmod(remainder, 60)
-            if hours > 0:
-                return f"{hours:02d}:{minutes:02d}:{seconds:02d}"
-            else:
-                return f"{minutes:02d}:{seconds:02d}"
-
-        # Create status line
-        status = (
-            f"\r[{bar}] {percentage:.1f}% | "
-            f"{completed}/{num_files_to_process} | "
-            f"Elapsed: {format_time(elapsed_time)} | "
-            f"Remaining: {format_time(remaining_time)} | "
-            f"Rate: {rate:.2f} files/s"
-        )
-
-        # Print status
-        sys.stdout.write("\r" + " " * 100)  # Clear previous line
-        sys.stdout.write(status)
-        sys.stdout.flush()
-
-        return completed
-
-    # Process genes in parallel
-    process_func = partial(
-        process_gene_silent,
-        OPTIONS=OPTIONS,
-        suppress_stderr=suppress_stderr,
-        results_folder=results_folder,
-        logs_folder=logs_folder,
+    optimized_seq, objectives_before, objectives_after = runOptimization(
+        CDS, OPTIONS, on_progress=on_progress
     )
+    if not optimized_seq:
+        raise OptimizationError("Optimization produced an empty sequence")
 
-    results = []
-    start_time = time.time()
-    last_update_time = start_time
+    split_result = insertSplitMarkers(optimized_seq, OPTIONS)
+    seq_with_markers = split_result.sequence_with_markers
 
-    with ProcessPoolExecutor(max_workers=os.cpu_count()) as executor:
-        # Submit all jobs
-        futures = [executor.submit(process_func, file_path) for file_path in files_to_process]
-
-        # Monitor progress while jobs are running
-        while True:
-            # Only update display every second to avoid excessive updates
-            current_time = time.time()
-            if current_time - last_update_time >= 1.0:
-                completed = display_progress()
-                last_update_time = current_time
-
-            # Check if all futures are done
-            all_done = True
-            for future in futures:
-                if not future.done():
-                    all_done = False
-                    break
-
-            if all_done:
-                break
-
-            # Sleep briefly to avoid high CPU usage in this loop
-            time.sleep(0.5)
-
-        # Collect results from completed futures
-        for future in futures:
-            try:
-                result = future.result()
-                results.append(result)
-            except Exception as e:
-                if not suppress_stderr:
-                    print(f"\nError in processing: {str(e)}")
-
-    # Final progress update
-    completed = display_progress()
-    print(f"\n\nCompleted {completed}/{num_files_to_process} files successfully.")
-
-    return results
-
-
-def process_single_request(CDS, name, OPTIONS, results_folder="/tmp/results"):
-    """
-    Process a single coding sequence directly (without reading from a file).
-    Created for the web application.
-
-    Args:
-        CDS: The coding sequence string to process
-        name: Name identifier for the output files
-        OPTIONS: Optimization options dictionary
-        results_folder: Folder to save output files
-
-    Returns:
-        tuple: (report_filename, sequences_filename)
-    """
-    try:
-        # Clean up the input sequence
-        CDS = CDS.strip().upper()
-
-        # Ensure the CDS is valid
-        if "N" in CDS:
-            raise ValueError("Coding sequence contains ambiguous 'N' nucleotides")
-        if len(CDS) % 3 != 0:
-            raise ValueError("Coding sequence length is not a multiple of 3")
-
-        # Create a copy of OPTIONS without modifying the split point
-        options_for_sequence = OPTIONS.copy()
-
-        # Run the optimization and splitting
-        seq5, seq3, obj_before, obj_after, optimized_seq = optimize_and_split(
-            CDS, options_for_sequence
+    # Check for numeric markers in sequence which could cause translation errors
+    if re.search(r"[^ACGT]", seq_with_markers):
+        # Count numeric markers
+        num_0_markers = seq_with_markers.count("0")
+        num_1_markers = seq_with_markers.count("1")
+        print(
+            f"Found {num_0_markers} main markers and {num_1_markers} stimulatory markers in sequence"
         )
 
-        # Prepare report text
-        report_text = f"Sequence Name: {name}\n"
-        report_text += "CDS:\n" + CDS + "\n\n"
-        report_text += "Options Used:\n" + str(options_for_sequence) + "\n\n"
-        report_text += "Optimized Sequence (prior to splitting):\n" + optimized_seq + "\n\n"
-        report_text += "Objectives Summary (Before optimization):\n" + obj_before + "\n\n"
-        report_text += "Objectives Summary (After optimization):\n" + obj_after + "\n"
+    seq5, seq3 = replaceMarkersWithPlaceholders(seq_with_markers)
+    OPTIONS["actual_split_point"] = split_result.actual_split_point
+    try:
+        objectives_after, objectives_report_after = evaluate_objectives_for_sequence(
+            split_result.final_sequence,
+            OPTIONS,
+        )
+        OPTIONS["objectives_report_after"] = objectives_report_after
+    except Exception as report_error:
+        # The design itself is fine; only the (cosmetic) re-scored report is
+        # missing, so keep the summary from the optimize phase.
+        print(f"Warning: Final objective re-evaluation failed: {report_error}")
 
-        # Add WGGW information if available
-        if "wggw_info" in options_for_sequence:
-            wggw_info_all = options_for_sequence["wggw_info"]
-            report_text += "\nWGGW Motif Information:\n"
+    if not split_result.final_sequence or not seq5:
+        raise OptimizationError("Optimization produced an empty design fragment")
 
-            for site_type, info in wggw_info_all.items():
-                report_text += f"\n{site_type.upper()} Site:\n"
-                report_text += f"  Position: {info['position']}\n"
-                report_text += f"  Motif: {info['motif']}\n"
-                report_text += f"  Distance from split point: {info['distance_from_split']} bp\n"
-                report_text += f"  Original codons: {info['original_codons'][0]}|{info['original_codons'][1]}\n"
-                report_text += f"  New codons: {info['new_codons'][0]}|{info['new_codons'][1]}\n"
-
-                # Add specific location information for main/stim sites
-                if site_type == "main":
-                    main_location = info["position"] + 2  # Middle of GG
-                    report_text += f"  Main Split Location: {main_location}\n"
-                elif site_type == "stim5":
-                    stim5_location = info["position"] + 2  # Middle of GG
-                    report_text += f"  Stim5 Location: {stim5_location}\n"
-                elif site_type == "stim3":
-                    stim3_location = info["position"] + 2  # Middle of GG
-                    report_text += f"  Stim3 Location: {stim3_location}\n"
-
-            if "main" in wggw_info_all:
-                report_text += f"\nUsed WGGW as main split point: {options_for_sequence.get('used_wggw_as_split', False)}\n"
-
-        # Add processing timestamp
-        current_time = time.strftime("%Y-%m-%d %H:%M:%S")
-        report_text += f"\nProcessing Time: {current_time}\n"
-
-        # Create results folder - use absolute path
-        results_folder = os.path.abspath(results_folder)
-        os.makedirs(results_folder, exist_ok=True)
-
-        # Write output files with explicit paths
-        report_filename = os.path.join(results_folder, f"optimization_report.{name}.txt")
-        sequences_filename = os.path.join(results_folder, f"REJ.{name}.txt")
-
-        # Write files
-        with open(report_filename, "w", encoding="utf-8") as report_file:
-            report_file.write(report_text)
-
-        with open(sequences_filename, "w", encoding="utf-8") as seq_file:
-            seq_file.write("5' Sequence:\n" + seq5 + "\n\n3' Sequence:\n" + seq3)
-
-        return report_filename, sequences_filename
-
-    except Exception as e:
-        print(f"Error in process_single_request: {str(e)}")
-        # Ensure the results folder exists even on error
-        os.makedirs(results_folder, exist_ok=True)
-        # Create an error report
-        error_report = os.path.join(results_folder, f"error_report.{name}.txt")
-        with open(error_report, "w", encoding="utf-8") as f:
-            f.write(f"Error processing sequence '{name}': {str(e)}\n")
-            f.write(f"CDS: {CDS[:100]}... (truncated if longer than 100 characters)\n")
-        return error_report, None
+    return seq5, seq3, objectives_before, objectives_after, split_result.final_sequence
 
 
 def process_single_request_json(CDS, name, OPTIONS, on_progress=None):
@@ -1476,26 +1048,35 @@ def process_single_request_json(CDS, name, OPTIONS, on_progress=None):
     Args:
         CDS: The coding sequence string to process
         name: Name identifier for the sequence
-        OPTIONS: Optimization options dictionary
+        OPTIONS: Optimization options dictionary. An optional "seed" makes the
+            run reproducible; without one a seed is derived from the inputs.
+        on_progress: Optional (fraction, stage) progress callback
 
     Returns:
-        dict: Structured results including sequences, objectives, and WGGW info
+        dict: Structured results including sequences, objectives, WGGW info
+        and the seed the run used
     """
     import time as _time
 
     start = _time.monotonic()
 
     # Clean up the input sequence
-    CDS = CDS.strip().upper()
+    CDS = CDS.strip().upper().replace("U", "T")
 
     # Ensure the CDS is valid
-    if "N" in CDS:
-        raise ValueError("Coding sequence contains ambiguous 'N' nucleotides")
+    if not CDS:
+        raise ValueError("Coding sequence must not be empty")
+    if not re.match(r"^[ACGT]+$", CDS):
+        raise ValueError("Coding sequence must contain only A, C, G, T, or U")
     if len(CDS) % 3 != 0:
         raise ValueError("Coding sequence length is not a multiple of 3")
 
     # Create a copy of OPTIONS without modifying the original
     options_copy = OPTIONS.copy()
+
+    # Seed before touching DNAChisel so the design is reproducible.
+    seed = resolve_seed(CDS, options_copy)
+    apply_seed(seed)
 
     if on_progress is not None:
         on_progress(0.05, "Checking sequence")
@@ -1529,7 +1110,7 @@ def process_single_request_json(CDS, name, OPTIONS, on_progress=None):
         "seq3": seq3,
         "split_point": options_copy.get(
             "actual_split_point",
-            options_copy.get("split_point", OPTIONS.get("split_point")),
+            resolve_split_point(options_copy, len(CDS)),
         ),
         "used_wggw_as_split": options_copy.get("used_wggw_as_split", False),
         "objectives_before": obj_before,
@@ -1540,39 +1121,5 @@ def process_single_request_json(CDS, name, OPTIONS, on_progress=None):
         or {"entries": [], "total_score": None},
         "wggw_info": wggw_info,
         "processing_time_seconds": round(elapsed, 2),
+        "seed": seed,
     }
-
-
-if __name__ == "__main__":
-    OPTIONS = {
-        "codon_optimize": "human",
-        "codon_optimize_weight": 1.0,
-        "remove_cryptic_ss": True,
-        "remove_cryptic_ss_weight": 1.0,
-        "minimize_CpGs": True,
-        "minimize_CpGs_weight": 1.0,
-        "reduce_kmer_complexity": True,
-        "reduce_kmer_complexity_k": 10,  # Changed from 15 to 10 as requested
-        "reduce_kmer_complexity_weight": 1.0,  #
-        "enforce_gc": True,  # Enforce GC content between 35% and 60%  // USE THIS + ^
-        "induce_optimal_ss": True,  # Option remains (but not used)
-        "stim_5": True,  # Option for stimulatory intron 5' // USE THIS
-        "stim_3": True,  # Option for stimulatory intron 3' // USE THIS
-        "split_point": 500,  # This value will be overridden per gene  // USE THIS
-        "ensure_wggw": True,  # Ensure WGGW motif near split points
-        "wggw_threshold": 300,  # Distance threshold for WGGW from split point
-    }
-
-    # Added ability to specify results folder
-    results_folder = "results4"  # Default, can be changed as needed
-    logs_folder = "logs4"  # Default, can be changed as needed
-
-    process_all_genes(
-        OPTIONS,
-        max_files=200000,
-        suppress_stderr=True,
-        randomize=True,
-        skip_complex=False,
-        results_folder=results_folder,
-        logs_folder=logs_folder,
-    )
