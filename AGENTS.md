@@ -13,7 +13,7 @@ REJ Studio is a bioinformatics web app for RNA End-Joining sequence design. User
 - **shadcn/ui + Radix UI** — Component library. UI primitives live in `src/components/ui/`. Config in `components.json`.
 - **Zustand** — Global client state (favorites, recent genes, species filter) lives in `src/stores/` (shared) or `src/features/<feature>/stores/` (feature-owned).
 - **Auth** — Shared-password session gate enforced in the proxy (`src/proxy.ts`). Engages when `BASIC_AUTH_PASSWORD` is set (with `SESSION_SECRET`); skip locally with `BYPASS_AUTH=true` (dev only). Without a session, page loads redirect to `/login?return_to=…` and API calls and server actions get 401; the paths that stay public are `PUBLIC_PATHS` plus the matcher exclusions. Client-invoked server actions also call `requireSession()` (`src/lib/auth/require-session.ts`), since actions are public endpoints. The root-layout `AuthGate` is only a backstop: it can't stop a page segment from rendering. `/api/health` is public but runs DB/Modal checks only with `HEALTH_AUTH_TOKEN`.
-- **Observability** — Sentry (`sentry.*.config.ts`), OpenTelemetry (`src/instrumentation.ts`, vendor-neutral OTLP), and Google Tag Manager (`NEXT_PUBLIC_GTM_ID`) ship Web Vitals to the dataLayer. Upstash Redis powers distributed rate limiting (`src/lib/rate-limit.ts`), falling back to in-memory when unconfigured.
+- **Observability** — Sentry (`instrumentation-client.ts`, `src/sentry.*.config.ts`, loaded from `src/instrumentation.ts`) handles errors and traces; it registers its own OpenTelemetry provider, so there's no separate OTel SDK on the Next.js side. Google Tag Manager (`NEXT_PUBLIC_GTM_ID`) ships Web Vitals to the dataLayer. Upstash Redis powers distributed rate limiting (`src/lib/rate-limit.ts`), falling back to in-memory when unconfigured.
 
 ## Key Directories
 
@@ -32,7 +32,7 @@ REJ Studio is a bioinformatics web app for RNA End-Joining sequence design. User
 | `src/copy/`              | Shared user-facing copy (`errors.ts`, `common.ts`, `app.ts`). Feature copy lives in `src/features/<f>/copy.ts`     |
 | `src/drizzle/`           | DB schema, client, migrations (`schema.ts`, `db.ts`, `migrations/`)                                                |
 | `src/proxy.ts`           | Next.js middleware — session gate, CSRF and body-size checks, CSP                                                  |
-| `src/instrumentation.ts` | OpenTelemetry bootstrap + Sentry server/edge init                                                                  |
+| `src/instrumentation.ts` | Env validation at boot + Sentry server/edge init                                                                   |
 | `python/`                | FastAPI Python backend (`index.py`, `algorithm.py`); dependencies in the root `pyproject.toml` + `uv.lock`         |
 | `modal/`                 | Modal deployment for the Python backend (production compute)                                                       |
 | `scripts/`               | Dev tooling — worktree bootstrap, DB build/load, bundle-size checks, schema verify, type generation                |
@@ -118,7 +118,7 @@ For seeding a Neon database (production), the same `db:build`/`db:push`/`db:uplo
 - **Core** — `DATABASE_URL` (omit for PGlite dev), `COMPUTE_BACKEND`, `MODAL_API_URL`, `LOCAL_API_URL`.
 - **Auth** — `BASIC_AUTH_USER`, `BASIC_AUTH_PASSWORD`, `BYPASS_AUTH`.
 - **Public / client** — `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_GTM_ID`.
-- **Observability** — `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_*`, `OTEL_EXPORTER_OTLP_*`, `OTEL_SERVICE_NAME`.
+- **Observability** — `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_*`.
 - **Optional features** — `HEALTH_AUTH_TOKEN`, `MAINTENANCE_MESSAGE`, `UPSTASH_REDIS_REST_*`, `BLOB_READ_WRITE_TOKEN`.
 - **Build-time** — `GIT_COMMIT_SHA`.
 

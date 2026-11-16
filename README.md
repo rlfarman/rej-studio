@@ -18,16 +18,16 @@ A web application for RNA End-Joining sequence design and optimization. Scientis
 
 ## Tech Stack
 
-| Layer         | Technology                                                         |
-| ------------- | ------------------------------------------------------------------ |
-| Frontend      | Next.js 16 (App Router), React 19, TypeScript 6, Tailwind CSS 4    |
-| UI            | shadcn/ui, Radix UI, cmdk (command palette)                        |
-| State         | React Query (server state), Zustand (client state)                 |
-| Backend       | FastAPI (Python) with DNAChisel, deployed on Modal                 |
-| Database      | Neon (Postgres) via HTTP driver, Drizzle ORM                       |
-| Cache/Infra   | Upstash Redis (rate limiting, circuit breaker, idempotency, DLQ)   |
-| Hosting       | Vercel (Next.js) + Modal (Python)                                  |
-| Observability | Sentry (errors), OpenTelemetry (traces), Google Analytics (vitals) |
+| Layer         | Technology                                                       |
+| ------------- | ---------------------------------------------------------------- |
+| Frontend      | Next.js 16 (App Router), React 19, TypeScript 6, Tailwind CSS 4  |
+| UI            | shadcn/ui, Radix UI, cmdk (command palette)                      |
+| State         | React Query (server state), Zustand (client state)               |
+| Backend       | FastAPI (Python) with DNAChisel, deployed on Modal               |
+| Database      | Neon (Postgres) via HTTP driver, Drizzle ORM                     |
+| Cache/Infra   | Upstash Redis (rate limiting, circuit breaker, idempotency, DLQ) |
+| Hosting       | Vercel (Next.js) + Modal (Python)                                |
+| Observability | Sentry (errors, traces), Google Analytics (vitals)               |
 
 ## Getting Started
 
@@ -197,8 +197,7 @@ Set `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` to enable. Without t
 
 ## Observability
 
-- **Sentry** — Client and server error tracking. Set `NEXT_PUBLIC_SENTRY_DSN` to enable.
-- **OpenTelemetry** — Vendor-neutral distributed tracing. Set `OTEL_EXPORTER_OTLP_ENDPOINT` to ship traces (e.g. to Axiom).
+- **Sentry** — Client and server error tracking and tracing. Set `NEXT_PUBLIC_SENTRY_DSN` to enable.
 - **Google Analytics** — Web Vitals (LCP, CLS, INP) reporting via GTM. Set `NEXT_PUBLIC_GTM_ID`.
 - **Structured logging** — JSON output in production (stdout/stderr), human-readable in dev. See `src/lib/logger.ts`.
 
