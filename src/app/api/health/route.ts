@@ -130,10 +130,10 @@ async function checkModal(): Promise<Check> {
   }
   const start = performance.now()
   try {
-    // Probe the Modal ASGI app's /docs (FastAPI's default). We don't need a
-    // custom health endpoint on the Modal side — any 2xx from the web app
-    // proves the container spun up and is serving.
-    const response = await fetch(`${env.MODAL_API_URL}/docs`, {
+    // Probe the Modal app's own /health. It's the one public route (the
+    // /jobs routes need the bearer token, and FastAPI's docs/OpenAPI are
+    // switched off), and a 2xx proves the container spun up and is serving.
+    const response = await fetch(`${env.MODAL_API_URL}/health`, {
       method: 'GET',
       signal: AbortSignal.timeout(5000),
     })
