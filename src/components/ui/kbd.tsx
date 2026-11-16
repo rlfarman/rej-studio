@@ -1,19 +1,26 @@
 'use client'
 
-import * as React from 'react'
 import { useSyncExternalStore } from 'react'
+import { cn } from 'cn'
 
-import { cn } from '@/lib/utils'
-
-/** A keycap. Compose multiple keys inside one cap, e.g. `<Kbd><ModKey /> K</Kbd>`. */
 function Kbd({ className, ...props }: React.ComponentProps<'kbd'>) {
   return (
     <kbd
       data-slot="kbd"
       className={cn(
-        'bg-muted text-muted-foreground type-nano pointer-events-none inline-flex h-5 min-w-5 items-center justify-center gap-1 rounded border px-1.5 font-sans font-medium select-none',
+        "bg-muted text-muted-foreground in-data-[slot=input-group]:bg-input in-data-[slot=tooltip-content]:bg-background/20 in-data-[slot=tooltip-content]:text-background dark:in-data-[slot=tooltip-content]:bg-background/10 pointer-events-none inline-flex h-5 w-fit min-w-5 items-center justify-center gap-1 rounded-lg px-1 font-sans text-xs font-medium select-none [&_svg:not([class*='size-'])]:size-3",
         className,
       )}
+      {...props}
+    />
+  )
+}
+
+function KbdGroup({ className, ...props }: React.ComponentProps<'div'>) {
+  return (
+    <kbd
+      data-slot="kbd-group"
+      className={cn('inline-flex items-center gap-1', className)}
       {...props}
     />
   )
@@ -42,4 +49,4 @@ function ModKey() {
   return <span>{isApple ? '⌘' : 'Ctrl'}</span>
 }
 
-export { Kbd, ModKey }
+export { Kbd, KbdGroup, ModKey }

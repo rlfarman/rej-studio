@@ -8,8 +8,10 @@ import { appCopy } from '@/copy/app'
 import { commonCopy } from '@/copy/common'
 
 interface ErrorStateProps {
-  error: Error & { digest?: string }
-  reset: () => void
+  /** Whatever was thrown; client components can throw non-Error values. */
+  error: unknown
+  /** Next's `retry`: re-fetches and re-renders the boundary's segment. */
+  retry: () => void
   /** Sentry tag identifying which error boundary caught it. */
   boundary?: string
   title: string
@@ -26,7 +28,7 @@ interface ErrorStateProps {
  */
 export function ErrorState({
   error,
-  reset,
+  retry,
   boundary,
   title,
   description,
@@ -35,11 +37,19 @@ export function ErrorState({
   standalone = false,
 }: ErrorStateProps) {
   useEffect(() => {
+    // Server Component errors arrive as Errors with a digest that matches
+    // the server log entry.
+    const digest =
+      error instanceof Error &&
+      'digest' in error &&
+      typeof error.digest === 'string'
+        ? error.digest
+        : undefined
     // Dynamic import keeps Sentry out of the bundle when it isn't enabled.
     import('@sentry/nextjs')
       .then((Sentry) => {
         Sentry.captureException(error, {
-          tags: { digest: error.digest, ...(boundary && { boundary }) },
+          tags: { digest, ...(boundary && { boundary }) },
         })
       })
       .catch(() => {
@@ -57,7 +67,7 @@ export function ErrorState({
       detail={detail}
       actions={
         <>
-          <Button onClick={() => reset()}>{commonCopy.actions.tryAgain}</Button>
+          <Button onClick={() => retry()}>{commonCopy.actions.tryAgain}</Button>
           {secondaryAction}
         </>
       }

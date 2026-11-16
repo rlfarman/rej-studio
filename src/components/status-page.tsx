@@ -41,7 +41,7 @@ export function StatusPage({
   const body = (
     <section
       className={cn(
-        'fade-up flex w-full max-w-xl flex-col gap-5',
+        'flex w-full max-w-xl flex-col gap-5',
         !standalone && 'px-6 pt-16 pb-12 md:px-10 md:pt-24',
       )}
     >

@@ -11,7 +11,6 @@ import {
   Play,
   RotateCw,
 } from 'lucide-react'
-import { AnimatePresence, m } from 'motion/react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { DnaLoader } from '@/components/bio/dna-loader'
@@ -49,20 +48,9 @@ export function RunningPlaceholder({
         <DnaLoader className="h-10 w-[120px]" />
         <div className="space-y-1 text-center">
           <p className="text-sm font-medium">{copy.running.title}</p>
-          <div className="text-muted-foreground relative h-4 text-xs">
-            <AnimatePresence mode="wait" initial={false}>
-              <m.p
-                key={stage ?? 'default'}
-                initial={{ opacity: 0, y: 4 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -4 }}
-                transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-                className="absolute inset-x-0"
-              >
-                {stage ?? copy.running.defaultStage}
-              </m.p>
-            </AnimatePresence>
-          </div>
+          <p className="text-muted-foreground h-4 text-xs">
+            {stage ?? copy.running.defaultStage}
+          </p>
         </div>
         <div className="w-full max-w-xs">
           <div className="bg-muted relative h-1.5 w-full overflow-hidden rounded-full">
@@ -155,7 +143,8 @@ type JobHeaderStatus = 'running' | 'completed' | 'failed' | 'cancelled'
 
 interface JobHeaderProps {
   name: string
-  sequenceLength: number
+  /** null when there's no local record of this job — the chip is hidden. */
+  sequenceLength: number | null
   species: DesignToolSpecies
   status: JobHeaderStatus
   processingTimeSeconds?: number | null
@@ -259,9 +248,11 @@ export function JobHeader({
                 <div className="truncate text-sm font-semibold">
                   {name || copy.untitled}
                 </div>
-                <span className="text-muted-foreground text-xs tabular-nums">
-                  · {sequenceLength.toLocaleString()} bp
-                </span>
+                {sequenceLength != null && (
+                  <span className="text-muted-foreground text-xs tabular-nums">
+                    · {sequenceLength.toLocaleString()} bp
+                  </span>
+                )}
                 {speciesLabel && (
                   <span className="text-muted-foreground text-xs">
                     · {speciesLabel}

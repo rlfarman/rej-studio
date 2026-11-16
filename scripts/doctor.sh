@@ -8,7 +8,7 @@ set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-cd "$ROOT"
+cd "$ROOT" || exit 1
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -80,25 +80,34 @@ fi
 if [ -e "$ROOT/.env" ]; then
   ok ".env present"
 else
-  bad ".env missing — copy .env.example to .env and fill in values"
+  ok ".env absent — fine for local dev (PGlite + local FastAPI); copy .env.example to configure"
 fi
 
 # --- Modal CLI -------------------------------------------------------------
 section "Modal CLI"
 
-if command -v modal >/dev/null 2>&1; then
-  modal_version="$(modal --version 2>&1 | head -1)"
+# Only needed to inspect Modal by hand; CI deploys (modal-deploy.yml). The
+# pinned client lives in the uv `deploy` group, so prefer the project venv.
+modal_cmd=""
+if [ -x "$ROOT/.venv/bin/modal" ]; then
+  modal_cmd="$ROOT/.venv/bin/modal"
+elif command -v modal >/dev/null 2>&1; then
+  modal_cmd="modal"
+fi
+
+if [ -n "$modal_cmd" ]; then
+  modal_version="$("$modal_cmd" --version 2>&1 | head -1)"
   ok "modal CLI installed ($modal_version)"
 
   # Check authentication by hitting `modal profile current`.
   # On an unauthed machine this exits non-zero or prints nothing.
-  if modal_profile="$(modal profile current 2>/dev/null)" && [ -n "$modal_profile" ]; then
+  if modal_profile="$("$modal_cmd" profile current 2>/dev/null)" && [ -n "$modal_profile" ]; then
     ok "modal authenticated (profile: $modal_profile)"
   else
-    warn "modal CLI installed but not authenticated — run: modal token set"
+    warn "modal CLI installed but not authenticated — run: uv run modal token set"
   fi
 else
-  warn "modal CLI not found — install with: pip install modal"
+  warn "modal CLI not found — install the pinned client with: uv sync --group deploy"
 fi
 
 # --- Environment variables -------------------------------------------------
@@ -109,11 +118,19 @@ if [ -f "$ROOT/.env" ]; then
   set -a; . "$ROOT/.env"; set +a
 fi
 
-if [ -n "${DATABASE_URL:-}" ]; then
-  ok "DATABASE_URL set"
-else
-  bad "DATABASE_URL not set — Neon connection will fail at boot"
-fi
+db_is_postgres=false
+case "${DATABASE_URL:-}" in
+  "" | file:* | memory:*)
+    ok "DATABASE_URL=${DATABASE_URL:-<unset>} — embedded PGlite (local dev)"
+    ;;
+  postgres://* | postgresql://*)
+    ok "DATABASE_URL set (Postgres)"
+    db_is_postgres=true
+    ;;
+  *)
+    bad "DATABASE_URL has an unexpected scheme — expected postgres(ql)://, file:, memory:// or empty"
+    ;;
+esac
 
 case "${COMPUTE_BACKEND:-}" in
   modal)
@@ -122,6 +139,11 @@ case "${COMPUTE_BACKEND:-}" in
       ok "MODAL_API_URL set"
     else
       bad "MODAL_API_URL not set — required when COMPUTE_BACKEND=modal"
+    fi
+    if [ -n "${MODAL_API_TOKEN:-}" ]; then
+      ok "MODAL_API_TOKEN set"
+    else
+      bad "MODAL_API_TOKEN not set — must match JOB_API_TOKEN in the Modal secret"
     fi
     ;;
   local|"")
@@ -135,7 +157,7 @@ esac
 # --- Neon reachability -----------------------------------------------------
 section "Neon reachability"
 
-if [ -n "${DATABASE_URL:-}" ]; then
+if [ "$db_is_postgres" = true ]; then
   if command -v psql >/dev/null 2>&1; then
     if PGCONNECT_TIMEOUT=5 psql "$DATABASE_URL" -tAc 'SELECT 1' >/dev/null 2>&1; then
       ok "Neon reachable (psql SELECT 1)"
@@ -152,7 +174,7 @@ if [ -n "${DATABASE_URL:-}" ]; then
     fi
   fi
 else
-  warn "skipped (DATABASE_URL not set)"
+  ok "skipped (not using Postgres)"
 fi
 
 # --- Summary ---------------------------------------------------------------

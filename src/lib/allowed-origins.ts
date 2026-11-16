@@ -9,8 +9,15 @@ const STATIC_ORIGINS = new Set([
   'https://rej-studio.vercel.app',
 ])
 
-/** Vercel preview deploys: `rej-studio-<branch>.vercel.app` */
-const VERCEL_PREVIEW = /^https:\/\/rej-studio-[\w-]+\.vercel\.app$/
+/**
+ * This project's Vercel preview deploys, which always end in the team slug:
+ * `rej-studio-<hash>-richie-farmans-projects.vercel.app` (per deployment)
+ * and `rej-studio-git-<branch>-richie-farmans-projects.vercel.app` (per
+ * branch). Matching any `rej-studio-*.vercel.app` also accepted projects in
+ * other people's Vercel accounts.
+ */
+const VERCEL_PREVIEW =
+  /^https:\/\/rej-studio-[a-z0-9-]+-richie-farmans-projects\.vercel\.app$/
 
 /**
  * Any local port in development. Pinning :3000 broke server actions (403)

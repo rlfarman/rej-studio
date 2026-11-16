@@ -24,23 +24,23 @@ afterEach(() => cleanup())
 describe('ErrorPage (root)', () => {
   it('renders error message', () => {
     const error = new Error('test error')
-    const reset = vi.fn()
-    const { container } = render(<ErrorPage error={error} reset={reset} />)
+    const retry = vi.fn()
+    const { container } = render(<ErrorPage error={error} retry={retry} />)
     expect(container.textContent).toContain('Something went wrong')
   })
 
-  it('calls reset when Try Again is clicked', () => {
+  it('calls retry when Try Again is clicked', () => {
     const error = new Error('test error')
-    const reset = vi.fn()
-    const { getAllByText } = render(<ErrorPage error={error} reset={reset} />)
+    const retry = vi.fn()
+    const { getAllByText } = render(<ErrorPage error={error} retry={retry} />)
     fireEvent.click(getAllByText('Try again')[0])
-    expect(reset).toHaveBeenCalledTimes(1)
+    expect(retry).toHaveBeenCalledTimes(1)
   })
 
   it('has a Go Home link', () => {
     const error = new Error('test error')
-    const reset = vi.fn()
-    const { container } = render(<ErrorPage error={error} reset={reset} />)
+    const retry = vi.fn()
+    const { container } = render(<ErrorPage error={error} retry={retry} />)
     const link = container.querySelector('a[href="/"]')
     expect(link).not.toBeNull()
   })

@@ -46,18 +46,54 @@ describe('useJobHistory', () => {
     )
   })
 
-  it('clears progress/stage on terminal status', () => {
-    useJobHistory.getState().upsertEntry({
-      id: 'job-1',
-      status: 'running',
+  it('keeps progress out of the persisted entries', () => {
+    useJobHistory.getState().upsertEntry({ id: 'job-1', status: 'running' })
+    useJobHistory
+      .getState()
+      .setProgress('job-1', { progress: 0.5, stage: 'optimizing' })
+
+    expect(useJobHistory.getState().getProgress('job-1')).toEqual({
       progress: 0.5,
       stage: 'optimizing',
     })
-    expect(useJobHistory.getState().getEntry('job-1')!.progress).toBe(0.5)
+    // A progress tick must not rewrite the persisted history.
+    const persisted = JSON.parse(
+      localStorage.getItem('rej-studio:job-history') ?? '{}',
+    )
+    expect(JSON.stringify(persisted)).not.toContain('optimizing')
+  })
+
+  it('drops progress once the job reaches a terminal status', () => {
+    useJobHistory.getState().upsertEntry({ id: 'job-1', status: 'running' })
+    useJobHistory
+      .getState()
+      .setProgress('job-1', { progress: 0.5, stage: 'optimizing' })
 
     useJobHistory.getState().upsertEntry({ id: 'job-1', status: 'completed' })
-    expect(useJobHistory.getState().getEntry('job-1')!.progress).toBeUndefined()
-    expect(useJobHistory.getState().getEntry('job-1')!.stage).toBeUndefined()
+    expect(useJobHistory.getState().getProgress('job-1')).toBeUndefined()
+  })
+
+  it('lists running ids for best-effort cancellation', () => {
+    useJobHistory.getState().upsertEntry({ id: 'job-1', status: 'running' })
+    useJobHistory.getState().upsertEntry({ id: 'job-2', status: 'completed' })
+    expect(useJobHistory.getState().getRunningIds()).toEqual(['job-1'])
+  })
+
+  it('survives a storage write that throws', () => {
+    const setItem = Storage.prototype.setItem
+    Storage.prototype.setItem = () => {
+      throw new DOMException('nope', 'QuotaExceededError')
+    }
+    try {
+      expect(() =>
+        useJobHistory
+          .getState()
+          .upsertEntry({ id: 'job-q', status: 'running' }),
+      ).not.toThrow()
+      expect(useJobHistory.getState().getEntry('job-q')).not.toBeNull()
+    } finally {
+      Storage.prototype.setItem = setItem
+    }
   })
 
   it('derives name from formValues', () => {

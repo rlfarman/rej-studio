@@ -4,12 +4,28 @@ updates:
     directory: '/'
     schedule:
       interval: 'weekly'
+    # Only propose versions a week old: pnpm refuses anything under a day
+    # (minimumReleaseAge), and the wait lets a compromised release get caught
+    # and yanked first. Security updates skip the cooldown.
+    cooldown:
+      default-days: 7
     open-pull-requests-limit: 10
+    # A dependency matching several groups lands in the first one.
     groups:
-      radix-ui:
+      base-ui:
         patterns:
-          - '@radix-ui/*'
-          - 'radix-ui'
+          - '@base-ui/*'
+      sentry:
+        patterns:
+          - '@sentry/*'
+      storybook:
+        patterns:
+          - 'storybook'
+          - '@storybook/*'
+      vitest:
+        patterns:
+          - 'vitest'
+          - '@vitest/*'
       types:
         patterns:
           - '@types/*'
@@ -55,6 +71,10 @@ updates:
           - '@tailwindcss/*'
           - 'prettier-plugin-*'
           - '@tanstack/*'
+          - 'storybook'
+          - '@storybook/*'
+          - 'vitest'
+          - '@vitest/*'
 
   - package-ecosystem: 'uv'
     # Python dependencies (runtime, dev and the Modal deploy client) are
@@ -63,6 +83,8 @@ updates:
     directory: '/'
     schedule:
       interval: 'weekly'
+    cooldown:
+      default-days: 7
     open-pull-requests-limit: 5
     groups:
       # Released in lockstep; updating them separately breaks resolution.
@@ -71,9 +93,15 @@ updates:
           - 'opentelemetry-*'
 
   - package-ecosystem: 'github-actions'
-    directory: '/'
+    # '/' covers .github/workflows; the local composite action pins its own
+    # actions, so it's listed too.
+    directories:
+      - '/'
+      - '/.github/actions/*'
     schedule:
       interval: 'weekly'
+    cooldown:
+      default-days: 7
     open-pull-requests-limit: 5
     groups:
       actions:

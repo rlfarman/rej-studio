@@ -2,10 +2,9 @@ import { McpServer } from '@modelcontextprotocol/server'
 import { z } from 'zod'
 
 import {
-  type JobCaller,
-  runJobStatus,
-  runSubmitJob,
-} from '@/features/design-tool/api/jobs-core'
+  fetchJobStatus,
+  submitToBackend,
+} from '@/features/design-tool/api/job-backend'
 import {
   type FormValues,
   validationSchema,
@@ -24,6 +23,7 @@ import { fetchIsoformsByGene } from '@/features/gene-search/api/isoform-queries'
 import { reverseTranslate } from '@/lib/bio/reverse-translate'
 import { isSpecies } from '@/lib/bio/species'
 import { createLogger } from '@/lib/logger'
+import { createUpstashRateLimiter } from '@/lib/upstash'
 
 import type { McpToken } from './tokens'
 
@@ -186,12 +186,16 @@ function explainValidation(error: unknown): string {
   return error instanceof Error ? error.message : String(error)
 }
 
-export function createRejStudioMcpServer(token: McpToken): McpServer {
-  const caller: JobCaller = {
-    key: `mcp:${token.name}`,
-    label: `mcp token "${token.name}"`,
-  }
+// The same budget the browser gets, counted per token rather than per
+// request: an agent holds one token across many requests, so a per-IP key
+// would either throttle a whole lab together or not throttle an agent at all.
+const submitLimiter = createUpstashRateLimiter({
+  prefix: 'mcp-jobs',
+  maxRequests: 10,
+  windowMs: 60_000,
+})
 
+export function createRejStudioMcpServer(token: McpToken): McpServer {
   const server = new McpServer(
     { name: 'com.rej-studio/design', version: '1.0.0' },
     {
@@ -227,10 +231,19 @@ export function createRejStudioMcpServer(token: McpToken): McpServer {
       annotations: { readOnlyHint: true },
     },
     async ({ query, species }) => {
-      const matches = await fetchGenesBySearch(query.trim(), species ?? 'both')
+      // The query does the limiting, so the count below is the number of
+      // genes actually on offer. `truncated` means more matched than were
+      // fetched, which is said outright rather than reported as a total the
+      // tool cannot actually produce.
+      const { results: matches, truncated } = await fetchGenesBySearch(
+        query.trim(),
+        species ?? 'both',
+        MAX_SEARCH_RESULTS,
+      )
       log.info('mcp search_genes', {
         caller: token.name,
         resultCount: matches.length,
+        truncated,
       })
 
       if (matches.length === 0) {
@@ -239,7 +252,7 @@ export function createRejStudioMcpServer(token: McpToken): McpServer {
         )
       }
 
-      const results = matches.slice(0, MAX_SEARCH_RESULTS).map((gene) => ({
+      const results = matches.map((gene) => ({
         symbol: gene.symbol,
         name: gene.name,
         species: gene.species,
@@ -247,11 +260,11 @@ export function createRejStudioMcpServer(token: McpToken): McpServer {
       }))
 
       return data(
-        `${matches.length} gene${matches.length === 1 ? '' : 's'} match "${query}"` +
-          (matches.length > results.length
-            ? `; the ${results.length} most relevant are listed.`
+        `${results.length} gene${results.length === 1 ? '' : 's'} match "${query}"` +
+          (truncated
+            ? `; more matched than are listed, so narrow the query if the gene you want is missing.`
             : '.'),
-        { results, total: matches.length },
+        { results, truncated },
       )
     },
   )
@@ -328,7 +341,34 @@ export function createRejStudioMcpServer(token: McpToken): McpServer {
         }
       }
 
-      const { jobId, result } = await runSubmitJob(buildJobParams(values), caller)
+      const { ok: allowed, resetMs } = await submitLimiter.check(
+        `mcp:${token.name}`,
+      )
+      if (!allowed) {
+        return {
+          ...text(
+            `Too many designs submitted with this token. Try again in ${Math.ceil(resetMs / 1000)} seconds.`,
+          ),
+          isError: true as const,
+        }
+      }
+
+      const outcome = await submitToBackend(buildJobParams(values))
+      if (!outcome.ok) {
+        log.error('mcp submit_design failed', undefined, {
+          caller: token.name,
+          code: outcome.error.code,
+        })
+        return {
+          ...data(
+            `Design "${values.name}" could not be submitted: ${outcome.error.message}`,
+            { error: outcome.error },
+          ),
+          isError: true as const,
+        }
+      }
+
+      const { jobId, result } = outcome.data
       log.info('mcp submit_design', { caller: token.name, jobId })
 
       // The local dev backend answers inline and keeps no job afterwards, so
@@ -365,7 +405,20 @@ export function createRejStudioMcpServer(token: McpToken): McpServer {
       annotations: { readOnlyHint: true },
     },
     async ({ job_id }) => {
-      const status = await runJobStatus(job_id)
+      const polled = await fetchJobStatus(job_id)
+      if (!polled.ok) {
+        // The backend could not be asked at all — unreachable, timed out,
+        // rejected. That is not the same as a job that does not exist, and
+        // saying "not found" would send an agent off to resubmit.
+        return {
+          ...data(
+            `Design ${job_id} could not be read: ${polled.error.message}`,
+            { job_id, error: polled.error },
+          ),
+          isError: true as const,
+        }
+      }
+      const status = polled.data
 
       if (status.status === 'not_found') {
         return notFound(

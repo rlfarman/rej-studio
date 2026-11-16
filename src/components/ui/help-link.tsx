@@ -22,20 +22,22 @@ interface HelpLinkProps {
 export function HelpLink({ href, topic, className }: HelpLinkProps) {
   return (
     <Tooltip>
-      <TooltipTrigger asChild>
-        <Link
-          href={href}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label={`Open docs for ${topic} (opens in new tab)`}
-          onClick={(e) => e.stopPropagation()}
-          className={cn(
-            'text-muted-foreground hover:text-foreground hover:bg-muted focus-visible:ring-ring inline-flex shrink-0 items-center justify-center rounded-md p-1.5 transition-colors focus-visible:ring-2 focus-visible:outline-hidden',
-            className,
-          )}
-        >
-          <CircleHelp className="size-4" aria-hidden />
-        </Link>
+      <TooltipTrigger
+        render={
+          <Link
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`Open docs for ${topic} (opens in new tab)`}
+            onClick={(e) => e.stopPropagation()}
+            className={cn(
+              'text-muted-foreground hover:text-foreground hover:bg-muted focus-visible:ring-ring inline-flex shrink-0 items-center justify-center rounded-md p-1.5 transition-colors focus-visible:ring-2 focus-visible:outline-hidden',
+              className,
+            )}
+          />
+        }
+      >
+        <CircleHelp className="size-4" aria-hidden />
       </TooltipTrigger>
       <TooltipContent side="top" sideOffset={4}>
         Docs: {topic} ↗

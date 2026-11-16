@@ -5,6 +5,7 @@ import {
   signSession,
   timingSafeEqual,
 } from '@/lib/auth/session'
+import { getClientIp } from '@/lib/client-ip'
 import { createUpstashRateLimiter } from '@/lib/upstash'
 
 const loginLimiter = createUpstashRateLimiter({
@@ -12,10 +13,6 @@ const loginLimiter = createUpstashRateLimiter({
   maxRequests: 5,
   windowMs: 60_000,
 })
-
-function getClientIp(req: NextRequest): string {
-  return req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
-}
 
 /**
  * Resolve `return_to` to a same-origin URL, falling back to `/`. A prefix
@@ -34,8 +31,8 @@ function safeReturnTo(raw: string, base: string): URL {
 }
 
 export async function POST(req: NextRequest) {
-  const ip = getClientIp(req)
-  const { ok } = await loginLimiter.check(ip)
+  // Always by IP: a caller signing in has no session to key on.
+  const { ok } = await loginLimiter.check(getClientIp(req.headers))
   if (!ok) {
     return new NextResponse('Too Many Requests', { status: 429 })
   }

@@ -5,12 +5,7 @@ import { ChevronDown } from 'lucide-react'
 import { ToggleCard } from './toggle-card'
 import { FieldHelp } from './field-help'
 import { designToolCopy } from '../copy'
-import {
-  CodonOptimizeWeight,
-  RemoveCrypticSpliceSitesWeight,
-  MinimizeCpGsWeight,
-  ReduceKmerComplexityWeight,
-} from './weight-inputs'
+import { ObjectiveWeights } from './weight-inputs'
 import { StimulatoryIntronOptions } from './stimulatory-intron-options'
 import { FormValues } from '../types/form-schema'
 import { isSpecies } from '@/lib/bio/species'
@@ -25,7 +20,7 @@ const copy = designToolCopy.optimizationOptions
 const formCopy = designToolCopy.form
 const CODON_OPTIMIZATION_CHECKBOX_ID = 'codon-optimization-enabled'
 
-function CodonOptimizationRow({ showWeight }: { showWeight: boolean }) {
+function CodonOptimizationRow() {
   const { watch, setValue } = useFormContext<FormValues>()
   const species = watch('species')
   const sequenceType = watch('sequenceType')
@@ -112,11 +107,6 @@ function CodonOptimizationRow({ showWeight }: { showWeight: boolean }) {
             </button>
           )
         })}
-        {showWeight ? (
-          <div className="min-w-fit pl-1.5">
-            <CodonOptimizeWeight inline />
-          </div>
-        ) : null}
       </div>
     </div>
   )
@@ -198,31 +188,24 @@ export function DesignObjectives() {
       {customizing && (
         <div id={panelId} className="flex flex-col">
           <div className="divide-border/60 flex flex-col divide-y">
-            <CodonOptimizationRow showWeight={showAdvanced} />
+            <CodonOptimizationRow />
             <ToggleCard
               name="removeCrypticSpliceSites"
               label={copy.removeCrypticSpliceSites.label}
               description={copy.removeCrypticSpliceSites.description}
               help={copy.help.spliceSites}
-              activeChildren={
-                showAdvanced ? <RemoveCrypticSpliceSitesWeight /> : undefined
-              }
             />
             <ToggleCard
               name="minimizeCpgs"
               label={copy.minimizeCpGs.label}
               description={copy.minimizeCpGs.description}
               help={copy.help.cpg}
-              activeChildren={showAdvanced ? <MinimizeCpGsWeight /> : undefined}
             />
             <ToggleCard
               name="reduceKmerComplexity"
               label={copy.reduceKmer.label}
               description={copy.reduceKmer.description}
               help={copy.help.kmer}
-              activeChildren={
-                showAdvanced ? <ReduceKmerComplexityWeight /> : undefined
-              }
             />
             <ToggleCard
               name="enforceGcContent"
@@ -260,14 +243,7 @@ export function DesignObjectives() {
               />
               {copy.advanced.label}
             </button>
-            {showAdvanced && (
-              <p
-                id={advancedId}
-                className="text-muted-foreground mt-2 max-w-prose text-xs leading-relaxed"
-              >
-                {copy.advanced.hint}
-              </p>
-            )}
+            {showAdvanced && <ObjectiveWeights id={advancedId} />}
           </div>
         </div>
       )}

@@ -45,6 +45,9 @@ export function AssociationsTable({
 
   const headerProps = { sortKey, sortDir, searchParams }
 
+  // TableCell defaults to nowrap, which let a 120-character gene name push
+  // the numeric columns off-screen. Text columns wrap (names clamp to two
+  // lines); the CDS column stays on one line.
   return (
     <div className="bg-card overflow-hidden rounded-lg border shadow-sm">
       <Table aria-label={diseaseAssociationsCopy.table.ariaLabel}>
@@ -65,13 +68,13 @@ export function AssociationsTable({
                 {...headerProps}
               />
             </TableHead>
-            <TableHead className="min-w-[240px] px-4">
+            <TableHead className="min-w-48 px-4">
               {diseaseAssociationsCopy.table.columns.name}
             </TableHead>
-            <TableHead className="w-[220px] px-4">
+            <TableHead className="min-w-44 px-4">
               {diseaseAssociationsCopy.table.columns.phenotype}
             </TableHead>
-            <TableHead className="w-[220px] px-4">
+            <TableHead className="w-40 px-4">
               {diseaseAssociationsCopy.table.columns.inheritance}
             </TableHead>
             <TableHead
@@ -101,7 +104,7 @@ export function AssociationsTable({
                 <TableCell className="px-4 py-2.5">
                   <Link
                     href={`/genes/${encodeURIComponent(row.symbol)}?species=human`}
-                    className="text-primary font-mono font-semibold hover:underline"
+                    className="text-primary -my-1 inline-flex min-h-6 items-center py-1 font-mono font-semibold hover:underline"
                     aria-label={diseaseAssociationsCopy.table.viewGeneAria(
                       row.symbol,
                     )}
@@ -109,13 +112,15 @@ export function AssociationsTable({
                     {row.symbol}
                   </Link>
                 </TableCell>
-                <TableCell className="text-muted-foreground px-4 py-2.5 text-sm">
-                  {row.name}
+                <TableCell className="text-muted-foreground px-4 py-2.5 text-sm whitespace-normal">
+                  <span className="line-clamp-2" title={row.name}>
+                    {row.name}
+                  </span>
                 </TableCell>
-                <TableCell className="text-muted-foreground px-4 py-2.5 text-sm">
+                <TableCell className="text-muted-foreground px-4 py-2.5 text-sm whitespace-normal">
                   {phenotype}
                 </TableCell>
-                <TableCell className="px-4 py-2.5">
+                <TableCell className="px-4 py-2.5 whitespace-normal">
                   <div className="flex flex-wrap gap-1">
                     {buckets.map((b) => (
                       <Badge
@@ -145,6 +150,31 @@ export function AssociationsTable({
           })}
         </TableBody>
       </Table>
+    </div>
+  )
+}
+
+const SKELETON_ROWS = 8
+
+/** Placeholder for the summary line and the first rows while params resolve. */
+export function AssociationsTableSkeleton() {
+  return (
+    <div aria-hidden className="flex flex-col gap-6">
+      <div className="bg-muted h-3 w-24 animate-pulse rounded" />
+      <div className="bg-card overflow-hidden rounded-lg border shadow-sm">
+        <div className="bg-muted/50 h-10 border-b" />
+        {Array.from({ length: SKELETON_ROWS }, (_, i) => (
+          <div
+            key={i}
+            className="flex h-12 items-center gap-6 border-b px-4 last:border-0"
+          >
+            <div className="bg-muted h-4 w-14 animate-pulse rounded" />
+            <div className="bg-muted h-4 flex-1 animate-pulse rounded" />
+            <div className="bg-muted hidden h-4 w-40 animate-pulse rounded sm:block" />
+            <div className="bg-muted h-4 w-16 animate-pulse rounded" />
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
@@ -218,7 +248,7 @@ function SortHeader({
       scroll={false}
       replace
       className={cn(
-        'hover:text-foreground inline-flex items-center gap-1 transition-colors',
+        'hover:text-foreground -my-2 inline-flex min-h-9 items-center gap-1 py-2 transition-colors',
         align === 'right' && 'flex-row-reverse',
         active ? 'text-foreground' : 'text-muted-foreground',
       )}

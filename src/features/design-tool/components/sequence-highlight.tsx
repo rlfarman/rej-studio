@@ -43,8 +43,8 @@ function HighlightSpan({ segment }: { segment: SequenceSegment }) {
 
   return (
     <Tooltip>
-      <TooltipTrigger asChild>
-        <mark className={`${style} rounded-sm`}>{segment.text}</mark>
+      <TooltipTrigger render={<mark className={`${style} rounded-sm`} />}>
+        {segment.text}
       </TooltipTrigger>
       <TooltipContent side="top" className="max-w-64 text-xs">
         {highlightLabels[segment.type]}

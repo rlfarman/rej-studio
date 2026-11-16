@@ -1,10 +1,8 @@
 'use client'
 import { type ComponentProps, type ReactNode } from 'react'
-import { AnimatePresence, m } from 'motion/react'
 import { Check, Copy } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
-import { popSpring } from '@/lib/motion'
 
 type IconComponent = React.ComponentType<{ className?: string }>
 
@@ -54,31 +52,7 @@ export function CopyButton({
       aria-label={ariaLabel}
       onClick={() => copy(typeof text === 'function' ? text() : text)}
     >
-      <AnimatePresence mode="wait" initial={false}>
-        {copied ? (
-          <m.span
-            key="check"
-            initial={{ scale: 0.6, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.6, opacity: 0 }}
-            transition={popSpring}
-            className="inline-flex"
-          >
-            <Check className="size-3" />
-          </m.span>
-        ) : (
-          <m.span
-            key="icon"
-            initial={{ scale: 0.6, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.6, opacity: 0 }}
-            transition={popSpring}
-            className="inline-flex"
-          >
-            <Icon className="size-3" />
-          </m.span>
-        )}
-      </AnimatePresence>
+      {copied ? <Check className="size-3" /> : <Icon className="size-3" />}
       {copied && copiedLabel !== undefined ? copiedLabel : children}
     </Button>
   )
