@@ -226,6 +226,47 @@ const submitLimiter = createUpstashRateLimiter({
   windowMs: 60_000,
 })
 
+// Reads cost less than a design but are not free: a search is a Neon query,
+// and get_design asks Modal about a job. An agent polls in a loop and does it
+// without a human pausing between clicks, so the read tools get a budget too —
+// generous enough to poll a long design every few seconds, bounded enough that
+// a loop cannot keep the database awake by itself.
+const readLimiter = createUpstashRateLimiter({
+  prefix: 'mcp-reads',
+  maxRequests: 60,
+  windowMs: 60_000,
+})
+
+/**
+ * Spends one unit of a token's budget, or says how long to wait.
+ *
+ * The message matters as much as the limit: an agent told "no" without a
+ * reason retries immediately, and one told "not found" gives up on work that
+ * is still running. This says which, and for how long.
+ */
+async function overBudget(
+  limiter: {
+    check: (key: string) => Promise<{ ok: boolean; resetMs: number }>
+  },
+  token: McpToken,
+  what: string,
+): Promise<{
+  content: { type: 'text'; text: string }[]
+  isError: true
+} | null> {
+  const { ok, resetMs } = await limiter.check(`mcp:${token.name}`)
+  if (ok) {
+    return null
+  }
+  return {
+    ...text(
+      `Too many ${what} with this token. Try again in ${Math.ceil(resetMs / 1000)} seconds; ` +
+        `nothing has changed and anything already running is still running.`,
+    ),
+    isError: true as const,
+  }
+}
+
 export function createRejStudioMcpServer(token: McpToken): McpServer {
   const server = new McpServer(
     { name: 'com.rej-studio/design', version: '1.0.0' },
@@ -262,6 +303,9 @@ export function createRejStudioMcpServer(token: McpToken): McpServer {
       annotations: { readOnlyHint: true },
     },
     async ({ query, species }) => {
+      const refused = await overBudget(readLimiter, token, 'searches')
+      if (refused) return refused
+
       // The query does the limiting, so the count below is the number of
       // genes actually on offer. `truncated` means more matched than were
       // fetched, which is said outright rather than reported as a total the
@@ -320,6 +364,9 @@ export function createRejStudioMcpServer(token: McpToken): McpServer {
       annotations: { readOnlyHint: true },
     },
     async ({ symbol, species }) => {
+      const refused = await overBudget(readLimiter, token, 'gene lookups')
+      if (refused) return refused
+
       const gene = await fetchGeneBySymbol(symbol.trim(), species ?? 'both')
       if (!gene) {
         return notFound(
@@ -357,9 +404,15 @@ export function createRejStudioMcpServer(token: McpToken): McpServer {
         'The design takes seconds to minutes, so call get_design with the id to collect ' +
         'the result. The sequence is validated exactly as the web form validates it; a ' +
         'sequence or option it would refuse is an error here too, not something adjusted ' +
-        'to fit.',
+        'to fit. Submitting the same sequence and options again while that design is ' +
+        'still running returns the same job rather than starting a second one — but once ' +
+        'it has finished, failed or been cancelled, submitting again runs it again, which ' +
+        'costs compute. Poll get_design instead of resubmitting.',
       inputSchema: designInput,
-      annotations: { readOnlyHint: false, idempotentHint: true },
+      // Not idempotent: the backend deduplicates only while a job is still
+      // running (see `job-backend.ts`), so a repeat after one finishes starts
+      // a new run. Claiming otherwise invites an agent to retry for free.
+      annotations: { readOnlyHint: false, idempotentHint: false },
     },
     async (input) => {
       let values: FormValues
@@ -372,17 +425,8 @@ export function createRejStudioMcpServer(token: McpToken): McpServer {
         }
       }
 
-      const { ok: allowed, resetMs } = await submitLimiter.check(
-        `mcp:${token.name}`,
-      )
-      if (!allowed) {
-        return {
-          ...text(
-            `Too many designs submitted with this token. Try again in ${Math.ceil(resetMs / 1000)} seconds.`,
-          ),
-          isError: true as const,
-        }
-      }
+      const refused = await overBudget(submitLimiter, token, 'designs')
+      if (refused) return refused
 
       const outcome = await submitToBackend(buildJobParams(values))
       if (!outcome.ok) {
@@ -437,6 +481,12 @@ export function createRejStudioMcpServer(token: McpToken): McpServer {
   }
 
   const getDesign = async ({ job_id }: { job_id: string }) => {
+    // Polling is the expected use, so the refusal is careful to say the job
+    // is untouched: an agent must not read a throttled poll as a lost design
+    // and resubmit it.
+    const refused = await overBudget(readLimiter, token, 'status checks')
+    if (refused) return refused
+
     const polled = await fetchJobStatus(job_id)
     if (!polled.ok) {
       // The backend could not be asked at all — unreachable, timed out,

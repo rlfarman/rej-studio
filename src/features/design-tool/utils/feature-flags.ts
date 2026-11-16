@@ -11,3 +11,10 @@
 // it.
 export const MULTI_SPLIT_ENABLED =
   process.env.NEXT_PUBLIC_ENABLE_MULTI_SPLIT === 'true'
+
+// In-browser optimizer — runs the design in a Web Worker instead of calling
+// the compute backend. Off by default while it is compared against the
+// server on real designs; set NEXT_PUBLIC_ENABLE_BROWSER_OPTIMIZER=true to
+// turn it on. See rust/README.md.
+export const BROWSER_OPTIMIZER_ENABLED =
+  process.env.NEXT_PUBLIC_ENABLE_BROWSER_OPTIMIZER === 'true'

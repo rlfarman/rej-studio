@@ -85,5 +85,10 @@ storybook-static/
 /playwright-report/
 /test-results/
 
+# static gene corpus: only the committed sample lives in git; build full
+# versions elsewhere (pnpm corpus:build --out ...) or here for local use
+/public/gene-data/*
+!/public/gene-data/sample/
+
 # Copied from node_modules by scripts/copy-mcp-app-bridge.mjs
 public/mcp/

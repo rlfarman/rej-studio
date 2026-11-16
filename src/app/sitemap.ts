@@ -31,11 +31,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   await connection()
   const allGenes = await fetchAllGeneSymbols()
 
-  const geneEntries: MetadataRoute.Sitemap = allGenes.map((gene) => ({
-    url: `${baseUrl}/genes/${gene.symbol}?species=${gene.species}`,
-    changeFrequency: 'monthly',
-    priority: 0.7,
-  }))
+  // A few hundred genes have no symbol, so no page to link to.
+  const geneEntries: MetadataRoute.Sitemap = allGenes
+    .filter((gene) => gene.symbol !== '')
+    .map((gene) => ({
+      url: `${baseUrl}/genes/${gene.symbol}?species=${gene.species}`,
+      changeFrequency: 'monthly',
+      priority: 0.7,
+    }))
 
   return [...staticEntries, ...geneEntries]
 }

@@ -11,11 +11,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 ;(process.env as Record<string, string>).NODE_ENV = 'development'
 
-const { genes, isoforms, submitted, jobStatus } = vi.hoisted(() => ({
+const { genes, isoforms, submitted, jobStatus, budget } = vi.hoisted(() => ({
   genes: vi.fn(),
   isoforms: vi.fn(),
   submitted: vi.fn(),
   jobStatus: vi.fn(),
+  /** Flipped by the tests that check what a spent budget says. */
+  budget: { ok: true },
 }))
 
 vi.mock('@/features/gene-search/api/gene-queries', () => ({
@@ -40,7 +42,11 @@ vi.mock('@/features/design-tool/api/job-backend', () => ({
 }))
 vi.mock('@/lib/upstash', () => ({
   createUpstashRateLimiter: () => ({
-    check: async () => ({ ok: true, remaining: 9, resetMs: 60_000 }),
+    check: async () => ({
+      ok: budget.ok,
+      remaining: budget.ok ? 9 : 0,
+      resetMs: 12_000,
+    }),
   }),
   redis: null,
 }))
@@ -66,6 +72,7 @@ let connection: Awaited<ReturnType<typeof connect>>
 
 beforeEach(async () => {
   vi.clearAllMocks()
+  budget.ok = true
   genes.mockResolvedValue({ results: [], truncated: false })
   isoforms.mockResolvedValue([])
   submitted.mockResolvedValue({ ok: true, data: { jobId: 'job-1' } })
@@ -504,5 +511,67 @@ describe('the view a design is shown in', () => {
       result: { optimized_sequence: CDS },
     })
     expect(said(result)).toContain('is done')
+  })
+})
+
+describe('when a token has spent its budget', () => {
+  // Every tool costs something: a search and a gene lookup are database
+  // queries, a status check asks Modal, a submission burns compute. An agent
+  // polls in a loop, so each path has to say no in a way that does not send it
+  // off to do something worse.
+  beforeEach(() => {
+    budget.ok = false
+  })
+
+  it('refuses a status check without suggesting the design is gone', async () => {
+    const result = await call('get_design', { job_id: 'job-1' })
+
+    expect(result.isError).toBe(true)
+    expect(said(result)).toContain('12 seconds')
+    expect(said(result)).toContain('still running')
+    // "No design with job id" would read as a lost job and prompt a resubmit.
+    expect(said(result)).not.toContain('No design')
+    expect(jobStatus).not.toHaveBeenCalled()
+  })
+
+  it('refuses a search without querying the database', async () => {
+    const result = await call('search_genes', { query: 'TP53' })
+
+    expect(result.isError).toBe(true)
+    expect(said(result)).toContain('Too many searches')
+    expect(genes).not.toHaveBeenCalled()
+  })
+
+  it('refuses a gene lookup without querying the database', async () => {
+    const result = await call('get_gene', { symbol: 'TP53' })
+
+    expect(result.isError).toBe(true)
+    expect(said(result)).toContain('Too many gene lookups')
+    expect(isoforms).not.toHaveBeenCalled()
+  })
+
+  it('refuses a submission without starting a design', async () => {
+    const result = await call('submit_design', { name: 'nope', sequence: CDS })
+
+    expect(result.isError).toBe(true)
+    expect(said(result)).toContain('Too many designs')
+    expect(submitted).not.toHaveBeenCalled()
+  })
+})
+
+describe('what submitting twice costs', () => {
+  it('does not tell an agent a repeat submission is free', async () => {
+    // The backend reuses a job only while that job is still running, so a
+    // repeat after one finishes starts a new Modal run. idempotentHint: true
+    // would invite exactly that retry.
+    const { tools } = await connection.client.listTools()
+    const submit = tools.find((tool) => tool.name === 'submit_design')
+
+    expect(submit?.annotations).toMatchObject({
+      readOnlyHint: false,
+      idempotentHint: false,
+    })
+    expect(submit?.description).toContain('still running')
+    expect(submit?.description).toContain('costs compute')
   })
 })

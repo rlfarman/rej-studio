@@ -44,7 +44,10 @@ function mountView(): ToolResultHandler {
     connect() {}
   }
 
-  // The view's own script, run as the host runs it.
+  // The view's own script, run as the host runs it. Evaluating that string is
+  // the point of this test: the view ships as one inline module, so there is
+  // no file to import.
+  // eslint-disable-next-line @typescript-eslint/no-implied-eval -- runs the view's own inline script, the code under test
   new Function('App', 'document', script)(AppStub, document)
 
   if (!handler) {

@@ -5,6 +5,7 @@ import type { DesignToolSpecies } from '@/features/design-tool/types/species-opt
 import { isSpecies } from '@/lib/bio/species'
 import { pickDefaultSplitPoint } from '@/features/design-tool/utils/default-split-point'
 import { Metadata } from 'next'
+import { Skeleton } from '@/components/ui/skeleton'
 
 export const metadata: Metadata = {
   title: 'Design Tool',
@@ -42,7 +43,7 @@ function DesignToolPage({ searchParams }: { searchParams: SearchParams }) {
 function DesignToolSkeleton() {
   return (
     <div aria-hidden className="mx-auto w-full max-w-5xl px-4 py-8 md:py-10">
-      <div className="bg-muted h-[28rem] animate-pulse rounded-xl" />
+      <Skeleton className="h-[28rem] rounded-[min(var(--radius-4xl),24px)]" />
     </div>
   )
 }

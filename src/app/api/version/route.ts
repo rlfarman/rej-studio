@@ -19,9 +19,10 @@ export async function GET() {
     NextResponse.json(
       {
         version: process.env.npm_package_version ?? 'unknown',
+        // `||` so a blank value falls through (see next.config.ts).
         sha:
-          process.env.GIT_COMMIT_SHA ??
-          process.env.VERCEL_GIT_COMMIT_SHA ??
+          process.env.GIT_COMMIT_SHA ||
+          process.env.VERCEL_GIT_COMMIT_SHA ||
           'unknown',
         buildTimestamp: process.env.BUILD_TIMESTAMP ?? 'unknown',
         nodeEnv: process.env.NODE_ENV,

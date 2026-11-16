@@ -23,7 +23,7 @@ export function detectSequenceType(text: string): 'dna' | 'protein' {
 
 export function computeGcPercent(seq: string): number {
   if (seq.length === 0) return 0
-  const gc = [...seq].filter((c) => c === 'G' || c === 'C').length
+  const gc = seq.split('').filter((c) => c === 'G' || c === 'C').length
   return (gc / seq.length) * 100
 }
 

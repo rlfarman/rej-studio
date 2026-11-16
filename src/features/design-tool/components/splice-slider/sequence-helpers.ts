@@ -239,9 +239,9 @@ function formatAminoAcidGuideText(
   splitPosition: number,
 ) {
   const coreText = buildDisplayCoreText(windowStart, windowEnd, splitPosition)
-  const chars: string[] = [...`...${coreText}...`].map((char) =>
-    char === '|' ? '|' : ' ',
-  )
+  const chars: string[] = `...${coreText}...`
+    .split('')
+    .map((char) => (char === '|' ? '|' : ' '))
   const boundaryIndexes = getCodonBoundaryDisplayIndexes(
     windowStart,
     windowEnd,
@@ -272,7 +272,9 @@ export function buildMotifGuide(
   displayText: string,
   boundaryIndexes: number[],
 ) {
-  const chars: string[] = [...displayText].map(() => ' ')
+  // split(''), not spread: indexOf() below counts UTF-16 code units, and the
+  // guide must use the same unit to line up with it.
+  const chars: string[] = displayText.split('').map(() => ' ')
   const splitIndex = displayText.indexOf('|')
   if (splitIndex === -1) {
     return { text: chars.join(''), boundaryIndexes }

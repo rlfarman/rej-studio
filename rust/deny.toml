@@ -1,0 +1,47 @@
+# Supply-chain policy for the optimizer's dependencies, enforced by
+# `cargo deny check` in the Security workflow on every PR and weekly. The
+# weekly run matters as much as the PR one: RUSTSEC advisories are published
+# against versions already in Cargo.lock, with no commit here to trigger CI.
+#
+# The tree is small (serde, serde_json, sha2 and what they pull in), so the
+# policy is strict. Any exception goes in `ignore` / `exceptions` with a
+# reason and a date to revisit it.
+
+[graph]
+# wasm32 is what ships to browsers; the host target is where tests run.
+targets = ["wasm32-unknown-unknown", "x86_64-unknown-linux-gnu"]
+all-features = true
+
+[advisories]
+# Vulnerabilities and unsound crates fail by default. Also fail on crates the
+# RustSec database marks unmaintained, anywhere in the tree, and on yanked
+# versions in the lockfile.
+unmaintained = "all"
+yanked = "deny"
+ignore = []
+
+[licenses]
+# What the current tree needs. MIT and Apache-2.0 cover almost everything;
+# unicode-ident adds Unicode-3.0. memchr is "Unlicense OR MIT", so MIT covers
+# it. Add a license only after reading it.
+allow = ["MIT", "Apache-2.0", "Unicode-3.0"]
+confidence-threshold = 0.93
+exceptions = []
+
+[licenses.private]
+# rej-optimizer itself is `publish = false`: it ships as a .wasm asset, and
+# its own license is the project's call, not a dependency policy question.
+ignore = true
+
+[bans]
+multiple-versions = "deny"
+wildcards = "deny"
+allow-wildcard-paths = false
+
+[sources]
+# crates.io only. A git or alternate-registry dependency should be a
+# deliberate, reviewed change to this file.
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+allow-git = []

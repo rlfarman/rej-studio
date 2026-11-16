@@ -66,6 +66,30 @@ jobs:
       - name: Audit runtime dependencies
         run: uvx --from pip-audit==2.10.1 pip-audit -r "$RUNNER_TEMP/requirements.txt" --strict --disable-pip
 
+  # cargo-deny for the Rust optimizer: RustSec advisories plus the license,
+  # ban and source policy in rust/deny.toml. The weekly schedule matters as
+  # much as the PR run, because advisories land against versions already in
+  # Cargo.lock with no commit here to trigger CI.
+  cargo-deny:
+    name: cargo deny
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # cargo-deny runs `cargo metadata`, so it needs the pinned toolchain.
+      - name: Install Rust
+        working-directory: rust
+        run: rustup toolchain install
+      # Prebuilt, checksum-verified binary: compiling cargo-deny from source
+      # would take minutes on every cache miss.
+      - uses: taiki-e/install-action@ab49d3c64680143e184118bed66a46419fc15519 # v2.90.5
+        with:
+          tool: cargo-deny@0.21.0
+      - name: Check advisories, bans, licenses and sources
+        working-directory: rust
+        run: cargo deny check
+
   # SBOM generation — attached as a workflow artifact on every main push.
   # Gives us a reproducible snapshot of what was shipped, usable for
   # compliance audits or CVE triage after the fact.

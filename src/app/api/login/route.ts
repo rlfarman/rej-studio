@@ -38,8 +38,14 @@ export async function POST(req: NextRequest) {
   }
 
   const form = await req.formData()
-  const password = String(form.get('password') ?? '')
-  const returnTo = safeReturnTo(String(form.get('return_to') ?? ''), req.url)
+  // FormData values are string | File. A file where a text field belongs is
+  // a malformed request, so read it as empty rather than as "[object File]".
+  const text = (name: string) => {
+    const value = form.get(name)
+    return typeof value === 'string' ? value : ''
+  }
+  const password = text('password')
+  const returnTo = safeReturnTo(text('return_to'), req.url)
 
   const expected = process.env.BASIC_AUTH_PASSWORD
   if (!expected) {

@@ -5,7 +5,7 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query'
-import type { GeneSearchResult } from '@/features/gene-search/api/gene-queries'
+import type { GeneSearchResult } from '@/features/gene-search/types/search'
 import {
   SEARCH_LIMITS,
   type SearchGenesResult,
@@ -15,6 +15,8 @@ import type { SpeciesFilter } from '@/lib/bio/species'
 import { useSpeciesContext } from '@/stores/species-store'
 import { trackEvent } from '@/lib/analytics'
 import { geneSearchCopy } from '../copy'
+import { searchCorpus } from '../corpus/client'
+import { getBrowserCorpus } from '../corpus/gene-data-url'
 
 interface UseGeneSearchProps {
   defaultQuery?: string
@@ -27,7 +29,7 @@ const EMPTY_RESULTS: GeneSearchResult[] = []
 const EMPTY_SUGGESTIONS: SimilarGene[] = []
 
 /**
- * Fetch one palette search. `signal` comes from TanStack Query, which aborts
+ * Run one palette search. Over the API (Postgres backend), `signal` comes from TanStack Query, which aborts
  * the request when the query key changes, so a stale keystroke's search
  * stops instead of queueing ahead of the current one. Expected failures
  * (rate limit, signed out, backend down) resolve with their message; only
@@ -38,6 +40,19 @@ async function fetchGeneSearch(
   species: SpeciesFilter,
   signal: AbortSignal,
 ): Promise<GeneSearchData> {
+  // With a static corpus the search runs right here, against an index
+  // downloaded once; no request per keystroke, so nothing to rate-limit.
+  // A failure to fetch the index throws, which reads as a network error.
+  const corpus = getBrowserCorpus()
+  if (corpus) {
+    const result = await searchCorpus(corpus, {
+      q: query,
+      species,
+      limit: SEARCH_LIMITS.palette,
+    })
+    return { ...result, error: null }
+  }
+
   const params = new URLSearchParams({
     q: query,
     species,
@@ -115,8 +130,11 @@ export function useGeneSearch({ defaultQuery }: UseGeneSearchProps = {}) {
     ? geneSearchCopy.searchErrors.network
     : (data?.error ?? null)
 
+  // Fire and forget: a failed refetch surfaces through the query's isError,
+  // read above, and invalidateQueries does not reject unless asked to
+  // (throwOnError).
   const retry = () => {
-    queryClient.invalidateQueries({ queryKey })
+    void queryClient.invalidateQueries({ queryKey })
   }
 
   const pendingQuery = query.trim()

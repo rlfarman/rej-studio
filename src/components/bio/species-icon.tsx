@@ -1,11 +1,15 @@
 import { User, RatIcon, Dna } from 'lucide-react'
-import type { SpeciesFilter } from '@/lib/bio/species'
 
 export function SpeciesIcon({
   species,
   className,
 }: {
-  species?: SpeciesFilter | string
+  /**
+   * Any string: callers pass `gene.species` straight from a text column.
+   * 'human' and 'mouse' get their own icons; anything else, including the
+   * 'both' filter, gets the generic DNA icon.
+   */
+  species?: string
   className?: string
 }) {
   switch (species) {

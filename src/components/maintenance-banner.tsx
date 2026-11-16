@@ -43,7 +43,7 @@ export function MaintenanceBanner({ message, signature }: Props) {
           window.localStorage.setItem(STORAGE_KEY, signature)
           setDismissed(true)
         }}
-        className="focus-visible:ring-ring hover:bg-warning/20 -m-1 rounded-md p-1 transition-colors focus-visible:ring-2 focus-visible:outline-none"
+        className="focus-visible:ring-ring hover:bg-warning/20 -m-1 rounded-full p-1 transition-colors focus-visible:ring-2 focus-visible:outline-none"
         aria-label="Dismiss maintenance notice"
       >
         <X className="size-4" />

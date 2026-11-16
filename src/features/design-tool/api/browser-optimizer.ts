@@ -1,0 +1,181 @@
+// Client for the in-browser optimizer.
+//
+// Owns the worker's lifecycle and turns its messages into the same
+// `JobActionResult` the server backends return, so `useJob` treats a browser
+// design like any other.
+//
+// The worker is created on first use and kept for the session: loading and
+// compiling the WebAssembly costs about as much as a short design, and
+// nothing carries over between runs. Cancelling terminates it, because a
+// design running inside WebAssembly cannot be interrupted from outside; the
+// next run starts a fresh one.
+
+import {
+  jobError,
+  type JobActionResult,
+} from '@/features/design-tool/types/job-result'
+import {
+  processResultSchema,
+  type BackendProcessResult,
+  type ProcessOptions,
+} from '@/features/design-tool/types/backend-contract'
+import type {
+  OptimizerRequest,
+  OptimizerResponse,
+} from '@/features/design-tool/workers/optimizer-protocol'
+import { designToolCopy } from '@/features/design-tool/copy'
+import { createLogger } from '@/lib/logger'
+
+const log = createLogger('browser-optimizer')
+const copy = designToolCopy.jobErrors
+
+export interface BrowserDesignParams {
+  CDS: string
+  name: string
+  options: ProcessOptions
+}
+
+export interface BrowserDesignCallbacks {
+  onProgress?: (fraction: number, stage: string) => void
+  /** Aborts the run by terminating the worker. */
+  signal?: AbortSignal
+}
+
+/** The live worker, or null before first use and after a cancel. */
+let worker: Worker | null = null
+
+function getWorker(): Worker {
+  worker ??= new Worker(
+    new URL('../workers/optimizer.worker.ts', import.meta.url),
+    { type: 'module', name: 'rej-optimizer' },
+  )
+  return worker
+}
+
+/** Tear the worker down; the next design starts a fresh one. */
+export function terminateOptimizerWorker() {
+  worker?.terminate()
+  worker = null
+}
+
+/**
+ * True when this browser can run the optimizer.
+ *
+ * Both are needed: a Worker to keep the tab responsive, and WebAssembly to
+ * run the optimizer at all. Callers fall back to the server when false.
+ */
+export function browserOptimizerSupported(): boolean {
+  return typeof Worker !== 'undefined' && typeof WebAssembly !== 'undefined'
+}
+
+/**
+ * Start the worker and the WebAssembly download ahead of time.
+ *
+ * Called when the design form mounts so the ~146 KB arrives while the user is
+ * still entering a sequence, rather than after they press Run.
+ */
+export function warmOptimizerWorker() {
+  if (!browserOptimizerSupported()) return
+  try {
+    getWorker()
+  } catch (error) {
+    // Pre-warming is an optimization; a failure here must not break the form.
+    log.warn('could not pre-warm the optimizer worker', {
+      reason: error instanceof Error ? error.name : 'unknown',
+    })
+  }
+}
+
+/**
+ * Design a sequence in this browser.
+ *
+ * Resolves with the same shape the server backends return, so callers need no
+ * branch of their own. Never rejects: a failure comes back as `ok: false`.
+ */
+export function designInBrowser(
+  params: BrowserDesignParams,
+  { onProgress, signal }: BrowserDesignCallbacks = {},
+): Promise<JobActionResult<BackendProcessResult>> {
+  if (!browserOptimizerSupported()) {
+    return Promise.resolve(jobError('backend', copy.browserUnsupported, false))
+  }
+  if (signal?.aborted) {
+    return Promise.resolve(jobError('cancelled', copy.cancelled, true))
+  }
+
+  const runId = crypto.randomUUID()
+
+  return new Promise((resolve) => {
+    let settled = false
+    const active = getWorker()
+
+    const finish = (outcome: JobActionResult<BackendProcessResult>) => {
+      if (settled) return
+      settled = true
+      active.removeEventListener('message', onMessage)
+      active.removeEventListener('error', onWorkerError)
+      signal?.removeEventListener('abort', onAbort)
+      resolve(outcome)
+    }
+
+    const onMessage = (event: MessageEvent<OptimizerResponse>) => {
+      const message = event.data
+      // A terminated run's messages can still arrive; ignore anything that
+      // is not this run's.
+      if (!message || message.runId !== runId) return
+
+      if (message.type === 'progress') {
+        onProgress?.(message.fraction, message.stage)
+        return
+      }
+      if (message.type === 'error') {
+        log.warn('browser design failed', { code: message.code })
+        finish(
+          jobError(
+            message.code,
+            message.code === 'invalid_input'
+              ? message.message
+              : copy.browserFailed,
+            message.code !== 'invalid_input',
+          ),
+        )
+        return
+      }
+
+      // Parse with the same schema the server responses go through, so a
+      // mismatch surfaces here rather than three layers into the UI.
+      const parsed = processResultSchema.safeParse(message.result)
+      if (!parsed.success) {
+        log.error('unexpected browser optimizer result', parsed.error)
+        finish(jobError('backend', copy.unexpectedResponse, false))
+        return
+      }
+      finish({ ok: true, data: parsed.data })
+    }
+
+    const onWorkerError = (event: ErrorEvent) => {
+      log.error('optimizer worker crashed', event.error)
+      // A crashed worker cannot be reused.
+      terminateOptimizerWorker()
+      finish(jobError('backend', copy.browserFailed, true))
+    }
+
+    const onAbort = () => {
+      terminateOptimizerWorker()
+      finish(jobError('cancelled', copy.cancelled, true))
+    }
+
+    active.addEventListener('message', onMessage)
+    active.addEventListener('error', onWorkerError)
+    signal?.addEventListener('abort', onAbort, { once: true })
+
+    const request: OptimizerRequest = {
+      type: 'design',
+      runId,
+      CDS: params.CDS,
+      name: params.name,
+      options: params.options,
+    }
+    active.postMessage(request)
+  })
+}

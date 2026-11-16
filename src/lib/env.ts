@@ -39,9 +39,7 @@ const serverSchema = z
 
     // Shared-password auth for the site. Gate only engages when
     // BASIC_AUTH_PASSWORD is set; SESSION_SECRET is then required so we can
-    // sign the session cookie. BASIC_AUTH_USER is accepted for back-compat
-    // with the prior basic-auth setup but no longer read.
-    BASIC_AUTH_USER: z.string().optional(),
+    // sign the session cookie.
     BASIC_AUTH_PASSWORD: z.string().optional(),
     SESSION_SECRET: z.string().min(32).optional(),
 
@@ -55,21 +53,20 @@ const serverSchema = z
     SENTRY_ORG: z.string().optional(),
     SENTRY_PROJECT: z.string().optional(),
     SENTRY_AUTH_TOKEN: z.string().optional(),
-
-    // OpenTelemetry — vendor-neutral. Axiom, Grafana, Honeycomb, etc.
-    OTEL_EXPORTER_OTLP_ENDPOINT: z.url().optional(),
-    OTEL_EXPORTER_OTLP_HEADERS: z.string().optional(),
-    OTEL_SERVICE_NAME: z.string().optional(),
   })
   .superRefine((data, ctx) => {
     // Production guardrails.
     if (isProd) {
-      if (!data.DATABASE_URL || !data.DATABASE_URL.startsWith('postgres')) {
+      // Gene data comes from Postgres until a static corpus is configured.
+      if (
+        !process.env.NEXT_PUBLIC_GENE_DATA_URL &&
+        (!data.DATABASE_URL || !data.DATABASE_URL.startsWith('postgres'))
+      ) {
         ctx.addIssue({
           path: ['DATABASE_URL'],
           code: 'custom',
           message:
-            'DATABASE_URL must be a Postgres connection string in production (PGlite is dev-only).',
+            'DATABASE_URL must be a Postgres connection string in production (PGlite is dev-only), unless NEXT_PUBLIC_GENE_DATA_URL points at a static gene corpus.',
         })
       }
       if (data.COMPUTE_BACKEND !== 'modal') {
@@ -129,6 +126,24 @@ const clientSchema = z
     // data layer already supports two positions. Client code reads this
     // directly via process.env (see features/design-tool/utils/feature-flags.ts).
     NEXT_PUBLIC_ENABLE_MULTI_SPLIT: z.enum(['true', 'false']).optional(),
+
+    // Feature flag: run the optimizer in a Web Worker rather than on the
+    // compute backend. Client code reads it directly via process.env (see
+    // features/design-tool/utils/feature-flags.ts).
+    NEXT_PUBLIC_ENABLE_BROWSER_OPTIMIZER: z.enum(['true', 'false']).optional(),
+
+    // Base URL of one version of the static gene corpus (built by
+    // `pnpm corpus:build`): an absolute URL, or a path served from public/.
+    // Unset, development uses the committed sample and production keeps
+    // reading Postgres. Read directly via process.env (see
+    // features/gene-search/corpus/gene-data-url.ts).
+    NEXT_PUBLIC_GENE_DATA_URL: z
+      .string()
+      .regex(
+        /^(https?:\/\/|\/)/,
+        'Expected an http(s) URL or a path starting with "/".',
+      )
+      .optional(),
   })
   .superRefine((data, ctx) => {
     if (isProd && !data.NEXT_PUBLIC_SITE_URL) {
