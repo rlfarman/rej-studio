@@ -670,6 +670,12 @@ def runOptimization(CDS, OPTIONS, on_progress=None):
     # 'objective', 'constraint') to our on_progress callback, so the frontend
     # can show real sub-progress during the long `problem.optimize()` call
     # instead of sitting frozen at 45% for most of the run.
+    #
+    # Without a progress callback there is nothing to bridge, so DNAChisel keeps
+    # its own default logger. "bar" is only meaningful to the problem
+    # constructor, which resolves it through proglog; assigning that string to
+    # `problem.logger` later would hand `optimize()` a str and raise
+    # AttributeError: 'str' object has no attribute 'iter_bar'.
     optimize_logger = (
         _ProgressBridgeLogger(
             gate=progress_gate,
@@ -677,7 +683,7 @@ def runOptimization(CDS, OPTIONS, on_progress=None):
             stage="Optimizing sequence",
         )
         if on_progress is not None
-        else "bar"
+        else None
     )
     resolve_logger = (
         _ProgressBridgeLogger(
@@ -704,7 +710,8 @@ def runOptimization(CDS, OPTIONS, on_progress=None):
     _emit(0.45, "Optimizing sequence")
     # Swap in the optimize-phase logger. Some dnachisel versions look it up
     # as problem.logger; this reassignment is safe either way.
-    problem.logger = optimize_logger  # type: ignore[assignment]
+    if optimize_logger is not None:
+        problem.logger = optimize_logger  # type: ignore[assignment]
     # Also run a heartbeat thread as a safety net: if dnachisel doesn't emit
     # bar events frequently enough (short objective lists, tight loops,
     # different version internals), we still creep forward on wall-clock so
