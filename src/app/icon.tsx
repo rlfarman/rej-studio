@@ -32,7 +32,6 @@ export default async function Icon({ id }: { id: Promise<string> }) {
         borderRadius: Math.round(px * 0.2),
       }}
     >
-      {/* eslint-disable-next-line @next/next/no-img-element -- Satori renders plain img */}
       <img src={dnaIconSvg} alt="" width={glyph} height={glyph} />
     </div>,
     { width: px, height: px },

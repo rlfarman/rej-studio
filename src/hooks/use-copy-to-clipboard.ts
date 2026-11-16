@@ -1,5 +1,5 @@
 'use client'
-import { useCallback, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { errorsCopy } from '@/copy/errors'
 
@@ -24,59 +24,57 @@ export function useCopyToClipboard({
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>(null)
 
-  const copy = useCallback(
-    async (text: string, id = 'default', options?: CopyOptions) => {
-      const succeed = () => {
-        if (timeoutRef.current) clearTimeout(timeoutRef.current)
-        setCopiedId(id)
-        if (showToast) {
-          toast.success(options?.successMessage ?? errorsCopy.clipboard.success)
-        }
-        timeoutRef.current = setTimeout(() => setCopiedId(null), resetDelay)
+  // Plain functions: the React Compiler memoizes them.
+  async function copy(text: string, id = 'default', options?: CopyOptions) {
+    const succeed = () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current)
+      setCopiedId(id)
+      if (showToast) {
+        toast.success(options?.successMessage ?? errorsCopy.clipboard.success)
       }
+      timeoutRef.current = setTimeout(() => setCopiedId(null), resetDelay)
+    }
 
-      // Prefer the async clipboard API, fall back to a hidden textarea +
-      // execCommand. The fallback handles browsers without clipboard
-      // permission (e.g. the document isn't focused, the page isn't in a
-      // secure context, or the user is on an older browser).
-      try {
-        await navigator.clipboard.writeText(text)
+    // Prefer the async clipboard API, fall back to a hidden textarea +
+    // execCommand. The fallback handles browsers without clipboard
+    // permission (e.g. the document isn't focused, the page isn't in a
+    // secure context, or the user is on an older browser).
+    try {
+      await navigator.clipboard.writeText(text)
+      succeed()
+      return
+    } catch {
+      // fall through to the legacy path
+    }
+    try {
+      const ta = document.createElement('textarea')
+      ta.value = text
+      ta.setAttribute('readonly', '')
+      ta.style.position = 'fixed'
+      ta.style.top = '0'
+      ta.style.left = '-9999px'
+      document.body.appendChild(ta)
+      const selection = document.getSelection()
+      const savedRange =
+        selection && selection.rangeCount > 0 ? selection.getRangeAt(0) : null
+      ta.select()
+      const ok = document.execCommand('copy')
+      document.body.removeChild(ta)
+      if (savedRange && selection) {
+        selection.removeAllRanges()
+        selection.addRange(savedRange)
+      }
+      if (ok) {
         succeed()
         return
-      } catch {
-        // fall through to the legacy path
       }
-      try {
-        const ta = document.createElement('textarea')
-        ta.value = text
-        ta.setAttribute('readonly', '')
-        ta.style.position = 'fixed'
-        ta.style.top = '0'
-        ta.style.left = '-9999px'
-        document.body.appendChild(ta)
-        const selection = document.getSelection()
-        const savedRange =
-          selection && selection.rangeCount > 0 ? selection.getRangeAt(0) : null
-        ta.select()
-        const ok = document.execCommand('copy')
-        document.body.removeChild(ta)
-        if (savedRange && selection) {
-          selection.removeAllRanges()
-          selection.addRange(savedRange)
-        }
-        if (ok) {
-          succeed()
-          return
-        }
-      } catch {
-        // fall through to error toast
-      }
-      toast.error(options?.errorMessage ?? errorsCopy.clipboard.failure)
-    },
-    [resetDelay, showToast],
-  )
+    } catch {
+      // fall through to error toast
+    }
+    toast.error(options?.errorMessage ?? errorsCopy.clipboard.failure)
+  }
 
-  const isCopied = useCallback((id = 'default') => copiedId === id, [copiedId])
+  const isCopied = (id = 'default') => copiedId === id
 
   return { copy, isCopied } as const
 }
