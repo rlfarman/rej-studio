@@ -1,9 +1,17 @@
 export const onboardingCopy = {
+  helpButton: {
+    label: 'Open help and tour',
+    tooltip: 'Help & tour',
+  },
   welcomeDialog: {
     title: 'Welcome to REJ Studio',
     description: 'Design optimized RNA End-Joining sequences in three steps.',
     skip: 'Skip for now',
     takeTour: 'Take the tour',
+    searchShortcut: {
+      before: 'Tip: press',
+      after: 'on any page to search genes.',
+    },
     features: {
       searchGenes: {
         title: 'Search genes',
@@ -26,7 +34,7 @@ export const onboardingCopy = {
       search: {
         title: 'Search for genes',
         description:
-          'Type a gene symbol like ATM or TP53 to get started. You can also press ⌘K from any page to open search.',
+          'Type a gene symbol like ATM or TP53 to get started. You can also press ⌘ K (Ctrl K on Windows and Linux) from any page to open search.',
       },
       paste: {
         title: 'Or paste your own sequence',

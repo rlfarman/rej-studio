@@ -9,7 +9,9 @@ import {
   TooltipContent,
 } from '@/components/ui/tooltip'
 import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar'
+import { BrandMark } from '@/components/brand-mark'
 import { commonCopy } from '@/copy/common'
+import { HeaderHelpButton } from '@/features/onboarding/components/help-button'
 import { cn } from '@/lib/utils'
 
 const HIDE_AFTER = 80
@@ -110,45 +112,84 @@ function useMainScroll() {
   return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
 }
 
+/**
+ * Short label for the current page, shown in the header once the page's own
+ * title has scrolled out of view. Null where the page has no title to echo.
+ */
+function pageContextLabel(pathname: string): string | null {
+  const geneMatch = pathname.match(/^\/genes\/([^/]+)/)
+  if (geneMatch) return decodeURIComponent(geneMatch[1])
+  if (pathname === '/genes') return commonCopy.pageContext.genes
+  if (pathname.startsWith('/design-tool'))
+    return commonCopy.pageContext.designTool
+  if (pathname.startsWith('/disease-associations'))
+    return commonCopy.pageContext.diseaseAssociations
+  if (pathname.startsWith('/architecture'))
+    return commonCopy.pageContext.architecture
+  return null
+}
+
 export function Header() {
   const pathname = usePathname()
   const isHomePage = pathname === '/'
-  const { state } = useSidebar()
+  // Home and /genes each render their own search box, so the header trigger
+  // would be a second search on the page.
+  const pageHasSearch = isHomePage || pathname === '/genes'
+  const { state, isMobile } = useSidebar()
   const sidebarLabel =
     state === 'expanded' ? commonCopy.sidebar.close : commonCopy.sidebar.open
   const { scrolled, isHidden } = useMainScroll()
 
   const geneSymbolMatch = pathname.match(/\/genes\/([^/]+)/)
   const geneSymbol = geneSymbolMatch ? geneSymbolMatch[1] : undefined
+  const contextLabel = pageContextLabel(pathname)
 
   return (
     <header
       aria-hidden={isHidden || undefined}
       className={cn(
-        'sticky top-0 z-10 flex items-center px-3 sm:px-4 md:px-6',
+        'sticky top-0 z-10 grid grid-cols-[1fr_auto_1fr] items-center gap-2 px-3 sm:px-4 md:px-6',
         'border-b transition-[height,margin-top,opacity,background-color,border-color] duration-200 ease-out motion-reduce:transition-none',
         scrolled
-          ? 'bg-background/80 border-border/60 h-12 backdrop-blur'
+          ? 'bg-background/85 border-border/60 h-12 backdrop-blur'
           : 'bg-background h-15 border-transparent',
         isHidden && 'pointer-events-none -mt-12 opacity-0',
       )}
     >
-      <div className="z-10 flex items-center">
+      <div className="flex min-w-0 items-center gap-2">
         <Tooltip>
           <TooltipTrigger asChild>
             <SidebarTrigger size="lg" aria-label={sidebarLabel} />
           </TooltipTrigger>
           <TooltipContent>{sidebarLabel}</TooltipContent>
         </Tooltip>
+        {/* On phones the sidebar (and its logo) is hidden behind the
+            trigger, so the header carries the brand. */}
+        {isMobile && <BrandMark showWordmark={isHomePage} />}
+        {!isMobile && contextLabel && (
+          // Visual echo of the page's own h1, so hidden from screen readers.
+          <span
+            aria-hidden
+            className={cn(
+              'text-muted-foreground truncate text-sm font-medium transition-opacity duration-200 motion-reduce:transition-none',
+              scrolled ? 'opacity-100' : 'opacity-0',
+            )}
+          >
+            {contextLabel}
+          </span>
+        )}
       </div>
-      <div className="flex flex-1 justify-center">
-        {!isHomePage && (
+      <div className="flex justify-center">
+        {!pageHasSearch && (
           <GeneSearchShell
             searchGenes={searchGenes}
             defaultQuery={geneSymbol}
             isDialog
           />
         )}
+      </div>
+      <div className="flex items-center justify-end">
+        <HeaderHelpButton />
       </div>
     </header>
   )

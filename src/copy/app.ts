@@ -1,5 +1,6 @@
 export const appCopy = {
   errorBoundary: {
+    eyebrow: 'Unexpected error',
     title: 'Something went wrong',
     description:
       'An unexpected mutation occurred. Try again, or reload the page.',
@@ -17,10 +18,20 @@ export const appCopy = {
     },
   },
   notFound: {
-    code: '404',
+    eyebrow: '404 · Page not found',
     description: 'This sequence doesn’t map to anything.',
     detail:
       'The page you’re looking for may have been spliced out. Head back or return home.',
+  },
+  geneNotFound: {
+    eyebrow: '404 · Gene not found',
+    title: (symbol: string) => `No gene matches “${symbol}”`,
+    titleUnknown: 'Gene not found in our database',
+    detail:
+      'Symbols are case-sensitive (TP53 for human, Trp53 for mouse), and some genes aren’t indexed yet.',
+    didYouMean: 'Did you mean',
+    searchGenes: 'Search genes',
+    customSequence: 'Enter a custom sequence',
   },
   home: {
     metadataTitle: 'REJ Studio — RNA End-Joining sequence design',

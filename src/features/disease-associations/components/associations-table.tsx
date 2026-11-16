@@ -118,9 +118,9 @@ export function AssociationsTable({
                   {row.largestCds != null ? (
                     <>
                       {cdsFormatter.format(row.largestCds)}
-                      <span className="text-muted-foreground/70 ml-1">
-                        {largestCdsUnit}
-                      </span>
+                      {/* The cell is already muted; dimming the unit further
+                          dropped it below 4.5:1. */}
+                      <span className="ml-1">{largestCdsUnit}</span>
                     </>
                   ) : (
                     largestCdsUnknown
