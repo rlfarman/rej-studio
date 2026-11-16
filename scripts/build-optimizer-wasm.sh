@@ -72,10 +72,8 @@ export const OPTIMIZER_WASM_PATH = '/optimizer/rej-optimizer.wasm'
  * files under public/ have no content hash in their name, so without this a
  * browser could keep an older optimizer after a deploy.
  */
-export const OPTIMIZER_WASM_DIGEST = '$digest'
-
-/** Uncompressed size in bytes, reported in the build log. */
-export const OPTIMIZER_WASM_BYTES = $bytes
+export const OPTIMIZER_WASM_DIGEST =
+  '$digest'
 EOF
 
 gzipped="$(gzip -9c "$ASSET" | wc -c)"

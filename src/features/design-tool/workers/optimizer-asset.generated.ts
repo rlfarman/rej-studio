@@ -13,6 +13,3 @@ export const OPTIMIZER_WASM_PATH = '/optimizer/rej-optimizer.wasm'
  */
 export const OPTIMIZER_WASM_DIGEST =
   '614e5a34ddf806d453378f0d2176c41bc9473e3db5998eb9544646ffe7b0edd5'
-
-/** Uncompressed size in bytes, reported in the build log. */
-export const OPTIMIZER_WASM_BYTES = 393233

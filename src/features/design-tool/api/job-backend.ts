@@ -36,7 +36,7 @@ const copy = designToolCopy.jobErrors
 // Re-exported for server callers. The definitions live in types/job-result
 // so the in-browser optimizer can return the same shape without dragging
 // this module's server-only imports into the client bundle.
-export { jobError, type JobActionResult, type JobError }
+export { jobError, type JobActionResult }
 
 export interface BackendJobParams {
   CDS: string

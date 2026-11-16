@@ -17,7 +17,7 @@ export interface OptimizerRequest {
 }
 
 /** Progress tick while the design runs. */
-export interface OptimizerProgress {
+interface OptimizerProgress {
   type: 'progress'
   runId: string
   /** 0 to 1. */
@@ -26,14 +26,14 @@ export interface OptimizerProgress {
 }
 
 /** The finished design, as the backend contract's `ProcessResult` JSON. */
-export interface OptimizerResult {
+interface OptimizerResult {
   type: 'result'
   runId: string
   result: unknown
 }
 
 /** The run failed. `code` mirrors the server's job error codes. */
-export interface OptimizerFailure {
+interface OptimizerFailure {
   type: 'error'
   runId: string
   code: 'invalid_input' | 'backend' | 'unknown'
