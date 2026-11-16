@@ -12,7 +12,9 @@ Sentry.init({
 
   integrations: [Sentry.replayIntegration()],
 
-  sendDefaultPii: true,
+  // Sentry 11 replaced `sendDefaultPii: true` with `dataCollection`, whose
+  // defaults already collect user info, cookies, headers and query params
+  // (with sensitive values filtered), so no option is needed here.
 })
 
 export const onRouterTransitionStart = Sentry.captureRouterTransitionStart

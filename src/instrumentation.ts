@@ -52,7 +52,7 @@ export async function register() {
     const { ATTR_SERVICE_NAME } =
       await import('@opentelemetry/semantic-conventions')
     const { resourceFromAttributes } = await import('@opentelemetry/resources')
-    const { BatchSpanProcessor } = await import('@opentelemetry/sdk-trace-base')
+    const { BatchSpanProcessor } = await import('@opentelemetry/sdk-trace')
 
     const traceExporter = new OTLPTraceExporter()
 
@@ -63,7 +63,8 @@ export async function register() {
       // BatchSpanProcessor with a short delay so spans flush before Vercel
       // freezes the serverless function.
       spanProcessors: [
-        new BatchSpanProcessor(traceExporter, {
+        new BatchSpanProcessor({
+          exporter: traceExporter,
           maxExportBatchSize: 64,
           scheduledDelayMillis: 1_000,
         }),
