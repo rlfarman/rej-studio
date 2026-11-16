@@ -63,23 +63,15 @@ const nextConfig: NextConfig = {
       '',
   },
   headers: async () => [
-    // Stale-while-revalidate for sitemap and OG images — CDN serves the
-    // cached version instantly and revalidates in the background.
+    // Stale-while-revalidate for the sitemap — CDN serves the cached version
+    // instantly and revalidates in the background. (OG image routes set
+    // their own Cache-Control in their ImageResponse.)
     {
       source: '/sitemap.xml',
       headers: [
         {
           key: 'Cache-Control',
           value: 'public, s-maxage=3600, stale-while-revalidate=86400',
-        },
-      ],
-    },
-    {
-      source: '/genes/:symbol/opengraph-image',
-      headers: [
-        {
-          key: 'Cache-Control',
-          value: 'public, s-maxage=86400, stale-while-revalidate=604800',
         },
       ],
     },
@@ -114,6 +106,11 @@ const nextConfig: NextConfig = {
         // Do not add a static CSP header here — it would conflict.
       ],
     },
+  ],
+  redirects: async () => [
+    // `/index` was served the `/` page shell but rendered with its own path,
+    // so React fell back to client rendering (Sentry REJ-STUDIO-2D).
+    { source: '/index', destination: '/', permanent: true },
   ],
   rewrites: async () => {
     if (process.env.NODE_ENV === 'development') {

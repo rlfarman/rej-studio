@@ -1,26 +1,11 @@
-import { getDb } from '@/drizzle/db'
-import { genes } from '@/drizzle/schema'
+import { connection } from 'next/server'
+import { fetchAllGeneSymbols } from '@/features/gene-search/api/gene-queries'
+import { isAuthGateActive } from '@/lib/auth/gate'
 import { source } from '@/lib/source'
 import type { MetadataRoute } from 'next'
 
-/**
- * Auto-generated sitemap from the genes table. Since gene data is read-only
- * and only changes on re-seed, we generate the full list on each build/request
- * and let Next.js cache it.
- */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const db = await getDb()
-  const allGenes = await db
-    .select({ symbol: genes.symbol, species: genes.species })
-    .from(genes)
-
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://rejstudio.com'
-
-  const geneEntries: MetadataRoute.Sitemap = allGenes.map((gene) => ({
-    url: `${baseUrl}/genes/${gene.symbol}?species=${gene.species}`,
-    changeFrequency: 'monthly',
-    priority: 0.7,
-  }))
 
   const docEntries: MetadataRoute.Sitemap = source.getPages().map((page) => ({
     url: `${baseUrl}${page.url}`,
@@ -28,7 +13,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }))
 
-  return [
+  const staticEntries: MetadataRoute.Sitemap = [
     {
       url: baseUrl,
       changeFrequency: 'weekly',
@@ -41,6 +26,24 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
     // design-tool is disallowed in robots.txt (functional tool, not content)
     ...docEntries,
-    ...geneEntries,
   ]
+
+  // While the site is password-gated, crawlers only ever reach the login
+  // page, so listing ~40k gene URLs just invites requests that redirect.
+  // This branch touches no database, so the sitemap prerenders as static.
+  if (isAuthGateActive()) return staticEntries
+
+  // Render at request time rather than at build: builds (CI included) then
+  // need no database, and the gene list comes from the shared remote cache
+  // instead of a full table scan per request.
+  await connection()
+  const allGenes = await fetchAllGeneSymbols()
+
+  const geneEntries: MetadataRoute.Sitemap = allGenes.map((gene) => ({
+    url: `${baseUrl}/genes/${gene.symbol}?species=${gene.species}`,
+    changeFrequency: 'monthly',
+    priority: 0.7,
+  }))
+
+  return [...staticEntries, ...geneEntries]
 }

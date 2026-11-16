@@ -145,7 +145,10 @@ jobs:
       - run: pnpm build
         env:
           NEXT_TELEMETRY_DISABLED: '1'
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          # The build never queries the database (every DB-backed route
+          # renders at request time), so CI gets an unreachable placeholder
+          # instead of production credentials. env.ts only checks the scheme.
+          DATABASE_URL: postgres://ci:ci@127.0.0.1:1/ci
           # Required by env.ts production validation but not exercised in CI.
           COMPUTE_BACKEND: modal
           MODAL_API_URL: https://placeholder.modal.run
