@@ -2,7 +2,7 @@
 # Diagnose the local dev environment.
 #
 # Verifies that all the moving parts the app depends on are present and
-# reachable: node/pnpm/uv versions, the Python env, .env vars, Neon connectivity.
+# reachable: node/pnpm/uv/rust versions, the Python env, .env vars, Neon connectivity.
 # Prints one line per check with ✓/✗ and exits non-zero if any fail.
 set -uo pipefail
 
@@ -60,6 +60,21 @@ if command -v uv >/dev/null 2>&1; then
   ok "uv $(uv --version 2>&1 | awk '{print $2}') (Python $(cat .python-version 2>/dev/null || echo '?') from .python-version)"
 else
   warn "uv not found — needed for fastapi-dev; install from https://docs.astral.sh/uv/"
+fi
+
+# Rust only rebuilds the optimizer (pnpm wasm:build). The .wasm is committed,
+# so everything else works without it — hence a warning, not a failure.
+# rust/rust-toolchain.toml pins the version; rustup installs it on request.
+rust_channel="$(sed -n 's/^channel = "\(.*\)"/\1/p' rust/rust-toolchain.toml 2>/dev/null)"
+rustup_bin="$(command -v rustup || echo "$HOME/.cargo/bin/rustup")"
+if [ -x "$rustup_bin" ]; then
+  if "$rustup_bin" toolchain list 2>/dev/null | grep -q "^${rust_channel}-"; then
+    ok "rust $rust_channel (from rust/rust-toolchain.toml)"
+  else
+    warn "rust $rust_channel not installed — needed only for pnpm wasm:build; run: (cd rust && rustup toolchain install)"
+  fi
+else
+  warn "rustup not found — needed only for pnpm wasm:build; install from https://rustup.rs"
 fi
 
 # --- Project bootstrap -----------------------------------------------------

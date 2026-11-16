@@ -8,6 +8,9 @@ description = "RNA End-Joining sequence design optimizer (port of python/algorit
 [lib]
 crate-type = ["cdylib", "rlib"]
 
+[lints]
+workspace = true
+
 [dependencies]
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.145"

@@ -21,10 +21,10 @@ concurrency:
 permissions:
   contents: read
 
+# The Rust version, components and wasm target all come from
+# rust/rust-toolchain.toml, so CI and local builds cannot drift apart. Bump
+# the toolchain there, not here.
 env:
-  # Pinned so the parity suite and the committed .wasm are built by a known
-  # compiler rather than whatever rustup resolves that week.
-  RUST_VERSION: '1.100.0'
   WASM_TARGET: wasm32-unknown-unknown
 
 jobs:
@@ -62,6 +62,7 @@ jobs:
             # What actually compiles into the .wasm. Tests and fixtures are
             # excluded: they change expectations, not the shipped module.
             wasm_source:
+              - 'rust/rust-toolchain.toml'
               - 'rust/Cargo.toml'
               - 'rust/Cargo.lock'
               - 'rust/optimizer/Cargo.toml'
@@ -80,11 +81,10 @@ jobs:
         with:
           persist-credentials: false
 
+      # No arguments: installs exactly what rust/rust-toolchain.toml names.
       - name: Install Rust
-        run: |
-          rustup toolchain install "${RUST_VERSION}" --profile minimal \
-            --component clippy,rustfmt
-          rustup default "${RUST_VERSION}"
+        working-directory: rust
+        run: rustup toolchain install
 
       - uses: Swatinem/rust-cache@f13886b937689c021905a6b90929199931d60db1 # v2.8.1
         with:
@@ -99,6 +99,13 @@ jobs:
       - name: Lint
         working-directory: rust
         run: cargo clippy --all-targets -- -D warnings
+
+      # The wasm ABI in optimizer/src/lib.rs — the crate's only unsafe code —
+      # is cfg(target_arch = "wasm32"), so the native run above never sees
+      # it. Lint the browser build too, or its SAFETY comments go unchecked.
+      - name: Lint the WebAssembly build
+        working-directory: rust
+        run: cargo clippy --lib --target "${WASM_TARGET}" -- -D warnings
 
       # The parity suite. Release mode because the fixtures include real genes
       # of a few thousand bases, which take minutes unoptimized.
@@ -131,10 +138,8 @@ jobs:
           exit 1
 
       - name: Install Rust
-        run: |
-          rustup toolchain install "${RUST_VERSION}" --profile minimal
-          rustup default "${RUST_VERSION}"
-          rustup target add "${WASM_TARGET}"
+        working-directory: rust
+        run: rustup toolchain install
 
       - uses: Swatinem/rust-cache@f13886b937689c021905a6b90929199931d60db1 # v2.8.1
         with:

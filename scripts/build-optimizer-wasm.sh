@@ -26,8 +26,9 @@ if ! command -v cargo >/dev/null 2>&1; then
   if [[ -x "$HOME/.cargo/bin/cargo" ]]; then
     export PATH="$HOME/.cargo/bin:$PATH"
   else
-    echo "error: cargo not found. Install Rust from https://rustup.rs then:" >&2
-    echo "       rustup target add $TARGET" >&2
+    echo "error: cargo not found. Install rustup from https://rustup.rs, then run" >&2
+    echo "       (cd rust && rustup toolchain install)" >&2
+    echo "       for the version and wasm target rust/rust-toolchain.toml names." >&2
     exit 1
   fi
 fi
