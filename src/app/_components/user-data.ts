@@ -148,7 +148,7 @@ export function exportUserData() {
   )
 }
 
-export type ImportCounts = { favorites: number; recents: number; jobs: number }
+type ImportCounts = { favorites: number; recents: number; jobs: number }
 
 export type ImportResult =
   | { ok: true; added: ImportCounts }
@@ -159,7 +159,7 @@ export type ImportResult =
  * id collision, so importing an old backup never rolls anything back.
  * Returns how many entries each store gained.
  */
-export function applyBackup(backup: Backup): ImportCounts {
+function applyBackup(backup: Backup): ImportCounts {
   const added: ImportCounts = { favorites: 0, recents: 0, jobs: 0 }
 
   const favorites = backup.data.favoriteGenes?.state.favoriteGenes ?? []
