@@ -10,9 +10,6 @@ vi.mock('@/features/gene-search/api/gene-queries', () => ({
   fetchAllGeneSymbols: mockFetchAllGeneSymbols,
 }))
 vi.mock('next/server', () => ({ connection: mockConnection }))
-vi.mock('@/lib/source', () => ({
-  source: { getPages: () => [{ url: '/docs' }] },
-}))
 
 import sitemap from './sitemap'
 import robots from './robots'
@@ -38,7 +35,7 @@ describe('sitemap and robots', () => {
 
     it('lists only static pages and never queries the database', async () => {
       const urls = (await sitemap()).map((e) => e.url)
-      expect(urls).toEqual([BASE, `${BASE}/genes`, `${BASE}/docs`])
+      expect(urls).toEqual([BASE, `${BASE}/genes`])
       expect(mockFetchAllGeneSymbols).not.toHaveBeenCalled()
       // No connection() call means the route can prerender as static.
       expect(mockConnection).not.toHaveBeenCalled()

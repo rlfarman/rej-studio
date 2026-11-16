@@ -1,17 +1,10 @@
 import { connection } from 'next/server'
 import { fetchAllGeneSymbols } from '@/features/gene-search/api/gene-queries'
 import { isAuthGateActive } from '@/lib/auth/gate'
-import { source } from '@/lib/source'
 import type { MetadataRoute } from 'next'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://rejstudio.com'
-
-  const docEntries: MetadataRoute.Sitemap = source.getPages().map((page) => ({
-    url: `${baseUrl}${page.url}`,
-    changeFrequency: 'monthly',
-    priority: 0.6,
-  }))
 
   const staticEntries: MetadataRoute.Sitemap = [
     {
@@ -24,8 +17,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'weekly',
       priority: 0.9,
     },
-    // design-tool is disallowed in robots.txt (functional tool, not content)
-    ...docEntries,
+    // design-tool is disallowed in robots.txt (functional tool, not content).
+    // Docs are hidden for now (src/app/docs/layout.tsx returns 404), so
+    // they aren't listed either.
   ]
 
   // While the site is password-gated, crawlers only ever reach the login
