@@ -41,7 +41,7 @@ export function SubmitButton({
     <Button
       type="submit"
       size="lg"
-      className="min-w-56 bg-[oklch(0.82_0.2_125)] px-6 py-6 text-base font-semibold text-[oklch(0.2_0.06_140)] hover:bg-[oklch(0.77_0.2_125)]"
+      className="min-w-56 text-base font-semibold"
       disabled={isProcessing}
       aria-busy={isProcessing}
       aria-live="polite"

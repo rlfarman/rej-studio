@@ -373,7 +373,7 @@ export function CodingSequenceInput() {
             <Button
               type="button"
               size="sm"
-              className="mt-2 bg-[oklch(0.82_0.2_125)] text-[oklch(0.2_0.06_140)] hover:bg-[oklch(0.77_0.2_125)]"
+              className="mt-2"
               onClick={handleReverseTranslate}
             >
               {copy.reverseTranslateButton}

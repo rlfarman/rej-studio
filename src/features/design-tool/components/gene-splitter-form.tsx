@@ -7,7 +7,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
@@ -19,9 +18,10 @@ import { validationSchema, FormValues } from '../types/form-schema'
 import { formatOptionsForReport } from '../utils/form-handler'
 import { useJob } from '@/features/design-tool/hooks/use-job'
 import { CustomizationOptions } from './customization-options'
-import { CodonOptimizationOptions } from './optimization-options'
-import { StimulatoryIntronOptions } from './stimulatory-intron-options'
+import { DesignObjectives } from './optimization-options'
 import { SubmitButton } from './submit-button'
+import { FieldHelp } from './field-help'
+import { RunSummary } from './run-summary'
 import { ResultsPanel } from './results-panel'
 import { JobHeader, RunningPlaceholder } from './job-header'
 import { toast } from 'sonner'
@@ -178,7 +178,7 @@ export function GeneSplitterForm({
 
         {showForm && (
           <>
-            {/* ── Card 1: Input ── */}
+            {/* ── Input + split point ── */}
             <Card
               className="fade-up-stagger"
               style={{ '--stagger': 0 } as React.CSSProperties}
@@ -196,9 +196,14 @@ export function GeneSplitterForm({
                   <CustomizationOptions />
                 </div>
                 <div className="flex flex-col gap-2" data-tour="dt-splicer">
-                  <p className="text-sm font-medium">
-                    {copy.spliceJunctionLabel}
-                  </p>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <p className="text-sm font-medium">
+                      {copy.spliceJunctionLabel}
+                    </p>
+                    <FieldHelp topic={copy.spliceJunctionLabel}>
+                      {copy.spliceJunctionHelp}
+                    </FieldHelp>
+                  </div>
                   <p className="text-muted-foreground text-sm">
                     {copy.spliceJunctionHint}
                   </p>
@@ -207,57 +212,30 @@ export function GeneSplitterForm({
               </CardContent>
             </Card>
 
-            {/* ── Card 2: Strategy + Submit ── */}
+            {/* ── Objectives (summarized; expand to customize) ── */}
             <Card
               className="fade-up-stagger"
               style={{ '--stagger': 1 } as React.CSSProperties}
               data-tour="dt-optimization"
             >
-              <CardHeader className="pb-2">
-                <CardTitle asChild>
-                  <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">
-                    {copy.optimizationHeading}
-                  </h2>
-                </CardTitle>
-                {copy.optimizationDescription ? (
-                  <CardDescription>
-                    {copy.optimizationDescription}
-                  </CardDescription>
-                ) : null}
-              </CardHeader>
-              <CardContent className="space-y-6 pt-0">
-                <section className="space-y-3">
-                  <div className="space-y-1">
-                    <h3 className="text-base font-medium">
-                      {copy.accordion.codonOptimization}
-                    </h3>
-                    <p className="text-muted-foreground text-sm">
-                      {copy.accordion.codonOptimizationHint}
-                    </p>
-                  </div>
-                  <CodonOptimizationOptions />
-                </section>
-
-                <section className="space-y-3">
-                  <div className="space-y-1">
-                    <h3 className="text-base font-medium">
-                      {copy.accordion.stimulatoryIntrons}
-                    </h3>
-                    <p className="text-muted-foreground text-sm">
-                      {copy.accordion.stimulatoryIntronsHint}
-                    </p>
-                  </div>
-                  <StimulatoryIntronOptions />
-                </section>
+              <CardContent className="py-5">
+                <DesignObjectives />
               </CardContent>
-              <CardFooter className="justify-end pt-4" data-tour="dt-submit">
-                <SubmitButton
-                  isJobRunning={job.isLoading}
-                  isJobComplete={job.status === 'completed'}
-                  stage={job.stage}
-                />
-              </CardFooter>
             </Card>
+
+            {/* Sticky so the primary action stays in reach on a long form,
+                and within thumb reach on a phone. */}
+            <div
+              className="bg-background/85 border-border supports-[backdrop-filter]:bg-background/70 sticky bottom-0 z-20 -mx-1 flex flex-wrap items-center justify-between gap-3 rounded-t-lg border-t px-4 py-3 backdrop-blur"
+              data-tour="dt-submit"
+            >
+              <RunSummary />
+              <SubmitButton
+                isJobRunning={job.isLoading}
+                isJobComplete={job.status === 'completed'}
+                stage={job.stage}
+              />
+            </div>
           </>
         )}
 

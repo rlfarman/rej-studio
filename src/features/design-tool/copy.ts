@@ -96,6 +96,41 @@ export const designToolCopy = {
   optimizationOptions: {
     objectivesHeading: 'Sequence objectives',
     constraintsHeading: 'Constraints',
+    summary: {
+      recommendedLabel: 'Recommended settings',
+      customLabel: 'Custom settings',
+      /** Joined into one sentence, e.g. "Codon usage (human) · CpG · GC". */
+      none: 'No objectives selected',
+      customize: 'Customize',
+      hide: 'Hide options',
+      editAria: 'Customize design objectives',
+      items: {
+        codonHuman: 'codon usage (human)',
+        codonMouse: 'codon usage (mouse)',
+        spliceSites: 'splice sites',
+        cpg: 'CpG',
+        kmer: 'k-mer diversity',
+        gc: 'GC 35–60%',
+        intronsBoth: 'both stimulatory introns',
+        intron5: '5′ stimulatory intron',
+        intron3: '3′ stimulatory intron',
+      },
+    },
+    advanced: {
+      label: 'Advanced: objective weights',
+      hint: 'Relative importance of each objective, 0–100. Higher values pull the designer harder toward that objective when they conflict. Defaults to 1 for every objective — equal weighting.',
+    },
+    help: {
+      codonOptimize:
+        'Rewrites codons to the ones the target species uses most often, without changing the protein.',
+      spliceSites:
+        'Cryptic splice sites are donor/acceptor motifs the cell may splice at by mistake, cutting the transcript in the wrong place.',
+      cpg: 'CpG is a C followed by a G. Fewer CpGs can lower innate immune (TLR9) recognition of the delivered DNA.',
+      kmer: 'A k-mer is any 10-base window. Making them unique avoids repeats that make DNA synthesis fail or misassemble.',
+      gc: 'Keeps the G+C fraction in a synthesis-friendly band; very high or low GC is hard to make and can translate poorly.',
+      stimulatoryIntrons:
+        'Short cis-acting introns placed either side of the REJ intron. They recruit splicing factors and can raise trans-splicing efficiency.',
+    },
     codonOptimize: {
       label: 'Codon usage optimization',
       description: 'Target species for codon-aware sequence design.',
@@ -124,6 +159,15 @@ export const designToolCopy = {
     label: 'Weight',
     inputAria: 'Weight',
   },
+  splitPoint: {
+    preselected: (bp: string) =>
+      `Nearest WGGW motif to your split point — the split lands at ${bp} bp. Use ‹ › to pick another.`,
+    noSites:
+      'No WGGW motif found in this sequence. Drag the split point or enter a position; the designer will install a motif near it.',
+    noSitesShort: 'No WGGW motif found',
+    emptyTitle: 'No motif selected',
+    emptyBody: 'Pick a motif on the strip above, or use ‹ › to step through.',
+  },
   stimulatoryIntrons: {
     fivePrime: {
       label: '5′ Stimulatory intron',
@@ -137,11 +181,19 @@ export const designToolCopy = {
     diagramSpliceJunction: 'split point',
   },
   form: {
-    title: 'REJ Studio Design Tool',
+    title: 'Design a sequence',
     description:
-      'Paste a coding sequence, tune the objectives, and generate optimized sequences for RNA end-joining.',
+      'Paste a coding sequence, choose a split point, and generate optimized 5′ and 3′ sequences for RNA end-joining.',
     spliceJunctionLabel: 'Split point',
     spliceJunctionHint: 'Set where the CDS divides into 5′ and 3′ sequences.',
+    spliceJunctionHelp:
+      'The CDS is delivered as two halves that rejoin in the cell. The split lands inside a WGGW motif (W = A or T), which the end-joining machinery needs at the junction.',
+    runSummary: {
+      noSequence: 'Add a coding sequence to run the designer.',
+      ready: (bp: string, objectives: number) =>
+        `${bp} bp · ${objectives} objective${objectives === 1 ? '' : 's'}`,
+      splitAt: (bp: string) => `split at ${bp} bp`,
+    },
     optimizationHeading: 'Design Objectives',
     optimizationDescription: '',
     accordion: {

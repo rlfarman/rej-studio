@@ -8,10 +8,11 @@ export const AAV_MAX_BP = 4000
 export const MIN_SEQUENCE_LENGTH = 12
 
 // Tick-click hit-detection: parent-routed click on the WGGW strip picks
-// the nearest site within this many pixels of the click. Larger than the
-// visible tick width (~4px) so the hit area feels generous; small enough
-// that adjacent ticks don't both qualify.
-export const TICK_CLICK_THRESHOLD_PX = 14
+// the nearest site within this many pixels of the click. Much larger than
+// the visible tick width (~4px) because the ticks are the primary way to
+// choose a split point and were hard to hit, especially by touch; still
+// small enough that a click far from any tick does nothing.
+export const TICK_CLICK_THRESHOLD_PX = 22
 
 // When the cursor moves by more than this many bp between renders, treat
 // it as a "jump" (active-splice switch, midpoint, GoTo, etc.) and smooth-
