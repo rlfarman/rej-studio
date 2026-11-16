@@ -42,7 +42,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
-    "@neondatabase/serverless": "^0.10.4",
+    "@neondatabase/serverless": "^1.2.1",
     "@next/third-parties": "^16.4.6",
     "@opentelemetry/auto-instrumentations-node": "^0.83.1",
     "@opentelemetry/exporter-trace-otlp-http": "^0.301.2",
