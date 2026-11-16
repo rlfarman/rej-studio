@@ -224,18 +224,66 @@ and local. Today the endpoint calls Modal, where a design really does take
 minutes, so making `submit_design` synchronous now would be a regression. It
 lands when the endpoint moves to the Worker, after steps 1 and 2.
 
-## The big-gene fallback
+## Designs you can close the tab on
 
-If some genes really are too slow in the browser, the same Rust crate can run
-on a Cloudflare Worker — no second implementation, no Modal, no containers.
+In the browser, a design runs in a Web Worker. It keeps running when the tab
+is in the background and stops when the tab closes. Nothing in the browser
+outlives the last open tab: SharedWorkers die with it, and Service Workers
+are cut off after about 30 seconds idle. So "close it and come back" means
+running the design on Cloudflare. The client-side half (finish
+notifications, a warning before closing mid-run, re-running an interrupted
+design, which reproduces it exactly because runs are seeded) is built in the
+app regardless.
 
-Workers Paid allows **5 minutes of CPU per request** (the default is 30
-seconds and must be raised in Wrangler config), and WebAssembly counts toward
-that budget. A 5,592 bp gene takes 3.8 s, so a 15 kb gene near 30 s fits
-comfortably. Memory is capped at 128 MB, which the optimizer stays well under.
+An earlier draft said a plain Worker request was enough for this. It isn't:
+the request is tied to the browser connection. The work has to be detached
+from the request, and **Workflows** is the fit. Each step can run for
+unlimited wall time and up to 5 minutes of CPU, an instance keeps its output
+for 7 days by default (up to 30), so it can hold the finished design itself,
+and the client fetches it by id later.
 
-Offer it only for sequences past some threshold, so the common case stays
-local and private.
+**The real limit is 5 minutes of CPU per invocation.** That applies to
+Workers, Workflow steps and Queue consumers alike. Optimizer time grows about
+with the square of CDS length (5.6 kb ≈ 4 s in WebAssembly), so one step
+covers sequences up to roughly **45 kb**. Beyond that (titin's ~100 kb CDS
+would need about 20 minutes), the options are:
+
+- checkpoint the optimizer between Workflow steps (serialize the sequence, the
+  RNG state and the position in the objective list), which is real Rust work;
+- or run the native binary in a **Container**, which has no CPU cap but means
+  a Docker image, cold starts and a Worker to orchestrate it.
+
+Neither is worth building until someone needs a gene that big.
+
+### What it costs
+
+Every option below needs **Workers Paid at $5/month**: the free plan allows
+10 ms of CPU per request, which can't run a design. The MCP Worker needs Paid
+for the same reason, since its designs run inline, so this is not a new
+cost.
+
+| Option                    | Covers                   | Marginal cost at lab scale                                                                                                                                |
+| ------------------------- | ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Workflows                 | up to ~45 kb per step    | ≈ $0: 30M CPU-ms (≈ 8.3 CPU-hours), 500k steps and 1 GB storage are included monthly; beyond that, $0.02 per million CPU-ms (≈ $0.0006 for a 30 s design) |
+| Workflows + checkpointing | any length               | same as above, plus the Rust work                                                                                                                         |
+| Containers                | any length, native speed | 375 vCPU-minutes and 25 GiB-hours of memory included; then $0.00002 per vCPU-second (≈ $0.024 for a 20-minute design)                                     |
+
+A worked example: 1,500 cloud designs a month averaging 30 s is 45,000
+CPU-seconds. That's 15,000 over the included amount, about **$0.30**, so the
+month comes to about $5.30.
+
+The rest of the plan fits the free tiers: the static app (static asset
+requests are free and unlimited), the corpus in R2 (10 GB, 10M reads/month
+and egress all free), and Access (free up to 50 users). One trap: a deployment
+holds at most 20,000 static files on the free plan (100,000 on Paid), so the
+~40k per-gene files have to live in R2, not in the app bundle.
+
+The privacy trade-off stays: a design sent to a Workflow leaves the user's
+machine. Make it explicit and opt-in ("run in the cloud so I can close this
+tab"), or apply it only above a size threshold.
+
+Sources (Cloudflare docs, November 2026): Workers pricing and limits,
+Workflows pricing and limits, Containers pricing, R2 pricing.
 
 ## Cloudflare features worth taking
 
