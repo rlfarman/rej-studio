@@ -1,10 +1,7 @@
 export type PhenotypeStatus =
-  | 'confirmed'
-  | 'provisional'
-  | 'susceptibility'
-  | 'nondisease'
+  'confirmed' | 'provisional' | 'susceptibility' | 'nondisease'
 
-export type Phenotype = {
+type Phenotype = {
   name: string
   mim: number | null
   mappingKey: 1 | 2 | 3 | 4 | null

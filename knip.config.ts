@@ -26,7 +26,7 @@ const config: KnipConfig = {
   ],
   // System tools used by package.json scripts: uv runs the Python backend
   // (fastapi-dev), python3 the data-build scripts.
-  ignoreBinaries: ['uv', 'python3'],
+  ignoreBinaries: ['uv'],
 }
 
 export default config

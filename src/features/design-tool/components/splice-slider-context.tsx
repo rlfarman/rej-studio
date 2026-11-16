@@ -1311,7 +1311,7 @@ function LocalSequenceView({
       ref={stripRef}
       role="group"
       aria-label="Sequence context around WGGW split site"
-      className="bg-muted/40 type-nano overflow-x-auto rounded-lg border px-5 py-1 font-mono leading-none [-ms-overflow-style:none] [scrollbar-width:none] sm:py-2 [&::-webkit-scrollbar]:hidden"
+      className="bg-muted/40 type-nano [scrollbar-width:none] overflow-x-auto rounded-lg border px-5 py-1 font-mono leading-none [-ms-overflow-style:none] sm:py-2 [&::-webkit-scrollbar]:hidden"
       onPointerLeave={() => setHoveredSitePosition(null)}
     >
       <div className="flex items-stretch">
@@ -1914,7 +1914,7 @@ function RewriteRow({ children }: { children: ReactNode }) {
   return (
     <div
       ref={scrollerRef}
-      className="-mx-1 flex gap-1.5 overflow-x-auto px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      className="-mx-1 flex [scrollbar-width:none] gap-1.5 overflow-x-auto px-1 [&::-webkit-scrollbar]:hidden"
       style={
         fadeStops
           ? { maskImage: fadeStops, WebkitMaskImage: fadeStops }
@@ -1975,7 +1975,7 @@ function SequenceContextTable({ rows }: { rows: SequenceRow[] }) {
       </div>
       <div
         ref={scrollerRef}
-        className="overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="[scrollbar-width:none] overflow-x-hidden [&::-webkit-scrollbar]:hidden"
         // Mask the leading and trailing edges so characters that fall
         // outside the visible window dissolve to transparent rather than
         // get hard-clipped mid-glyph. The center (around the splice) is

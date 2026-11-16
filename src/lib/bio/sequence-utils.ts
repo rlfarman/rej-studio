@@ -58,7 +58,7 @@ export interface WggwRecodingOption {
   baseChanges: number
 }
 
-export interface InducibleWggwCandidate {
+interface InducibleWggwCandidate {
   /** 1-based cut position at the motif midpoint (between bases 2 and 3). */
   position: number
   /** 1-based position of the first motif base in the CDS. */
@@ -377,14 +377,12 @@ export function rankInducibleWggwByBalance(
   if (len < 4) return []
   const center = len / 2
   return enumerateInducibleWggwCandidates(sequence)
-    .map(
-      (candidate): RankedInducibleWggwCandidate => ({
-        ...candidate,
-        distanceFromCenter: Math.abs(candidate.position - center),
-        fivePrimeLength: candidate.position,
-        threePrimeLength: len - candidate.position,
-      }),
-    )
+    .map((candidate): RankedInducibleWggwCandidate => ({
+      ...candidate,
+      distanceFromCenter: Math.abs(candidate.position - center),
+      fivePrimeLength: candidate.position,
+      threePrimeLength: len - candidate.position,
+    }))
     .sort((a, b) => {
       if (a.distanceFromCenter !== b.distanceFromCenter) {
         return a.distanceFromCenter - b.distanceFromCenter

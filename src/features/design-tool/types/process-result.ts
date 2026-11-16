@@ -6,7 +6,7 @@ export interface WggwSiteInfo {
   new_codons: [string, string]
 }
 
-export interface ObjectiveLocation {
+interface ObjectiveLocation {
   start: number
   end: number
   strand: number | null

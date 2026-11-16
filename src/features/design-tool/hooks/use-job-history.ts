@@ -26,13 +26,8 @@ export type JobStatus = 'running' | 'completed' | 'failed' | 'cancelled'
 // Structured failure shape. `code` lets the UI branch (retry vs user-action)
 // without string sniffing; `retriable` is the backend's hint about whether
 // the same inputs would likely succeed on another attempt.
-export type JobErrorCode =
-  | 'timeout'
-  | 'not_found'
-  | 'cancelled'
-  | 'backend'
-  | 'network'
-  | 'unknown'
+type JobErrorCode =
+  'timeout' | 'not_found' | 'cancelled' | 'backend' | 'network' | 'unknown'
 
 export interface JobError {
   code: JobErrorCode

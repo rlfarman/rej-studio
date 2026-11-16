@@ -18,9 +18,7 @@ const DRIVER_CONFIG = {
   popoverOffset: 16,
   popoverClass: 'rej-tour-popover',
   showButtons: ['next', 'previous', 'close'] as (
-    | 'next'
-    | 'previous'
-    | 'close'
+    'next' | 'previous' | 'close'
   )[],
   nextBtnText: 'Next →',
   prevBtnText: '← Prev',

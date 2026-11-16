@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-export const speciesSchema = z.enum(['human', 'mouse'])
+const speciesSchema = z.enum(['human', 'mouse'])
 export const speciesFilterSchema = z.enum(['human', 'mouse', 'both'])
 
 export type Species = z.infer<typeof speciesSchema>
