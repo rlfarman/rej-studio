@@ -85,5 +85,7 @@ jobs:
       - name: Schema constraint tests
         # Asserts FK + unique constraints are actually enforced by the DB
         # (not just declared in schema.ts). Belt-and-braces: the schema
-        # file claims a FK, the DB confirms it.
-        run: pnpm tsx scripts/verify-schema.ts
+        # file claims a FK, the DB confirms it. The react-server condition
+        # makes `server-only` (imported by src/drizzle/db.ts) resolve to its
+        # empty module, as it does in Next's server build.
+        run: pnpm tsx --conditions=react-server scripts/verify-schema.ts

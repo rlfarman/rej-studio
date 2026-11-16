@@ -210,18 +210,9 @@ importers:
       '@sentry/nextjs':
         specifier: ^11.12.0
         version: 11.12.0(next@16.4.6(@babel/core@7.29.13(supports-color@10.2.2))(@opentelemetry/api@1.10.0)(@playwright/test@1.65.1)(@types/node@26.6.6)(babel-plugin-react-compiler@1.0.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react@19.3.1)(vite@8.3.8(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))(webpack@5.112.2(esbuild@0.28.2)(lightningcss@1.33.0)(postcss@8.5.33)(sharp@0.35.5(@types/node@26.6.6)))
-      '@tailwindcss/postcss':
-        specifier: ^4.3.5
-        version: 4.3.5
       '@tanstack/react-query':
         specifier: ^5.96.2
         version: 5.107.1(@types/react@19.3.0)(react@19.3.1)
-      '@types/react':
-        specifier: ^19.2.14
-        version: 19.3.0
-      '@types/react-dom':
-        specifier: ^19.2.3
-        version: 19.3.0(@types/react@19.3.0)
       '@upstash/ratelimit':
         specifier: ^2.0.8
         version: 2.2.1(@upstash/redis@1.41.0)
@@ -237,18 +228,9 @@ importers:
       cn:
         specifier: ^0.5.2
         version: 0.5.2
-      concurrently:
-        specifier: ^10.0.7
-        version: 10.0.7
       drizzle-orm:
         specifier: ^0.45.2
         version: 0.45.4(@electric-sql/pglite@0.4.6)(@neondatabase/serverless@1.2.1)(@opentelemetry/api@1.10.0)(@types/pg@8.15.6)(@upstash/redis@1.41.0)
-      eslint:
-        specifier: ^10.15.0
-        version: 10.15.0(jiti@2.7.0)(supports-color@10.2.2)
-      eslint-config-next:
-        specifier: ^16.4.6
-        version: 16.4.6(@typescript-eslint/parser@8.72.2(eslint@10.15.0(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3))(eslint@10.15.0(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3)
       fflate:
         specifier: ^0.8.3
         version: 0.8.3
@@ -261,9 +243,6 @@ importers:
       next-themes:
         specifier: ^0.4.6
         version: 0.4.6(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
-      postcss:
-        specifier: ^8.5.33
-        version: 8.5.33
       react:
         specifier: ^19.2.4
         version: 19.3.1
@@ -273,18 +252,12 @@ importers:
       react-hook-form:
         specifier: ^7.54.2
         version: 7.92.0(@types/react@19.3.0)(react@19.3.1)
+      server-only:
+        specifier: 0.0.1
+        version: 0.0.1
       sonner:
         specifier: ^2.0.3
         version: 2.0.8(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
-      tailwindcss:
-        specifier: ^4.3.5
-        version: 4.3.5
-      tw-animate-css:
-        specifier: ^1.4.0
-        version: 1.4.0
-      typescript:
-        specifier: 'catalog:'
-        version: 6.0.3
       use-debounce:
         specifier: ^10.0.4
         version: 10.1.1(react@19.3.1)
@@ -319,21 +292,39 @@ importers:
       '@storybook/react':
         specifier: ^10.6.7
         version: 10.6.7(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(storybook@10.6.7(@types/react@19.3.0)(prettier@3.10.1)(react@19.3.1))(supports-color@10.2.2)(typescript@6.0.3)
+      '@tailwindcss/postcss':
+        specifier: ^4.3.5
+        version: 4.3.5
       '@testing-library/react':
         specifier: ^16.3.2
         version: 16.3.3(@testing-library/dom@10.4.2)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       '@types/node':
         specifier: ^26.6.6
         version: 26.6.6
+      '@types/react':
+        specifier: ^19.2.14
+        version: 19.3.0
+      '@types/react-dom':
+        specifier: ^19.2.3
+        version: 19.3.0(@types/react@19.3.0)
       '@vitest/coverage-v8':
         specifier: ^5.1.0
         version: 5.1.0(vitest@5.1.0)
       babel-plugin-react-compiler:
         specifier: ^1.0.0
         version: 1.0.0
+      concurrently:
+        specifier: ^10.0.7
+        version: 10.0.7
       drizzle-kit:
         specifier: ^0.31.10
         version: 0.31.11
+      eslint:
+        specifier: ^10.15.0
+        version: 10.15.0(jiti@2.7.0)(supports-color@10.2.2)
+      eslint-config-next:
+        specifier: ^16.4.6
+        version: 16.4.6(@typescript-eslint/parser@8.72.2(eslint@10.15.0(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3))(eslint@10.15.0(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3)
       eslint-plugin-oxlint:
         specifier: ^1.93.0
         version: 1.93.0(oxlint@1.93.0)
@@ -358,9 +349,9 @@ importers:
       oxlint:
         specifier: ^1.93.0
         version: 1.93.0
-      playwright:
-        specifier: ^1.50.0
-        version: 1.65.1
+      postcss:
+        specifier: ^8.5.33
+        version: 8.5.33
       prettier:
         specifier: ^3.10.1
         version: 3.10.1
@@ -373,9 +364,18 @@ importers:
       storybook:
         specifier: ^10.6.7
         version: 10.6.7(@types/react@19.3.0)(prettier@3.10.1)(react@19.3.1)
+      tailwindcss:
+        specifier: ^4.3.5
+        version: 4.3.5
       tsx:
         specifier: ^4.19.2
         version: 4.23.15
+      tw-animate-css:
+        specifier: ^1.4.0
+        version: 1.4.0
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
       typescript-native:
         specifier: npm:typescript@^7.0.2
         version: typescript@7.0.2
@@ -5779,6 +5779,9 @@ packages:
     resolution: {integrity: sha512-9tjS0jTx5FQzhwAGhpcnwvqE0MlQiwJtunsIUNqGkw6E9CBOMbijlamIDUqvZTDtJAveVwa9L5ziP44bOJUzcQ==}
     engines: {node: '>=20.0'}
     hasBin: true
+
+  server-only@0.0.1:
+    resolution: {integrity: sha512-qepMx2JxAa5jjfzxG79yPPq+8BuFToHd1hm7kI+Z4zAq1ftQiP7HcxMhDDItrbtwVeLg/cY2JnKnrcFkmiswNA==}
 
   set-function-length@1.2.2:
     resolution: {integrity: sha512-pgRc4hJ4/sNjWCSS9AmnS40x3bNMDTknHgL5UaMBTMyJnU90EgWh1Rz+MC9eFu4BuN/UwZjKQuY/1v3rM7HMfg==}
@@ -11372,6 +11375,8 @@ snapshots:
   semver@7.8.6: {}
 
   sentry@0.49.0: {}
+
+  server-only@0.0.1: {}
 
   set-function-length@1.2.2:
     dependencies:
