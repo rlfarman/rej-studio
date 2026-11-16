@@ -40,6 +40,21 @@ const nextConfig: NextConfig = {
     BUILD_TIMESTAMP: new Date().toISOString(),
   },
   headers: async () => [
+    // The MCP Apps client library, loaded by a view running inside a chat
+    // host. A module script is fetched with CORS, and the view's origin is the
+    // host's, never ours, so without this it cannot load at all. The file is a
+    // build of a public npm package, is served to nobody who asks for it, and
+    // no credentials are involved.
+    {
+      source: '/mcp/:path*',
+      headers: [
+        { key: 'Access-Control-Allow-Origin', value: '*' },
+        {
+          key: 'Cache-Control',
+          value: 'public, max-age=3600, stale-while-revalidate=86400',
+        },
+      ],
+    },
     // Stale-while-revalidate for the sitemap — CDN serves the cached version
     // instantly and revalidates in the background. (OG image routes set
     // their own Cache-Control in their ImageResponse.)

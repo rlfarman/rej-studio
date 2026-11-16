@@ -27,7 +27,7 @@
     "corpus:build": "tsx scripts/build-gene-corpus.ts",
     "db:reset": "rm -rf data/local.db",
     "db:studio": "drizzle-kit studio",
-    "build": "next build",
+    "build": "node scripts/copy-mcp-app-bridge.mjs && next build",
     "wasm:build": "./scripts/build-optimizer-wasm.sh",
     "wasm:verify": "node scripts/check-wasm-asset.mjs",
     "wasm:smoke": "node scripts/wasm-smoke.mjs public/optimizer/rej-optimizer.wasm",
@@ -44,12 +44,14 @@
     "verify": "pnpm lint && pnpm type-check && pnpm test",
     "doctor": "bash scripts/doctor.sh",
     "prepare": "husky",
+    "postinstall": "node scripts/copy-mcp-app-bridge.mjs",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
     "@hookform/resolvers": "^7.0.6",
+    "@modelcontextprotocol/ext-apps": "2.0.4",
     "@modelcontextprotocol/server": "2.4.0",
     "@neondatabase/serverless": "^1.2.1",
     "@next/third-parties": "^16.4.6",

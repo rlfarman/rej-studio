@@ -63,3 +63,16 @@ test('the MCP endpoint does not exist until tokens are configured', async ({
 
   expect(response.status()).toBe(404)
 })
+
+test('the MCP view can load its client library from a chat host', async ({
+  request,
+}) => {
+  // The view runs on the host's origin, never ours, and a module script is
+  // fetched with CORS. Without these headers it cannot load at all — in any
+  // host — and the view renders empty.
+  const response = await request.get('/mcp/app-bridge.js')
+
+  expect(response.status()).toBe(200)
+  expect(response.headers()['access-control-allow-origin']).toBe('*')
+  expect(response.headers()['content-type']).toContain('javascript')
+})

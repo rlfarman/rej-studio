@@ -54,6 +54,10 @@ const PUBLIC_PATHS = [
   // The MCP endpoint carries its own auth: named bearer tokens, checked in
   // app/api/mcp/tokens.ts. It answers 404 when none are configured.
   '/api/mcp',
+  // The client library for MCP views, which load inside a chat host and have
+  // no session cookie for this site. It is a copy of a public npm package and
+  // carries no gene data.
+  '/mcp',
   // Liveness only for anonymous callers; deep checks need a token.
   '/api/health',
   '/manifest.webmanifest',

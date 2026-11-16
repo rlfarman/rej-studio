@@ -433,6 +433,87 @@ describe('when the backend refuses the submission', () => {
   })
 })
 
+describe('the view a design is shown in', () => {
+  const connectWithOrigin = async () => {
+    vi.stubEnv('NEXT_PUBLIC_SITE_URL', 'https://rej.example.com/')
+    await connection.close()
+    connection = await connect()
+  }
+
+  afterEach(() => {
+    vi.unstubAllEnvs()
+  })
+
+  it('points get_design at a view, for hosts that can show one', async () => {
+    await connectWithOrigin()
+    const { tools } = await connection.client.listTools()
+    const getDesign = tools.find((tool) => tool.name === 'get_design')
+
+    expect(getDesign?._meta).toMatchObject({
+      ui: { resourceUri: 'ui://rej-studio/design-result.html' },
+    })
+  })
+
+  it('serves the view as one self-contained document', async () => {
+    await connectWithOrigin()
+    const { contents } = await connection.client.readResource({
+      uri: 'ui://rej-studio/design-result.html',
+    })
+    const [view] = contents
+
+    expect(view?.mimeType).toBe('text/html;profile=mcp-app')
+    const html = String((view as { text?: string } | undefined)?.text)
+    expect(html).toContain('<!doctype html>')
+    // One script, from this deployment, and nothing else fetched.
+    const scripts = html.match(/<script[^>]*src=|import .* from "/g) ?? []
+    expect(scripts).toHaveLength(1)
+    expect(html).toContain('https://rej.example.com/mcp/app-bridge.js')
+  })
+
+  it('allows the view to load that one script, and no other origin', async () => {
+    await connectWithOrigin()
+    const { contents } = await connection.client.readResource({
+      uri: 'ui://rej-studio/design-result.html',
+    })
+
+    expect(contents[0]?._meta).toMatchObject({
+      ui: { csp: { resourceDomains: ['https://rej.example.com'] } },
+    })
+  })
+
+  it('offers no view at all when the deployment does not know its own URL', async () => {
+    vi.stubEnv('NEXT_PUBLIC_SITE_URL', '')
+    await connection.close()
+    connection = await connect()
+
+    const { resources } = await connection.client.listResources()
+    expect(resources).toHaveLength(0)
+
+    // And does not point at one either: a host that followed the metadata
+    // would ask for a resource this server does not serve and get an error,
+    // where it would otherwise have shown the structured result.
+    const { tools } = await connection.client.listTools()
+    const getDesign = tools.find((tool) => tool.name === 'get_design')
+    expect(getDesign?._meta?.ui).toBeUndefined()
+  })
+
+  it('still returns the result as data, for hosts with no view', async () => {
+    await connectWithOrigin()
+    jobStatus.mockResolvedValue({
+      ok: true,
+      data: { status: 'completed', result: { optimized_sequence: CDS } },
+    })
+
+    const result = await call('get_design', { job_id: 'job-1' })
+
+    expect(result.structuredContent).toMatchObject({
+      status: 'completed',
+      result: { optimized_sequence: CDS },
+    })
+    expect(said(result)).toContain('is done')
+  })
+})
+
 describe('when a token has spent its budget', () => {
   // Every tool costs something: a search and a gene lookup are database
   // queries, a status check asks Modal, a submission burns compute. An agent

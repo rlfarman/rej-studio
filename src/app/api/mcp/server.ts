@@ -1,3 +1,8 @@
+import {
+  registerAppResource,
+  registerAppTool,
+  RESOURCE_MIME_TYPE,
+} from '@modelcontextprotocol/ext-apps/server'
 import { McpServer } from '@modelcontextprotocol/server'
 import { z } from 'zod'
 
@@ -26,6 +31,32 @@ import { createLogger } from '@/lib/logger'
 import { createUpstashRateLimiter } from '@/lib/upstash'
 
 import type { McpToken } from './tokens'
+import { designViewHtml } from './ui/design-view'
+
+/**
+ * The view a finished design is shown in, inside hosts that support MCP Apps.
+ * Hosts that do not simply ignore the metadata and show the structured result,
+ * which `get_design` returns either way.
+ */
+const DESIGN_VIEW_URI = 'ui://rej-studio/design-result.html'
+
+/**
+ * Where the view loads its client library from, and the only origin its
+ * content security policy allows. Falls back to a relative path when the
+ * deployment has not been told its own URL, which a host may refuse; the
+ * view then shows nothing rather than something wrong.
+ */
+function appOrigin(): string | null {
+  const url = process.env.NEXT_PUBLIC_SITE_URL?.trim()
+  if (!url) {
+    return null
+  }
+  try {
+    return new URL(url).origin
+  } catch {
+    return null
+  }
+}
 
 /**
  * REJ Studio for an agent.
@@ -430,81 +461,120 @@ export function createRejStudioMcpServer(token: McpToken): McpServer {
     },
   )
 
-  server.registerTool(
-    'get_design',
-    {
-      title: 'Get a design',
-      description:
-        'Reports a submitted design by its job id: whether it is still running, and the ' +
-        'full result once it is done — the optimized sequence, the 5′ and 3′ ' +
-        'fragments, and the objectives before and after. Poll this after submit_design, ' +
-        'unless submit_design already returned the result.',
-      inputSchema: z.object({
-        job_id: z
-          .string()
-          .min(1)
-          .max(200)
-          .describe('The id returned by submit_design.'),
-      }),
-      annotations: { readOnlyHint: true },
-    },
-    async ({ job_id }) => {
-      // Polling is the expected use, so the refusal above is careful to say
-      // the job is untouched: an agent must not read a throttled poll as a
-      // lost design and resubmit it.
-      const refused = await overBudget(readLimiter, token, 'status checks')
-      if (refused) return refused
+  const origin = appOrigin()
 
-      const polled = await fetchJobStatus(job_id)
-      if (!polled.ok) {
-        // The backend could not be asked at all — unreachable, timed out,
-        // rejected. That is not the same as a job that does not exist, and
-        // saying "not found" would send an agent off to resubmit.
-        return {
-          ...data(
-            `Design ${job_id} could not be read: ${polled.error.message}`,
-            { job_id, error: polled.error },
-          ),
-          isError: true as const,
-        }
-      }
-      const status = polled.data
+  const getDesignConfig = {
+    title: 'Get a design',
+    description:
+      'Reports a submitted design by its job id: whether it is still running, and the ' +
+      'full result once it is done — the optimized sequence, the 5′ and 3′ ' +
+      'fragments, and the objectives before and after. Poll this after submit_design, ' +
+      'unless submit_design already returned the result.',
+    inputSchema: z.object({
+      job_id: z
+        .string()
+        .min(1)
+        .max(200)
+        .describe('The id returned by submit_design.'),
+    }),
+    annotations: { readOnlyHint: true },
+  }
 
-      if (status.status === 'not_found') {
-        return notFound(
-          `No design with job id "${job_id}". A job id is only valid on the deployment that issued it, and results are not kept forever.`,
-        )
+  const getDesign = async ({ job_id }: { job_id: string }) => {
+    // Polling is the expected use, so the refusal is careful to say the job
+    // is untouched: an agent must not read a throttled poll as a lost design
+    // and resubmit it.
+    const refused = await overBudget(readLimiter, token, 'status checks')
+    if (refused) return refused
+
+    const polled = await fetchJobStatus(job_id)
+    if (!polled.ok) {
+      // The backend could not be asked at all — unreachable, timed out,
+      // rejected. That is not the same as a job that does not exist, and
+      // saying "not found" would send an agent off to resubmit.
+      return {
+        ...data(`Design ${job_id} could not be read: ${polled.error.message}`, {
+          job_id,
+          error: polled.error,
+        }),
+        isError: true as const,
       }
-      if (status.status === 'failed') {
-        return {
-          ...data(
-            `Design ${job_id} failed: ${status.error?.message ?? 'no reason given'}.`,
-            { job_id, status: status.status, error: status.error },
-          ),
-          isError: true as const,
-        }
+    }
+    const status = polled.data
+
+    if (status.status === 'not_found') {
+      return notFound(
+        `No design with job id "${job_id}". A job id is only valid on the deployment that issued it, and results are not kept forever.`,
+      )
+    }
+    if (status.status === 'failed') {
+      return {
+        ...data(
+          `Design ${job_id} failed: ${status.error?.message ?? 'no reason given'}.`,
+          { job_id, status: status.status, error: status.error },
+        ),
+        isError: true as const,
       }
-      if (status.status !== 'completed') {
-        return data(
-          `Design ${job_id} is ${status.status}` +
-            (status.stage ? ` (${status.stage})` : '') +
-            '. Call get_design again shortly.',
+    }
+    if (status.status !== 'completed') {
+      return data(
+        `Design ${job_id} is ${status.status}` +
+          (status.stage ? ` (${status.stage})` : '') +
+          '. Call get_design again shortly.',
+        {
+          job_id,
+          status: status.status,
+          progress: status.progress,
+          stage: status.stage,
+        },
+      )
+    }
+
+    return data(`Design ${job_id} is done.`, {
+      job_id,
+      status: status.status,
+      result: status.result,
+    })
+  }
+
+  // The view is advertised only when it is also served. A `resourceUri` the
+  // host cannot read is worse than no view: the host asks for it and gets an
+  // error, where it would otherwise have shown the structured result — which
+  // this tool returns either way.
+  if (origin) {
+    registerAppTool(
+      server,
+      'get_design',
+      { ...getDesignConfig, _meta: { ui: { resourceUri: DESIGN_VIEW_URI } } },
+      getDesign,
+    )
+    registerAppResource(
+      server,
+      'Design result',
+      DESIGN_VIEW_URI,
+      {
+        description:
+          'A compact view of a finished design: its length, where it was split, the objectives that changed, and the optimized sequence.',
+      },
+      async () => ({
+        contents: [
           {
-            job_id,
-            status: status.status,
-            progress: status.progress,
-            stage: status.stage,
+            uri: DESIGN_VIEW_URI,
+            mimeType: RESOURCE_MIME_TYPE,
+            text: designViewHtml(`${origin}/mcp/app-bridge.js`),
+            _meta: {
+              ui: {
+                // The one script the view loads. Nothing else is fetched.
+                csp: { resourceDomains: [origin] },
+              },
+            },
           },
-        )
-      }
-
-      return data(`Design ${job_id} is done.`, {
-        job_id,
-        status: status.status,
-        result: status.result,
-      })
-    },
-  )
+        ],
+      }),
+    )
+  } else {
+    server.registerTool('get_design', getDesignConfig, getDesign)
+  }
 
   return server
 }
