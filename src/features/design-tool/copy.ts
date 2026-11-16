@@ -452,6 +452,40 @@ export const designToolCopy = {
       optionName: 'Option',
       optionValue: 'Value',
     },
+    charts: {
+      gcContent: {
+        caption: (windowSize: number) =>
+          `GC content along the sequence, sampled in ${windowSize} base windows, before and after optimization`,
+        columns: ['Position (bp)', 'Original GC %', 'Optimized GC %'],
+      },
+      changeDensity: {
+        caption: 'How many bases changed in each bin along the sequence',
+        columns: ['From (bp)', 'To (bp)', 'Bases changed', 'Share of bin (%)'],
+      },
+      codonDelta: {
+        caption:
+          'Codon usage frequency in the chosen species, before and after optimization, for every codon that changed',
+        columns: [
+          'Position',
+          'Original codon',
+          'Original frequency',
+          'Optimized codon',
+          'Optimized frequency',
+        ],
+      },
+      restrictionSites: {
+        caption:
+          'Restriction enzyme sites before and after optimization, with their positions',
+        columns: [
+          'Enzyme',
+          'Sites before',
+          'Sites after',
+          'Added',
+          'Removed',
+          'Positions after (bp)',
+        ],
+      },
+    },
     wggwTable: {
       main: 'Main junction',
       stim5: '5′ stimulatory',
