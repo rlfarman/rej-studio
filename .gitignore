@@ -89,3 +89,6 @@ storybook-static/
 # versions elsewhere (pnpm corpus:build --out ...) or here for local use
 /public/gene-data/*
 !/public/gene-data/sample/
+
+# Copied from node_modules by scripts/copy-mcp-app-bridge.mjs
+public/mcp/
