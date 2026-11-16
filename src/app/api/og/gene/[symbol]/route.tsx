@@ -3,6 +3,7 @@ import { getGeneBySymbol } from '@/features/gene-search/api/genes'
 // gene.id comes from the database, not the request, so the summary query is
 // called directly rather than through the validating server-action wrapper.
 import { fetchIsoformSummaryByGene } from '@/features/gene-search/api/isoform-queries'
+import { isPlausibleGeneSymbol } from '@/lib/bio/gene-symbol'
 import { parseSpeciesParam } from '@/lib/bio/species'
 import {
   OG_ACCENT,
@@ -11,9 +12,9 @@ import {
   OG_FG,
   OG_MUTED,
   OG_PRIMARY,
-  loadDisplayFont,
-  loadSansFont,
 } from '@/lib/og-theme'
+import { OG_FONTS } from '../../_lib/fonts'
+import { rateLimitOgRequest } from '../../_lib/request'
 
 export const size = { width: 1200, height: 630 }
 
@@ -22,15 +23,19 @@ export async function GET(
   context: { params: Promise<{ symbol: string }> },
 ) {
   const { symbol } = await context.params
+  // Reject anything that can't be a gene symbol before it costs a database
+  // query or a cache entry: this route is public.
+  if (!isPlausibleGeneSymbol(symbol)) {
+    return new Response('Not Found', { status: 404 })
+  }
+  const limited = await rateLimitOgRequest(request)
+  if (limited) return limited
+
   const { searchParams } = new URL(request.url)
   const gene = await getGeneBySymbol(
     symbol,
     parseSpeciesParam(searchParams.get('species') ?? undefined),
   )
-  const [displayFont, sansFont] = await Promise.all([
-    loadDisplayFont(),
-    loadSansFont(),
-  ])
 
   if (!gene) {
     return new ImageResponse(
@@ -50,17 +55,7 @@ export async function GET(
       >
         {symbol} — Gene not found
       </div>,
-      {
-        ...size,
-        fonts: [
-          {
-            name: 'Source Sans 3',
-            data: sansFont,
-            weight: 600,
-            style: 'normal',
-          },
-        ],
-      },
+      { ...size, fonts: OG_FONTS },
     )
   }
 
@@ -205,20 +200,7 @@ export async function GET(
     </div>,
     {
       ...size,
-      fonts: [
-        {
-          name: 'Source Serif 4',
-          data: displayFont,
-          weight: 700,
-          style: 'normal',
-        },
-        {
-          name: 'Source Sans 3',
-          data: sansFont,
-          weight: 600,
-          style: 'normal',
-        },
-      ],
+      fonts: OG_FONTS,
       headers: {
         'Cache-Control':
           'public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400',
