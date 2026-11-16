@@ -7,15 +7,15 @@ import { appCopy } from '@/copy/app'
 
 export default function DesignToolError({
   error,
-  reset,
+  retry,
 }: {
-  error: Error & { digest?: string }
-  reset: () => void
+  error: unknown
+  retry: () => void
 }) {
   return (
     <ErrorState
       error={error}
-      reset={reset}
+      retry={retry}
       boundary="design-tool"
       title={appCopy.errorBoundary.designTool.title}
       description={appCopy.errorBoundary.designTool.description}
