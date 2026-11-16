@@ -1,7 +1,8 @@
 'use client'
 
-import { useCallback, useEffect, useState, useTransition } from 'react'
+import { useState, useTransition } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { useDebouncedCallback } from 'use-debounce'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { X } from 'lucide-react'
@@ -30,26 +31,21 @@ export function AssociationsFilters({ bucketCounts }: Props) {
   const initialQuery = searchParams.get(SEARCH_PARAM) ?? ''
   const [query, setQuery] = useState(initialQuery)
 
-  const pushParams = useCallback(
-    (next: URLSearchParams) => {
-      const qs = next.toString()
-      startTransition(() => {
-        router.replace(qs ? `?${qs}` : '?', { scroll: false })
-      })
-    },
-    [router],
-  )
+  const pushParams = (next: URLSearchParams) => {
+    const qs = next.toString()
+    startTransition(() => {
+      router.replace(qs ? `?${qs}` : '?', { scroll: false })
+    })
+  }
 
   // Debounce query updates so the table doesn't re-render on every keystroke.
-  useEffect(() => {
-    const handle = setTimeout(() => {
-      const next = new URLSearchParams(searchParams)
-      if (query) next.set(SEARCH_PARAM, query)
-      else next.delete(SEARCH_PARAM)
-      if (next.toString() !== searchParams.toString()) pushParams(next)
-    }, DEBOUNCE_MS)
-    return () => clearTimeout(handle)
-  }, [query, searchParams, pushParams])
+  // Driven from the input's change event rather than an effect.
+  const pushQuery = useDebouncedCallback((value: string) => {
+    const next = new URLSearchParams(searchParams)
+    if (value) next.set(SEARCH_PARAM, value)
+    else next.delete(SEARCH_PARAM)
+    if (next.toString() !== searchParams.toString()) pushParams(next)
+  }, DEBOUNCE_MS)
 
   const toggleBucket = (bucket: InheritanceBucket) => {
     const next = new URLSearchParams(searchParams)
@@ -65,6 +61,7 @@ export function AssociationsFilters({ bucketCounts }: Props) {
   }
 
   const clearAll = () => {
+    pushQuery.cancel()
     setQuery('')
     pushParams(new URLSearchParams())
   }
@@ -78,7 +75,10 @@ export function AssociationsFilters({ bucketCounts }: Props) {
           type="search"
           inputMode="search"
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => {
+            setQuery(e.target.value)
+            pushQuery(e.target.value)
+          }}
           placeholder={diseaseAssociationsCopy.filters.searchPlaceholder}
           aria-label={diseaseAssociationsCopy.filters.searchAria}
           className="bg-card max-w-lg shadow-xs"

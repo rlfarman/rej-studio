@@ -11,7 +11,10 @@ import {
 } from '@/features/disease-associations/api/associations'
 import { AssociationsFilters } from '@/features/disease-associations/components/associations-filters'
 import { AssociationsPagination } from '@/features/disease-associations/components/associations-pagination'
-import { AssociationsTable } from '@/features/disease-associations/components/associations-table'
+import {
+  AssociationsTable,
+  AssociationsTableSkeleton,
+} from '@/features/disease-associations/components/associations-table'
 import { diseaseAssociationsCopy } from '@/features/disease-associations/copy'
 import {
   INHERITANCE_BUCKETS,
@@ -38,6 +41,8 @@ type Props = {
   searchParams: Promise<SearchParams>
 }
 
+const ALL_ROWS_COUNTS = bucketCounts(getAssociations())
+
 function normalizeInheritance(
   value: string | string[] | undefined,
 ): InheritanceBucket[] {
@@ -58,27 +63,12 @@ function normalizeDir(raw: string | undefined, key: SortKey): SortDir {
   return key === 'symbol' ? 'asc' : 'desc'
 }
 
-export default async function DiseaseAssociationsPage({ searchParams }: Props) {
-  const params = await searchParams
-  const { q, i, sort, dir, page } = params
-  const all = getAssociations()
-  const counts = bucketCounts(all)
-  const filtered = filterAssociations(all, {
-    query: q,
-    inheritance: normalizeInheritance(i),
-  })
-  const sortKey = normalizeSort(sort)
-  const sortDir = normalizeDir(dir, sortKey)
-  const sorted = sortAssociations(filtered, sortKey, sortDir)
-
-  const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE))
-  const currentPage = Math.min(
-    Math.max(1, Number.parseInt(page ?? '1', 10) || 1),
-    totalPages,
-  )
-  const pageStart = (currentPage - 1) * PAGE_SIZE
-  const pageRows = sorted.slice(pageStart, pageStart + PAGE_SIZE)
-
+/**
+ * The header is static; everything that reads the URL renders inside
+ * Suspense, so the shell prerenders and Next doesn't flag request-time data
+ * outside a boundary.
+ */
+export default function DiseaseAssociationsPage({ searchParams }: Props) {
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-6 p-6">
       <header className="flex flex-col gap-2">
@@ -102,9 +92,38 @@ export default async function DiseaseAssociationsPage({ searchParams }: Props) {
       </header>
 
       <Suspense>
-        <AssociationsFilters bucketCounts={counts} />
+        <AssociationsFilters bucketCounts={ALL_ROWS_COUNTS} />
       </Suspense>
 
+      <Suspense fallback={<AssociationsTableSkeleton />}>
+        <AssociationsResults searchParams={searchParams} />
+      </Suspense>
+    </div>
+  )
+}
+
+async function AssociationsResults({ searchParams }: Props) {
+  const params = await searchParams
+  const { q, i, sort, dir, page } = params
+  const all = getAssociations()
+  const filtered = filterAssociations(all, {
+    query: q,
+    inheritance: normalizeInheritance(i),
+  })
+  const sortKey = normalizeSort(sort)
+  const sortDir = normalizeDir(dir, sortKey)
+  const sorted = sortAssociations(filtered, sortKey, sortDir)
+
+  const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE))
+  const currentPage = Math.min(
+    Math.max(1, Number.parseInt(page ?? '1', 10) || 1),
+    totalPages,
+  )
+  const pageStart = (currentPage - 1) * PAGE_SIZE
+  const pageRows = sorted.slice(pageStart, pageStart + PAGE_SIZE)
+
+  return (
+    <>
       <div className="text-muted-foreground text-xs" aria-live="polite">
         {diseaseAssociationsCopy.table.resultsSummary(
           sorted.length,
@@ -127,6 +146,6 @@ export default async function DiseaseAssociationsPage({ searchParams }: Props) {
         total={sorted.length}
         searchParams={params}
       />
-    </div>
+    </>
   )
 }
