@@ -188,24 +188,41 @@ a Worker's shape. Cloudflare now steers new MCP servers towards stateless
 handlers rather than the older session-backed `McpAgent`, so the existing
 design is already the one they recommend.
 
-**The one real design question** is the job model. Today `submit_design`
-returns a job id and the agent polls `get_design`, because a design on Modal
-took minutes. The Rust optimizer takes seconds, so there are two options:
+### The job model: decided, inline
 
-- **Run it inline** and have `submit_design` return the finished design. Far
-  simpler — no job state, no polling, no storage — but it changes the tool
-  contract and risks an MCP client timing out on a very large gene.
-- **Keep the asynchronous model**, which needs somewhere to hold job state: a
-  Durable Object per job, or Workflows.
+`submit_design` returns the finished design rather than a job id to poll.
+The Worker needs no job state, so no Durable Object, no Workflow, no storage.
 
-A reasonable middle: run inline when the sequence is small enough to finish
-quickly, and fall back to the asynchronous path beyond that. Decide this
-before porting, because it determines whether any state store is needed at
-all.
+**This is a smaller change than it sounds**, because the contract already
+allows it. `submit_design` returns `{ job_id, status: 'completed', result }`
+whenever the backend hands back a result — which the local development
+backend already does — and tells the agent outright that there is nothing to
+poll for. `get_design`'s own description already ends "unless submit_design
+already returned the result". Running the optimizer in the Worker simply
+makes the inline branch the only one taken.
 
-**Sequencing:** the MCP endpoint depends on the optimizer and on gene
-lookups, so port it after steps 1 and 2, alongside step 4. Until then it
-keeps working as it does today.
+What still needs doing when the endpoint is ported:
+
+- **Lead with it in the tool descriptions.** `submit_design` still says it
+  "returns a job id" and that a design "takes seconds to minutes, so call
+  get_design". Both become wrong.
+- **Move the MCP Apps view onto `submit_design`.** `_meta.ui.resourceUri` is
+  registered only on `get_design` today. If the result arrives from
+  `submit_design`, the view has to travel with it or the design never renders
+  in the chat host.
+- **Decide what becomes of `get_design`.** With no job to collect it has
+  nothing to read. Removing it is honest; keeping it to answer "designs are
+  returned directly now" is kinder to an agent working from a stale schema.
+- **Guard the sequence length.** The limit is not Cloudflare — a Worker gets
+  5 minutes of CPU, and even a 30 kb gene fits. It is the MCP client's own
+  request timeout. Refuse clearly above some length, with a message pointing
+  at the web app, rather than holding a connection open until the client
+  gives up.
+
+**Sequencing matters here.** Inline is right only once the optimizer is fast
+and local. Today the endpoint calls Modal, where a design really does take
+minutes, so making `submit_design` synchronous now would be a regression. It
+lands when the endpoint moves to the Worker, after steps 1 and 2.
 
 ## The big-gene fallback
 
@@ -232,11 +249,10 @@ local and private.
 | D1                    | If the lab later wants shared history rather than per-device                                                 |
 | Workers Issues        | Groups Worker errors and posts stack traces to a webhook; complements Sentry, which stays for browser errors |
 
-Relevant only if agent access keeps its asynchronous job model: **Durable
-Objects** or **Workflows** to hold a design's state between `submit_design`
-and `get_design`, and the **Rate Limiting binding** to replace Upstash.
+The **Rate Limiting binding** replaces Upstash for the MCP endpoint.
 
-Not worth taking for this app: Workers AI, Hyperdrive (the database goes
+Not worth taking for this app: Durable Objects and Workflows (the inline job
+model leaves no state to hold), Workers AI, Hyperdrive (the database goes
 away), Zaraz (GTM goes away).
 
 ## Open questions
@@ -249,9 +265,7 @@ Verify before committing:
    features?** Only matters if step 4 takes the lift-and-shift route.
 3. **What is the largest sequence the lab actually designs?** Decides whether
    the fallback is needed at all.
-4. **Should `submit_design` return the design inline, or keep the job id and
-   polling?** Decides whether the MCP Worker needs any state store.
-5. **Is anyone relying on sharing a `?job=` link?** Browser designs exist only
+4. **Is anyone relying on sharing a `?job=` link?** Browser designs exist only
    on the device that made them, so that capability goes away in step 1.
 
 ## What does not change
