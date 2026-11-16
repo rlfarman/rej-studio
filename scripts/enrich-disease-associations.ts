@@ -13,7 +13,7 @@
 
 import { readFileSync, writeFileSync } from 'fs'
 import { sql } from 'drizzle-orm'
-import { getDb } from '../src/drizzle/db'
+import { getDb } from '../src/drizzle/client'
 import { isoforms } from '../src/drizzle/schema'
 import type { AssociationData } from '../src/features/disease-associations/types'
 
