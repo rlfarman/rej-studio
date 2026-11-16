@@ -1,0 +1,29 @@
+# Runtime dependencies for the optimizer API: python/index.py in local dev and
+# the Modal image in production (modal/app.py installs the compiled lock).
+#
+# Edit this file, then regenerate the lock from the repo root on Python 3.11:
+#   pip-compile python/requirements.in
+# python/requirements.txt is generated (every package pinned, transitive ones
+# included) so Modal image builds are reproducible. Don't edit it by hand.
+
+# Web API. The [standard] extra is what Modal web endpoints expect, and it
+# brings uvicorn for the local dev server.
+fastapi[standard]
+pydantic
+uvicorn
+
+# Optimization engine (algorithm.py imports proglog directly)
+dnachisel
+proglog
+
+# Error reporting on Modal; a no-op unless SENTRY_DSN is set
+sentry-sdk[fastapi]
+
+# Tracing; a no-op unless OTEL_EXPORTER_OTLP_ENDPOINT is set
+opentelemetry-api
+opentelemetry-sdk
+opentelemetry-exporter-otlp-proto-http
+opentelemetry-instrumentation-fastapi
+
+# Security floor (form-parsing advisories in earlier releases)
+python-multipart>=0.0.26

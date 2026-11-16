@@ -9,8 +9,8 @@
  * version. Verifies SHA-256 against package.json before extracting.
  *
  * Uses `gh release download` so auth flows through the contributor's existing
- * `gh auth login` — required because rej-studio is a private repo. Public
- * repos could swap this for a plain `fetch(url)` against the public CDN URL.
+ * `gh auth login`. The repo is public now, so this could become a plain
+ * `fetch(url)` against the release's public download URL.
  *
  * Maintainers (re)publish a corpus version like so:
  *   # build data/local.db/ from Neon
@@ -75,9 +75,9 @@ async function main() {
     execSync('gh auth status', { stdio: 'ignore' })
   } catch {
     console.error(
-      'gh CLI is required (rej-studio is a private repo, so the corpus\n' +
-        'tarball is fetched via authenticated `gh release download`). Install\n' +
-        'from https://cli.github.com/ and run `gh auth login`.',
+      'gh CLI is required (the corpus tarball is fetched with\n' +
+        '`gh release download`). Install from https://cli.github.com/ and\n' +
+        'run `gh auth login`.',
     )
     process.exit(1)
   }

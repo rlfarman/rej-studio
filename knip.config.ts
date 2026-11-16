@@ -3,7 +3,6 @@ import type { KnipConfig } from 'knip'
 const config: KnipConfig = {
   entry: [
     'src/app/**/{page,layout,template,loading,error,not-found,route,default}.{ts,tsx}',
-    'src/app/**/{opengraph,twitter}-image.{ts,tsx}',
     'src/app/{sitemap,robots,manifest,icon,apple-icon}.{ts,tsx}',
     'src/sentry.client.config.ts',
     'src/sentry.server.config.ts',
@@ -24,6 +23,8 @@ const config: KnipConfig = {
     'tailwindcss-animate',
     // Used by scripts/generate-api-types.sh via npx
     'openapi-typescript',
+    // Browser automation for agents (playwright-cli skill); never imported
+    'playwright',
   ],
   ignoreBinaries: ['pip', 'python3'],
 }

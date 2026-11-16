@@ -10,6 +10,11 @@ export default defineConfig({
     environment: 'happy-dom',
     include: ['src/**/*.test.{ts,tsx}'],
     setupFiles: ['src/test/setup.ts'],
+    // Node 25+ defines its own global `localStorage` (Web Storage), which
+    // stays undefined without `--localstorage-file` and blocks happy-dom from
+    // installing its implementation, failing every storage-backed test.
+    // Turning Node's version off lets happy-dom's apply on any Node version.
+    execArgv: ['--no-experimental-webstorage'],
     // PGlite's cold-start (wasm unpack + schema apply) can exceed the
     // default 10s when the full suite runs in parallel, flaking
     // queries.integration.test.ts. 30s gives headroom without masking

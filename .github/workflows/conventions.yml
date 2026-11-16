@@ -40,11 +40,20 @@ jobs:
         env:
           BRANCH: ${{ github.head_ref }}
         run: |
-          pattern='^(main|master|develop|staging|(feature|bugfix|hotfix|release|chore|claude)/[a-z0-9._/-]+)$'
+          # Bot branches follow their own naming; the GitHub ruleset exempts them.
+          case "$BRANCH" in
+            dependabot/*|release-please--*)
+              echo "Bot branch '$BRANCH' — skipping."
+              exit 0
+              ;;
+          esac
+          # Same types as the "Conventional branch naming" ruleset and
+          # .husky/pre-push; keep the three in sync.
+          pattern='^(main|master|develop|staging|(feat|feature|fix|bugfix|hotfix|release|chore|claude)/[a-z0-9._/-]+)$'
           if ! echo "$BRANCH" | grep -Eq "$pattern"; then
             echo "::warning::Branch '$BRANCH' does not follow Conventional Branch naming."
             echo "Expected: main | master | develop | staging, or <type>/<description>"
-            echo "Types: feature, bugfix, hotfix, release, chore, claude"
+            echo "Types: feat, feature, fix, bugfix, hotfix, release, chore, claude"
             echo "See: https://conventional-branch.github.io/"
             exit 0
           fi

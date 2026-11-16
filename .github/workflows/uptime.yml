@@ -1,17 +1,29 @@
 name: Uptime
 
-# Self-hosted Upptime-style probe. Hits /api/health on a schedule from the
-# GitHub Actions runner and opens an issue when the probe fails. Zero
-# external vendor — results stored as issues and workflow runs.
+# Self-hosted Upptime-style probe of /api/health from GitHub Actions. Opens an
+# incident issue when a probe fails and closes it once probes pass again.
 #
-# For a richer dashboard, spin up a sibling repo using the Upptime template
-# (https://upptime.js.org) and point it at /api/health. This file is the
-# "good enough" in-repo version.
+# Two probe depths, because any database query wakes Neon's compute:
+# - every 10 minutes, anonymous: liveness only. The route answers without
+#   touching the database or Modal.
+# - once a day, with the HEALTH_AUTH_TOKEN secret: the full checks, including
+#   a DB ping. Catches outages like Neon's compute quota running out within a
+#   day, for the cost of a single wake-up.
+#
+# Setup: repo variable HEALTH_URL (e.g. https://rejstudio.com/api/health) and,
+# for the daily deep check, repo secret HEALTH_AUTH_TOKEN matching the
+# deployment's HEALTH_AUTH_TOKEN env var.
 
 on:
   schedule:
-    - cron: '*/10 * * * *' # every 10 minutes
+    - cron: '*/10 * * * *' # liveness
+    - cron: '17 13 * * *' # deep check (keep in sync with DEEP below)
   workflow_dispatch:
+    inputs:
+      deep:
+        description: Run the full checks (queries the database)
+        type: boolean
+        default: false
 
 concurrency:
   group: uptime
@@ -30,52 +42,115 @@ jobs:
         id: probe
         env:
           HEALTH_URL: ${{ vars.HEALTH_URL }}
+          HEALTH_AUTH_TOKEN: ${{ secrets.HEALTH_AUTH_TOKEN }}
+          DEEP: ${{ github.event.schedule == '17 13 * * *' || inputs.deep == true }}
         run: |
           set -uo pipefail
           if [ -z "${HEALTH_URL:-}" ]; then
             echo "::warning::HEALTH_URL repo variable not set — skipping probe."
+            echo "skipped=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
+
+          depth=liveness
+          auth=()
+          if [ "$DEEP" = "true" ]; then
+            if [ -n "${HEALTH_AUTH_TOKEN:-}" ]; then
+              depth=deep
+              auth=(-H "Authorization: Bearer $HEALTH_AUTH_TOKEN")
+            else
+              echo "::warning::HEALTH_AUTH_TOKEN secret not set — running a liveness probe instead."
+            fi
+          fi
+
           start=$(date +%s%N)
-          http_code=$(curl -s -o body.json -w "%{http_code}" --max-time 15 "$HEALTH_URL" || echo "000")
+          http_code=$(curl -s -o body.json -w "%{http_code}" --max-time 15 "${auth[@]}" "$HEALTH_URL" || echo "000")
           end=$(date +%s%N)
           latency_ms=$(( (end - start) / 1000000 ))
-          echo "http_code=$http_code" >> "$GITHUB_OUTPUT"
-          echo "latency_ms=$latency_ms" >> "$GITHUB_OUTPUT"
-          echo "body=$(cat body.json | head -c 500)" >> "$GITHUB_OUTPUT"
+          # Only per-check statuses go into the (public) incident issue; the
+          # raw body of a deep check can include internal error messages.
+          summary=$(jq -c '{status, checks: ((.checks // {}) | map_values(.status))}' body.json 2>/dev/null || echo '"non-JSON response"')
+
+          {
+            echo "depth=$depth"
+            echo "http_code=$http_code"
+            echo "latency_ms=$latency_ms"
+            echo "summary=$summary"
+          } >> "$GITHUB_OUTPUT"
+
           if [ "$http_code" != "200" ]; then
+            echo "::error::$depth probe failed: HTTP $http_code $summary"
             exit 1
           fi
-          echo "OK ($latency_ms ms)"
+          echo "OK: $depth probe, $latency_ms ms, $summary"
 
-      - name: Open/update incident issue on failure
+      - name: Open incident issue on failure
         if: failure()
         uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.0.1
+        env:
+          DEPTH: ${{ steps.probe.outputs.depth }}
+          HTTP_CODE: ${{ steps.probe.outputs.http_code }}
+          LATENCY_MS: ${{ steps.probe.outputs.latency_ms }}
+          SUMMARY: ${{ steps.probe.outputs.summary }}
         with:
           script: |
             const marker = '<!-- uptime-incident -->'
-            const title = '🚨 Uptime incident: /api/health failing'
-            const body = `${marker}
-            Health probe failed at ${new Date().toISOString()}.
-
-            - HTTP status: \`${{ steps.probe.outputs.http_code }}\`
-            - Latency: \`${{ steps.probe.outputs.latency_ms }} ms\`
-            - Body (truncated): \`${{ steps.probe.outputs.body }}\`
-
-            Workflow run: ${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`
+            const { DEPTH, HTTP_CODE, LATENCY_MS, SUMMARY } = process.env
+            const run = `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`
             const { data: issues } = await github.rest.issues.listForRepo({
               owner: context.repo.owner, repo: context.repo.repo,
               state: 'open', labels: 'incident',
             })
-            const existing = issues.find(i => i.body?.includes(marker))
-            if (existing) {
+            // One issue per incident: later failures don't comment, or a
+            // 10-minute probe would add ~144 comments a day. The depth is
+            // recorded so recovery knows which probe may close it.
+            if (issues.some(i => i.body?.includes(marker))) {
+              core.info('Incident already open; not commenting again.')
+              return
+            }
+            await github.rest.issues.create({
+              owner: context.repo.owner, repo: context.repo.repo,
+              title: '🚨 Uptime incident: /api/health failing',
+              labels: ['incident'],
+              body: [
+                marker,
+                `<!-- uptime-depth:${DEPTH} -->`,
+                `Health probe (${DEPTH}) failed at ${new Date().toISOString()}.`,
+                '',
+                `- HTTP status: \`${HTTP_CODE}\``,
+                `- Latency: \`${LATENCY_MS} ms\``,
+                `- Checks: \`${SUMMARY}\``,
+                '',
+                `Workflow run: ${run}`,
+                '',
+                'This issue closes automatically when a probe passes again.',
+              ].join('\n'),
+            })
+
+      - name: Close incident issue on recovery
+        if: success() && steps.probe.outputs.skipped != 'true'
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.0.1
+        env:
+          DEPTH: ${{ steps.probe.outputs.depth }}
+        with:
+          script: |
+            const marker = '<!-- uptime-incident -->'
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner, repo: context.repo.repo,
+              state: 'open', labels: 'incident',
+            })
+            for (const issue of issues.filter(i => i.body?.includes(marker))) {
+              // A liveness pass says nothing about the database, so it must
+              // not close an incident a deep check opened.
+              const deepIncident = issue.body.includes('<!-- uptime-depth:deep -->')
+              if (deepIncident && process.env.DEPTH !== 'deep') continue
               await github.rest.issues.createComment({
                 owner: context.repo.owner, repo: context.repo.repo,
-                issue_number: existing.number, body,
+                issue_number: issue.number,
+                body: `Recovered: ${process.env.DEPTH} probe passed at ${new Date().toISOString()}.`,
               })
-            } else {
-              await github.rest.issues.create({
+              await github.rest.issues.update({
                 owner: context.repo.owner, repo: context.repo.repo,
-                title, body, labels: ['incident'],
+                issue_number: issue.number, state: 'closed',
               })
             }

@@ -16,9 +16,9 @@ permissions:
   contents: read
 
 jobs:
-  # `pnpm audit` hits the npm registry's advisory DB directly — no GitHub code
-  # scanning required, which matters while the repo is private (code scanning
-  # is paid on private repos). Fails on moderate+ so CVEs block merges.
+  # `pnpm audit` hits the npm registry's advisory DB directly, independent of
+  # GitHub's own Dependabot alerts. Fails on high+ so serious CVEs block
+  # merges.
   npm-audit:
     name: pnpm audit
     runs-on: ubuntu-latest
@@ -32,9 +32,10 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: Audit production dependencies
         # Only fail on advisories affecting prod deps; dev-dep CVEs are noisy
-        # and rarely ship to users. `--audit-level moderate` blocks on
-        # moderate+ severity; swap to `high` if the signal gets too noisy.
-        run: pnpm audit --prod --audit-level moderate
+        # and rarely ship to users. Blocks on high+: the remaining moderate
+        # advisories need upstream major releases, so failing on them would
+        # leave this check permanently red. Dependabot still reports them.
+        run: pnpm audit --prod --audit-level high
 
   # pip-audit uses PyPI's advisory DB (PYSEC + OSV feed) — no GitHub code
   # scanning. Runs against runtime + Modal requirements.

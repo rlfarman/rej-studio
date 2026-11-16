@@ -58,11 +58,7 @@ FULL_OPTIONS = {
 
 
 def strip_design_placeholders(sequence: str) -> str:
-    return (
-        sequence.replace("[REJ5]", "")
-        .replace("[REJ3]", "")
-        .replace("[STIMINTRON]", "")
-    )
+    return sequence.replace("[REJ5]", "").replace("[REJ3]", "").replace("[STIMINTRON]", "")
 
 
 @pytest.mark.timeout(30)
@@ -175,6 +171,7 @@ class TestInsertWggwMotif:
         }
         recoded, info, _ = apply_explicit_wggw_site(sequence, explicit_site, 4)
         assert recoded == sequence
+        assert info is not None
         assert info["split_position"] == 4
 
 

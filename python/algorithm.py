@@ -526,7 +526,12 @@ def build_objectives_report(problem):
     return {"entries": entries, "total_score": total}
 
 
-def build_optimization_problem(CDS, OPTIONS, logger="bar", explicit_lock_region=None):
+# `logger` is either proglog's "bar" shorthand or a ProgressBarLogger instance
+# (see _ProgressBridgeLogger); annotated so pyright doesn't infer `str` from
+# the default.
+def build_optimization_problem(
+    CDS, OPTIONS, logger: "str | _ProgressBarLoggerBase" = "bar", explicit_lock_region=None
+):
     """Create a DNAChisel problem using the configured objectives."""
     CDS = CDS.upper().replace("U", "T")
     AAseq = biotools.translate(CDS)
