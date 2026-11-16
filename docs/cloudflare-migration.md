@@ -326,10 +326,39 @@ away), Zaraz (GTM goes away).
 Verify before committing:
 
 0. **How should agents run designs on the free tier?** Candidates: (a) run
-   the wasm optimizer inside the MCP Apps view in the agent host's sandboxed
-   iframe, if MCP Apps lets a view hand a result back to the model; (b) drop
-   `submit_design` and have agents link the user to the web app; (c) pay
-   $5/month for Workers Paid only if agent designs prove worth it.
+   the optimizer inside the MCP Apps view, in the agent host's sandboxed
+   iframe; (b) drop `submit_design` and have agents link the user to the web
+   app; (c) pay $5/month for Workers Paid only if agent designs prove worth
+   it.
+
+   Option (a), researched November 2026 against `@modelcontextprotocol/ext-apps`
+   2.0.4 and the 2026-01-26 and draft specs:
+
+   - **Returning a result works,** through `ui/message` (triggers a model
+     turn) and `ui/update-model-context` (silent, seen on the next turn).
+     Both are in the stable spec, and both are capabilities each host must
+     advertise; some hosts don't. App-provided tools (the model calling a
+     tool implemented in the view, which would be the clean way) are in the
+     **draft only**.
+   - **WebAssembly is blocked.** The spec has hosts build the view's CSP as
+     `script-src 'self' 'unsafe-inline' <resource domains>`, with no
+     `'wasm-unsafe-eval'`, so a compliant host cannot compile the `.wasm`.
+     Workers are effectively unavailable too.
+   - **A plain-JavaScript build works.** Binaryen's wasm2js, after lowering
+     bulk-memory, sign-ext and saturating float-to-int, turns the same module
+     into JavaScript: 2.6 MB, or 228 KB brotli. Designs are identical to
+     Python. It's about 10× slower than WebAssembly and runs on the view's
+     main thread: 0.4 s for 600 bp, 2.3 s for 1,182 bp, 13.7 s for 3,633 bp,
+     versus 0.04, 0.15 and 1.4 s for the `.wasm`.
+   - **It only works where views render.** Headless agents and API clients
+     never mount the view, so the design never runs; `submit_design` would
+     still need a fallback such as a web-app link.
+
+   So (a) is possible but second-class: UI hosts only, minutes-scale for the
+   big genes, and the result arrives as a message rather than a tool result.
+   A sensible combination is (b) everywhere, plus (a) where the host supports
+   it, feature-detecting real WebAssembly first in case a host is looser
+   than the spec.
 
 1. **Does Cloudflare count Access "users" as provisioned identities or active
    ones?** Decides whether the free tier really covers the lab.
