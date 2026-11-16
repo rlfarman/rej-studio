@@ -44,7 +44,7 @@
     "@hookform/resolvers": "^5.2.2",
     "@neondatabase/serverless": "^0.10.4",
     "@next/third-parties": "^16.4.6",
-    "@opentelemetry/auto-instrumentations-node": "^0.81.2",
+    "@opentelemetry/auto-instrumentations-node": "^0.83.1",
     "@opentelemetry/exporter-trace-otlp-http": "^0.223.2",
     "@opentelemetry/resources": "^2.12.1",
     "@opentelemetry/sdk-node": "^0.223.2",
