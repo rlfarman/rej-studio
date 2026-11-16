@@ -1,5 +1,95 @@
 # Changelog
 
+## [0.2.3](https://github.com/rlfarman/rej-studio/compare/v0.2.2...v0.2.3) (2026-11-16)
+
+
+### Features
+
+* **auth:** overhaul login screen with DNA helix background ([#226](https://github.com/rlfarman/rej-studio/issues/226)) ([f68ed74](https://github.com/rlfarman/rej-studio/commit/f68ed740ed56a5f66516d837624a378322445014))
+* **auth:** session-cookie gate so crawlers see OG metadata ([#204](https://github.com/rlfarman/rej-studio/issues/204)) ([3f1585c](https://github.com/rlfarman/rej-studio/commit/3f1585cd51eb6a744c9a31a1818393a9550c0e72))
+* **design-tool:** stack result sequences, highlight introns, promote download ([#209](https://github.com/rlfarman/rej-studio/issues/209)) ([c386a6d](https://github.com/rlfarman/rej-studio/commit/c386a6dcbc7c2fff0c9de2add003c89c297392cd))
+* **dev:** zero-setup local dev with sample seed + db:fetch ([#247](https://github.com/rlfarman/rej-studio/issues/247)) ([a1b53b1](https://github.com/rlfarman/rej-studio/commit/a1b53b18a218e4b1b2aade1df5d013aa286e1551))
+* **disease-landscape:** add explorer for large-CDS disease genes ([#198](https://github.com/rlfarman/rej-studio/issues/198)) ([5f3dcb4](https://github.com/rlfarman/rej-studio/commit/5f3dcb41dc1832e8f9d5471e836f79fd42d81a43))
+* **disease-landscape:** add largest CDS column ([#207](https://github.com/rlfarman/rej-studio/issues/207)) ([c008e2e](https://github.com/rlfarman/rej-studio/commit/c008e2e6e779c0956663d4f1ecb23aa3812fd795))
+* **gene-search:** add text labels to isoform action buttons ([#222](https://github.com/rlfarman/rej-studio/issues/222)) ([f4ce9aa](https://github.com/rlfarman/rej-studio/commit/f4ce9aa91cfcd1b028c35e132560c8f1beccbc8f))
+* **gene-search:** enable precomputed ZIP download for isoforms ([#231](https://github.com/rlfarman/rej-studio/issues/231)) ([6645a5a](https://github.com/rlfarman/rej-studio/commit/6645a5a2f035995958117ff6cffb9c4754334e5e))
+* **gene-search:** in-place loader during gene navigation ([#248](https://github.com/rlfarman/rej-studio/issues/248)) ([390112d](https://github.com/rlfarman/rej-studio/commit/390112d39678bce41e35c299fb5f56c15d59649d))
+* **layout:** adaptive header and inline footer ([#187](https://github.com/rlfarman/rej-studio/issues/187)) ([5813964](https://github.com/rlfarman/rej-studio/commit/581396493e74d8947c5334c63aa5b5ed3d6fb6a6))
+* **og:** refresh OG images for helix theme and serif display font ([#179](https://github.com/rlfarman/rej-studio/issues/179)) ([5a85fe3](https://github.com/rlfarman/rej-studio/commit/5a85fe3b9aafddfa4306d44e0b8fc079a417e2b6))
+* refine design tool copy and layout ([#238](https://github.com/rlfarman/rej-studio/issues/238)) ([b75b069](https://github.com/rlfarman/rej-studio/commit/b75b0692340ae1cdab4e18f56d1bd189de9e27bd))
+* refine disease associations page ([#239](https://github.com/rlfarman/rej-studio/issues/239)) ([733edff](https://github.com/rlfarman/rej-studio/commit/733edff120b938fbbc1c9e4064f42e5566749f25))
+* **search:** merge favorites, recents, and jobs into Cmd+K palette ([#195](https://github.com/rlfarman/rej-studio/issues/195)) ([e54c1eb](https://github.com/rlfarman/rej-studio/commit/e54c1eb8ed009f0b1e655c579d20eb76d2cd129f))
+* **sidebar:** pin nav, collapse sections with counts ([#218](https://github.com/rlfarman/rej-studio/issues/218)) ([2856dff](https://github.com/rlfarman/rej-studio/commit/2856dff968038b48532b5298c731ae34d0237138))
+* **sidebar:** two-line rows replace truncation tooltips ([#185](https://github.com/rlfarman/rej-studio/issues/185)) ([0226b23](https://github.com/rlfarman/rej-studio/commit/0226b23400520eeca5ffe952bf73716e27c27fe9))
+* **storybook:** add Storybook 10 with stories for UI and Bio components ([#172](https://github.com/rlfarman/rej-studio/issues/172)) ([fa608ae](https://github.com/rlfarman/rej-studio/commit/fa608aee51b026d48108f1039c4f1f2bb43a0ad7))
+* streamline inducible WGGW splice selection ([#117](https://github.com/rlfarman/rej-studio/issues/117)) ([820f595](https://github.com/rlfarman/rej-studio/commit/820f595a14dfacab3040baeca6ec26b6cace6366))
+* **theme:** apply helix palette and serif display font ([#176](https://github.com/rlfarman/rej-studio/issues/176)) ([03ca924](https://github.com/rlfarman/rej-studio/commit/03ca924150ea142b8a9efa13657671947ff98ae4))
+* **typography:** unify type system with semantic roles ([#199](https://github.com/rlfarman/rej-studio/issues/199)) ([5e33db3](https://github.com/rlfarman/rej-studio/commit/5e33db30967c700bf1b3c575729510fbe9dca4bd))
+* **ui:** add dna helix loader and smoother gene-search transitions ([#181](https://github.com/rlfarman/rej-studio/issues/181)) ([3befd47](https://github.com/rlfarman/rej-studio/commit/3befd473227b68f27dccc950d27cb96365ee67d0))
+* **ui:** polish motion across job progress, results, and search ([#235](https://github.com/rlfarman/rej-studio/issues/235)) ([350b69c](https://github.com/rlfarman/rej-studio/commit/350b69ceb219c1981033a892f60050694d5c9337))
+* **ui:** prominent home CTA, auto-convert DNA/protein, inline weights ([#210](https://github.com/rlfarman/rej-studio/issues/210)) ([48224cf](https://github.com/rlfarman/rej-studio/commit/48224cf336cae7ed19523e93a410c568554bcd77))
+* **ui:** subtle delight pass — completion bloom, breath, console egg ([#200](https://github.com/rlfarman/rej-studio/issues/200)) ([fdf52c3](https://github.com/rlfarman/rej-studio/commit/fdf52c3ab2c7d0cccda82d98f7ca09f190c70a4a))
+
+
+### Bug Fixes
+
+* **a11y,perf:** resolve axe violations and polish across app ([#167](https://github.com/rlfarman/rej-studio/issues/167)) ([47fc49e](https://github.com/rlfarman/rej-studio/commit/47fc49e223d31afe6849546780d8a32a0c599780))
+* **a11y,ui:** finish audit fixes and home polish ([#170](https://github.com/rlfarman/rej-studio/issues/170)) ([020ff17](https://github.com/rlfarman/rej-studio/commit/020ff176758629f7b997ee10f1d411c9d6926e92))
+* **auth:** enforce the session gate in the proxy ([#255](https://github.com/rlfarman/rej-studio/issues/255)) ([cdcab6d](https://github.com/rlfarman/rej-studio/commit/cdcab6d8d90b34c1b380e116aae0f9d9626cfec2))
+* **auth:** protect all routes with basic auth ([#162](https://github.com/rlfarman/rej-studio/issues/162)) ([b009438](https://github.com/rlfarman/rej-studio/commit/b00943819a5fa1500a9d5e4c02dc23b1e68b40ed))
+* **ci:** make PR checks pass now that CI is back on ([#268](https://github.com/rlfarman/rej-studio/issues/268)) ([7d1f2ae](https://github.com/rlfarman/rej-studio/commit/7d1f2ae77f24f8ea17b594d9d0b0545deae2b175))
+* **db:** stop routine traffic from waking Neon ([#257](https://github.com/rlfarman/rej-studio/issues/257)) ([bb785d1](https://github.com/rlfarman/rej-studio/commit/bb785d199761233a8964aadf4a482af52ce0321f))
+* **deps:** patch protobufjs and python-multipart CVEs ([#197](https://github.com/rlfarman/rej-studio/issues/197)) ([3d55b3d](https://github.com/rlfarman/rej-studio/commit/3d55b3d67ea921ca779767ab9181072b021b6e54))
+* **deps:** upgrade Next.js, Sentry and vulnerable dependencies ([#256](https://github.com/rlfarman/rej-studio/issues/256)) ([856c231](https://github.com/rlfarman/rej-studio/commit/856c231c8d3f7234ec8b77d54d9a3f6121e8e048))
+* **design-tool:** align optimized sequence results and junction coordinates ([#251](https://github.com/rlfarman/rej-studio/issues/251)) ([0869ee7](https://github.com/rlfarman/rej-studio/commit/0869ee77cad17b223f5da126ed70df778690d312))
+* **design-tool:** polish progress copy and unify stage labels ([#227](https://github.com/rlfarman/rej-studio/issues/227)) ([d5ac808](https://github.com/rlfarman/rej-studio/commit/d5ac808dd661393e03db413945af23738dddad18))
+* **design-tool:** smoother, more responsive progress reporting ([#221](https://github.com/rlfarman/rej-studio/issues/221)) ([93e6de2](https://github.com/rlfarman/rej-studio/commit/93e6de258e17f679a85d906f9070a75141f95d10))
+* **design-tool:** stop codon strip forcing horizontal overflow ([#217](https://github.com/rlfarman/rej-studio/issues/217)) ([7fafee7](https://github.com/rlfarman/rej-studio/commit/7fafee70aa5ece93fcbab62cc5e11659b8615cf5))
+* **dev:** install node_modules in worktrees instead of symlinking ([#246](https://github.com/rlfarman/rej-studio/issues/246)) ([3ebf50f](https://github.com/rlfarman/rej-studio/commit/3ebf50f5954d69a7aadb5e2adb9740798123e956))
+* **docs:** prevent sidebar width from squishing content on mobile ([#164](https://github.com/rlfarman/rej-studio/issues/164)) ([bf768d1](https://github.com/rlfarman/rej-studio/commit/bf768d1c3b5e5a472fcf7908b14df80c29178708))
+* drop hidden docs from the sitemap and allow any local dev port ([#272](https://github.com/rlfarman/rej-studio/issues/272)) ([d86399d](https://github.com/rlfarman/rej-studio/commit/d86399dfadc25a6b7745cc1542b5680c5468e650))
+* **gene-search:** resolve set-state-in-effect warning in useDelayedTrue ([#203](https://github.com/rlfarman/rej-studio/issues/203)) ([ccb81c0](https://github.com/rlfarman/rej-studio/commit/ccb81c05bc685beaa964eb9a9cfa50d8acc0c6ae))
+* **gene-search:** stabilize command list item width ([#180](https://github.com/rlfarman/rej-studio/issues/180)) ([b4a02fb](https://github.com/rlfarman/rej-studio/commit/b4a02fbd888e58bc9be80d91eaff0026fffe83ce))
+* **header:** readable text on command bar hover ([#214](https://github.com/rlfarman/rej-studio/issues/214)) ([1d75e5e](https://github.com/rlfarman/rej-studio/commit/1d75e5e4a0bde6faea10e63fcf02818f5934ad3c))
+* **home:** center page content vertically instead of fixed top offset ([#219](https://github.com/rlfarman/rej-studio/issues/219)) ([88b9c7d](https://github.com/rlfarman/rej-studio/commit/88b9c7d7c2cd926b00ffea04eb159fbfe6eaacdb))
+* **home:** prevent mobile overflow clip, polish desktop spacing ([#183](https://github.com/rlfarman/rej-studio/issues/183)) ([fccb13b](https://github.com/rlfarman/rej-studio/commit/fccb13bb37cf213cb848543073343f464270949a))
+* **mobile:** resolve 375px overflow ([#168](https://github.com/rlfarman/rej-studio/issues/168)) ([23b6575](https://github.com/rlfarman/rej-studio/commit/23b65752ac1adbb00ba8c4c0de3157a432c6d6e8))
+* **mobile:** responsive layout improvements across the app ([#166](https://github.com/rlfarman/rej-studio/issues/166)) ([cecafdd](https://github.com/rlfarman/rej-studio/commit/cecafddc2d51e545714151785c07cf4b3e5ea833))
+* **proxy:** exempt /api/og/* from basic-auth middleware ([#196](https://github.com/rlfarman/rej-studio/issues/196)) ([b3d258d](https://github.com/rlfarman/rej-studio/commit/b3d258dfb9ed711edd1de49c92cd93ed0ab3026a))
+* **settings-menu:** boost icon contrast ([#233](https://github.com/rlfarman/rej-studio/issues/233)) ([24a7245](https://github.com/rlfarman/rej-studio/commit/24a7245226c42093195e92caaf4c584e449f7797))
+* **sidebar:** prevent horizontal scroll from clear button ([#230](https://github.com/rlfarman/rej-studio/issues/230)) ([58b14da](https://github.com/rlfarman/rej-studio/commit/58b14da89ff4d16260689c7e7cf1aae454a575ce))
+* **sidebar:** remove unbuilt Batch link that 404s ([#163](https://github.com/rlfarman/rej-studio/issues/163)) ([a7cd7dc](https://github.com/rlfarman/rej-studio/commit/a7cd7dcc07586a797cb5e917ffebbbd0f6e880f6))
+* **ui:** darken muted text on hovered accent rows ([#178](https://github.com/rlfarman/rej-studio/issues/178)) ([e417e12](https://github.com/rlfarman/rej-studio/commit/e417e12621678bccb42681a61dff7bd192fe9092))
+* **ui:** layout audit — spacing, rhythm, and sidebar density ([#175](https://github.com/rlfarman/rej-studio/issues/175)) ([478e288](https://github.com/rlfarman/rej-studio/commit/478e2881fdf08533c51062caa01ed62492840722))
+* **ui:** patch responsive breakpoint gaps ([#234](https://github.com/rlfarman/rej-studio/issues/234)) ([aba94db](https://github.com/rlfarman/rej-studio/commit/aba94db065ef9a45134df70a98dabe655fe84d1c))
+* **ui:** restore sidebar X button visibility on hover ([#184](https://github.com/rlfarman/rej-studio/issues/184)) ([589c56e](https://github.com/rlfarman/rej-studio/commit/589c56e6a04b24154e96b70193e83d20f5731b02))
+
+
+### Performance
+
+* static (app) layout, faster isoform sort, cached queries ([#205](https://github.com/rlfarman/rej-studio/issues/205)) ([9e7554c](https://github.com/rlfarman/rej-studio/commit/9e7554c98fa86ee4d304b2576ea83d0e11fe3777))
+
+
+### Documentation
+
+* **agents:** align AGENTS.md with current project state ([#186](https://github.com/rlfarman/rej-studio/issues/186)) ([e9920f0](https://github.com/rlfarman/rej-studio/commit/e9920f0b520e9e8cd35364dc45ce3be76fb799e1))
+* **copy:** tighten scientific accuracy across UI and docs ([#194](https://github.com/rlfarman/rej-studio/issues/194)) ([e8b8ce5](https://github.com/rlfarman/rej-studio/commit/e8b8ce51936554c2784eead60ac55597ada90bbb))
+
+
+### Refactors
+
+* **color:** categorical AAV palette, semantic tokens aligned to theme ([#216](https://github.com/rlfarman/rej-studio/issues/216)) ([3bff172](https://github.com/rlfarman/rej-studio/commit/3bff172215a1a5a30efb8d2b7f2ad20112fbb9e6))
+* **copy:** centralize user-facing strings per feature ([#177](https://github.com/rlfarman/rej-studio/issues/177)) ([9b00c85](https://github.com/rlfarman/rej-studio/commit/9b00c85a4f32de837d6165e5d25cd761dff7ae5a))
+* **copy:** clarity pass — consistent case, actionable errors, dedup ([#182](https://github.com/rlfarman/rej-studio/issues/182)) ([5eef490](https://github.com/rlfarman/rej-studio/commit/5eef490a8917995092030a2b3517a0cf637a5660))
+* **design-tool:** consolidate sequence export into dropdown ([#174](https://github.com/rlfarman/rej-studio/issues/174)) ([9fbbd96](https://github.com/rlfarman/rej-studio/commit/9fbbd96a0356e31a45bd8d8b9f125a2ece7d846b))
+* **design-tool:** remove GC sparkline and codon usage heatmap from input ([#228](https://github.com/rlfarman/rej-studio/issues/228)) ([eb070ec](https://github.com/rlfarman/rej-studio/commit/eb070ecb45a56c8ef2e2b84810a983228d7b38db))
+* extract ExpandableSidebarList, MetricCell, and CopyButton ([#171](https://github.com/rlfarman/rej-studio/issues/171)) ([6a3f188](https://github.com/rlfarman/rej-studio/commit/6a3f1886bcf838b6066a71e618c0b608da19b5bf))
+* **gene-page:** quieter AAV fit strip + cleaner disease associations ([#211](https://github.com/rlfarman/rej-studio/issues/211)) ([f9afc71](https://github.com/rlfarman/rej-studio/commit/f9afc71588fda4b0ff3cfcbf4df19daa9c112254))
+* **onboarding:** replace custom tour with driver.js ([#165](https://github.com/rlfarman/rej-studio/issues/165)) ([f12256d](https://github.com/rlfarman/rej-studio/commit/f12256d119ea79e3b30b40cc8b454dfa7b0d395d))
+* rename disease-landscape to disease-associations ([#208](https://github.com/rlfarman/rej-studio/issues/208)) ([c485c4e](https://github.com/rlfarman/rej-studio/commit/c485c4e38e5272355829cabb9826c64c6d5678ef))
+* **ui:** centralize status colors and normalize tokens ([#201](https://github.com/rlfarman/rej-studio/issues/201)) ([9aa9173](https://github.com/rlfarman/rej-studio/commit/9aa9173e1cf8b486dc70fca56a9ea0ea8478825e))
+* **ui:** normalize design tokens and typography utilities ([#236](https://github.com/rlfarman/rej-studio/issues/236)) ([a14927f](https://github.com/rlfarman/rej-studio/commit/a14927ff64d4cdf23e758f391b0d78eb4c4b481d))
+
 ## [0.2.2](https://github.com/rlfarman/rej-studio/compare/v0.2.1...v0.2.2) (2026-04-12)
 
 
