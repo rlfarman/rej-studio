@@ -4,7 +4,16 @@
  * Mocks Next.js server APIs and analytics so tests can import server
  * actions and hooks without hitting real infrastructure.
  */
-import { vi } from 'vitest'
+import { afterEach, vi } from 'vitest'
+import { cleanup } from '@testing-library/react'
+
+// Testing Library only registers its automatic cleanup when test globals are
+// enabled, and they're off in vitest.config.ts. Without this, hooks and
+// components from earlier tests stay mounted, and their debounced queries
+// fire into later tests' shared mocks (flaky on slower CI runners).
+afterEach(() => {
+  cleanup()
+})
 
 // --- next/headers ---
 // Server actions call headers() to extract IP for rate limiting, and

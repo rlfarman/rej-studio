@@ -133,3 +133,82 @@ describe('validationSchema', () => {
     expect(parse({ codonOptimizeWeight: 101 }).success).toBe(false)
   })
 })
+
+describe('validationSchema — protein input', () => {
+  const protein = (overrides: Record<string, unknown> = {}) =>
+    parse({
+      sequenceType: 'protein',
+      codingSequence: '',
+      proteinSequence: 'MKV*',
+      ...overrides,
+    })
+
+  const issuePaths = (result: ReturnType<typeof parse>) =>
+    result.success ? [] : result.error.issues.map((i) => i.path.join('.'))
+
+  it('accepts a valid protein with a species', () => {
+    expect(protein().success).toBe(true)
+  })
+
+  it('accepts a protein without a trailing stop', () => {
+    expect(protein({ proteinSequence: 'mkv' }).success).toBe(true)
+  })
+
+  it('requires a species for reverse translation', () => {
+    expect(issuePaths(protein({ species: 'none' }))).toEqual(['species'])
+  })
+
+  it('rejects an empty protein', () => {
+    expect(issuePaths(protein({ proteinSequence: '' }))).toContain(
+      'proteinSequence',
+    )
+  })
+
+  it('rejects characters that are not amino acids', () => {
+    expect(issuePaths(protein({ proteinSequence: 'MKB1' }))).toContain(
+      'proteinSequence',
+    )
+  })
+
+  it('rejects an internal stop', () => {
+    expect(issuePaths(protein({ proteinSequence: 'MK*V*' }))).toEqual([
+      'proteinSequence',
+    ])
+  })
+
+  it('rejects a protein over 16666 residues', () => {
+    expect(
+      issuePaths(protein({ proteinSequence: 'M'.repeat(16667) })),
+    ).toContain('proteinSequence')
+  })
+
+  it('skips the DNA splice-position checks in protein mode', () => {
+    // codingSequence is filled in after reverse translation, so a splice
+    // position beyond the (empty) coding sequence is not an error yet.
+    expect(protein({ spliceJunctionPositions: [500] }).success).toBe(true)
+  })
+})
+
+describe('validationSchema — splice position order', () => {
+  it('accepts two ascending splice positions', () => {
+    expect(
+      parse({
+        codingSequence: 'ATGAAAAAATGA',
+        spliceJunctionPositions: [3, 6],
+      }).success,
+    ).toBe(true)
+  })
+
+  it('rejects positions that are not strictly ascending', () => {
+    const result = parse({
+      codingSequence: 'ATGAAAAAATGA',
+      spliceJunctionPositions: [6, 6],
+    })
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      expect(result.error.issues.map((i) => i.path)).toEqual([
+        ['spliceJunctionPositions', 1],
+      ])
+    }
+  })
+})
