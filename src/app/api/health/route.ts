@@ -5,6 +5,7 @@ import { getDb } from '@/drizzle/db'
 import { env } from '@/lib/env'
 import { createUpstashRateLimiter, redis } from '@/lib/upstash'
 import { withCors } from '@/lib/api-cors'
+import { timingSafeEqual } from '@/lib/auth/session'
 
 // Rate limit: 20 requests per minute per IP.
 const limiter = createUpstashRateLimiter({
@@ -13,7 +14,21 @@ const limiter = createUpstashRateLimiter({
   windowMs: 60_000,
 })
 
-const HEALTH_AUTH_TOKEN = process.env.HEALTH_AUTH_TOKEN
+/**
+ * Deep checks (DB ping, Modal probe) are opt-in. With HEALTH_AUTH_TOKEN set
+ * they need `Authorization: Bearer <token>`; without it they only run outside
+ * production. Anonymous probes (uptime monitors, load balancers) get a
+ * liveness answer that touches nothing: a DB ping every few minutes would
+ * keep the serverless Postgres compute awake around the clock.
+ */
+async function canRunDeepChecks(authorization: string | null) {
+  const expected = process.env.HEALTH_AUTH_TOKEN
+  if (!expected) return process.env.NODE_ENV !== 'production'
+  const token = authorization?.startsWith('Bearer ')
+    ? authorization.slice(7)
+    : ''
+  return timingSafeEqual(token, expected)
+}
 
 // --- Rolling latency tracker ------------------------------------------------
 // Keeps the last N DB latency samples so the health endpoint can report
@@ -163,32 +178,25 @@ export async function GET() {
     )
   }
 
+  if (!(await canRunDeepChecks(hdrs.get('authorization')))) {
+    return withCors(
+      NextResponse.json(
+        { status: 'ok' },
+        {
+          status: 200,
+          headers: {
+            'Cache-Control': 'no-store, max-age=0',
+            'X-RateLimit-Remaining': String(remaining),
+          },
+        },
+      ),
+      origin,
+    )
+  }
+
   const [database, modal] = await Promise.all([checkDatabase(), checkModal()])
 
   const degraded = database.status === 'fail' || modal.status === 'fail'
-
-  // When HEALTH_AUTH_TOKEN is configured, require it to see full check details.
-  // Unauthenticated callers still get a status code (for load-balancer probes)
-  // but no internal info.
-  if (HEALTH_AUTH_TOKEN) {
-    const authHeader = hdrs.get('authorization')
-    const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null
-    if (token !== HEALTH_AUTH_TOKEN) {
-      return withCors(
-        NextResponse.json(
-          { status: degraded ? 'degraded' : 'ok' },
-          {
-            status: degraded ? 503 : 200,
-            headers: {
-              'Cache-Control': 'no-store, max-age=0',
-              'X-RateLimit-Remaining': String(remaining),
-            },
-          },
-        ),
-        origin,
-      )
-    }
-  }
 
   const body: HealthResponse = {
     status: degraded ? 'degraded' : 'ok',

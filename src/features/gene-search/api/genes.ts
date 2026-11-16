@@ -11,6 +11,7 @@ import { z } from 'zod'
 import { headers } from 'next/headers'
 import { createUpstashRateLimiter } from '@/lib/upstash'
 import { createLogger } from '@/lib/logger'
+import { requireSession } from '@/lib/auth/require-session'
 
 // NOTE: GeneSearchResult is NOT re-exported from this 'use server' file.
 // Turbopack treats all exports from server action files as server actions,
@@ -52,6 +53,8 @@ export async function searchGenes(
   const parsed = searchGenesInput.parse({ query, species })
   const trimmedQuery = parsed.query.trim()
   if (trimmedQuery.length === 0) return { results: [] }
+
+  await requireSession()
 
   const hdrs = await headers()
   const ip = hdrs.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'

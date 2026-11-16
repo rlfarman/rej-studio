@@ -7,10 +7,13 @@
 import { vi } from 'vitest'
 
 // --- next/headers ---
-// Server actions call headers() to extract IP for rate limiting.
+// Server actions call headers() to extract IP for rate limiting, and
+// cookies() to check the session when the auth gate is on. The default
+// cookie store is empty; tests that need a session override cookies().
 const mockHeaders = new Headers({ 'x-forwarded-for': '127.0.0.1' })
 vi.mock('next/headers', () => ({
   headers: vi.fn(async () => mockHeaders),
+  cookies: vi.fn(async () => ({ get: () => undefined })),
 }))
 
 // --- next/cache ---

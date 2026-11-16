@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { isAllowedOrigin } from '@/lib/allowed-origins'
+import { isAuthGateActive } from '@/lib/auth/gate'
 import { SESSION_COOKIE_NAME, verifySession } from '@/lib/auth/session'
 
 export const config = {
@@ -28,16 +29,58 @@ const MAX_BODY_BYTES = 256 * 1024
 // Origin check (which only validates server actions, not API routes).
 // Origin allowlist is shared with API-route CORS in @/lib/allowed-origins.
 
-// --- API routes that don't require a session -------------------------------
-// HTML routes are always served so crawlers can read metadata; the root
-// layout gates the body on session. API routes return 401 without a session
-// except for the ones below.
-const PUBLIC_API_PREFIXES = [
+// --- Paths reachable without a session -------------------------------------
+// When the gate is active, every other matched request needs a session:
+// pages, RSC/prefetch requests, API routes, and server actions (which POST to
+// page URLs). Gating only in the root layout is not enough: Next still renders
+// the page segment and streams its RSC payload (gene data included) next to
+// the login form, and each of those renders queries the database.
+// robots.txt, sitemap.xml, favicon.ico, /monitoring and /api/og are excluded
+// by the matcher above, so they stay public too.
+const PUBLIC_PATHS = [
+  '/login',
   '/api/login',
   '/api/logout',
   '/api/csp-report',
-  '/api/og',
+  // Liveness only for anonymous callers; deep checks need a token.
+  '/api/health',
+  '/manifest.webmanifest',
+  '/icon',
+  '/apple-icon',
 ]
+
+function isPublicPath(pathname: string): boolean {
+  return PUBLIC_PATHS.some(
+    (p) => pathname === p || pathname.startsWith(`${p}/`),
+  )
+}
+
+/**
+ * Page loads go to the login page (which sends the user back afterwards).
+ * Everything else — server actions, API calls — gets a 401, since a redirect
+ * to an HTML page is meaningless to a fetch() caller.
+ */
+function rejectUnauthenticated(req: NextRequest): NextResponse {
+  const isPageLoad =
+    (req.method === 'GET' || req.method === 'HEAD') &&
+    !req.nextUrl.pathname.startsWith('/api/')
+  if (!isPageLoad) {
+    return NextResponse.json(
+      { error: 'Authentication required.' },
+      { status: 401 },
+    )
+  }
+
+  const target = req.nextUrl.clone()
+  // `_rsc` is Next's cache-busting param on client-side navigations; it
+  // shouldn't survive into the post-login redirect.
+  target.searchParams.delete('_rsc')
+  const returnTo = target.pathname + target.search
+
+  const loginUrl = new URL('/login', req.url)
+  if (returnTo !== '/') loginUrl.searchParams.set('return_to', returnTo)
+  return NextResponse.redirect(loginUrl)
+}
 
 function buildCsp(): string {
   return [
@@ -57,15 +100,6 @@ function buildCsp(): string {
 
 // Reporting-Endpoints header for the Reporting API v1 (report-to directive).
 const REPORTING_ENDPOINTS = 'csp-endpoint="/api/csp-report"'
-
-function isAuthConfigured(): boolean {
-  return Boolean(process.env.BASIC_AUTH_PASSWORD)
-}
-
-function shouldBypassAuth(): boolean {
-  const isDev = process.env.NODE_ENV === 'development'
-  return isDev && process.env.BYPASS_AUTH === 'true'
-}
 
 export async function proxy(req: NextRequest) {
   // --- CSRF check (mutating requests) ---
@@ -97,25 +131,12 @@ export async function proxy(req: NextRequest) {
 
   const csp = isDev ? undefined : buildCsp()
 
-  // --- API session gate ---
-  // Only applies when auth is configured. HTML routes bypass this and gate
-  // in the root layout so crawlers can still read per-page metadata.
-  const pathname = req.nextUrl.pathname
-  if (
-    isAuthConfigured() &&
-    !shouldBypassAuth() &&
-    pathname.startsWith('/api/') &&
-    !PUBLIC_API_PREFIXES.some((p) => pathname.startsWith(p))
-  ) {
+  // --- Session gate ---
+  if (isAuthGateActive() && !isPublicPath(req.nextUrl.pathname)) {
     const session = await verifySession(
       req.cookies.get(SESSION_COOKIE_NAME)?.value,
     )
-    if (!session) {
-      return NextResponse.json(
-        { error: 'Authentication required.' },
-        { status: 401 },
-      )
-    }
+    if (!session) return rejectUnauthenticated(req)
   }
 
   const response = NextResponse.next({ request: { headers: requestHeaders } })

@@ -143,3 +143,22 @@ describe('cancelJob', () => {
     await expect(cancelJob('invalid job id!')).rejects.toThrow()
   })
 })
+
+describe('job actions auth gate', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs()
+  })
+
+  it('reject callers without a session when the gate is on', async () => {
+    vi.stubEnv('BASIC_AUTH_PASSWORD', 'hunter2')
+    vi.stubEnv('SESSION_SECRET', 'test-secret-that-is-at-least-32-chars-long')
+    await expect(submitJob(VALID_PARAMS)).rejects.toThrow(
+      'Authentication required.',
+    )
+    await expect(getJobStatus('job-1')).rejects.toThrow(
+      'Authentication required.',
+    )
+    await expect(cancelJob('job-1')).rejects.toThrow('Authentication required.')
+    expect(mockFetch).not.toHaveBeenCalled()
+  })
+})
