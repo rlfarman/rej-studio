@@ -217,6 +217,20 @@ jobs:
           path: ${{ runner.temp }}/bundle-stats/base.json
           key: bundle-stats-${{ github.sha }}
 
+  # Builds every story in test mode (no docs, no sourcemaps), so a story
+  # that no longer compiles against the components fails here.
+  storybook:
+    name: Storybook
+    runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: $/.github/actions/setup
+      - run: pnpm build-storybook --test -o "$RUNNER_TEMP/storybook-static"
+
   # Posts the coverage and bundle-size reports the jobs above leave as
   # artifacts. The only job with a write token, and it runs no repo code.
   pr-comments:
