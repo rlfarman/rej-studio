@@ -34,7 +34,11 @@ export default {
   '*.{js,jsx,ts,tsx,mjs,cjs}': (files) => {
     const real = realFiles(files).map(quote).join(' ')
     if (!real) return []
-    return [`eslint --fix ${real}`, `prettier --write ${real}`]
+    return [
+      `oxlint --fix ${real}`,
+      `eslint --fix ${real}`,
+      `prettier --write ${real}`,
+    ]
   },
   '*.{json,md,css,yml,yaml}': (files) => {
     const real = realFiles(files).map(quote).join(' ')

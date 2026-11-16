@@ -1,0 +1,78 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  // Oxlint is the fast first pass of `pnpm lint`. ESLint still runs after it
+  // for what Oxlint can't do (the feature-boundary import rules); rules
+  // covered here are switched off in ESLint by eslint-plugin-oxlint.
+  "plugins": [
+    "typescript",
+    "unicorn",
+    "oxc",
+    "react",
+    "nextjs",
+    "jsx-a11y",
+    "import",
+    "vitest"
+  ],
+  "categories": {
+    "correctness": "error"
+  },
+  "env": {
+    "browser": true,
+    "node": true,
+    "es2024": true
+  },
+  "ignorePatterns": [
+    "coverage/**",
+    ".next/**",
+    ".source/**",
+    ".claude/worktrees/**",
+    ".worktrees/**",
+    ".vercel/**",
+    "storybook-static/**"
+  ],
+  "rules": {
+    // React Hooks + React Compiler rules, at the severities
+    // eslint-plugin-react-hooks used for this repo.
+    "react/rules-of-hooks": "error",
+    "react/exhaustive-deps": "warn",
+    "react/static-components": "error",
+    "react/use-memo": "error",
+    "react/preserve-manual-memoization": "error",
+    "react/incompatible-library": "warn",
+    "react/immutability": "error",
+    "react/globals": "error",
+    "react/refs": "error",
+    "react/set-state-in-effect": "warn",
+    "react/error-boundaries": "error",
+    "react/purity": "error",
+    "react/set-state-in-render": "error",
+    "react/unsupported-syntax": "warn",
+    "react/no-unescaped-entities": "off",
+
+    // Same severities as eslint-config-next.
+    "nextjs/no-img-element": "warn",
+    "nextjs/no-before-interactive-script-outside-document": "warn",
+
+    // Off for good: test-style preferences, an intentional pattern, and a
+    // false positive TypeScript already covers.
+    "vitest/require-mock-type-parameters": "off",
+    "vitest/require-to-throw-message": "off",
+    // Tests narrow discriminated unions (`if (!result.success)`) before
+    // asserting on the error branch.
+    "vitest/no-conditional-expect": "off",
+    // Search and login focus their only input on purpose.
+    "jsx-a11y/no-autofocus": "off",
+    // Flags members of conditional (browser-only) exports such as
+    // Sentry.replayIntegration; tsc already checks namespace members.
+    "import/namespace": "off",
+
+    // Off until the code is fixed (follow-ups; each fails today in feature,
+    // component or lib code). Turn back on once clean.
+    "jsx-a11y/prefer-tag-over-role": "off",
+    "jsx-a11y/anchor-has-content": "off",
+    "jsx-a11y/control-has-associated-label": "off",
+    "no-unused-vars": "off",
+    "no-useless-escape": "off",
+    "unicorn/no-new-array": "off"
+  }
+}
