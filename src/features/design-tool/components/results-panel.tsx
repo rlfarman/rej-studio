@@ -62,12 +62,17 @@ import { CodonDeltaStrip } from './codon-delta-strip'
 import { AavResults } from './aav-size-estimator'
 import { SplitBar } from '@/components/bio/split-bar'
 import { ObjectivesSummary } from './objectives-output'
+import { ObjectiveReplay } from './objective-replay'
 import { formatFasta } from '@/lib/bio/fasta'
 import { downloadTextFile } from '@/lib/download-file'
 import { isSpecies } from '@/lib/bio/species'
 import type { DesignToolSpecies } from '@/features/design-tool/types/species-options'
 import { computeGcPercent, countCpG } from '@/lib/bio/sequence-utils'
 import { deriveKeyMetrics } from '@/features/design-tool/utils/objective-metrics'
+import {
+  buildObjectiveSteps,
+  countOutcomes,
+} from '@/features/design-tool/utils/objective-steps'
 import { SPECIES_DISPLAY_NAME } from '@/lib/bio/species'
 import { toCodons } from '@/lib/bio/genetic-code'
 import { designToolCopy } from '../copy'
@@ -539,6 +544,18 @@ function ResultsPanelImpl({ result, optionsUsed, species }: ResultsPanelProps) {
     return resultsCopy.summaries.objectivesPassed(after.passedCount, total)
   }, [result.objectives_after])
 
+  const changedSummary = useMemo(() => {
+    const counts = countOutcomes(
+      buildObjectiveSteps(
+        result.objectives_report_before,
+        result.objectives_report_after,
+      ),
+    )
+    const moved = counts.fixed + counts.broken
+    if (moved === 0 && counts.unresolved === 0) return undefined
+    return resultsCopy.summaries.changed(counts.fixed, counts.unresolved)
+  }, [result.objectives_report_before, result.objectives_report_after])
+
   const junctionSummary = resultsCopy.summaries.junction(
     result.split_point.toLocaleString(),
   )
@@ -656,6 +673,17 @@ function ResultsPanelImpl({ result, optionsUsed, species }: ResultsPanelProps) {
                 <WggwTable wggwInfo={result.wggw_info} />
               </ExpandableRow>
             )}
+            <ExpandableRow
+              title={resultsCopy.sections.replay}
+              icon={TrendingUp}
+              summary={changedSummary}
+            >
+              <ObjectiveReplay
+                reportBefore={result.objectives_report_before}
+                reportAfter={result.objectives_report_after}
+                sequenceLength={result.optimized_sequence.length}
+              />
+            </ExpandableRow>
             <ExpandableRow
               title={resultsCopy.sections.objectivesReport}
               icon={ClipboardCheck}
