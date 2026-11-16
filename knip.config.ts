@@ -26,7 +26,9 @@ const config: KnipConfig = {
     // Browser automation for agents (playwright-cli skill); never imported
     'playwright',
   ],
-  ignoreBinaries: ['pip', 'python3'],
+  // System tools used by package.json scripts: uv runs the Python backend
+  // (fastapi-dev), python3 the data-build scripts.
+  ignoreBinaries: ['uv', 'python3'],
 }
 
 export default config
