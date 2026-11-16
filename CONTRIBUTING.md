@@ -38,7 +38,7 @@ Branch names follow [Conventional Branch](https://conventional-branch.github.io/
 <type>/<description>
 ```
 
-**Allowed types:** `feature`, `bugfix`, `hotfix`, `release`, `chore`, `claude`
+**Allowed types:** `feat`, `feature`, `fix`, `bugfix`, `hotfix`, `release`, `chore`, `claude`
 
 Long-lived branches `main`, `master`, `develop`, `staging` are also allowed.
 
@@ -47,7 +47,10 @@ Long-lived branches `main`, `master`, `develop`, `staging` are also allowed.
 Enforcement:
 
 - **Local** — a `pre-push` hook validates the branch name before pushing.
-- **CI** — branch names on PRs are validated.
+- **CI** — branch names on PRs are validated (advisory).
+- **GitHub** — the "Conventional branch naming" ruleset blocks other names. Bot branches (`dependabot/**`, `release-please--*`) are exempt.
+
+The three lists of types must stay in sync.
 
 ## Pre-commit formatting
 
@@ -70,34 +73,33 @@ Hooks install automatically when you run `pnpm install` (via husky's `prepare` s
 
 ## Required status checks
 
-The following jobs should be configured as **required status checks** on `main` in GitHub repo settings (Settings → Branches → Branch protection rules → `main`):
+The following jobs should be configured as **required status checks** on `main` in the "Protect main" ruleset (Settings → Rules → Rulesets → Protect main → Require status checks to pass):
 
-| Check                       | Workflow                | Blocks merge? |
-| --------------------------- | ----------------------- | ------------- |
-| `Lint`                      | `ci.yml`                | ✅ required   |
-| `Format`                    | `ci.yml`                | ✅ required   |
-| `Type Check`                | `ci.yml`                | ✅ required   |
-| `Knip`                      | `ci.yml`                | ✅ required   |
-| `Build`                     | `ci.yml`                | ✅ required   |
-| `pnpm audit`                | `security.yml`          | ✅ required   |
-| `pip-audit`                 | `security.yml`          | ✅ required   |
-| `Gitleaks`                  | `secret-scanning.yml`   | ✅ required   |
-| `Lockfile drift`            | `lock-file-policy.yml`  | ⚠️ advisory   |
-| `Ruff (lint + format)`      | `python-ci.yml`         | ✅ required   |
-| `Pyright`                   | `python-ci.yml`         | ⚠️ advisory   |
-| `Schema drift + migrations` | `db-ci.yml`             | ✅ required   |
-| `Commitlint`                | `conventions.yml`       | ⚠️ advisory   |
-| `PR Title`                  | `conventions.yml`       | ⚠️ advisory   |
-| `Branch Name`               | `conventions.yml`       | ⚠️ advisory   |
-| `Lighthouse CI`             | `lighthouse.yml`        | ⚠️ advisory   |
-| `Dependency Review`         | `dependency-review.yml` | ⚠️ advisory   |
-| `Modal Canary`              | `modal-canary.yml`      | ⚠️ advisory   |
+| Check                       | Workflow               | Blocks merge? |
+| --------------------------- | ---------------------- | ------------- |
+| `Lint`                      | `ci.yml`               | ✅ required   |
+| `Format`                    | `ci.yml`               | ✅ required   |
+| `Type Check`                | `ci.yml`               | ✅ required   |
+| `Knip`                      | `ci.yml`               | ✅ required   |
+| `Build`                     | `ci.yml`               | ✅ required   |
+| `pnpm audit`                | `security.yml`         | ✅ required   |
+| `pip-audit`                 | `security.yml`         | ✅ required   |
+| `Lockfile drift`            | `lock-file-policy.yml` | ⚠️ advisory   |
+| `Ruff (lint + format)`      | `python-ci.yml`        | ✅ required   |
+| `Pyright`                   | `python-ci.yml`        | ⚠️ advisory   |
+| `Schema drift + migrations` | `db-ci.yml`            | ✅ required   |
+| `Commitlint`                | `conventions.yml`      | ⚠️ advisory   |
+| `PR Title`                  | `conventions.yml`      | ⚠️ advisory   |
+| `Branch Name`               | `conventions.yml`      | ⚠️ advisory   |
+| `Lighthouse CI`             | `lighthouse.yml`       | ⚠️ advisory   |
 
 The `ci.yml` jobs use `dorny/paths-filter` and are skipped for docs-only PRs; GitHub treats skipped required checks as passing. `python-ci.yml` and `db-ci.yml` are path-filtered too.
 
 All GitHub Action uses are pinned to commit SHAs (not tags) to prevent tag-reassignment attacks. When updating actions via Dependabot, the pinned SHA will be bumped automatically.
 
-To enable: repo Settings → Branches → Add branch protection rule → pattern `main` → "Require status checks to pass before merging" → search for and add each required check.
+Secrets are covered by GitHub secret scanning with push protection (repo Settings → Code security), which replaced the old Gitleaks workflow.
+
+To enable: repo Settings → Rules → Rulesets → Protect main → "Require status checks to pass" → add each required check. A check only appears there after its workflow has run at least once.
 
 ## Locally reproducing CI
 

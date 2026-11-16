@@ -88,7 +88,7 @@ App code uses dialect-neutral SQL (Drizzle query builder + `LOWER(col) LIKE '%x%
 
 **Local dev (PGlite):** No setup needed. On first `getDb()` call, `initPglite()` checks for the `genes` table and, if missing, applies `src/drizzle/migrations/0000_initial.sql` and loads the committed sample seed at `data/sample-genes.jsonl` + `data/sample-isoforms.jsonl`. Delete `data/local.db/` to re-bootstrap. The sample covers 24 well-known genes (TP53, BRCA1/2, EGFR, KRAS, MYC, INS, etc.) with real CDS + protein sequences for all 228 isoforms — gene search and the design-tool optimizer both work end-to-end with no further setup.
 
-**Full corpus locally (`pnpm db:fetch`):** Downloads the prebuilt PGlite tarball pinned in `package.json`'s `corpus` field from a GitHub Release via `gh release download` (rej-studio is a private repo, so auth flows through your existing `gh auth login`), verifies SHA-256, and extracts to `data/local.db/`. One command, no Python, no CSV. `initPglite()` reads the version from `data/local.db/.corpus-version` and logs `[pglite] Full corpus (vN, …)` on boot. Run `pnpm db:reset` to wipe `data/local.db/` and fall back to the sample seed.
+**Full corpus locally (`pnpm db:fetch`):** Downloads the prebuilt PGlite tarball pinned in `package.json`'s `corpus` field from a GitHub Release via `gh release download` (auth flows through your existing `gh auth login`), verifies SHA-256, and extracts to `data/local.db/`. One command, no Python, no CSV. `initPglite()` reads the version from `data/local.db/.corpus-version` and logs `[pglite] Full corpus (vN, …)` on boot. Run `pnpm db:reset` to wipe `data/local.db/` and fall back to the sample seed.
 
 **Maintainer-only — publishing a new corpus version:**
 
@@ -149,7 +149,7 @@ Shared Claude Code permissions, deny rules, and sandbox config live in `.agents/
     "environment": [
       "Organization: REJ Studio. Primary use: bioinformatics web app (Next.js + FastAPI)",
       "Source control: github.com/rlfarman/rej-studio",
-      "Trusted internal services: Turso database at *.turso.io, Vercel deployments at *.vercel.app"
+      "Trusted internal services: Neon Postgres at *.neon.tech, Modal at *.modal.run, Vercel deployments at *.vercel.app"
     ]
   }
 }
