@@ -129,34 +129,94 @@ and most of `src/proxy.ts`.
 **Decide first:** who administers the Cloudflare account, and does everyone in
 the lab have an identity provider the whole group can use?
 
-## Step 4 — host on Cloudflare
+## Step 4 — TanStack Start on Vite+, hosted on Cloudflare
 
-By this point the browser-facing app is static, and the only server left is
-the MCP endpoint. Two routes for the app itself:
+Decided November 2026: **TanStack Start in SPA mode, on the Vite+ toolchain,
+deployed with the Cloudflare Vite plugin.** One Worker serves everything:
 
-- **Static export.** Fewest moving parts. The remaining dynamic pieces (OG
-  images, `/api/health`, `/api/version`) become pre-generated files or one
-  Worker.
-- **TanStack Start.** The framework migration from the earlier plan. Start is
-  Vite-based and first-class on Cloudflare, and the app is a single-page tool
-  rather than a content site, so little of Next's server rendering is being
-  used by then anyway.
+- **The app:** a prerendered shell and pages as static assets, which are free
+  and don't invoke the Worker.
+- **Server routes:** the MCP endpoint, the cloud-designs API and
+  health/version.
+- **The cloud-designs Workflow** runs on the same Worker.
 
-### Why hosting moves last
+Cloudflare supports Start officially (framework guide, prerendering,
+auxiliary Workers), so this skips OpenNext entirely.
 
-**Next.js does not run natively on Cloudflare**; it runs through the OpenNext
-adapter. That adapter is in real production use, but it still describes itself
-as pre-1.0, it does not support the edge runtime, and this app leans on
-middleware (`src/proxy.ts`), `cacheComponents` and partial prerendering —
-exactly the features most likely to have rough edges.
+A test run in November 2026 confirmed why Next shouldn't be lifted over
+instead. Next 16.4 on OpenNext 1.20 worked for sign-in and in-browser
+designs, but resuming `cacheComponents`/PPR pages on workerd renders a
+different tree from the build. React falls back to client rendering and logs
+an error on every page view. That spike is parked on the local branch
+`feat/cloudflare-hosting`.
 
-Moving hosting last means that by the time the question arises, the middleware
-is gone (step 3), the server rendering has little left to do (step 2), and the
-adapter can be skipped entirely.
+### What there is to move
 
-If being on Cloudflare sooner matters more than that, the alternative is a
-lift-and-shift through OpenNext now, accepting the risk and re-testing after
-each later step.
+Measured on the branch after steps 2 and 3:
+
+- **7 pages, 11 Next route handlers, 1 `'use server'` module.**
+- **88 of 125 components are already client components** and carry over
+  unchanged.
+- **Next APIs in use:** `next/link` (21 files), `next/navigation` (12),
+  `next/server` (14), `next/headers` (9), `next/og` (5), `next/cache` (2), and
+  one each of `next/image`, `next/font`, `next/script` and `next/web-vitals`.
+
+| Today                                               | After                                                                                                                             |
+| --------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `app/` routes and layouts                           | `src/routes/` file routes; `head()` replaces `metadata`                                                                           |
+| `next/link`, `next/navigation`                      | TanStack Router `Link`, `useNavigate`, `useSearch` (typed search params)                                                          |
+| `next/font`                                         | self-hosted fonts via `@fontsource` or CSS                                                                                        |
+| `next/image` (1 use)                                | plain `<img>`                                                                                                                     |
+| server components reading genes                     | route `loader`s reading the static corpus                                                                                         |
+| `jobs.ts` server action, `/api/jobs`, Modal         | deleted: designs run in the browser (step 1) or the Workflow                                                                      |
+| `/api/genes/search`, Upstash limiter                | deleted: search runs in the browser (step 2)                                                                                      |
+| `/login`, `/logout`, `src/proxy.ts`, sessions, CSRF | deleted: Cloudflare Access gates the hostname                                                                                     |
+| `/api/csp-report`, CSP built in the proxy           | static `_headers`, or headers set by the Worker                                                                                   |
+| `/api/og`, `icon`, `apple-icon`                     | prerendered at build (the gene set is fixed per corpus) or dropped. The app is gated, so link previews only work for public pages |
+| `sitemap`, `robots`, `manifest`                     | prerendered static files                                                                                                          |
+| `/api/health`, `/api/version`                       | Start server routes                                                                                                               |
+| ESLint + Prettier + Vitest                          | `vp`: Oxlint (feature-boundary rules permitting), Oxfmt, Vitest                                                                   |
+| Storybook `nextjs-vite`                             | Storybook `react-vite`                                                                                                            |
+| GTM/GA4                                             | Cloudflare Web Analytics                                                                                                          |
+
+### Slices
+
+Each slice is its own PR into a long-lived `feat/tanstack-start` branch.
+That branch only replaces the release branch once the last slice and the
+Cloudflare cutover are done. Everything here is reversible until DNS moves.
+
+1. **Toolchain and shell.** Vite+, Start in SPA mode and the Cloudflare
+   plugin; the root route with theme, query client, sidebar and header; the
+   error and not-found boundaries; Storybook on `react-vite`. Also check that
+   Oxlint can carry the feature-boundary rules, or keep a minimal ESLint for
+   them, and that Oxfmt can sort Tailwind classes, or keep Prettier for it.
+2. **Pages.** Home, genes, gene page, design tool, disease associations and
+   architecture, with loaders reading the static corpus and typed search
+   params replacing `useSearchParams`.
+3. **Deletions.** The job API and Modal path, sessions and the proxy, the
+   search API, the database layer (Drizzle, Neon, PGlite, migrations, `db:*`),
+   Upstash and GTM. Python leaves here as well (see the stack review).
+4. **Server routes.** Health and version; the MCP endpoint ported from #280
+   and #281 with inline designs; the cloud-designs API and Workflow (planned
+   below).
+5. **Cutover**, which needs the owner's Cloudflare account:
+   - Workers Paid, with a spending limit.
+   - The corpus uploaded to R2.
+   - Access on the hostname, with a bypass policy for the MCP path, which
+     uses bearer tokens instead.
+   - Web Analytics, Sentry for Start, and secrets.
+   - A preview deploy on `workers.dev`, then DNS moves from Vercel.
+
+   Vercel stays up until the new deploy has served the lab for a while.
+
+### Before slice 1
+
+- **Land the open PRs.** #279–#286 (with #281 rebased onto #280 first) all
+  touch files this rewrite replaces, so they should merge into the release
+  branch first. Rewriting on top of eight unmerged branches would mean
+  rebasing all of them across a framework change.
+- **Step 1:** the browser optimizer on by default in production, so slice 3
+  can delete the server design path.
 
 ## Agent access (MCP)
 
