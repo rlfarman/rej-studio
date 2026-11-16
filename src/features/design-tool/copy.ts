@@ -340,6 +340,7 @@ export const designToolCopy = {
       aavPackaging: 'AAV packaging',
       wggwDetails: 'WGGW motif details',
       objectivesReport: 'Objectives report',
+      replay: 'What changed',
     },
     summaries: {
       codonsChanged: (changed: string, total: string) =>
@@ -348,6 +349,69 @@ export const designToolCopy = {
         `${passed} of ${total} passed`,
       junction: (splitPoint: string) => `±18 bp at ${splitPoint}`,
       wggwSites: (count: number) => `${count} site${count === 1 ? '' : 's'}`,
+      // A collapsed row has to account for every outcome worth opening it
+      // for. Counting only the good news left a run that traded one objective
+      // for another looking exactly like a run where nothing happened.
+      changed: (counts: {
+        fixed: number
+        broken: number
+        unresolved: number
+        added: number
+      }) =>
+        [
+          counts.fixed > 0 ? `${counts.fixed} fixed` : null,
+          counts.broken > 0 ? `${counts.broken} broken` : null,
+          counts.unresolved > 0 ? `${counts.unresolved} still failing` : null,
+          counts.added > 0 ? `${counts.added} new` : null,
+        ]
+          .filter(Boolean)
+          .join(' \u00b7 '),
+    },
+    replay: {
+      noReport:
+        'This result has no objectives report, so there is nothing to step through.',
+      noFinalReport:
+        'This run recorded the objectives before optimization but not after, so there is nothing to compare. Run the design again; if it happens every time, the final evaluation is failing.',
+      noInitialReport:
+        'This run recorded the objectives after optimization but not before, so there is nothing to compare.',
+      nothingChanged:
+        'Every objective held: none was fixed, broken or left failing.',
+      showAll: 'Step through all of them anyway',
+      showAllWithCount: (count: number) =>
+        `Include the ${count} that held throughout`,
+      groupLabel: 'Objectives, one at a time. Use the arrow keys to move.',
+      position: (current: number, total: number) => `${current} of ${total}`,
+      previous: 'Previous objective',
+      next: 'Next objective',
+      beforeLabel: 'Before',
+      afterLabel: 'After',
+      passed: 'Passed',
+      failed: 'Failed',
+      absent: 'Not evaluated',
+      outcomes: {
+        fixed: 'Fixed',
+        broken: 'Broken',
+        unresolved: 'Still failing',
+        held: 'Held',
+        added: 'New',
+        dropped: 'Dropped',
+      },
+      track: {
+        count: (count: number) =>
+          `${count} region${count === 1 ? '' : 's'} flagged`,
+        none: (label: string) =>
+          `${label}: nothing flagged along the sequence.`,
+        regions: (label: string, count: number) =>
+          `${label}: ${count} region${count === 1 ? '' : 's'} flagged along the sequence.`,
+      },
+      tableCaption: (objective: string) =>
+        `${objective}, before and after optimization`,
+      headers: {
+        report: 'Report',
+        verdict: 'Verdict',
+        score: 'Score',
+        flagged: 'Regions flagged',
+      },
     },
     wggwTable: {
       main: 'Main junction',
