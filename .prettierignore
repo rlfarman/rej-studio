@@ -13,3 +13,7 @@ pnpm-lock.yaml
 
 # Local Python test cache
 .pytest_cache
+
+# Generated parity fixtures for the Rust optimizer (produced by
+# scripts/gen-parity-fixtures.py, compared byte-for-byte in tests)
+rust/optimizer/tests/fixtures
