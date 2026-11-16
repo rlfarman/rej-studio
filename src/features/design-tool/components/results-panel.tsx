@@ -531,9 +531,12 @@ function ResultsPanelImpl({ result, optionsUsed, species }: ResultsPanelProps) {
         result.objectives_report_after,
       ),
     )
-    const moved = counts.fixed + counts.broken
-    if (moved === 0 && counts.unresolved === 0) return undefined
-    return resultsCopy.summaries.changed(counts.fixed, counts.unresolved)
+    // Every outcome the replay would show, so the collapsed row never reads
+    // as "nothing happened" when something did. Objectives that simply held
+    // are not news and are left out; a row with none of these has nothing to
+    // open it for, and gets no summary at all.
+    const summary = resultsCopy.summaries.changed(counts)
+    return summary || undefined
   })()
 
   const junctionSummary = resultsCopy.summaries.junction(

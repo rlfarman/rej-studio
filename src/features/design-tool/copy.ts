@@ -328,10 +328,20 @@ export const designToolCopy = {
         `${passed} of ${total} passed`,
       junction: (splitPoint: string) => `±18 bp at ${splitPoint}`,
       wggwSites: (count: number) => `${count} site${count === 1 ? '' : 's'}`,
-      changed: (fixed: number, stillFailing: number) =>
+      // A collapsed row has to account for every outcome worth opening it
+      // for. Counting only the good news left a run that traded one objective
+      // for another looking exactly like a run where nothing happened.
+      changed: (counts: {
+        fixed: number
+        broken: number
+        unresolved: number
+        added: number
+      }) =>
         [
-          fixed > 0 ? `${fixed} fixed` : null,
-          stillFailing > 0 ? `${stillFailing} still failing` : null,
+          counts.fixed > 0 ? `${counts.fixed} fixed` : null,
+          counts.broken > 0 ? `${counts.broken} broken` : null,
+          counts.unresolved > 0 ? `${counts.unresolved} still failing` : null,
+          counts.added > 0 ? `${counts.added} new` : null,
         ]
           .filter(Boolean)
           .join(' \u00b7 '),

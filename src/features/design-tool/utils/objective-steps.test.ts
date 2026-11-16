@@ -5,6 +5,8 @@ import type {
   ObjectivesReport,
 } from '@/features/design-tool/types/process-result'
 
+import { designToolCopy } from '@/features/design-tool/copy'
+
 import {
   buildObjectiveSteps,
   countOutcomes,
@@ -147,5 +149,39 @@ describe('the tally across a run', () => {
       unresolved: 1,
       held: 0,
     })
+  })
+})
+
+describe('the summary on the collapsed row', () => {
+  // The row is the only hint a reader gets before deciding to open it, so it
+  // has to account for the bad news as well as the good.
+  const summarise = designToolCopy.results.summaries.changed
+  const counts = (over: Partial<Record<string, number>> = {}) => ({
+    fixed: 0,
+    broken: 0,
+    unresolved: 0,
+    added: 0,
+    ...over,
+  })
+
+  it('names a regression rather than saying nothing', () => {
+    // A run that traded one objective for another used to summarise as an
+    // empty string, which the row hides — indistinguishable from a run where
+    // nothing moved at all.
+    expect(summarise(counts({ broken: 2 }))).toBe('2 broken')
+  })
+
+  it('names every outcome that moved', () => {
+    expect(
+      summarise(counts({ fixed: 3, broken: 1, unresolved: 2, added: 1 })),
+    ).toBe('3 fixed · 1 broken · 2 still failing · 1 new')
+  })
+
+  it('names objectives the final sequence is newly judged against', () => {
+    expect(summarise(counts({ added: 1 }))).toBe('1 new')
+  })
+
+  it('says nothing when nothing moved', () => {
+    expect(summarise(counts())).toBe('')
   })
 })
