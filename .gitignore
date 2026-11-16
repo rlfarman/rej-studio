@@ -81,3 +81,8 @@ data/local.db/
 
 # storybook
 storybook-static/
+
+# Playwright (pnpm test:e2e)
+/e2e/.auth/
+/playwright-report/
+/test-results/
