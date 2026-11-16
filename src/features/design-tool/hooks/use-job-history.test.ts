@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { isSeedId, useJobHistory } from './use-job-history'
 
 describe('isSeedId', () => {
@@ -80,10 +80,11 @@ describe('useJobHistory', () => {
   })
 
   it('survives a storage write that throws', () => {
-    const setItem = Storage.prototype.setItem
-    Storage.prototype.setItem = () => {
-      throw new DOMException('nope', 'QuotaExceededError')
-    }
+    const setItem = vi
+      .spyOn(Storage.prototype, 'setItem')
+      .mockImplementation(() => {
+        throw new DOMException('nope', 'QuotaExceededError')
+      })
     try {
       expect(() =>
         useJobHistory
@@ -92,7 +93,7 @@ describe('useJobHistory', () => {
       ).not.toThrow()
       expect(useJobHistory.getState().getEntry('job-q')).not.toBeNull()
     } finally {
-      Storage.prototype.setItem = setItem
+      setItem.mockRestore()
     }
   })
 

@@ -49,13 +49,9 @@ export interface BackendJobParams {
 type ComputeBackend = 'modal' | 'local'
 
 export function getComputeBackend(): ComputeBackend {
-  const value = env.COMPUTE_BACKEND
-  if (value === 'modal') return 'modal'
-  if (value && value !== 'local') {
-    throw new Error(
-      `Invalid COMPUTE_BACKEND: "${value}". Expected "modal", "local", or unset.`,
-    )
-  }
+  // Any other value is rejected when env.ts parses the environment at boot
+  // (z.enum(['modal', 'local'])), so only these cases reach here.
+  if (env.COMPUTE_BACKEND === 'modal') return 'modal'
   if (process.env.NODE_ENV !== 'development') {
     throw new Error(
       'COMPUTE_BACKEND=modal is required in production. The local FastAPI backend is dev-only.',

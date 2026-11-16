@@ -2010,7 +2010,9 @@ function SequenceRowText({
 
   return (
     <div className="flex h-[18px] items-stretch whitespace-pre">
-      {[...row.text].map((char, index) => (
+      {/* split(''), not spread: focusIndex comes from indexOf(), which
+          counts UTF-16 code units, so the spans must be indexed the same way. */}
+      {row.text.split('').map((char, index) => (
         <Fragment key={`${char}-${index}`}>
           <span
             data-focus={isFocusRow && index === focusIndex ? 'true' : undefined}

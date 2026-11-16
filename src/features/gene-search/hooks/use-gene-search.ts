@@ -115,8 +115,11 @@ export function useGeneSearch({ defaultQuery }: UseGeneSearchProps = {}) {
     ? geneSearchCopy.searchErrors.network
     : (data?.error ?? null)
 
+  // Fire and forget: a failed refetch surfaces through the query's isError,
+  // read above, and invalidateQueries does not reject unless asked to
+  // (throwOnError).
   const retry = () => {
-    queryClient.invalidateQueries({ queryKey })
+    void queryClient.invalidateQueries({ queryKey })
   }
 
   const pendingQuery = query.trim()
