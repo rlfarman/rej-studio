@@ -10,14 +10,14 @@ build: ## Production build (Vercel target)
 
 # ---------- Database ----------
 
-seed: ## Rebuild JSONL from CSV, push schema, and upload data
-	pnpm db:build && pnpm db:push && pnpm db:upload
+seed: ## Rebuild JSONL from CSV, apply migrations, and upload data
+	pnpm db:build && pnpm db:migrate && pnpm db:upload
 
 db-studio: ## Open Drizzle Studio
 	pnpm db:studio
 
-db-push: ## Push schema changes to $DATABASE_URL
-	pnpm db:push
+db-migrate: ## Apply committed migrations to $DATABASE_URL
+	pnpm db:migrate
 
 # ---------- Deploy ----------
 

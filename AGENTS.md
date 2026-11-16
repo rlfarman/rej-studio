@@ -55,7 +55,8 @@ pnpm verify       # lint + type-check + test (pre-push gate)
 uv sync           # Python env (.venv) for the FastAPI backend, from uv.lock
 pnpm storybook    # Storybook dev server on :6006
 pnpm db:build     # Emit neutral JSONL seed from source CSV (data/*.jsonl)
-pnpm db:push      # Create/update tables in $DATABASE_URL from schema.ts
+pnpm db:migrate   # Apply the committed migrations (src/drizzle/migrations) to $DATABASE_URL
+pnpm db:generate  # Write a migration for schema.ts changes (commit it with the schema)
 pnpm db:upload    # Load JSONL into $DATABASE_URL via Drizzle (dialect-neutral)
 pnpm db:studio    # Browse DB in Drizzle Studio (local.drizzle.studio)
 ```
@@ -103,13 +104,13 @@ App code uses dialect-neutral SQL (Drizzle query builder + `LOWER(col) LIKE '%x%
 
 **Maintainer-only — publishing a new corpus version:**
 
-1. Build a fresh `data/local.db/` from Neon (e.g. via `pnpm db:build && pnpm db:push && pnpm db:upload` against `drizzle/transcript_metadata.csv`, or by snapshotting Neon directly).
+1. Build a fresh `data/local.db/` from Neon (e.g. via `pnpm db:build && pnpm db:migrate && pnpm db:upload` against `drizzle/transcript_metadata.csv`, or by snapshotting Neon directly).
 2. `tar czf rej-corpus-vN.tar.gz -C data local.db && shasum -a 256 rej-corpus-vN.tar.gz`
 3. `gh release create corpus-vN --title "Corpus vN" --notes "…"` (creates the release with no asset).
 4. `gh release upload corpus-vN rej-corpus-vN.tar.gz` (upload separately — uploading at create time has hit `HTTP 400` for ~250 MB assets).
 5. Bump `package.json`'s `corpus.{version,tag,asset,sha256}` and open a PR. Contributors pick up the new version on next `pnpm db:fetch`.
 
-For seeding a Neon database (production), the same `db:build`/`db:push`/`db:upload` pipeline still works against `$DATABASE_URL`.
+For seeding a Neon database (production), the same `db:build`/`db:migrate`/`db:upload` pipeline works against `$DATABASE_URL`. New or updated databases always get their schema from `pnpm db:migrate`; `pnpm db:push` syncs `schema.ts` directly and skips the migration files, so keep it for throwaway prototyping.
 
 ## Environment Variables
 
@@ -175,7 +176,7 @@ Shared Claude Code permissions, deny rules, and sandbox config live in `.agents/
 - **Adding a new feature**: Create `src/features/<name>/` with the standard subfolders. ESLint boundary rules apply automatically (no config changes needed).
 - **Adding shared code**: If used by ≥2 features, decide by domain: bio-specific → `src/lib/bio/` or `src/components/bio/`; generic → `src/lib/` or `src/components/`.
 - **Modifying the optimization algorithm**: Edit `python/algorithm.py`. The FastAPI endpoint is in `python/index.py`. In production this runs on Modal (see `modal/app.py`), so redeploy Modal after changes.
-- **Database schema changes**: Edit `src/drizzle/schema.ts`, update `scripts/build-db.py` if the JSONL shape needs to change, then `pnpm db:build && pnpm db:push && pnpm db:upload`.
+- **Database schema changes**: Edit `src/drizzle/schema.ts`, run `pnpm db:generate` and commit the new SQL in `src/drizzle/migrations/` (DB CI fails if `schema.ts` and the migrations disagree), then `pnpm db:migrate` against each database. Update `scripts/build-db.py` too if the JSONL shape changes, then `pnpm db:build && pnpm db:upload`.
 - **Switching DB backend**: Edit `src/drizzle/db.ts` and the connection driver — it's a 5-file change.
 
 <!-- BEGIN:nextjs-agent-rules -->

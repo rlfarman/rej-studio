@@ -58,7 +58,7 @@ A web application for RNA End-Joining sequence design and optimization. Scientis
 
    ```bash
    pnpm db:build      # emit data/genes.jsonl + data/isoforms.jsonl from source CSV
-   pnpm db:push       # create tables in $DATABASE_URL from schema.ts
+   pnpm db:migrate    # create the tables in $DATABASE_URL from the committed migrations
    pnpm db:upload     # load JSONL via Drizzle
    ```
 
@@ -104,7 +104,8 @@ pnpm test:e2e      # Playwright smoke tests (gated next dev on :3000)
 | `pnpm verify`       | Lint + type-check + unit tests       |
 | `pnpm next analyze` | Explore the client/server bundles    |
 | `pnpm db:build`     | Emit JSONL seed from source CSV      |
-| `pnpm db:push`      | Create/update tables from schema.ts  |
+| `pnpm db:migrate`   | Apply committed migrations to the DB |
+| `pnpm db:generate`  | Write a migration for schema changes |
 | `pnpm db:upload`    | Load JSONL into the DB via Drizzle   |
 | `pnpm db:studio`    | Browse DB with Drizzle Studio        |
 | `pnpm doctor`       | Check local dev environment health   |

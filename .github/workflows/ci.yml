@@ -21,7 +21,6 @@ jobs:
       pull-requests: read # paths-filter lists a PR's files through the API
     outputs:
       code: ${{ steps.filter.outputs.code }}
-      db: ${{ steps.filter.outputs.db }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -32,10 +31,6 @@ jobs:
           filters: |
             code:
               - '!(**/*.md|docs/**|LICENSE|.github/ISSUE_TEMPLATE/**|.editorconfig)'
-            db:
-              - 'src/drizzle/**'
-              - 'scripts/migrate-db.ts'
-              - 'drizzle.config.ts'
 
   # Static analysis of the workflows themselves (template injection,
   # credential persistence, unpinned actions, risky triggers). Not
