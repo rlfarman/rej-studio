@@ -2,22 +2,26 @@ import { expect, test, type Page } from '@playwright/test'
 
 import { appCopy } from '../src/copy/app'
 import { commonCopy } from '../src/copy/common'
+import { designToolCopy } from '../src/features/design-tool/copy'
+import { diseaseAssociationsCopy } from '../src/features/disease-associations/copy'
+import { geneSearchCopy } from '../src/features/gene-search/copy'
 
 // The TanStack Start app shell: every route renders inside the sidebar and
 // header, the sidebar navigates, the theme persists, and an unknown URL gets
 // the not-found page. Expected text comes from the copy files rather than
 // being repeated here.
 
+// The architecture page's heading is written inline in the page.
 const ROUTES = [
-  { path: '/', heading: appCopy.home.ogTitle },
-  { path: '/genes', heading: commonCopy.pageContext.genes },
+  { path: '/', heading: appCopy.home.searchPrompt },
+  { path: '/genes', heading: geneSearchCopy.searchPage.title },
   { path: '/genes/TP53', heading: 'TP53' },
-  { path: '/design-tool', heading: commonCopy.pageContext.designTool },
+  { path: '/design-tool', heading: designToolCopy.form.title },
   {
     path: '/disease-associations',
-    heading: commonCopy.pageContext.diseaseAssociations,
+    heading: diseaseAssociationsCopy.page.title,
   },
-  { path: '/architecture', heading: commonCopy.pageContext.architecture },
+  { path: '/architecture', heading: 'REJ Studio — Architecture' },
 ]
 
 const nav = appCopy.sidebar.nav
@@ -64,7 +68,7 @@ test('sidebar links navigate and mark the active page', async ({ page }) => {
   await sidebarLink(page, nav.designTool).click()
   await expect(page).toHaveURL('/design-tool')
   await expect(
-    page.getByRole('heading', { name: commonCopy.pageContext.designTool }),
+    page.getByRole('heading', { name: designToolCopy.form.title }),
   ).toBeVisible()
   await expect(sidebarLink(page, nav.designTool)).toHaveAttribute(
     'data-active',
@@ -76,7 +80,7 @@ test('sidebar links navigate and mark the active page', async ({ page }) => {
   await expect(page).toHaveURL('/disease-associations')
   await expect(
     page.getByRole('heading', {
-      name: commonCopy.pageContext.diseaseAssociations,
+      name: diseaseAssociationsCopy.page.title,
     }),
   ).toBeVisible()
 })
