@@ -16,7 +16,7 @@ rate limits, and keeps unpublished sequences on the user's machine.
 
 Python can run in a browser through Pyodide, but that means downloading a
 Python runtime plus NumPy and Biopython — about 7 MB even after trimming, and
-roughly twice as slow as native Python. This port is **117 KB** compressed and
+roughly twice as slow as native Python. This port is **126 KB** compressed and
 **5–7× faster than Python**, so a design that took 21 seconds on the server
 takes under 4 seconds in the tab.
 
@@ -75,7 +75,7 @@ Download size, the reason for the rewrite:
 | Approach                             | Compressed                         |
 | ------------------------------------ | ---------------------------------- |
 | Pyodide + NumPy + Biopython, trimmed | ~7 MB                              |
-| This crate as WebAssembly            | **117 KB** (Brotli), 146 KB (gzip) |
+| This crate as WebAssembly            | **126 KB** (Brotli), 158 KB (gzip) |
 
 ## Layout
 
@@ -127,16 +127,49 @@ PYTHONPATH=. uv run python ../scripts/gen-codon-tables.py > optimizer/src/tables
 
 Deliberately not wasm-bindgen: the whole interface is one JSON string in and
 one JSON string out, so generated glue would cost more bytes than it saves
-effort. The module exports four functions and imports nothing.
+effort. The module imports only `env.report_progress`.
 
 ```js
-const { alloc, dealloc, process, free_response, memory } = instance.exports
+const {
+  alloc,
+  dealloc,
+  free_response,
+  memory,
+  process,
+  reverse_translate,
+  wggw_report,
+  codon_tables,
+} = instance.exports
 ```
 
 1. `alloc(len)` for the request; write UTF-8 bytes there.
 2. `process(ptr, len)` returns a pointer to a 4-byte little-endian length
    followed by that many UTF-8 bytes.
 3. `free_response(ptr)` and `dealloc(ptr, len)` when finished.
+
+`reverse_translate` and `wggw_report` take and return JSON the same way;
+`codon_tables` takes no request. All four free with `free_response`.
+
+| Export              | Request                                       | Answer                                                        |
+| ------------------- | --------------------------------------------- | ------------------------------------------------------------- |
+| `process`           | `{ CDS, name, options }`                      | the design (`ProcessResult`)                                  |
+| `reverse_translate` | `{ protein, species }`                        | `{ CDS }` — species-preferred codons, a stop codon appended   |
+| `wggw_report`       | `{ sequence, split_point?, wggw_threshold? }` | candidates, their distance order, the recode and chosen split |
+| `codon_tables`      | —                                             | each codon's preference relative to its amino acid's best     |
+
+`reverse_translate` exists because the frontend has no codon table: protein
+input is translated here, with the very codons [`MaximizeCAI`] scores against.
+A tie goes to the earlier codon in DNAChisel's backtranslation order, which is
+why mouse arginine is AGA. The seed is unaffected — `derive_seed` hashes the
+coding sequence it is handed, and this function is pure, so the same protein
+and species reproduce the design.
+
+`codon_tables` is what `src/features/design-tool/utils/codon-preference.generated.ts`
+is generated from (`cargo run --example codon-tables`, through
+`pnpm wasm:build`); `pnpm wasm:verify` compares the two, so a chart cannot
+show frequencies the optimizer did not score with. `wggw_report` is how
+`sequence-utils.wggw-parity.test.ts` checks the TypeScript WGGW ranking the
+gene pages use against this crate's.
 
 `scripts/wasm-harness.mjs` wraps this in about 20 lines and is what the worker
 would use. Errors come back as `{"error": "..."}`, never as a panic.
@@ -159,7 +192,7 @@ Cancelling terminates the worker, since a run inside WebAssembly cannot be
 interrupted from outside; the next design starts a fresh one. A browser that
 lacks Workers or WebAssembly falls back to the backend rather than failing.
 
-The worker starts when the design form mounts, so the ~146 KB arrives while
+The worker starts when the design form mounts, so the ~158 KB arrives while
 the user is still entering a sequence.
 
 Measured in Chrome through the real UI: a 5,592 bp gene designs in **1.9 s**

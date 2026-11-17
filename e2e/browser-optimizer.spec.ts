@@ -258,3 +258,35 @@ test('a run cut off by a closed tab is offered again and redesigns identically',
     finished!.result?.optimized_sequence,
   )
 })
+
+// Protein input, end to end. The codon tables live in the Rust crate, so the
+// DNA comes back from the optimizer worker — this is the only place that path
+// runs for real.
+test('reverse-translates a protein in the optimizer and designs it', async ({
+  page,
+}) => {
+  await page.goto('/design-tool')
+
+  await page.getByRole('radio', { name: 'Protein' }).click()
+  await page.locator('input[name="name"]').fill('Protein input')
+
+  // Arginine (R) is the residue the old TypeScript table disagreed with the
+  // optimizer about; the crate's tables spell it AGA.
+  const protein = 'MKRLDSEDDLERLKATLEGVDSVITD*'
+  await page.locator('textarea').first().fill(protein)
+
+  await expect(page.getByText(/bp DNA generated/i)).toBeVisible()
+  await page
+    .getByRole('button', { name: /reverse translate to continue/i })
+    .click()
+
+  // Back in DNA mode with the translated sequence, arginine spelled AGA.
+  const sequence = page.locator('textarea').first()
+  await expect(sequence).toHaveValue(/^ATGAAGAGA[ACGT]+$/)
+  expect((await sequence.inputValue()).length).toBe(protein.length * 3)
+
+  await page.getByRole('button', { name: /run designer/i }).click()
+  await expect(page.getByText(/split after base/i).first()).toBeVisible({
+    timeout: 120_000,
+  })
+})
