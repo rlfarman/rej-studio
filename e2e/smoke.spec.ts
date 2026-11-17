@@ -308,3 +308,52 @@ test('highlighting a palette result preloads its gene page', async ({
   await page.keyboard.press('Enter')
   await expect(page).toHaveURL(/\/genes\/TP53/)
 })
+
+test('the palette works from the keyboard', async ({ page }) => {
+  await page.goto('/design-tool', { waitUntil: 'networkidle' })
+  const trigger = page.getByRole('button', {
+    name: geneSearchCopy.trigger.label,
+  })
+  await trigger.click()
+  const dialog = page.getByRole('dialog')
+  const input = dialog.getByRole('combobox', {
+    name: geneSearchCopy.command.inputAria,
+  })
+  await expect(input).toBeFocused()
+
+  // Escape closes the dialog and hands focus back to the button.
+  await input.fill('brca1')
+  await expect(dialog.getByRole('option').first()).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(dialog).toBeHidden()
+  await expect(trigger).toBeFocused()
+
+  // The first result starts highlighted; ArrowDown moves to the next, and
+  // Enter opens it.
+  await trigger.click()
+  await expect(input).toBeFocused()
+  await input.fill('brca1')
+  const options = dialog.getByRole('option', { name: /BRCA1/ })
+  await expect(options).toHaveCount(2)
+  const second = await options.nth(1).getAttribute('id')
+  await page.keyboard.press('ArrowDown')
+  await expect(input).toHaveAttribute('aria-activedescendant', second!)
+  await page.keyboard.press('Enter')
+  await expect(page).toHaveURL(/\/genes\/BRCA1\?species=mouse/)
+  await expect(dialog).toBeHidden()
+})
+
+test('the home page search opens a gene from the keyboard', async ({
+  page,
+}) => {
+  await page.goto('/', { waitUntil: 'networkidle' })
+  const input = page.getByRole('combobox', {
+    name: geneSearchCopy.command.inputAria,
+  })
+  await input.fill('tp53')
+  await expect(page.getByRole('option', { name: /TP53/ }).first()).toBeVisible()
+  await input.press('ArrowDown')
+  await input.press('ArrowUp')
+  await input.press('Enter')
+  await expect(page).toHaveURL(/\/genes\/TP53/)
+})
