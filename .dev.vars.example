@@ -25,7 +25,14 @@ HEALTH_AUTH_TOKEN=
 # designs) works under `vp dev` and `wrangler dev`: requests to localhost are
 # treated as this email, and every one logs a loud warning. NEVER set this on
 # a deployed Worker — it is not declared in wrangler.jsonc, and the Worker
-# ignores it for any non-loopback host anyway. Deployed, cloud designs need
-# ACCESS_TEAM_DOMAIN and ACCESS_AUD (wrangler.jsonc `vars`, at cutover) and
-# verify the Access JWT; with neither, /api/designs answers 503.
+# ignores it for any non-loopback host anyway. Deployed, cloud designs verify
+# the Access JWT against ACCESS_TEAM_DOMAIN and ACCESS_AUD (wrangler.jsonc
+# `vars`); with neither, /api/designs answers 503.
 DEV_ACCESS_EMAIL=
+
+# Blank the deployed Access settings locally. A configured Access takes
+# precedence over DEV_ACCESS_EMAIL, and no request to localhost carries an
+# Access token, so leaving wrangler.jsonc's values in place makes every
+# cloud-design request a 401.
+ACCESS_TEAM_DOMAIN=
+ACCESS_AUD=

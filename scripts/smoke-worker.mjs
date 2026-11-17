@@ -376,6 +376,12 @@ async function main() {
       `HEALTH_AUTH_TOKEN:${HEALTH_TOKEN}`,
       '--var',
       `DEV_ACCESS_EMAIL:${DEV_EMAIL}`,
+      // wrangler.jsonc carries the deployed Access settings, and a configured
+      // Access outranks DEV_ACCESS_EMAIL; blank them so the stand-in applies.
+      '--var',
+      'ACCESS_TEAM_DOMAIN:',
+      '--var',
+      'ACCESS_AUD:',
     ],
     {
       cwd: root,

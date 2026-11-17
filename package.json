@@ -14,7 +14,7 @@
     "corpus:build": "tsx scripts/build-gene-corpus.ts",
     "images:build": "node scripts/build-branding-images.mjs",
     "wasm:build": "./scripts/build-optimizer-wasm.sh",
-    "cf:types": "wrangler types",
+    "cf:types": "wrangler types --strict-vars=false",
     "wasm:verify": "node scripts/check-wasm-asset.mjs",
     "wasm:smoke": "node scripts/wasm-smoke.mjs public/optimizer/rej-optimizer.wasm",
     "lint": "vp lint --report-unused-disable-directives",
