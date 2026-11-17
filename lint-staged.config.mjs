@@ -39,16 +39,20 @@ const realFiles = (files) =>
 
 const quote = (f) => `"${f}"`
 
+// Without the flag, oxfmt exits non-zero when every file it is given is in its
+// ignorePatterns (test fixtures, generated files), blocking those commits.
+const oxfmt = 'oxfmt --no-error-on-unmatched-pattern'
+
 export default {
   '*.{js,jsx,ts,tsx,mjs,cjs}': (files) => {
     const real = realFiles(files).map(quote).join(' ')
     if (!real) return []
-    return [`vp lint --fix ${real}`, `oxfmt ${real}`]
+    return [`vp lint --fix ${real}`, `${oxfmt} ${real}`]
   },
   '*.{json,md,css,yml,yaml}': (files) => {
     const real = realFiles(files).map(quote).join(' ')
     if (!real) return []
-    return [`oxfmt ${real}`]
+    return [`${oxfmt} ${real}`]
   },
   '*.py': (files) => {
     const real = realFiles(files).map(quote).join(' ')
