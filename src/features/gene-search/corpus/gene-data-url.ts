@@ -3,6 +3,9 @@ import { GeneCorpus, type CorpusReader } from './client'
 /** Where `pnpm corpus:build` writes the committed sample (under public/). */
 const SAMPLE_GENE_DATA_URL = '/gene-data/sample'
 
+/** Genes in the committed sample (checked against it in gene-data-url.test.ts). */
+export const SAMPLE_GENE_COUNT = 24
+
 /**
  * The static corpus's base URL (one version directory, no trailing slash).
  *
@@ -14,6 +17,15 @@ const SAMPLE_GENE_DATA_URL = '/gene-data/sample'
 export function geneDataUrl(): string {
   const configured = import.meta.env.VITE_GENE_DATA_URL?.trim()
   return configured ? configured.replace(/\/+$/, '') : SAMPLE_GENE_DATA_URL
+}
+
+/**
+ * Whether this build reads the committed sample rather than a real corpus,
+ * so the app can say so: a deployment that forgot VITE_GENE_DATA_URL must
+ * not pass for the lab's dataset.
+ */
+export function usesSampleCorpus(): boolean {
+  return geneDataUrl() === SAMPLE_GENE_DATA_URL
 }
 
 /** Reads corpus files over HTTP; a 404 is "no such file". */
