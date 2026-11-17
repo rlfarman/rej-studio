@@ -7,7 +7,7 @@ export const geneSearchCopy = {
     },
     identityMatrix: {
       caption:
-        'Protein sequence identity between each pair of isoforms, as a percentage',
+        'Protein sequence identity from a global alignment of each pair of isoforms, as a percentage',
       columns: ['Isoform', 'Compared with', 'Identity (%)'],
     },
   },
@@ -189,11 +189,15 @@ export const geneSearchCopy = {
     caption:
       'Pairwise protein identity between isoforms. Rows and columns use the same numbering; each cell is the identity between that row and that column.',
     footnote:
-      'Identity estimated from shared prefix + suffix of protein sequences. Pairs ≥95% share most coding content — consider optimizing one per cluster.',
+      'Identity from a global alignment of the two protein sequences (BLOSUM62, gap open 11, extend 1): identical positions as a share of all alignment columns, gaps included. Pairs ≥95% share most coding content — consider optimizing one per cluster.',
+    truncated: (shown: number, total: number) =>
+      `Showing the ${shown} longest of ${total} isoforms.`,
+    unavailable:
+      'Identities are not available for this gene in this version of the gene data.',
     legendAria: 'Identity scale',
     rowHeader: 'Isoform',
     jumpTo: (id: string) => `Jump to ${id}`,
     cellLabel: (pct: string, a: string, b: string) =>
-      `${pct}% identity between ${a} and ${b}`,
+      `${pct}% aligned identity between ${a} and ${b}`,
   },
 } as const

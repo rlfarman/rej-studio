@@ -6,12 +6,20 @@ import { cn } from '@/lib/utils'
 import type { IsoformListItem } from '@/features/gene-search/types/domain-types'
 import { ChartDataTable } from '@/components/chart-data-table'
 import { geneSearchCopy } from '@/features/gene-search/copy'
+import {
+  selectIdentityIsoforms,
+  type IsoformIdentityMatrix as Identities,
+} from '@/features/gene-search/corpus/identity'
 
 interface Props {
   isoforms: IsoformListItem[]
+  /**
+   * Stored alignment identities for `selectIdentityIsoforms(isoforms)`, or
+   * null when the gene data has none (`parseIsoformIdentity`).
+   */
+  identity: Identities | null
 }
 
-const MAX_ISOFORMS = 16
 const MIN_ISOFORMS = 2
 
 /**
@@ -35,60 +43,25 @@ function binFor(pct: number) {
 }
 
 /**
- * Compute % protein-sequence identity between two isoforms using end-anchored
- * prefix/suffix overlap. Most isoforms differ by exon inclusion, so they share
- * large contiguous blocks at the start and end — this catches those cases
- * cheaply without a full alignment.
- */
-function proteinIdentity(a: string, b: string): number {
-  if (a === b) return 100
-  const shorter = a.length <= b.length ? a : b
-  const longer = a.length <= b.length ? b : a
-  if (shorter.length === 0) return 0
-
-  // Shared prefix.
-  let prefix = 0
-  while (prefix < shorter.length && shorter[prefix] === longer[prefix]) prefix++
-
-  // Shared suffix.
-  let suffix = 0
-  while (
-    suffix < shorter.length - prefix &&
-    shorter[shorter.length - 1 - suffix] === longer[longer.length - 1 - suffix]
-  ) {
-    suffix++
-  }
-
-  const matches = prefix + suffix
-  return (matches / longer.length) * 100
-}
-
-/**
  * Triangular heatmap of pairwise % identity between isoform protein
  * sequences. Surfaces near-duplicate isoforms so users don't waste time
  * optimizing functionally redundant transcripts separately.
  *
- * Identity is computed as prefix+suffix match / longer protein length.
- * This is a fast proxy, not a full alignment — good enough to cluster
- * isoforms by similarity but not for exact percent identity claims.
+ * Identities are read, not computed: the corpus build aligns each pair
+ * globally in Rust and stores the result in the gene file (see
+ * `StoredIsoformIdentity`). Alignment is too slow to run here, and the
+ * prefix/suffix shortcut this used to compute was off by more than 20
+ * points for about a fifth of the cells. Without stored values the section
+ * says so instead of guessing.
  *
  * Rendered as a real table: numbered columns match the numbered row
  * headers (no rotated or truncated labels), row headers stay pinned while
  * the grid scrolls horizontally on narrow screens, and every visible cell
  * carries its value for screen readers and as a hover title.
  */
-export function IsoformIdentityMatrix({ isoforms }: Props) {
-  // Sort by protein length descending so the longest (usually canonical)
-  // isoform is in the top-left corner.
-  const trimmed = [...isoforms]
-    .sort((a, b) => b.proteinSequenceLength - a.proteinSequenceLength)
-    .slice(0, MAX_ISOFORMS)
-  const ids = trimmed.map((i) => i.id)
-  const rows = trimmed.map((a) =>
-    trimmed.map((b) => proteinIdentity(a.proteinSequence, b.proteinSequence)),
-  )
-
-  if (ids.length < MIN_ISOFORMS) return null
+export function IsoformIdentityMatrix({ isoforms, identity }: Props) {
+  const shown = selectIdentityIsoforms(isoforms)
+  if (shown.length < MIN_ISOFORMS) return null
 
   return (
     <section
@@ -103,9 +76,34 @@ export function IsoformIdentityMatrix({ isoforms }: Props) {
           <Grid3x3 className="size-4 text-muted-foreground" />
           {geneSearchCopy.identityMatrix.title}
         </h2>
-        <Legend />
+        {identity && <Legend />}
       </div>
+      {identity ? (
+        <Matrix
+          identity={identity}
+          total={isoforms.length}
+          shown={shown.length}
+        />
+      ) : (
+        <p className="max-w-prose text-sm text-muted-foreground">
+          {geneSearchCopy.identityMatrix.unavailable}
+        </p>
+      )}
+    </section>
+  )
+}
 
+function Matrix({
+  identity: { ids, percent: rows },
+  shown,
+  total,
+}: {
+  identity: Identities
+  shown: number
+  total: number
+}) {
+  return (
+    <>
       <div className="-mx-4 overflow-x-auto px-4">
         <table className="border-separate border-spacing-[2px] text-left">
           <caption className="sr-only">
@@ -141,6 +139,9 @@ export function IsoformIdentityMatrix({ isoforms }: Props) {
 
       <p className="max-w-prose type-nano text-muted-foreground">
         {geneSearchCopy.identityMatrix.footnote}
+        {shown < total && (
+          <> {geneSearchCopy.identityMatrix.truncated(shown, total)}</>
+        )}
       </p>
       <ChartDataTable
         storageKey="isoforms"
@@ -159,7 +160,7 @@ export function IsoformIdentityMatrix({ isoforms }: Props) {
         )}
         csvFilename="isoform-identity.csv"
       />
-    </section>
+    </>
   )
 }
 

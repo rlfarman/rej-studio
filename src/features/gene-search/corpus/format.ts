@@ -40,9 +40,32 @@ export interface CorpusIsoform {
   species: string
 }
 
+/**
+ * Pairwise protein identity of the isoforms the gene page's matrix shows,
+ * from a global alignment (Needleman–Wunsch/Gotoh, BLOSUM62, gap open 11,
+ * extend 1) computed at corpus-build time by the Rust crate's
+ * `isoform-identities` example. Stored rather than computed in the browser
+ * because alignment is too slow there and a cheap shortcut was badly wrong.
+ */
+export interface StoredIsoformIdentity {
+  /** Transcript ids in display order: `selectIdentityIsoforms` (identity.ts). */
+  isoforms: string[]
+  /**
+   * Identical aligned columns over alignment columns (gaps count), in tenths
+   * of a percent (0–1000), for the upper triangle row by row: (0,1), (0,2),
+   * …, (0,n-1), (1,2), …. Integers keep it short and exact.
+   */
+  permille: number[]
+}
+
 /** `genes/<geneId>.json`. Isoforms are sorted by id. */
 export interface GeneFile extends CorpusGene {
   isoforms: CorpusIsoform[]
+  /**
+   * Absent from corpora built before alignments were stored; the matrix then
+   * says identities are unavailable (validated by `parseIsoformIdentity`).
+   */
+  isoformIdentity?: StoredIsoformIdentity
 }
 
 /**

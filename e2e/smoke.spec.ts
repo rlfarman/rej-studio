@@ -90,6 +90,17 @@ test('a gene page lists its isoforms, with charts and phenotypes', async ({
       name: geneSearchCopy.identityMatrix.title,
     }),
   ).toBeVisible()
+  // The identity matrix reads the alignment the corpus build stored: the
+  // two longest BRCA1 isoforms are 98.8% identical.
+  await expect(
+    page.getByTitle(
+      geneSearchCopy.identityMatrix.cellLabel(
+        '98.8',
+        'ENST00000357654',
+        'ENST00000471181',
+      ),
+    ),
+  ).toBeAttached()
   // BRCA1 is disease-associated, so its OMIM phenotypes show.
   await expect(
     page.getByRole('heading', {

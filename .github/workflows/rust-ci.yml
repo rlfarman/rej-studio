@@ -60,6 +60,11 @@ jobs:
               - 'src/features/design-tool/utils/codon-preference.generated.ts'
               - 'src/lib/bio/sequence-utils.ts'
               - 'src/lib/bio/sequence-utils.wggw-parity.test.ts'
+              # The sample's stored isoform identities come from the crate's
+              # aligner, and tests/align.rs recomputes them, so a rebuilt or
+              # hand-edited sample has to face that test (and the WGGW
+              # reference, which covers the sample's isoforms).
+              - 'public/gene-data/sample/**'
               - '.github/workflows/rust-ci.yml'
             # What actually compiles into the .wasm. Tests and fixtures are
             # excluded: they change expectations, not the shipped module.
@@ -150,20 +155,8 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-
-      # The gap the byte comparison was meant to close: optimizer source
-      # edited, committed .wasm left behind. Caught by what the PR touches
-      # rather than by rebuilding, so it cannot fail for a host difference.
-      - name: Optimizer source changed without rebuilding the asset
-        if: >-
-          needs.changes.outputs.wasm_code == 'true' &&
-          needs.changes.outputs.wasm_asset != 'true'
-        run: |
-          echo "::error::rust/optimizer/src changed but the committed" \
-            ".wasm did not. Run 'pnpm wasm:build' and commit" \
-            "public/optimizer/rej-optimizer.wasm together with" \
-            "src/features/design-tool/workers/optimizer-asset.generated.ts."
-          exit 1
+          # Full history: the stale-asset check below builds the base too.
+          fetch-depth: 0
 
       - name: Install Rust
         working-directory: rust
@@ -173,6 +166,43 @@ jobs:
         with:
           workspaces: rust
           key: wasm
+
+      # The gap the byte comparison was meant to close: optimizer source
+      # edited, committed .wasm left behind. Only checked when the source
+      # changed and the asset did not, and then by building the module from
+      # the base and from this commit on this one runner. Builds on different
+      # hosts differ byte for byte (see below), but two on the same runner
+      # and toolchain agree, so the comparison is exact: code the module never
+      # compiles in (the isoform aligner the corpus build runs natively, say)
+      # needs no new asset, and anything that changes the module does.
+      - name: Optimizer source changed without rebuilding the asset
+        if: >-
+          needs.changes.outputs.wasm_code == 'true' &&
+          needs.changes.outputs.wasm_asset != 'true'
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          stale() {
+            echo "::error::rust/optimizer/src changed the module but the" \
+              "committed .wasm did not. Run 'pnpm wasm:build' and commit" \
+              "public/optimizer/rej-optimizer.wasm together with" \
+              "src/features/design-tool/workers/optimizer-asset.generated.ts."
+            exit 1
+          }
+          # No base to compare with (a new branch, a force-push): assume the
+          # module changed.
+          if [ -z "${BASE}" ] || ! git cat-file -e "${BASE}^{commit}" 2>/dev/null; then
+            stale
+          fi
+          base_dir="${RUNNER_TEMP}/base"
+          mkdir -p "${base_dir}"
+          git archive "${BASE}" rust | tar -x -C "${base_dir}"
+          (cd "${base_dir}/rust" && cargo build --release --target "${WASM_TARGET}") || stale
+          (cd rust && cargo build --release --target "${WASM_TARGET}")
+          built="target/${WASM_TARGET}/release/rej_optimizer.wasm"
+          cmp -s "${base_dir}/rust/${built}" "rust/${built}" || stale
+          echo "The optimizer source changed but builds the same module as" \
+            "${BASE}, so the committed asset is still current."
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:

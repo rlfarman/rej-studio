@@ -9,6 +9,7 @@
 //! The entry point is [`process`], which takes a coding sequence plus options
 //! and returns the same JSON shape the FastAPI backend returns today.
 
+pub mod align;
 mod biotools;
 mod exports;
 mod location;

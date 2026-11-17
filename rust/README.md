@@ -98,8 +98,22 @@ optimizer/src/
   reverse_translate.rs  protein -> DNA with the species-preferred codons
   contract.rs        request/result types (the retired python/contracts.py's JSON)
   exports.rs         the other JSON entry points (one exported, two generators)
+  align.rs           global protein alignment for the isoform identity matrix
   lib.rs             public API and the browser ABI
 ```
+
+`align.rs` is not part of the optimizer and never reaches the browser: no
+export calls it, so the .wasm is byte-identical with or without it. The
+corpus build (`pnpm corpus:build`) runs it natively, through
+`cargo run --release --example isoform-identities`, and stores each gene's
+isoform identities in its JSON; the gene page only reads them. It is
+Needleman–Wunsch with Gotoh's affine gaps, BLOSUM62, gap open 11 / extend 1,
+taking the optimal alignment with the most identities, and identity is
+identical columns over all alignment columns. `tests/align.rs` checks it
+against a Biopython recording and checks the committed sample's stored
+values against it. `cargo run --release --example align-bench -- sample`
+times it and compares it with the prefix/suffix shortcut the page used
+before.
 
 ## Working on it
 
@@ -234,9 +248,12 @@ Whether two such modules _behave_ the same is what `wasm:smoke` answers, and
 CI now runs it against both the committed asset and a module built fresh on
 the runner. The staleness case the digest check was really aimed at is caught
 directly instead: if a PR changes code in `rust/optimizer/src/` (or the
-toolchain, manifests or lockfile) and leaves `public/optimizer/` alone, the
-build fails and says to run `pnpm wasm:build`. An edit that touches only `//`
-comments and blank lines is exempt: it builds the same module.
+toolchain, manifests or lockfile) and leaves `public/optimizer/` alone, CI
+builds the module from the PR's base and from its head on the same runner —
+where builds do agree — and fails, saying to run `pnpm wasm:build`, if the
+two differ. So code the module never compiles in, like `align.rs`, needs no
+new asset. An edit that touches only `//` comments and blank lines skips the
+comparison: it builds the same module.
 
 ### Making these required on main
 
