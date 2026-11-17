@@ -1,0 +1,449 @@
+import {
+  registerAppResource,
+  registerAppTool,
+  RESOURCE_MIME_TYPE,
+} from '@modelcontextprotocol/ext-apps/server'
+import { McpServer } from '@modelcontextprotocol/server'
+import { z } from 'zod'
+
+import {
+  validationSchema,
+  type FormValues,
+} from '@/features/design-tool/types/form-schema'
+import { pickDefaultSplitPoint } from '@/features/design-tool/utils/default-split-point'
+import {
+  listWggwSites,
+  pickDefaultWggwSite,
+} from '@/features/design-tool/utils/default-wggw-site'
+import { buildJobParams } from '@/features/design-tool/utils/form-handler'
+import { searchCorpus } from '@/features/gene-search/corpus/client'
+import type { GeneCorpus } from '@/features/gene-search/corpus/client'
+import { SEARCH_LIMITS } from '@/features/gene-search/types/search'
+import { isSpecies } from '@/lib/bio/species'
+import { createLogger } from '@/lib/logger'
+
+import type { ServerEnv } from '../env'
+import { mcpCopy } from './copy'
+import { designOnWorker, reverseTranslateOnWorker } from './optimizer'
+import { withinBudget } from './rate-limit'
+import type { McpToken } from './tokens'
+import { designViewHtml } from './ui/design-view'
+
+/**
+ * REJ Studio for an agent.
+ *
+ * The tools here are the things a person can already do in the browser, and
+ * nothing else: search genes, read a gene and its isoforms, run a design.
+ * Each one goes through the same corpus code the pages read and the same
+ * validation the form uses, so there is one definition of a valid design and
+ * one ranking of a search, not two that can drift.
+ *
+ * A design runs inline, in this Worker, on the same WebAssembly module the
+ * browser runs: `submit_design` returns the finished design in its own call.
+ */
+
+const log = createLogger('mcp')
+
+/** The view a finished design is shown in, in hosts that support MCP Apps. */
+const DESIGN_VIEW_URI = 'ui://rej-studio/design-result.html'
+
+/** Search results are capped so a tool call cannot return a wall of genes. */
+const MAX_SEARCH_RESULTS = SEARCH_LIMITS.page
+
+/**
+ * The longest coding sequence this endpoint will design.
+ *
+ * Not a Cloudflare limit — a Worker on the Paid plan gets 5 minutes of CPU.
+ * It is the MCP client's own request timeout: the design holds the request
+ * open, and a client that gives up mid-run leaves the caller with nothing.
+ *
+ * Measured with the committed `.wasm` (scaling is roughly quadratic):
+ * 1.2 kb 0.2 s, 3 kb 1.2 s, 6 kb 4.8 s, 9 kb 11.7 s, **12 kb 21 s**,
+ * 15 kb 32 s, 18 kb 48 s. 12,000 bases keeps a run around 20 seconds — well
+ * inside a 60-second client timeout and the Worker's CPU budget, with room
+ * for a slower isolate — and still covers the largest coding sequence in the
+ * gene data (BRCA2, 10,257 bases). Longer sequences go to the web app, where
+ * the same optimizer runs in the user's own tab with no request waiting on
+ * it.
+ */
+export const MAX_DESIGN_LENGTH = 12_000
+
+const speciesFilter = z
+  .enum(['human', 'mouse', 'both'])
+  .describe(mcpCopy.searchGenes.species)
+
+/** The design options an agent can set. Defaults match the form's. */
+const designInput = z.object({
+  name: z.string().min(1).max(250).describe(mcpCopy.submitDesign.input.name),
+  sequence: z.string().min(1).describe(mcpCopy.submitDesign.input.sequence),
+  sequence_type: z
+    .enum(['dna', 'protein'])
+    .optional()
+    .describe(mcpCopy.submitDesign.input.sequenceType),
+  species: z
+    .enum(['none', 'human', 'mouse'])
+    .optional()
+    .describe(mcpCopy.submitDesign.input.species),
+  split_point: z
+    .number()
+    .int()
+    .min(1)
+    .optional()
+    .describe(mcpCopy.submitDesign.input.splitPoint),
+  seed: z.number().int().optional().describe(mcpCopy.submitDesign.input.seed),
+  remove_cryptic_splice_sites: z.boolean().optional(),
+  minimize_cpgs: z.boolean().optional(),
+  reduce_kmer_complexity: z.boolean().optional(),
+  enforce_gc_content: z.boolean().optional(),
+  five_prime_stimulatory_intron: z.boolean().optional(),
+  three_prime_stimulatory_intron: z.boolean().optional(),
+})
+
+type DesignInput = z.infer<typeof designInput>
+
+/** A tool result that is plain text and nothing else. */
+function text(body: string) {
+  return { content: [{ type: 'text' as const, text: body }] }
+}
+
+/** A tool result carrying structured data, with a readable summary beside it. */
+function data(summary: string, structured: Record<string, unknown>) {
+  return {
+    content: [{ type: 'text' as const, text: summary }],
+    structuredContent: structured,
+  }
+}
+
+/**
+ * Says plainly that something is not there. Agents otherwise fill a silence
+ * with a guess, so the wording leaves no room for one.
+ */
+function notFound(what: string) {
+  return { ...text(what), isError: true as const }
+}
+
+function failed(summary: string, structured: Record<string, unknown>) {
+  return { ...data(summary, structured), isError: true as const }
+}
+
+/** Every Zod complaint, in one line an agent can act on. */
+function explainValidation(error: unknown): string {
+  if (error instanceof z.ZodError) {
+    return error.issues
+      .map((issue) => {
+        const where = issue.path.join('.')
+        return where ? `${where}: ${issue.message}` : issue.message
+      })
+      .join('; ')
+  }
+  return error instanceof Error ? error.message : String(error)
+}
+
+/**
+ * Turns an agent's design input into the form values the app validates.
+ *
+ * Protein input is reverse-translated by the optimizer first, exactly as the
+ * form does before a design runs, so both routes hand the optimizer a coding
+ * sequence spelled with the codons it scores against.
+ */
+async function toFormValues(input: DesignInput): Promise<FormValues> {
+  const species = input.species ?? 'none'
+  const sequenceType = input.sequence_type ?? 'dna'
+  const raw = input.sequence.trim().toUpperCase()
+
+  if (sequenceType === 'protein' && !isSpecies(species)) {
+    throw new Error(
+      'Protein input needs a species ("human" or "mouse"), because it is reverse-translated before optimization.',
+    )
+  }
+
+  let codingSequence = raw
+  if (sequenceType === 'protein' && isSpecies(species)) {
+    const translated = await reverseTranslateOnWorker(raw, species)
+    if (!translated.ok) throw new Error(translated.message)
+    codingSequence = translated.CDS
+  }
+
+  const splitPoint = input.split_point ?? pickDefaultSplitPoint(codingSequence)
+
+  const values = {
+    sequenceType,
+    codingSequence,
+    proteinSequence: sequenceType === 'protein' ? raw : '',
+    name: input.name,
+    species,
+    codonOptimizeWeight: 1,
+    removeCrypticSpliceSites: input.remove_cryptic_splice_sites ?? true,
+    removeCrypticSpliceSitesWeight: 1,
+    minimizeCpgs: input.minimize_cpgs ?? true,
+    minimizeCpgsWeight: 1,
+    reduceKmerComplexity: input.reduce_kmer_complexity ?? true,
+    reduceKmerComplexityWeight: 1,
+    enforceGcContent: input.enforce_gc_content ?? true,
+    '5PrimeStimulatoryIntron': input.five_prime_stimulatory_intron ?? false,
+    '3PrimeStimulatoryIntron': input.three_prime_stimulatory_intron ?? false,
+    spliceJunctionPositions: [splitPoint],
+    selectedWggwSites: [
+      pickDefaultWggwSite(listWggwSites(codingSequence), splitPoint),
+    ],
+  }
+
+  // The form's own schema has the final word, so an agent cannot run a
+  // design the UI would have refused.
+  return validationSchema.parse(values)
+}
+
+export interface McpServerContext {
+  /** The caller, for logging and its rate-limit budget. */
+  token: McpToken
+  /** The Worker's bindings: the rate limiters. */
+  env: ServerEnv
+  /** The gene data, read the same way the pages read it. */
+  corpus: GeneCorpus
+  /**
+   * Where the view loads the MCP Apps client from, taken from the request's
+   * own origin, and the only origin the view's policy allows.
+   */
+  bridgeUrl: string
+}
+
+export function createRejStudioMcpServer({
+  token,
+  env,
+  corpus,
+  bridgeUrl,
+}: McpServerContext): McpServer {
+  const server = new McpServer(
+    { name: 'com.rej-studio/design', version: '1.0.0' },
+    { instructions: mcpCopy.instructions },
+  )
+
+  /**
+   * Spends one unit of this token's budget, or refuses.
+   *
+   * The message matters as much as the limit: an agent told "no" without a
+   * reason retries immediately, and one told "not found" gives up on work
+   * that was never done.
+   */
+  async function overBudget(budget: 'reads' | 'designs', what: string) {
+    if (await withinBudget(env, budget, token.name)) return null
+    return { ...text(mcpCopy.rateLimited(what)), isError: true as const }
+  }
+
+  server.registerTool(
+    'search_genes',
+    {
+      title: mcpCopy.searchGenes.title,
+      description: mcpCopy.searchGenes.description,
+      inputSchema: z.object({
+        query: z.string().min(1).max(200).describe(mcpCopy.searchGenes.query),
+        species: speciesFilter.optional(),
+      }),
+      annotations: { readOnlyHint: true },
+    },
+    async ({ query, species }) => {
+      const refused = await overBudget('reads', 'searches')
+      if (refused) return refused
+
+      const { results, truncated, suggestions } = await searchCorpus(corpus, {
+        q: query,
+        species: species ?? 'both',
+        limit: MAX_SEARCH_RESULTS,
+      })
+      log.info('mcp search_genes', {
+        caller: token.name,
+        resultCount: results.length,
+        truncated,
+      })
+
+      if (results.length === 0) {
+        return notFound(
+          mcpCopy.searchGenes.none(
+            query,
+            suggestions.map((gene) => gene.symbol),
+          ),
+        )
+      }
+
+      return data(mcpCopy.searchGenes.found(results.length, query, truncated), {
+        results: results.map((gene) => ({
+          symbol: gene.symbol,
+          name: gene.name,
+          species: gene.species,
+          ensembl_gene_id: gene.id,
+        })),
+        truncated,
+      })
+    },
+  )
+
+  server.registerTool(
+    'get_gene',
+    {
+      title: mcpCopy.getGene.title,
+      description: mcpCopy.getGene.description,
+      inputSchema: z.object({
+        symbol: z.string().min(1).max(100).describe(mcpCopy.getGene.symbol),
+        species: z.enum(['human', 'mouse']).optional(),
+      }),
+      annotations: { readOnlyHint: true },
+    },
+    async ({ symbol, species }) => {
+      const refused = await overBudget('reads', 'gene lookups')
+      if (refused) return refused
+
+      const index = await corpus.loadIndex()
+      const gene = index.geneBySymbol(symbol.trim(), species)
+      const file = gene ? await corpus.geneFile(gene.id) : null
+      if (!gene || !file) {
+        return notFound(mcpCopy.getGene.none(symbol, species))
+      }
+
+      return data(
+        mcpCopy.getGene.found(
+          gene.symbol,
+          gene.species,
+          gene.name,
+          file.isoforms.length,
+        ),
+        {
+          gene: {
+            symbol: gene.symbol,
+            name: gene.name,
+            species: gene.species,
+            ensembl_gene_id: gene.id,
+          },
+          isoforms: file.isoforms.map((isoform) => ({
+            ensembl_transcript_id: isoform.id,
+            coding_sequence_length: isoform.codingSequenceLength,
+            protein_length: isoform.proteinSequenceLength,
+            has_coding_sequence: isoform.codingSequence.length > 0,
+          })),
+        },
+      )
+    },
+  )
+
+  const submitDesign = async (input: DesignInput) => {
+    // The length guard comes before validation and before the budget: it is
+    // about the request's own shape, and it costs nothing to say.
+    const presented = input.sequence.trim()
+    const bases =
+      (input.sequence_type ?? 'dna') === 'protein'
+        ? presented.length * 3
+        : presented.length
+    if (bases > MAX_DESIGN_LENGTH) {
+      return {
+        ...text(mcpCopy.submitDesign.tooLong(bases, MAX_DESIGN_LENGTH)),
+        isError: true as const,
+      }
+    }
+
+    let values: FormValues
+    try {
+      values = await toFormValues(input)
+    } catch (error) {
+      return {
+        ...text(mcpCopy.submitDesign.invalid(explainValidation(error))),
+        isError: true as const,
+      }
+    }
+
+    const refused = await overBudget('designs', 'designs')
+    if (refused) return refused
+
+    const params = buildJobParams(values)
+    const outcome = await designOnWorker(
+      input.seed === undefined
+        ? params
+        : { ...params, options: { ...params.options, seed: input.seed } },
+    )
+
+    if (!outcome.ok) {
+      log.error('mcp submit_design failed', undefined, {
+        caller: token.name,
+        code: outcome.code,
+      })
+      return failed(mcpCopy.submitDesign.failed(values.name, outcome.message), {
+        name: values.name,
+        status: 'failed',
+        error: { code: outcome.code, message: outcome.message },
+      })
+    }
+
+    log.info('mcp submit_design', {
+      caller: token.name,
+      bases: values.codingSequence.length,
+      seconds: outcome.seconds,
+    })
+
+    return data(mcpCopy.submitDesign.done(values.name, outcome.seconds), {
+      name: values.name,
+      status: 'completed',
+      result: outcome.result,
+    })
+  }
+
+  // The view travels with the design, so it has to be registered on the tool
+  // that returns one. A host that cannot show a view gets the structured
+  // result instead, which this tool returns either way.
+  registerAppTool(
+    server,
+    'submit_design',
+    {
+      title: mcpCopy.submitDesign.title,
+      description: mcpCopy.submitDesign.description,
+      inputSchema: designInput,
+      // Deterministic given the sequence, options and seed, but every call
+      // spends the same seconds of compute, so a retry is never free.
+      annotations: { readOnlyHint: false, idempotentHint: false },
+      _meta: { ui: { resourceUri: DESIGN_VIEW_URI } },
+    },
+    submitDesign,
+  )
+
+  registerAppResource(
+    server,
+    mcpCopy.designView.name,
+    DESIGN_VIEW_URI,
+    { description: mcpCopy.designView.description },
+    () => ({
+      contents: [
+        {
+          uri: DESIGN_VIEW_URI,
+          mimeType: RESOURCE_MIME_TYPE,
+          text: designViewHtml(bridgeUrl),
+          _meta: {
+            ui: {
+              // The one script the view loads. Nothing else is fetched.
+              csp: { resourceDomains: [new URL(bridgeUrl).origin] },
+            },
+          },
+        },
+      ],
+    }),
+  )
+
+  // Kept, rather than removed, for an agent working from a stale schema: it
+  // answers what became of the id it is holding instead of failing as an
+  // unknown tool. Slice 4b gives it real work — reading a cloud design by id
+  // — so it keeps its name, its input and its structured shape.
+  server.registerTool(
+    'get_design',
+    {
+      title: mcpCopy.getDesign.title,
+      description: mcpCopy.getDesign.description,
+      inputSchema: z.object({
+        job_id: z.string().min(1).max(200).describe(mcpCopy.getDesign.jobId),
+      }),
+      annotations: { readOnlyHint: true },
+    },
+    async ({ job_id }) => {
+      const refused = await overBudget('reads', 'design lookups')
+      if (refused) return refused
+      return notFound(mcpCopy.getDesign.inlineOnly(job_id))
+    },
+  )
+
+  return server
+}

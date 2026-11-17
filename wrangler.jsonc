@@ -2,17 +2,54 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "rej-studio",
   // Start's server entry. In SPA mode it only answers requests that reach
-  // the Worker (server routes from slice 4); pages are static assets.
+  // the Worker: the server routes under /api (src/routes/api/); pages are
+  // static assets.
   "main": "@tanstack/react-start/server-entry",
   "compatibility_date": "2026-11-16",
-  // No nodejs_compat: nothing on the Worker side needs Node APIs yet.
+  // No nodejs_compat: nothing on the Worker needs Node APIs. The MCP SDK
+  // (@modelcontextprotocol/server) and zod run on web standards alone.
   "assets": {
     // Every navigation that doesn't match a file gets the prerendered SPA
     // shell (index.html, see `spa.prerender.outputPath` in vite.config.ts),
     // served as a free static asset without invoking the Worker. The
     // directory is set by the Cloudflare Vite plugin.
     "not_found_handling": "single-page-application",
+    // /api is the Worker's, always. Without this, a browser navigation to
+    // /api/health would be answered with the SPA shell by the asset layer
+    // and never reach the route.
+    "run_worker_first": ["/api/*"],
+    // Lets the Worker read static assets without a network round trip: the
+    // MCP endpoint reads the committed sample corpus (public/gene-data/
+    // sample) through it when no R2 corpus is configured.
+    "binding": "ASSETS",
   },
+  // Rate limits for the MCP endpoint, counted per token name (see
+  // src/server/mcp/rate-limit.ts). The namespace ids are arbitrary but must
+  // be unique within the Cloudflare account. Simulated locally by Miniflare.
+  "ratelimits": [
+    {
+      // search_genes, get_gene, get_design.
+      "name": "MCP_READ_LIMITER",
+      "namespace_id": "4101",
+      "simple": { "limit": 60, "period": 60 },
+    },
+    {
+      // submit_design: each one runs the optimizer inline, seconds of CPU.
+      "name": "MCP_DESIGN_LIMITER",
+      "namespace_id": "4102",
+      "simple": { "limit": 10, "period": 60 },
+    },
+  ],
+  // The corpus bucket is bound at cutover, once it exists on the lab's
+  // account (docs/cloudflare-migration.md, cutover checklist). Until then the
+  // Worker reads gene data over HTTP or from the static assets, and the
+  // binding is typed as optional in src/server/env.ts.
+  //
+  // "r2_buckets": [{ "binding": "GENE_DATA", "bucket_name": "rej-studio-gene-data" }],
+  //
+  // Secrets (never in this file): MCP_TOKENS and HEALTH_AUTH_TOKEN. Locally
+  // they go in .dev.vars (see .dev.vars.example); deployed, `wrangler secret
+  // put`.
   "observability": {
     "enabled": true,
   },

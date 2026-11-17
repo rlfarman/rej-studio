@@ -1,4 +1,5 @@
-import { writeFileSync } from 'node:fs'
+import { createRequire } from 'node:module'
+import { readFileSync, writeFileSync } from 'node:fs'
 import { join, relative } from 'node:path'
 
 import { cloudflare } from '@cloudflare/vite-plugin'
@@ -70,6 +71,75 @@ function clientChunkGraph(): Plugin {
   }
 }
 
+/**
+ * Serves the MCP Apps client library at /mcp/app-bridge.js, as a static asset
+ * of this build.
+ *
+ * The design view (src/server/mcp/ui/design-view.ts) is HTML delivered
+ * through the protocol, not a page of this app: it has no build of its own,
+ * and the bundler cannot reach into it. Inlining half a megabyte of library
+ * in every resource read would be worse than serving it from here and naming
+ * this origin in the view's content security policy. Under Next this was a
+ * script that copied the file into public/; as a plugin it needs no
+ * gitignored copy in the tree.
+ */
+function mcpAppBridge(): Plugin {
+  const PATH = '/mcp/app-bridge.js'
+  // The dependency-free browser build, by its published entry point.
+  const source = createRequire(import.meta.url).resolve(
+    '@modelcontextprotocol/ext-apps/app-with-deps',
+  )
+  return {
+    name: 'rej:mcp-app-bridge',
+    applyToEnvironment: (environment) => environment.name === 'client',
+    // At its own path, unhashed: the view is handed a URL at runtime, so
+    // there is nothing to rewrite a hashed name into.
+    generateBundle() {
+      this.emitFile({
+        type: 'asset',
+        fileName: PATH.slice(1),
+        source: readFileSync(source),
+      })
+    },
+    configureServer(server) {
+      server.middlewares.use(PATH, (_request, response) => {
+        response.setHeader('content-type', 'text/javascript; charset=utf-8')
+        response.end(readFileSync(source))
+      })
+    },
+  }
+}
+
+/**
+ * What the Worker reports at /api/version. The Worker has no git and no
+ * package.json at runtime, so the build inlines them; they are defined for
+ * the Worker only, because a page has no use for them.
+ */
+function workerBuildInfo(): Plugin {
+  return {
+    name: 'rej:worker-build-info',
+    configEnvironment(name) {
+      if (name !== 'ssr') return
+      const version = JSON.parse(
+        readFileSync(join(import.meta.dirname, 'package.json'), 'utf8'),
+      ) as { version: string }
+      return {
+        define: {
+          // Blank is treated as unset by the route, so passing an empty
+          // GIT_COMMIT_SHA reports "unknown" rather than ''.
+          'import.meta.env.REJ_GIT_COMMIT_SHA': JSON.stringify(
+            process.env.GIT_COMMIT_SHA ?? '',
+          ),
+          'import.meta.env.REJ_APP_VERSION': JSON.stringify(version.version),
+          'import.meta.env.REJ_BUILD_TIMESTAMP': JSON.stringify(
+            new Date().toISOString(),
+          ),
+        },
+      }
+    },
+  }
+}
+
 // An object rather than a function: `vp lint` reads the `lint` block below
 // straight from this file.
 export default defineConfig({
@@ -89,7 +159,9 @@ export default defineConfig({
     // `ssr` environment and runs in workerd in dev, preview and production.
     cloudflare({ viteEnvironment: { name: 'ssr' } }),
     spaShellOnWorker(),
+    workerBuildInfo(),
     clientChunkGraph(),
+    mcpAppBridge(),
     tailwindcss(),
     tanstackStart({
       // SPA mode: the build prerenders one HTML shell (the root route, with

@@ -7,8 +7,9 @@ after porting the optimizer to Rust and running it in the browser.
 scientist's own agent search genes and run designs. See
 [Agent access](#agent-access-mcp). Everything else goes.
 
-**Nothing here has been started.** Step 0 is done and merged behind a flag;
-steps 1 to 4 are proposals. Each one ships on its own and makes the next
+**Where this stands:** steps 0 to 3 are done, and step 4 is mid-flight —
+slices 1 to 3 and 4a (the server routes below) have landed on
+`feat/tanstack-start`; slice 4b (cloud designs) and the cutover remain. Each one ships on its own and makes the next
 smaller, so the plan can be stopped at any point and still leave the app in a
 better state than it started.
 
@@ -200,9 +201,10 @@ Cloudflare cutover are done. Everything here is reversible until DNS moves.
    fixtures are frozen and Rust is the reference; `build-db.py` and
    `build-disease-associations.py` became TypeScript (`pnpm data:genes`,
    `pnpm data:associations`) with byte-identical output.
-4. **Server routes.** Health and version; the MCP endpoint ported from #280
-   and #281 with inline designs; the cloud-designs API and Workflow (planned
-   below).
+4. **Server routes.** 4a (done): health and version, and the MCP endpoint
+   ported from #280 and #281 with inline designs — see
+   [Agent access](#agent-access-mcp) and AGENTS.md's "Server routes".
+   4b: the cloud-designs API and Workflow (planned below).
 5. **Cutover**, which needs the owner's Cloudflare account:
    - Workers Paid, with a spending limit.
    - The corpus uploaded to R2.
@@ -241,8 +243,24 @@ can do:
   built with `pnpm corpus:build` (AGENTS.md, "Gene data") and set
   `VITE_GENE_DATA_URL` to it for the deploy build.
 - **Repoint `uptime.yml`**, which probes the Vercel deployment's
-  `/api/health` (and talks about Neon and Modal), at the Worker once slice 4
-  restores `/api/health` there.
+  `/api/health` (and talks about Neon and Modal), at the Worker. The route is
+  back (slice 4a) and keeps the old response shapes, but its deep check now
+  probes the corpus in R2 rather than Neon and Modal, so the workflow's
+  comments and its `checks` jq need updating with the URL.
+- **Set the Worker's secrets:** `wrangler secret put MCP_TOKENS` (named
+  bearer tokens; without it `/api/mcp` answers 503 and agent access is off)
+  and, for the deep health check, `HEALTH_AUTH_TOKEN`.
+- **Bind the corpus bucket.** `GENE_DATA` is commented out in
+  `wrangler.jsonc` until the bucket exists; uncomment it with the bucket's
+  name in the same change that sets `VITE_GENE_DATA_URL`, then `pnpm
+  cf:types`. Until it is bound, the MCP endpoint reads gene data over HTTP
+  (or the committed sample through the assets binding) and the health check
+  stays shallow.
+- **Access: add a bypass policy for `/api/mcp`** on the hostname, since an
+  agent has no browser to sign in with and the endpoint carries its own
+  bearer tokens. Everything else, including `/api/health` and
+  `/api/version`, sits behind Access; a monitor probing health needs either a
+  service token or a bypass of its own.
 - **Tear down Vercel, Neon, Modal and Upstash only after the Cloudflare
   deploy has served the lab** for a while. Until then the release branch's
   Vercel deployment, with its Neon database, Modal app and Upstash limiter,
@@ -268,7 +286,7 @@ What the Worker needs, and where each piece comes from afterwards:
 | An HTTP endpoint | `/api/mcp` route handler   | a Worker                                               |
 | Gene lookups     | Neon                       | R2 binding over the static corpus                      |
 | Running a design | Modal                      | the same Rust crate, as WebAssembly                    |
-| Rate limiting    | Upstash                    | Cloudflare's Rate Limiting binding                     |
+| Rate limiting    | Upstash                    | Cloudflare's Rate Limiting binding, keyed per token    |
 | Caller identity  | `MCP_TOKENS` bearer tokens | the same, as a Worker secret, or Access service tokens |
 | The design view  | static HTML                | unchanged                                              |
 
@@ -292,23 +310,25 @@ poll for. `get_design`'s own description already ends "unless submit_design
 already returned the result". Running the optimizer in the Worker simply
 makes the inline branch the only one taken.
 
-What still needs doing when the endpoint is ported:
+Done in slice 4a, and what each decision came to:
 
-- **Lead with it in the tool descriptions.** `submit_design` still says it
-  "returns a job id" and that a design "takes seconds to minutes, so call
-  get_design". Both become wrong.
-- **Move the MCP Apps view onto `submit_design`.** `_meta.ui.resourceUri` is
-  registered only on `get_design` today. If the result arrives from
-  `submit_design`, the view has to travel with it or the design never renders
-  in the chat host.
-- **Decide what becomes of `get_design`.** With no job to collect it has
-  nothing to read. Removing it is honest; keeping it to answer "designs are
-  returned directly now" is kinder to an agent working from a stale schema.
-- **Guard the sequence length.** The limit is not Cloudflare — a Worker gets
-  5 minutes of CPU, and even a 30 kb gene fits. It is the MCP client's own
-  request timeout. Refuse clearly above some length, with a message pointing
-  at the web app, rather than holding a connection open until the client
-  gives up.
+- **The tool descriptions lead with it.** `submit_design` says the design
+  comes back in the same call and that there is no job to poll; nothing
+  mentions a job id.
+- **The MCP Apps view moved onto `submit_design`**, which is what returns a
+  design, and the view is served to every host that asks: the bridge URL is
+  taken from the request's own origin, so no deployment needs to be told its
+  URL.
+- **`get_design` stayed.** It answers that designs are returned directly by
+  `submit_design` — kinder to an agent working from a stale schema than an
+  unknown-tool error — and keeps its name, input and structured shape so
+  slice 4b can give it real work reading a cloud design by id.
+- **The sequence length is guarded at 12,000 bases.** Measured with the
+  committed `.wasm`: 1.2 kb 0.2 s, 6 kb 4.8 s, 12 kb 21 s, 15 kb 32 s, 18 kb
+  48 s. 12 kb keeps a run near 20 seconds — inside a 60-second client timeout
+  with room for a slower isolate — and still covers the largest coding
+  sequence in the gene data (BRCA2, 10,257 bases). Above it the refusal points
+  at the web app, where the same optimizer runs in the user's own tab.
 
 **Sequencing matters here.** Inline is right only once the optimizer is fast
 and local. Today the endpoint calls Modal, where a design really does take

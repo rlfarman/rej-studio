@@ -167,6 +167,13 @@ jobs:
       # the prerendered SPA shell. Needs no secrets.
       - run: pnpm build
 
+      # The server routes in the real Workers runtime: starts `wrangler dev`
+      # on the build output and exercises /api/health, /api/version and
+      # /api/mcp over HTTP, including a real inline design. Needs the build,
+      # so it runs here rather than in the Test job, and needs no secrets or
+      # Cloudflare account (`wrangler dev --local`).
+      - run: pnpm test:worker
+
       # Bundle budgets: per-route first-load JS (gzip) from the build's
       # client chunk graph (dist/client-chunks.json). Each main build caches
       # its stats under its SHA; a PR compares against its base commit's.

@@ -31,6 +31,12 @@ yarn-error.log*
 .env.local
 .env.production
 
+# Worker secrets for local dev (see .dev.vars.example). Loaded by vp dev,
+# vp preview and wrangler dev.
+.dev.vars
+.dev.vars.*
+!.dev.vars.example
+
 
 # vercel
 .vercel
@@ -77,7 +83,7 @@ storybook-static/
 /public/gene-data/*
 !/public/gene-data/sample/
 
-# Copied from node_modules by the MCP app-bridge script (removed with the
-# Next app; slice 4 brings it back with the MCP endpoint). Still ignored so a
-# stale copy in an older checkout is never committed.
+# The MCP app bridge used to be copied here by a script; it is now emitted by
+# the build (`mcpAppBridge` in vite.config.ts). Still ignored so a stale copy
+# in an older checkout is never committed.
 public/mcp/
