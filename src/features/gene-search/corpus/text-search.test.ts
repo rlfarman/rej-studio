@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vite-plus/test'
 import { geneVector, lexemes, tsRank } from './text-search'
 
 // Every expectation here is what Postgres 17 (PGlite) returned for the same

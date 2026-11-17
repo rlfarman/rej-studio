@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test'
 import { createStore, get } from 'idb-keyval'
 import { JOB_HISTORY_IDB } from '@/features/design-tool/utils/job-history-storage'
 import {

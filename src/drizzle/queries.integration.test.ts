@@ -7,7 +7,7 @@
  * search_vector is null. The trigram indexes from migration 0001 are covered
  * by migrations.integration.test.ts; the queries don't depend on them.
  */
-import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vite-plus/test'
 import { cleanDb, getTestDb, seedGenes, seedIsoforms } from '@/test/db'
 import { makeGene, makeIsoform, resetFixtureCounters } from '@/test/fixtures'
 

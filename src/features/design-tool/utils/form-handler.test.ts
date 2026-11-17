@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vite-plus/test'
 import type { FormValues } from '../types/form-schema'
 import { buildJobParams, formatOptionsForReport } from './form-handler'
 

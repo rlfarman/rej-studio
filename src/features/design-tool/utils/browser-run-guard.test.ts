@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test'
 import { installFakeLocks } from '@/features/design-tool/test-utils/fake-locks'
 import {
   claimAbandonedRun,

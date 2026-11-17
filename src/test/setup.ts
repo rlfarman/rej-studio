@@ -4,7 +4,7 @@
  * Mocks Next.js server APIs and analytics so tests can import server
  * actions and hooks without hitting real infrastructure.
  */
-import { afterEach, vi } from 'vitest'
+import { afterEach, vi } from 'vite-plus/test'
 import { cleanup } from '@testing-library/react'
 // happy-dom has no IndexedDB, which the design history is stored in. This
 // installs an in-memory implementation on the globals.

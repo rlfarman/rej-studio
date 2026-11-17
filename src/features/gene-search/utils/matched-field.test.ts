@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vite-plus/test'
 import { matchedField } from './matched-field'
 
 const tp53 = { symbol: 'TP53', name: 'Tumor Protein P53' }

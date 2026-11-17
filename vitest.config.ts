@@ -1,15 +1,18 @@
-import { defineConfig } from 'vitest/config'
+import { defineConfig } from 'vite-plus'
 import { createRequire } from 'node:module'
 import path from 'node:path'
 
 const require = createRequire(import.meta.url)
 
+// Separate from vite.config.ts on purpose: Vitest can't load the Cloudflare
+// plugin there (Cloudflare's Start migration guide says the same), and tests
+// need none of the app's plugins.
 export default defineConfig({
   resolve: {
     alias: [
       { find: '@', replacement: path.resolve(__dirname, 'src') },
       // Server modules `import 'server-only'`, whose default export throws
-      // outside a React Server Components build. Next swaps in its own empty
+      // outside a React Server Components build. Next swapped in its own empty
       // module at build time; tests run those modules on the server side, so
       // they get the same empty module.
       {

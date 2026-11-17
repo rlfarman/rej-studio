@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test'
 import { cookies } from 'next/headers'
 import { requireSession } from './require-session'
 import { SESSION_COOKIE_NAME, signSession } from './session'

@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vite-plus/test'
 import { cleanup, render, screen, within } from '@testing-library/react'
 
 import type { RunRecord } from '@/features/design-tool/types/process-result'

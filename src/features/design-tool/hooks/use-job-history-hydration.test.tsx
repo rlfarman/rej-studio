@@ -1,7 +1,7 @@
 // The history store loads from IndexedDB asynchronously. These tests import
 // a fresh copy of the store per test, against a fresh IndexedDB, so each one
 // sees its own first load.
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test'
 import { act, renderHook, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createElement, type ReactNode } from 'react'

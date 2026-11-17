@@ -4,7 +4,7 @@
  * src/drizzle/client.ts loads it (with the pg_trgm bundle), and checks the
  * search indexes exist and can serve the query shapes gene search uses.
  */
-import { beforeAll, describe, expect, it } from 'vitest'
+import { beforeAll, describe, expect, it } from 'vite-plus/test'
 import { PGlite } from '@electric-sql/pglite'
 import { pg_trgm } from '@electric-sql/pglite/contrib/pg_trgm'
 import { drizzle } from 'drizzle-orm/pglite'

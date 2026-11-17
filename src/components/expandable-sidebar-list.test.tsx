@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test'
 import { cleanup, fireEvent, render, within } from '@testing-library/react'
 import { ExpandableSidebarList } from './expandable-sidebar-list'
 
