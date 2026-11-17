@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react'
-import { GeneSearchShell } from '../gene-search-shell'
+import { HeaderSearch } from '../header-search'
 import { useShellPathname } from './use-shell-pathname'
 import {
   Tooltip,
@@ -196,7 +196,7 @@ function HeaderContent({ scrolled }: { scrolled: boolean }) {
       <div className="flex justify-center">
         {/* Opens empty: pre-filling the current gene made typing "kras" on
             /genes/BRCA1 search for "BRCA1kras". */}
-        {!pageHasSearch && <GeneSearchShell isDialog />}
+        {!pageHasSearch && <HeaderSearch />}
       </div>
       {/* The right column keeps the search centered in the 1fr/auto/1fr
           grid. A build-time constant, so the shell renders it too. */}

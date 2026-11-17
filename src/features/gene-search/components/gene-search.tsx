@@ -2,9 +2,6 @@
 import { useRef, useState, useTransition } from 'react'
 import { CommandDialog } from '@/components/ui/command'
 import { useNavigate } from '@tanstack/react-router'
-import { Button } from '@/components/ui/button'
-import { Kbd, ModKey } from '@/components/ui/kbd'
-import { SearchIcon } from 'lucide-react'
 import { useGeneSearch } from '@/features/gene-search/hooks/use-gene-search'
 import { usePrefetchGeneIndex } from '@/features/gene-search/hooks/use-prefetch-gene-index'
 import { GeneSearchCommand } from './gene-search-command'
@@ -20,7 +17,6 @@ import type {
   JobSearchItem,
 } from '@/features/gene-search/types/domain-types'
 import { useSearchShortcut } from '@/hooks/use-search-shortcut'
-import { geneSearchCopy } from '../copy'
 
 interface GeneSearchProperties {
   defaultQuery?: string
@@ -29,6 +25,12 @@ interface GeneSearchProperties {
   // `GeneSearch` doesn't need to cross the feature boundary into `design-tool`.
   jobs?: JobSearchItem[]
   onSelectJob?: (id: string) => void
+  /**
+   * The dialog's open state, owned by GeneSearchTrigger, which renders the
+   * button and loads this component only once the palette is wanted.
+   */
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
 const EMPTY_JOBS: JobSearchItem[] = []
@@ -38,9 +40,11 @@ export function GeneSearch({
   isDialog = false,
   jobs = EMPTY_JOBS,
   onSelectJob,
+  open,
+  onOpenChange,
 }: GeneSearchProperties) {
-  // The search box is in the header of every page: start the index download
-  // from here, before anyone types.
+  // Start the index download before anyone types (also started by the
+  // header's trigger; the worker loads it once).
   usePrefetchGeneIndex()
   const navigate = useNavigate()
   const {
@@ -56,7 +60,9 @@ export function GeneSearch({
     retry,
   } = useGeneSearch({ defaultQuery })
   const { species } = useSpeciesContext()
-  const [isOpen, setIsOpen] = useState(false)
+  const [isOpenState, setIsOpenState] = useState(false)
+  const isOpen = open ?? isOpenState
+  const setIsOpen = onOpenChange ?? setIsOpenState
   const [pendingGene, setPendingGene] = useState<SavedGene | null>(null)
   const [, startTransition] = useTransition()
   const { recentGenes, addRecentGene } = useRecentGenes()
@@ -89,37 +95,18 @@ export function GeneSearch({
     void navigate(searchPageLink(query.trim(), species))
   }
 
-  // ⌘K toggles the palette; on a page with the inline search (home), it
-  // focuses that box instead.
+  // On a page with the inline search (home), ⌘K focuses that box. The
+  // dialog's ⌘K belongs to GeneSearchTrigger, which is always mounted.
   const inputRef = useRef<HTMLInputElement>(null)
   useSearchShortcut(() => {
-    if (isDialog) {
-      setIsOpen((isOpen) => !isOpen)
-    } else {
-      inputRef.current?.focus()
-      inputRef.current?.select()
-    }
+    if (isDialog) return
+    inputRef.current?.focus()
+    inputRef.current?.select()
   })
 
   if (isDialog) {
     return (
-      <div>
-        <Button
-          variant="outline"
-          onClick={() => setIsOpen(true)}
-          className="group w-full min-w-42 cursor-pointer justify-between text-muted-foreground hover:text-accent-foreground md:min-w-72 xl:min-w-108"
-        >
-          <div className="flex items-center gap-2">
-            <SearchIcon className="h-5 w-5" />
-            <span>{geneSearchCopy.trigger.label}</span>
-          </div>
-          <p className="hidden text-sm text-muted-foreground group-hover:text-accent-foreground md:block">
-            {geneSearchCopy.trigger.kbdHintPrefix}{' '}
-            <Kbd>
-              <ModKey /> K
-            </Kbd>
-          </p>
-        </Button>
+      <>
         <CommandDialog open={isOpen} onOpenChange={setIsOpen}>
           <GeneSearchCommand
             query={query}
@@ -142,7 +129,7 @@ export function GeneSearch({
             pendingGene={pendingGene}
           />
         </CommandDialog>
-      </div>
+      </>
     )
   }
 
