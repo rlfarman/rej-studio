@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Diagnose the local dev environment.
 #
-# Verifies that all the moving parts the app depends on are present and
-# reachable: node/pnpm/uv/rust versions, the Python env, .env vars, Neon connectivity.
+# Verifies that what the app needs to build and run is present: node, pnpm
+# and (optionally) Rust, installed dependencies, and the gene-data setting.
 # Prints one line per check with ✓/✗ and exits non-zero if any fail.
 set -uo pipefail
 
@@ -54,14 +54,6 @@ else
   bad "pnpm not found on PATH — install with: npm install -g pnpm@12"
 fi
 
-# The Python backend runs through uv, which installs the interpreter pinned
-# in .python-version (the same one CI and the Modal image use).
-if command -v uv >/dev/null 2>&1; then
-  ok "uv $(uv --version 2>&1 | awk '{print $2}') (Python $(cat .python-version 2>/dev/null || echo '?') from .python-version)"
-else
-  warn "uv not found — needed for the Python backend and its tests; install from https://docs.astral.sh/uv/"
-fi
-
 # Rust only rebuilds the optimizer (pnpm wasm:build). The .wasm is committed,
 # so everything else works without it — hence a warning, not a failure.
 # rust/rust-toolchain.toml pins the version; rustup installs it on request.
@@ -86,43 +78,10 @@ else
   bad "node_modules/ missing — run: pnpm install"
 fi
 
-if [ -d "$ROOT/.venv" ]; then
-  ok ".venv/ present (uv)"
-else
-  warn ".venv/ missing — run: uv sync"
-fi
-
 if [ -e "$ROOT/.env" ]; then
   ok ".env present"
 else
-  ok ".env absent — fine for local dev (PGlite + local FastAPI); copy .env.example to configure"
-fi
-
-# --- Modal CLI -------------------------------------------------------------
-section "Modal CLI"
-
-# Only needed to inspect Modal by hand; CI deploys (modal-deploy.yml). The
-# pinned client lives in the uv `deploy` group, so prefer the project venv.
-modal_cmd=""
-if [ -x "$ROOT/.venv/bin/modal" ]; then
-  modal_cmd="$ROOT/.venv/bin/modal"
-elif command -v modal >/dev/null 2>&1; then
-  modal_cmd="modal"
-fi
-
-if [ -n "$modal_cmd" ]; then
-  modal_version="$("$modal_cmd" --version 2>&1 | head -1)"
-  ok "modal CLI installed ($modal_version)"
-
-  # Check authentication by hitting `modal profile current`.
-  # On an unauthed machine this exits non-zero or prints nothing.
-  if modal_profile="$("$modal_cmd" profile current 2>/dev/null)" && [ -n "$modal_profile" ]; then
-    ok "modal authenticated (profile: $modal_profile)"
-  else
-    warn "modal CLI installed but not authenticated — run: uv run modal token set"
-  fi
-else
-  warn "modal CLI not found — install the pinned client with: uv sync --group deploy"
+  ok ".env absent — fine for local dev (sample gene data, designs in the browser); copy .env.example to configure"
 fi
 
 # --- Environment variables -------------------------------------------------
@@ -133,63 +92,12 @@ if [ -f "$ROOT/.env" ]; then
   set -a; . "$ROOT/.env"; set +a
 fi
 
-db_is_postgres=false
-case "${DATABASE_URL:-}" in
-  "" | file:* | memory:*)
-    ok "DATABASE_URL=${DATABASE_URL:-<unset>} — embedded PGlite (local dev)"
-    ;;
-  postgres://* | postgresql://*)
-    ok "DATABASE_URL set (Postgres)"
-    db_is_postgres=true
-    ;;
-  *)
-    bad "DATABASE_URL has an unexpected scheme — expected postgres(ql)://, file:, memory:// or empty"
-    ;;
-esac
-
-case "${COMPUTE_BACKEND:-}" in
-  modal)
-    ok "COMPUTE_BACKEND=modal"
-    if [ -n "${MODAL_API_URL:-}" ]; then
-      ok "MODAL_API_URL set"
-    else
-      bad "MODAL_API_URL not set — required when COMPUTE_BACKEND=modal"
-    fi
-    if [ -n "${MODAL_API_TOKEN:-}" ]; then
-      ok "MODAL_API_TOKEN set"
-    else
-      bad "MODAL_API_TOKEN not set — must match JOB_API_TOKEN in the Modal secret"
-    fi
-    ;;
-  local|"")
-    ok "COMPUTE_BACKEND=${COMPUTE_BACKEND:-<unset>} (dev fallback to local uvicorn)"
-    ;;
-  *)
-    bad "COMPUTE_BACKEND=${COMPUTE_BACKEND} — expected 'modal', 'local', or unset"
-    ;;
-esac
-
-# --- Neon reachability -----------------------------------------------------
-section "Neon reachability"
-
-if [ "$db_is_postgres" = true ]; then
-  if command -v psql >/dev/null 2>&1; then
-    if PGCONNECT_TIMEOUT=5 psql "$DATABASE_URL" -tAc 'SELECT 1' >/dev/null 2>&1; then
-      ok "Neon reachable (psql SELECT 1)"
-    else
-      bad "Neon unreachable — check DATABASE_URL and network"
-    fi
-  else
-    # Fall back to a curl HEAD against the Neon host.
-    host="$(printf '%s' "$DATABASE_URL" | sed -E 's|.*@([^:/]+).*|\1|')"
-    if [ -n "$host" ] && curl -sSf --max-time 5 "https://$host/" -o /dev/null 2>&1; then
-      ok "Neon host $host reachable (HTTP)"
-    else
-      warn "psql not found and HTTP probe inconclusive — can't verify Neon"
-    fi
-  fi
+# Build-time: Vite inlines it. Unset is right for dev; a deploy refuses to
+# build without it (scripts/check-deploy-env.mjs).
+if [ -n "${VITE_GENE_DATA_URL:-}" ]; then
+  ok "VITE_GENE_DATA_URL=${VITE_GENE_DATA_URL}"
 else
-  ok "skipped (not using Postgres)"
+  ok "VITE_GENE_DATA_URL unset — builds read the committed 24-gene sample"
 fi
 
 # --- Summary ---------------------------------------------------------------

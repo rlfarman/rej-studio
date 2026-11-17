@@ -51,27 +51,6 @@ export const designToolCopy = {
   },
   /** Failures from the job pipeline, phrased for the person who hit them. */
   jobErrors: {
-    unreachable:
-      'Couldn’t reach the optimizer — your inputs are saved, try again.',
-    backendUnavailable:
-      'The optimizer is temporarily unavailable. Try again in a few seconds.',
-    backendRejected: 'The optimizer rejected this run.',
-    busy: 'The optimizer is busy right now. Try again in a few seconds.',
-    rateLimited: (seconds: number) =>
-      `That's a lot of runs — wait ${seconds}s and try again.`,
-    submitTimeout:
-      'The optimizer didn’t answer in time. Your inputs are saved — try again.',
-    statusTimeout: 'Lost contact with the optimizer while checking progress.',
-    pollTimeout: 'Timed out waiting for the result.',
-    invalidInput: 'The designer couldn’t accept these inputs.',
-    invalidJobId: 'That job reference isn’t valid.',
-    splitPointPastEnd: (point: number, length: number) =>
-      `The split point (${point.toLocaleString()}) is past the end of the ${length.toLocaleString()}-base sequence.`,
-    wggwSiteOutsideSequence:
-      'The selected WGGW motif lies outside the coding sequence.',
-    unauthorized:
-      'The optimizer refused this request. The compute backend may be misconfigured.',
-    sessionExpired: 'Your session expired — sign in again to run the designer.',
     unexpectedResponse:
       'The optimizer returned something unexpected. This run was not saved.',
     cancelled: 'Cancelled',

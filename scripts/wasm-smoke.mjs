@@ -2,7 +2,7 @@
 //
 // The Rust test suite covers the library; this covers the browser path: that
 // the module loads with no imports, that the hand-written ABI round-trips
-// strings correctly, that a design matches the fixture Python produced, and
+// strings correctly, that a design matches the frozen DNAChisel fixture, and
 // that a bad request comes back as an error instead of a crash.
 //
 //   node scripts/wasm-smoke.mjs <module.wasm>
@@ -67,7 +67,7 @@ for (const testCase of cases) {
     `${ticks.length} ticks`,
   )
   check(
-    `${testCase.id}: design matches Python`,
+    `${testCase.id}: design matches DNAChisel`,
     result.optimized_sequence === expected.optimized_sequence,
   )
   check(`${testCase.id}: 5' fragment matches`, result.seq5 === expected.seq5)
@@ -112,8 +112,8 @@ for (let i = 0; i < 50; i += 1) {
 }
 check('50 designs in a row all succeed', repeated)
 
-// Stage captions are shown to the user, so they must read like the Python
-// backend's wording rather than a raw objective label.
+// Stage captions are shown to the user, so they must read as plain words
+// rather than a raw objective label.
 const everyTick = allProgress.flat()
 check('progress is reported', everyTick.length > 0, `${everyTick.length} ticks`)
 check(

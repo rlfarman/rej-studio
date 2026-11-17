@@ -52,8 +52,8 @@ body:
       options:
         - Gene search
         - Design tool / optimization
-        - Database / seeding
-        - Python backend (FastAPI / Modal)
+        - Gene data / corpus
+        - Optimizer (Rust / WebAssembly)
         - UI / styling
         - Build / deploy
         - Other

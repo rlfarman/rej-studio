@@ -1,13 +1,10 @@
-//! Checks the generated codon tables still match Python's.
+//! Checks the codon tables still match the ones DNAChisel used.
 //!
-//! `src/tables.rs` is produced by `scripts/gen-codon-tables.py` and committed.
-//! A stale copy would quietly change every codon-optimization score without
-//! breaking anything visibly, so the committed constants are compared against
-//! a fixture dumped straight from Biopython and python_codon_tables.
-//!
-//! When this fails, regenerate the file rather than editing it:
-//!
-//!     uv run python scripts/gen-codon-tables.py > rust/optimizer/src/tables.rs
+//! `src/tables.rs` was generated once from Biopython and python_codon_tables
+//! and is frozen, as is `fixtures/tables.json`, dumped from the same
+//! libraries (see `fixtures/README.md`). An edited table would quietly change
+//! every codon-optimization score without breaking anything visibly, so the
+//! constants are compared against the fixture. Neither file should change.
 
 use std::collections::BTreeMap;
 

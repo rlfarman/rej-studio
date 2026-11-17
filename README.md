@@ -1,12 +1,14 @@
 # REJ Studio
 
-A web application for RNA End-Joining sequence design and optimization. Scientists can search human and mouse gene databases, browse isoforms, and run codon-optimized sequence designs through an interactive design tool.
+A web application for RNA End-Joining sequence design and optimization. Scientists can search human and mouse genes, browse isoforms, and run codon-optimized sequence designs through an interactive design tool.
+
+Everything runs in the browser. Gene data is a set of static, versioned files; designs run in a WebAssembly build of the optimizer, in a worker on the user's machine. There is no application server, database or compute backend: one Cloudflare Worker serves the built app (see [docs/cloudflare-migration.md](./docs/cloudflare-migration.md) for where the move from Vercel stands).
 
 ## Features
 
-- **Gene Search** — Full-text search across human and mouse genes by symbol, name, Ensembl ID (ENSG/ENST), or disease association. Backed by a tsvector GIN index for fast ranked results with LIKE fallback for substring matches.
-- **Gene Detail & Isoforms** — View gene metadata, browse transcript isoforms with length distribution charts, sequence identity matrices, and downloadable coding/protein sequences.
-- **Design Tool** — Submit coding sequences for DNAChisel optimization with configurable parameters:
+- **Gene Search** — Search human and mouse genes by symbol, name, alias or Ensembl ID (ENSG/ENST), ranked in the browser against a static search index.
+- **Gene Detail & Isoforms** — Gene metadata, transcript isoforms with length charts, sequence identity matrices, and downloadable coding/protein sequences.
+- **Design Tool** — Optimize a coding sequence (DNA or protein, reverse-translated with species-preferred codons) with:
   - Codon optimization
   - Cryptic splice site removal
   - CpG minimization
@@ -14,20 +16,20 @@ A web application for RNA End-Joining sequence design and optimization. Scientis
   - GC content enforcement
   - WGGW motif insertion
   - Stimulatory intron options
-- **User Features** — Favorite genes, search history, dark/light theme, keyboard shortcuts (Cmd+K search).
+- **Disease associations** — OMIM gene–disease associations, filterable by inheritance.
+- **User Features** — Favorite genes, recent genes, design history (kept in this browser), dark/light theme, keyboard shortcuts (Cmd+K search).
 
 ## Tech Stack
 
-| Layer         | Technology                                                       |
-| ------------- | ---------------------------------------------------------------- |
-| Frontend      | Next.js 16 (App Router), React 19, TypeScript 6, Tailwind CSS 4  |
-| UI            | shadcn/ui (base-rhea style on Base UI), cmdk (command palette)   |
-| State         | React Query (server state), Zustand (client state)               |
-| Backend       | FastAPI (Python) with DNAChisel, deployed on Modal               |
-| Database      | Neon (Postgres) via HTTP driver, Drizzle ORM                     |
-| Cache/Infra   | Upstash Redis (rate limiting, circuit breaker, idempotency, DLQ) |
-| Hosting       | Vercel (Next.js) + Modal (Python)                                |
-| Observability | Sentry (errors, traces), Google Analytics (vitals)               |
+| Layer     | Technology                                                                  |
+| --------- | --------------------------------------------------------------------------- |
+| Frontend  | TanStack Start (SPA mode), React 19, TypeScript, Tailwind CSS 4             |
+| Toolchain | Vite+ (`vp`: Vite, Vitest, Oxlint), Oxfmt                                   |
+| UI        | shadcn/ui (base-rhea style on Base UI), cmdk (command palette)              |
+| State     | TanStack Query, Zustand; design history in IndexedDB                        |
+| Optimizer | Rust, compiled to WebAssembly (`rust/`), running in a Web Worker            |
+| Gene data | Static JSON corpus (`pnpm corpus:build`), served from R2 at cutover         |
+| Hosting   | One Cloudflare Worker serving the static build (Cloudflare Access gates it) |
 
 ## Getting Started
 
@@ -35,187 +37,81 @@ A web application for RNA End-Joining sequence design and optimization. Scientis
 
 - Node.js 26 (see `.nvmrc`)
 - pnpm 12 (`npm install -g pnpm@12`; the `packageManager` field pins the exact version)
-- [uv](https://docs.astral.sh/uv/) — installs the Python version pinned in `.python-version` for the FastAPI backend
+- Rust, only to rebuild the optimizer (`pnpm wasm:build`); the `.wasm` is committed
 
 ### Setup
 
-1. **Install dependencies**
-
-   ```bash
-   pnpm install
-   uv sync
-   ```
-
-2. **Configure environment** (optional for local development)
-
-   ```bash
-   cp .env.example .env
-   ```
-
-   Local development needs no configuration: with `DATABASE_URL` empty the app uses an embedded PGlite database seeded with 24 sample genes (`pnpm db:fetch` swaps in the full corpus), and design jobs go to the local FastAPI server. Production needs a Neon `DATABASE_URL`, `COMPUTE_BACKEND=modal`, `MODAL_API_URL`, `MODAL_API_TOKEN` and `NEXT_PUBLIC_SITE_URL`. Optionally add `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` for distributed rate limiting (falls back to in-memory without them). See `.env.example` for all available options.
-
-3. **Populate a Postgres database** (first time only; not needed for PGlite)
-
-   ```bash
-   pnpm db:build      # emit data/genes.jsonl + data/isoforms.jsonl from source CSV
-   pnpm db:migrate    # create the tables in $DATABASE_URL from the committed migrations
-   pnpm db:upload     # load JSONL via Drizzle
-   ```
-
-   After loading, run `scripts/populate-search-vector.sql` against your database to build the full-text search index.
-
-### Development
-
 ```bash
-pnpm dev
+pnpm install
+pnpm dev           # vp dev on :3000, the Worker in workerd
 ```
 
-Starts both the Next.js dev server (port 3000) and the FastAPI server (port 8000) concurrently. API requests to `/api/py/*` are proxied to FastAPI in development.
-
-To run them individually:
-
-```bash
-pnpm next-dev      # Next.js only
-pnpm fastapi-dev   # FastAPI only
-```
+Nothing else is needed: the app reads the committed 24-gene sample corpus and runs designs in the browser. `.env.example` lists the optional build-time settings; a deployment for the lab must set `VITE_GENE_DATA_URL` to the full corpus.
 
 ### Verify everything works
 
 ```bash
-pnpm verify        # lint + type-check + unit tests (also the pre-push hook)
-pnpm test:e2e      # Playwright smoke tests (gated next dev on :3000)
+pnpm verify        # lint + format check + knip + type-check + unit tests (also the pre-push hook)
+pnpm test:e2e      # Playwright against vp dev on :3000 (E2E_SERVER=preview for the build)
 ```
 
 ## Scripts
 
-| Command             | Description                          |
-| ------------------- | ------------------------------------ |
-| `pnpm dev`          | Start Next.js + FastAPI concurrently |
-| `pnpm build`        | Production build (Vercel target)     |
-| `pnpm start`        | Start production server              |
-| `pnpm lint`         | Run Oxlint, then ESLint              |
-| `pnpm lint:fix`     | Auto-fix lint issues                 |
-| `pnpm format`       | Format with Oxfmt                    |
-| `pnpm format:check` | Check formatting without writing     |
-| `pnpm type-check`   | Type check with TypeScript 7         |
-| `pnpm test`         | Run unit tests (Vitest)              |
-| `pnpm test:e2e`     | Run Playwright smoke tests           |
-| `pnpm knip`         | Find unused exports, deps, and files |
-| `pnpm verify`       | Lint + type-check + unit tests       |
-| `pnpm next analyze` | Explore the client/server bundles    |
-| `pnpm db:build`     | Emit JSONL seed from source CSV      |
-| `pnpm db:migrate`   | Apply committed migrations to the DB |
-| `pnpm db:generate`  | Write a migration for schema changes |
-| `pnpm db:upload`    | Load JSONL into the DB via Drizzle   |
-| `pnpm db:studio`    | Browse DB with Drizzle Studio        |
-| `pnpm doctor`       | Check local dev environment health   |
+| Command                           | Description                                                    |
+| --------------------------------- | -------------------------------------------------------------- |
+| `pnpm dev`                        | Dev server on :3000                                            |
+| `pnpm build`                      | Client bundle, Worker and prerendered SPA shell in `dist/`     |
+| `pnpm preview`                    | Serve `dist/` on workerd at :3000                              |
+| `pnpm cf:deploy`                  | Check `VITE_GENE_DATA_URL`, build, `wrangler deploy`           |
+| `pnpm lint` / `lint:fix`          | Oxlint, with the feature-boundary rules                        |
+| `pnpm format` / `format:check`    | Oxfmt                                                          |
+| `pnpm type-check`                 | TypeScript 7                                                   |
+| `pnpm knip`                       | Unused files, exports and dependencies                         |
+| `pnpm test`                       | Unit tests (Vitest)                                            |
+| `pnpm test:e2e`                   | Playwright tests                                               |
+| `pnpm verify`                     | Everything CI checks before the build                          |
+| `pnpm data:genes`                 | Source CSV → `data/genes.jsonl` + `data/isoforms.jsonl`        |
+| `pnpm data:associations`          | OMIM CSV → the disease-associations JSON the app ships         |
+| `pnpm corpus:build`               | JSONL seed → a static gene corpus version                      |
+| `pnpm wasm:build`                 | Build the Rust optimizer and install it in `public/`           |
+| `pnpm wasm:verify` / `wasm:smoke` | Check the committed `.wasm`'s digest / run it against fixtures |
+| `pnpm doctor`                     | Check local dev environment health                             |
 
 ## Project Structure
 
 ```
 src/
-├── app/                          # Next.js pages and layouts (App Router)
-│   ├── (app)/                    # Signed-in app shell
-│   │   ├── (search)/genes/       # Gene search and gene detail ([symbol])
-│   │   ├── (design-tool)/        # Sequence design tool
-│   │   └── (internal)/           # Unlisted pages (architecture, disease associations)
-│   ├── login/                    # Password gate
-│   └── api/                      # API routes (health, version, login/logout, OG images, CSP reports)
+├── routes/                       # TanStack Start file routes; __root.tsx is the shell
+├── router.tsx                    # Router factory and its query client
 ├── features/                     # Self-contained feature modules
-│   ├── gene-search/              # Search API, components, hooks, stores
-│   ├── design-tool/              # Job submission, form, results
-│   ├── disease-associations/     # Gene-disease association tables
-│   └── auth/                     # Login form and session gate
-├── components/                   # Shared UI components
-│   ├── ui/                       # shadcn/ui primitives
-│   └── bio/                      # Bio-domain widgets (species icon, GC sparkline, split bar)
-├── lib/                          # Shared utilities
-│   ├── bio/                      # Bio-domain utils (species, FASTA, sequences)
-│   └── analytics/                # Typed event tracking and consent
+│   ├── gene-search/              # Static corpus client, search, gene pages
+│   ├── design-tool/              # Form, in-browser optimizer worker, results, history
+│   └── disease-associations/     # Gene–disease association table
+├── components/                   # Shared UI components (ui/ = shadcn primitives, bio/ = bio widgets)
+├── lib/                          # Shared utilities (bio/ = species, FASTA, sequences)
 ├── hooks/                        # Shared React hooks
-├── stores/                       # Shared Zustand stores
-└── drizzle/                      # DB schema and client
+└── stores/                       # Shared Zustand stores
 
-python/                           # FastAPI backend
-├── index.py                      # POST /api/py/process endpoint
-└── algorithm.py                  # DNAChisel optimization algorithms
-
-modal/                            # Modal deployment (production compute)
+rust/                             # The optimizer (Rust → WebAssembly); see rust/README.md
+scripts/                          # Data pipeline, wasm build and checks, dev tooling
+data/                             # The committed sample seed (24 genes)
+public/gene-data/sample/          # The sample corpus the app reads by default
 ```
 
-Features are self-contained modules (`api/`, `components/`, `hooks/`, `stores/`, `types/`, `utils/`). Cross-feature imports are forbidden by ESLint boundary rules.
+Features are self-contained modules (`api/`, `components/`, `hooks/`, `stores/`, `types/`, `utils/`). Cross-feature imports are lint errors.
 
-## API
+## Gene data
 
-### Next.js API Routes
-
-- **`GET /api/health`** — Public liveness check. DB and Modal checks run only with `Authorization: Bearer $HEALTH_AUTH_TOKEN` (or outside production when no token is set). Rate-limited.
-- **`GET /api/version`** — Build SHA, timestamp, package version.
-- **`POST /api/login`** / **`POST /api/logout`** — Shared-password session login/logout (when `BASIC_AUTH_PASSWORD` is set).
-
-### FastAPI Backend
-
-- **`POST /api/py/process`** — Accepts a coding sequence and optimization options, returns a ZIP containing a report and optimized sequences.
-
-Swagger docs are available at `/api/py/docs` in development.
-
-In production, Python runs on [Modal](https://modal.com) and is called from Next.js server actions — not served alongside the frontend. Set `COMPUTE_BACKEND=modal` and `MODAL_API_URL` in production.
-
-## Deployment
-
-The frontend deploys to **Vercel**:
-
-```bash
-pnpm build         # Production build
-```
-
-The Python backend deploys separately to **Modal**: `.github/workflows/modal-deploy.yml` deploys on pushes to `main` that touch the backend, and can be run by hand (`gh workflow run modal-deploy.yml`). See `modal/README.md`.
-
-## Infrastructure
-
-### Rate Limiting & Distributed State
-
-All rate limiting, idempotency, circuit breaker, dead letter queue, and latency tracking are backed by **Upstash Redis** in production, with automatic in-memory fallback when Redis is unavailable. The free tier (10k requests/day) is sufficient for normal traffic.
-
-| Concern           | Redis key pattern   | Fallback                  |
-| ----------------- | ------------------- | ------------------------- |
-| Rate limiting     | `rl:<prefix>:*`     | In-memory sliding window  |
-| Idempotency       | `inflight:<hash>`   | In-memory Map (10m TTL)   |
-| Circuit breaker   | `circuit:modal`     | In-memory object          |
-| Dead letter queue | `dlq:jobs`          | In-memory array (cap 50)  |
-| DB latency        | `health:db_latency` | In-memory array (cap 100) |
-
-Set `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` to enable. Without them, everything falls back to per-instance in-memory state (fine for single-instance dev/preview).
-
-### Security
-
-- **HSTS** — `Strict-Transport-Security` with preload directive via `next.config.ts` headers.
-- **CSRF** — Origin validation in `src/proxy.ts` against a shared allowlist (`src/lib/allowed-origins.ts`).
-- **Session gate** — When `BASIC_AUTH_PASSWORD` is set, the proxy redirects page loads without a session to `/login` and rejects API calls and server actions with 401. Login attempts are capped at 5/min per IP.
-- **Request size cap** — 256 KB body limit for mutating requests (proxy).
-- **Input validation** — Zod schemas at every server action boundary.
-
-### Health & Version Endpoints
-
-- **`GET /api/health`** — Anonymous callers get liveness only (no DB query, so probes don't keep Neon awake). With `Authorization: Bearer <token>`: DB ping with latency percentiles (p50/p95/p99) and a Modal connectivity check.
-- **`GET /api/version`** — Build SHA, timestamp, and package version.
-
-## Observability
-
-- **Sentry** — Client and server error tracking and tracing. Set `NEXT_PUBLIC_SENTRY_DSN` to enable.
-- **Google Analytics** — Web Vitals (LCP, CLS, INP) reporting via GTM. Set `NEXT_PUBLIC_GTM_ID`.
-- **Structured logging** — JSON output in production (stdout/stderr), human-readable in dev. See `src/lib/logger.ts`.
+Source CSV → JSONL seed (`pnpm data:genes`) → static corpus (`pnpm corpus:build`) → published to R2 at cutover, one immutable directory per version. `AGENTS.md` ("Gene data") has the details.
 
 ## CI
 
 GitHub Actions runs on every PR and push to `main`:
 
-- **CI** — Lint, Format, Type Check, Knip (unused code), Test (Vitest, with a coverage comment), E2E (Playwright smoke tests), Storybook (test build), and Workflow Security (zizmor).
-- **Build** — production build with per-route first-load JS budgets (gzip), compared against `main` and reported in a PR comment (`scripts/bundle-size.mjs`).
-- **Security** — Dependency Review on PRs, `pnpm audit` and `pip-audit` (also weekly), and CycloneDX SBOMs on `main`.
-- **DB CI** — applies the committed migrations to PGlite, checks `schema.ts` against them, and verifies constraints.
-- **Python CI** — `uv.lock` check, Ruff, Pytest and Pyright for the FastAPI backend.
-- **Lighthouse CI** — performance, accessibility, and SEO audits of `/`.
+- **CI** — Lint, Format, Type Check, Knip, Test (Vitest, with a coverage comment), E2E (Playwright), Build (with per-route first-load JS budgets reported in a PR comment), Storybook (test build), and Workflow Security (zizmor).
+- **Rust CI** — format, Clippy (native and wasm32), the parity suite against the frozen DNAChisel fixtures, and a smoke test of the committed and a freshly built `.wasm`.
+- **Security** — Dependency Review on PRs, `pnpm audit` and `cargo deny` (also weekly), and a CycloneDX SBOM on `main`.
+- **Lighthouse CI** — performance, accessibility and SEO audits of `/`.
 - **Conventions** — PR title, commit messages, and branch names (advisory).
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md#required-status-checks) for which checks block merging.

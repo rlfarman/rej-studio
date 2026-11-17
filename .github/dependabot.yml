@@ -34,22 +34,12 @@ updates:
           - 'eslint'
           - 'eslint-*'
           - '@eslint/*'
-      drizzle:
-        patterns:
-          - 'drizzle-orm'
-          - 'drizzle-kit'
       react:
         patterns:
           - 'react'
           - 'react-dom'
           - 'react-hook-form'
           - '@hookform/*'
-      next:
-        patterns:
-          - 'next'
-          - 'next-*'
-          - '@next/*'
-          - 'eslint-config-next'
       tailwind:
         patterns:
           - 'tailwindcss'
@@ -64,8 +54,6 @@ updates:
         exclude-patterns:
           - 'eslint*'
           - '@eslint/*'
-          - 'drizzle-*'
-          - '@next/*'
           - 'tailwindcss*'
           - '@tailwindcss/*'
           - '@tanstack/*'
@@ -73,22 +61,6 @@ updates:
           - '@storybook/*'
           - 'vitest'
           - '@vitest/*'
-
-  - package-ecosystem: 'uv'
-    # Python dependencies (runtime, dev and the Modal deploy client) are
-    # declared in the root pyproject.toml and locked in uv.lock; Dependabot
-    # updates both.
-    directory: '/'
-    schedule:
-      interval: 'weekly'
-    cooldown:
-      default-days: 7
-    open-pull-requests-limit: 5
-    groups:
-      # Released in lockstep; updating them separately breaks resolution.
-      opentelemetry:
-        patterns:
-          - 'opentelemetry-*'
 
   - package-ecosystem: 'github-actions'
     # '/' covers .github/workflows; the local composite action pins its own

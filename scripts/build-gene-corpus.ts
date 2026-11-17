@@ -1,6 +1,6 @@
 /**
  * Build the static gene corpus (see src/features/gene-search/corpus/format.ts)
- * from the JSONL seed that scripts/build-db.py emits.
+ * from the JSONL seed that `pnpm data:genes` writes.
  *
  *   pnpm corpus:build                       # the committed sample → public/gene-data/sample
  *   pnpm corpus:build --genes data/genes.jsonl --isoforms data/isoforms.jsonl \
@@ -37,7 +37,7 @@ const { values } = parseArgs({
 
 async function* readJsonl<T>(path: string): AsyncGenerator<T> {
   if (!existsSync(path)) {
-    throw new Error(`${path} not found — run \`pnpm db:build\` first.`)
+    throw new Error(`${path} not found — run \`pnpm data:genes\` first.`)
   }
   const lines = createInterface({ input: createReadStream(path) })
   for await (const line of lines) {

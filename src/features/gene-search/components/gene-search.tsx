@@ -18,7 +18,6 @@ import type {
   SavedGene,
   JobSearchItem,
 } from '@/features/gene-search/types/domain-types'
-import { trackEvent } from '@/lib/analytics'
 import { useSearchShortcut } from '@/hooks/use-search-shortcut'
 import { geneSearchCopy } from '../copy'
 
@@ -61,12 +60,6 @@ export function GeneSearch({
 
   const handleSelect = (gene: SavedGene) => {
     addRecentGene(gene)
-    trackEvent({
-      event: 'gene_select',
-      symbol: gene.symbol,
-      species: gene.species ?? 'unknown',
-      isoform_id: gene.matchedIsoformId,
-    })
     // Show the in-place "Opening X…" loader immediately as an urgent update.
     setPendingGene(gene)
     // Close the dialog, reset the query and clear the loader together once

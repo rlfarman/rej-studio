@@ -193,9 +193,13 @@ Cloudflare cutover are done. Everything here is reversible until DNS moves.
 2. **Pages.** Home, genes, gene page, design tool, disease associations and
    architecture, with loaders reading the static corpus and typed search
    params replacing `useSearchParams`.
-3. **Deletions.** The job API and Modal path, sessions and the proxy, the
-   search API, the database layer (Drizzle, Neon, PGlite, migrations, `db:*`),
-   Upstash and GTM. Python leaves here as well (see the stack review).
+3. **Deletions. Done.** The job API and Modal path, sessions and the
+   proxy, the search API, the database layer (Drizzle, Neon, PGlite,
+   migrations, `db:*`), Upstash and GTM, and all of Python: FastAPI, Modal,
+   `pyproject.toml`/`uv.lock` and Python/DB CI. The DNAChisel parity
+   fixtures are frozen and Rust is the reference; `build-db.py` and
+   `build-disease-associations.py` became TypeScript (`pnpm data:genes`,
+   `pnpm data:associations`) with byte-identical output.
 4. **Server routes.** Health and version; the MCP endpoint ported from #280
    and #281 with inline designs; the cloud-designs API and Workflow (planned
    below).
@@ -217,6 +221,33 @@ Cloudflare cutover are done. Everything here is reversible until DNS moves.
   rebasing all of them across a framework change.
 - **Step 1:** the browser optimizer on by default in production, so slice 3
   can delete the server design path.
+
+### Cutover checklist
+
+Things slice 3 left for the cutover, which only the repo and account owner
+can do:
+
+- **Swap the required checks in the same change that points the
+  integration branch at `main`.** The Protect main ruleset requires
+  `Pytest`, `Pyright`, `Ruff (lint + format)`, `uv.lock up to date`,
+  `Schema drift + migrations` and `pip-audit`. Their workflows
+  (`python-ci.yml`, `db-ci.yml`, `security.yml`'s pip-audit job) no longer
+  exist on this branch, so they never report and the PR stays blocked
+  forever. Remove them from the ruleset and add `Rust tests, format and
+  lint`, `WebAssembly build and smoke test` and `cargo deny` at the same
+  time (CONTRIBUTING.md lists the result). Doing either half early either
+  unprotects `main` or blocks its PRs (rust/README.md explains the latter).
+- **Publish the corpus.** Create the R2 bucket, upload a corpus version
+  built with `pnpm corpus:build` (AGENTS.md, "Gene data") and set
+  `VITE_GENE_DATA_URL` to it for the deploy build.
+- **Repoint `uptime.yml`**, which probes the Vercel deployment's
+  `/api/health` (and talks about Neon and Modal), at the Worker once slice 4
+  restores `/api/health` there.
+- **Tear down Vercel, Neon, Modal and Upstash only after the Cloudflare
+  deploy has served the lab** for a while. Until then the release branch's
+  Vercel deployment, with its Neon database, Modal app and Upstash limiter,
+  is the fallback and must keep working; deleting any of them first leaves
+  nothing to roll back to.
 
 ## Agent access (MCP)
 
