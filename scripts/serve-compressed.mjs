@@ -30,9 +30,22 @@ const READY_LINE = `serve-compressed: ready on http://localhost:${PORT}`
 const COMPRESSIBLE =
   /^(text\/|application\/(javascript|json|wasm|xml|manifest\+json)|image\/svg\+xml)/
 
+// Bound to 127.0.0.1 explicitly: left to `localhost`, the preview listens on
+// ::1 alone on GitHub's runners, and the IPv4 probe below never connects.
+const UPSTREAM_HOST = '127.0.0.1'
+
 const preview = spawn(
   'pnpm',
-  ['exec', 'vp', 'preview', '--port', String(UPSTREAM_PORT), '--strictPort'],
+  [
+    'exec',
+    'vp',
+    'preview',
+    '--host',
+    UPSTREAM_HOST,
+    '--port',
+    String(UPSTREAM_PORT),
+    '--strictPort',
+  ],
   { stdio: ['ignore', 'inherit', 'inherit'] },
 )
 preview.on('exit', (code) => {
@@ -55,7 +68,7 @@ function pickEncoding(acceptEncoding = '') {
 const server = http.createServer((req, res) => {
   const upstream = http.request(
     {
-      host: '127.0.0.1',
+      host: UPSTREAM_HOST,
       port: UPSTREAM_PORT,
       method: req.method,
       path: req.url,
@@ -104,7 +117,7 @@ async function waitForPreview() {
   for (let attempt = 0; attempt < 240; attempt++) {
     try {
       const response = await fetch(
-        `http://127.0.0.1:${UPSTREAM_PORT}/favicon.svg`,
+        `http://${UPSTREAM_HOST}:${UPSTREAM_PORT}/favicon.svg`,
       )
       if (response.ok) return
     } catch {
