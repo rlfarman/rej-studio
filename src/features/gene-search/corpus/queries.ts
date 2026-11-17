@@ -4,6 +4,7 @@ import { SEARCH_LIMITS, type GeneSearchResult } from '../types/search'
 import type { IsoformListItem } from '../types/domain-types'
 import { searchCorpus } from './client'
 import { getBrowserCorpus } from './gene-data-url'
+import { parseIsoformIdentity, type IsoformIdentityMatrix } from './identity'
 
 /*
  * What the pages read from the static corpus, as TanStack Query options so
@@ -16,6 +17,8 @@ import { getBrowserCorpus } from './gene-data-url'
 export interface GeneWithIsoforms {
   gene: GeneSearchResult
   isoforms: IsoformListItem[]
+  /** Null when the gene file has no usable stored identities. */
+  identity: IsoformIdentityMatrix | null
 }
 
 /**
@@ -32,7 +35,14 @@ export function geneBySymbolQuery(symbol: string, species?: SpeciesFilter) {
       const gene = (await corpus.loadIndex()).geneBySymbol(symbol, species)
       if (!gene) return null
       const file = await corpus.geneFile(gene.id)
-      return { gene, isoforms: file?.isoforms ?? [] }
+      const isoforms = file?.isoforms ?? []
+      return {
+        gene,
+        isoforms,
+        // Validated here, where the file is read, so the page only ever
+        // sees identities that belong to the isoforms it shows.
+        identity: parseIsoformIdentity(file?.isoformIdentity, isoforms),
+      }
     },
     staleTime: Infinity,
   })

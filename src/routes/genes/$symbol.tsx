@@ -112,7 +112,7 @@ function GenePage() {
   // The loader has thrown notFound() for a missing gene.
   if (!data) return null
 
-  const { gene, isoforms } = data
+  const { gene, isoforms, identity } = data
   const associationRow =
     isHuman && associations
       ? findBySymbol(associations, gene.symbol)
@@ -168,7 +168,7 @@ function GenePage() {
         {/* The matrix grows with isoform count; scroll it rather than let
             it widen the page on small screens. */}
         <div className="min-w-0 overflow-x-auto">
-          <IsoformIdentityMatrix isoforms={isoforms} />
+          <IsoformIdentityMatrix isoforms={isoforms} identity={identity} />
         </div>
       </div>
     </div>
