@@ -241,6 +241,9 @@ importers:
       idb-keyval:
         specifier: ^6.3.0
         version: 6.3.0
+      jose:
+        specifier: 6.2.17
+        version: 6.2.17
       lucide-react:
         specifier: ^1.7.0
         version: 1.73.0(@types/react@19.3.0)(react@19.3.1)

@@ -27,6 +27,10 @@ vi.mock('./rate-limit', () => ({
 
 import { sampleCorpus } from '@/features/gene-search/corpus/test-utils'
 
+import { CLOUD_DESIGN_MAX_BASES } from '@/features/design-tool/types/cloud-design'
+
+import type { ServerEnv } from '../env'
+import { FakeWorkflow } from '../designs/test-utils'
 import { createRejStudioMcpServer, MAX_DESIGN_LENGTH } from './server'
 
 /** A short, valid coding sequence: starts ATG, ends TAA, no internal stop. */
@@ -46,10 +50,14 @@ const RESULT = {
   processing_time_seconds: 0,
 }
 
+/** The cloud-design Workflow a hand-off goes to, fresh for every test. */
+let workflow: FakeWorkflow
+let serverEnv: ServerEnv
+
 async function connect() {
   const server = createRejStudioMcpServer({
     token: { name: 'test-agent' },
-    env: {},
+    env: serverEnv,
     corpus: sampleCorpus(),
     bridgeUrl: 'https://rej.example.com/mcp/app-bridge.js',
   })
@@ -67,6 +75,8 @@ let connection: Awaited<ReturnType<typeof connect>>
 
 beforeEach(async () => {
   vi.clearAllMocks()
+  workflow = new FakeWorkflow()
+  serverEnv = { DESIGN_WORKFLOW: workflow.binding() }
   budget.ok = true
   design.mockResolvedValue({ ok: true, result: RESULT, seconds: 0.2 })
   reverseTranslate.mockImplementation(async (protein: string) => ({
@@ -122,16 +132,28 @@ describe('what an agent is offered', () => {
     expect(readOnly.submit_design).toBe(false)
   })
 
-  // The inline job model: nothing is submitted and collected later, so a
-  // description that says otherwise sends an agent looking for a job id.
-  it('does not describe designs as jobs to poll for', async () => {
+  // Two paths, by length, and the descriptions have to say exactly when each
+  // happens: an agent told "nothing to poll" waits forever on a job id, and
+  // one told to poll polls designs that came back inline.
+  it('says when a design comes back in the call and when it needs get_design', async () => {
     const { tools } = await connection.client.listTools()
     const submit = tools.find((tool) => tool.name === 'submit_design')
+    const get = tools.find((tool) => tool.name === 'get_design')
 
-    expect(submit?.description).toContain('in this call')
-    expect(submit?.description).toContain('no job to poll')
-    expect(submit?.description).not.toMatch(/job id|call get_design/i)
+    expect(submit?.description).toContain('up to 12,000 bases')
+    expect(submit?.description).toContain('returned in it')
+    expect(submit?.description).toContain('From 12,001 to 45,000 bases')
+    expect(submit?.description).toContain('call get_design with that job_id')
+    expect(get?.description).toContain('12,000 bases or fewer')
     expect(submit?.annotations).toMatchObject({ idempotentHint: false })
+  })
+
+  // Agents work inside their own harness: nothing may send them to a page.
+  it('never tells an agent to open the web app', async () => {
+    const { tools } = await connection.client.listTools()
+    for (const tool of tools) {
+      expect(tool.description).not.toMatch(/open the web app|in the web app/i)
+    }
   })
 })
 
@@ -329,34 +351,36 @@ describe('running a design', () => {
 })
 
 describe('the sequence-length guard', () => {
-  const tooLong = `ATG${'AAA'.repeat(MAX_DESIGN_LENGTH / 3)}TAA`
+  const tooLong = `ATG${'AAA'.repeat(CLOUD_DESIGN_MAX_BASES / 3)}TAA`
 
-  it('refuses a sequence too long to design inside one request', async () => {
+  it('refuses a sequence longer than any design runs here', async () => {
     const result = await call('submit_design', {
       name: 'huge',
       sequence: tooLong,
     })
 
     expect(result.isError).toBe(true)
-    expect(said(result)).toContain(MAX_DESIGN_LENGTH.toLocaleString())
+    expect(said(result)).toContain(CLOUD_DESIGN_MAX_BASES.toLocaleString())
     expect(design).not.toHaveBeenCalled()
+    expect(workflow.creates).toBe(0)
   })
 
-  // The refusal has to leave the caller somewhere to go: the same optimizer
-  // runs in the browser with no request waiting on it.
-  it('points at the web app rather than just saying no', async () => {
+  // The refusal has to leave the caller something to do in the
+  // conversation, never a page to open.
+  it('says what to do instead, inside the conversation', async () => {
     const result = await call('submit_design', {
       name: 'huge',
       sequence: tooLong,
     })
 
-    expect(said(result)).toContain('web app')
+    expect(said(result)).toMatch(/split it into shorter coding sequences/i)
+    expect(said(result)).not.toContain('web app')
   })
 
   it('counts a protein as the DNA it becomes', async () => {
     const result = await call('submit_design', {
       name: 'huge protein',
-      sequence: 'M'.repeat(MAX_DESIGN_LENGTH / 3 + 1),
+      sequence: 'M'.repeat(CLOUD_DESIGN_MAX_BASES / 3 + 1),
       sequence_type: 'protein',
       species: 'human',
     })
@@ -366,7 +390,7 @@ describe('the sequence-length guard', () => {
     expect(reverseTranslate).not.toHaveBeenCalled()
   })
 
-  it('designs a sequence just inside the limit', async () => {
+  it('designs a sequence just inside the inline limit in the call', async () => {
     const result = await call('submit_design', {
       name: 'large',
       sequence: `ATG${'AAA'.repeat(MAX_DESIGN_LENGTH / 3 - 2)}TAA`,
@@ -374,17 +398,118 @@ describe('the sequence-length guard', () => {
 
     expect(result.isError).toBeFalsy()
     expect(design).toHaveBeenCalledOnce()
+    expect(workflow.creates).toBe(0)
+  })
+})
+
+describe('a design too long for the call', () => {
+  // Over the inline limit, under the cloud cap.
+  const long = `ATG${'AAA'.repeat(MAX_DESIGN_LENGTH / 3)}TAA`
+
+  it('is handed to the cloud, owned by the token, and answered with a job id', async () => {
+    const result = await call('submit_design', { name: 'long', sequence: long })
+
+    expect(result.isError).toBeFalsy()
+    expect(design).not.toHaveBeenCalled()
+    const structured = result.structuredContent as Record<string, unknown>
+    expect(structured).toMatchObject({ name: 'long', status: 'queued' })
+    expect(structured.job_id).toMatch(/^[0-9a-f]{64}$/)
+    expect(structured.estimated_seconds).toBeGreaterThan(0)
+    expect(said(result)).toContain('get_design')
+
+    const instance = workflow.instances.get(structured.job_id as string)
+    expect(instance?.params.owner).toBe('mcp:test-agent')
+    expect(instance?.params.bases).toBe(long.length)
+  })
+
+  it('hands the same request to the same job rather than running it twice', async () => {
+    const first = await call('submit_design', { name: 'long', sequence: long })
+    const second = await call('submit_design', { name: 'long', sequence: long })
+
+    expect(second.structuredContent).toMatchObject({
+      job_id: (first.structuredContent as { job_id: string }).job_id,
+    })
+    expect(workflow.creates).toBe(1)
+  })
+
+  it('is read back with get_design: running, then the result', async () => {
+    const submitted = await call('submit_design', {
+      name: 'long',
+      sequence: long,
+    })
+    const jobId = (submitted.structuredContent as { job_id: string }).job_id
+    const instance = workflow.instances.get(jobId)!
+
+    instance.snapshot = { status: 'running' }
+    const running = await call('get_design', { job_id: jobId })
+    expect(running.isError).toBeFalsy()
+    expect(running.structuredContent).toMatchObject({
+      job_id: jobId,
+      status: 'running',
+      name: 'long',
+    })
+    expect(said(running)).toContain('call get_design again')
+
+    const { values, owner, bases, submittedAt } = instance.params
+    instance.snapshot = {
+      status: 'complete',
+      output: {
+        values,
+        owner,
+        bases,
+        submittedAt,
+        seconds: 30,
+        result: RESULT,
+      },
+    }
+    const done = await call('get_design', { job_id: jobId })
+    expect(done.isError).toBeFalsy()
+    expect(done.structuredContent).toMatchObject({
+      job_id: jobId,
+      status: 'completed',
+      result: { optimized_sequence: RESULT.optimized_sequence },
+    })
+  })
+
+  it('reports a cloud design that ran out of CPU as failed, with the reason', async () => {
+    const submitted = await call('submit_design', {
+      name: 'long',
+      sequence: long,
+    })
+    const jobId = (submitted.structuredContent as { job_id: string }).job_id
+    workflow.instances.get(jobId)!.snapshot = {
+      status: 'errored',
+      error: { name: 'Error', message: 'Worker exceeded CPU time limit.' },
+    }
+
+    const result = await call('get_design', { job_id: jobId })
+    expect(result.isError).toBe(true)
+    expect(result.structuredContent).toMatchObject({
+      status: 'failed',
+      error: { code: 'too_large' },
+    })
+  })
+
+  it('says so plainly when this deployment has no cloud designs', async () => {
+    serverEnv = {}
+    await connection.close()
+    connection = await connect()
+
+    const result = await call('submit_design', { name: 'long', sequence: long })
+    expect(result.isError).toBe(true)
+    expect(said(result)).toContain(MAX_DESIGN_LENGTH.toLocaleString())
+    expect(design).not.toHaveBeenCalled()
   })
 })
 
 describe('the design a view is shown in', () => {
-  it('attaches the view to submit_design, which is what returns a design', async () => {
+  it('attaches the view to the tools that return a design', async () => {
     const { tools } = await connection.client.listTools()
-    const submit = tools.find((tool) => tool.name === 'submit_design')
-
-    expect(submit?._meta).toMatchObject({
-      ui: { resourceUri: 'ui://rej-studio/design-result.html' },
-    })
+    for (const name of ['submit_design', 'get_design']) {
+      expect(tools.find((tool) => tool.name === name)?._meta).toMatchObject({
+        ui: { resourceUri: 'ui://rej-studio/design-result.html' },
+      })
+    }
   })
 
   it('serves the view as one self-contained document', async () => {
@@ -414,14 +539,16 @@ describe('the design a view is shown in', () => {
 })
 
 describe('asking for a design by id', () => {
-  // Kept rather than removed, for an agent working from a stale schema. It
-  // says what became of the id instead of failing as an unknown tool.
-  it('says designs are returned directly, without implying one was lost', async () => {
-    const result = await call('get_design', { job_id: 'job-1' })
+  // An id from an older version of the endpoint, or a made-up one: a plain
+  // "not found" that says where ids come from, not an unknown-tool error.
+  it('says plainly that an unknown id is not there, and where ids come from', async () => {
+    for (const jobId of ['job-1', 'f'.repeat(64)]) {
+      const result = await call('get_design', { job_id: jobId })
 
-    expect(result.isError).toBe(true)
-    expect(said(result)).toContain('inline')
-    expect(said(result)).toContain('submit_design')
+      expect(result.isError).toBe(true)
+      expect(said(result)).toContain('no cloud design')
+      expect(said(result)).toContain('submit_design')
+    }
   })
 })
 
