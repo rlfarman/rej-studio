@@ -1,8 +1,9 @@
 // useJob, for designs run in the cloud: the submission files a history entry
 // under the cloud id, the poller is told, a `?job=` this browser has never
 // seen is read from the cloud, and "Delete from cloud" keeps the local copy.
-// The /api/designs client is mocked; its own wire format is covered by the
-// Worker's handler tests.
+// The cloud-design client is mocked; the server functions behind it are
+// covered by the Worker's handler tests and, in the browser, by
+// e2e/cloud-design.spec.ts.
 
 import { act, renderHook, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'

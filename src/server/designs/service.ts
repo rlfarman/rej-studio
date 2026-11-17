@@ -23,7 +23,8 @@ import type {
 
 /**
  * Cloud designs on the Workflow binding: submit, read and delete, shared by
- * `/api/designs` (./handler.ts) and the MCP endpoint's hand-off.
+ * the design tool's server functions (./handler.ts) and the MCP endpoint's
+ * hand-off.
  *
  * ## Who may do what
  *

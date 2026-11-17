@@ -116,8 +116,12 @@ export const runRecordSchema = z.object({
   /** The seed the run used, supplied or derived by the backend. */
   seed: z.number(),
   input: runRecordInputSchema,
-  /** The options as applied, after validation and defaults. */
-  options: z.record(z.string(), z.unknown()),
+  /**
+   * The options as applied, after validation and defaults. JSON, as the
+   * backend wrote it; typed so rather than `unknown` because a cloud design's
+   * result crosses a server function, whose return type must be serializable.
+   */
+  options: z.record(z.string(), z.json()),
   versions: runRecordVersionsSchema,
   /**
    * The gene dataset the deployment was serving when the run happened — a

@@ -9,11 +9,10 @@
 // gene data is read through the assets binding, and /api/mcp is spoken to
 // over the protocol with a bearer token.
 //
-// Cloud designs run here end to end too: POST /api/designs starts the real
-// Workflow in workerd, the script polls it to completion, checks that a
-// resubmission is deduplicated, that the result is the browser's design (the
-// same .wasm run through Node with the browser's ABI glue), and deletes it;
-// and that submit_design hands a sequence over 12 kb to the same Workflow.
+// The cloud-design Workflow runs here too: submit_design hands a sequence
+// over 12 kb to it, and the script polls it to completion. The design tool's
+// own cloud designs (server functions) are covered end to end by
+// e2e/cloud-design.spec.ts, in the browser, on dev and on this build.
 // The passcode gate is on, as deployed: the script checks that it turns away
 // signed-out requests, signs in through /api/login, and sends that session
 // cookie with everything after.
@@ -157,29 +156,6 @@ function stop(child) {
 const textOf = (result) =>
   (result.content ?? []).map((block) => block.text ?? '').join('\n')
 
-/** The design form's values for a coding sequence, as the browser sends them. */
-function formValues(cds, name) {
-  return {
-    selectedWggwSites: [null],
-    sequenceType: 'dna',
-    codingSequence: cds,
-    proteinSequence: '',
-    name,
-    species: 'human',
-    codonOptimizeWeight: 1,
-    removeCrypticSpliceSites: true,
-    removeCrypticSpliceSitesWeight: 1,
-    minimizeCpgs: true,
-    minimizeCpgsWeight: 1,
-    reduceKmerComplexity: true,
-    reduceKmerComplexityWeight: 1,
-    enforceGcContent: true,
-    '5PrimeStimulatoryIntron': false,
-    '3PrimeStimulatoryIntron': false,
-    spliceJunctionPositions: [Math.floor(cds.length / 2)],
-  }
-}
-
 /** Polls until `read` returns something `done` accepts, or gives up. */
 async function pollUntil(read, done, ms = 180_000) {
   const deadline = Date.now() + ms
@@ -192,23 +168,6 @@ async function pollUntil(read, done, ms = 180_000) {
   throw new Error(`timed out polling: ${JSON.stringify(last).slice(0, 300)}`)
 }
 
-/**
- * The design the browser makes for the same request: the committed .wasm,
- * instantiated by Node through the app's own ABI glue (wasm-harness.mjs) and
- * given the request the form builds (form-handler.ts, through Node's type
- * stripping).
- */
-async function browserDesign(values, seed) {
-  const { loadModule } = await import('./wasm-harness.mjs')
-  const { buildJobParams } =
-    await import('../src/features/design-tool/utils/form-handler.ts')
-  const { design } = await loadModule(
-    path.join(root, 'public/optimizer/rej-optimizer.wasm'),
-  )
-  const request = buildJobParams(values)
-  return design({ ...request, options: { ...request.options, seed } })
-}
-
 async function passcodeGate(url) {
   const page = await request(`${url}/genes/TP53`, { redirect: 'manual' })
   check(
@@ -219,6 +178,14 @@ async function passcodeGate(url) {
   )
   const api = await request(`${url}/api/version`)
   check('a signed-out API call is refused with 401', api.status === 401)
+  // A server-function read is a GET; it must not be taken for a page load.
+  const fn = await request(`${url}/_serverFn/any`, { redirect: 'manual' })
+  const fnBody = await fn.json().catch(() => null)
+  check(
+    'a signed-out server-function call gets a 401 refusal, not a redirect',
+    fn.status === 401 && fnBody?.reason === 'unauthorized',
+    `HTTP ${fn.status}`,
+  )
   const login = await request(`${url}/login`)
   check(
     'the login page is served to anyone',
@@ -303,90 +270,6 @@ async function passcodeGate(url) {
   )
 }
 
-async function cloudDesigns(url, cds) {
-  const designs = `${url}/api/designs`
-  const values = formValues(cds, 'TP53 cloud smoke')
-  const body = JSON.stringify({ values, seed: 1234 })
-  const post = () =>
-    request(designs, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body,
-    })
-
-  const started = Date.now()
-  const created = await post()
-  const submitted = await created.json()
-  check(
-    'POST /api/designs starts a cloud design',
-    created.status === 202 &&
-      /^[0-9a-f]{64}$/.test(submitted.id) &&
-      submitted.existing === false,
-    `HTTP ${created.status} ${JSON.stringify(submitted)}`,
-  )
-  const id = submitted.id
-
-  const finished = await pollUntil(
-    async () => (await request(`${designs}/${id}`)).json(),
-    (design) => design.status === 'completed' || design.status === 'failed',
-  )
-  const seconds = (Date.now() - started) / 1000
-  console.log(
-    `[smoke] TP53 cloud design: POST to completed in ${seconds.toFixed(2)} s`,
-  )
-  check(
-    'the cloud design completes with a result, owned by the caller',
-    finished.status === 'completed' &&
-      finished.result?.optimized_sequence?.length === cds.length &&
-      finished.owner?.startsWith('session:') &&
-      finished.ownedByCaller === true &&
-      finished.values?.codingSequence === cds,
-    JSON.stringify({ ...finished, result: undefined, values: undefined }),
-  )
-
-  const again = await post()
-  const resubmitted = await again.json()
-  check(
-    'an identical POST returns the same design without a new run',
-    again.status === 200 &&
-      resubmitted.id === id &&
-      resubmitted.existing === true &&
-      resubmitted.status === 'completed',
-    `HTTP ${again.status} ${JSON.stringify(resubmitted)}`,
-  )
-
-  const browser = await browserDesign(values, 1234)
-  const same = ['optimized_sequence', 'seq5', 'seq3', 'split_point', 'seed']
-  check(
-    'the cloud design is the design the browser makes (same .wasm, same seed)',
-    same.every(
-      (key) =>
-        JSON.stringify(browser[key]) === JSON.stringify(finished.result?.[key]),
-    ),
-    same
-      .filter(
-        (key) =>
-          JSON.stringify(browser[key]) !==
-          JSON.stringify(finished.result?.[key]),
-      )
-      .join(', '),
-  )
-
-  const tooLong = await request(designs, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({
-      values: formValues(`ATG${'AAA'.repeat(15_000)}TAA`, 'too long'),
-    }),
-  })
-  check('the cloud cap refuses a sequence over 45 kb', tooLong.status === 413)
-
-  const deleted = await request(`${designs}/${id}`, { method: 'DELETE' })
-  check('DELETE removes the design', deleted.status === 204)
-  const gone = await request(`${designs}/${id}`)
-  check('a deleted design is not found', gone.status === 404)
-}
-
 /**
  * A coding sequence of `codons` sense codons between ATG and TAA, from a
  * fixed pseudo-random stream: varied enough for the optimizer to have real
@@ -409,14 +292,53 @@ function syntheticCds(codons) {
   return `${cds}TAA`
 }
 
+/**
+ * The design the browser's optimizer makes for a request: the committed
+ * .wasm, instantiated by Node through the app's own ABI glue
+ * (wasm-harness.mjs).
+ */
+async function designInNode(request) {
+  const { loadModule } = await import('./wasm-harness.mjs')
+  const { design } = await loadModule(
+    path.join(root, 'public/optimizer/rej-optimizer.wasm'),
+  )
+  return design(request)
+}
+
+const HAND_OFF_SEED = 4321
+
+/**
+ * The optimizer request the MCP endpoint builds for a DNA `submit_design`
+ * input: the endpoint's own input mapping and the form's request builder,
+ * loaded through tsx (which resolves the `@/` paths).
+ */
+async function mcpRequestFor(input) {
+  const { tsImport } = await import('tsx/esm/api')
+  const { toFormValues } = await tsImport(
+    '../src/server/mcp/design-input.ts',
+    import.meta.url,
+  )
+  const { buildJobParams } = await tsImport(
+    '../src/features/design-tool/utils/form-handler.ts',
+    import.meta.url,
+  )
+  const values = await toFormValues(input, () => {
+    throw new Error('DNA input only: nothing to reverse-translate')
+  })
+  const request = buildJobParams(values)
+  return { ...request, options: { ...request.options, seed: input.seed } }
+}
+
 async function mcpHandOff(url) {
   // Just over the 12 kb inline limit: the shortest design that is handed off.
   const sequence = syntheticCds(4_050)
-  const handed = await callTool(url, 'submit_design', {
+  const input = {
     name: 'long smoke',
     sequence,
     species: 'human',
-  })
+    seed: HAND_OFF_SEED,
+  }
+  const handed = await callTool(url, 'submit_design', input)
   const jobId = handed.structuredContent?.job_id
   check(
     'submit_design hands a sequence over 12 kb to the cloud and returns a job id',
@@ -426,7 +348,7 @@ async function mcpHandOff(url) {
       handed.structuredContent?.estimated_seconds > 0,
     textOf(handed),
   )
-  if (!jobId) return
+  if (!jobId) return null
 
   const started = Date.now()
   const done = await pollUntil(
@@ -445,6 +367,28 @@ async function mcpHandOff(url) {
       done.structuredContent?.result?.optimized_sequence?.length ===
         sequence.length,
     textOf(done),
+  )
+
+  // Compared with the browser's design after the HTTP checks: running a
+  // 12 kb design in Node blocks its event loop for seconds, long enough for
+  // the server to drop the next request's keep-alive connection.
+  return { input, cloud: done.structuredContent?.result }
+}
+
+/**
+ * The Workflow ran the same optimizer the browser runs: the committed .wasm
+ * in Node, given the request the endpoint built, makes the same design.
+ */
+async function compareWithBrowser({ input, cloud }) {
+  const local = await designInNode(await mcpRequestFor(input))
+  const same = ['optimized_sequence', 'seq5', 'seq3', 'split_point', 'seed']
+  const differing = same.filter(
+    (key) => JSON.stringify(local[key]) !== JSON.stringify(cloud?.[key]),
+  )
+  check(
+    'the cloud design is the design the browser makes (same .wasm, same seed)',
+    cloud?.seed === HAND_OFF_SEED && differing.length === 0,
+    `seed ${cloud?.seed}; differing: ${differing.join(', ')}`,
   )
 }
 
@@ -682,8 +626,7 @@ async function main() {
       textOf(stale),
     )
 
-    await cloudDesigns(url, CDS)
-    await mcpHandOff(url)
+    const handedOff = await mcpHandOff(url)
 
     // --- the design view ---------------------------------------------------
     const view = await rpc(url, 'resources/read', {
@@ -701,6 +644,9 @@ async function main() {
       bridge.ok && (await bridge.text()).length > 1000,
       `HTTP ${bridge.status}`,
     )
+
+    // Last: CPU-bound in Node (see mcpHandOff).
+    if (handedOff) await compareWithBrowser(handedOff)
   } catch (error) {
     // A hang or crash says more with wrangler's own output beside it.
     console.error('wrangler dev output:\n' + log.join(''))

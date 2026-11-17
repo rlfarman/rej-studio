@@ -1,5 +1,6 @@
-// The Worker's entry: the passcode gate, then Start's handler for /api or the
-// static assets for pages, plus the classes the runtime instantiates by name.
+// The Worker's entry: the passcode gate, then Start's handler for /api and
+// server functions (/_serverFn) or the static assets for pages, plus the
+// classes the runtime instantiates by name.
 // wrangler.jsonc's `main` points here rather than at
 // `@tanstack/react-start/server-entry` because a Workflow class has to be a
 // named export of the Worker's main module (Cloudflare's TanStack Start
@@ -10,7 +11,8 @@
 
 import handler from '@tanstack/react-start/server-entry'
 
-import { gate } from './auth/gate'
+import { gate, isServerFnCall } from './auth/gate'
+import { capServerFnBody } from './body-cap'
 import { handleLogin, handleLogout } from './auth/login'
 
 import { SHELL_PATH, isPrerenderedPage } from './prerendered-pages'
@@ -52,8 +54,15 @@ export default {
     const refusal = await gate(request, env)
     if (refusal) return refusal
 
-    // Start's handler takes the request alone; the routes reach the Worker's
-    // bindings through `env` from `cloudflare:workers`.
+    // Start's handler takes the request alone; the routes and server
+    // functions reach the Worker's bindings through `env` from
+    // `cloudflare:workers`. Start applies its own same-origin check to server
+    // functions; the body cap comes first, because Start reads the body
+    // before any server-function code runs.
+    if (isServerFnCall(pathname)) {
+      const capped = capServerFnBody(request)
+      return capped instanceof Response ? capped : handler.fetch(capped)
+    }
     if (pathname.startsWith('/api/')) return handler.fetch(request)
 
     return servePage(request, env)

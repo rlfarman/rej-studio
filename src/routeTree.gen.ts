@@ -20,8 +20,6 @@ import { Route as ApiMcpRouteImport } from './routes/api/mcp'
 import { Route as ApiVersionRouteImport } from './routes/api/version'
 import { Route as GenesIndexRouteImport } from './routes/genes/index'
 import { Route as GenesSymbolRouteImport } from './routes/genes/$symbol'
-import { Route as ApiDesignsIndexRouteImport } from './routes/api/designs/index'
-import { Route as ApiDesignsIdRouteImport } from './routes/api/designs/$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -78,16 +76,6 @@ const GenesSymbolRoute = GenesSymbolRouteImport.update({
   path: '/$symbol',
   getParentRoute: () => GenesRouteRoute,
 } as any)
-const ApiDesignsIndexRoute = ApiDesignsIndexRouteImport.update({
-  id: '/api/designs/',
-  path: '/api/designs/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiDesignsIdRoute = ApiDesignsIdRouteImport.update({
-  id: '/api/designs/$id',
-  path: '/api/designs/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -101,8 +89,6 @@ export interface FileRoutesByFullPath {
   '/api/version': typeof ApiVersionRoute
   '/genes/$symbol': typeof GenesSymbolRoute
   '/genes/': typeof GenesIndexRoute
-  '/api/designs/$id': typeof ApiDesignsIdRoute
-  '/api/designs/': typeof ApiDesignsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -115,8 +101,6 @@ export interface FileRoutesByTo {
   '/api/version': typeof ApiVersionRoute
   '/genes/$symbol': typeof GenesSymbolRoute
   '/genes': typeof GenesIndexRoute
-  '/api/designs/$id': typeof ApiDesignsIdRoute
-  '/api/designs': typeof ApiDesignsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -131,8 +115,6 @@ export interface FileRoutesById {
   '/api/version': typeof ApiVersionRoute
   '/genes/$symbol': typeof GenesSymbolRoute
   '/genes/': typeof GenesIndexRoute
-  '/api/designs/$id': typeof ApiDesignsIdRoute
-  '/api/designs/': typeof ApiDesignsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -148,8 +130,6 @@ export interface FileRouteTypes {
     | '/api/version'
     | '/genes/$symbol'
     | '/genes/'
-    | '/api/designs/$id'
-    | '/api/designs/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -162,8 +142,6 @@ export interface FileRouteTypes {
     | '/api/version'
     | '/genes/$symbol'
     | '/genes'
-    | '/api/designs/$id'
-    | '/api/designs'
   id:
     | '__root__'
     | '/'
@@ -177,8 +155,6 @@ export interface FileRouteTypes {
     | '/api/version'
     | '/genes/$symbol'
     | '/genes/'
-    | '/api/designs/$id'
-    | '/api/designs/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -191,8 +167,6 @@ export interface RootRouteChildren {
   ApiHealthRoute: typeof ApiHealthRoute
   ApiMcpRoute: typeof ApiMcpRoute
   ApiVersionRoute: typeof ApiVersionRoute
-  ApiDesignsIdRoute: typeof ApiDesignsIdRoute
-  ApiDesignsIndexRoute: typeof ApiDesignsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -274,20 +248,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GenesSymbolRouteImport
       parentRoute: typeof GenesRouteRoute
     }
-    '/api/designs/': {
-      id: '/api/designs/'
-      path: '/api/designs'
-      fullPath: '/api/designs/'
-      preLoaderRoute: typeof ApiDesignsIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/designs/$id': {
-      id: '/api/designs/$id'
-      path: '/api/designs/$id'
-      fullPath: '/api/designs/$id'
-      preLoaderRoute: typeof ApiDesignsIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
@@ -315,8 +275,6 @@ const rootRouteChildren: RootRouteChildren = {
   ApiHealthRoute: ApiHealthRoute,
   ApiMcpRoute: ApiMcpRoute,
   ApiVersionRoute: ApiVersionRoute,
-  ApiDesignsIdRoute: ApiDesignsIdRoute,
-  ApiDesignsIndexRoute: ApiDesignsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

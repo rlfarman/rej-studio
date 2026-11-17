@@ -71,6 +71,21 @@ describe('the gate, with a passcode set', () => {
     expect(response?.status).toBe(401)
   })
 
+  it.each(['GET', 'POST'])(
+    'answers a signed-out %s server-function call with a 401 refusal its caller can read',
+    async (method) => {
+      const response = await gate(
+        new Request(`${SITE}/_serverFn/abc`, { method }),
+        ON,
+      )
+      expect(response?.status).toBe(401)
+      expect(await response!.json()).toMatchObject({
+        ok: false,
+        reason: 'unauthorized',
+      })
+    },
+  )
+
   it.each(['/login', '/api/login', '/api/logout', '/api/mcp', '/api/health'])(
     'lets %s through without a session',
     async (path) => {

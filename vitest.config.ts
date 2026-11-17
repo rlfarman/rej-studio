@@ -29,6 +29,9 @@ export default defineConfig({
         'src/features/**/api/**',
         'src/stores/**',
       ],
+      // Server-function modules are Worker wiring that only Start's compiler
+      // can load; their handlers are covered in src/server/.
+      exclude: ['src/**/*.functions.ts'],
       thresholds: {
         'src/lib/bio/**': { lines: 90 },
         'src/features/**/types/**': { lines: 80 },

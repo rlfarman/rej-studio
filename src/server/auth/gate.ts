@@ -50,10 +50,22 @@ function isPublicPath(pathname: string): boolean {
   )
 }
 
+/**
+ * Where Start serves server functions: its default `serverFns.base`, which
+ * vite.config.ts leaves as it is.
+ */
+const SERVER_FN_BASE = '/_serverFn/'
+
+/** A server-function call (a fetch() from the app, even when it is a GET). */
+export function isServerFnCall(pathname: string): boolean {
+  return pathname.startsWith(SERVER_FN_BASE)
+}
+
 function isPageLoad(request: Request, pathname: string): boolean {
   return (
     (request.method === 'GET' || request.method === 'HEAD') &&
-    !pathname.startsWith('/api/')
+    !pathname.startsWith('/api/') &&
+    !isServerFnCall(pathname)
   )
 }
 
@@ -123,10 +135,17 @@ export async function gate(
   if (session || isPublicPath(url.pathname)) return null
 
   if (!isPageLoad(request, url.pathname)) {
-    return Response.json(
-      { error: authCopy.signInRequired },
-      { status: 401, headers: { 'cache-control': 'no-store' } },
-    )
+    // A server function answers with a value its caller switches on
+    // (features/design-tool/types/cloud-design.ts, `CloudAnswer`), and Start's
+    // client returns a JSON body as that value, so the gate answers in the
+    // same shape; anything else gets `{ error }`.
+    const body = isServerFnCall(url.pathname)
+      ? { ok: false, reason: 'unauthorized', message: authCopy.signInRequired }
+      : { error: authCopy.signInRequired }
+    return Response.json(body, {
+      status: 401,
+      headers: { 'cache-control': 'no-store' },
+    })
   }
   const login = new URL('/login', url)
   const returnTo = url.pathname + url.search

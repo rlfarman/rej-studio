@@ -8,6 +8,7 @@ vi.mock('../mcp/optimizer', () => ({ designOnWorker: vi.fn() }))
 import {
   CLOUD_DESIGN_MAX_BASES,
   cloudDesignSchema,
+  type CloudAnswer,
 } from '@/features/design-tool/types/cloud-design'
 
 import {
@@ -16,12 +17,10 @@ import {
   signSession,
   verifySession,
 } from '../auth/session'
+import { buildJobParams } from '@/features/design-tool/utils/form-handler'
+
 import type { ServerEnv } from '../env'
-import {
-  handleCreateDesign,
-  handleDeleteDesign,
-  handleGetDesign,
-} from './handler'
+import { deleteDesign, readDesign, statusOf, submitDesign } from './handler'
 import { STATUS_RETRY_DELAYS_MS } from './service'
 import { resultKey, type CloudDesignOutput } from './run'
 import {
@@ -33,12 +32,13 @@ import {
   RESULT,
 } from './test-utils'
 
-// The HTTP surface of /api/designs, through the real handlers and service,
-// against an in-memory Workflow binding. Identity is a real session cookie
+// The cloud-design server functions' handlers, through the real service,
+// against an in-memory Workflow binding. Each answer is read as the client
+// gets it: its HTTP status (as the server function sends it) and its value. Identity is a real session cookie
 // signed under the passcode, so a test switches who is asking by sending
 // another caller's cookie.
 
-const BASE = 'http://localhost:3000/api/designs'
+const BASE = 'http://localhost:3000/_serverFn/x'
 const GATE = {
   BASIC_AUTH_PASSWORD: 'splice-test',
   SESSION_SECRET: 'a-test-session-secret-of-at-least-32-chars',
@@ -119,35 +119,34 @@ async function settle<T>(pending: Promise<T>): Promise<T> {
   return pending
 }
 
-function post(body: unknown, e: ServerEnv, init: RequestInit = {}) {
-  return new Request(BASE, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json', ...headersFor(e) },
-    body: typeof body === 'string' ? body : JSON.stringify(body),
-    ...init,
-  })
+function callAs(e: ServerEnv) {
+  return new Request(BASE, { method: 'POST', headers: headersFor(e) })
 }
 
-async function submit(body: unknown = { values: formValues() }, e = env) {
-  const response = await handleCreateDesign(post(body, e), e)
-  return { response, json: (await response.json()) as Record<string, unknown> }
+/** An answer as the client reads it: the status sent, and the value or refusal. */
+async function sent(
+  pending: Promise<CloudAnswer<unknown>>,
+): Promise<{ status: number; json: Record<string, unknown> }> {
+  const answer = await pending
+  const created =
+    answer.ok &&
+    (answer.data as { existing?: boolean } | null)?.existing === false
+  return {
+    status: statusOf(answer, created),
+    json: (answer.ok ? (answer.data ?? {}) : answer) as Record<string, unknown>,
+  }
 }
 
-async function read(id: string, e = env) {
-  const response = await handleGetDesign(
-    new Request(`${BASE}/${id}`, { headers: headersFor(e) }),
-    e,
-    id,
-  )
-  return { response, json: (await response.json()) as Record<string, unknown> }
+function submit(input: unknown = { values: formValues() }, e = env) {
+  return sent(submitDesign(callAs(e), e, input))
+}
+
+function read(id: string, e = env) {
+  return sent(readDesign(callAs(e), e, { id }))
 }
 
 function remove(id: string, e = env) {
-  return handleDeleteDesign(
-    new Request(`${BASE}/${id}`, { method: 'DELETE', headers: headersFor(e) }),
-    e,
-    id,
-  )
+  return sent(deleteDesign(callAs(e), e, { id }))
 }
 
 /** Finishes an instance the way the Workflow would. */
@@ -170,13 +169,11 @@ function complete(id: string, output: Partial<CloudDesignOutput> = {}) {
 
 describe('POST /api/designs', () => {
   it('creates an instance owned by the caller, kept 30 days (7 on error)', async () => {
-    const { response, json } = await submit()
-    expect(response.status).toBe(202)
-    expect(response.headers.get('cache-control')).toBe('no-store')
+    const { status, json } = await submit()
+    expect(status).toBe(202)
     expect(json).toMatchObject({ status: 'queued', existing: false })
     const id = json.id as string
     expect(id).toMatch(/^[0-9a-f]{64}$/)
-    expect(response.headers.get('location')).toBe(`/api/designs/${id}`)
 
     const instance = workflow.instances.get(id)!
     expect(instance.params.owner).toBe(ADA.owner)
@@ -189,12 +186,25 @@ describe('POST /api/designs', () => {
     expect(limiter.keys).toEqual([`cloud:${ADA.owner}`])
   })
 
+  it('runs exactly the request the browser would run for the same values', async () => {
+    // The browser's optimizer and the Workflow step run the same .wasm
+    // (its digest is in the id); this pins that they are given the same
+    // request, which is what makes the designs the same.
+    const values = formValues()
+    const { json } = await submit({ values, seed: 1234 })
+    const params = buildJobParams(values)
+    expect(workflow.instances.get(json.id as string)!.params.request).toEqual({
+      ...params,
+      options: { ...params.options, seed: 1234 },
+    })
+  })
+
   it('returns the existing design for an identical request, without running or spending again', async () => {
     const first = await submit()
     complete(first.json.id as string)
     // Someone else asking for the very same design shares the run.
     const second = await submit({ values: formValues() }, as(BOB))
-    expect(second.response.status).toBe(200)
+    expect(second.status).toBe(200)
     expect(second.json).toEqual({
       id: first.json.id,
       status: 'completed',
@@ -229,8 +239,8 @@ describe('POST /api/designs', () => {
         },
       })
     }
-    const { response, json } = await submit()
-    expect(response.status).toBe(200)
+    const { status, json } = await submit()
+    expect(status).toBe(200)
     expect(json).toMatchObject({ status: 'queued', existing: true })
     expect(workflow.creates).toBe(1)
   })
@@ -261,81 +271,78 @@ describe('POST /api/designs', () => {
   })
 
   it('refuses a design the form would refuse, with the form’s reason', async () => {
-    const { response, json } = await submit({
+    const { status, json } = await submit({
       values: formValues({ codingSequence: 'ATGAAATAG'.slice(0, 7) }),
     })
-    expect(response.status).toBe(400)
-    expect(json.error).toMatch(/codingSequence: .*multiple of 3/)
+    expect(status).toBe(400)
+    expect(json.message).toMatch(/codingSequence: .*multiple of 3/)
     expect(workflow.creates).toBe(0)
   })
 
   it('refuses a sequence over the cloud cap', async () => {
     const long = `ATG${'AAA'.repeat(CLOUD_DESIGN_MAX_BASES / 3)}TAA`
-    const { response, json } = await submit({
+    const { status, json } = await submit({
       values: formValues({ codingSequence: long }),
     })
-    expect(response.status).toBe(413)
-    expect(json.error).toMatch(/45,000/)
+    expect(status).toBe(413)
+    expect(json.message).toMatch(/45,000/)
     expect(workflow.creates).toBe(0)
   })
 
-  it('refuses an oversized body before parsing it', async () => {
-    const response = await handleCreateDesign(
-      post('x'.repeat(300_000), env),
-      env,
-    )
-    expect(response.status).toBe(413)
+  it('refuses input that is not a submission at all', async () => {
+    const { status, json } = await submit('nope')
+    expect(status).toBe(400)
+    expect(json).toMatchObject({ ok: false, reason: 'invalid' })
   })
 
-  it('refuses a body that is not JSON', async () => {
-    const response = await handleCreateDesign(post('{nope', env), env)
-    expect(response.status).toBe(400)
+  it('checks who is asking before looking at the input', async () => {
+    expect((await submit('nope', as(NOBODY))).json.reason).toBe('unauthorized')
   })
 
   it('refuses over the per-owner budget, with Retry-After', async () => {
     limiter = fakeLimiter(1)
     env = { ...env, DESIGN_LIMITER: limiter.binding }
     await submit()
-    const { response } = await submit({ values: formValues(), seed: 2 })
-    expect(response.status).toBe(429)
-    expect(response.headers.get('retry-after')).toBe('60')
+    const { status, json } = await submit({ values: formValues(), seed: 2 })
+    expect(status).toBe(429)
+    expect(json.retryAfter).toBe(60)
     expect(workflow.creates).toBe(1)
   })
 
   it('answers 503 when the Workflow is not bound', async () => {
-    const { response } = await submit(undefined, as(ADA, { ...GATE }))
-    expect(response.status).toBe(503)
+    const { status } = await submit(undefined, as(ADA, { ...GATE }))
+    expect(status).toBe(503)
   })
 
   it('answers 401 without a session, and creates nothing', async () => {
-    const { response } = await submit(undefined, as(NOBODY))
-    expect(response.status).toBe(401)
+    const { status } = await submit(undefined, as(NOBODY))
+    expect(status).toBe(401)
     expect(workflow.creates).toBe(0)
   })
 
   it('answers 401 for a session signed under another passcode', async () => {
     const changed = as(ADA, { ...env, BASIC_AUTH_PASSWORD: 'rotated' })
-    const { response } = await submit(undefined, changed)
-    expect(response.status).toBe(401)
+    const { status } = await submit(undefined, changed)
+    expect(status).toBe(401)
   })
 
   it('answers 503 with the passcode half-configured, and creates nothing', async () => {
-    const { response } = await submit(
+    const { status } = await submit(
       undefined,
       as(ADA, {
         DESIGN_WORKFLOW: workflow.binding(),
         BASIC_AUTH_PASSWORD: 'x',
       }),
     )
-    expect(response.status).toBe(503)
+    expect(status).toBe(503)
     expect(workflow.creates).toBe(0)
   })
 
   it('treats local development with no passcode as one local owner', async () => {
-    const { response, json } = await submit(undefined, {
+    const { status, json } = await submit(undefined, {
       DESIGN_WORKFLOW: workflow.binding(),
     })
-    expect(response.status).toBe(202)
+    expect(status).toBe(202)
     expect(workflow.instances.get(json.id as string)!.params.owner).toBe(
       'local',
     )
@@ -345,8 +352,8 @@ describe('POST /api/designs', () => {
 describe('GET /api/designs/:id', () => {
   it('reports a queued design by id alone', async () => {
     const { json: submitted } = await submit()
-    const { response, json } = await read(submitted.id as string)
-    expect(response.status).toBe(200)
+    const { status, json } = await read(submitted.id as string)
+    expect(status).toBe(200)
     expect(json).toEqual({ id: submitted.id, status: 'queued' })
   })
 
@@ -368,8 +375,8 @@ describe('GET /api/designs/:id', () => {
   it('returns a finished design to anyone signed in, not only its owner', async () => {
     const { json: submitted } = await submit()
     complete(submitted.id as string)
-    const { response, json } = await read(submitted.id as string, as(BOB))
-    expect(response.status).toBe(200)
+    const { status, json } = await read(submitted.id as string, as(BOB))
+    expect(status).toBe(200)
     // The browser parses it with this schema; so must the test.
     const design = cloudDesignSchema.parse(json)
     expect(design).toMatchObject({
@@ -409,14 +416,14 @@ describe('GET /api/designs/:id', () => {
   })
 
   it('answers 404 for an unknown id and for something that is not an id', async () => {
-    expect((await read('a'.repeat(64))).response.status).toBe(404)
-    expect((await read('browser-123')).response.status).toBe(404)
+    expect((await read('a'.repeat(64))).status).toBe(404)
+    expect((await read('browser-123')).status).toBe(404)
   })
 
   it('needs an identity like everything else', async () => {
     const { json: submitted } = await submit()
-    const { response } = await read(submitted.id as string, as(NOBODY))
-    expect(response.status).toBe(401)
+    const { status } = await read(submitted.id as string, as(NOBODY))
+    expect(status).toBe(401)
   })
 
   describe('when the Workflow binding stumbles on a read', () => {
@@ -437,8 +444,8 @@ describe('GET /api/designs/:id', () => {
       try {
         const { json: submitted } = await submit()
         failStatus(submitted.id as string, STATUS_RETRY_DELAYS_MS.length)
-        const { response, json } = await settle(read(submitted.id as string))
-        expect(response.status).toBe(200)
+        const { status, json } = await settle(read(submitted.id as string))
+        expect(status).toBe(200)
         expect(json).toEqual({ id: submitted.id, status: 'queued' })
       } finally {
         vi.useRealTimers()
@@ -455,16 +462,16 @@ describe('GET /api/designs/:id', () => {
           if (failures++ < 2) throw new Error('internal error')
           return real(id)
         }
-        const { response } = await settle(read(submitted.id as string))
-        expect(response.status).toBe(200)
+        const { status } = await settle(read(submitted.id as string))
+        expect(status).toBe(200)
       } finally {
         vi.useRealTimers()
       }
     })
 
     it('still answers 404 at once for an id that does not exist', async () => {
-      const { response } = await read('f'.repeat(64))
-      expect(response.status).toBe(404)
+      const { status } = await read('f'.repeat(64))
+      expect(status).toBe(404)
     })
 
     it('asks the client to retry, not fail, when it does not recover', async () => {
@@ -472,9 +479,9 @@ describe('GET /api/designs/:id', () => {
       try {
         const { json: submitted } = await submit()
         failStatus(submitted.id as string, Infinity)
-        const { response } = await settle(read(submitted.id as string))
-        expect(response.status).toBe(503)
-        expect(response.headers.get('retry-after')).toBe('2')
+        const { status, json } = await settle(read(submitted.id as string))
+        expect(status).toBe(503)
+        expect(json).toMatchObject({ reason: 'busy', retryAfter: 2 })
       } finally {
         vi.useRealTimers()
       }
@@ -491,18 +498,16 @@ describe('DELETE /api/designs/:id', () => {
     bucket.objects.set(resultKey(id), JSON.stringify(RESULT))
     complete(id, { resultKey: resultKey(id), result: undefined })
 
-    const response = await remove(id)
-    expect(response.status).toBe(204)
+    expect((await remove(id)).status).toBe(200)
     expect(workflow.instances.get(id)!.deleted).toBe(true)
     expect(bucket.objects.size).toBe(0)
-    expect((await read(id)).response.status).toBe(404)
+    expect((await read(id)).status).toBe(404)
   })
 
   it('refuses anyone but the owner', async () => {
     const { json: submitted } = await submit()
     complete(submitted.id as string)
-    const response = await remove(submitted.id as string, as(BOB))
-    expect(response.status).toBe(403)
+    expect((await remove(submitted.id as string, as(BOB))).status).toBe(403)
     expect(workflow.instances.get(submitted.id as string)!.deleted).toBe(false)
   })
 
@@ -514,13 +519,14 @@ describe('DELETE /api/designs/:id', () => {
       error: { name: 'Error', message: 'invalid_input: nope' },
     }
     expect((await remove(id, as(BOB))).status).toBe(403)
-    expect((await remove(id)).status).toBe(204)
+    expect((await remove(id)).status).toBe(200)
   })
 
   it('refuses, for now, a design that has not started and so has no known owner', async () => {
     const { json: submitted } = await submit()
-    const response = await remove(submitted.id as string)
-    expect(response.status).toBe(409)
+    const { status, json } = await remove(submitted.id as string)
+    expect(status).toBe(409)
+    expect(json).toMatchObject({ reason: 'not_started', retryAfter: 5 })
   })
 
   it('answers 404 for an unknown design', async () => {

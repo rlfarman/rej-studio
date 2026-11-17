@@ -29,6 +29,18 @@ vi.mock('@/features/design-tool/utils/finish-notification', () => ({
   notifyRunSettled: vi.fn(),
 }))
 
+// The cloud-design server functions only exist once Start's compiler has
+// made them RPC stubs, which Vitest does not run (and their module imports
+// the Worker). Nothing here may reach them.
+vi.mock('@/features/design-tool/api/cloud-designs.functions', () => {
+  const unreachable = () => Promise.reject(new TypeError('no server here'))
+  return {
+    submitCloudDesignFn: vi.fn(unreachable),
+    readCloudDesignFn: vi.fn(unreachable),
+    deleteCloudDesignFn: vi.fn(unreachable),
+  }
+})
+
 import { notifyRunSettled } from '@/features/design-tool/utils/finish-notification'
 import {
   browserOptimizerSupported,

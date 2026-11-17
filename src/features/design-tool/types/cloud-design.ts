@@ -1,6 +1,7 @@
 /**
  * Cloud designs: the contract between the design tool, the Worker's
- * `/api/designs` routes and the MCP endpoint's hand-off.
+ * cloud-design server functions (`api/cloud-designs.functions.ts`) and the MCP
+ * endpoint's hand-off.
  *
  * A cloud design runs the same `.wasm` the tab runs, in a Cloudflare Workflow,
  * so the person can close the tab (docs/cloudflare-migration.md, "Plan: cloud
@@ -63,7 +64,7 @@ export function isCloudDesignId(id: string): boolean {
   return CLOUD_DESIGN_ID.test(id)
 }
 
-/** `POST /api/designs`: the form's values, and an optional fixed seed. */
+/** A submission: the form's values, and an optional fixed seed. */
 export const cloudDesignSubmitSchema = z.object({
   values: validationSchema,
   seed: z.number().int().optional(),
@@ -80,7 +81,7 @@ const cloudDesignStatusSchema = z.enum([
 export type CloudDesignStatus = z.infer<typeof cloudDesignStatusSchema>
 
 /**
- * A cloud design, as `GET /api/designs/:id` reports it.
+ * A cloud design, as reading it reports it.
  *
  * What is known depends on how far it has got: a queued instance has only its
  * id and status; once it starts, its inputs are readable; once it finishes,
@@ -104,8 +105,8 @@ export const cloudDesignSchema = z.object({
 
 export type CloudDesign = z.infer<typeof cloudDesignSchema>
 
-/** `POST /api/designs`'s answer: the id, and whether it already existed. */
-export const cloudDesignSubmittedSchema = z.object({
+/** A submission's answer: the id, and whether it already existed. */
+const cloudDesignSubmittedSchema = z.object({
   id: z.string(),
   status: cloudDesignStatusSchema,
   /** True when an identical request had already been submitted. */
@@ -114,5 +115,37 @@ export const cloudDesignSubmittedSchema = z.object({
 
 export type CloudDesignSubmitted = z.infer<typeof cloudDesignSubmittedSchema>
 
-/** Every refusal from `/api/designs` has this shape. */
-export const cloudDesignRefusalSchema = z.object({ error: z.string() })
+/**
+ * Why a cloud-design call was refused, and the HTTP status it is sent with
+ * (which the poller and the history map back to: 404 is "gone", anything
+ * else is "try again later").
+ */
+export const CLOUD_REFUSAL_STATUS = {
+  invalid: 400,
+  unauthorized: 401,
+  forbidden: 403,
+  not_found: 404,
+  not_started: 409,
+  too_large: 413,
+  rate_limited: 429,
+  failed: 500,
+  unavailable: 503,
+  busy: 503,
+} as const
+
+export type CloudRefusalReason = keyof typeof CLOUD_REFUSAL_STATUS
+
+/**
+ * What every cloud-design server function returns: its value, or a refusal
+ * with a message written for the person reading it. `retryAfter` (seconds)
+ * says when trying again could help. The Worker's passcode gate answers a
+ * signed-out call in this shape too (src/server/auth/gate.ts).
+ */
+export type CloudAnswer<T> =
+  | { ok: true; data: T }
+  | {
+      ok: false
+      reason: CloudRefusalReason
+      message: string
+      retryAfter?: number
+    }

@@ -1,14 +1,18 @@
 import { z } from 'zod'
 
 import {
+  CLOUD_REFUSAL_STATUS,
   cloudDesignSubmitSchema,
   isCloudDesignId,
+  type CloudAnswer,
+  type CloudDesign,
   type CloudDesignSubmitted,
+  type CloudRefusalReason,
 } from '@/features/design-tool/types/cloud-design'
 import { createLogger } from '@/lib/logger'
 
 import type { ServerEnv } from '../env'
-import { identify, type Identity } from './identity'
+import { identify } from './identity'
 import { designsCopy } from './copy'
 import { withinDesignBudget } from './rate-limit'
 import {
@@ -19,66 +23,61 @@ import {
 } from './service'
 
 /**
- * `/api/designs`: submit, read and delete cloud designs, for the design tool.
+ * Submit, read and delete cloud designs, for the design tool's server
+ * functions (`features/design-tool/api/cloud-designs.functions.ts`).
  *
- * Behind the passcode gate like the rest of the app (unlike `/api/mcp`), and
- * checked here as well, fail-closed (./identity.ts). Every answer is JSON and
- * `no-store`: a design is someone's unpublished sequence, so no cache between
- * here and the browser may keep a copy.
+ * Plain functions of the request, the env and the call's input, so they run
+ * under Vitest. Each checks who is asking first, fail-closed (./identity.ts),
+ * then validates the input itself (it arrives as the client sent it), and
+ * answers a `CloudAnswer`: the value, or a refusal the client can switch on.
  */
 
 const log = createLogger('designs')
 
-/**
- * A 45 kb sequence is ~45 KB of JSON, and the form sends it at most twice
- * (the DNA, and the protein it came from). Anything much bigger is not a
- * design request.
- */
-const MAX_BODY_BYTES = 256 * 1024
-
-function json(
-  body: unknown,
-  status = 200,
-  headers: Record<string, string> = {},
-) {
-  return Response.json(body, {
-    status,
-    headers: { 'cache-control': 'no-store', ...headers },
-  })
-}
+type Refusal = Extract<CloudAnswer<never>, { ok: false }>
 
 function refuse(
-  status: number,
+  reason: CloudRefusalReason,
   message: string,
-  headers: Record<string, string> = {},
-) {
-  return json({ error: message }, status, headers)
+  retryAfter?: number,
+): Refusal {
+  return { ok: false, reason, message, retryAfter }
 }
 
-/** Seconds a client is asked to wait after a transient Workflow failure. */
-const BUSY_RETRY_AFTER = '2'
+/** The HTTP status for an answer (the server functions send it). */
+export function statusOf(answer: CloudAnswer<unknown>, created = false) {
+  if (!answer.ok) return CLOUD_REFUSAL_STATUS[answer.reason]
+  return created ? 202 : 200
+}
 
 /**
- * A failure while handling a design: 503 with `retry-after` when the Workflow
- * binding is only briefly unavailable (the client polls again), 500 otherwise.
+ * Runs `work` for a caller who has proved who they are. A Workflow binding
+ * that is only briefly unavailable is `busy` (the client tries again); any
+ * other failure is logged and `failed`.
  */
-function refuseFailure(
-  error: unknown,
+async function asCaller<T>(
+  request: Request,
+  env: ServerEnv,
   what: string,
-  context: Record<string, unknown>,
-) {
-  if (error instanceof CloudDesignUnavailableError) {
-    log.warn(`${what}: Workflow status unavailable`, context)
-    return refuse(503, designsCopy.http.busy, {
-      'retry-after': BUSY_RETRY_AFTER,
-    })
+  work: (owner: string) => Promise<CloudAnswer<T>>,
+): Promise<CloudAnswer<T>> {
+  const identity = await identify(request, env)
+  if (!identity.ok) {
+    return refuse(
+      identity.status === 401 ? 'unauthorized' : 'unavailable',
+      identity.message,
+    )
   }
-  log.error(what, error, context)
-  return refuse(500, designsCopy.http.failed)
-}
-
-function refuseIdentity(identity: Extract<Identity, { ok: false }>) {
-  return refuse(identity.status, identity.message)
+  try {
+    return await work(identity.owner)
+  } catch (error) {
+    if (error instanceof CloudDesignUnavailableError) {
+      log.warn(`${what}: Workflow status unavailable`)
+      return refuse('busy', designsCopy.http.busy, 2)
+    }
+    log.error(what, error, { owner: identity.owner })
+    return refuse('failed', designsCopy.http.failed)
+  }
 }
 
 /** Every Zod complaint, in one line. */
@@ -91,113 +90,76 @@ function explain(error: z.ZodError): string {
     .join('; ')
 }
 
-/** `POST /api/designs` */
-export async function handleCreateDesign(
+/** `{ id }` naming a cloud design, or null. */
+function designId(input: unknown): string | null {
+  const id = (input as { id?: unknown } | null)?.id
+  return typeof id === 'string' && isCloudDesignId(id) ? id : null
+}
+
+/**
+ * Starts a design, or finds the identical one already submitted
+ * (`existing`). The input is checked by the form's own schema, so the
+ * Worker refuses exactly what the form does.
+ */
+export function submitDesign(
   request: Request,
   env: ServerEnv,
-): Promise<Response> {
-  const identity = await identify(request, env)
-  if (!identity.ok) return refuseIdentity(identity)
-
-  const declared = Number(request.headers.get('content-length') ?? '0')
-  if (declared > MAX_BODY_BYTES) {
-    return refuse(413, designsCopy.http.bodyTooLarge)
-  }
-  const text = await request.text()
-  if (text.length > MAX_BODY_BYTES) {
-    return refuse(413, designsCopy.http.bodyTooLarge)
-  }
-
-  let body: unknown
-  try {
-    body = JSON.parse(text)
-  } catch {
-    return refuse(400, designsCopy.http.badJson)
-  }
-  // The form's own schema, so the Worker refuses exactly what the form does.
-  const parsed = cloudDesignSubmitSchema.safeParse(body)
-  if (!parsed.success) {
-    return refuse(400, designsCopy.http.invalid(explain(parsed.error)))
-  }
-
-  try {
+  input: unknown,
+): Promise<CloudAnswer<CloudDesignSubmitted>> {
+  return asCaller(request, env, 'cloud design submit failed', async (owner) => {
+    const parsed = cloudDesignSubmitSchema.safeParse(input)
+    if (!parsed.success) {
+      return refuse('invalid', designsCopy.http.invalid(explain(parsed.error)))
+    }
     const outcome = await submitCloudDesign(env, {
-      values: parsed.data.values,
-      seed: parsed.data.seed,
-      owner: identity.owner,
-      spend: () => withinDesignBudget(env, identity.owner),
+      ...parsed.data,
+      owner,
+      spend: () => withinDesignBudget(env, owner),
     })
     if (!outcome.ok) {
-      switch (outcome.reason) {
-        case 'too_large':
-          return refuse(413, outcome.message)
-        case 'rate_limited':
-          return refuse(429, outcome.message, { 'retry-after': '60' })
-        case 'unavailable':
-          return refuse(503, outcome.message)
-      }
+      return outcome.reason === 'rate_limited'
+        ? refuse('rate_limited', outcome.message, 60)
+        : refuse(outcome.reason, outcome.message)
     }
-    const answer: CloudDesignSubmitted = {
-      id: outcome.id,
-      status: outcome.status,
-      existing: outcome.existing,
-    }
-    return json(answer, outcome.existing ? 200 : 202, {
-      location: `/api/designs/${outcome.id}`,
-    })
-  } catch (error) {
-    return refuseFailure(error, 'cloud design submit failed', {
-      owner: identity.owner,
-    })
-  }
+    const { id, status, existing } = outcome
+    return { ok: true, data: { id, status, existing } }
+  })
 }
 
-/** `GET /api/designs/:id` */
-export async function handleGetDesign(
+/** Reads a design: anyone signed in may (see "Who may do what" in ./service.ts). */
+export function readDesign(
   request: Request,
   env: ServerEnv,
-  id: string,
-): Promise<Response> {
-  const identity = await identify(request, env)
-  if (!identity.ok) return refuseIdentity(identity)
-  if (!isCloudDesignId(id)) return refuse(404, designsCopy.http.badId)
-
-  try {
-    // No ownership check: see "Who may do what" in ./service.ts.
-    const design = await readCloudDesign(env, id, identity.owner)
-    if (!design) return refuse(404, designsCopy.http.notFound)
-    return json(design)
-  } catch (error) {
-    return refuseFailure(error, 'cloud design read failed', { id })
-  }
+  input: unknown,
+): Promise<CloudAnswer<CloudDesign>> {
+  return asCaller(request, env, 'cloud design read failed', async (owner) => {
+    const id = designId(input)
+    if (!id) return refuse('not_found', designsCopy.http.badId)
+    const design = await readCloudDesign(env, id, owner)
+    return design
+      ? { ok: true, data: design }
+      : refuse('not_found', designsCopy.http.notFound)
+  })
 }
 
-/** `DELETE /api/designs/:id`: the owner only. */
-export async function handleDeleteDesign(
+/** Deletes a design and its stored result: its owner only. */
+export function deleteDesign(
   request: Request,
   env: ServerEnv,
-  id: string,
-): Promise<Response> {
-  const identity = await identify(request, env)
-  if (!identity.ok) return refuseIdentity(identity)
-  if (!isCloudDesignId(id)) return refuse(404, designsCopy.http.badId)
-
-  try {
-    const outcome = await deleteCloudDesign(env, id, identity.owner)
-    switch (outcome) {
+  input: unknown,
+): Promise<CloudAnswer<null>> {
+  return asCaller(request, env, 'cloud design delete failed', async (owner) => {
+    const id = designId(input)
+    if (!id) return refuse('not_found', designsCopy.http.badId)
+    switch (await deleteCloudDesign(env, id, owner)) {
       case 'deleted':
-        return new Response(null, {
-          status: 204,
-          headers: { 'cache-control': 'no-store' },
-        })
+        return { ok: true, data: null }
       case 'not_found':
-        return refuse(404, designsCopy.http.notFound)
+        return refuse('not_found', designsCopy.http.notFound)
       case 'forbidden':
-        return refuse(403, designsCopy.http.notOwner)
+        return refuse('forbidden', designsCopy.http.notOwner)
       case 'not_started':
-        return refuse(409, designsCopy.http.notStarted, { 'retry-after': '5' })
+        return refuse('not_started', designsCopy.http.notStarted, 5)
     }
-  } catch (error) {
-    return refuseFailure(error, 'cloud design delete failed', { id })
-  }
+  })
 }
