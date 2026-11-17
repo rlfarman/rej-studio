@@ -38,12 +38,12 @@ export function FavoriteGenes() {
             {gene.species && (
               <SpeciesIcon
                 species={gene.species}
-                className="text-muted-foreground group-hover/menu-button:text-sidebar-accent-foreground mt-0.5 flex-shrink-0"
+                className="mt-0.5 flex-shrink-0 text-muted-foreground group-hover/menu-button:text-sidebar-accent-foreground"
               />
             )}
             <div className="flex min-w-0 flex-1 flex-col gap-0.5 leading-tight">
               <span className="font-mono font-medium">{gene.symbol}</span>
-              <span className="text-muted-foreground group-hover/menu-button:text-sidebar-accent-foreground type-nano line-clamp-2 pr-5">
+              <span className="line-clamp-2 pr-5 type-nano text-muted-foreground group-hover/menu-button:text-sidebar-accent-foreground">
                 {gene.name}
               </span>
             </div>

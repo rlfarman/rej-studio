@@ -72,7 +72,7 @@ export function AssociationsPagination({
 
   return (
     <div className="flex flex-col items-center gap-2 sm:flex-row sm:justify-between">
-      <div className="text-muted-foreground text-xs" aria-live="polite">
+      <div className="text-xs text-muted-foreground" aria-live="polite">
         {pageSummary(pageStart, pageEnd, total)}
       </div>
       {totalPages > 1 && (

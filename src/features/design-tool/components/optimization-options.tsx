@@ -75,7 +75,7 @@ function CodonOptimizationRow() {
               {copy.help.codonOptimize}
             </FieldHelp>
           </div>
-          <p className="text-muted-foreground text-xs leading-snug">
+          <p className="text-xs leading-snug text-muted-foreground">
             {copy.codonOptimize.description}
           </p>
         </div>
@@ -99,9 +99,9 @@ function CodonOptimizationRow() {
                 'flex items-center gap-1.5 rounded-full border px-2 py-1 text-[11px] font-medium transition-colors',
                 isActive
                   ? 'border-primary bg-primary/10 text-primary'
-                  : 'bg-background text-muted-foreground hover:text-foreground hover:bg-muted/60',
+                  : 'bg-background text-muted-foreground hover:bg-muted/60 hover:text-foreground',
                 isDisabled &&
-                  'hover:bg-background hover:text-muted-foreground cursor-not-allowed opacity-50',
+                  'cursor-not-allowed opacity-50 hover:bg-background hover:text-muted-foreground',
               )}
             >
               <SpeciesIcon species={value} className="size-3.5" />
@@ -151,8 +151,8 @@ export function DesignObjectives() {
           <h2 className="text-base font-medium">
             {formCopy.optimizationHeading}
           </h2>
-          <p className="text-muted-foreground text-sm">
-            <span className="text-foreground font-medium">
+          <p className="text-sm text-muted-foreground">
+            <span className="font-medium text-foreground">
               {summary.isDefault
                 ? copy.summary.recommendedLabel
                 : copy.summary.customLabel}
@@ -189,7 +189,7 @@ export function DesignObjectives() {
 
       {customizing && (
         <div id={panelId} className="flex flex-col">
-          <div className="divide-border/60 flex flex-col divide-y">
+          <div className="flex flex-col divide-y divide-border/60">
             <CodonOptimizationRow />
             <ToggleCard
               name="removeCrypticSpliceSites"
@@ -234,7 +234,7 @@ export function DesignObjectives() {
               aria-expanded={showAdvanced}
               aria-controls={advancedId}
               onClick={() => setShowAdvanced((open) => !open)}
-              className="text-muted-foreground hover:text-foreground focus-visible:ring-ring inline-flex items-center gap-1.5 rounded-sm text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-hidden"
+              className="inline-flex items-center gap-1.5 rounded-sm text-sm font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-hidden"
             >
               <ChevronDown
                 aria-hidden

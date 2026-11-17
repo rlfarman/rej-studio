@@ -6,7 +6,7 @@ const copy = designToolCopy.stimulatoryIntrons
 
 export function StimulatoryIntronOptions() {
   return (
-    <div className="divide-border/60 flex flex-col divide-y sm:grid sm:grid-cols-2 sm:divide-y-0">
+    <div className="flex flex-col divide-y divide-border/60 sm:grid sm:grid-cols-2 sm:divide-y-0">
       <ToggleCard
         name="5PrimeStimulatoryIntron"
         label={copy.fivePrime.label}

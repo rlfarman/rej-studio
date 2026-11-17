@@ -112,20 +112,20 @@ export function RecentJobs({ onSelectJob, onCancelJob }: RecentJobsProps) {
                 <Loader2 className="mt-0.5 flex-shrink-0 animate-spin" />
               )}
               {isError && (
-                <CircleAlert className="text-destructive mt-0.5 flex-shrink-0" />
+                <CircleAlert className="mt-0.5 flex-shrink-0 text-destructive" />
               )}
               <div className="flex min-w-0 flex-1 flex-col gap-0.5 leading-tight">
                 <span className="line-clamp-2 pr-5 font-medium">
                   {entry.name}
                 </span>
-                <span className="text-muted-foreground group-hover/menu-button:text-sidebar-accent-foreground type-nano line-clamp-2 block min-h-[14px] pr-5">
+                <span className="line-clamp-2 block min-h-[14px] pr-5 type-nano text-muted-foreground group-hover/menu-button:text-sidebar-accent-foreground">
                   {subline}
                 </span>
                 {entry.status === 'running' &&
                   progress?.progress !== undefined && (
-                    <div className="bg-sidebar-border mt-1 h-0.5 w-full overflow-hidden rounded-full">
+                    <div className="mt-1 h-0.5 w-full overflow-hidden rounded-full bg-sidebar-border">
                       <div
-                        className="bg-primary h-full w-full origin-left transition-transform duration-700 ease-out"
+                        className="h-full w-full origin-left bg-primary transition-transform duration-700 ease-out"
                         style={{
                           transform: `scaleX(${Math.max(0.02, progress.progress)})`,
                         }}

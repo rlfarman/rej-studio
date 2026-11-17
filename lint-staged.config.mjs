@@ -26,7 +26,7 @@ const getRuff = () => {
 }
 
 // `.claude/launch.json` and `.claude/skills` are symlinks into `.agents/`.
-// lint-staged matches them under `*.json`, but prettier errors out on any
+// lint-staged matches them under `*.json`, but the formatter errors out on any
 // explicitly-specified symlink. Filter symlinks out before invoking tools.
 const realFiles = (files) =>
   files.filter((f) => {
@@ -43,12 +43,12 @@ export default {
   '*.{js,jsx,ts,tsx,mjs,cjs}': (files) => {
     const real = realFiles(files).map(quote).join(' ')
     if (!real) return []
-    return [`vp lint --fix ${real}`, `prettier --write ${real}`]
+    return [`vp lint --fix ${real}`, `oxfmt ${real}`]
   },
   '*.{json,md,css,yml,yaml}': (files) => {
     const real = realFiles(files).map(quote).join(' ')
     if (!real) return []
-    return [`prettier --write ${real}`]
+    return [`oxfmt ${real}`]
   },
   '*.py': (files) => {
     const real = realFiles(files).map(quote).join(' ')

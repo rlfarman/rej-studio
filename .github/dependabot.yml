@@ -56,7 +56,6 @@ updates:
           - 'tailwindcss-*'
           - '@tailwindcss/*'
           - 'tailwind-merge'
-          - 'prettier-plugin-tailwindcss'
       tanstack:
         patterns:
           - '@tanstack/*'
@@ -69,7 +68,6 @@ updates:
           - '@next/*'
           - 'tailwindcss*'
           - '@tailwindcss/*'
-          - 'prettier-plugin-*'
           - '@tanstack/*'
           - 'storybook'
           - '@storybook/*'

@@ -99,7 +99,8 @@ async function storedJobNames(page: Page): Promise<string[] | null> {
           get.onerror = () => reject(get.error)
           get.onsuccess = () => {
             const value = get.result as
-              { state: { entries: { name: string }[] } } | undefined
+              | { state: { entries: { name: string }[] } }
+              | undefined
             db.close()
             resolve(value ? value.state.entries.map((e) => e.name) : null)
           }
@@ -194,7 +195,8 @@ function history(page: Page, write?: StoredEntry[]) {
           tx.oncomplete = () => {
             db.close()
             const value = get.result as
-              { state: { entries: StoredEntry[] } } | undefined
+              | { state: { entries: StoredEntry[] } }
+              | undefined
             resolve(value?.state.entries ?? [])
           }
           tx.onerror = () => reject(tx.error)

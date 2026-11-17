@@ -54,7 +54,7 @@ The three lists of types must stay in sync.
 
 ## Pre-commit formatting
 
-A `pre-commit` hook runs `oxlint --fix`, `eslint --fix` and `prettier --write` on staged JS/TS files (and `ruff` through `uv run` on staged Python files) via `lint-staged`. This keeps formatting consistent without running the whole repo through the linter on every commit.
+A `pre-commit` hook runs `vp lint --fix` (Oxlint) and `oxfmt` on staged JS/TS files, `oxfmt` on staged JSON/Markdown/CSS/YAML, (and `ruff` through `uv run` on staged Python files) via `lint-staged`. This keeps formatting consistent without running the whole repo through the linter on every commit.
 
 ## Emergency bypass
 

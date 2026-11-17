@@ -46,7 +46,8 @@ export class SearchUnavailableError extends Error {
 }
 
 export type RateLimitOutcome =
-  { ok: true } | { ok: false; retryAfterSeconds: number }
+  | { ok: true }
+  | { ok: false; retryAfterSeconds: number }
 
 /** Spend one search from the caller's per-IP budget. */
 export async function checkSearchRateLimit(): Promise<RateLimitOutcome> {

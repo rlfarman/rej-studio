@@ -95,7 +95,7 @@ pnpm test:e2e      # Playwright smoke tests (gated next dev on :3000)
 | `pnpm start`        | Start production server              |
 | `pnpm lint`         | Run Oxlint, then ESLint              |
 | `pnpm lint:fix`     | Auto-fix lint issues                 |
-| `pnpm format`       | Format with Prettier                 |
+| `pnpm format`       | Format with Oxfmt                    |
 | `pnpm format:check` | Check formatting without writing     |
 | `pnpm type-check`   | Type check with TypeScript 7         |
 | `pnpm test`         | Run unit tests (Vitest)              |

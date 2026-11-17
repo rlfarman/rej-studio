@@ -112,7 +112,7 @@ export function SidebarMenu() {
                     </DropdownMenuLabel>
                     {THEMES.map(({ value, label, icon: Icon }) => (
                       <DropdownMenuRadioItem key={value} value={value}>
-                        <Icon className="text-foreground h-4 w-4" />
+                        <Icon className="h-4 w-4 text-foreground" />
                         {label}
                       </DropdownMenuRadioItem>
                     ))}
@@ -121,11 +121,11 @@ export function SidebarMenu() {
                 </>
               )}
               <DropdownMenuItem onClick={() => void exportUserData()}>
-                <Download className="text-foreground h-4 w-4" />
+                <Download className="h-4 w-4 text-foreground" />
                 {menuCopy.exportData}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>
-                <Upload className="text-foreground h-4 w-4" />
+                <Upload className="h-4 w-4 text-foreground" />
                 {menuCopy.importData}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
@@ -135,7 +135,7 @@ export function SidebarMenu() {
                   toast.success(menuCopy.seedResult(favorites, recents, jobs))
                 }}
               >
-                <Sprout className="text-foreground h-4 w-4" />
+                <Sprout className="h-4 w-4 text-foreground" />
                 {menuCopy.seedData}
               </DropdownMenuItem>
               <DropdownMenuItem
@@ -151,7 +151,7 @@ export function SidebarMenu() {
                   }
                 }}
               >
-                <Eraser className="text-foreground h-4 w-4" />
+                <Eraser className="h-4 w-4 text-foreground" />
                 {menuCopy.clearSeedData}
               </DropdownMenuItem>
             </DropdownMenuContent>

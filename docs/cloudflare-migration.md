@@ -189,7 +189,7 @@ Cloudflare cutover are done. Everything here is reversible until DNS moves.
    plugin; the root route with theme, query client, sidebar and header; the
    error and not-found boundaries; Storybook on `react-vite`. Also check that
    Oxlint can carry the feature-boundary rules, or keep a minimal ESLint for
-   them, and that Oxfmt can sort Tailwind classes, or keep Prettier for it.
+   them. (Oxfmt replaced Prettier, including Tailwind class sorting.)
 2. **Pages.** Home, genes, gene page, design tool, disease associations and
    architecture, with loaders reading the static corpus and typed search
    params replacing `useSearchParams`.

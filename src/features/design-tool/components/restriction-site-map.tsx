@@ -81,7 +81,7 @@ export function RestrictionSiteMap({ original, optimized }: Props) {
 
   if (rows.length === 0) {
     return (
-      <p className="text-muted-foreground text-xs">
+      <p className="text-xs text-muted-foreground">
         No common Type II enzyme sites found in either sequence.
       </p>
     )
@@ -92,7 +92,7 @@ export function RestrictionSiteMap({ original, optimized }: Props) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-end">
-        <div className="text-muted-foreground type-micro flex items-center gap-3 tabular-nums">
+        <div className="flex items-center gap-3 type-micro text-muted-foreground tabular-nums">
           <span>
             {totalBefore} → {totalAfter} total
           </span>
@@ -108,13 +108,13 @@ export function RestrictionSiteMap({ original, optimized }: Props) {
             {net > 0 ? `+${net}` : net}
           </span>
           <span className="flex items-center gap-1">
-            <span className="bg-success/70 size-2 rounded-sm" /> added
+            <span className="size-2 rounded-sm bg-success/70" /> added
           </span>
           <span className="flex items-center gap-1">
-            <span className="bg-danger/70 size-2 rounded-sm" /> removed
+            <span className="size-2 rounded-sm bg-danger/70" /> removed
           </span>
           <span className="flex items-center gap-1">
-            <span className="bg-muted-foreground/50 size-2 rounded-sm" /> kept
+            <span className="size-2 rounded-sm bg-muted-foreground/50" /> kept
           </span>
         </div>
       </div>
@@ -181,8 +181,8 @@ function EnzymeTrack({
   }, [row, maxLen])
 
   return (
-    <div className="group type-micro flex items-center gap-2">
-      <span className="text-muted-foreground w-16 shrink-0 truncate font-mono">
+    <div className="group flex items-center gap-2 type-micro">
+      <span className="w-16 shrink-0 truncate font-mono text-muted-foreground">
         {row.enzyme}
       </span>
       <div className="flex flex-1 flex-col gap-0.5">
@@ -199,7 +199,7 @@ function EnzymeTrack({
           axisLen={maxLen}
         />
       </div>
-      <span className="text-muted-foreground w-16 shrink-0 text-right font-mono tabular-nums">
+      <span className="w-16 shrink-0 text-right font-mono text-muted-foreground tabular-nums">
         {row.added > 0 && (
           <span className="text-success-soft">+{row.added}</span>
         )}
@@ -230,12 +230,12 @@ function Lane({
   const laneLabel = `${label} strand: ${hits.length} site${hits.length === 1 ? '' : 's'}`
   return (
     <div
-      className="bg-muted/30 relative h-2.5 w-full rounded-sm"
+      className="relative h-2.5 w-full rounded-sm bg-muted/30"
       role="img"
       aria-label={laneLabel}
     >
       <div
-        className="bg-muted/50 absolute inset-y-0 left-0 rounded-sm"
+        className="absolute inset-y-0 left-0 rounded-sm bg-muted/50"
         style={{ width: `${lanePct}%` }}
       />
       {hits.map((h, i) => {

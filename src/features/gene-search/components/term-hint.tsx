@@ -41,7 +41,7 @@ export function TermHint({ label, hint, className }: TermHintProps) {
               setOpen((o) => !o)
             }}
             className={cn(
-              'text-muted-foreground hover:text-foreground focus-visible:ring-ring inline-flex size-6 shrink-0 items-center justify-center rounded-full transition-colors focus-visible:ring-2 focus-visible:outline-none',
+              'inline-flex size-6 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none',
               className,
             )}
           >

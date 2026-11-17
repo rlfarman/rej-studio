@@ -32,7 +32,7 @@ lint: ## Run Oxlint (vp lint), with the boundary rules as JS plugins
 lint-fix: ## Auto-fix lint issues
 	pnpm lint:fix
 
-format: ## Run Prettier
+format: ## Run Oxfmt
 	pnpm format
 
 type-check: ## Run TypeScript type checker

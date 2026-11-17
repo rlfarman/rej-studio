@@ -687,7 +687,7 @@ export function SpliceSliderContext({
                         disabled={!canPrev}
                         title="Previous WGGW site"
                         aria-label="Previous WGGW site"
-                        className="text-foreground/55 hover:text-foreground inline-flex size-4 items-center justify-center rounded-full transition-colors disabled:pointer-events-none disabled:opacity-30"
+                        className="inline-flex size-4 items-center justify-center rounded-full text-foreground/55 transition-colors hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
                       >
                         <ChevronLeft className="size-3" strokeWidth={2.5} />
                       </button>
@@ -697,7 +697,7 @@ export function SpliceSliderContext({
                       onPointerDown={(e) => startDrag(idx, e, false)}
                       title={`Split point at bp ${pos.toLocaleString()} — drag to move`}
                       className={cn(
-                        'bg-background inline-flex min-w-max cursor-grab touch-none items-center rounded-full border px-2 py-0.5 font-mono text-xs font-semibold whitespace-nowrap tabular-nums shadow-sm transition-all active:cursor-grabbing',
+                        'inline-flex min-w-max cursor-grab touch-none items-center rounded-full border bg-background px-2 py-0.5 font-mono text-xs font-semibold whitespace-nowrap tabular-nums shadow-sm transition-all active:cursor-grabbing',
                         isActive
                           ? cn('ring-2', tone.caretRing, tone.text)
                           : 'text-muted-foreground opacity-70',
@@ -724,7 +724,7 @@ export function SpliceSliderContext({
                         disabled={!canNext}
                         title="Next WGGW site"
                         aria-label="Next WGGW site"
-                        className="text-foreground/55 hover:text-foreground inline-flex size-4 items-center justify-center rounded-full transition-colors disabled:pointer-events-none disabled:opacity-30"
+                        className="inline-flex size-4 items-center justify-center rounded-full text-foreground/55 transition-colors hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
                       >
                         <ChevronRight className="size-3" strokeWidth={2.5} />
                       </button>
@@ -744,7 +744,7 @@ export function SpliceSliderContext({
             aria-valuenow={activePosition}
             aria-valuetext={`bp ${activePosition.toLocaleString()} of ${seqLen.toLocaleString()}`}
             onPointerDown={handleTrackPointerDown}
-            className="focus-visible:ring-ring bg-background/80 relative h-18 cursor-ew-resize touch-none rounded-2xl border select-none focus:outline-none focus-visible:ring-2"
+            className="relative h-18 cursor-ew-resize touch-none rounded-2xl border bg-background/80 select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <div className="absolute inset-x-0 top-0 z-10 flex h-11 overflow-hidden rounded-t-2xl">
               {buildSegments(positions, seqLen).map((seg, i, arr) => {
@@ -792,7 +792,7 @@ export function SpliceSliderContext({
             <div
               ref={wggwStripRef}
               role="presentation"
-              className="bg-background/70 absolute inset-x-0 bottom-0 h-7 cursor-pointer overflow-hidden rounded-b-2xl border-t"
+              className="absolute inset-x-0 bottom-0 h-7 cursor-pointer overflow-hidden rounded-b-2xl border-t bg-background/70"
               // Parent-routed tick selection: compute clicked bp from
               // clientX and pick the nearest WGGW site within a small
               // pixel threshold. Avoids the prior bug where overlapping
@@ -852,7 +852,7 @@ export function SpliceSliderContext({
             >
               {stripWindow && (
                 <div
-                  className="bg-foreground/10 pointer-events-none absolute inset-y-0"
+                  className="pointer-events-none absolute inset-y-0 bg-foreground/10"
                   style={{
                     left: `${((stripWindow.start - 1) / seqLen) * 100}%`,
                     width: `${((stripWindow.end - stripWindow.start + 1) / seqLen) * 100}%`,
@@ -879,7 +879,7 @@ export function SpliceSliderContext({
                         : cn(
                             'bg-marker',
                             'h-4 w-1',
-                            'data-[tick-hovered=true]:ring-foreground/30 data-[tick-hovered=true]:z-10 data-[tick-hovered=true]:h-5 data-[tick-hovered=true]:w-1.5 data-[tick-hovered=true]:ring-1',
+                            'data-[tick-hovered=true]:z-10 data-[tick-hovered=true]:h-5 data-[tick-hovered=true]:w-1.5 data-[tick-hovered=true]:ring-1 data-[tick-hovered=true]:ring-foreground/30',
                           ),
                     )}
                     style={{ left: `${x}%` }}
@@ -1042,12 +1042,12 @@ function Toolbar({
   const isSequence = queryMode === 'sequence'
   const isBp = queryMode === 'bp'
   return (
-    <div className="bg-background/25 flex w-full items-center gap-2 rounded-xl px-1 py-0.5">
+    <div className="flex w-full items-center gap-2 rounded-xl bg-background/25 px-1 py-0.5">
       <div className="flex min-w-0 flex-1 items-center gap-1">
-        <span className="text-muted-foreground text-[10px] font-medium tracking-[0.08em] uppercase">
+        <span className="text-[10px] font-medium tracking-[0.08em] text-muted-foreground uppercase">
           Go to
         </span>
-        <div className="bg-background flex h-7 min-w-0 flex-1 items-center gap-1 rounded-2xl border px-1.5">
+        <div className="flex h-7 min-w-0 flex-1 items-center gap-1 rounded-2xl border bg-background px-1.5">
           <input
             type="text"
             inputMode={isBp ? 'numeric' : 'text'}
@@ -1069,7 +1069,7 @@ function Toolbar({
           />
           {isSequence && (
             <>
-              <span className="text-muted-foreground font-mono text-[10px] tabular-nums">
+              <span className="font-mono text-[10px] text-muted-foreground tabular-nums">
                 {searchMatchCount === 0
                   ? '0/0'
                   : `${searchMatchIndex + 1}/${searchMatchCount}`}
@@ -1079,7 +1079,7 @@ function Toolbar({
                 onClick={onSearchPrev}
                 disabled={searchMatchCount === 0}
                 title="Previous match (Shift+Enter)"
-                className="text-muted-foreground hover:text-foreground inline-flex size-5 items-center justify-center rounded-full disabled:opacity-30"
+                className="inline-flex size-5 items-center justify-center rounded-full text-muted-foreground hover:text-foreground disabled:opacity-30"
               >
                 <ChevronLeft className="size-3" />
               </button>
@@ -1088,14 +1088,14 @@ function Toolbar({
                 onClick={onSearchNext}
                 disabled={searchMatchCount === 0}
                 title="Next match (Enter)"
-                className="text-muted-foreground hover:text-foreground inline-flex size-5 items-center justify-center rounded-full disabled:opacity-30"
+                className="inline-flex size-5 items-center justify-center rounded-full text-muted-foreground hover:text-foreground disabled:opacity-30"
               >
                 <ChevronRight className="size-3" />
               </button>
             </>
           )}
           {isBp && (
-            <span className="text-muted-foreground font-mono text-[10px] tracking-[0.04em] uppercase">
+            <span className="font-mono text-[10px] tracking-[0.04em] text-muted-foreground uppercase">
               bp
             </span>
           )}
@@ -1130,7 +1130,7 @@ function SiteNav({
   onNext: () => void
 }) {
   return (
-    <div className="text-muted-foreground inline-flex items-center gap-1 font-mono text-[11px] font-normal tabular-nums">
+    <div className="inline-flex items-center gap-1 font-mono text-[11px] font-normal text-muted-foreground tabular-nums">
       <Button
         type="button"
         variant="ghost"
@@ -1139,7 +1139,7 @@ function SiteNav({
         disabled={!canPrev}
         title="Previous WGGW site ([)"
         aria-label="Previous WGGW site"
-        className="hover:text-foreground size-5 [&_svg:not([class*='size-'])]:size-3.5"
+        className="size-5 hover:text-foreground [&_svg:not([class*='size-'])]:size-3.5"
       >
         <ChevronLeft />
       </Button>
@@ -1152,7 +1152,7 @@ function SiteNav({
         disabled={!canNext}
         title="Next WGGW site (])"
         aria-label="Next WGGW site"
-        className="hover:text-foreground size-5 [&_svg:not([class*='size-'])]:size-3.5"
+        className="size-5 hover:text-foreground [&_svg:not([class*='size-'])]:size-3.5"
       >
         <ChevronRight />
       </Button>
@@ -1306,7 +1306,7 @@ function LocalSequenceView({
       ref={stripRef}
       role="group"
       aria-label="Sequence context around WGGW split site"
-      className="bg-muted/40 type-nano [scrollbar-width:none] overflow-x-auto rounded-2xl border px-5 py-1 font-mono leading-none [-ms-overflow-style:none] sm:py-2 [&::-webkit-scrollbar]:hidden"
+      className="[scrollbar-width:none] overflow-x-auto rounded-2xl border bg-muted/40 px-5 py-1 font-mono type-nano leading-none [-ms-overflow-style:none] sm:py-2 [&::-webkit-scrollbar]:hidden"
       onPointerLeave={() => setHoveredSitePosition(null)}
     >
       <div className="flex items-stretch">
@@ -1369,11 +1369,11 @@ function CodonCard({
     <div className={cardClasses}>
       {!isLast && (
         <span
-          className="border-border/60 pointer-events-none absolute top-3 right-0 bottom-0 border-r"
+          className="pointer-events-none absolute top-3 right-0 bottom-0 border-r border-border/60"
           aria-hidden="true"
         />
       )}
-      <div className="text-muted-foreground pointer-events-none absolute top-0 left-0 z-10 w-max -translate-x-1/2 text-[10px] leading-3 tabular-nums">
+      <div className="pointer-events-none absolute top-0 left-0 z-10 w-max -translate-x-1/2 text-[10px] leading-3 text-muted-foreground tabular-nums">
         {codon.start.toLocaleString()}
       </div>
       <div
@@ -1415,7 +1415,7 @@ function CodonCard({
             'relative flex h-8 w-4 items-center justify-center text-[15px] font-semibold tabular-nums transition-colors',
             roleStyles.base,
             coverSite &&
-              'cursor-pointer border-0 bg-transparent p-0 font-mono leading-none text-foreground focus-visible:z-20 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring',
+              'cursor-pointer border-0 bg-transparent p-0 font-mono leading-none text-foreground focus-visible:z-20 focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none',
             inOtherSite && 'text-foreground',
             isOverlappingMotifBase && 'text-foreground',
             inSelectedMotif && selectedTone && selectedTone.baseText,
@@ -1426,7 +1426,7 @@ function CodonCard({
               'text-foreground',
             changeTone && changeTone.text,
             inSearchMatch &&
-              'ring-foreground/60 z-10 rounded-sm ring-1 ring-inset',
+              'z-10 rounded-sm ring-1 ring-foreground/60 ring-inset',
           )
           const baseContent = (
             <>
@@ -1618,12 +1618,12 @@ function Inspector({
     'flex min-h-[280px] min-w-0 flex-col gap-4 rounded-2xl border px-4 pt-4 pb-3 text-xs transition-all',
     isMulti
       ? isActive
-        ? cn('bg-muted/40 cursor-pointer shadow-sm ring-2', tone?.caretRing)
+        ? cn('cursor-pointer bg-muted/40 shadow-sm ring-2', tone?.caretRing)
         : cn(
-            'bg-muted/20 cursor-pointer opacity-55 hover:bg-muted/30 hover:opacity-80',
+            'cursor-pointer bg-muted/20 opacity-55 hover:bg-muted/30 hover:opacity-80',
             tone?.hoverBorder,
           )
-      : 'bg-muted/30 cursor-default',
+      : 'cursor-default bg-muted/30',
   )
 
   // Header left side: the section title, or — in multi-split mode — a
@@ -1644,7 +1644,7 @@ function Inspector({
       {spliceLabel}
     </button>
   ) : (
-    <h3 className="text-foreground text-sm font-semibold tracking-tight">
+    <h3 className="text-sm font-semibold tracking-tight text-foreground">
       Split point design
     </h3>
   )
@@ -1658,7 +1658,7 @@ function Inspector({
         onClick={onRemoveSplice}
         title={`Remove ${spliceLabel}`}
         aria-label={`Remove ${spliceLabel}`}
-        className="text-muted-foreground hover:text-foreground size-5"
+        className="size-5 text-muted-foreground hover:text-foreground"
       >
         <X className="size-3" />
       </Button>
@@ -1672,12 +1672,12 @@ function Inspector({
           {removeButton}
         </div>
         <div className="flex flex-1 flex-col items-center justify-center gap-1 px-4 text-center">
-          <p className="text-foreground/80 text-sm font-medium">
+          <p className="text-sm font-medium text-foreground/80">
             {totalSites === 0
               ? designToolCopy.splitPoint.noSitesShort
               : designToolCopy.splitPoint.emptyTitle}
           </p>
-          <p className="text-muted-foreground text-xs leading-relaxed">
+          <p className="text-xs leading-relaxed text-muted-foreground">
             {totalSites === 0
               ? designToolCopy.splitPoint.noSites
               : designToolCopy.splitPoint.emptyBody}
@@ -1716,7 +1716,7 @@ function Inspector({
             label={
               <>
                 Site{' '}
-                <span className="text-foreground font-medium">
+                <span className="font-medium text-foreground">
                   {selectedSiteIndex >= 0 ? selectedSiteIndex + 1 : 0}
                 </span>
                 <span className="text-muted-foreground">/{totalSites}</span>
@@ -1731,7 +1731,7 @@ function Inspector({
       </div>
 
       {isDefaultedSite && (
-        <p className="text-muted-foreground -mt-1 text-xs leading-relaxed">
+        <p className="-mt-1 text-xs leading-relaxed text-muted-foreground">
           {designToolCopy.splitPoint.preselected(
             selectedSite.position.toLocaleString(),
           )}
@@ -1740,7 +1740,7 @@ function Inspector({
 
       <div className="space-y-3">
         <div className="space-y-1.5">
-          <div className="text-muted-foreground flex items-center justify-between text-[10px] font-semibold tracking-[0.08em] uppercase">
+          <div className="flex items-center justify-between text-[10px] font-semibold tracking-[0.08em] text-muted-foreground uppercase">
             <span>Synonymous rewrites</span>
             {selectedSite.rewriteOptions.length > 1 && (
               <span className="text-muted-foreground normal-case">
@@ -1795,10 +1795,10 @@ function Inspector({
                         className="grid font-mono text-[12px] leading-none"
                         style={{ gridTemplateColumns: 'repeat(7, 1ch)' }}
                       >
-                        <span className="text-muted-foreground col-start-2 text-center font-medium">
+                        <span className="col-start-2 text-center font-medium text-muted-foreground">
                           {translateCodon(option.newCodons[0]) ?? '?'}
                         </span>
-                        <span className="text-muted-foreground col-start-6 text-center font-medium">
+                        <span className="col-start-6 text-center font-medium text-muted-foreground">
                           {translateCodon(option.newCodons[1]) ?? '?'}
                         </span>
                       </span>
@@ -1821,7 +1821,7 @@ function Inspector({
         </div>
 
         <div className="space-y-1.5">
-          <div className="text-muted-foreground text-[10px] font-semibold tracking-[0.08em] uppercase">
+          <div className="text-[10px] font-semibold tracking-[0.08em] text-muted-foreground uppercase">
             Sequence context
           </div>
           <SequenceContextTable
@@ -1924,7 +1924,7 @@ function RewriteRow({ children }: { children: ReactNode }) {
 
 function Kbd({ children }: { children: ReactNode }) {
   return (
-    <kbd className="bg-background text-foreground type-micro inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-lg border px-1 font-mono font-semibold">
+    <kbd className="inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-lg border bg-background px-1 font-mono type-micro font-semibold text-foreground">
       {children}
     </kbd>
   )
@@ -1963,7 +1963,7 @@ function SequenceContextTable({ rows }: { rows: SequenceRow[] }) {
         {rows.map((row) => (
           <div
             key={row.label}
-            className="text-muted-foreground flex h-[18px] items-center text-[10px] font-medium tracking-[0.08em] whitespace-nowrap uppercase"
+            className="flex h-[18px] items-center text-[10px] font-medium tracking-[0.08em] whitespace-nowrap text-muted-foreground uppercase"
           >
             {row.label}
           </div>
@@ -2018,7 +2018,7 @@ function SequenceRowText({
             data-focus={isFocusRow && index === focusIndex ? 'true' : undefined}
             className={cn(
               'inline-flex min-w-[1ch] items-center justify-center',
-              char === '|' && 'text-primary font-bold',
+              char === '|' && 'font-bold text-primary',
               editedSet.has(index) && 'font-semibold',
             )}
           >
@@ -2055,7 +2055,7 @@ function ShortcutHint({
   return (
     <div
       className={cn(
-        'text-muted-foreground hidden flex-wrap items-center gap-x-3 gap-y-1 text-[10px] transition-opacity md:flex',
+        'hidden flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-muted-foreground transition-opacity md:flex',
         active ? 'opacity-100' : 'pointer-events-none opacity-0',
       )}
       aria-hidden={!active}

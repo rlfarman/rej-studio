@@ -1,5 +1,8 @@
 export type PhenotypeStatus =
-  'confirmed' | 'provisional' | 'susceptibility' | 'nondisease'
+  | 'confirmed'
+  | 'provisional'
+  | 'susceptibility'
+  | 'nondisease'
 
 type Phenotype = {
   name: string

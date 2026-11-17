@@ -30,7 +30,7 @@ export function NameInput() {
             </FormLabel>
             <span
               className={cn(
-                'text-muted-foreground shrink-0 text-xs tabular-nums',
+                'shrink-0 text-xs text-muted-foreground tabular-nums',
                 length > MAX_NAME_LENGTH && 'text-destructive-foreground',
               )}
             >

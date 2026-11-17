@@ -81,7 +81,7 @@ export function AssociationsFilters({ bucketCounts }: Props) {
           }}
           placeholder={diseaseAssociationsCopy.filters.searchPlaceholder}
           aria-label={diseaseAssociationsCopy.filters.searchAria}
-          className="bg-card max-w-lg shadow-xs"
+          className="max-w-lg bg-card shadow-xs"
         />
         {hasFilters && (
           <Button
@@ -98,7 +98,7 @@ export function AssociationsFilters({ bucketCounts }: Props) {
       </div>
 
       <div className="flex flex-wrap items-center gap-1.5">
-        <span className="text-muted-foreground mr-1 text-xs font-semibold tracking-wider uppercase">
+        <span className="mr-1 text-xs font-semibold tracking-wider text-muted-foreground uppercase">
           {diseaseAssociationsCopy.filters.inheritanceLabel}
         </span>
         {FILTER_INHERITANCE_BUCKETS.map((bucket) => {
@@ -114,14 +114,14 @@ export function AssociationsFilters({ bucketCounts }: Props) {
               className={cn(
                 'rounded-full border px-2.5 py-1 text-xs transition-colors',
                 active
-                  ? 'bg-primary text-primary-foreground border-primary'
+                  ? 'border-primary bg-primary text-primary-foreground'
                   : 'bg-card text-foreground hover:bg-muted',
               )}
             >
               {formatInheritanceLabel(bucket)}
               <span
                 className={cn(
-                  'type-micro ml-1.5 font-mono',
+                  'ml-1.5 font-mono type-micro',
                   active ? 'opacity-80' : 'text-muted-foreground',
                 )}
               >

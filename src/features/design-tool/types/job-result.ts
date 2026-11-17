@@ -17,7 +17,8 @@ export type JobError = BackendJobError
  * Only bugs throw.
  */
 export type JobActionResult<T> =
-  { ok: true; data: T } | { ok: false; error: JobError }
+  | { ok: true; data: T }
+  | { ok: false; error: JobError }
 
 export function jobError(
   code: JobErrorCode,

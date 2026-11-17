@@ -133,11 +133,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 tooltip={commonCopy.brandName}
                 render={<Link to="/" />}
               >
-                <div className="bg-spark text-spark-foreground flex aspect-square size-8 items-center justify-center rounded-xl">
+                <div className="flex aspect-square size-8 items-center justify-center rounded-xl bg-spark text-spark-foreground">
                   <Dna className="size-4" />
                 </div>
                 <div className="grid flex-1 text-left leading-tight opacity-0 transition-opacity duration-150 group-data-[state=expanded]:opacity-100 group-data-[state=expanded]:delay-200 [[data-mobile=true]_&]:opacity-100">
-                  <span className="font-display truncate text-base font-semibold">
+                  <span className="truncate font-display text-base font-semibold">
                     {commonCopy.brandName}
                   </span>
                 </div>
@@ -156,7 +156,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <RecentGenes />
             {jobCount > 0 && <RecentJobs onSelectJob={handleSelectJob} />}
             {hydrated && !hasHistory && (
-              <p className="text-muted-foreground px-4 py-3 text-xs leading-relaxed">
+              <p className="px-4 py-3 text-xs leading-relaxed text-muted-foreground">
                 {appCopy.sidebar.historyHint}
               </p>
             )}

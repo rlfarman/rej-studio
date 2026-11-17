@@ -117,7 +117,7 @@ function SplitVisualization({
   return (
     <div className="space-y-1.5">
       <div className="flex items-center gap-2 text-sm">
-        <Scissors className="text-muted-foreground size-4" />
+        <Scissors className="size-4 text-muted-foreground" />
         <span>
           {resultsCopy.splitAtPosition}{' '}
           <span className="font-mono font-medium">
@@ -191,7 +191,7 @@ function MetricsStrip({ result }: { result: ProcessResult }) {
   const showCai = stats.keyAfter.caiScore !== null
 
   return (
-    <div className="bg-border grid grid-cols-1 gap-px overflow-hidden rounded-2xl border sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid grid-cols-1 gap-px overflow-hidden rounded-2xl border bg-border sm:grid-cols-2 lg:grid-cols-4">
       <MetricCell
         label="Score"
         before={stats.before.totalScore}
@@ -264,10 +264,10 @@ function renderSequenceWithIntrons(sequence: string) {
               <span
                 className={
                   isStim
-                    ? 'bg-accent text-accent-foreground cursor-help rounded-sm px-1 font-semibold'
+                    ? 'cursor-help rounded-sm bg-accent px-1 font-semibold text-accent-foreground'
                     : isFive
-                      ? 'text-info-soft bg-info/15 dark:text-info cursor-help rounded-sm px-1 font-semibold'
-                      : 'bg-primary/15 text-primary dark:text-primary-foreground dark:bg-primary/40 cursor-help rounded-sm px-1 font-semibold'
+                      ? 'cursor-help rounded-sm bg-info/15 px-1 font-semibold text-info-soft dark:text-info'
+                      : 'cursor-help rounded-sm bg-primary/15 px-1 font-semibold text-primary dark:bg-primary/40 dark:text-primary-foreground'
                 }
               />
             }
@@ -295,7 +295,7 @@ function SequenceCard({
   const justCopied = isCopied('fasta') || isCopied('seq')
   const displayLength = sequence.replace(INTRON_MARKER_RE, '').length
   return (
-    <div className="bg-muted/30 space-y-2 rounded-2xl border p-3">
+    <div className="space-y-2 rounded-2xl border bg-muted/30 p-3">
       <div className="flex flex-wrap items-center justify-between gap-1.5">
         <div className="flex items-center gap-1.5">
           <span className="text-xs font-medium">{label}</span>
@@ -351,7 +351,7 @@ function SequenceCard({
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-      <pre className="bg-muted max-h-40 overflow-auto rounded-xl p-2.5 font-mono text-xs break-all whitespace-pre-wrap">
+      <pre className="max-h-40 overflow-auto rounded-xl bg-muted p-2.5 font-mono text-xs break-all whitespace-pre-wrap">
         {renderSequenceWithIntrons(sequence)}
       </pre>
     </div>
@@ -405,14 +405,14 @@ function ExpandableRow({
         <ChevronRight
           aria-hidden
           className={cn(
-            'text-muted-foreground size-4 shrink-0 transition-transform duration-200',
+            'size-4 shrink-0 text-muted-foreground transition-transform duration-200',
             open && 'rotate-90',
           )}
         />
-        <Icon className="text-muted-foreground size-4 shrink-0" />
+        <Icon className="size-4 shrink-0 text-muted-foreground" />
         <span className="font-medium">{title}</span>
         {summary && (
-          <span className="text-muted-foreground text-xs">— {summary}</span>
+          <span className="text-xs text-muted-foreground">— {summary}</span>
         )}
       </button>
       {open && <div className="pt-3 pb-2 pl-6">{children}</div>}
@@ -563,7 +563,7 @@ function ResultsPanelImpl({ result, optionsUsed, species }: ResultsPanelProps) {
           <Button
             type="button"
             size="default"
-            className="bg-accent text-accent-foreground hover:bg-accent/80 gap-1.5 shadow-sm"
+            className="gap-1.5 bg-accent text-accent-foreground shadow-sm hover:bg-accent/80"
             onClick={handleDownloadZip}
           >
             <Download className="size-4" />

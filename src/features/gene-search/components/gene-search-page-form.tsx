@@ -44,7 +44,7 @@ export function GeneSearchPageForm({
         </label>
         <div className="relative min-w-0 flex-1">
           <SearchIcon
-            className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2"
+            className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
             aria-hidden="true"
           />
           <Input
@@ -77,7 +77,7 @@ export function GeneSearchPageForm({
               href={searchPageHref(query, value)}
               aria-current={active ? 'page' : undefined}
               className={cn(
-                'focus-visible:ring-ring flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none',
+                'flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none',
                 active
                   ? 'bg-accent text-accent-foreground'
                   : 'text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground',

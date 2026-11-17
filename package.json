@@ -1,19 +1,9 @@
 {
   "name": "rej-studio",
   "version": "0.2.2",
-  "license": "BSD-3-Clause-Clear",
   "private": true,
+  "license": "BSD-3-Clause-Clear",
   "type": "module",
-  "packageManager": "pnpm@12.21.0",
-  "engines": {
-    "node": "26.x"
-  },
-  "corpus": {
-    "version": "v1",
-    "tag": "corpus-v1",
-    "asset": "rej-corpus-v1.tar.gz",
-    "sha256": "5dc0f5283dfc34cbc7d441ee2c469ce16ae9ff0e164334842216c10ffcec57ff"
-  },
   "scripts": {
     "dev": "vp dev",
     "build": "vp build",
@@ -35,8 +25,8 @@
     "wasm:smoke": "node scripts/wasm-smoke.mjs public/optimizer/rej-optimizer.wasm",
     "lint": "vp lint --report-unused-disable-directives",
     "lint:fix": "vp lint --fix",
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
+    "format": "oxfmt",
+    "format:check": "oxfmt --check",
     "knip": "knip",
     "test": "vp test run",
     "test:watch": "vp test",
@@ -108,10 +98,9 @@
     "knip": "^6.45.1",
     "lint-staged": "^17.6.0",
     "openapi-typescript": "^7.13.0",
+    "oxfmt": "0.79.0",
     "oxlint": "1.93.0",
     "oxlint-tsgolint": "7.0.2006",
-    "prettier": "^3.10.1",
-    "prettier-plugin-tailwindcss": "~0.8.1",
     "shadcn": "^4.23.0",
     "sharp": "0.35.5",
     "storybook": "^10.6.7",
@@ -122,5 +111,15 @@
     "typescript-native": "npm:typescript@^7.0.2",
     "vite-plus": "^1.6.0",
     "wrangler": "^4.162.0"
+  },
+  "engines": {
+    "node": "26.x"
+  },
+  "packageManager": "pnpm@12.21.0",
+  "corpus": {
+    "version": "v1",
+    "tag": "corpus-v1",
+    "asset": "rej-corpus-v1.tar.gz",
+    "sha256": "5dc0f5283dfc34cbc7d441ee2c469ce16ae9ff0e164334842216c10ffcec57ff"
   }
 }

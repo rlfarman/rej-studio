@@ -110,7 +110,7 @@ export function IsoformIdentityMatrix({ isoforms }: Props) {
           id="identity-matrix-title"
           className="flex items-center gap-2 font-sans text-sm font-medium"
         >
-          <Grid3x3 className="text-muted-foreground size-4" />
+          <Grid3x3 className="size-4 text-muted-foreground" />
           {geneSearchCopy.identityMatrix.title}
         </h2>
         <Legend />
@@ -123,7 +123,7 @@ export function IsoformIdentityMatrix({ isoforms }: Props) {
           </caption>
           <thead>
             <tr>
-              <th scope="col" className="bg-card sticky left-0 z-10">
+              <th scope="col" className="sticky left-0 z-10 bg-card">
                 <span className="sr-only">
                   {geneSearchCopy.identityMatrix.rowHeader}
                 </span>
@@ -133,7 +133,7 @@ export function IsoformIdentityMatrix({ isoforms }: Props) {
                   key={`col-${id}`}
                   scope="col"
                   title={id}
-                  className="text-muted-foreground type-micro w-5 min-w-5 pb-1 text-center font-medium tabular-nums"
+                  className="w-5 min-w-5 pb-1 text-center type-micro font-medium text-muted-foreground tabular-nums"
                 >
                   <span aria-hidden>{j + 1}</span>
                   <span className="sr-only">{id}</span>
@@ -156,7 +156,7 @@ export function IsoformIdentityMatrix({ isoforms }: Props) {
         </table>
       </div>
 
-      <p className="text-muted-foreground type-nano max-w-prose">
+      <p className="max-w-prose type-nano text-muted-foreground">
         {geneSearchCopy.identityMatrix.footnote}
       </p>
       <ChartDataTable
@@ -184,7 +184,7 @@ function Legend() {
   return (
     <ul
       aria-label={geneSearchCopy.identityMatrix.legendAria}
-      className="text-muted-foreground type-nano flex flex-wrap items-center gap-x-3 gap-y-1"
+      className="flex flex-wrap items-center gap-x-3 gap-y-1 type-nano text-muted-foreground"
     >
       {BINS.map((bin) => (
         <li key={bin.label} className="flex items-center gap-1.5">
@@ -216,15 +216,15 @@ function Row({
     <tr>
       <th
         scope="row"
-        className="bg-card sticky left-0 z-10 pr-3 text-right font-normal whitespace-nowrap"
+        className="sticky left-0 z-10 bg-card pr-3 text-right font-normal whitespace-nowrap"
       >
         <Link
           href={href}
           scroll={false}
-          className="text-muted-foreground hover:text-foreground focus-visible:ring-ring/50 type-nano inline-flex min-h-6 items-center gap-2 rounded-sm font-mono outline-none hover:underline focus-visible:ring-[3px] sm:min-h-0 sm:items-baseline"
+          className="inline-flex min-h-6 items-center gap-2 rounded-sm font-mono type-nano text-muted-foreground outline-none hover:text-foreground hover:underline focus-visible:ring-[3px] focus-visible:ring-ring/50 sm:min-h-0 sm:items-baseline"
           title={geneSearchCopy.identityMatrix.jumpTo(id)}
         >
-          <span className="text-foreground font-sans font-medium tabular-nums">
+          <span className="font-sans font-medium text-foreground tabular-nums">
             {index + 1}
           </span>
           {/* Phones get the distinguishing tail so the grid keeps its width;
