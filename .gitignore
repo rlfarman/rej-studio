@@ -12,6 +12,7 @@
 /dist/
 /.wrangler/
 /.tanstack/
+/.lighthouseci/
 
 # next.js (transitional: the `next` package stays until slice 3)
 /.next/

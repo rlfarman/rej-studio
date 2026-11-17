@@ -80,6 +80,8 @@ uv sync           # Python env (.venv) for the FastAPI backend, from uv.lock
 pnpm storybook    # Storybook dev server on :6006
 pnpm build-storybook --test # What CI's Storybook job runs
 node scripts/bundle-size.mjs # Per-route first-load JS budgets (after pnpm build)
+node scripts/serve-compressed.mjs # The build behind a brotli/gzip proxy on :3000, as Lighthouse CI audits it
+pnpm images:build # Regenerate the logo variants in public/branding/ from assets/branding/ (sharp)
 pnpm db:build     # Emit neutral JSONL seed from source CSV (data/*.jsonl)
 pnpm db:migrate   # Apply the committed migrations (src/drizzle/migrations) to $DATABASE_URL
 pnpm db:generate  # Write a migration for schema.ts changes (commit it with the schema)
