@@ -24,10 +24,9 @@ const PROTEIN_RE = /^[ACDEFGHIKLMNPQRSTVWYacdefghiklmnpqrstvwy*]+$/
 
 /**
  * Full CDS validation: character set, length, frame, start/stop codons and
- * no premature stops. Exported so the job server action can apply exactly
- * the same rules as the form instead of a weaker regex.
+ * no premature stops.
  */
-export const dnaSequenceSchema = z
+const dnaSequenceSchema = z
   .string()
   .nonempty(designToolCopy.validation.dna.required)
   .regex(/^[ACGTUacgtu]+$/, designToolCopy.validation.dna.invalidNucleotides)

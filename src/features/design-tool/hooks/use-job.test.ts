@@ -8,7 +8,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createElement, type ReactNode } from 'react'
 
 import type { JobActionResult } from '@/features/design-tool/types/job-result'
-import type { BackendProcessResult } from '@/features/design-tool/types/backend-contract'
+import type { ProcessResult } from '@/features/design-tool/types/process-result'
 
 vi.mock('@/features/design-tool/utils/form-handler', () => ({
   buildJobParams: vi.fn((values: { codingSequence: string; name: string }) => ({
@@ -99,9 +99,9 @@ const RESULT = {
   wggw_info: null,
   processing_time_seconds: 0.2,
   seed: 1234,
-} as unknown as BackendProcessResult
+} as unknown as ProcessResult
 
-const succeeds = (): JobActionResult<BackendProcessResult> => ({
+const succeeds = (): JobActionResult<ProcessResult> => ({
   ok: true,
   data: RESULT,
 })
@@ -158,7 +158,7 @@ describe('useJob', () => {
 
   it('feeds progress into the history store as the design runs', async () => {
     let report: ((fraction: number, stage: string) => void) | undefined
-    let settle!: (value: JobActionResult<BackendProcessResult>) => void
+    let settle!: (value: JobActionResult<ProcessResult>) => void
     mockDesign.mockImplementation((_params, callbacks) => {
       report = callbacks?.onProgress
       // Stays in flight until the end of the test.
@@ -240,7 +240,7 @@ describe('useJob', () => {
   })
 
   it('warns before the tab closes only while a run is in flight', async () => {
-    let finish!: (value: JobActionResult<BackendProcessResult>) => void
+    let finish!: (value: JobActionResult<ProcessResult>) => void
     mockDesign.mockImplementation(
       () => new Promise((resolve) => (finish = resolve)),
     )

@@ -4,7 +4,7 @@
 // without the client pulling in the worker's module graph (importing the
 // worker file directly would bundle the WebAssembly loader into the page).
 
-import type { ProcessOptions } from '@/features/design-tool/types/backend-contract'
+import type { ProcessOptions } from '@/features/design-tool/types/optimizer-contract'
 
 /** Sent to the worker to start a design. */
 export interface OptimizerRequest {
@@ -25,14 +25,14 @@ interface OptimizerProgress {
   stage: string
 }
 
-/** The finished design, as the backend contract's `ProcessResult` JSON. */
+/** The finished design, as `ProcessResult` JSON (see optimizer-contract.ts). */
 interface OptimizerResult {
   type: 'result'
   runId: string
   result: unknown
 }
 
-/** The run failed. `code` mirrors the server's job error codes. */
+/** The run failed, with one of the design error codes. */
 interface OptimizerFailure {
   type: 'error'
   runId: string

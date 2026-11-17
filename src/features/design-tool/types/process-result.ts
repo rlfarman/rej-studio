@@ -1,18 +1,17 @@
 /**
  * UI-facing types for an optimization result.
  *
- * These are inferred from the zod schemas in `backend-contract.ts` so the
- * types the components consume can't drift from what we actually parse off
- * the wire.
+ * Inferred from the zod schemas in `optimizer-contract.ts` so the types the
+ * components consume can't drift from what is actually parsed.
  */
 
 import type {
-  BackendProcessResult,
   objectiveEvaluationEntrySchema,
   objectivesReportSchema,
+  processResultSchema,
   runRecordSchema,
   wggwSiteInfoSchema,
-} from '@/features/design-tool/types/backend-contract'
+} from '@/features/design-tool/types/optimizer-contract'
 import type { z } from 'zod'
 
 export type WggwSiteInfo = z.infer<typeof wggwSiteInfoSchema>
@@ -21,4 +20,4 @@ export type ObjectiveEvaluationEntry = z.infer<
 >
 export type ObjectivesReport = z.infer<typeof objectivesReportSchema>
 export type RunRecord = z.infer<typeof runRecordSchema>
-export type ProcessResult = BackendProcessResult
+export type ProcessResult = z.infer<typeof processResultSchema>

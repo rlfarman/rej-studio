@@ -11,7 +11,7 @@ import type {
 } from '@/features/design-tool/types/process-result'
 import type { FormValues } from '@/features/design-tool/types/form-schema'
 
-// Real coding sequences copied verbatim from drizzle/transcript_metadata.csv.
+// Real coding sequences copied verbatim from the source transcript_metadata.csv.
 // Keyed by Ensembl transcript ID so the seed job for "TP53 optimization" is
 // actually TP53 (ENST00000269305), not a synthetic GCT-repeat. Lengths are
 // real, reading frames are real, users can copy the originals into the
