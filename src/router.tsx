@@ -3,6 +3,7 @@ import { createRouter } from '@tanstack/react-router'
 
 import { PageLoading } from '@/routes/-components/layout/page-loading'
 import { RouteError } from '@/routes/-components/route-error'
+import { parseSearch, stringifySearch } from '@/routes/-components/search-codec'
 import { routeTree } from './routeTree.gen'
 
 function makeQueryClient() {
@@ -26,6 +27,10 @@ export function getRouter() {
   return createRouter({
     routeTree,
     context: { queryClient },
+    // Plain query strings (`?q=53`, `?i=a&i=b`) rather than the default
+    // JSON values; the routes' zod schemas coerce types.
+    parseSearch,
+    stringifySearch,
     Wrap: ({ children }) => (
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     ),

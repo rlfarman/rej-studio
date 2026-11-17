@@ -4,6 +4,7 @@ import { appCopy } from '../src/copy/app'
 import { diseaseAssociationsCopy } from '../src/features/disease-associations/copy'
 import { formatInheritanceLabel } from '../src/features/disease-associations/types'
 import { geneSearchCopy } from '../src/features/gene-search/copy'
+import { SAMPLE_GENE_COUNT } from '../src/features/gene-search/corpus/gene-data-url'
 
 // The pages, on the committed sample corpus (public/gene-data/sample), with
 // no server behind them. Expected text comes from the copy files; otherwise
@@ -209,4 +210,49 @@ test('disease-association pages navigate without a reload', async ({
       () => (window as unknown as { marker?: number }).marker,
     ),
   ).toBe(1)
+})
+
+test('search URLs stay plain query strings', async ({ page }) => {
+  await page.goto('/genes')
+  const box = page.getByRole('searchbox', {
+    name: geneSearchCopy.searchPage.inputLabel,
+  })
+  await box.fill('53')
+  await box.press('Enter')
+  await expect(page).toHaveURL(/\/genes\?q=53$/)
+  await expect(
+    page.getByRole('heading', {
+      level: 1,
+      name: geneSearchCopy.searchPage.resultsTitle('53'),
+    }),
+  ).toBeVisible()
+
+  // Repeated keys for a list, and a single value from an older link.
+  await page.goto('/disease-associations?i=X-linked')
+  const xLinked = page.getByRole('button', {
+    name: new RegExp(`^${formatInheritanceLabel('X-linked')}`),
+  })
+  await expect(xLinked).toHaveAttribute('aria-pressed', 'true')
+  await page
+    .getByRole('button', {
+      name: new RegExp(`^${formatInheritanceLabel('Digenic')}`),
+    })
+    .click()
+  await expect(page).toHaveURL('/disease-associations?i=X-linked&i=Digenic')
+
+  // A JSON-encoded link copied while the router wrote JSON values.
+  await page.goto('/genes?q=%2253%22')
+  await expect(
+    page.getByRole('heading', {
+      level: 1,
+      name: geneSearchCopy.searchPage.resultsTitle('53'),
+    }),
+  ).toBeVisible()
+})
+
+test('a build on the sample corpus says so', async ({ page }) => {
+  await page.goto('/')
+  await expect(
+    page.getByText(appCopy.sampleData.label(SAMPLE_GENE_COUNT)),
+  ).toBeVisible()
 })

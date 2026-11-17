@@ -1,16 +1,17 @@
 import { z } from 'zod'
 
 /*
- * Building blocks for the routes' `validateSearch` schemas. The router
- * parses each search value as JSON when it can, so `?q=53` arrives as the
- * number 53 and `?page=2` as 2. Every field `.catch`es: a hand-edited or
- * outdated URL loses the param it got wrong rather than failing the page.
+ * Building blocks for the routes' `validateSearch` schemas. The router's
+ * codec (search-codec.ts) hands every value over as text, or a list of
+ * text for a repeated key, so these coerce types (`?page=2` → 2). Every
+ * field `.catch`es: a hand-edited or outdated URL loses the param it got
+ * wrong rather than failing the page.
  *
  * Routes call `schema.parse` inside `validateSearch` (rather than passing
  * the schema itself), so links are typed with the parsed output.
  */
 
-/** A non-empty string param. A number or boolean (`?q=53`) is read as text. */
+/** A non-empty string param (a number or boolean from a link is read as text). */
 export const searchText = z
   .union([z.string(), z.number(), z.boolean()])
   .transform(String)
