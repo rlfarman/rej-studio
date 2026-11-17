@@ -4,19 +4,16 @@ import { GeneCorpus, type CorpusReader } from './client'
 const SAMPLE_GENE_DATA_URL = '/gene-data/sample'
 
 /**
- * The static corpus's base URL (one version directory, no trailing slash),
- * or null to keep reading genes from Postgres.
+ * The static corpus's base URL (one version directory, no trailing slash).
  *
- * NEXT_PUBLIC_GENE_DATA_URL picks it explicitly: an absolute URL (R2, a
- * CDN) or a path the app serves from public/. Unset, development and tests
- * use the committed sample, while production stays on Postgres until the
- * full corpus is hosted somewhere. Next inlines both variables, so the
- * browser and the server always agree.
+ * VITE_GENE_DATA_URL picks it at build time: an absolute URL (R2, a CDN)
+ * or a path the app serves from public/. Unset, the app reads the committed
+ * 24-gene sample, which ships with every build, so a deployment meant for
+ * the lab must set it to the full corpus.
  */
-export function geneDataUrl(): string | null {
-  const configured = process.env.NEXT_PUBLIC_GENE_DATA_URL
-  if (configured) return configured.replace(/\/+$/, '')
-  return process.env.NODE_ENV === 'production' ? null : SAMPLE_GENE_DATA_URL
+export function geneDataUrl(): string {
+  const configured = import.meta.env.VITE_GENE_DATA_URL?.trim()
+  return configured ? configured.replace(/\/+$/, '') : SAMPLE_GENE_DATA_URL
 }
 
 /** Reads corpus files over HTTP; a 404 is "no such file". */
@@ -34,12 +31,11 @@ export function httpReader(baseUrl: string): CorpusReader {
 let browserCorpus: { baseUrl: string; corpus: GeneCorpus } | null = null
 
 /**
- * The browser's corpus, shared by every search surface so the index
- * downloads once per page load. Null when genes come from Postgres.
+ * The browser's corpus, shared by every search surface and page so the
+ * index downloads once per page load.
  */
-export function getBrowserCorpus(): GeneCorpus | null {
+export function getBrowserCorpus(): GeneCorpus {
   const baseUrl = geneDataUrl()
-  if (!baseUrl) return null
   if (browserCorpus?.baseUrl !== baseUrl) {
     browserCorpus = { baseUrl, corpus: new GeneCorpus(httpReader(baseUrl)) }
   }

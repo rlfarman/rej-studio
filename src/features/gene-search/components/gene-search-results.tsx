@@ -1,72 +1,49 @@
-import {
-  checkSearchRateLimit,
-  searchGenes,
-  SearchUnavailableError,
-} from '@/features/gene-search/api/genes'
-import {
-  SEARCH_LIMITS,
-  type SearchGenesResult,
-} from '@/features/gene-search/types/search'
+import { useQuery } from '@tanstack/react-query'
+import { RefreshCwIcon } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import type { SpeciesFilter } from '@/lib/bio/species'
-import { connection } from 'next/server'
-import { geneDataUrl } from '../corpus/gene-data-url'
-import { BrowserGeneSearchResults } from './browser-gene-search-results'
-import { GeneSearchResultsView, SearchError } from './gene-search-results-view'
-import { SearchRetryButton } from './search-retry-button'
+import { geneSearchPageQuery } from '../corpus/queries'
 import { geneSearchCopy } from '../copy'
-
-export { GeneSearchResultsLoading } from './gene-search-results-view'
-
-const copy = geneSearchCopy.results
+import {
+  GeneSearchResultsLoading,
+  GeneSearchResultsView,
+  SearchError,
+} from './gene-search-results-view'
 
 interface GeneSearchResultsProps {
   query: string
   species: SpeciesFilter
 }
 
-/** Runs the search, mapping expected failures to a message. */
-async function runSearch(
-  query: string,
-  species: SpeciesFilter,
-): Promise<{ data: SearchGenesResult } | { error: string }> {
-  const rateLimit = await checkSearchRateLimit()
-  if (!rateLimit.ok) return { error: copy.rateLimited }
-  try {
-    return {
-      data: await searchGenes({ q: query, species, limit: SEARCH_LIMITS.page }),
-    }
-  } catch (err) {
-    if (err instanceof SearchUnavailableError) {
-      return { error: geneSearchCopy.searchErrors.unavailable }
-    }
-    throw err
-  }
-}
-
 /**
- * The /genes results. With a static corpus the search runs in the browser;
- * otherwise (production on Postgres) it runs here, behind the rate limit.
+ * The /genes results, searched in the browser against the static corpus's
+ * index (downloaded once, then shared with the palette). The route loader
+ * usually has them in the cache already; a failed search is retried in
+ * place rather than taking the page down.
  */
-export async function GeneSearchResults({
-  query,
-  species,
-}: GeneSearchResultsProps) {
-  if (geneDataUrl()) {
-    return <BrowserGeneSearchResults query={query} species={species} />
-  }
-
-  // Searching rate-limits by wall-clock time (Date.now), so it must run at
-  // request time; connection() marks that explicitly for Cache Components.
-  await connection()
-  const outcome = await runSearch(query, species)
-  if ('error' in outcome) {
-    return <SearchError message={outcome.error} retry={<SearchRetryButton />} />
-  }
-  return (
-    <GeneSearchResultsView
-      query={query}
-      species={species}
-      data={outcome.data}
-    />
+export function GeneSearchResults({ query, species }: GeneSearchResultsProps) {
+  const { data, isError, refetch } = useQuery(
+    geneSearchPageQuery(query, species),
   )
+
+  if (isError) {
+    return (
+      <SearchError
+        message={geneSearchCopy.searchErrors.unavailable}
+        retry={
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 gap-1.5 px-2 text-xs"
+            onClick={() => void refetch()}
+          >
+            <RefreshCwIcon className="size-3" />
+            {geneSearchCopy.command.retry}
+          </Button>
+        }
+      />
+    )
+  }
+  if (!data) return <GeneSearchResultsLoading />
+  return <GeneSearchResultsView query={query} species={species} data={data} />
 }

@@ -1,7 +1,52 @@
-/**
- * Keeps a raw search param only if it is a non-empty string, so a
- * hand-edited URL (`?species=1`, `?job=`) is dropped rather than typed wrong.
+import { z } from 'zod'
+
+/*
+ * Building blocks for the routes' `validateSearch` schemas. The router
+ * parses each search value as JSON when it can, so `?q=53` arrives as the
+ * number 53 and `?page=2` as 2. Every field `.catch`es: a hand-edited or
+ * outdated URL loses the param it got wrong rather than failing the page.
+ *
+ * Routes call `schema.parse` inside `validateSearch` (rather than passing
+ * the schema itself), so links are typed with the parsed output.
  */
-export function optionalString(value: unknown): string | undefined {
-  return typeof value === 'string' && value !== '' ? value : undefined
+
+/** A non-empty string param. A number or boolean (`?q=53`) is read as text. */
+export const searchText = z
+  .union([z.string(), z.number(), z.boolean()])
+  .transform(String)
+  .pipe(z.string().min(1))
+  .optional()
+  .catch(undefined)
+
+/** A positive integer param, e.g. a page number. */
+export const searchPositiveInt = z.coerce
+  .number()
+  .int()
+  .positive()
+  .optional()
+  .catch(undefined)
+
+/** One of `values`, or nothing. */
+export function searchOneOf<const T extends readonly [string, ...string[]]>(
+  values: T,
+) {
+  return z.enum(values).optional().catch(undefined)
+}
+
+/**
+ * A list param, kept to `values`. Accepts the router's own array form and a
+ * single value (`?i=X-linked`, as older links wrote it); empty is nothing.
+ */
+export function searchList<const T extends readonly [string, ...string[]]>(
+  values: T,
+) {
+  const allowed = new Set<string>(values)
+  return z
+    .unknown()
+    .transform((value) => {
+      const list: unknown[] = Array.isArray(value) ? value : [value]
+      const kept = list.filter((v): v is T[number] => allowed.has(v as string))
+      return kept.length > 0 ? kept : undefined
+    })
+    .optional()
 }

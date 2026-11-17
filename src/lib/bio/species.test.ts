@@ -1,11 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test'
 
-import {
-  geneHref,
-  isSpecies,
-  isSpeciesFilter,
-  parseSpeciesParam,
-} from './species'
+import { isSpecies, isSpeciesFilter, parseSpeciesParam } from './species'
 
 describe('isSpecies', () => {
   it('returns true for human', () => {
@@ -33,25 +28,6 @@ describe('isSpeciesFilter', () => {
   })
 })
 
-describe('geneHref', () => {
-  it('returns path with just symbol', () => {
-    expect(geneHref('BRCA1')).toBe('/genes/BRCA1')
-  })
-  it('includes species param', () => {
-    expect(geneHref('BRCA1', 'human')).toBe('/genes/BRCA1?species=human')
-  })
-  it('includes isoform param', () => {
-    expect(geneHref('BRCA1', undefined, 'ENST00000001')).toBe(
-      '/genes/BRCA1?isoform=ENST00000001',
-    )
-  })
-  it('includes both params', () => {
-    const href = geneHref('BRCA1', 'mouse', 'ENST00000001')
-    expect(href).toContain('species=mouse')
-    expect(href).toContain('isoform=ENST00000001')
-  })
-})
-
 describe('parseSpeciesParam', () => {
   it('returns valid species filter', () => {
     expect(parseSpeciesParam('human')).toBe('human')
@@ -61,7 +37,8 @@ describe('parseSpeciesParam', () => {
   it('returns undefined for invalid', () => {
     expect(parseSpeciesParam('dog')).toBeUndefined()
   })
-  it('returns undefined for undefined', () => {
+  it('returns undefined for undefined or a non-string', () => {
     expect(parseSpeciesParam(undefined)).toBeUndefined()
+    expect(parseSpeciesParam(['human'])).toBeUndefined()
   })
 })

@@ -6,7 +6,7 @@ import type { Suitability } from '@/lib/bio/design-suitability'
  * no params.
  */
 
-const ISOFORM_SORT_KEYS = [
+export const ISOFORM_SORT_KEYS = [
   'enst',
   'cdsLength',
   'proteinLength',
@@ -29,15 +29,23 @@ export const DEFAULT_ISOFORM_SORT: IsoformSort = {
   dir: 'asc',
 }
 
-function isSortKey(value: string | null): value is IsoformSortKey {
-  return (ISOFORM_SORT_KEYS as readonly (string | null)[]).includes(value)
+function isIsoformSortKey(value: unknown): value is IsoformSortKey {
+  return (ISOFORM_SORT_KEYS as readonly unknown[]).includes(value)
 }
 
-/** Read the sort from URL params, falling back to the default for junk. */
-export function parseIsoformSort(params: URLSearchParams): IsoformSort {
-  const key = params.get('sort')
-  if (!isSortKey(key)) return DEFAULT_ISOFORM_SORT
-  return { key, dir: params.get('dir') === 'desc' ? 'desc' : 'asc' }
+/** The sort as the gene page keeps it in its search params. */
+export interface IsoformSortSearch {
+  sort?: IsoformSortKey
+  dir?: SortDirection
+}
+
+/** Read the sort from the search params, falling back to the default for junk. */
+export function parseIsoformSort(search: {
+  sort?: unknown
+  dir?: unknown
+}): IsoformSort {
+  if (!isIsoformSortKey(search.sort)) return DEFAULT_ISOFORM_SORT
+  return { key: search.sort, dir: search.dir === 'desc' ? 'desc' : 'asc' }
 }
 
 /**
@@ -52,23 +60,17 @@ export function nextIsoformSort(
   return { key, dir: current.dir === 'asc' ? 'desc' : 'asc' }
 }
 
-/** Params with `sort`/`dir` set for `sort`, other params untouched. */
-export function withIsoformSort(
-  params: URLSearchParams,
-  sort: IsoformSort,
-): URLSearchParams {
-  const next = new URLSearchParams(params)
+/**
+ * The search params for `sort`: the default order has none, so the plain
+ * gene URL stays the canonical one. Undefined values drop the params.
+ */
+export function isoformSortSearch(sort: IsoformSort): IsoformSortSearch {
   const isDefault =
     sort.key === DEFAULT_ISOFORM_SORT.key &&
     sort.dir === DEFAULT_ISOFORM_SORT.dir
-  if (isDefault) {
-    next.delete('sort')
-    next.delete('dir')
-  } else {
-    next.set('sort', sort.key)
-    next.set('dir', sort.dir)
-  }
-  return next
+  return isDefault
+    ? { sort: undefined, dir: undefined }
+    : { sort: sort.key, dir: sort.dir }
 }
 
 /** The value for a column header's `aria-sort`, or undefined if unsorted. */

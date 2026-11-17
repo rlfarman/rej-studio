@@ -1,6 +1,5 @@
-'use client'
 import { useState, useEffect } from 'react'
-import { usePathname, useSearchParams } from 'next/navigation'
+import { Link, useNavigate, useSearch } from '@tanstack/react-router'
 import {
   Table,
   TableBody,
@@ -36,7 +35,6 @@ import {
   WandSparkles,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
@@ -60,14 +58,13 @@ import type { IsoformListItem } from '@/features/gene-search/types/domain-types'
 import {
   ariaSortFor,
   nextIsoformSort,
+  isoformSortSearch,
   parseIsoformSort,
   sortIsoforms,
-  withIsoformSort,
   type IsoformSort,
   type IsoformSortKey,
 } from '@/features/gene-search/utils/isoform-sort'
 import { geneSearchCopy } from '../copy'
-import { Skeleton } from '@/components/ui/skeleton'
 
 const copy = geneSearchCopy.isoformTable
 const terms = geneSearchCopy.terms
@@ -100,9 +97,9 @@ export default function IsoformTable({
   isoforms,
   highlightedIsoformId,
 }: IsoformListProps) {
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
-  const sort = parseIsoformSort(new URLSearchParams(searchParams.toString()))
+  const search = useSearch({ from: '/genes/$symbol' })
+  const navigate = useNavigate({ from: '/genes/$symbol' })
+  const sort = parseIsoformSort(search)
   const { copy: copyText, isCopied } = useCopyToClipboard({
     showToast: false,
   })
@@ -124,19 +121,17 @@ export default function IsoformTable({
   })
   const sortedRows = sortIsoforms(rows, sort)
 
-  // replaceState, not router.replace: Next syncs useSearchParams with it and
-  // skips the server round trip, since the table sorts on the client.
+  // Replaces the history entry: re-sorting isn't a step to go back
+  // through. The sort is client-side, so nothing reloads.
   const toggleSort = (key: IsoformSortKey) => {
-    const params = withIsoformSort(
-      new URLSearchParams(searchParams.toString()),
-      nextIsoformSort(sort, key),
-    )
-    const qs = params.toString()
-    window.history.replaceState(
-      null,
-      '',
-      `${pathname}${qs ? `?${qs}` : ''}${window.location.hash}`,
-    )
+    void navigate({
+      search: (prev) => ({
+        ...prev,
+        ...isoformSortSearch(nextIsoformSort(sort, key)),
+      }),
+      replace: true,
+      resetScroll: false,
+    })
   }
 
   const toggleExpanded = (id: string) => {
@@ -424,7 +419,8 @@ function IsoformRow({
                       nativeButton={false}
                       render={
                         <Link
-                          href={`/design-tool?isoform=${isoform.id}`}
+                          to="/design-tool"
+                          search={{ isoform: isoform.id }}
                           aria-label={copy.customizeAria(isoform.id)}
                         />
                       }
@@ -468,7 +464,9 @@ function IsoformRow({
                   }
                 />
                 <DropdownMenuItem
-                  render={<Link href={`/design-tool?isoform=${isoform.id}`} />}
+                  render={
+                    <Link to="/design-tool" search={{ isoform: isoform.id }} />
+                  }
                 >
                   <WandSparkles className="size-4" />
                   {copy.customizeLong}
@@ -576,7 +574,8 @@ function ExpandedDetails({
             nativeButton={false}
             render={
               <Link
-                href={`/design-tool?isoform=${isoform.id}`}
+                to="/design-tool"
+                search={{ isoform: isoform.id }}
                 aria-label={copy.customizeAria(isoform.id)}
               />
             }
@@ -744,48 +743,5 @@ function SortButton({
         <ArrowUpDown className="size-3.5 text-muted-foreground" aria-hidden />
       )}
     </button>
-  )
-}
-
-const SKELETON_ROWS = 5
-
-/**
- * Stands in for the summary line and the table at roughly their real size,
- * so the page doesn't jump when the isoforms arrive.
- */
-export function IsoformTableLoading() {
-  return (
-    <div
-      role="status"
-      aria-label={copy.loadingAria}
-      className="flex flex-col gap-3"
-    >
-      <div className="flex h-8 items-center gap-6" aria-hidden>
-        <Skeleton className="h-4 w-24" />
-        <Skeleton className="h-4 w-36" />
-        <Skeleton className="hidden h-4 w-40 sm:block" />
-      </div>
-      <div aria-hidden>
-        <div className="flex h-10 items-center gap-4 border-b px-2">
-          <Skeleton className="h-3.5 w-7" />
-          <Skeleton className="h-3.5 w-40" />
-          <Skeleton className="h-3.5 w-16" />
-          <Skeleton className="hidden h-3.5 w-16 sm:block" />
-          <Skeleton className="hidden h-3.5 w-12 sm:block" />
-        </div>
-        {Array.from({ length: SKELETON_ROWS }, (_, i) => (
-          <div
-            key={i}
-            className="flex h-11 items-center gap-4 border-b px-2 last:border-0"
-          >
-            <Skeleton className="size-4 rounded-full" />
-            <Skeleton className="h-4 w-36" />
-            <Skeleton className="h-4 w-16" />
-            <Skeleton className="hidden h-4 w-16 sm:block" />
-            <Skeleton className="hidden h-4 w-12 sm:block" />
-          </div>
-        ))}
-      </div>
-    </div>
   )
 }

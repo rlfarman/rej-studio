@@ -1,11 +1,12 @@
-import Link from 'next/link'
+import { Link, useNavigate } from '@tanstack/react-router'
+import type { FormEvent } from 'react'
 import { SearchIcon } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { SpeciesIcon } from '@/components/bio/species-icon'
 import type { SpeciesFilter } from '@/lib/bio/species'
 import { cn } from '@/lib/utils'
-import { searchPageHref } from '@/features/gene-search/utils/search-href'
+import { searchPageLink } from '@/features/gene-search/utils/search-href'
 import { geneSearchCopy } from '../copy'
 import {
   SearchShortcutFocus,
@@ -27,8 +28,9 @@ interface GeneSearchPageFormProps {
 }
 
 /**
- * The search page's only search box. A plain GET form, so it works before
- * hydration and the URL stays the source of truth (shareable, back/forward).
+ * The search page's only search box. Submitting navigates to the results
+ * URL, so the URL stays the source of truth (shareable, back/forward); the
+ * GET action is only a fallback for a submit before the app has loaded.
  * The header's as-you-type palette is hidden on this page, so ⌘K / Ctrl+K
  * focuses this box instead.
  */
@@ -36,9 +38,25 @@ export function GeneSearchPageForm({
   query,
   species,
 }: GeneSearchPageFormProps) {
+  const navigate = useNavigate()
+
+  const onSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    const q = new FormData(event.currentTarget).get('q')
+    void navigate(
+      searchPageLink(typeof q === 'string' ? q.trim() : '', species),
+    )
+  }
+
   return (
     <div className="flex flex-col gap-3">
-      <form action="/genes" method="get" role="search" className="flex gap-2">
+      <form
+        action="/genes"
+        method="get"
+        role="search"
+        className="flex gap-2"
+        onSubmit={onSubmit}
+      >
         <label htmlFor="gene-query" className="sr-only">
           {copy.inputLabel}
         </label>
@@ -48,6 +66,9 @@ export function GeneSearchPageForm({
             aria-hidden="true"
           />
           <Input
+            // Remounted per query, so the box shows the URL's query after a
+            // back/forward or an example link.
+            key={query}
             id="gene-query"
             name="q"
             type="search"
@@ -74,7 +95,7 @@ export function GeneSearchPageForm({
           return (
             <Link
               key={value}
-              href={searchPageHref(query, value)}
+              {...searchPageLink(query, value)}
               aria-current={active ? 'page' : undefined}
               className={cn(
                 'flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none',

@@ -1,12 +1,14 @@
-import Link from 'next/link'
+import { Link } from '@tanstack/react-router'
 import type { ReactNode } from 'react'
 import { WandSparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { SpeciesIcon } from '@/components/bio/species-icon'
 import type { SearchGenesResult } from '@/features/gene-search/types/search'
-import { searchPageHref } from '@/features/gene-search/utils/search-href'
 import {
-  geneHref,
+  geneLink,
+  searchPageLink,
+} from '@/features/gene-search/utils/search-href'
+import {
   isSpecies,
   SPECIES_DISPLAY_NAME,
   type SpeciesFilter,
@@ -23,9 +25,7 @@ const copy = geneSearchCopy.results
 const pageCopy = geneSearchCopy.searchPage
 
 /*
- * The /genes results list, shared by the server-rendered search (Postgres)
- * and the in-browser one (static corpus). No hooks and no server-only
- * imports, so it renders on either side.
+ * The /genes results list: what a search found, or what to try instead.
  */
 
 export function SearchError({
@@ -87,7 +87,7 @@ export function GeneSearchResultsView({
         allSpeciesAction={
           species === 'both' ? undefined : (
             <Link
-              href={searchPageHref(query, 'both')}
+              {...searchPageLink(query, 'both')}
               className="rounded-sm font-medium text-primary underline underline-offset-4 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
             >
               {copy.searchAllSpecies}
@@ -118,11 +118,7 @@ export function GeneSearchResultsView({
               className="group/gene-row flex items-center gap-2 transition-colors hover:bg-accent/40"
             >
               <Link
-                href={geneHref(
-                  gene.symbol,
-                  gene.species,
-                  gene.matchedIsoformId,
-                )}
+                {...geneLink(gene.symbol, gene.species, gene.matchedIsoformId)}
                 className="grid min-w-0 flex-1 grid-cols-[5rem_1fr] items-baseline gap-x-4 gap-y-1 rounded-xl px-2 py-3 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none sm:grid-cols-[7rem_1fr]"
               >
                 <span className="truncate font-mono text-sm font-semibold">
@@ -150,7 +146,8 @@ export function GeneSearchResultsView({
                   nativeButton={false}
                   render={
                     <Link
-                      href={`/design-tool?isoform=${gene.matchedIsoformId}`}
+                      to="/design-tool"
+                      search={{ isoform: gene.matchedIsoformId }}
                       aria-label={geneSearchCopy.command.customizeAria(
                         gene.matchedIsoformId,
                       )}

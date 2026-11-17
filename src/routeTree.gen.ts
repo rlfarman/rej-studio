@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ArchitectureRouteImport } from './routes/architecture'
 import { Route as DesignToolRouteImport } from './routes/design-tool'
 import { Route as DiseaseAssociationsRouteImport } from './routes/disease-associations'
+import { Route as GenesRouteRouteImport } from './routes/genes/route'
 import { Route as GenesIndexRouteImport } from './routes/genes/index'
 import { Route as GenesSymbolRouteImport } from './routes/genes/$symbol'
 
@@ -36,19 +37,25 @@ const DiseaseAssociationsRoute = DiseaseAssociationsRouteImport.update({
   path: '/disease-associations',
   getParentRoute: () => rootRouteImport,
 } as any)
-const GenesIndexRoute = GenesIndexRouteImport.update({
-  id: '/genes/',
-  path: '/genes/',
+const GenesRouteRoute = GenesRouteRouteImport.update({
+  id: '/genes',
+  path: '/genes',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GenesIndexRoute = GenesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => GenesRouteRoute,
+} as any)
 const GenesSymbolRoute = GenesSymbolRouteImport.update({
-  id: '/genes/$symbol',
-  path: '/genes/$symbol',
-  getParentRoute: () => rootRouteImport,
+  id: '/$symbol',
+  path: '/$symbol',
+  getParentRoute: () => GenesRouteRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/genes': typeof GenesRouteRouteWithChildren
   '/architecture': typeof ArchitectureRoute
   '/design-tool': typeof DesignToolRoute
   '/disease-associations': typeof DiseaseAssociationsRoute
@@ -66,6 +73,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/genes': typeof GenesRouteRouteWithChildren
   '/architecture': typeof ArchitectureRoute
   '/design-tool': typeof DesignToolRoute
   '/disease-associations': typeof DiseaseAssociationsRoute
@@ -76,6 +84,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/genes'
     | '/architecture'
     | '/design-tool'
     | '/disease-associations'
@@ -92,6 +101,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/genes'
     | '/architecture'
     | '/design-tool'
     | '/disease-associations'
@@ -101,11 +111,10 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  GenesRouteRoute: typeof GenesRouteRouteWithChildren
   ArchitectureRoute: typeof ArchitectureRoute
   DesignToolRoute: typeof DesignToolRoute
   DiseaseAssociationsRoute: typeof DiseaseAssociationsRoute
-  GenesSymbolRoute: typeof GenesSymbolRoute
-  GenesIndexRoute: typeof GenesIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -138,30 +147,50 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DiseaseAssociationsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/genes': {
+      id: '/genes'
+      path: '/genes'
+      fullPath: '/genes'
+      preLoaderRoute: typeof GenesRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/genes/': {
       id: '/genes/'
-      path: '/genes'
+      path: '/'
       fullPath: '/genes/'
       preLoaderRoute: typeof GenesIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof GenesRouteRoute
     }
     '/genes/$symbol': {
       id: '/genes/$symbol'
-      path: '/genes/$symbol'
+      path: '/$symbol'
       fullPath: '/genes/$symbol'
       preLoaderRoute: typeof GenesSymbolRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof GenesRouteRoute
     }
   }
 }
 
+interface GenesRouteRouteChildren {
+  GenesSymbolRoute: typeof GenesSymbolRoute
+  GenesIndexRoute: typeof GenesIndexRoute
+}
+
+const GenesRouteRouteChildren: GenesRouteRouteChildren = {
+  GenesSymbolRoute: GenesSymbolRoute,
+  GenesIndexRoute: GenesIndexRoute,
+}
+
+const GenesRouteRouteWithChildren = GenesRouteRoute._addFileChildren(
+  GenesRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  GenesRouteRoute: GenesRouteRouteWithChildren,
   ArchitectureRoute: ArchitectureRoute,
   DesignToolRoute: DesignToolRoute,
   DiseaseAssociationsRoute: DiseaseAssociationsRoute,
-  GenesSymbolRoute: GenesSymbolRoute,
-  GenesIndexRoute: GenesIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

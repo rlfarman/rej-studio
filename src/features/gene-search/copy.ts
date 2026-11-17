@@ -40,13 +40,8 @@ export const geneSearchCopy = {
       mouse: 'Mouse',
     },
   },
-  /** Messages for GET /api/genes/search failures, shown in the palette. */
+  /** A search whose index couldn't be loaded, on the page and in the palette. */
   searchErrors: {
-    invalid:
-      'That search couldn’t be read. Queries can be up to 200 characters.',
-    unauthenticated: 'Your session has expired. Sign in again to search.',
-    rateLimited: (seconds: number) =>
-      `Too many searches. Try again in ${seconds}s.`,
     unavailable: 'Search is temporarily unavailable.',
     network: 'Search failed. Please try again.',
   },
@@ -69,9 +64,12 @@ export const geneSearchCopy = {
       `Showing the first ${n} matches. Add more of the name or symbol to narrow them down.`,
     loading: 'Searching…',
   },
+  genePage: {
+    metadataDescription: (name: string) =>
+      `View all isoforms for ${name} and download pre-optimized sequences or customize your own.`,
+  },
   results: {
     errorSuffix: 'Try again in a moment.',
-    rateLimited: 'Too many searches in a short time.',
     noMatches: (query: string) => `No genes match “${query}”.`,
     noMatchesInSpecies: (query: string, species: string) =>
       `No ${species.toLowerCase()} genes match “${query}”.`,
@@ -97,7 +95,6 @@ export const geneSearchCopy = {
     expandRowAria: (id: string) => `Expand ${id} details`,
     collapseRowAria: (id: string) => `Collapse ${id} details`,
     empty: 'No isoforms are indexed for this gene yet.',
-    loadingAria: 'Loading isoforms',
     downloadLong: 'Download pre-optimized sequences',
     downloadAria: (id: string) =>
       `Download pre-optimized sequences for ${id} (ZIP)`,
