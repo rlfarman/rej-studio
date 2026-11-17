@@ -58,6 +58,11 @@ jobs:
               # so a change there has to re-run parity too.
               - 'python/**'
               - 'scripts/check-wasm-asset.mjs'
+              # Generated from the crate by `cargo run --example`, so a hand
+              # edit to either has to face the regeneration check below.
+              - 'src/features/design-tool/utils/codon-preference.generated.ts'
+              - 'src/lib/bio/sequence-utils.ts'
+              - 'src/lib/bio/sequence-utils.wggw-parity.test.ts'
               - '.github/workflows/rust-ci.yml'
             # What actually compiles into the .wasm. Tests and fixtures are
             # excluded: they change expectations, not the shipped module.
@@ -176,3 +181,27 @@ jobs:
           ./scripts/build-optimizer-wasm.sh
           node scripts/wasm-smoke.mjs \
             "rust/target/${WASM_TARGET}/release/rej_optimizer.wasm"
+
+      # Two files are generated from the crate's own data and committed: the
+      # codon preferences the charts draw (written by the build script above)
+      # and the WGGW answers the TypeScript parity test compares against.
+      # Neither is reachable from the .wasm — an export only these generators
+      # call would be download weight for every visitor — so this job, which
+      # has the toolchain, is what keeps them from going stale.
+      - name: Regenerate what the crate generates
+        working-directory: rust
+        run: cargo run --release --quiet --example wggw-reference
+
+      - name: Generated files are in step with the crate
+        run: |
+          files=(
+            src/features/design-tool/utils/codon-preference.generated.ts
+            rust/optimizer/tests/fixtures/wggw_reference.json
+          )
+          if ! git diff --exit-code -- "${files[@]}"; then
+            echo "::error::a file generated from the crate is stale. Run" \
+              "'pnpm wasm:build' and" \
+              "'(cd rust && cargo run --release --example wggw-reference)'," \
+              "then commit the result."
+            exit 1
+          fi

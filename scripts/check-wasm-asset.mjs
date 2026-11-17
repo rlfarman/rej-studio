@@ -20,7 +20,6 @@ import { createHash } from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { loadModule } from './wasm-harness.mjs'
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..')
 const assetPath = path.join(root, 'public/optimizer/rej-optimizer.wasm')
@@ -74,61 +73,8 @@ if (!fs.readFileSync(noticesSource).equals(fs.readFileSync(noticesServed))) {
   )
 }
 
-// The codon preferences the charts draw are generated from the crate's
-// tables. Comparing them against the committed module — not against a fresh
-// `cargo run`, which needs Rust — keeps the chart honest on any machine: if
-// the tables moved and the module was rebuilt, this file has to come with it.
-const codonTablePath = path.join(
-  root,
-  'src/features/design-tool/utils/codon-preference.generated.ts',
-)
-if (!fs.existsSync(codonTablePath)) {
-  fail(`${path.relative(root, codonTablePath)} is missing.`)
-}
-
-/** The object literal out of the generated module, as data. */
-function readGeneratedTable(file) {
-  const source = fs.readFileSync(file, 'utf8')
-  const literal = source
-    .slice(source.indexOf('{'), source.lastIndexOf('}') + 1)
-    .replace(/(\w+):/g, '"$1":')
-    .replace(/,(\s*[}\]])/g, '$1')
-  try {
-    return JSON.parse(literal)
-  } catch (error) {
-    fail(
-      `${path.relative(root, file)} is not a plain table of numbers: ${error.message}`,
-    )
-  }
-}
-
-const generated = readGeneratedTable(codonTablePath)
-const { codonTables } = await loadModule(assetPath)
-const fromModule = codonTables()
-
-for (const species of Object.keys(fromModule)) {
-  const theirs = fromModule[species]
-  const ours = generated[species]
-  if (!ours) fail(`the generated codon table has no "${species}" entry.`)
-  for (const [codon, preference] of Object.entries(theirs)) {
-    if (ours[codon] !== preference) {
-      fail(
-        `the generated codon table disagrees with the .wasm.\n` +
-          `       ${species} ${codon}: file ${ours[codon]}, module ${preference}`,
-      )
-    }
-  }
-  const extra = Object.keys(ours).filter((codon) => !(codon in theirs))
-  if (extra.length > 0) {
-    fail(
-      `the generated codon table has codons the module does not: ${extra.join(', ')}`,
-    )
-  }
-}
-
 const kb = (bytes.length / 1024).toFixed(1)
 console.log(
   `ok: public/optimizer/rej-optimizer.wasm (${kb} KB, ${digest.slice(0, 16)}…)`,
 )
 console.log('    matches optimizer-asset.generated.ts')
-console.log('    matches codon-preference.generated.ts')

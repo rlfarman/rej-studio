@@ -30,7 +30,7 @@ if (!wasmPath) {
 // monotonicity only means anything within a single design.
 let progress = []
 const allProgress = []
-const { design, reverseTranslate, wggwReport, codonTables } = await loadModule(
+const { design, reverseTranslate, exportNames } = await loadModule(
   wasmPath,
   (fraction, stage) => progress.push({ fraction, stage }),
 )
@@ -124,10 +124,20 @@ check(
   everyTick.find((tick) => tick.stage.includes('['))?.stage ?? '',
 )
 
-// --- The other exports -----------------------------------------------------
+// Every export is download weight for every visitor, so the set is pinned:
+// the crate has entry points the build-time generators use, and they must
+// stay out of the module.
+check(
+  'the module exports only what the browser calls',
+  exportNames.join(',') ===
+    'alloc,dealloc,free_response,memory,process,reverse_translate',
+  exportNames.join(','),
+)
+
+// --- Reverse translation ---------------------------------------------------
 //
-// Reverse translation and the codon tables are the only implementations left,
-// so the browser path has to exercise them too.
+// The crate owns the codon tables, so this export is the only way the browser
+// can turn a protein into DNA; the design path depends on what it returns.
 
 const translated = reverseTranslate({ protein: 'MKR*', species: 'mouse' })
 check(
@@ -155,50 +165,6 @@ check(
   'a reverse-translated sequence designs',
   !fromProtein.error && fromProtein.optimized_sequence.length > 0,
   fromProtein.error ?? '',
-)
-
-const tables = codonTables()
-check(
-  'the codon tables cover both species',
-  Object.keys(tables).join(',') === 'human,mouse' &&
-    Object.keys(tables.human).length === 64 &&
-    Object.keys(tables.mouse).length === 64,
-  Object.keys(tables).join(','),
-)
-check(
-  // Mouse uses AGA and AGG equally, so both are the most-preferred codon and
-  // the backtranslation order picks AGA — which is what `translated` above
-  // shows, and where the TypeScript table this replaced said AGG.
-  'the codon tables top out at 1 for the most-used codon',
-  tables.mouse.AGA === 1 &&
-    tables.mouse.AGG === 1 &&
-    tables.mouse.CGT < 0.5 &&
-    tables.human.CTG === 1,
-  `mouse AGA ${tables.mouse.AGA}, AGG ${tables.mouse.AGG}`,
-)
-
-const report = wggwReport({ sequence: cases[0].sequence, split_point: 600 })
-check(
-  'the WGGW report lists candidates in distance order',
-  Array.isArray(report.candidates) &&
-    report.candidates.length > 0 &&
-    report.by_distance.length === report.candidates.length &&
-    report.by_distance.every(
-      (position, index) =>
-        index === 0 ||
-        Math.abs(report.by_distance[index - 1] - 600) <=
-          Math.abs(position - 600),
-    ),
-  JSON.stringify(report.candidates?.slice(0, 3) ?? report),
-)
-check(
-  'the WGGW report names the split it would choose',
-  typeof report.split?.split_point === 'number',
-  JSON.stringify(report.split),
-)
-check(
-  'a bad WGGW request is an error, not a crash',
-  typeof wggwReport({ nope: true }).error === 'string',
 )
 
 const failed = checks.filter((entry) => !entry.ok)

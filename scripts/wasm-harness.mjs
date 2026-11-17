@@ -10,12 +10,11 @@
 import fs from 'node:fs'
 
 /**
- * Instantiate the module and wrap every entry point it exports.
+ * Instantiate the module and wrap both of its entry points.
  *
- * `design`, `reverseTranslate` and `wggwReport` take a request object and
- * return the parsed JSON response; `codonTables` takes nothing. They all
- * share one framing convention (see the wasm_abi modules in the crate), so
- * one wrapper covers them.
+ * `design` and `reverseTranslate` each take a request object and return the
+ * parsed JSON response; they share one framing convention (see the wasm_abi
+ * modules in the crate), so one wrapper covers both.
  */
 export async function loadModule(wasmPath, onProgress) {
   let memoryRef = null
@@ -72,8 +71,8 @@ export async function loadModule(wasmPath, onProgress) {
   return {
     design: (request) => call('process', request),
     reverseTranslate: (request) => call('reverse_translate', request),
-    wggwReport: (request) => call('wggw_report', request),
-    codonTables: () => readResponse(exports.codon_tables()),
+    /** What the module exposes, so a caller can check nothing crept in. */
+    exportNames: Object.keys(exports).sort(),
   }
 }
 

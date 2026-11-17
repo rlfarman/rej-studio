@@ -16,7 +16,7 @@ rate limits, and keeps unpublished sequences on the user's machine.
 
 Python can run in a browser through Pyodide, but that means downloading a
 Python runtime plus NumPy and Biopython — about 7 MB even after trimming, and
-roughly twice as slow as native Python. This port is **126 KB** compressed and
+roughly twice as slow as native Python. This port is **120 KB** compressed and
 **5–7× faster than Python**, so a design that took 21 seconds on the server
 takes under 4 seconds in the tab.
 
@@ -75,7 +75,7 @@ Download size, the reason for the rewrite:
 | Approach                             | Compressed                         |
 | ------------------------------------ | ---------------------------------- |
 | Pyodide + NumPy + Biopython, trimmed | ~7 MB                              |
-| This crate as WebAssembly            | **126 KB** (Brotli), 158 KB (gzip) |
+| This crate as WebAssembly            | **120 KB** (Brotli), 150 KB (gzip) |
 
 ## Layout
 
@@ -116,6 +116,12 @@ cargo run --release --example bench -- cases.json
 PYTHONPATH=. uv run python ../scripts/bench-python.py cases.json
 ```
 
+Regenerate the WGGW reference after any change to `optimizer/src/rej.rs`:
+
+```bash
+cargo run --release --example wggw-reference
+```
+
 Regenerate the fixtures after any change to `python/algorithm.py`:
 
 ```bash
@@ -130,16 +136,8 @@ one JSON string out, so generated glue would cost more bytes than it saves
 effort. The module imports only `env.report_progress`.
 
 ```js
-const {
-  alloc,
-  dealloc,
-  free_response,
-  memory,
-  process,
-  reverse_translate,
-  wggw_report,
-  codon_tables,
-} = instance.exports
+const { alloc, dealloc, free_response, memory, process, reverse_translate } =
+  instance.exports
 ```
 
 1. `alloc(len)` for the request; write UTF-8 bytes there.
@@ -147,15 +145,13 @@ const {
    followed by that many UTF-8 bytes.
 3. `free_response(ptr)` and `dealloc(ptr, len)` when finished.
 
-`reverse_translate` and `wggw_report` take and return JSON the same way;
-`codon_tables` takes no request. All four free with `free_response`.
+`reverse_translate` takes and returns JSON the same way, and frees with
+`free_response` too.
 
-| Export              | Request                                       | Answer                                                        |
-| ------------------- | --------------------------------------------- | ------------------------------------------------------------- |
-| `process`           | `{ CDS, name, options }`                      | the design (`ProcessResult`)                                  |
-| `reverse_translate` | `{ protein, species }`                        | `{ CDS }` — species-preferred codons, a stop codon appended   |
-| `wggw_report`       | `{ sequence, split_point?, wggw_threshold? }` | candidates, their distance order, the recode and chosen split |
-| `codon_tables`      | —                                             | each codon's preference relative to its amino acid's best     |
+| Export              | Request                  | Answer                                                      |
+| ------------------- | ------------------------ | ----------------------------------------------------------- |
+| `process`           | `{ CDS, name, options }` | the design (`ProcessResult`)                                |
+| `reverse_translate` | `{ protein, species }`   | `{ CDS }` — species-preferred codons, a stop codon appended |
 
 `reverse_translate` exists because the frontend has no codon table: protein
 input is translated here, with the very codons [`MaximizeCAI`] scores against.
@@ -164,12 +160,22 @@ why mouse arginine is AGA. The seed is unaffected — `derive_seed` hashes the
 coding sequence it is handed, and this function is pure, so the same protein
 and species reproduce the design.
 
-`codon_tables` is what `src/features/design-tool/utils/codon-preference.generated.ts`
-is generated from (`cargo run --example codon-tables`, through
-`pnpm wasm:build`); `pnpm wasm:verify` compares the two, so a chart cannot
-show frequencies the optimizer did not score with. `wggw_report` is how
-`sequence-utils.wggw-parity.test.ts` checks the TypeScript WGGW ranking the
-gene pages use against this crate's.
+These two are the whole browser interface, and deliberately so: every export
+is bytes every visitor downloads. Two more entry points exist in
+`optimizer/src/exports.rs` — `codon_tables_json` and `wggw_report_json` — but
+nothing in a page calls them, so they are not exported from the module.
+Instead each feeds a `cargo run --example` that writes a committed file, which
+cost 6.4 KB of Brotli as wasm exports and nothing as files:
+
+| Generated file                                                 | Example          | Read by                              |
+| -------------------------------------------------------------- | ---------------- | ------------------------------------ |
+| `src/features/design-tool/utils/codon-preference.generated.ts` | `codon-tables`   | the design tool's codon charts       |
+| `optimizer/tests/fixtures/wggw_reference.json`                 | `wggw-reference` | `sequence-utils.wggw-parity.test.ts` |
+
+`pnpm wasm:build` writes the first; the second is written by
+`cargo run --release --example wggw-reference`. Rust CI runs both and fails if
+either committed file differs, so neither can fall behind the crate — and a
+chart cannot show frequencies the optimizer did not score with.
 
 `scripts/wasm-harness.mjs` wraps this in about 20 lines and is what the worker
 would use. Errors come back as `{"error": "..."}`, never as a panic.
@@ -192,7 +198,7 @@ Cancelling terminates the worker, since a run inside WebAssembly cannot be
 interrupted from outside; the next design starts a fresh one. A browser that
 lacks Workers or WebAssembly falls back to the backend rather than failing.
 
-The worker starts when the design form mounts, so the ~158 KB arrives while
+The worker starts when the design form mounts, so the ~150 KB arrives while
 the user is still entering a sequence.
 
 Measured in Chrome through the real UI: a 5,592 bp gene designs in **1.9 s**

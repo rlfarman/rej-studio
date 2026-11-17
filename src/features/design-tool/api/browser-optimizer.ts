@@ -73,7 +73,7 @@ export function browserOptimizerSupported(): boolean {
 /**
  * Start the worker and the WebAssembly download ahead of time.
  *
- * Called when the design form mounts so the ~158 KB arrives while the user is
+ * Called when the design form mounts so the ~150 KB arrives while the user is
  * still entering a sequence, rather than after they press Run.
  */
 export function warmOptimizerWorker() {

@@ -1,22 +1,25 @@
-//! The crate's other JSON entry points, and their browser ABI.
+//! The crate's other JSON entry points.
 //!
 //! [`crate::process`] designs a sequence; these three answer the questions the
 //! UI needs answered *before* a design, or needs the crate's data for:
 //!
 //!   * [`reverse_translate_json`] — protein to DNA, so the form has a coding
 //!     sequence to place a split on. The TypeScript side has no codon table
-//!     any more, so this is the only implementation.
-//!   * [`codon_tables_json`] — the codon preferences the charts draw. The
-//!     generated TypeScript module is produced from this (see
-//!     `examples/codon-tables.rs`), and `pnpm wasm:verify` compares the two,
-//!     so a chart cannot show frequencies the optimizer did not score with.
+//!     any more, so this is the only implementation, and the browser needs
+//!     it: it is the one of the three with a wasm export, using the ABI
+//!     [`crate::process`] uses (a JSON string in, a length-prefixed JSON
+//!     string out, freed with `free_response`).
+//!   * [`codon_tables_json`] — the codon preferences the charts draw, which
+//!     `examples/codon-tables.rs` turns into a TypeScript module.
 //!   * [`wggw_report_json`] — the crate's WGGW candidates, their ordering and
-//!     the split it would choose. TypeScript ranks candidates of its own for
-//!     the gene pages (which never load this module); this export is what
-//!     `sequence-utils.wggw-parity.test.ts` checks that ranking against.
+//!     the split it would choose, which `examples/wggw-reference.rs` records
+//!     for `sequence-utils.wggw-parity.test.ts` to check the TypeScript
+//!     ranking against.
 //!
-//! The ABI is the one [`crate::process`] uses: a JSON string in, a
-//! length-prefixed JSON string out, freed with `free_response`.
+//! Only the first is reachable from the browser. The other two are read at
+//! build time by those examples and would otherwise cost every visitor 6.4 KB
+//! of compressed WebAssembly for data that is committed to the repository;
+//! Rust CI regenerates both files and fails if they have gone stale.
 
 use std::collections::BTreeMap;
 
@@ -141,12 +144,16 @@ pub fn wggw_report_json(request: &str) -> String {
 // --- Browser interface ------------------------------------------------------
 //
 // Same contract as `process` (see the `wasm_abi` module in lib.rs): the host
-// writes a UTF-8 request into a buffer from `alloc`, calls one of these, reads
-// the 4-byte little-endian length and that many bytes, then `free_response`s
-// the pointer. The framing is identical, so `free_response` frees these too.
+// writes a UTF-8 request into a buffer from `alloc`, calls this, reads the
+// 4-byte little-endian length and that many bytes, then `free_response`s the
+// pointer. The framing is identical, so `free_response` frees these too.
+//
+// Reverse translation is the only one of this module's entry points the
+// browser can reach. The other two feed build-time generators, and an export
+// no page calls is 6.4 KB of compressed download for everyone.
 #[cfg(target_arch = "wasm32")]
 mod wasm_abi {
-    use super::{codon_tables_json, reverse_translate_json, wggw_report_json};
+    use super::reverse_translate_json;
 
     /// Box a response as a 4-byte little-endian length followed by its bytes.
     ///
@@ -192,23 +199,6 @@ mod wasm_abi {
         // SAFETY: forwarded unchanged; this function's contract is the one
         // `with_request` asks for.
         unsafe { with_request(pointer, len, reverse_translate_json) }
-    }
-
-    /// The crate's WGGW candidates for a sequence. JSON in, JSON out.
-    ///
-    /// # Safety
-    /// As [`with_request`]: `pointer` must be readable for `len` bytes.
-    #[unsafe(no_mangle)]
-    pub unsafe extern "C" fn wggw_report(pointer: *const u8, len: usize) -> *mut u8 {
-        // SAFETY: forwarded unchanged; this function's contract is the one
-        // `with_request` asks for.
-        unsafe { with_request(pointer, len, wggw_report_json) }
-    }
-
-    /// The codon preference tables. Takes no request.
-    #[unsafe(no_mangle)]
-    pub extern "C" fn codon_tables() -> *mut u8 {
-        frame(codon_tables_json())
     }
 }
 
