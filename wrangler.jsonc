@@ -70,29 +70,22 @@
       },
     },
   ],
-  // The corpus bucket is bound at cutover, once it exists on the lab's
-  // account (docs/cloudflare-migration.md, cutover checklist). Until then the
-  // Worker reads gene data over HTTP or from the static assets, and the
-  // binding is typed as optional in src/server/env.ts.
-  //
-  // "r2_buckets": [{ "binding": "GENE_DATA", "bucket_name": "rej-studio-gene-data" }],
-  //
-  // The cloud-design results bucket, for the rare result over ~900 KB (more
-  // than a Workflow step may return), is bound at cutover the same way. Give
-  // it a 30-day lifecycle rule to match the Workflow's retention. Until then
-  // such a design fails with a message saying so; it is typed as optional in
-  // src/server/env.ts.
-  //
-  // { "binding": "DESIGN_RESULTS", "bucket_name": "rej-studio-design-results" },
-  //
+  // The gene corpus (R2, rej-studio-gene-data; served to browsers from
+  // https://gene-data.rejstudio.com) and the cloud-design results bucket
+  // (rej-studio-design-results, 30-day lifecycle rule to match the
+  // Workflow's retention), for the rare result over ~900 KB that a Workflow
+  // step may not return.
+  "r2_buckets": [
+    { "binding": "GENE_DATA", "bucket_name": "rej-studio-gene-data" },
+    { "binding": "DESIGN_RESULTS", "bucket_name": "rej-studio-design-results" },
+  ],
   // Cloudflare Access, for /api/designs (src/server/designs/access.ts): the
-  // team domain and this application's AUD tag, set at cutover. Without them
-  // the cloud-designs API answers 503.
-  //
-  // "vars": {
-  //   "ACCESS_TEAM_DOMAIN": "<team>.cloudflareaccess.com",
-  //   "ACCESS_AUD": "<application AUD tag>",
-  // },
+  // team domain and the "REJ Studio" Access application's AUD tag. Neither is
+  // a secret: the AUD only names which application a token must be for.
+  "vars": {
+    "ACCESS_TEAM_DOMAIN": "rlfarman.cloudflareaccess.com",
+    "ACCESS_AUD": "c43327af6399ff82f387e91d3c02d6550445e2eb3a51d6585fa5d255d49a6c2e",
+  },
   //
   // Secrets (never in this file): MCP_TOKENS and HEALTH_AUTH_TOKEN. Locally
   // they go in .dev.vars (see .dev.vars.example); deployed, `wrangler secret

@@ -226,6 +226,46 @@ Cloudflare cutover are done. Everything here is reversible until DNS moves.
 - **Step 1:** the browser optimizer on by default in production, so slice 3
   can delete the server design path.
 
+### Cutover status (2026-11-17)
+
+Done on the `rlfarman` account; the preview is live at
+`https://rej-studio.rejstudio.workers.dev`, behind Access.
+
+- **Workers Paid** is on, with a $10 Workers spending limit that blocks
+  usage (Billing → Spend limits) and email alerts at $2 and $5. The limit is
+  account-wide, so it also covers the other Worker on the account.
+- **Corpus v1 is published.** It was rebuilt from the `corpus-v1` release
+  snapshot (39,990 genes, 40,695 files, 273 MB, with isoform alignments),
+  uploaded to the R2 bucket `rej-studio-gene-data` under `v1/`, and is served
+  to browsers from `https://gene-data.rejstudio.com/v1` with long-lived
+  immutable caching and CORS for the app's origins. It is public reference
+  data, so it sits outside Access.
+- **Buckets bound** in `wrangler.jsonc`: `GENE_DATA` and `DESIGN_RESULTS`
+  (`rej-studio-design-results`, 30-day lifecycle rule).
+- **Access.** The `rlfarman` Zero Trust team has two applications:
+  - "REJ Studio" covers the Worker's production and preview URLs. Its reusable
+    policy "REJ Studio users" allows `@salk.edu` plus two named addresses.
+    Its AUD and team domain are the `vars` in `wrangler.jsonc`.
+  - "REJ Studio MCP (agents)" bypasses Access for
+    `rej-studio.rejstudio.workers.dev/api/mcp`, because agents use bearer
+    tokens.
+
+  At DNS cutover, add `rejstudio.com` to the first application and
+  `rejstudio.com/api/mcp` to the second.
+
+- **Secrets** `MCP_TOKENS` (one token, `richie`) and `HEALTH_AUTH_TOKEN` are
+  set. The owner keeps them in `~/.config/rej-studio/worker-secrets.json`,
+  which is never committed. Deploy with that file so the secrets travel with
+  the version:
+
+  ```bash
+  VITE_GENE_DATA_URL=https://gene-data.rejstudio.com/v1 pnpm cf:deploy -- --secrets-file ~/.config/rej-studio/worker-secrets.json
+  ```
+
+Still to do: verify the preview while signed in (including reloading the page
+while a cloud design runs), Web Analytics, Sentry for Start, the DNS move, the
+required-checks swap, repointing the uptime monitor, and the teardown.
+
 ### Cutover checklist
 
 Things slice 3 left for the cutover, which only the repo and account owner
