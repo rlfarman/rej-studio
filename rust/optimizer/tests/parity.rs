@@ -1,9 +1,9 @@
 //! Checks the Rust port against the Python optimizer it replaces.
 //!
-//! Fixtures in `tests/fixtures/` are produced by running the real DNAChisel
-//! (see `scripts/gen-parity-fixtures.py`). Without these, the unit tests only
+//! Fixtures in `tests/fixtures/` were recorded from the real DNAChisel and are
+//! frozen (see `tests/fixtures/README.md`). Without these, the unit tests only
 //! prove the port is self-consistent; these prove it agrees with the pipeline
-//! that has been designing sequences to date.
+//! that designed sequences until the browser optimizer replaced it.
 //!
 //! The three groups demand different things, because the pipeline is only
 //! partly deterministic:
