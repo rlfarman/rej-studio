@@ -15,7 +15,8 @@ const baseURL = `http://localhost:${E2E_PORT}`
  * workerd). `E2E_SERVER=preview` runs the same specs against `vp preview`
  * instead, i.e. the production build on workerd; build first.
  *
- * Port 3000 (`strictPort` in vite.config.ts): stop a local `pnpm dev` first.
+ * Port 3000 by default (`strictPort` in vite.config.ts): stop a local `pnpm dev`
+ * first, or set E2E_PORT to run on another.
  */
 const server =
   process.env.E2E_SERVER === 'preview'
