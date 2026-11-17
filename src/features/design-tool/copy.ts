@@ -7,6 +7,12 @@ function formatProcessingTime(seconds: number): string {
   return `${Math.round(seconds)}s`
 }
 
+/** A cloud design's estimated duration, as a phrase ("about 3 min"). */
+function formatEstimate(seconds: number): string {
+  if (seconds < 60) return 'under a minute'
+  return `about ${Math.round(seconds / 60)} min`
+}
+
 export const designToolCopy = {
   metadata: {
     title: 'Design Tool',
@@ -78,6 +84,36 @@ export const designToolCopy = {
         ? 'A design was interrupted when its tab closed.'
         : `${count} designs were interrupted when their tab closed.`,
     interruptedToastAction: 'Open',
+  },
+  /** Designs run in the cloud, so the tab can close. */
+  cloud: {
+    toggleLabel: 'Run in the cloud',
+    // The one line that says what the option means. It is the whole of the
+    // privacy trade-off, so it stays next to the checkbox, not in a tooltip.
+    toggleHint:
+      'Your sequence leaves this machine, is kept for up to 30 days, and can be deleted.',
+    tooLong: (bases: number, limit: number) =>
+      `That sequence is ${bases.toLocaleString('en-US')} bp; cloud designs take up to ${limit.toLocaleString('en-US')}. Turn off “Run in the cloud” to design it in this browser.`,
+    unreachable:
+      'Could not reach the cloud. Check your connection, or reload the page to sign in again.',
+    failedGeneric: 'The cloud could not take that request. Try again.',
+    notFound: 'No longer in the cloud: it was deleted or passed its 30 days.',
+    running: {
+      title: 'Running in the cloud',
+      body: (estimate: number, bp: number) =>
+        `Usually ${formatEstimate(estimate)} for ${bp.toLocaleString('en-US')} bp. You can close this tab; the result will be here when you come back.`,
+    },
+    statusRunning: (estimate: number) =>
+      `Running in the cloud · ${formatEstimate(estimate)}`,
+    recentSubline: (estimate: number) =>
+      `in the cloud · ${formatEstimate(estimate)}`,
+    deleteAction: 'Delete from cloud',
+    deleting: 'Deleting…',
+    deleted:
+      'Deleted from the cloud. The copy in this browser’s history stays.',
+    deletedNote: 'Deleted from the cloud; kept in this browser.',
+    deleteFailed: (reason: string) =>
+      `Could not delete it from the cloud: ${reason}`,
   },
   draft: {
     restored: 'Restored your unsaved draft.',

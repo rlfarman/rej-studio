@@ -39,7 +39,9 @@ export function isBrowserJobId(id: string): boolean {
 }
 // How long to keep an entry stuck in the running state before we assume its
 // run was abandoned and drop it. BrowserRuns settles interrupted browser runs
-// as soon as it sees them; this catches anything it never did.
+// as soon as it sees them; this catches anything it never did. Cloud designs
+// are exempt: they finish without this tab, and the poller (CloudRuns) reads
+// their outcome however long the person was away.
 const STALE_RUNNING_TTL_MS = 24 * 60 * 60 * 1000
 
 export type JobStatus = 'running' | 'completed' | 'failed' | 'cancelled'
@@ -65,6 +67,11 @@ export interface JobHistoryEntry {
   // "Clear seed data" action and excludes the entry from exports. Not set
   // on real jobs.
   isSeed?: boolean
+  // Set when the design ran in the cloud: its id there (the same as `id`),
+  // which is what the poller reads and "Delete from cloud" deletes.
+  cloudId?: string
+  // The cloud copy was deleted; this entry is the only one left.
+  cloudDeleted?: boolean
 }
 
 /**
@@ -86,6 +93,8 @@ interface UpsertInput {
   result?: ProcessResult | null
   error?: JobError | null
   formValues?: FormValues
+  cloudId?: string
+  cloudDeleted?: boolean
 }
 
 interface JobHistoryState {
@@ -197,7 +206,10 @@ function finishHydration(entries: JobHistoryEntry[], error: unknown) {
 function sweepStaleRunning(entries: JobHistoryEntry[]): JobHistoryEntry[] {
   const cutoff = Date.now() - STALE_RUNNING_TTL_MS
   return entries.filter(
-    (e) => e.status !== 'running' || new Date(e.createdAt).getTime() >= cutoff,
+    (e) =>
+      e.status !== 'running' ||
+      e.cloudId !== undefined ||
+      new Date(e.createdAt).getTime() >= cutoff,
   )
 }
 
@@ -228,7 +240,15 @@ export const useJobHistory = create<JobHistoryState>()(
       // createdAt (so a running entry doesn't jump in the list when it
       // completes) and overlay any fields we've learned. Otherwise insert
       // at the top.
-      upsertEntry: ({ id, status, result, error, formValues }) => {
+      upsertEntry: ({
+        id,
+        status,
+        result,
+        error,
+        formValues,
+        cloudId,
+        cloudDeleted,
+      }) => {
         set((state) => {
           const existing = state.entries.find((e) => e.id === id)
           const nextResult = result ?? existing?.result ?? null
@@ -253,6 +273,12 @@ export const useJobHistory = create<JobHistoryState>()(
             error: error ?? existing?.error ?? null,
             formValues: nextFormValues,
             ...(existing?.isSeed ? { isSeed: true } : {}),
+            ...((cloudId ?? existing?.cloudId)
+              ? { cloudId: cloudId ?? existing?.cloudId }
+              : {}),
+            ...((cloudDeleted ?? existing?.cloudDeleted)
+              ? { cloudDeleted: true }
+              : {}),
           }
           // Terminal states have no progress left to show.
           const progressById =

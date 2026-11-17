@@ -7,9 +7,11 @@ import {
   Check,
   CircleAlert,
   CircleSlash,
+  Cloud,
   Pencil,
   Play,
   RotateCw,
+  Trash2,
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -19,6 +21,41 @@ import type { DesignToolSpecies } from '@/features/design-tool/types/species-opt
 import { designToolCopy } from '../copy'
 
 const copy = designToolCopy.jobHeader
+const cloudCopy = designToolCopy.cloud
+
+/**
+ * What a cloud design shows while it runs: an estimate from its length, not
+ * a progress bar. A Workflow step cannot report progress, and a bar that
+ * moved on a timer would claim to know something it does not.
+ */
+export function CloudRunningPlaceholder({
+  bases,
+  estimateSeconds,
+}: {
+  bases: number
+  estimateSeconds: number
+}) {
+  return (
+    <Card>
+      <CardContent
+        role="status"
+        aria-live="polite"
+        aria-label={cloudCopy.running.title}
+        className="flex flex-col items-center justify-center gap-4 py-12"
+      >
+        <span className="flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+          <Cloud className="size-6" />
+        </span>
+        <div className="max-w-sm space-y-1 text-center">
+          <p className="text-sm font-medium">{cloudCopy.running.title}</p>
+          <p className="text-xs text-muted-foreground">
+            {cloudCopy.running.body(estimateSeconds, bases)}
+          </p>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
 
 interface RunningPlaceholderProps {
   stage?: string
@@ -153,6 +190,13 @@ interface JobHeaderProps {
   onEdit: () => void
   onRerun: () => void
   onCancel?: () => void
+  /** Set for a design that ran in the cloud. */
+  cloud?: {
+    estimateSeconds: number
+    deleted: boolean
+    onDelete: () => void
+    deleting: boolean
+  } | null
 }
 
 const SPECIES_LABEL: Record<DesignToolSpecies, string> = copy.speciesLabel
@@ -211,8 +255,16 @@ function statusMessage({
   status,
   processingTimeSeconds,
   errorMessage,
-}: Pick<JobHeaderProps, 'status' | 'processingTimeSeconds' | 'errorMessage'>) {
-  if (status === 'running') return copy.statusRunning
+  cloud,
+}: Pick<
+  JobHeaderProps,
+  'status' | 'processingTimeSeconds' | 'errorMessage' | 'cloud'
+>) {
+  if (status === 'running') {
+    return cloud
+      ? cloudCopy.statusRunning(cloud.estimateSeconds)
+      : copy.statusRunning
+  }
   if (status === 'completed')
     return processingTimeSeconds != null
       ? copy.statusCompletedIn(processingTimeSeconds)
@@ -232,8 +284,14 @@ export function JobHeader({
   onEdit,
   onRerun,
   onCancel,
+  cloud,
 }: JobHeaderProps) {
-  const message = statusMessage({ status, processingTimeSeconds, errorMessage })
+  const message = statusMessage({
+    status,
+    processingTimeSeconds,
+    errorMessage,
+    cloud,
+  })
   const speciesLabel = SPECIES_LABEL[species]
   const canRerun = status !== 'running' && (status !== 'failed' || retriable)
 
@@ -269,9 +327,26 @@ export function JobHeader({
               >
                 {message}
               </p>
+              {cloud?.deleted && (
+                <p className="text-xs text-muted-foreground">
+                  {cloudCopy.deletedNote}
+                </p>
+              )}
             </div>
           </div>
-          <div className="flex shrink-0 items-center gap-1.5">
+          <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
+            {cloud && !cloud.deleted && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={cloud.onDelete}
+                disabled={cloud.deleting}
+              >
+                <Trash2 className="size-3.5" />
+                {cloud.deleting ? cloudCopy.deleting : cloudCopy.deleteAction}
+              </Button>
+            )}
             {status === 'running' && onCancel && (
               <Button
                 type="button"

@@ -1,11 +1,26 @@
 import { useEffect, useRef, useState } from 'react'
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import {
   browserOptimizerSupported,
   designInBrowser,
   warmOptimizerWorker,
 } from '@/features/design-tool/api/browser-optimizer'
+import {
+  deleteCloudDesign,
+  fetchCloudDesign,
+  submitCloudDesign,
+} from '@/features/design-tool/api/cloud-designs'
+import {
+  CLOUD_DESIGN_MAX_BASES,
+  estimateCloudSeconds,
+  isCloudDesignId,
+} from '@/features/design-tool/types/cloud-design'
 import { buildJobParams } from '@/features/design-tool/utils/form-handler'
+import {
+  applyCloudDesign,
+  cloudRuns,
+} from '@/features/design-tool/utils/cloud-runs'
 import {
   BROWSER_ID_PREFIX,
   useJobHistory,
@@ -27,6 +42,17 @@ import { designToolCopy } from '@/features/design-tool/copy'
 
 const copy = designToolCopy.jobErrors
 const runCopy = designToolCopy.browserRun
+const cloudCopy = designToolCopy.cloud
+
+/** A cloud submission the Worker refused; its message is for the person. */
+class CloudSubmitError extends Error {
+  override name = 'CloudSubmitError'
+}
+
+interface SubmitOptions {
+  /** Run in the cloud rather than in this tab, so the tab can close. */
+  cloud?: boolean
+}
 
 type JobStatus = 'idle' | 'submitting' | EntryStatus
 
@@ -40,10 +66,25 @@ interface UseJobOptions {
    * caller can drop it from the URL (without remounting the form mid-run).
    */
   onLeaveJob?: (jobId: string) => void
+  /**
+   * Called with a cloud design's id once it is submitted. Unlike a browser
+   * run's, it resolves anywhere, so the caller can put it in the URL: a
+   * reload, or the link sent to a colleague, opens the same design.
+   */
+  onCloudJob?: (jobId: string) => void
+}
+
+/** What the job view needs to know about a design that ran in the cloud. */
+interface CloudJobInfo {
+  id: string
+  /** Its cloud copy was deleted; only this browser's remains. */
+  deleted: boolean
+  /** About how long it takes, from its length (no live progress exists). */
+  estimateSeconds: number
 }
 
 interface UseJobReturn {
-  submitJob: (values: FormValues) => Promise<void>
+  submitJob: (values: FormValues, options?: SubmitOptions) => Promise<void>
   cancelJob: () => Promise<void>
   jobId: string | null
   status: JobStatus
@@ -61,6 +102,11 @@ interface UseJobReturn {
    * empty form nor "not found" until it clears.
    */
   isRestoring: boolean
+  /** Set when the design shown ran in the cloud. */
+  cloud: CloudJobInfo | null
+  /** Deletes the shown design's cloud copy (its owner only). */
+  deleteFromCloud: () => Promise<void>
+  isDeletingFromCloud: boolean
 }
 
 /**
@@ -82,6 +128,7 @@ function useBrowserOptimizer(): boolean {
 export function useJob({
   initialJobId = null,
   onLeaveJob,
+  onCloudJob,
 }: UseJobOptions = {}): UseJobReturn {
   const [jobId, setJobIdState] = useState<string | null>(initialJobId)
   const runsInBrowser = useBrowserOptimizer()
@@ -117,8 +164,44 @@ export function useJob({
     requestOpenJob(id)
   }
 
+  /**
+   * Submits to the cloud. Nothing runs here: the history entry, keyed by the
+   * cloud id, is marked running and the app shell's poller (CloudRuns) fills
+   * it in. An identical design submitted before gets the same id back, so
+   * it lands on the same entry instead of a duplicate.
+   */
+  const submitToCloud = async (values: FormValues) => {
+    // The Worker checks this too; checking here saves sending 45 kb to be
+    // told no.
+    if (values.codingSequence.length > CLOUD_DESIGN_MAX_BASES) {
+      throw new CloudSubmitError(
+        cloudCopy.tooLong(values.codingSequence.length, CLOUD_DESIGN_MAX_BASES),
+      )
+    }
+    const submitted = await submitCloudDesign(values)
+    if (!submitted.ok) throw new CloudSubmitError(submitted.message)
+    const { id, status } = submitted.data
+    const existing = useJobHistory.getState().getEntry(id)
+    if (existing?.status !== 'completed' || status !== 'completed') {
+      upsertEntry({ id, status: 'running', formValues: values, cloudId: id })
+    }
+    setJobIdState(id)
+    cloudRuns.wake()
+    onCloudJob?.(id)
+  }
+
   const submitMutation = useMutation({
-    mutationFn: async (values: FormValues) => {
+    mutationFn: async ({
+      values,
+      cloud = false,
+    }: {
+      values: FormValues
+      cloud?: boolean
+    }) => {
+      if (cloud) {
+        await submitToCloud(values)
+        return null
+      }
       const params = buildJobParams(values)
 
       // The design runs here, so there is no job to poll. A local id carries
@@ -171,7 +254,10 @@ export function useJob({
     },
     // The run's history entry was created when the design started, so
     // progress had somewhere to go; settle that one in place.
-    onSuccess: ({ outcome, values, id }) => {
+    onSuccess: (settled) => {
+      // A cloud submission settles through the poller, not here.
+      if (!settled) return
+      const { outcome, values, id } = settled
       if (outcome.ok) {
         upsertEntry({
           id,
@@ -212,6 +298,39 @@ export function useJob({
     return Promise.resolve()
   }
 
+  // A `?job=` naming a cloud design this browser has no entry for — a link
+  // from a colleague or another device — is read from the cloud, and kept in
+  // this browser's history from then on (running ones are then polled).
+  const remoteId =
+    historyHydrated &&
+    !entry &&
+    jobId !== null &&
+    jobId === initialJobId &&
+    isCloudDesignId(jobId)
+      ? jobId
+      : null
+  const remoteLookup = useQuery({
+    queryKey: ['cloud-design', remoteId],
+    queryFn: async () => {
+      const answer = await fetchCloudDesign(remoteId!)
+      if (answer.ok) return answer.data
+      if (answer.status === 404) return null
+      throw new Error(answer.message)
+    },
+    enabled: remoteId !== null,
+    retry: false,
+    staleTime: Infinity,
+  })
+  const remoteDesign = remoteLookup.data
+  useEffect(() => {
+    if (!remoteDesign) return
+    applyCloudDesign(remoteDesign)
+    cloudRuns.wake()
+  }, [remoteDesign])
+  const remoteLookupPending =
+    remoteId !== null &&
+    (remoteLookup.isPending || (remoteLookup.data != null && !entry))
+
   // Derive unified status/result/error. Submit-in-flight comes from the
   // mutation; everything after that reads the entry, including failures
   // (which are recorded as entries above). A thrown mutation error is a bug
@@ -222,22 +341,72 @@ export function useJob({
 
   if (submitMutation.isError) {
     status = 'failed'
-    error = { code: 'unknown', message: copy.unknown, retriable: true }
+    error =
+      submitMutation.error instanceof CloudSubmitError
+        ? {
+            code: 'backend',
+            message: submitMutation.error.message,
+            retriable: true,
+          }
+        : { code: 'unknown', message: copy.unknown, retriable: true }
   } else if (entry) {
     status = entry.status
     result = entry.result
     error = entry.error
   } else if (submitMutation.isPending) {
     status = 'submitting'
-  } else if (historyHydrated && jobId !== null && jobId === initialJobId) {
-    // A `?job=` this browser has no record of: a link from another device,
-    // or a cleared history. Shown as unavailable, without writing anything.
+  } else if (
+    historyHydrated &&
+    jobId !== null &&
+    jobId === initialJobId &&
+    !remoteLookupPending
+  ) {
+    // A `?job=` this browser has no record of and the cloud does not have
+    // either: a browser run from another device, a cleared history, or a
+    // cloud design past its retention. Shown as unavailable.
     status = 'failed'
-    error = { code: 'not_found', message: copy.notFound, retriable: false }
+    error = remoteLookup.isError
+      ? // The cloud could not be asked (offline, signed out): say that, not
+        // that the design does not exist.
+        {
+          code: 'backend',
+          message: remoteLookup.error.message,
+          retriable: false,
+        }
+      : { code: 'not_found', message: copy.notFound, retriable: false }
   }
 
-  const submitJob = async (values: FormValues) => {
-    await submitMutation.mutateAsync(values)
+  const submitJob = async (values: FormValues, options: SubmitOptions = {}) => {
+    await submitMutation.mutateAsync({ values, cloud: options.cloud })
+  }
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const answer = await deleteCloudDesign(id)
+      // Already gone from the cloud is what was asked for.
+      if (!answer.ok && answer.status !== 404) throw new Error(answer.message)
+      return id
+    },
+    onSuccess: (id) => {
+      const current = useJobHistory.getState().getEntry(id)
+      if (!current) return
+      upsertEntry({
+        id,
+        // A run deleted mid-flight will never report back.
+        status: current.status === 'running' ? 'cancelled' : current.status,
+        cloudDeleted: true,
+      })
+      toast.success(cloudCopy.deleted)
+    },
+    onError: (err) =>
+      toast.error(
+        cloudCopy.deleteFailed(err instanceof Error ? err.message : ''),
+      ),
+  })
+
+  const deleteFromCloud = async () => {
+    if (!entry?.cloudId || entry.cloudDeleted) return
+    await deleteMutation.mutateAsync(entry.cloudId).catch(() => {})
   }
 
   return {
@@ -253,6 +422,18 @@ export function useJob({
     isLoading: status === 'submitting' || status === 'running',
     runsInBrowser,
     isRestoring:
-      !historyHydrated && jobId !== null && jobId === initialJobId && !entry,
+      jobId !== null &&
+      jobId === initialJobId &&
+      !entry &&
+      (!historyHydrated || remoteLookupPending),
+    cloud: entry?.cloudId
+      ? {
+          id: entry.cloudId,
+          deleted: entry.cloudDeleted === true,
+          estimateSeconds: estimateCloudSeconds(entry.sequenceLength),
+        }
+      : null,
+    deleteFromCloud,
+    isDeletingFromCloud: deleteMutation.isPending,
   }
 }

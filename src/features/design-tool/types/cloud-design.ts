@@ -69,10 +69,8 @@ export const cloudDesignSubmitSchema = z.object({
   seed: z.number().int().optional(),
 })
 
-export type CloudDesignSubmit = z.input<typeof cloudDesignSubmitSchema>
-
 /** Where a cloud design is. A Workflow's finer states fold into these four. */
-export const cloudDesignStatusSchema = z.enum([
+const cloudDesignStatusSchema = z.enum([
   'queued',
   'running',
   'completed',

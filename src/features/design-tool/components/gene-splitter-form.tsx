@@ -27,7 +27,12 @@ import { FinishNotificationOptIn } from './finish-notification-opt-in'
 import { FieldHelp } from './field-help'
 import { RunSummary } from './run-summary'
 import { ResultsPanel } from './results-panel'
-import { JobHeader, RunningPlaceholder } from './job-header'
+import {
+  CloudRunningPlaceholder,
+  JobHeader,
+  RunningPlaceholder,
+} from './job-header'
+import { CloudRunToggle } from './cloud-run-toggle'
 import { toast } from 'sonner'
 import { designToolCopy } from '../copy'
 
@@ -44,6 +49,8 @@ interface GeneSplitterFormProperties {
   draftKey?: string
   /** A new run replaced the design `defaultJobId` named (see useJob). */
   onLeaveJob?: (jobId: string) => void
+  /** A design was submitted to the cloud under this id (see useJob). */
+  onCloudJob?: (jobId: string) => void
 }
 
 export function GeneSplitterForm({
@@ -54,8 +61,12 @@ export function GeneSplitterForm({
   defaultSpliceJunctionPosition,
   draftKey = 'new',
   onLeaveJob,
+  onCloudJob,
 }: GeneSplitterFormProperties) {
   const [isEditing, setIsEditing] = useState(false)
+  // Off by default: a cloud run sends the sequence off this machine, so it
+  // is only ever the person's explicit choice, made each time.
+  const [runInCloud, setRunInCloud] = useState(false)
   // Guards the one-shot form restore. Set true after we hydrate from a
   // resumed URL job, or eagerly on submit so the new job's own persisted
   // formValues don't ricochet back and overwrite the live form.
@@ -64,7 +75,11 @@ export function GeneSplitterForm({
   // navigating back to a previously-failed job doesn't spam. Keyed by the
   // error itself, not just the job id, so a fresh failure always speaks up.
   const toastedFailuresRef = useRef<Set<string>>(new Set())
-  const job = useJob({ initialJobId: defaultJobId ?? null, onLeaveJob })
+  const job = useJob({
+    initialJobId: defaultJobId ?? null,
+    onLeaveJob,
+    onCloudJob,
+  })
 
   const methods = useForm<FormValues>({
     resolver: zodResolver(validationSchema),
@@ -146,7 +161,7 @@ export function GeneSplitterForm({
     // the hydration effect above and overwrite the live form.
     didResetRef.current = true
     setIsEditing(false)
-    await job.submitJob(values)
+    await job.submitJob(values, { cloud: runInCloud })
     // The inputs are safe in the job entry now, so the draft can go.
     draft.clear()
   }
@@ -202,7 +217,17 @@ export function GeneSplitterForm({
             retriable={job.error?.retriable ?? true}
             onEdit={() => setIsEditing(true)}
             onRerun={handleRerun}
-            onCancel={isRunning ? job.cancelJob : undefined}
+            // A cloud run cannot be cancelled from here: it is not this
+            // tab's to stop. Deleting it from the cloud is the way out.
+            onCancel={isRunning && !job.cloud ? job.cancelJob : undefined}
+            cloud={
+              job.cloud && {
+                estimateSeconds: job.cloud.estimateSeconds,
+                deleted: job.cloud.deleted,
+                deleting: job.isDeletingFromCloud,
+                onDelete: () => void job.deleteFromCloud(),
+              }
+            }
           />
         )}
 
@@ -213,9 +238,17 @@ export function GeneSplitterForm({
           />
         )}
 
-        {!showForm && isRunning && !result && (
-          <RunningPlaceholder stage={job.stage} progress={job.progress} />
-        )}
+        {!showForm &&
+          isRunning &&
+          !result &&
+          (job.cloud ? (
+            <CloudRunningPlaceholder
+              bases={methods.getValues('codingSequence').length}
+              estimateSeconds={job.cloud.estimateSeconds}
+            />
+          ) : (
+            <RunningPlaceholder stage={job.stage} progress={job.progress} />
+          ))}
 
         {showForm && (
           <>
@@ -292,9 +325,16 @@ export function GeneSplitterForm({
                 and within thumb reach on a phone. */}
             <div className="sticky bottom-0 z-20 -mx-1 flex flex-wrap items-center justify-between gap-3 rounded-t-2xl border-t border-border bg-background/85 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/70">
               <RunSummary />
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="flex flex-wrap items-center gap-3">
+                <CloudRunToggle
+                  checked={runInCloud}
+                  onCheckedChange={setRunInCloud}
+                  disabled={job.isLoading}
+                />
                 {/* Only browser runs can finish unseen in a background tab. */}
-                {job.runsInBrowser && <FinishNotificationOptIn />}
+                {job.runsInBrowser && !runInCloud && (
+                  <FinishNotificationOptIn />
+                )}
                 <SubmitButton
                   isJobRunning={job.isLoading}
                   isJobComplete={job.status === 'completed'}

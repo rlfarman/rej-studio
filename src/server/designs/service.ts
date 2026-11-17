@@ -46,7 +46,7 @@ const log = createLogger('designs')
 /** How long a subscription is given to deliver an instance's start event. */
 const PARAMS_TIMEOUT_MS = 1500
 
-export type DesignWorkflow = Workflow<CloudDesignParams>
+type DesignWorkflow = Workflow<CloudDesignParams>
 
 // ── Submitting ───────────────────────────────────────────────────────────
 
@@ -71,10 +71,7 @@ interface SubmitInput {
 }
 
 /** The optimizer request a form's values (and an optional seed) make. */
-export function optimizerRequest(
-  values: FormValues,
-  seed?: number,
-): OptimizerRequest {
+function optimizerRequest(values: FormValues, seed?: number): OptimizerRequest {
   const params = buildJobParams(values)
   return seed === undefined
     ? params
