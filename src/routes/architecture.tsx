@@ -216,8 +216,8 @@ function ArchitecturePage() {
               name="Worker"
               tech="TanStack Start server entry"
               details={[
-                'Renders the shell for unmatched requests',
-                'Server routes arrive in slice 4',
+                'Gate first, then pages or /api',
+                'MCP endpoint and cloud-design Workflow',
               ]}
               variant="muted"
             />
