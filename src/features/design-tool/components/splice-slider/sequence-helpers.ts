@@ -1,4 +1,4 @@
-import { getRelativePreference } from '@/lib/bio/codon-usage'
+import { getRelativePreference } from '@/features/design-tool/utils/codon-preference'
 import { translateCodon } from '@/lib/bio/genetic-code'
 import type { Species } from '@/lib/bio/species'
 import type {

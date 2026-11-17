@@ -22,9 +22,11 @@ import {
 import type {
   OptimizerRequest,
   OptimizerResponse,
+  ReverseTranslateRequest,
 } from '@/features/design-tool/workers/optimizer-protocol'
 import { designToolCopy } from '@/features/design-tool/copy'
 import { createLogger } from '@/lib/logger'
+import type { Species } from '@/lib/bio/species'
 
 const log = createLogger('browser-optimizer')
 const copy = designToolCopy.jobErrors
@@ -86,6 +88,88 @@ export function warmOptimizerWorker() {
   }
 }
 
+/** The DNA a protein reverse-translates to, or why it could not. */
+export type ReverseTranslation =
+  | { ok: true; CDS: string }
+  | { ok: false; message: string }
+
+/**
+ * Reverse-translate a protein to DNA in the optimizer.
+ *
+ * The crate owns the codon tables, so this is the only implementation: the
+ * DNA it returns is spelled with the very codons the optimizer scores
+ * against. It runs in the same worker a design runs in, which the form warms
+ * on mount, so by the time someone has pasted a protein the module is live.
+ *
+ * Never rejects; a failure comes back as `ok: false`.
+ */
+export function reverseTranslateInBrowser(
+  protein: string,
+  species: Species,
+  { signal }: { signal?: AbortSignal } = {},
+): Promise<ReverseTranslation> {
+  if (!browserOptimizerSupported()) {
+    return Promise.resolve({ ok: false, message: copy.browserUnsupported })
+  }
+
+  const runId = crypto.randomUUID()
+
+  return new Promise((resolve) => {
+    let settled = false
+    const active = getWorker()
+
+    const finish = (outcome: ReverseTranslation) => {
+      if (settled) return
+      settled = true
+      active.removeEventListener('message', onMessage)
+      active.removeEventListener('error', onWorkerError)
+      signal?.removeEventListener('abort', onAbort)
+      resolve(outcome)
+    }
+
+    const onMessage = (event: MessageEvent<OptimizerResponse>) => {
+      const message = event.data
+      if (!message || message.runId !== runId) return
+      if (message.type === 'reverse-translated') {
+        finish({ ok: true, CDS: message.CDS })
+        return
+      }
+      if (message.type === 'error') {
+        log.warn('reverse translation failed', { code: message.code })
+        finish({
+          ok: false,
+          message:
+            message.code === 'invalid_input'
+              ? message.message
+              : copy.browserFailed,
+        })
+      }
+    }
+
+    const onWorkerError = (event: ErrorEvent) => {
+      log.error('optimizer worker crashed', event.error)
+      terminateOptimizerWorker()
+      finish({ ok: false, message: copy.browserFailed })
+    }
+
+    // A superseded request is dropped rather than cancelled: the call is
+    // short, and terminating the worker would throw away the warm module.
+    const onAbort = () => finish({ ok: false, message: copy.cancelled })
+
+    active.addEventListener('message', onMessage)
+    active.addEventListener('error', onWorkerError)
+    signal?.addEventListener('abort', onAbort, { once: true })
+
+    const request: ReverseTranslateRequest = {
+      type: 'reverse-translate',
+      runId,
+      protein,
+      species,
+    }
+    active.postMessage(request)
+  })
+}
+
 /**
  * Design a sequence in this browser.
  *
@@ -141,6 +225,9 @@ export function designInBrowser(
         )
         return
       }
+
+      // A reverse translation's reply belongs to its own caller.
+      if (message.type !== 'result') return
 
       // Parse with the same schema the server responses go through, so a
       // mismatch surfaces here rather than three layers into the UI.

@@ -15,15 +15,24 @@ import {
   OPTIMIZER_WASM_DIGEST,
   OPTIMIZER_WASM_PATH,
 } from './optimizer-asset.generated'
-import type { OptimizerRequest, OptimizerResponse } from './optimizer-protocol'
+import type {
+  OptimizerMessage,
+  OptimizerRequest,
+  OptimizerResponse,
+  ReverseTranslateRequest,
+} from './optimizer-protocol'
 
 interface OptimizerExports {
   memory: WebAssembly.Memory
   alloc: (length: number) => number
   dealloc: (pointer: number, length: number) => void
   process: (pointer: number, length: number) => number
+  reverse_translate: (pointer: number, length: number) => number
   free_response: (pointer: number) => void
 }
+
+/** The module's JSON-in/JSON-out entry points. */
+type OptimizerCall = 'process' | 'reverse_translate'
 
 const scope = self as unknown as DedicatedWorkerGlobalScope
 
@@ -93,15 +102,13 @@ const modulePromise: Promise<OptimizerExports> = (async () => {
   return instantiated
 })()
 
-/** Run one design, returning the raw JSON the module produced. */
-function design(exports: OptimizerExports, request: OptimizerRequest): string {
-  const payload = new TextEncoder().encode(
-    JSON.stringify({
-      CDS: request.CDS,
-      name: request.name,
-      options: request.options,
-    }),
-  )
+/** Call one of the module's entry points, returning the raw JSON it produced. */
+function call(
+  exports: OptimizerExports,
+  entry: OptimizerCall,
+  request: unknown,
+): string {
+  const payload = new TextEncoder().encode(JSON.stringify(request))
 
   const requestPointer = exports.alloc(payload.length)
   if (requestPointer === 0) throw new Error('the optimizer ran out of memory')
@@ -111,7 +118,7 @@ function design(exports: OptimizerExports, request: OptimizerRequest): string {
 
   let responsePointer = 0
   try {
-    responsePointer = exports.process(requestPointer, payload.length)
+    responsePointer = exports[entry](requestPointer, payload.length)
     // Read the length and bytes only after the call: growing the heap
     // detaches any view created earlier.
     const length = new DataView(exports.memory.buffer).getUint32(
@@ -130,48 +137,103 @@ function design(exports: OptimizerExports, request: OptimizerRequest): string {
   }
 }
 
-scope.addEventListener('message', (event: MessageEvent<OptimizerRequest>) => {
-  const request = event.data
-  if (request?.type !== 'design') return
+/** The `{ "error": "..." }` shape every entry point reports failures with. */
+function errorFrom(parsed: unknown): string | null {
+  if (
+    parsed &&
+    typeof parsed === 'object' &&
+    'error' in parsed &&
+    typeof (parsed as { error: unknown }).error === 'string'
+  ) {
+    return (parsed as { error: string }).error
+  }
+  return null
+}
 
-  void (async () => {
-    activeRunId = request.runId
-    try {
-      const exports = await modulePromise
-      const raw = design(exports, request)
-      const parsed: unknown = JSON.parse(raw)
+/** Report a module error, telling bad input apart from a real failure. */
+function postError(runId: string, message: string) {
+  post({
+    type: 'error',
+    runId,
+    // The module reports bad input in the same words the server does;
+    // anything else is a genuine failure of the optimizer.
+    code: /sequence|codons|WGGW|multiple of 3|amino acid|species/i.test(message)
+      ? 'invalid_input'
+      : 'backend',
+    message,
+  })
+}
 
-      if (
-        parsed &&
-        typeof parsed === 'object' &&
-        'error' in parsed &&
-        typeof (parsed as { error: unknown }).error === 'string'
-      ) {
-        const message = (parsed as { error: string }).error
-        post({
-          type: 'error',
-          runId: request.runId,
-          // The module reports bad input in the same words the server does;
-          // anything else is a genuine failure of the optimizer.
-          code: /sequence|codons|WGGW|multiple of 3/i.test(message)
-            ? 'invalid_input'
-            : 'backend',
-          message,
-        })
-        return
-      }
+async function runDesign(request: OptimizerRequest) {
+  activeRunId = request.runId
+  try {
+    const exports = await modulePromise
+    const parsed: unknown = JSON.parse(
+      call(exports, 'process', {
+        CDS: request.CDS,
+        name: request.name,
+        options: request.options,
+      }),
+    )
 
-      post({ type: 'result', runId: request.runId, result: parsed })
-    } catch (error) {
-      post({
-        type: 'error',
-        runId: request.runId,
-        code: 'unknown',
-        message:
-          error instanceof Error ? error.message : 'the optimizer failed',
-      })
-    } finally {
-      activeRunId = null
+    const error = errorFrom(parsed)
+    if (error !== null) {
+      postError(request.runId, error)
+      return
     }
-  })()
+    post({ type: 'result', runId: request.runId, result: parsed })
+  } catch (error) {
+    post({
+      type: 'error',
+      runId: request.runId,
+      code: 'unknown',
+      message: error instanceof Error ? error.message : 'the optimizer failed',
+    })
+  } finally {
+    activeRunId = null
+  }
+}
+
+async function runReverseTranslation(request: ReverseTranslateRequest) {
+  try {
+    const exports = await modulePromise
+    const parsed: unknown = JSON.parse(
+      call(exports, 'reverse_translate', {
+        protein: request.protein,
+        species: request.species,
+      }),
+    )
+
+    const error = errorFrom(parsed)
+    if (error !== null) {
+      postError(request.runId, error)
+      return
+    }
+    const cds =
+      parsed && typeof parsed === 'object' && 'CDS' in parsed
+        ? (parsed as { CDS: unknown }).CDS
+        : null
+    if (typeof cds !== 'string') {
+      postError(request.runId, 'the optimizer returned no coding sequence')
+      return
+    }
+    post({ type: 'reverse-translated', runId: request.runId, CDS: cds })
+  } catch (error) {
+    post({
+      type: 'error',
+      runId: request.runId,
+      code: 'unknown',
+      message: error instanceof Error ? error.message : 'the optimizer failed',
+    })
+  }
+}
+
+scope.addEventListener('message', (event: MessageEvent<OptimizerMessage>) => {
+  const request = event.data
+  // Reverse translation is cheap and the module runs one call at a time, so a
+  // request that arrives mid-design simply waits its turn.
+  if (request?.type === 'design') void runDesign(request)
+  else if (request?.type === 'reverse-translate') {
+    void runReverseTranslation(request)
+  }
 })

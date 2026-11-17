@@ -35,6 +35,8 @@ export const designToolCopy = {
         'Sequence must contain only standard amino acid letters (A, C, D, E, F, G, H, I, K, L, M, N, P, Q, R, S, T, V, W, Y) or * for stop.',
       internalStop:
         'Sequence contains internal stop character(s) (*). Only a terminal * is allowed.',
+      awaitingDna:
+        'Waiting for the DNA sequence this protein reverse-translates to.',
     },
     name: {
       required: 'A name is required.',
@@ -140,6 +142,9 @@ export const designToolCopy = {
       'Select a target species before reverse translating.',
     reverseTranslateProteinRequired:
       'Enter a protein sequence before reverse translating.',
+    reverseTranslatePending: 'Reverse translating…',
+    reverseTranslateFailed: (reason: string) =>
+      `Could not reverse translate this protein: ${reason}`,
   },
   nameInput: {
     label: 'Choose a name for your coding sequence',
