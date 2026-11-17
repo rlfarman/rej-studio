@@ -145,7 +145,7 @@ function ArchitecturePage() {
               tech="TanStack Query + static index"
               details={[
                 'Index fetched once per load',
-                'Postgres-equivalent ranking',
+                'MiniSearch: prefix + typo matching',
                 'Favorites & recents (localStorage)',
               ]}
             />

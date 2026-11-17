@@ -113,7 +113,7 @@ async function runHere(message: Call): Promise<unknown> {
     case 'similar':
       return corpus.similarGenes(message.symbol)
     case 'prefetch':
-      ;(await corpus.loadIndex()).warm()
+      await corpus.loadTextSearch()
       return null
   }
 }

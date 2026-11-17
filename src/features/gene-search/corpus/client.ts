@@ -22,6 +22,7 @@ import {
   type GeneTable,
   type TranscriptShard,
 } from './format'
+import type { GeneTextSearch } from './gene-text-search'
 import { GeneSearchIndex } from './search-index'
 
 /**
@@ -38,6 +39,7 @@ export type CorpusReader = (path: string) => Promise<unknown>
  */
 export class GeneCorpus {
   private index: Promise<GeneSearchIndex> | null = null
+  private textSearch: Promise<GeneTextSearch> | null = null
   private readonly shards = new Map<number, Promise<TranscriptShard>>()
   private readonly symbolShards = new Map<
     string,
@@ -62,6 +64,22 @@ export class GeneCorpus {
       this.index = null
     })
     return this.index
+  }
+
+  /**
+   * Load (once) and return the text search over the index. MiniSearch is
+   * imported here, on demand, so pages that only look a gene up never
+   * download it; the search worker calls this ahead of the first query.
+   */
+  loadTextSearch(): Promise<GeneTextSearch> {
+    this.textSearch ??= Promise.all([
+      this.loadIndex(),
+      import('./gene-text-search'),
+    ]).then(([index, { GeneTextSearch }]) => new GeneTextSearch(index.genes))
+    this.textSearch.catch(() => {
+      this.textSearch = null
+    })
+    return this.textSearch
   }
 
   /**
@@ -142,7 +160,7 @@ export class GeneCorpus {
     return (await this.read(geneFilePath(geneId))) as GeneFile | null
   }
 
-  /** fetchGenesBySearch: Ensembl ids first, then the ranked text search. */
+  /** Ensembl ids (exact lookups) first, then the ranked text search. */
   async searchGenes(
     query: string,
     species: string,
@@ -150,7 +168,7 @@ export class GeneCorpus {
   ): Promise<GeneSearchPage> {
     const index = await this.loadIndex()
 
-    // Like the SQL, an id lookup ignores the species filter.
+    // An id names one gene, so it ignores the species filter.
     if (ENST_REGEX.test(query)) {
       const geneId = await this.geneIdOfTranscript(query)
       const gene = geneId ? index.gene(geneId) : null
@@ -163,17 +181,17 @@ export class GeneCorpus {
       const gene = index.gene(query)
       return { results: gene ? [gene] : [], truncated: false }
     }
-    return index.searchText(query, species, limit)
+    return (await this.loadTextSearch()).search(query, species, limit)
   }
 
   async similarGenes(lowerSymbol: string): Promise<SimilarGene[]> {
-    return (await this.loadIndex()).similarGenes(lowerSymbol)
+    return (await this.loadTextSearch()).similarGenes(lowerSymbol)
   }
 }
 
 /**
- * searchGenes in api/genes.ts, for a corpus: trims the query, searches, and
- * offers "did you mean" symbols when nothing matched.
+ * A search as every surface runs it (palette, /genes, MCP): trims the query,
+ * searches, and offers "did you mean" symbols when nothing matched.
  */
 export async function searchCorpus(
   corpus: GeneCorpus,
