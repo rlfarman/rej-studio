@@ -325,9 +325,9 @@ describe('GET /api/designs/:id', () => {
     expect(response.status).toBe(503)
   })
 
-  describe('when the Workflow binding stumbles on status()', () => {
-    // The deployed binding answers status() with a bare "internal error" for
-    // about a second after create(); the service retries through it.
+  describe('when the Workflow binding stumbles on a read', () => {
+    // The deployed binding answers get() and status() with a bare "internal
+    // error" for about a second after create(); the service retries both.
     function failStatus(id: string, times: number) {
       const instance = workflow.instances.get(id)!
       const real = instance.status
@@ -351,6 +351,30 @@ describe('GET /api/designs/:id', () => {
       } finally {
         vi.useRealTimers()
       }
+    })
+
+    it('retries a stumbling get() too', async () => {
+      vi.useFakeTimers()
+      try {
+        const { json: submitted } = await submit()
+        const real = workflow.get
+        let failures = 0
+        workflow.get = async (id) => {
+          if (failures++ < 2) throw new Error('internal error')
+          return real(id)
+        }
+        const pending = read(submitted.id as string)
+        await vi.runAllTimersAsync()
+        const { response } = await pending
+        expect(response.status).toBe(200)
+      } finally {
+        vi.useRealTimers()
+      }
+    })
+
+    it('still answers 404 at once for an id that does not exist', async () => {
+      const { response } = await read('f'.repeat(64))
+      expect(response.status).toBe(404)
     })
 
     it('asks the client to retry, not fail, when it does not recover', async () => {
