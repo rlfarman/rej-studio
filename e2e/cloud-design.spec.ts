@@ -1,6 +1,7 @@
 import { expect, test, type Response } from '@playwright/test'
 
 import { designToolCopy } from '../src/features/design-tool/copy'
+import { signInToAccount, testEmail } from './accounts'
 import { signIn } from './sign-in'
 
 // A cloud design, end to end: the toggle, the submit server function, the
@@ -9,6 +10,9 @@ import { signIn } from './sign-in'
 // submitted it has closed. The server-side 45 kb cap and the cloud/browser
 // request parity cannot be reached from the page (the form refuses first,
 // and has no seed); src/server/designs/handler.test.ts covers them.
+//
+// Cloud runs need an account, so each test signs in to one first (with an
+// emailed code; e2e/accounts.ts). Reading a design needs only the passcode.
 
 /** Start's default server-function base (src/server/auth/gate.ts). */
 const SERVER_FN_BASE = '/_serverFn/'
@@ -29,6 +33,7 @@ test('runs a design in the cloud, and finds it after the page closes', async ({
   const page = await context.newPage()
   await page.goto(GENE_PAGE)
   await expect(page.locator('textarea').first()).toHaveValue(/^ATG[ACGT]+$/i)
+  await signInToAccount(page, testEmail('cloud'))
 
   // A name of its own, so this run is not an earlier run's design (the id is
   // a hash of the request, and the dev server keeps its Workflow state).
@@ -79,6 +84,7 @@ test('a cloud design link opens on another device, and its owner can delete it',
 }) => {
   await page.goto(GENE_PAGE)
   await expect(page.locator('textarea').first()).toHaveValue(/^ATG[ACGT]+$/i)
+  await signInToAccount(page, testEmail('cloud-link'))
   const name = `Cloud link e2e ${Date.now()}`
   await page.locator('input[name="name"]').fill(name)
   await page.getByRole('checkbox', { name: copy.toggleLabel }).click()
@@ -89,8 +95,8 @@ test('a cloud design link opens on another device, and its owner can delete it',
     timeout: 60_000,
   })
 
-  // A fresh browser context has no history at all, and its own sign-in: the
-  // design comes from the cloud.
+  // A fresh browser context has no history at all, and its own passcode
+  // sign-in but no account: the design comes from the cloud all the same.
   const elsewhere = await browser.newContext({ storageState: undefined })
   const other = await elsewhere.newPage()
   await signIn(other)
@@ -100,7 +106,8 @@ test('a cloud design link opens on another device, and its owner can delete it',
   })
   await elsewhere.close()
 
-  // The owner deletes it; this browser keeps its own copy.
+  // The owner (the account that ran it) deletes it; this browser keeps its
+  // own copy.
   await page.getByRole('button', { name: copy.deleteAction }).click()
   await expect(page.getByText(copy.deletedNote)).toBeVisible()
   await expect(page.getByText(/split after base/i).first()).toBeVisible()

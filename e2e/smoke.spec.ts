@@ -5,17 +5,23 @@ import { diseaseAssociationsCopy } from '../src/features/disease-associations/co
 import { formatInheritanceLabel } from '../src/features/disease-associations/types'
 import { geneSearchCopy } from '../src/features/gene-search/copy'
 import { SAMPLE_GENE_COUNT } from '../src/features/gene-search/corpus/gene-data-url'
+import { ACCOUNT_STATE_PATH } from './accounts'
 
 // The pages, on the committed sample corpus (public/gene-data/sample), with
 // no server behind them. Expected text comes from the copy files; otherwise
 // assertions target roles and data.
 
-/** Fails the test on any request that isn't a static file or the app. */
+/**
+ * Fails the test on any request that isn't a static file or the app (the
+ * account state aside: e2e/accounts.ts).
+ */
 function watchForServerCalls(page: Page) {
   const calls: string[] = []
   page.on('request', (request) => {
     const { pathname } = new URL(request.url())
-    if (pathname.startsWith('/api/')) calls.push(pathname)
+    if (pathname.startsWith('/api/') && pathname !== ACCOUNT_STATE_PATH) {
+      calls.push(pathname)
+    }
   })
   return calls
 }
