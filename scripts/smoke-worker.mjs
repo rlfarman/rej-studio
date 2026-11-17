@@ -9,12 +9,21 @@
 // gene data is read through the assets binding, and /api/mcp is spoken to
 // over the protocol with a bearer token.
 //
+// Cloud designs run here end to end too: POST /api/designs starts the real
+// Workflow in workerd, the script polls it to completion, checks that a
+// resubmission is deduplicated, that the result is the browser's design (the
+// same .wasm run through Node with the browser's ABI glue), and deletes it;
+// and that submit_design hands a sequence over 12 kb to the same Workflow.
+// The identity is DEV_ACCESS_EMAIL, honoured only on this loopback host.
+//
 // It lives here rather than in Vitest because @cloudflare/vitest-pool-workers
 // supports Vitest 4 and this repo runs Vite+'s Vitest 5; the pool's proxy
 // worker fails to start. See AGENTS.md ("Testing").
 
 import { spawn } from 'node:child_process'
+import { mkdtempSync, rmSync } from 'node:fs'
 import { createServer } from 'node:net'
+import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -25,6 +34,7 @@ const worker = path.join(root, 'dist/server/wrangler.json')
 const TOKEN = `smoke-agent:${'s'.repeat(32)}`
 const SECRET = 's'.repeat(32)
 const HEALTH_TOKEN = 'h'.repeat(40)
+const DEV_EMAIL = 'smoke@example.com'
 
 /**
  * fetch with a deadline. A request that workerd accepts but never answers
@@ -138,9 +148,211 @@ function stop(child) {
 const textOf = (result) =>
   (result.content ?? []).map((block) => block.text ?? '').join('\n')
 
+/** The design form's values for a coding sequence, as the browser sends them. */
+function formValues(cds, name) {
+  return {
+    selectedWggwSites: [null],
+    sequenceType: 'dna',
+    codingSequence: cds,
+    proteinSequence: '',
+    name,
+    species: 'human',
+    codonOptimizeWeight: 1,
+    removeCrypticSpliceSites: true,
+    removeCrypticSpliceSitesWeight: 1,
+    minimizeCpgs: true,
+    minimizeCpgsWeight: 1,
+    reduceKmerComplexity: true,
+    reduceKmerComplexityWeight: 1,
+    enforceGcContent: true,
+    '5PrimeStimulatoryIntron': false,
+    '3PrimeStimulatoryIntron': false,
+    spliceJunctionPositions: [Math.floor(cds.length / 2)],
+  }
+}
+
+/** Polls until `read` returns something `done` accepts, or gives up. */
+async function pollUntil(read, done, ms = 180_000) {
+  const deadline = Date.now() + ms
+  let last
+  while (Date.now() < deadline) {
+    last = await read()
+    if (done(last)) return last
+    await new Promise((resolve) => setTimeout(resolve, 250))
+  }
+  throw new Error(`timed out polling: ${JSON.stringify(last).slice(0, 300)}`)
+}
+
+/**
+ * The design the browser makes for the same request: the committed .wasm,
+ * instantiated by Node through the app's own ABI glue (wasm-harness.mjs) and
+ * given the request the form builds (form-handler.ts, through Node's type
+ * stripping).
+ */
+async function browserDesign(values, seed) {
+  const { loadModule } = await import('./wasm-harness.mjs')
+  const { buildJobParams } =
+    await import('../src/features/design-tool/utils/form-handler.ts')
+  const { design } = await loadModule(
+    path.join(root, 'public/optimizer/rej-optimizer.wasm'),
+  )
+  const request = buildJobParams(values)
+  return design({ ...request, options: { ...request.options, seed } })
+}
+
+async function cloudDesigns(url, cds) {
+  const designs = `${url}/api/designs`
+  const values = formValues(cds, 'TP53 cloud smoke')
+  const body = JSON.stringify({ values, seed: 1234 })
+  const post = () =>
+    request(designs, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body,
+    })
+
+  const started = Date.now()
+  const created = await post()
+  const submitted = await created.json()
+  check(
+    'POST /api/designs starts a cloud design',
+    created.status === 202 &&
+      /^[0-9a-f]{64}$/.test(submitted.id) &&
+      submitted.existing === false,
+    `HTTP ${created.status} ${JSON.stringify(submitted)}`,
+  )
+  const id = submitted.id
+
+  const finished = await pollUntil(
+    async () => (await request(`${designs}/${id}`)).json(),
+    (design) => design.status === 'completed' || design.status === 'failed',
+  )
+  const seconds = (Date.now() - started) / 1000
+  console.log(
+    `[smoke] TP53 cloud design: POST to completed in ${seconds.toFixed(2)} s`,
+  )
+  check(
+    'the cloud design completes with a result, owned by the caller',
+    finished.status === 'completed' &&
+      finished.result?.optimized_sequence?.length === cds.length &&
+      finished.owner === DEV_EMAIL &&
+      finished.ownedByCaller === true &&
+      finished.values?.codingSequence === cds,
+    JSON.stringify({ ...finished, result: undefined, values: undefined }),
+  )
+
+  const again = await post()
+  const resubmitted = await again.json()
+  check(
+    'an identical POST returns the same design without a new run',
+    again.status === 200 &&
+      resubmitted.id === id &&
+      resubmitted.existing === true &&
+      resubmitted.status === 'completed',
+    `HTTP ${again.status} ${JSON.stringify(resubmitted)}`,
+  )
+
+  const browser = await browserDesign(values, 1234)
+  const same = ['optimized_sequence', 'seq5', 'seq3', 'split_point', 'seed']
+  check(
+    'the cloud design is the design the browser makes (same .wasm, same seed)',
+    same.every(
+      (key) =>
+        JSON.stringify(browser[key]) === JSON.stringify(finished.result?.[key]),
+    ),
+    same
+      .filter(
+        (key) =>
+          JSON.stringify(browser[key]) !==
+          JSON.stringify(finished.result?.[key]),
+      )
+      .join(', '),
+  )
+
+  const tooLong = await request(designs, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      values: formValues(`ATG${'AAA'.repeat(15_000)}TAA`, 'too long'),
+    }),
+  })
+  check('the cloud cap refuses a sequence over 45 kb', tooLong.status === 413)
+
+  const deleted = await request(`${designs}/${id}`, { method: 'DELETE' })
+  check('DELETE removes the design', deleted.status === 204)
+  const gone = await request(`${designs}/${id}`)
+  check('a deleted design is not found', gone.status === 404)
+}
+
+/**
+ * A coding sequence of `codons` sense codons between ATG and TAA, from a
+ * fixed pseudo-random stream: varied enough for the optimizer to have real
+ * work, identical every run.
+ */
+function syntheticCds(codons) {
+  const sense = []
+  for (const a of 'ACGT')
+    for (const b of 'ACGT')
+      for (const c of 'ACGT') {
+        const codon = a + b + c
+        if (!['TAA', 'TAG', 'TGA'].includes(codon)) sense.push(codon)
+      }
+  let state = 12345
+  let cds = 'ATG'
+  for (let i = 0; i < codons; i++) {
+    state = (state * 1103515245 + 12345) % 2 ** 31
+    cds += sense[state % sense.length]
+  }
+  return `${cds}TAA`
+}
+
+async function mcpHandOff(url) {
+  // Just over the 12 kb inline limit: the shortest design that is handed off.
+  const sequence = syntheticCds(4_050)
+  const handed = await callTool(url, 'submit_design', {
+    name: 'long smoke',
+    sequence,
+    species: 'human',
+  })
+  const jobId = handed.structuredContent?.job_id
+  check(
+    'submit_design hands a sequence over 12 kb to the cloud and returns a job id',
+    !handed.isError &&
+      /^[0-9a-f]{64}$/.test(jobId ?? '') &&
+      ['queued', 'running'].includes(handed.structuredContent?.status) &&
+      handed.structuredContent?.estimated_seconds > 0,
+    textOf(handed),
+  )
+  if (!jobId) return
+
+  const started = Date.now()
+  const done = await pollUntil(
+    () => callTool(url, 'get_design', { job_id: jobId }),
+    (result) =>
+      result.isError ||
+      ['completed', 'failed'].includes(result.structuredContent?.status),
+  )
+  console.log(
+    `[smoke] ${sequence.length} bp hand-off finished ${((Date.now() - started) / 1000).toFixed(1)} s after submit_design returned`,
+  )
+  check(
+    'get_design returns the handed-off design when it is done',
+    !done.isError &&
+      done.structuredContent?.status === 'completed' &&
+      done.structuredContent?.result?.optimized_sequence?.length ===
+        sequence.length,
+    textOf(done),
+  )
+}
+
 async function main() {
   const port = await freePort()
   const url = `http://127.0.0.1:${port}`
+  // Local state (Workflow instances, rate-limit counters) in a directory of
+  // its own: wrangler's default, .wrangler/state, outlives the run, and a
+  // design left from the last run would turn "submitted" into "already
+  // done".
+  const state = mkdtempSync(path.join(tmpdir(), 'rej-smoke-'))
 
   // The wrangler binary itself, not `npx wrangler`, and in its own process
   // group: wrangler starts workerd as a child, and killing only the parent
@@ -156,10 +368,14 @@ async function main() {
       '--ip',
       '127.0.0.1',
       '--local',
+      '--persist-to',
+      state,
       '--var',
       `MCP_TOKENS:${TOKEN}`,
       '--var',
       `HEALTH_AUTH_TOKEN:${HEALTH_TOKEN}`,
+      '--var',
+      `DEV_ACCESS_EMAIL:${DEV_EMAIL}`,
     ],
     {
       cwd: root,
@@ -327,13 +543,17 @@ async function main() {
     )
 
     // --- the guards --------------------------------------------------------
+    // Over the cloud cap: nothing here runs it, and the refusal keeps the
+    // agent in its conversation rather than sending it to a page.
     const tooLong = await callTool(url, 'submit_design', {
       name: 'too long',
-      sequence: `ATG${'AAA'.repeat(4500)}TAA`,
+      sequence: `ATG${'AAA'.repeat(15_000)}TAA`,
     })
     check(
-      'the length guard refuses an oversized sequence',
-      tooLong.isError === true && /web app/.test(textOf(tooLong)),
+      'the length guard refuses a sequence over the cloud cap',
+      tooLong.isError === true &&
+        /45,000/.test(textOf(tooLong)) &&
+        !/web app/.test(textOf(tooLong)),
       textOf(tooLong),
     )
 
@@ -349,10 +569,13 @@ async function main() {
 
     const stale = await callTool(url, 'get_design', { job_id: 'job-1' })
     check(
-      'get_design says designs come back from submit_design',
+      'get_design answers an unknown id with where ids come from',
       stale.isError === true && /submit_design/.test(textOf(stale)),
       textOf(stale),
     )
+
+    await cloudDesigns(url, CDS)
+    await mcpHandOff(url)
 
     // --- the design view ---------------------------------------------------
     const view = await rpc(url, 'resources/read', {
@@ -376,6 +599,10 @@ async function main() {
     throw error
   } finally {
     stop(child)
+    // After workerd has had a moment to go (stop() signals its group): it
+    // holds the files. A failure to remove a temp directory fails nothing.
+    await new Promise((resolve) => setTimeout(resolve, 500))
+    rmSync(state, { recursive: true, force: true, maxRetries: 3 })
   }
 
   const failed = checks.filter((entry) => !entry.ok)

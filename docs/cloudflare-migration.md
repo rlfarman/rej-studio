@@ -204,7 +204,9 @@ Cloudflare cutover are done. Everything here is reversible until DNS moves.
 4. **Server routes.** 4a (done): health and version, and the MCP endpoint
    ported from #280 and #281 with inline designs — see
    [Agent access](#agent-access-mcp) and AGENTS.md's "Server routes".
-   4b: the cloud-designs API and Workflow (planned below).
+   4b (done): the cloud-designs API and Workflow — see
+   [Plan: cloud designs](#plan-cloud-designs-decided-opt-in) and "Done in
+   slice 4b" under it.
 5. **Cutover**, which needs the owner's Cloudflare account:
    - Workers Paid, with a spending limit.
    - The corpus uploaded to R2.
@@ -261,6 +263,19 @@ can do:
   bearer tokens. Everything else, including `/api/health` and
   `/api/version`, sits behind Access; a monitor probing health needs either a
   service token or a bypass of its own.
+- **Cloud designs (slice 4b).** Set `ACCESS_TEAM_DOMAIN` and `ACCESS_AUD`
+  (the Access application's AUD tag) in `wrangler.jsonc` `vars` once the
+  Access application exists; until both are set `/api/designs` answers 503.
+  Keep `/api/designs` behind Access — unlike `/api/mcp` it has no bypass,
+  and the Worker verifies the Access JWT itself as well. Never set
+  `DEV_ACCESS_EMAIL` on the deployed Worker.
+- **The design-results bucket.** Create an R2 bucket for results over ~900
+  KB, give it a 30-day lifecycle rule to match the Workflow's retention, and
+  uncomment the `DESIGN_RESULTS` binding in `wrangler.jsonc` (then `pnpm
+  cf:types`). Without it such a design fails with a message saying so; at
+  45 kb a result is a few hundred KB, so this is a backstop.
+- **Workers Paid before the first deploy.** `limits.cpu_ms: 300000` is a Paid
+  setting; the Workflow `rej-studio-designs` is created by `wrangler deploy`.
 - **Tear down Vercel, Neon, Modal and Upstash only after the Cloudflare
   deploy has served the lab** for a while. Until then the release branch's
   Vercel deployment, with its Neon database, Modal app and Upstash limiter,
@@ -329,6 +344,12 @@ Done in slice 4a, and what each decision came to:
   with room for a slower isolate — and still covers the largest coding
   sequence in the gene data (BRCA2, 10,257 bases). Above it the refusal points
   at the web app, where the same optimizer runs in the user's own tab.
+
+**Slice 4b added the async path back, for long sequences only.** From 12 kb
+to 45 kb `submit_design` hands the design to the cloud-design Workflow and
+returns a `job_id`, and `get_design` reads it — the "old async contract"
+the plan below offered, kept for designs that would otherwise time out.
+Up to 12 kb nothing changed: the design comes back in the call.
 
 **Sequencing matters here.** Inline is right only once the optimizer is fast
 and local. Today the endpoint calls Modal, where a design really does take
@@ -491,6 +512,77 @@ contract, kept for the cases that would otherwise time out.
 **Not in scope.** Checkpointing for titin-scale genes (over 45 kb), and
 Containers. Revisit only if someone needs them.
 
+### Done in slice 4b
+
+What each decision came to, and where the build differs from the plan above:
+
+- **One Worker.** `wrangler.jsonc`'s `main` is `src/server/worker-entry.ts`,
+  which re-exports Start's handler beside the `DesignWorkflow` class (a
+  Workflow must be a named export of the main module); the Workflow is bound
+  as `DESIGN_WORKFLOW`.
+- **API.** `POST /api/designs`, `GET` and `DELETE /api/designs/:id`, behind
+  Access and verifying the Access JWT again in the Worker (signature against
+  the team's JWKS, issuer, audience, expiry; jose, no `nodejs_compat`). No
+  Access configuration means 503, never open; `DEV_ACCESS_EMAIL` stands in
+  locally, on loopback hosts only. The request is the form's values, checked
+  by the form's own zod schema, with the 45 kb cap in the browser and the
+  Worker.
+- **The id** is SHA-256 over `rej-studio/cloud-design/v1`, the `.wasm`
+  digest and the canonical optimizer request (sorted keys, `undefined`
+  dropped; pinned in `src/server/designs/id.ts`). The owner is not in it, so
+  two people asking for the same design share one run; reads need no owner
+  check (the id implies the input, and the output is deterministic), deletes
+  are owner-only.
+- **Deviation — step CPU.** Steps have no `cpu_ms` of their own; the Worker's
+  `limits.cpu_ms: 300000` is what each step invocation gets (it also covers
+  the inline MCP design).
+- **Deviation — retries.** The step has no retries at all, rather than
+  "retry only transient failures" inside the instance: a CPU-limit kill
+  cannot be told apart from a transient failure until afterwards, and
+  retrying it costs another 5 minutes of CPU. Transient failures are retried
+  where they can be told apart: the R2 write retries inside the step, and
+  resubmitting a design whose failure was transient (anything that is not
+  the CPU limit or the optimizer's own refusal) restarts the instance.
+- **Retention** is per instance, as planned: 30 days on success, 7 on error
+  (and the same as the Workflow's `default_retention`).
+- **Deviation — rate limit.** The Rate Limiting binding counts over 10 or 60
+  seconds only, so "about 20 an hour" became 3 a minute per owner
+  (`DESIGN_LIMITER`), spent only when a run starts. An hourly counter would
+  need a Durable Object or KV that nothing else needs; the spending limit is
+  the backstop.
+- **Results over ~900 KB** go to the optional `DESIGN_RESULTS` bucket
+  (commented out until cutover); without it such a design fails clearly.
+- **Deviation — reading params.** A Workflow binding has no way to read an
+  instance's params back, so the owner and inputs of a running or failed
+  instance come from its `workflow_started` event (`instance.subscribe`),
+  and a finished one carries them in its output. A queued instance has no
+  start event yet, so deleting one answers 409 until it starts.
+- **MCP.** `submit_design` stays inline up to 12 kb; from 12 kb to 45 kb it
+  hands off to the same Workflow (owner `mcp:<token name>`) and returns
+  `{ job_id, status, estimated_seconds }`, and `get_design` reads it back
+  with the design view. Over 45 kb the refusal tells the agent to split the
+  sequence; nothing tells an agent to open the web app.
+- **UI.** "Run in the cloud" beside Run designer, off by default, with its
+  one line of copy always visible. History entries carry the cloud id; the
+  app shell polls running ones with backoff (2 s doubling to a minute, reset
+  on focus) and keeps the result locally; running entries show an estimate
+  from length (0.145 s × kb², the measured scaling), not a bar. A cloud id
+  goes in the URL, and `?job=` resolves for anyone signed in. The job view
+  has "Delete from cloud"; the Recent jobs row keeps its one action.
+- **Tests.** Vitest covers the id, the JWT verification, the handlers, the
+  step and the failure mapping (the CPU limit cannot be hit locally) against
+  an in-memory Workflow, and the poller's backoff. Deviation: the plan named
+  `@cloudflare/vitest-pool-workers`, which does not run on Vite+'s Vitest 5,
+  so the Workflow runs for real in `pnpm test:worker` (POST → poll →
+  completed → dedupe → parity with the browser's design → DELETE, and the
+  MCP hand-off) and in `e2e/cloud-design.spec.ts`, since the dev server runs
+  Workflows.
+- **Locally**, workerd runs the step on the same thread as every request, so
+  nothing else is answered while it runs (a 12 kb design held a page load,
+  static assets and all, for 22 s). That is why "reload while running" can
+  only be seen deployed; locally the reloaded page arrives with the result.
+  TP53 (1,182 bp) goes from POST to completed in about 0.3 s.
+
 ## Cloudflare features worth taking
 
 | Feature               | Why it matters here                                                                                          |
@@ -503,10 +595,11 @@ Containers. Revisit only if someone needs them.
 | D1                    | If the lab later wants shared history rather than per-device                                                 |
 | Workers Issues        | Groups Worker errors and posts stack traces to a webhook; complements Sentry, which stays for browser errors |
 
-The **Rate Limiting binding** replaces Upstash for the MCP endpoint.
+The **Rate Limiting binding** replaces Upstash for the MCP endpoint and
+limits cloud designs. **Workflows** run cloud designs (slice 4b).
 
-Not worth taking for this app: Durable Objects and Workflows (the inline job
-model leaves no state to hold), Workers AI, Hyperdrive (the database goes
+Not worth taking for this app: Durable Objects (nothing needs coordinated
+state), Workers AI, Hyperdrive (the database goes
 away), Zaraz (GTM goes away).
 
 ## Open questions

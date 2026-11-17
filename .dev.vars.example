@@ -20,3 +20,12 @@ MCP_TOKENS=lab-agent:replace-me-with-at-least-24-characters
 # caller presenting `Authorization: Bearer <token>`. Anonymous probes always
 # get liveness only.
 HEALTH_AUTH_TOKEN=
+
+# Local stand-in for a Cloudflare Access sign-in, so /api/designs (cloud
+# designs) works under `vp dev` and `wrangler dev`: requests to localhost are
+# treated as this email, and every one logs a loud warning. NEVER set this on
+# a deployed Worker — it is not declared in wrangler.jsonc, and the Worker
+# ignores it for any non-loopback host anyway. Deployed, cloud designs need
+# ACCESS_TEAM_DOMAIN and ACCESS_AUD (wrangler.jsonc `vars`, at cutover) and
+# verify the Access JWT; with neither, /api/designs answers 503.
+DEV_ACCESS_EMAIL=
