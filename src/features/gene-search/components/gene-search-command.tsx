@@ -605,30 +605,26 @@ export function GeneSearchCommand({
               />
             )}
 
-            {/* The listbox only when it has options; without it the input
-                drops aria-controls rather than pointing at an empty list. */}
-            {content === 'results' && (
-              <AutocompleteList
-                className={cn(
-                  'max-h-[300px] transition-opacity duration-200',
-                  // Dim the list while a fresh query is loading to telegraph
-                  // that newer results are on the way, without yanking the
-                  // current content out from under the user.
-                  showLoader && 'opacity-60',
-                )}
-              >
-                {(group: PaletteGroup) => (
-                  <AutocompleteGroup key={group.key} items={group.items}>
-                    <AutocompleteGroupLabel>
-                      {group.label}
-                    </AutocompleteGroupLabel>
-                    <AutocompleteCollection>
-                      {renderItem}
-                    </AutocompleteCollection>
-                  </AutocompleteGroup>
-                )}
-              </AutocompleteList>
-            )}
+            {/* Always mounted: Base UI treats an inline list as permanently
+                expanded, so the input's aria-controls must name a listbox
+                that exists. Hidden while it has nothing to show. */}
+            <AutocompleteList
+              hidden={content !== 'results'}
+              className={cn(
+                'max-h-[300px] transition-opacity duration-200',
+                // Dim the list while a fresh query is loading to telegraph
+                // that newer results are on the way, without yanking the
+                // current content out from under the user.
+                showLoader && 'opacity-60',
+              )}
+            >
+              {(group: PaletteGroup) => (
+                <AutocompleteGroup key={group.key} items={group.items}>
+                  <AutocompleteGroupLabel>{group.label}</AutocompleteGroupLabel>
+                  <AutocompleteCollection>{renderItem}</AutocompleteCollection>
+                </AutocompleteGroup>
+              )}
+            </AutocompleteList>
             {/* Outside the listbox, which may only hold options and groups. */}
             {content === 'results' && error && !hasGeneResults && hasQuery && (
               <div className="flex items-center justify-between gap-2 border-t px-3 py-2 text-xs text-destructive-foreground">
