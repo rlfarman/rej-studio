@@ -11,6 +11,7 @@ import { pickDefaultSplitPoint } from '@/features/design-tool/utils/default-spli
 import { isoformWithGeneQuery } from '@/features/gene-search/corpus/queries'
 import { isSpecies } from '@/lib/bio/species'
 import { DesignToolError } from './-components/design-tool-error'
+import { sectionPending } from './-components/layout/section-pending'
 import { searchText } from './-components/search-params'
 
 const searchSchema = z.object({
@@ -34,7 +35,7 @@ export const Route = createFileRoute('/design-tool')({
     ],
   }),
   component: DesignToolPage,
-  pendingComponent: DesignToolSkeleton,
+  pendingComponent: sectionPending(DesignToolSkeleton),
   errorComponent: DesignToolError,
 })
 

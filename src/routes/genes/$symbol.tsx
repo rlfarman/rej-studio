@@ -28,6 +28,7 @@ import {
 } from '@/lib/bio/species'
 import { GeneLoading } from '../-components/genes/gene-loading'
 import { GeneNotFound } from '../-components/genes/gene-not-found'
+import { sectionPending } from '../-components/layout/section-pending'
 import { SearchError } from '../-components/genes/search-error'
 import { searchOneOf, searchText } from '../-components/search-params'
 
@@ -88,7 +89,7 @@ export const Route = createFileRoute('/genes/$symbol')({
     ],
   }),
   component: GenePage,
-  pendingComponent: GeneLoading,
+  pendingComponent: sectionPending(GeneLoading),
   errorComponent: SearchError,
   notFoundComponent: GeneNotFoundPage,
 })

@@ -27,6 +27,7 @@ import {
   searchPositiveInt,
   searchText,
 } from './-components/search-params'
+import { sectionPending } from './-components/layout/section-pending'
 
 const PAGE_SIZE = 50
 
@@ -56,12 +57,16 @@ export const Route = createFileRoute('/disease-associations')({
     ],
   }),
   component: DiseaseAssociationsPage,
-  pendingComponent: () => (
+  pendingComponent: sectionPending(AssociationsPending),
+})
+
+function AssociationsPending() {
+  return (
     <PageFrame>
       <AssociationsTableSkeleton />
     </PageFrame>
-  ),
-})
+  )
+}
 
 function PageFrame({ children }: { children: ReactNode }) {
   return (
