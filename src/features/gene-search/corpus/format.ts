@@ -2,16 +2,18 @@
  * The static gene corpus: what `scripts/build-gene-corpus.ts` writes and
  * what the app reads, over HTTP or from disk.
  *
+ *   <base>/manifest.json           counts and the transcript shard count (CorpusManifest)
  *   <base>/index.json              every gene's searchable fields (GeneIndexFile)
  *   <base>/genes/<geneId>.json     one gene and its isoforms (GeneFile)
  *   <base>/transcripts/<n>.json    transcript id → gene id, sharded (TranscriptShard)
  *   <base>/symbols/<key>.json      the index rows whose symbol starts with <key> (GeneTable)
  *
- * The browser loads index.json once and searches all of it. The symbol
- * shards are for readers that can't afford to parse the whole index per
- * request (a Worker on a 10 ms CPU budget): an exact or prefix symbol
- * lookup reads one small shard, and a transcript lookup one transcript
- * shard. Every key is derivable from the query, so nothing needs a
+ * The browser loads index.json (about 1 MB compressed) once and searches all
+ * of it. The symbol shards and manifest are for lookups that should not wait
+ * for that: a gene page by symbol reads one small shard, and a transcript
+ * lookup reads the manifest (for the shard count) and one transcript shard.
+ * The Worker reads them too, where parsing the whole index per request
+ * would cost too much CPU. Every key is derivable from the query, so nothing needs a
  * directory listing.
  *
  * `<base>` names one corpus version (e.g. `…/v1`), and nothing under it is
@@ -95,10 +97,23 @@ export interface GeneIndexFile extends GeneTable {
   transcriptShards: number
 }
 
+/**
+ * `manifest.json`: what a reader needs before it has the index. Corpora
+ * built before it existed lack the file; readers fall back to the index.
+ */
+export interface CorpusManifest {
+  format: typeof CORPUS_FORMAT
+  version: string
+  geneCount: number
+  isoformCount: number
+  transcriptShards: number
+}
+
 /** `transcripts/<n>.json`: transcript id → gene id. */
 export type TranscriptShard = Record<string, string>
 
 export const INDEX_PATH = 'index.json'
+export const MANIFEST_PATH = 'manifest.json'
 
 export function geneFilePath(geneId: string): string {
   return `genes/${encodeURIComponent(geneId)}.json`

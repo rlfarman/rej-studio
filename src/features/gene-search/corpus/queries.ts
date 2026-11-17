@@ -32,7 +32,7 @@ export function geneBySymbolQuery(symbol: string, species?: SpeciesFilter) {
     queryKey: ['corpus', 'gene', symbol, species ?? null],
     queryFn: async (): Promise<GeneWithIsoforms | null> => {
       const corpus = getBrowserCorpus()
-      const gene = (await corpus.loadIndex()).geneBySymbol(symbol, species)
+      const gene = await corpus.geneBySymbol(symbol, species)
       if (!gene) return null
       const file = await corpus.geneFile(gene.id)
       const isoforms = file?.isoforms ?? []

@@ -10,11 +10,16 @@ import {
 import {
   CORPUS_FORMAT,
   INDEX_PATH,
+  MANIFEST_PATH,
   geneFilePath,
+  symbolShardKey,
+  symbolShardPath,
   transcriptShardOf,
   transcriptShardPath,
+  type CorpusManifest,
   type GeneFile,
   type GeneIndexFile,
+  type GeneTable,
   type TranscriptShard,
 } from './format'
 import { GeneSearchIndex } from './search-index'
@@ -34,6 +39,11 @@ export type CorpusReader = (path: string) => Promise<unknown>
 export class GeneCorpus {
   private index: Promise<GeneSearchIndex> | null = null
   private readonly shards = new Map<number, Promise<TranscriptShard>>()
+  private readonly symbolShards = new Map<
+    string,
+    Promise<GeneSearchIndex | null>
+  >()
+  private shardCount: Promise<number> | null = null
 
   constructor(private readonly read: CorpusReader) {}
 
@@ -54,8 +64,32 @@ export class GeneCorpus {
     return this.index
   }
 
-  private shard(index: GeneSearchIndex, transcriptId: string) {
-    const n = transcriptShardOf(transcriptId, index.transcriptShards)
+  /**
+   * How many transcript shards there are, from the small manifest rather
+   * than the 1 MB index. A corpus built before the manifest existed has
+   * none, and then the index says.
+   */
+  private transcriptShardCount(): Promise<number> {
+    this.shardCount ??= this.read(MANIFEST_PATH)
+      .then((file) => {
+        const manifest = file as CorpusManifest | null
+        if (
+          manifest?.format === CORPUS_FORMAT &&
+          Number.isInteger(manifest.transcriptShards) &&
+          manifest.transcriptShards > 0
+        ) {
+          return manifest.transcriptShards
+        }
+        return this.loadIndex().then((index) => index.transcriptShards)
+      })
+      .catch((error: unknown) => {
+        this.shardCount = null
+        throw error
+      })
+    return this.shardCount
+  }
+
+  private shard(n: number) {
     let shard = this.shards.get(n)
     if (!shard) {
       shard = this.read(transcriptShardPath(n)).then(
@@ -67,14 +101,43 @@ export class GeneCorpus {
     return shard
   }
 
-  /** The gene id a transcript belongs to, or null. */
   async geneIdOfTranscript(transcriptId: string): Promise<string | null> {
-    const index = await this.loadIndex()
-    const shard = await this.shard(index, transcriptId)
+    const n = transcriptShardOf(transcriptId, await this.transcriptShardCount())
+    const shard = await this.shard(n)
     return Object.hasOwn(shard, transcriptId) ? shard[transcriptId] : null
   }
 
-  /** A gene with its isoforms, or null when the corpus has no such gene. */
+  /** The genes whose symbol starts like `symbol`: one small file. */
+  private symbolShard(symbol: string): Promise<GeneSearchIndex | null> {
+    const key = symbolShardKey(symbol)
+    let shard = this.symbolShards.get(key)
+    if (!shard) {
+      shard = this.read(symbolShardPath(key)).then((file) => {
+        const table = file as GeneTable | null
+        return table?.format === CORPUS_FORMAT
+          ? new GeneSearchIndex(table)
+          : null
+      })
+      shard.catch(() => this.symbolShards.delete(key))
+      this.symbolShards.set(key, shard)
+    }
+    return shard
+  }
+
+  /**
+   * A gene by symbol (GeneSearchIndex.geneBySymbol), from its symbol shard,
+   * so a gene page opened from a link does not wait for the whole index.
+   * No shard (an empty or symbol-less query) means no such gene.
+   */
+  async geneBySymbol(
+    symbol: string,
+    species: string | undefined,
+  ): Promise<GeneSearchResult | null> {
+    if (symbol.trim() === '') return null
+    const shard = await this.symbolShard(symbol)
+    return shard ? shard.geneBySymbol(symbol, species) : null
+  }
+
   async geneFile(geneId: string): Promise<GeneFile | null> {
     return (await this.read(geneFilePath(geneId))) as GeneFile | null
   }

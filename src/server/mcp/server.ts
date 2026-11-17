@@ -301,8 +301,8 @@ export function createRejStudioMcpServer({
       const refused = await overBudget('reads', 'gene lookups')
       if (refused) return refused
 
-      const index = await corpus.loadIndex()
-      const gene = index.geneBySymbol(symbol.trim(), species)
+      // One small symbol shard, not the whole index (format.ts).
+      const gene = await corpus.geneBySymbol(symbol.trim(), species)
       const file = gene ? await corpus.geneFile(gene.id) : null
       if (!gene || !file) {
         return notFound(mcpCopy.getGene.none(symbol, species))
