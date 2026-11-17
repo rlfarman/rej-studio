@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react'
+import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
 import { SpliceSliderContext } from './splice-slider-context'
 import { pickDefaultSplitPoints } from '../utils/default-split-point'
