@@ -50,12 +50,12 @@ export function StatusPage({
         <p className="type-overline">{eyebrow}</p>
         <h1 className="type-page-title">{title}</h1>
         {description && (
-          <p className="text-muted-foreground text-base leading-relaxed text-pretty">
+          <p className="text-base leading-relaxed text-pretty text-muted-foreground">
             {description}
           </p>
         )}
         {detail && (
-          <p className="text-muted-foreground text-sm leading-relaxed text-pretty">
+          <p className="text-sm leading-relaxed text-pretty text-muted-foreground">
             {detail}
           </p>
         )}

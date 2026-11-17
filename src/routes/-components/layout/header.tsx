@@ -139,8 +139,8 @@ export function Header() {
         'sticky top-0 z-10 grid grid-cols-[1fr_auto_1fr] items-center gap-2 px-3 sm:px-4 md:px-6',
         'border-b transition-[height,margin-top,opacity,background-color,border-color] duration-200 ease-out motion-reduce:transition-none',
         scrolled
-          ? 'bg-background/85 border-border/60 h-12 backdrop-blur'
-          : 'bg-background h-15 border-transparent',
+          ? 'h-12 border-border/60 bg-background/85 backdrop-blur'
+          : 'h-15 border-transparent bg-background',
         isHidden && 'pointer-events-none -mt-12 opacity-0',
       )}
     >
@@ -179,7 +179,7 @@ function HeaderContent({ scrolled }: { scrolled: boolean }) {
           <span
             aria-hidden
             className={cn(
-              'text-muted-foreground truncate text-sm font-medium transition-opacity duration-200 motion-reduce:transition-none',
+              'truncate text-sm font-medium text-muted-foreground transition-opacity duration-200 motion-reduce:transition-none',
               scrolled ? 'opacity-100' : 'opacity-0',
             )}
           >

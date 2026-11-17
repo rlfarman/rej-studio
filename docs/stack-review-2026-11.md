@@ -222,7 +222,6 @@ settle a disagreement about a design.
 | `+simd128`                    | ~11% slower. Measured above.                                                                                                                                                                                                        |
 | wasm-bindgen                  | Adds glue and size for a JSON-in/JSON-out module.                                                                                                                                                                                   |
 | Drop ESLint, keep only oxlint | Verified against oxlint 1.93: `import/no-restricted-paths` and `no-restricted-syntax` are both unimplemented — and they are the _only_ two rules ESLint still runs.                                                                 |
-| Replace Prettier with oxfmt   | Still pre-1.0. Prettier also carries `prettier-plugin-tailwindcss` for class sorting, which would need an equivalent first.                                                                                                         |
 | TypeScript 7 as sole compiler | 7.0 is GA but ships no programmatic API; typescript-eslint, knip and Storybook all need one. The existing split (`typescript` 6.x as library, `typescript-native` 7 for `type-check`) is the documented workaround and should stay. |
 | Next.js 17                    | Not released. 16.4.x is current and this repo is on 16.4.6, with `cacheComponents` already enabled — which is what 17 makes the default.                                                                                            |
 
@@ -232,8 +231,8 @@ settle a disagreement about a design.
   the programmatic API. That is not the signal to collapse the dual-TypeScript
   setup; **typescript-eslint shipping 7.1 support is** (unannounced, estimated
   Q1 2027). Re-check then.
-- **oxfmt 1.0** — reconsider replacing Prettier, Tailwind class sorting
-  permitting.
+- **Oxfmt replaced Prettier** (step 4). The earlier "don't" here was wrong: Oxfmt sorts Tailwind
+  classes, including inside `cn(…)` calls that Prettier's setup here never sorted.
 - **Rust 1.100.0** is current as of 9 Nov 2026, so the pin in point 1 is not
   already stale. Bump it in its own PR and fix new lints there.
 - **Requiring the Rust CI checks on `main`** is already tracked in

@@ -35,14 +35,14 @@ export function DnaLoader({ className }: Props) {
     >
       <path
         d="M0 12 Q 9 2 18 12 T 36 12 T 54 12 T 72 12"
-        className="stroke-primary/70 [animation:dna-strand-flow_3.2s_linear_infinite,dna-strand-breathe_2.8s_ease-in-out_infinite] fill-none motion-reduce:animate-none"
+        className="[animation:dna-strand-flow_3.2s_linear_infinite,dna-strand-breathe_2.8s_ease-in-out_infinite] fill-none stroke-primary/70 motion-reduce:animate-none"
         strokeLinecap="round"
         pathLength={48}
         strokeDasharray="22 2"
       />
       <path
         d="M0 12 Q 9 22 18 12 T 36 12 T 54 12 T 72 12"
-        className="stroke-primary/40 [animation:dna-strand-flow_3.2s_linear_infinite_reverse,dna-strand-breathe_2.8s_ease-in-out_infinite_reverse] fill-none motion-reduce:animate-none"
+        className="[animation:dna-strand-flow_3.2s_linear_infinite_reverse,dna-strand-breathe_2.8s_ease-in-out_infinite_reverse] fill-none stroke-primary/40 motion-reduce:animate-none"
         strokeLinecap="round"
         pathLength={48}
         strokeDasharray="22 2"
@@ -54,7 +54,7 @@ export function DnaLoader({ className }: Props) {
           x2={x}
           y1={y1}
           y2={y2}
-          className="stroke-primary [animation:dna-rung-glow_1.8s_ease-in-out_infinite] motion-reduce:animate-none"
+          className="[animation:dna-rung-glow_1.8s_ease-in-out_infinite] stroke-primary motion-reduce:animate-none"
           strokeWidth={1.25}
           strokeLinecap="round"
           style={{ animationDelay: `${i * 150}ms` }}

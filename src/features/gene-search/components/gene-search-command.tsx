@@ -80,7 +80,7 @@ function SpeciesToggle() {
 function ExampleGenes({ onPick }: { onPick: (symbol: string) => void }) {
   return (
     <div className="flex flex-wrap items-center gap-2 px-3 py-3 text-sm">
-      <span className="text-muted-foreground mr-1">{copy.examplesLabel}</span>
+      <span className="mr-1 text-muted-foreground">{copy.examplesLabel}</span>
       <ul className="flex flex-wrap gap-2" aria-label={copy.examplesAria}>
         {geneSearchCopy.exampleGenes.map((symbol) => (
           <li key={symbol}>
@@ -94,7 +94,7 @@ function ExampleGenes({ onPick }: { onPick: (symbol: string) => void }) {
                   ?.querySelector<HTMLInputElement>('[cmdk-input]')
                   ?.focus()
               }}
-              className="hover:bg-accent hover:text-accent-foreground focus-visible:ring-ring rounded-full border px-3 py-1 font-mono text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
+              className="rounded-full border px-3 py-1 font-mono text-xs font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
             >
               {symbol}
             </button>
@@ -138,7 +138,7 @@ function SearchingRow({
     <div
       role="status"
       className={cn(
-        'text-muted-foreground flex items-center gap-2 px-4 py-3 text-sm',
+        'flex items-center gap-2 px-4 py-3 text-sm text-muted-foreground',
         className,
       )}
     >
@@ -214,7 +214,7 @@ function SavedGeneRow({
       {gene.species && (
         <SpeciesIcon
           species={gene.species}
-          className="text-muted-foreground h-3.5 w-3.5"
+          className="h-3.5 w-3.5 text-muted-foreground"
         />
       )}
       <span className="font-mono font-medium">
@@ -223,12 +223,12 @@ function SavedGeneRow({
       <div className="flex min-w-0 flex-1 flex-col">
         <TruncatedText
           tooltip={gene.name}
-          className="text-muted-foreground truncate"
+          className="truncate text-muted-foreground"
         >
           <HighlightMatch text={gene.name} query={query} />
         </TruncatedText>
         {gene.matchedIsoformId && (
-          <span className="text-muted-foreground font-mono text-xs">
+          <span className="font-mono text-xs text-muted-foreground">
             {gene.matchedIsoformId}
           </span>
         )}
@@ -249,17 +249,17 @@ function JobRow({ entry, query, onSelect }: JobRowProps) {
   return (
     <CommandItem value={`job-${entry.id}`} onSelect={() => onSelect(entry)}>
       {isRunning ? (
-        <Loader2 className="text-muted-foreground h-4 w-4 animate-spin" />
+        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
       ) : isError ? (
-        <CircleAlert className="text-destructive h-4 w-4" />
+        <CircleAlert className="h-4 w-4 text-destructive" />
       ) : (
-        <WandSparkles className="text-muted-foreground h-4 w-4" />
+        <WandSparkles className="h-4 w-4 text-muted-foreground" />
       )}
       <div className="flex min-w-0 flex-1 flex-col">
         <TruncatedText tooltip={entry.name} className="truncate font-medium">
           <HighlightMatch text={entry.name} query={query} />
         </TruncatedText>
-        <span className="text-muted-foreground truncate text-xs">
+        <span className="truncate text-xs text-muted-foreground">
           {entry.sequenceLength
             ? `${entry.sequenceLength} bp · ${entry.status}`
             : entry.status}
@@ -394,7 +394,7 @@ export function GeneSearchCommand({
           className="flex flex-col items-center justify-center gap-3 px-6 py-10"
         >
           <DnaLoader className="h-8 w-20" />
-          <p className="text-muted-foreground text-sm">
+          <p className="text-sm text-muted-foreground">
             {copy.opening(pendingGene.symbol)}
           </p>
         </div>
@@ -412,7 +412,7 @@ export function GeneSearchCommand({
       {!isNavigating && showList && (
         <>
           {content === 'error' && (
-            <div className="text-destructive-foreground flex flex-col items-center gap-2 p-4 text-center text-sm">
+            <div className="flex flex-col items-center gap-2 p-4 text-center text-sm text-destructive-foreground">
               <span>{error}</span>
               <Button
                 variant="ghost"
@@ -446,7 +446,7 @@ export function GeneSearchCommand({
                   <button
                     type="button"
                     onClick={() => handleSpeciesChange('both')}
-                    className="text-primary focus-visible:ring-ring rounded-sm font-medium underline underline-offset-4 focus-visible:ring-2 focus-visible:outline-none"
+                    className="rounded-sm font-medium text-primary underline underline-offset-4 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                   >
                     {geneSearchCopy.results.searchAllSpecies}
                   </button>
@@ -480,7 +480,7 @@ export function GeneSearchCommand({
                       keyPrefix="fav"
                       query={query}
                       leadingIcon={
-                        <StarIcon className="text-muted-foreground h-4 w-4" />
+                        <StarIcon className="h-4 w-4 text-muted-foreground" />
                       }
                       onSelect={internalHandleSelect}
                     />
@@ -498,7 +498,7 @@ export function GeneSearchCommand({
                         keyPrefix="recent"
                         query={query}
                         leadingIcon={
-                          <ClockIcon className="text-muted-foreground h-4 w-4" />
+                          <ClockIcon className="h-4 w-4 text-muted-foreground" />
                         }
                         onSelect={internalHandleSelect}
                       />
@@ -533,7 +533,7 @@ export function GeneSearchCommand({
                       >
                         <SpeciesIcon
                           species={gene.species}
-                          className="text-muted-foreground h-3.5 w-3.5"
+                          className="h-3.5 w-3.5 text-muted-foreground"
                         />
                         <span className="font-mono font-medium">
                           <HighlightMatch text={gene.symbol} query={query} />
@@ -541,12 +541,12 @@ export function GeneSearchCommand({
                         <div className="flex min-w-0 flex-1 flex-col">
                           <TruncatedText
                             tooltip={gene.name}
-                            className="text-muted-foreground truncate"
+                            className="truncate text-muted-foreground"
                           >
                             <HighlightMatch text={gene.name} query={query} />
                           </TruncatedText>
                           {gene.matchedIsoformId && (
-                            <span className="text-muted-foreground font-mono text-xs">
+                            <span className="font-mono text-xs text-muted-foreground">
                               {gene.matchedIsoformId}
                             </span>
                           )}
@@ -581,7 +581,7 @@ export function GeneSearchCommand({
                     ))}
                     {truncated && (
                       <CommandItem value="see-all" onSelect={onSeeAll}>
-                        <ArrowRight className="text-muted-foreground h-4 w-4" />
+                        <ArrowRight className="h-4 w-4 text-muted-foreground" />
                         <span className="text-muted-foreground">
                           {copy.seeAll(query.trim())}
                         </span>
@@ -591,7 +591,7 @@ export function GeneSearchCommand({
                 </>
               )}
               {error && !hasGeneResults && hasQuery && (
-                <div className="text-destructive-foreground flex items-center justify-between gap-2 px-3 py-2 text-xs">
+                <div className="flex items-center justify-between gap-2 px-3 py-2 text-xs text-destructive-foreground">
                   <span>{error}</span>
                   <Button
                     variant="ghost"

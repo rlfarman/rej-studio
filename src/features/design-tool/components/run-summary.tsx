@@ -22,7 +22,7 @@ export function RunSummary() {
       : (values.codingSequence ?? '')
 
   if (sequence.length === 0) {
-    return <p className="text-muted-foreground text-sm">{copy.noSequence}</p>
+    return <p className="text-sm text-muted-foreground">{copy.noSequence}</p>
   }
 
   const { count } = summarizeObjectives({
@@ -47,7 +47,7 @@ export function RunSummary() {
       : (values.spliceJunctionPositions?.[0] ?? null)
 
   return (
-    <p className="text-muted-foreground min-w-0 text-sm">
+    <p className="min-w-0 text-sm text-muted-foreground">
       {copy.ready(sequence.length.toLocaleString(), count)}
       {splitPoint !== null && (
         <> · {copy.splitAt(splitPoint.toLocaleString())}</>

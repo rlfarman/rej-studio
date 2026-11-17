@@ -36,7 +36,7 @@ type MetricCellComparativeProps = MetricCellCommonProps & {
 type MetricCellProps = MetricCellSimpleProps | MetricCellComparativeProps
 
 function Label({ children }: { children: ReactNode }) {
-  return <div className="type-overline truncate">{children}</div>
+  return <div className="truncate type-overline">{children}</div>
 }
 
 function defaultFormat(n: number) {
@@ -54,7 +54,7 @@ function SimpleCell({
   className,
 }: MetricCellSimpleProps) {
   return (
-    <div className={cn('bg-muted/30 min-w-0 px-3 py-2', className)}>
+    <div className={cn('min-w-0 bg-muted/30 px-3 py-2', className)}>
       <Label>{label}</Label>
       <div className={cn('text-sm tabular-nums', valueClassName)}>{value}</div>
     </div>
@@ -91,7 +91,7 @@ function ComparativeCell({
       : undefined
 
   return (
-    <div className={cn('bg-muted/30 min-w-0 px-3 py-2', className)}>
+    <div className={cn('min-w-0 bg-muted/30 px-3 py-2', className)}>
       <Label>{label}</Label>
       <div
         className="mt-0.5 flex min-w-0 items-center gap-1 text-sm tabular-nums"
@@ -99,11 +99,11 @@ function ComparativeCell({
       >
         {hasBoth ? (
           <>
-            <span className="text-muted-foreground truncate">
+            <span className="truncate text-muted-foreground">
               {fmt(before)}
               {unit}
             </span>
-            <ArrowRight className="text-muted-foreground size-3 shrink-0" />
+            <ArrowRight className="size-3 shrink-0 text-muted-foreground" />
             <span
               className={cn(
                 'truncate font-medium',

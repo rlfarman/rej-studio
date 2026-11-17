@@ -48,30 +48,30 @@ export function RunningPlaceholder({
         <DnaLoader className="h-10 w-[120px]" />
         <div className="space-y-1 text-center">
           <p className="text-sm font-medium">{copy.running.title}</p>
-          <p className="text-muted-foreground h-4 text-xs">
+          <p className="h-4 text-xs text-muted-foreground">
             {stage ?? copy.running.defaultStage}
           </p>
         </div>
         <div className="w-full max-w-xs">
-          <div className="bg-muted relative h-1.5 w-full overflow-hidden rounded-full">
+          <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-muted">
             {displayedPct !== null ? (
               <div
-                className="bg-primary absolute inset-y-0 left-0 w-full origin-left transition-transform duration-700 ease-out"
+                className="absolute inset-y-0 left-0 w-full origin-left bg-primary transition-transform duration-700 ease-out"
                 style={{ transform: `scaleX(${displayedPct / 100})` }}
               />
             ) : (
               <div
                 aria-hidden
-                className="bg-primary/70 absolute inset-y-0 left-0 w-1/3 animate-[indeterminate_1.4s_ease-in-out_infinite] rounded-full"
+                className="absolute inset-y-0 left-0 w-1/3 animate-[indeterminate_1.4s_ease-in-out_infinite] rounded-full bg-primary/70"
               />
             )}
             <span
               aria-hidden
-              className="via-foreground/25 pointer-events-none absolute inset-0 -translate-x-full animate-[shimmer_1.6s_ease-in-out_infinite] bg-gradient-to-r from-transparent to-transparent"
+              className="pointer-events-none absolute inset-0 -translate-x-full animate-[shimmer_1.6s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-foreground/25 to-transparent"
             />
           </div>
           {displayedPct !== null && (
-            <p className="text-muted-foreground type-micro mt-1.5 text-center tabular-nums">
+            <p className="mt-1.5 text-center type-micro text-muted-foreground tabular-nums">
               {displayedPct}%
             </p>
           )}
@@ -199,7 +199,7 @@ function StatusDot({ status }: { status: JobHeaderStatus }) {
       {celebrateKey > 0 && (
         <span
           aria-hidden
-          className="bg-success/40 pointer-events-none absolute inset-0 [animation:completion-bloom_600ms_cubic-bezier(0.16,1,0.3,1)_1] rounded-full motion-reduce:hidden"
+          className="pointer-events-none absolute inset-0 [animation:completion-bloom_600ms_cubic-bezier(0.16,1,0.3,1)_1] rounded-full bg-success/40 motion-reduce:hidden"
         />
       )}
       <Icon className={cn('size-4', status === 'running' && 'animate-spin')} />
@@ -249,12 +249,12 @@ export function JobHeader({
                   {name || copy.untitled}
                 </div>
                 {sequenceLength != null && (
-                  <span className="text-muted-foreground text-xs tabular-nums">
+                  <span className="text-xs text-muted-foreground tabular-nums">
                     · {sequenceLength.toLocaleString()} bp
                   </span>
                 )}
                 {speciesLabel && (
-                  <span className="text-muted-foreground text-xs">
+                  <span className="text-xs text-muted-foreground">
                     · {speciesLabel}
                   </span>
                 )}

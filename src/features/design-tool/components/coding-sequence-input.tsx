@@ -41,7 +41,7 @@ function SequenceTypeToggle({
     <div
       role="radiogroup"
       aria-label={copy.typeToggleAria}
-      className="bg-muted inline-flex gap-0.5 rounded-2xl p-0.5"
+      className="inline-flex gap-0.5 rounded-2xl bg-muted p-0.5"
     >
       {options.map((opt) => {
         const Icon = opt.icon
@@ -319,7 +319,7 @@ export function CodingSequenceInput() {
                   sharedTextStyles,
                   // The field's fill lives here, behind the transparent
                   // textarea, so it doesn't tint the highlighted bases.
-                  'bg-input/50 text-foreground pointer-events-none absolute inset-0 overflow-hidden rounded-2xl border border-transparent',
+                  'pointer-events-none absolute inset-0 overflow-hidden rounded-2xl border border-transparent bg-input/50 text-foreground',
                 )}
               >
                 {activeValue ? (
@@ -347,9 +347,9 @@ export function CodingSequenceInput() {
                 className={cn(
                   sharedTextStyles,
                   // Same look as the Textarea primitive.
-                  'placeholder:text-muted-foreground selection:bg-primary/30 caret-foreground relative flex w-full min-w-0 resize-y rounded-2xl border border-transparent transition-[color,box-shadow] duration-200 outline-none disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
-                  'focus-visible:border-ring focus-visible:ring-ring/30 focus-visible:ring-3',
-                  'aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 aria-invalid:ring-3',
+                  'relative flex w-full min-w-0 resize-y rounded-2xl border border-transparent caret-foreground transition-[color,box-shadow] duration-200 outline-none selection:bg-primary/30 placeholder:text-muted-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
+                  'focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30',
+                  'aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40',
                   isProtein ? 'bg-input/50' : 'bg-transparent text-transparent',
                 )}
               />
@@ -367,7 +367,7 @@ export function CodingSequenceInput() {
             </Button>
           )}
           {isProtein && isSpecies(species) && dnaValue && (
-            <p className="text-muted-foreground text-sm">
+            <p className="text-sm text-muted-foreground">
               {copy.reverseTranslated(
                 dnaValue.length.toLocaleString(),
                 species,
@@ -375,7 +375,7 @@ export function CodingSequenceInput() {
             </p>
           )}
           {isProtein && !isSpecies(species) && length > 0 && (
-            <p className="text-warning-soft text-sm">
+            <p className="text-sm text-warning-soft">
               {copy.selectSpeciesHint}
             </p>
           )}

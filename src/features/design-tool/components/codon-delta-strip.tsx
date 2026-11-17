@@ -76,15 +76,15 @@ export function CodonDeltaStrip({ original, optimized, species }: Props) {
   return (
     <div className="space-y-1.5">
       <div className="flex items-center justify-end">
-        <span className="text-muted-foreground type-micro tabular-nums">
+        <span className="type-micro text-muted-foreground tabular-nums">
           mean {(meanBefore * 100).toFixed(0)}% → {(meanAfter * 100).toFixed(0)}
           %
           <span
             className={
               meanShift > 0
-                ? 'text-success-soft ml-1'
+                ? 'ml-1 text-success-soft'
                 : meanShift < 0
-                  ? 'text-danger-soft ml-1'
+                  ? 'ml-1 text-danger-soft'
                   : 'ml-1'
             }
           >
@@ -130,9 +130,9 @@ export function CodonDeltaStrip({ original, optimized, species }: Props) {
           )
         })}
       </div>
-      <div className="text-muted-foreground type-micro flex items-center gap-1">
+      <div className="flex items-center gap-1 type-micro text-muted-foreground">
         <span>regressed</span>
-        <span className="from-chart-2/70 via-muted-foreground/25 to-chart-1/70 h-2 flex-1 rounded-sm bg-gradient-to-r" />
+        <span className="h-2 flex-1 rounded-sm bg-gradient-to-r from-chart-2/70 via-muted-foreground/25 to-chart-1/70" />
         <span>improved</span>
       </div>
       {/* Only the codons that changed: an unchanged codon is not a data point

@@ -19,7 +19,7 @@ export function HighlightMatch({
     <>
       {parts.map((part, i) =>
         i % 2 === 1 ? (
-          <mark key={i} className="bg-primary/20 rounded-sm text-inherit">
+          <mark key={i} className="rounded-sm bg-primary/20 text-inherit">
             {part}
           </mark>
         ) : (

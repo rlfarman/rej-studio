@@ -1,0 +1,24 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "printWidth": 80,
+  "semi": false,
+  "singleQuote": true,
+  "trailingComma": "all",
+  "sortTailwindcss": {
+    "stylesheet": "./src/styles/globals.css",
+    "functions": ["cn"]
+  },
+  "ignorePatterns": [
+    ".claude/launch.json",
+    ".claude/skills",
+    ".agents/skills",
+    "CHANGELOG.md",
+    "pnpm-lock.yaml",
+    ".pytest_cache",
+    "rust/optimizer/tests/fixtures",
+    "rust/target",
+    "public/gene-data",
+    ".claude-preview",
+    "src/routeTree.gen.ts"
+  ]
+}

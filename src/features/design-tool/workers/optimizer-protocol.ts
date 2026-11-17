@@ -41,4 +41,6 @@ interface OptimizerFailure {
 }
 
 export type OptimizerResponse =
-  OptimizerProgress | OptimizerResult | OptimizerFailure
+  | OptimizerProgress
+  | OptimizerResult
+  | OptimizerFailure

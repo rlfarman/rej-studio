@@ -96,7 +96,7 @@ export function RunRecordCard({ record, name }: RunRecordCardProps) {
   const { copy: copyText, isCopied } = useCopyToClipboard()
 
   if (!record) {
-    return <p className="text-muted-foreground text-sm">{copy.unavailable}</p>
+    return <p className="text-sm text-muted-foreground">{copy.unavailable}</p>
   }
 
   const json = JSON.stringify(record, null, 2)
@@ -108,7 +108,7 @@ export function RunRecordCard({ record, name }: RunRecordCardProps) {
 
   return (
     <div className="space-y-4">
-      <p className="text-muted-foreground text-sm">{copy.description}</p>
+      <p className="text-sm text-muted-foreground">{copy.description}</p>
 
       <Table>
         <TableCaption className="sr-only">{copy.tableCaption}</TableCaption>
@@ -130,7 +130,7 @@ export function RunRecordCard({ record, name }: RunRecordCardProps) {
         <div>
           <h4 className="mb-2 text-sm font-medium">
             {copy.fields.options}{' '}
-            <span className="text-muted-foreground font-normal">
+            <span className="font-normal text-muted-foreground">
               ({copy.optionsCount(options.length)})
             </span>
           </h4>
@@ -160,7 +160,7 @@ export function RunRecordCard({ record, name }: RunRecordCardProps) {
 
       <div>
         <h4 className="mb-2 text-sm font-medium">{copy.methodsHeading}</h4>
-        <p className="text-muted-foreground text-sm leading-relaxed">
+        <p className="text-sm leading-relaxed text-muted-foreground">
           {methods}
         </p>
       </div>

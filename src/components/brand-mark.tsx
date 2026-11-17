@@ -20,13 +20,13 @@ export function BrandMark({
     <Link
       to="/"
       className={cn(
-        'focus-visible:ring-ring/50 inline-flex items-center gap-2 rounded-xl outline-none focus-visible:ring-[3px]',
+        'inline-flex items-center gap-2 rounded-xl outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50',
         className,
       )}
     >
       <span
         aria-hidden
-        className="bg-spark text-spark-foreground flex size-7 items-center justify-center rounded-xl"
+        className="flex size-7 items-center justify-center rounded-xl bg-spark text-spark-foreground"
       >
         <Dna className="size-4" />
       </span>

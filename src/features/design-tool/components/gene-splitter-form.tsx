@@ -215,7 +215,7 @@ export function GeneSplitterForm({
             {draft.restored && (
               <div
                 role="status"
-                className="text-muted-foreground flex flex-wrap items-center gap-2 text-xs"
+                className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground"
               >
                 <span>{draftCopy.restored}</span>
                 <Button
@@ -266,7 +266,7 @@ export function GeneSplitterForm({
                       {copy.spliceJunctionHelp}
                     </FieldHelp>
                   </div>
-                  <p className="text-muted-foreground text-sm">
+                  <p className="text-sm text-muted-foreground">
                     {copy.spliceJunctionHint}
                   </p>
                   <DNASplicer />
@@ -283,7 +283,7 @@ export function GeneSplitterForm({
 
             {/* Sticky so the primary action stays in reach on a long form,
                 and within thumb reach on a phone. */}
-            <div className="bg-background/85 border-border supports-[backdrop-filter]:bg-background/70 sticky bottom-0 z-20 -mx-1 flex flex-wrap items-center justify-between gap-3 rounded-t-2xl border-t px-4 py-3 backdrop-blur">
+            <div className="sticky bottom-0 z-20 -mx-1 flex flex-wrap items-center justify-between gap-3 rounded-t-2xl border-t border-border bg-background/85 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/70">
               <RunSummary />
               <div className="flex flex-wrap items-center gap-2">
                 {/* Only browser runs can finish unseen in a background tab. */}

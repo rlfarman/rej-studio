@@ -37,8 +37,8 @@ export function AavResults({ seq5Length, seq3Length }: AavResultsProps) {
     <div className="space-y-3">
       <span className="text-sm font-medium">{copy.results.heading}</span>
       <div className="grid grid-cols-2 gap-2">
-        <div className="bg-muted/50 flex flex-col rounded-2xl border p-3">
-          <span className="text-muted-foreground text-xs font-medium">
+        <div className="flex flex-col rounded-2xl border bg-muted/50 p-3">
+          <span className="text-xs font-medium text-muted-foreground">
             {copy.results.fiveVector}
           </span>
           <div className="mt-1 flex items-center gap-1.5">
@@ -63,13 +63,13 @@ export function AavResults({ seq5Length, seq3Length }: AavResultsProps) {
                   : copy.results.overLimit}
             </Badge>
           </div>
-          <span className="text-muted-foreground type-micro mt-1">
+          <span className="mt-1 type-micro text-muted-foreground">
             {seq5Length.toLocaleString()} bp + ~
             {AAV_OVERHEAD_BP.toLocaleString()} overhead
           </span>
         </div>
-        <div className="bg-muted/50 flex flex-col rounded-2xl border p-3">
-          <span className="text-muted-foreground text-xs font-medium">
+        <div className="flex flex-col rounded-2xl border bg-muted/50 p-3">
+          <span className="text-xs font-medium text-muted-foreground">
             {copy.results.threeVector}
           </span>
           <div className="mt-1 flex items-center gap-1.5">
@@ -94,13 +94,13 @@ export function AavResults({ seq5Length, seq3Length }: AavResultsProps) {
                   : copy.results.overLimit}
             </Badge>
           </div>
-          <span className="text-muted-foreground type-micro mt-1">
+          <span className="mt-1 type-micro text-muted-foreground">
             {seq3Length.toLocaleString()} bp + ~
             {AAV_OVERHEAD_BP.toLocaleString()} overhead
           </span>
         </div>
       </div>
-      <p className="text-muted-foreground type-nano">
+      <p className="type-nano text-muted-foreground">
         Estimates assume ~{AAV_OVERHEAD_BP.toLocaleString()} bp overhead (ITRs +
         promoter + polyA + regulatory elements). AAV packaging limit is ~
         {AAV_PACKAGING_LIMIT.toLocaleString()} bp.

@@ -31,7 +31,7 @@ export function FinishNotificationOptIn() {
       type="button"
       variant="ghost"
       size="sm"
-      className="text-muted-foreground gap-1.5"
+      className="gap-1.5 text-muted-foreground"
       title={copy.notifyOptInHint}
       onClick={() => void requestNotificationPermission()}
     >

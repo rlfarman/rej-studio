@@ -47,7 +47,7 @@ function WeightField({
             >
               {label}
               {enabled ? null : (
-                <span className="text-muted-foreground text-xs">
+                <span className="text-xs text-muted-foreground">
                   {copy.off}
                 </span>
               )}
@@ -96,10 +96,10 @@ export function ObjectiveWeights({ id }: { id: string }) {
 
   return (
     <div id={id} className="mt-2 max-w-md">
-      <p className="text-muted-foreground text-xs leading-relaxed">
+      <p className="text-xs leading-relaxed text-muted-foreground">
         {copy.hint}
       </p>
-      <div className="divide-border/60 mt-1 flex flex-col divide-y">
+      <div className="mt-1 flex flex-col divide-y divide-border/60">
         <WeightField
           name="codonOptimizeWeight"
           label={objectiveCopy.codonOptimize.label}

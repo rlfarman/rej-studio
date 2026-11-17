@@ -157,7 +157,7 @@ export default function IsoformTable({
 
   if (isoforms.length === 0) {
     return (
-      <p className="text-muted-foreground py-8 text-center text-sm">
+      <p className="py-8 text-center text-sm text-muted-foreground">
         {copy.empty}
       </p>
     )
@@ -178,7 +178,7 @@ export default function IsoformTable({
                       type="button"
                       onClick={toggleExpandAll}
                       aria-expanded={allExpanded}
-                      className="hover:text-foreground focus-visible:ring-ring text-muted-foreground flex h-full w-full items-center justify-center transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                      className="flex h-full w-full items-center justify-center text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                       aria-label={
                         allExpanded ? copy.collapseAllAria : copy.expandAllAria
                       }
@@ -319,7 +319,7 @@ function IsoformRow({
         id={`isoform-row-${isoform.id}`}
         className={cn(
           'group/row cursor-pointer transition-shadow duration-1000',
-          ringVisible && 'ring-primary ring-2 ring-inset',
+          ringVisible && 'ring-2 ring-primary ring-inset',
         )}
         onClick={() => onToggleExpanded(isoform.id)}
       >
@@ -330,7 +330,7 @@ function IsoformRow({
               e.stopPropagation()
               onToggleExpanded(isoform.id)
             }}
-            className="text-muted-foreground hover:text-foreground focus-visible:ring-ring flex size-11 items-center justify-center rounded-full focus-visible:ring-2 focus-visible:outline-none"
+            className="flex size-11 items-center justify-center rounded-full text-muted-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
             aria-expanded={isExpanded}
             aria-controls={
               isExpanded ? `isoform-row-${isoform.id}-details` : undefined
@@ -351,11 +351,11 @@ function IsoformRow({
         <TableCell className="font-mono">{isoform.id}</TableCell>
         <TableCell className="font-mono whitespace-nowrap tabular-nums">
           {isoform.codingSequenceLength.toLocaleString()}{' '}
-          <span className="text-muted-foreground text-xs">bp</span>
+          <span className="text-xs text-muted-foreground">bp</span>
         </TableCell>
         <TableCell className="hidden font-mono whitespace-nowrap tabular-nums sm:table-cell">
           {isoform.proteinSequenceLength.toLocaleString()}{' '}
-          <span className="text-muted-foreground text-xs">aa</span>
+          <span className="text-xs text-muted-foreground">aa</span>
         </TableCell>
         <TableCell className="hidden font-mono tabular-nums sm:table-cell">
           {gcPercent.toFixed(1)}%
@@ -534,7 +534,7 @@ function IsoformRow({
             colSpan={COLUMN_COUNT}
             className="bg-muted/30 px-3 py-4 whitespace-normal sm:px-6"
           >
-            <div className="motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-top-1 duration-200">
+            <div className="duration-200 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-top-1">
               <ExpandedDetails
                 isoform={isoform}
                 gcPercent={gcPercent}
@@ -584,7 +584,7 @@ function ExpandedDetails({
             <WandSparkles className="size-4" />
             {copy.customizeLong}
           </Button>
-          <p className="text-muted-foreground text-xs">{copy.customizeHint}</p>
+          <p className="text-xs text-muted-foreground">{copy.customizeHint}</p>
         </div>
         <div className="flex flex-col items-start gap-1.5 sm:max-w-xs">
           <Button
@@ -608,7 +608,7 @@ function ExpandedDetails({
               </a>
             }
           />
-          <p className="text-muted-foreground text-xs">{copy.downloadHint}</p>
+          <p className="text-xs text-muted-foreground">{copy.downloadHint}</p>
         </div>
       </div>
 
@@ -730,7 +730,7 @@ function SortButton({
     // py-2 with -my-2: a 36px tap target in the same 20px of layout.
     <button
       type="button"
-      className="hover:text-foreground focus-visible:ring-ring -my-2 inline-flex min-h-9 items-center gap-1 rounded-sm py-2 transition-colors focus-visible:ring-2 focus-visible:outline-none"
+      className="-my-2 inline-flex min-h-9 items-center gap-1 rounded-sm py-2 transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
       onClick={onClick}
     >
       {label}
@@ -741,7 +741,7 @@ function SortButton({
           <ArrowDown className="size-3.5" aria-hidden />
         )
       ) : (
-        <ArrowUpDown className="text-muted-foreground size-3.5" aria-hidden />
+        <ArrowUpDown className="size-3.5 text-muted-foreground" aria-hidden />
       )}
     </button>
   )

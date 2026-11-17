@@ -55,7 +55,7 @@ export function SearchEmptyState({
                 <Link
                   href={geneHref(gene.symbol, gene.species)}
                   onClick={onNavigate}
-                  className="hover:bg-accent hover:text-accent-foreground focus-visible:ring-ring inline-flex min-h-8 items-center gap-1.5 rounded-full border px-3 font-mono text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                  className="inline-flex min-h-8 items-center gap-1.5 rounded-full border px-3 font-mono text-xs font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                 >
                   <SpeciesIcon species={gene.species} className="!size-3.5" />
                   {gene.symbol}

@@ -110,13 +110,13 @@ export function GeneSearch({
         <Button
           variant="outline"
           onClick={() => setIsOpen(true)}
-          className="group text-muted-foreground hover:text-accent-foreground w-full min-w-42 cursor-pointer justify-between md:min-w-72 xl:min-w-108"
+          className="group w-full min-w-42 cursor-pointer justify-between text-muted-foreground hover:text-accent-foreground md:min-w-72 xl:min-w-108"
         >
           <div className="flex items-center gap-2">
             <SearchIcon className="h-5 w-5" />
             <span>{geneSearchCopy.trigger.label}</span>
           </div>
-          <p className="text-muted-foreground group-hover:text-accent-foreground hidden text-sm md:block">
+          <p className="hidden text-sm text-muted-foreground group-hover:text-accent-foreground md:block">
             {geneSearchCopy.trigger.kbdHintPrefix}{' '}
             <Kbd>
               <ModKey /> K

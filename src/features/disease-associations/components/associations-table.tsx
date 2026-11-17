@@ -40,7 +40,7 @@ export function AssociationsTable({
   if (rows.length === 0) {
     return (
       <Card>
-        <CardContent className="text-muted-foreground text-center">
+        <CardContent className="text-center text-muted-foreground">
           {diseaseAssociationsCopy.table.empty}
         </CardContent>
       </Card>
@@ -108,7 +108,7 @@ export function AssociationsTable({
                 <TableCell className="px-4 py-2.5">
                   <Link
                     href={`/genes/${encodeURIComponent(row.symbol)}?species=human`}
-                    className="text-primary -my-1 inline-flex min-h-6 items-center py-1 font-mono font-semibold hover:underline"
+                    className="-my-1 inline-flex min-h-6 items-center py-1 font-mono font-semibold text-primary hover:underline"
                     aria-label={diseaseAssociationsCopy.table.viewGeneAria(
                       row.symbol,
                     )}
@@ -116,12 +116,12 @@ export function AssociationsTable({
                     {row.symbol}
                   </Link>
                 </TableCell>
-                <TableCell className="text-muted-foreground px-4 py-2.5 text-sm whitespace-normal">
+                <TableCell className="px-4 py-2.5 text-sm whitespace-normal text-muted-foreground">
                   <span className="line-clamp-2" title={row.name}>
                     {row.name}
                   </span>
                 </TableCell>
-                <TableCell className="text-muted-foreground px-4 py-2.5 text-sm whitespace-normal">
+                <TableCell className="px-4 py-2.5 text-sm whitespace-normal text-muted-foreground">
                   {phenotype}
                 </TableCell>
                 <TableCell className="px-4 py-2.5 whitespace-normal">
@@ -137,7 +137,7 @@ export function AssociationsTable({
                     ))}
                   </div>
                 </TableCell>
-                <TableCell className="text-muted-foreground px-4 py-2.5 text-right font-mono text-xs">
+                <TableCell className="px-4 py-2.5 text-right font-mono text-xs text-muted-foreground">
                   {row.largestCds != null ? (
                     <>
                       {cdsFormatter.format(row.largestCds)}
@@ -166,7 +166,7 @@ export function AssociationsTableSkeleton() {
     <div aria-hidden className="flex flex-col gap-6">
       <Skeleton className="h-3 w-24" />
       <Card className="gap-0 py-0">
-        <div className="bg-muted/50 h-10 border-b" />
+        <div className="h-10 border-b bg-muted/50" />
         {Array.from({ length: SKELETON_ROWS }, (_, i) => (
           <div
             key={i}
@@ -252,7 +252,7 @@ function SortHeader({
       scroll={false}
       replace
       className={cn(
-        'hover:text-foreground -my-2 inline-flex min-h-9 items-center gap-1 py-2 transition-colors',
+        '-my-2 inline-flex min-h-9 items-center gap-1 py-2 transition-colors hover:text-foreground',
         align === 'right' && 'flex-row-reverse',
         active ? 'text-foreground' : 'text-muted-foreground',
       )}

@@ -77,7 +77,7 @@ export function DNASplicer() {
 
   if (!hasSequence) {
     return (
-      <p className="text-muted-foreground rounded-xl border border-dashed px-3 py-2 text-xs">
+      <p className="rounded-xl border border-dashed px-3 py-2 text-xs text-muted-foreground">
         Add a coding sequence above to configure the split point.
       </p>
     )
