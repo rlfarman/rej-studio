@@ -160,7 +160,7 @@ function ArchitecturePage() {
             />
             <ServiceBox
               name="Shared UI"
-              tech="shadcn/ui + Base UI + cmdk"
+              tech="shadcn/ui + Base UI"
               details={[
                 'Dark/light theme',
                 'Command palette (⌘K)',

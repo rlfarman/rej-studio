@@ -25,7 +25,7 @@ Everything runs in the browser. Gene data is a set of static, versioned files; d
 | --------- | --------------------------------------------------------------------------- |
 | Frontend  | TanStack Start (SPA mode), React 19, TypeScript, Tailwind CSS 4             |
 | Toolchain | Vite+ (`vp`: Vite, Vitest, Oxlint), Oxfmt                                   |
-| UI        | shadcn/ui (base-rhea style on Base UI), cmdk (command palette)              |
+| UI        | shadcn/ui (base-rhea style on Base UI)                                      |
 | State     | TanStack Query, Zustand; design history in IndexedDB                        |
 | Optimizer | Rust, compiled to WebAssembly (`rust/`), running in a Web Worker            |
 | Gene data | Static JSON corpus (`pnpm corpus:build`), served from R2 at cutover         |
