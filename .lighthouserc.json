@@ -1,8 +1,8 @@
 {
   "ci": {
     "collect": {
-      "startServerCommand": "pnpm start",
-      "startServerReadyPattern": "Ready in",
+      "startServerCommand": "pnpm preview",
+      "startServerReadyPattern": "Local:",
       "url": ["http://localhost:3000/"],
       "numberOfRuns": 3,
       "settings": {
