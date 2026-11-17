@@ -227,6 +227,13 @@ async function passcodeGate(url) {
   )
   const asset = await request(`${url}/optimizer/THIRD-PARTY-NOTICES.md`)
   check('static files load without a session', asset.status === 200)
+  const wasm = await request(`${url}/optimizer/rej-optimizer.wasm?v=smoke`)
+  check(
+    'the optimizer .wasm is cached as immutable (its URL is versioned)',
+    wasm.status === 200 &&
+      (wasm.headers.get('cache-control') ?? '').includes('immutable'),
+    wasm.headers.get('cache-control') ?? '',
+  )
 
   const signIn = (password) =>
     request(`${url}/api/login`, {

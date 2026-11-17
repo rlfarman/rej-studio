@@ -3,3 +3,10 @@
 # serves them with max-age=0, must-revalidate.
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
+
+# The optimizer is fetched only as /optimizer/rej-optimizer.wasm?v=<sha256>
+# (src/features/design-tool/workers/optimizer.worker.ts), so a new build is a
+# new URL and the old one can be kept forever. Without this every visit to
+# the design tool revalidated 147 KB.
+/optimizer/rej-optimizer.wasm
+  Cache-Control: public, max-age=31536000, immutable
