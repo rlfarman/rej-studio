@@ -292,14 +292,53 @@ function syntheticCds(codons) {
   return `${cds}TAA`
 }
 
+/**
+ * The design the browser's optimizer makes for a request: the committed
+ * .wasm, instantiated by Node through the app's own ABI glue
+ * (wasm-harness.mjs).
+ */
+async function designInNode(request) {
+  const { loadModule } = await import('./wasm-harness.mjs')
+  const { design } = await loadModule(
+    path.join(root, 'public/optimizer/rej-optimizer.wasm'),
+  )
+  return design(request)
+}
+
+const HAND_OFF_SEED = 4321
+
+/**
+ * The optimizer request the MCP endpoint builds for a DNA `submit_design`
+ * input: the endpoint's own input mapping and the form's request builder,
+ * loaded through tsx (which resolves the `@/` paths).
+ */
+async function mcpRequestFor(input) {
+  const { tsImport } = await import('tsx/esm/api')
+  const { toFormValues } = await tsImport(
+    '../src/server/mcp/design-input.ts',
+    import.meta.url,
+  )
+  const { buildJobParams } = await tsImport(
+    '../src/features/design-tool/utils/form-handler.ts',
+    import.meta.url,
+  )
+  const values = await toFormValues(input, () => {
+    throw new Error('DNA input only: nothing to reverse-translate')
+  })
+  const request = buildJobParams(values)
+  return { ...request, options: { ...request.options, seed: input.seed } }
+}
+
 async function mcpHandOff(url) {
   // Just over the 12 kb inline limit: the shortest design that is handed off.
   const sequence = syntheticCds(4_050)
-  const handed = await callTool(url, 'submit_design', {
+  const input = {
     name: 'long smoke',
     sequence,
     species: 'human',
-  })
+    seed: HAND_OFF_SEED,
+  }
+  const handed = await callTool(url, 'submit_design', input)
   const jobId = handed.structuredContent?.job_id
   check(
     'submit_design hands a sequence over 12 kb to the cloud and returns a job id',
@@ -309,7 +348,7 @@ async function mcpHandOff(url) {
       handed.structuredContent?.estimated_seconds > 0,
     textOf(handed),
   )
-  if (!jobId) return
+  if (!jobId) return null
 
   const started = Date.now()
   const done = await pollUntil(
@@ -328,6 +367,28 @@ async function mcpHandOff(url) {
       done.structuredContent?.result?.optimized_sequence?.length ===
         sequence.length,
     textOf(done),
+  )
+
+  // Compared with the browser's design after the HTTP checks: running a
+  // 12 kb design in Node blocks its event loop for seconds, long enough for
+  // the server to drop the next request's keep-alive connection.
+  return { input, cloud: done.structuredContent?.result }
+}
+
+/**
+ * The Workflow ran the same optimizer the browser runs: the committed .wasm
+ * in Node, given the request the endpoint built, makes the same design.
+ */
+async function compareWithBrowser({ input, cloud }) {
+  const local = await designInNode(await mcpRequestFor(input))
+  const same = ['optimized_sequence', 'seq5', 'seq3', 'split_point', 'seed']
+  const differing = same.filter(
+    (key) => JSON.stringify(local[key]) !== JSON.stringify(cloud?.[key]),
+  )
+  check(
+    'the cloud design is the design the browser makes (same .wasm, same seed)',
+    cloud?.seed === HAND_OFF_SEED && differing.length === 0,
+    `seed ${cloud?.seed}; differing: ${differing.join(', ')}`,
   )
 }
 
@@ -565,7 +626,7 @@ async function main() {
       textOf(stale),
     )
 
-    await mcpHandOff(url)
+    const handedOff = await mcpHandOff(url)
 
     // --- the design view ---------------------------------------------------
     const view = await rpc(url, 'resources/read', {
@@ -583,6 +644,9 @@ async function main() {
       bridge.ok && (await bridge.text()).length > 1000,
       `HTTP ${bridge.status}`,
     )
+
+    // Last: CPU-bound in Node (see mcpHandOff).
+    if (handedOff) await compareWithBrowser(handedOff)
   } catch (error) {
     // A hang or crash says more with wrangler's own output beside it.
     console.error('wrangler dev output:\n' + log.join(''))
