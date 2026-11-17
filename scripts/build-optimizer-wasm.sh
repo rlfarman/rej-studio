@@ -21,6 +21,7 @@ BUILT="$CRATE_DIR/target/$TARGET/release/rej_optimizer.wasm"
 ASSET_DIR="$ROOT/public/optimizer"
 ASSET="$ASSET_DIR/rej-optimizer.wasm"
 MANIFEST="$ROOT/src/features/design-tool/workers/optimizer-asset.generated.ts"
+CODON_TABLE="$ROOT/src/features/design-tool/utils/codon-preference.generated.ts"
 NOTICES="$CRATE_DIR/optimizer/THIRD-PARTY-NOTICES.md"
 
 if ! command -v cargo >/dev/null 2>&1; then
@@ -65,6 +66,12 @@ export const OPTIMIZER_WASM_PATH = '/optimizer/rej-optimizer.wasm'
 export const OPTIMIZER_WASM_DIGEST =
   '$digest'
 EOF
+
+# The codon preferences the charts draw come from the crate's tables, so the
+# numbers a reader sees are the ones the optimizer scored. `pnpm wasm:verify`
+# compares this file against the module's own `codon_tables` export.
+echo "Writing the codon preference table..."
+(cd "$CRATE_DIR" && cargo run --release --quiet --example codon-tables) > "$CODON_TABLE"
 
 gzipped="$(gzip -9c "$ASSET" | wc -c)"
 printf 'Installed %s\n  raw    %6.1f KB\n  gzip   %6.1f KB\n  sha256 %s\n' \

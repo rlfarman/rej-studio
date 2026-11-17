@@ -77,17 +77,27 @@ pub struct KmerLocalization {
     extended_fixed_kmers: HashSet<String>,
 }
 
+/// The species a codon-usage table name refers to.
+fn named(species: &str) -> Option<Species> {
+    match species {
+        "h_sapiens" => Some(Species::Human),
+        "m_musculus" => Some(Species::Mouse),
+        _ => None,
+    }
+}
+
 /// Log usage frequency of a codon, for checking the generated tables.
 pub(crate) fn log_frequency(species: &str, codon: &str) -> Option<f64> {
-    let species = match species {
-        "h_sapiens" => Species::Human,
-        "m_musculus" => Species::Mouse,
-        _ => return None,
-    };
-    species
+    named(species)?
         .codon_log_frequencies()
         .get(codon)
         .map(|(_, log_frequency)| *log_frequency)
+}
+
+/// Log usage frequency of an amino acid's most-used codon, which is what a
+/// codon's preference is measured against.
+pub(crate) fn log_best_frequency(species: &str, amino_acid: char) -> Option<f64> {
+    named(species)?.log_best().get(&amino_acid).copied()
 }
 
 #[derive(Debug, Clone)]

@@ -10,7 +10,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { loadOptimizer } from './wasm-harness.mjs'
+import { loadModule } from './wasm-harness.mjs'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 const fixtures = path.join(here, '..', 'rust', 'optimizer', 'tests', 'fixtures')
@@ -30,8 +30,9 @@ if (!wasmPath) {
 // monotonicity only means anything within a single design.
 let progress = []
 const allProgress = []
-const design = await loadOptimizer(wasmPath, (fraction, stage) =>
-  progress.push({ fraction, stage }),
+const { design, reverseTranslate, wggwReport, codonTables } = await loadModule(
+  wasmPath,
+  (fraction, stage) => progress.push({ fraction, stage }),
 )
 /** Run one design and return the ticks it produced. */
 function designWithProgress(request) {
@@ -121,6 +122,83 @@ check(
     /^Optimizing sequence \(\d+\/\d+\)$/.test(tick.stage),
   ) && !everyTick.some((tick) => tick.stage.includes('[')),
   everyTick.find((tick) => tick.stage.includes('['))?.stage ?? '',
+)
+
+// --- The other exports -----------------------------------------------------
+//
+// Reverse translation and the codon tables are the only implementations left,
+// so the browser path has to exercise them too.
+
+const translated = reverseTranslate({ protein: 'MKR*', species: 'mouse' })
+check(
+  'reverse translation returns DNA',
+  translated.CDS === 'ATGAAGAGATGA',
+  JSON.stringify(translated),
+)
+check(
+  'reverse translation refuses an unknown species',
+  typeof reverseTranslate({ protein: 'MK*', species: 'rat' }).error ===
+    'string',
+)
+check(
+  'reverse translation refuses a non-protein',
+  typeof reverseTranslate({ protein: 'MZ*', species: 'human' }).error ===
+    'string',
+)
+// The design must be runnable from what reverse translation produced.
+const fromProtein = design({
+  CDS: translated.CDS,
+  name: 'from-protein',
+  options: { codon_optimize: 'mouse', enforce_gc: true, seed: 7 },
+})
+check(
+  'a reverse-translated sequence designs',
+  !fromProtein.error && fromProtein.optimized_sequence.length > 0,
+  fromProtein.error ?? '',
+)
+
+const tables = codonTables()
+check(
+  'the codon tables cover both species',
+  Object.keys(tables).join(',') === 'human,mouse' &&
+    Object.keys(tables.human).length === 64 &&
+    Object.keys(tables.mouse).length === 64,
+  Object.keys(tables).join(','),
+)
+check(
+  // Mouse uses AGA and AGG equally, so both are the most-preferred codon and
+  // the backtranslation order picks AGA — which is what `translated` above
+  // shows, and where the TypeScript table this replaced said AGG.
+  'the codon tables top out at 1 for the most-used codon',
+  tables.mouse.AGA === 1 &&
+    tables.mouse.AGG === 1 &&
+    tables.mouse.CGT < 0.5 &&
+    tables.human.CTG === 1,
+  `mouse AGA ${tables.mouse.AGA}, AGG ${tables.mouse.AGG}`,
+)
+
+const report = wggwReport({ sequence: cases[0].sequence, split_point: 600 })
+check(
+  'the WGGW report lists candidates in distance order',
+  Array.isArray(report.candidates) &&
+    report.candidates.length > 0 &&
+    report.by_distance.length === report.candidates.length &&
+    report.by_distance.every(
+      (position, index) =>
+        index === 0 ||
+        Math.abs(report.by_distance[index - 1] - 600) <=
+          Math.abs(position - 600),
+    ),
+  JSON.stringify(report.candidates?.slice(0, 3) ?? report),
+)
+check(
+  'the WGGW report names the split it would choose',
+  typeof report.split?.split_point === 'number',
+  JSON.stringify(report.split),
+)
+check(
+  'a bad WGGW request is an error, not a crash',
+  typeof wggwReport({ nope: true }).error === 'string',
 )
 
 const failed = checks.filter((entry) => !entry.ok)
