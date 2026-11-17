@@ -76,6 +76,8 @@ describe('gene search (sample corpus)', () => {
     expect((await symbols('brac1'))[0]).toBe('BRCA1/human')
     expect((await symbols('egrf'))[0]).toBe('EGFR/human')
     expect((await symbols('androgen recepter'))[0]).toBe('AR/human')
+    // An alternate symbol (CDKN1A's WAF1) with its letters swapped.
+    expect((await symbols('wfa1'))[0]).toBe('CDKN1A/human')
   })
 
   it('does not search fuzzily when the query matches as typed, or is short', async () => {
