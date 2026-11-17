@@ -173,6 +173,7 @@ jobs:
       # so it runs here rather than in the Test job, and needs no secrets or
       # Cloudflare account (`wrangler dev --local`).
       - run: pnpm test:worker
+        timeout-minutes: 5
 
       # Bundle budgets: per-route first-load JS (gzip) from the build's
       # client chunk graph (dist/client-chunks.json). Each main build caches

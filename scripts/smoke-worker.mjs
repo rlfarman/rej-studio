@@ -26,6 +26,14 @@ const TOKEN = `smoke-agent:${'s'.repeat(32)}`
 const SECRET = 's'.repeat(32)
 const HEALTH_TOKEN = 'h'.repeat(40)
 
+/**
+ * fetch with a deadline. A request that workerd accepts but never answers
+ * would otherwise hang the script, and with it the CI job, indefinitely.
+ */
+function request(url, init = {}, ms = 60_000) {
+  return fetch(url, { ...init, signal: AbortSignal.timeout(ms) })
+}
+
 const checks = []
 function check(name, ok, detail = '') {
   checks.push({ name, ok: Boolean(ok), detail })
@@ -50,7 +58,7 @@ async function waitForReady(url, child) {
       throw new Error(`wrangler dev exited with ${child.exitCode}`)
     }
     try {
-      const response = await fetch(`${url}/api/version`)
+      const response = await request(`${url}/api/version`, {}, 2_000)
       if (response.ok) return
     } catch {
       // Not listening yet.
@@ -62,7 +70,7 @@ async function waitForReady(url, child) {
 
 /** One JSON-RPC call to /api/mcp, as a client would make it. */
 async function rpc(url, method, params, { secret = SECRET, id = 1 } = {}) {
-  const response = await fetch(`${url}/api/mcp`, {
+  const response = await request(`${url}/api/mcp`, {
     method: 'POST',
     headers: {
       'content-type': 'application/json',
@@ -112,6 +120,21 @@ async function callTool(url, name, args, options) {
   return json.result
 }
 
+/** Ends wrangler and everything it started (workerd), however it responds. */
+function stop(child) {
+  const group = (signal) => {
+    try {
+      process.kill(-child.pid, signal)
+    } catch {
+      // Already gone.
+    }
+  }
+  group('SIGTERM')
+  setTimeout(() => group('SIGKILL'), 5_000).unref()
+  child.stdout.destroy()
+  child.stderr.destroy()
+}
+
 const textOf = (result) =>
   (result.content ?? []).map((block) => block.text ?? '').join('\n')
 
@@ -119,10 +142,12 @@ async function main() {
   const port = await freePort()
   const url = `http://127.0.0.1:${port}`
 
+  // The wrangler binary itself, not `npx wrangler`, and in its own process
+  // group: wrangler starts workerd as a child, and killing only the parent
+  // leaves workerd holding our stdout/stderr pipes open, so Node never exits.
   const child = spawn(
-    'npx',
+    path.join(root, 'node_modules/.bin/wrangler'),
     [
-      'wrangler',
       'dev',
       '--config',
       worker,
@@ -136,7 +161,12 @@ async function main() {
       '--var',
       `HEALTH_AUTH_TOKEN:${HEALTH_TOKEN}`,
     ],
-    { cwd: root, stdio: ['ignore', 'pipe', 'pipe'] },
+    {
+      cwd: root,
+      detached: true,
+      stdio: ['ignore', 'pipe', 'pipe'],
+      env: { ...process.env, WRANGLER_SEND_METRICS: 'false' },
+    },
   )
   const log = []
   child.stdout.on('data', (chunk) => log.push(String(chunk)))
@@ -146,7 +176,7 @@ async function main() {
     await waitForReady(url, child)
 
     // --- version -----------------------------------------------------------
-    const version = await (await fetch(`${url}/api/version`)).json()
+    const version = await (await request(`${url}/api/version`)).json()
     check(
       'version reports the optimizer digest',
       /^[0-9a-f]{64}$/.test(version.optimizerSha256),
@@ -163,13 +193,13 @@ async function main() {
     )
 
     // --- health ------------------------------------------------------------
-    const liveness = await fetch(`${url}/api/health`)
+    const liveness = await request(`${url}/api/health`)
     check(
       'health answers an anonymous probe with liveness only',
       liveness.status === 200 &&
         JSON.stringify(await liveness.json()) === '{"status":"ok"}',
     )
-    const deep = await fetch(`${url}/api/health`, {
+    const deep = await request(`${url}/api/health`, {
       headers: { authorization: `Bearer ${HEALTH_TOKEN}` },
     })
     const deepBody = await deep.json()
@@ -234,7 +264,7 @@ async function main() {
     // The coding sequence to design: TP53-201, straight out of the corpus the
     // Worker just read.
     const geneFile = await (
-      await fetch(`${url}/gene-data/sample/genes/ENSG00000141510.json`)
+      await request(`${url}/gene-data/sample/genes/ENSG00000141510.json`)
     ).json()
     const CDS = geneFile.isoforms.find(
       (isoform) => isoform.id === 'ENST00000269305',
@@ -334,14 +364,18 @@ async function main() {
       html.startsWith('<!doctype html>') && html.includes('/mcp/app-bridge.js'),
       html.slice(0, 80),
     )
-    const bridge = await fetch(`${url}/mcp/app-bridge.js`)
+    const bridge = await request(`${url}/mcp/app-bridge.js`)
     check(
       'the view’s client library is a static asset of this build',
       bridge.ok && (await bridge.text()).length > 1000,
       `HTTP ${bridge.status}`,
     )
+  } catch (error) {
+    // A hang or crash says more with wrangler's own output beside it.
+    console.error('wrangler dev output:\n' + log.join(''))
+    throw error
   } finally {
-    child.kill('SIGTERM')
+    stop(child)
   }
 
   const failed = checks.filter((entry) => !entry.ok)
@@ -359,4 +393,12 @@ async function main() {
   }
 }
 
-await main()
+try {
+  await main()
+} catch (error) {
+  console.error(error)
+  process.exitCode = 1
+}
+// Nothing should be left running, but never let a stray handle keep CI
+// waiting: the result is already decided.
+process.exit()
