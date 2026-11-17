@@ -1,11 +1,12 @@
 import {
-  Command,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-  CommandSeparator,
-} from '@/components/ui/command'
+  Autocomplete,
+  AutocompleteCollection,
+  AutocompleteGroup,
+  AutocompleteGroupLabel,
+  AutocompleteInput,
+  AutocompleteItem,
+  AutocompleteList,
+} from '@/components/ui/autocomplete'
 import { Link, useRouter } from '@tanstack/react-router'
 import type { GeneSearchResult } from '@/features/gene-search/types/search'
 import type { SimilarGene } from '@/features/gene-search/types/search'
@@ -33,6 +34,7 @@ import type {
 import { useSpeciesContext } from '@/stores/species-store'
 import { SPECIES_DISPLAY_NAME, type SpeciesFilter } from '@/lib/bio/species'
 import { useIsMobile } from '@/hooks/use-mobile'
+import { useSearchShortcut } from '@/hooks/use-search-shortcut'
 import { geneSearchCopy } from '../copy'
 import { geneLink } from '../utils/search-href'
 import { SearchEmptyState } from './search-empty-state'
@@ -75,8 +77,8 @@ function SpeciesToggle() {
 /**
  * First-run hint inside the empty palette: a few well-known genes to try,
  * instead of a sentence that restates the placeholder. Picking one searches
- * for it right away (so the results show how search works) and returns focus
- * to the input so arrow keys reach the results.
+ * for it right away (so the results show how search works); the caller
+ * returns focus to the input so arrow keys reach the results.
  */
 function ExampleGenes({ onPick }: { onPick: (symbol: string) => void }) {
   return (
@@ -88,13 +90,7 @@ function ExampleGenes({ onPick }: { onPick: (symbol: string) => void }) {
             <button
               type="button"
               aria-label={copy.exampleAria(symbol)}
-              onClick={(e) => {
-                onPick(symbol)
-                e.currentTarget
-                  .closest('[cmdk-root]')
-                  ?.querySelector<HTMLInputElement>('[cmdk-input]')
-                  ?.focus()
-              }}
+              onClick={() => onPick(symbol)}
               className="rounded-full border px-3 py-1 font-mono text-xs font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
             >
               {symbol}
@@ -149,14 +145,42 @@ function SearchingRow({
   )
 }
 
+/** One option in the palette's listbox; Enter or a click runs it. */
+type PaletteItem =
+  | { kind: 'favorite' | 'recent' | 'result'; key: string; gene: SavedGene }
+  | { kind: 'job'; key: string; entry: JobSearchItem }
+  | { kind: 'see-all'; key: string }
+
+interface PaletteGroup {
+  key: string
+  label: string
+  items: PaletteItem[]
+}
+
+// The text Base UI would put in the input when an option is picked. The
+// palette ignores those changes (see onValueChange), so this only names the
+// option for Base UI's own bookkeeping.
+function paletteItemToString(item: PaletteItem): string {
+  switch (item.kind) {
+    case 'job':
+      return item.entry.name
+    case 'see-all':
+      return item.key
+    default:
+      return item.gene.symbol
+  }
+}
+
 interface GeneSearchInputProps {
   query: string
   setQuery: (query: string) => void
   /** Sets the query and searches immediately, skipping the typing debounce. */
   searchNow: (query: string) => void
-  inputRef?: React.Ref<HTMLInputElement>
-  /** Show the ⌘K hint (inline search; the dialog is already open). */
-  shortcutHint?: boolean
+  /**
+   * On a page rather than in the dialog: show the ⌘K hint, focus this input
+   * on ⌘K and on mount. The dialog's ⌘K belongs to GeneSearchTrigger.
+   */
+  onPage?: boolean
   hasSearched: boolean
   searchResults: GeneSearchResult[]
   /** More genes matched than the palette shows. */
@@ -166,7 +190,7 @@ interface GeneSearchInputProps {
   /** Open the full results page for the current query. */
   onSeeAll: () => void
   isLoading: boolean
-  setIsOpen: (isLoading: boolean) => void
+  setIsOpen: (open: boolean) => void
   handleSelect: (gene: SavedGene) => void
   error: string | null
   retry: () => void
@@ -191,33 +215,9 @@ function jobMatches(entry: JobSearchItem, q: string): boolean {
   return entry.name.toLowerCase().includes(q)
 }
 
-interface SavedGeneRowProps {
-  gene: SavedGene
-  keyPrefix: 'fav' | 'recent'
-  query: string
-  leadingIcon: React.ReactNode
-  onSelect: (gene: SavedGene) => void
-}
-
-function SavedGeneRow({
-  gene,
-  keyPrefix,
-  query,
-  leadingIcon,
-  onSelect,
-}: SavedGeneRowProps) {
+function GeneRowBody({ gene, query }: { gene: SavedGene; query: string }) {
   return (
-    <CommandItem
-      value={`${keyPrefix}-${gene.id}`}
-      onSelect={() => onSelect(gene)}
-    >
-      {leadingIcon}
-      {gene.species && (
-        <SpeciesIcon
-          species={gene.species}
-          className="h-3.5 w-3.5 text-muted-foreground"
-        />
-      )}
+    <>
       <span className="font-mono font-medium">
         <HighlightMatch text={gene.symbol} query={query} />
       </span>
@@ -234,21 +234,15 @@ function SavedGeneRow({
           </span>
         )}
       </div>
-    </CommandItem>
+    </>
   )
 }
 
-interface JobRowProps {
-  entry: JobSearchItem
-  query: string
-  onSelect: (entry: JobSearchItem) => void
-}
-
-function JobRow({ entry, query, onSelect }: JobRowProps) {
+function JobRowBody({ entry, query }: { entry: JobSearchItem; query: string }) {
   const isRunning = entry.status === 'running'
   const isError = entry.status === 'failed' || entry.status === 'cancelled'
   return (
-    <CommandItem value={`job-${entry.id}`} onSelect={() => onSelect(entry)}>
+    <>
       {isRunning ? (
         <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
       ) : isError ? (
@@ -266,16 +260,22 @@ function JobRow({ entry, query, onSelect }: JobRowProps) {
             : entry.status}
         </span>
       </div>
-    </CommandItem>
+    </>
   )
 }
 
+/**
+ * The gene search palette: Base UI's Autocomplete rendered inline (always
+ * open, no popup of its own), on the home page or inside the header's
+ * Dialog. Results are filtered by the search worker, not by Base UI
+ * (`filter={null}`); each option runs an action instead of filling the
+ * input.
+ */
 export function GeneSearchCommand({
   query,
   setQuery,
   searchNow,
-  inputRef,
-  shortcutHint = false,
+  onPage = false,
   hasSearched,
   searchResults,
   truncated,
@@ -295,26 +295,24 @@ export function GeneSearchCommand({
   const [showList, setShowList] = useState(true)
   const { species, handleSpeciesChange } = useSpeciesContext()
   const isMobile = useIsMobile()
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  useSearchShortcut(() => {
+    if (!onPage) return
+    inputRef.current?.focus()
+    inputRef.current?.select()
+  })
 
   // Highlighting a gene (arrow keys or hover) preloads its page, as hovering
   // a link does elsewhere (the router's `defaultPreload: 'intent'`): palette
   // rows open with navigate(), so the router never sees an intent. After the
   // same short pause the router uses, so arrowing past a row costs nothing.
   const router = useRouter()
-  // Controlled: cmdk reports a highlight change only to a controlled
-  // `value`.
-  const [highlighted, setHighlighted] = useState('')
   const preloadTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
-  const genesByValue = new Map<string, SavedGene>([
-    ...favoriteGenes.map((gene) => [`fav-${gene.id}`, gene] as const),
-    ...recentGenes.map((gene) => [`recent-${gene.id}`, gene] as const),
-    ...searchResults.map((gene) => [gene.id, gene] as const),
-  ])
-  const preloadHighlighted = (value: string) => {
-    setHighlighted(value)
+  const preloadHighlighted = (item: PaletteItem | undefined) => {
     clearTimeout(preloadTimer.current)
-    const gene = genesByValue.get(value)
-    if (!gene) return
+    if (!item || !('gene' in item)) return
+    const { gene } = item
     preloadTimer.current = setTimeout(() => {
       void router
         .preloadRoute(
@@ -327,14 +325,14 @@ export function GeneSearchCommand({
   }
   useEffect(() => () => clearTimeout(preloadTimer.current), [])
 
-  const internalHandleSelect = (gene: SavedGene) => {
+  const runItem = (item: PaletteItem) => {
+    if (item.kind === 'see-all') {
+      onSeeAll()
+      return
+    }
     setShowList(false)
-    handleSelect(gene)
-  }
-
-  const internalHandleSelectJob = (entry: JobSearchItem) => {
-    setShowList(false)
-    handleSelectJob(entry)
+    if (item.kind === 'job') handleSelectJob(item.entry)
+    else handleSelect(item.gene)
   }
 
   const trimmedQuery = query.trim().toLowerCase()
@@ -364,12 +362,57 @@ export function GeneSearchCommand({
   const seenIds = new Set([...favIds, ...displayedRecents.map((g) => g.id)])
   const displayedGeneResults = searchResults.filter((g) => !seenIds.has(g.id))
 
-  const hasFavoriteGenes = displayedFavorites.length > 0
-  const hasRecentGenes = displayedRecents.length > 0
-  const hasJobs = displayedJobs.length > 0
   const hasGeneResults = displayedGeneResults.length > 0
-  const hasAnySuggestions = hasFavoriteGenes || hasRecentGenes || hasJobs
-  const hasResults = hasAnySuggestions || hasGeneResults
+
+  // The listbox's contents, in order. Base UI walks these for arrow keys and
+  // highlighting, so they're built here once rather than as loose children.
+  const groups: PaletteGroup[] = [
+    {
+      key: 'favorites',
+      label: copy.favorites,
+      items: displayedFavorites.map((gene) => ({
+        kind: 'favorite' as const,
+        key: `fav-${gene.id}`,
+        gene,
+      })),
+    },
+    {
+      key: 'recent',
+      label: copy.recentGenes,
+      items: displayedRecents.map((gene) => ({
+        kind: 'recent' as const,
+        key: `recent-${gene.id}`,
+        gene,
+      })),
+    },
+    {
+      key: 'jobs',
+      label: copy.recentJobs,
+      items: displayedJobs.map((entry) => ({
+        kind: 'job' as const,
+        key: `job-${entry.id}`,
+        entry,
+      })),
+    },
+    {
+      key: 'genes',
+      label: copy.genes,
+      items: hasGeneResults
+        ? [
+            ...displayedGeneResults.map((gene) => ({
+              kind: 'result' as const,
+              key: gene.id,
+              gene,
+            })),
+            ...(truncated
+              ? [{ kind: 'see-all' as const, key: 'see-all' }]
+              : []),
+          ]
+        : [],
+    },
+  ].filter((group) => group.items.length > 0)
+
+  const hasResults = groups.length > 0
 
   // Single-source state resolution. Anything already worth showing (matching
   // favorites/recents/jobs, or the previous query's results that
@@ -400,258 +443,216 @@ export function GeneSearchCommand({
 
   const isNavigating = Boolean(pendingGene)
 
-  return (
-    <Command
-      className="border md:min-w-[450px]"
-      shouldFilter={false}
-      value={highlighted}
-      onValueChange={preloadHighlighted}
-    >
-      <CommandInput
-        ref={inputRef}
-        aria-label={copy.inputAria}
-        aria-keyshortcuts={shortcutHint ? SEARCH_SHORTCUT_ARIA : undefined}
-        endAddon={shortcutHint ? <SearchShortcutHint /> : undefined}
-        placeholder={isMobile ? copy.placeholderMobile : copy.placeholder}
-        className="border-0 text-base ring-0 outline-0 focus:border-0 focus:ring-0 active:border-0 active:ring-0 sm:text-sm"
-        value={isNavigating && pendingGene ? pendingGene.symbol : query}
-        onValueChange={(q) => {
-          setQuery(q)
-          if (!showList) {
-            setShowList(true)
-          }
-        }}
-        disabled={isNavigating}
-        autoFocus
-      />
-      {isNavigating && pendingGene ? (
-        <div
-          role="status"
-          aria-live="polite"
-          className="flex flex-col items-center justify-center gap-3 px-6 py-10"
-        >
-          <DnaLoader className="h-8 w-20" />
-          <p className="text-sm text-muted-foreground">
-            {copy.opening(pendingGene.symbol)}
-          </p>
-        </div>
-      ) : (
-        <SpeciesToggle />
-      )}
-      {/* cmdk's input always sets aria-controls to the list's id, and its own
-          attributes win over props, so keep an empty, hidden list mounted
-          whenever the real one isn't. Hidden, it isn't an empty listbox to
-          assistive tech, but the reference resolves (axe
-          aria-valid-attr-value, which failed Lighthouse CI). */}
-      {(isNavigating || !showList || content !== 'results') && (
-        <CommandList hidden />
-      )}
-      {!isNavigating && showList && (
+  const renderItem = (item: PaletteItem) => (
+    <AutocompleteItem key={item.key} value={item} onClick={() => runItem(item)}>
+      {item.kind === 'job' ? (
+        <JobRowBody entry={item.entry} query={query} />
+      ) : item.kind === 'see-all' ? (
         <>
-          {content === 'error' && (
-            <div className="flex flex-col items-center gap-2 p-4 text-center text-sm text-destructive-foreground">
-              <span>{error}</span>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 gap-1.5 px-2 text-xs"
-                onClick={retry}
-              >
-                <RefreshCwIcon className="size-3" />
-                {copy.retry}
-              </Button>
-            </div>
+          <ArrowRight className="h-4 w-4 text-muted-foreground" />
+          <span className="text-muted-foreground">
+            {copy.seeAll(query.trim())}
+          </span>
+        </>
+      ) : (
+        <>
+          {item.kind === 'favorite' && (
+            <StarIcon className="h-4 w-4 text-muted-foreground" />
           )}
-          {content === 'prompt' && (
-            <ExampleGenes
-              onPick={(symbol) => {
-                searchNow(symbol)
-                setShowList(true)
-              }}
+          {item.kind === 'recent' && (
+            <ClockIcon className="h-4 w-4 text-muted-foreground" />
+          )}
+          {item.gene.species && (
+            <SpeciesIcon
+              species={item.gene.species}
+              className="h-3.5 w-3.5 text-muted-foreground"
             />
           )}
-          {content === 'searching' && <SearchingRow query={query} />}
-          {content === 'no-results' && (
-            <SearchEmptyState
-              className="items-center px-4 py-6 text-center"
-              query={query.trim()}
-              speciesLabel={
-                species === 'both' ? undefined : SPECIES_DISPLAY_NAME[species]
+          <GeneRowBody gene={item.gene} query={query} />
+          {item.kind === 'result' && item.gene.matchedIsoformId && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="ml-auto h-7 px-2"
+              nativeButton={false}
+              render={
+                <Link
+                  to="/design-tool"
+                  search={{ isoform: item.gene.matchedIsoformId }}
+                  aria-label={copy.customizeAria(item.gene.matchedIsoformId)}
+                  onClick={(e) => {
+                    // The link, not the option it sits in, handles the click.
+                    e.stopPropagation()
+                    setIsOpen(false)
+                    setShowList(false)
+                  }}
+                />
               }
-              allSpeciesAction={
-                species === 'both' ? undefined : (
-                  <button
-                    type="button"
-                    onClick={() => handleSpeciesChange('both')}
-                    className="rounded-sm font-medium text-primary underline underline-offset-4 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-                  >
-                    {geneSearchCopy.results.searchAllSpecies}
-                  </button>
-                )
-              }
-              suggestions={suggestions}
-              onNavigate={() => {
-                setIsOpen(false)
-                setShowList(false)
-              }}
-            />
-          )}
-
-          {/* CommandList (role="listbox") only when there are CommandItem children. */}
-          {content === 'results' && (
-            <CommandList
-              className={cn(
-                'max-h-[300px] overflow-y-auto transition-opacity duration-200',
-                // Dim the list while a fresh query is loading to telegraph
-                // that newer results are on the way, without yanking the
-                // current content out from under the user.
-                showLoader && 'opacity-60',
-              )}
             >
-              {hasFavoriteGenes && (
-                <CommandGroup heading={copy.favorites}>
-                  {displayedFavorites.map((gene) => (
-                    <SavedGeneRow
-                      key={`fav-${gene.id}`}
-                      gene={gene}
-                      keyPrefix="fav"
-                      query={query}
-                      leadingIcon={
-                        <StarIcon className="h-4 w-4 text-muted-foreground" />
-                      }
-                      onSelect={internalHandleSelect}
-                    />
-                  ))}
-                </CommandGroup>
-              )}
-              {hasRecentGenes && (
-                <>
-                  {hasFavoriteGenes && <CommandSeparator />}
-                  <CommandGroup heading={copy.recentGenes}>
-                    {displayedRecents.map((gene) => (
-                      <SavedGeneRow
-                        key={`recent-${gene.id}`}
-                        gene={gene}
-                        keyPrefix="recent"
-                        query={query}
-                        leadingIcon={
-                          <ClockIcon className="h-4 w-4 text-muted-foreground" />
-                        }
-                        onSelect={internalHandleSelect}
-                      />
-                    ))}
-                  </CommandGroup>
-                </>
-              )}
-              {hasJobs && (
-                <>
-                  {(hasFavoriteGenes || hasRecentGenes) && <CommandSeparator />}
-                  <CommandGroup heading={copy.recentJobs}>
-                    {displayedJobs.map((entry) => (
-                      <JobRow
-                        key={`job-${entry.id}`}
-                        entry={entry}
-                        query={query}
-                        onSelect={internalHandleSelectJob}
-                      />
-                    ))}
-                  </CommandGroup>
-                </>
-              )}
-              {hasGeneResults && (
-                <>
-                  {hasAnySuggestions && <CommandSeparator />}
-                  <CommandGroup heading={copy.genes}>
-                    {displayedGeneResults.map((gene) => (
-                      <CommandItem
-                        key={gene.id}
-                        value={gene.id}
-                        onSelect={() => internalHandleSelect(gene)}
-                      >
-                        <SpeciesIcon
-                          species={gene.species}
-                          className="h-3.5 w-3.5 text-muted-foreground"
-                        />
-                        <span className="font-mono font-medium">
-                          <HighlightMatch text={gene.symbol} query={query} />
-                        </span>
-                        <div className="flex min-w-0 flex-1 flex-col">
-                          <TruncatedText
-                            tooltip={gene.name}
-                            className="truncate text-muted-foreground"
-                          >
-                            <HighlightMatch text={gene.name} query={query} />
-                          </TruncatedText>
-                          {gene.matchedIsoformId && (
-                            <span className="font-mono text-xs text-muted-foreground">
-                              {gene.matchedIsoformId}
-                            </span>
-                          )}
-                        </div>
-                        {gene.matchedIsoformId && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="ml-auto h-7 px-2"
-                            onClick={(e) => e.stopPropagation()}
-                            onMouseDown={(e) => e.stopPropagation()}
-                            nativeButton={false}
-                            render={
-                              <Link
-                                to="/design-tool"
-                                search={{ isoform: gene.matchedIsoformId }}
-                                aria-label={copy.customizeAria(
-                                  gene.matchedIsoformId,
-                                )}
-                                onClick={() => {
-                                  setIsOpen(false)
-                                  setShowList(false)
-                                }}
-                              />
-                            }
-                          >
-                            {copy.customize}
-                            <ExternalLink className="size-3.5" />
-                          </Button>
-                        )}
-                      </CommandItem>
-                    ))}
-                    {truncated && (
-                      <CommandItem value="see-all" onSelect={onSeeAll}>
-                        <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-muted-foreground">
-                          {copy.seeAll(query.trim())}
-                        </span>
-                      </CommandItem>
-                    )}
-                  </CommandGroup>
-                </>
-              )}
-              {error && !hasGeneResults && hasQuery && (
-                <div className="flex items-center justify-between gap-2 px-3 py-2 text-xs text-destructive-foreground">
-                  <span>{error}</span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 gap-1.5 px-2 text-xs"
-                    onClick={retry}
-                  >
-                    <RefreshCwIcon className="size-3" />
-                    {copy.retry}
-                  </Button>
-                </div>
-              )}
-            </CommandList>
-          )}
-          {/* Saved genes or jobs can match before the gene search returns;
-              say the search is still running rather than implying those are
-              all the results. Outside the listbox, which may only hold
-              options and groups. */}
-          {content === 'results' && isLoading && !hasGeneResults && (
-            <SearchingRow query={query} className="border-t" />
+              {copy.customize}
+              <ExternalLink className="size-3.5" />
+            </Button>
           )}
         </>
       )}
-    </Command>
+    </AutocompleteItem>
+  )
+
+  return (
+    <div className="flex size-full flex-col overflow-hidden rounded-3xl border bg-popover p-1 text-popover-foreground md:min-w-[450px]">
+      <Autocomplete
+        // Inline: the list is part of this panel, not a popup, so it's
+        // always open (https://base-ui.com/react/components/autocomplete).
+        inline
+        open
+        items={groups}
+        // The search worker already filtered and ranked the results.
+        filter={null}
+        itemToStringValue={paletteItemToString}
+        // Like a command palette, Enter runs the first option without an
+        // arrow key first, and the highlight stays when the pointer leaves.
+        autoHighlight="always"
+        keepHighlight
+        onItemHighlighted={preloadHighlighted}
+        value={isNavigating && pendingGene ? pendingGene.symbol : query}
+        onValueChange={(q, details) => {
+          // Only typing changes the query. Base UI also writes a picked
+          // option's text into the input and clears it on Escape; the
+          // palette runs the option instead, and keeps the query when the
+          // dialog closes.
+          if (details.reason !== 'input-change') return
+          setQuery(q)
+          if (!showList) setShowList(true)
+        }}
+      >
+        <AutocompleteInput
+          ref={inputRef}
+          aria-label={copy.inputAria}
+          aria-keyshortcuts={onPage ? SEARCH_SHORTCUT_ARIA : undefined}
+          endAddon={onPage ? <SearchShortcutHint /> : undefined}
+          placeholder={isMobile ? copy.placeholderMobile : copy.placeholder}
+          className="border-0 text-base ring-0 outline-0 focus:border-0 focus:ring-0 active:border-0 active:ring-0 sm:text-sm"
+          disabled={isNavigating}
+          // Inline only. The dialog focuses its first field itself, and an
+          // input that grabs focus while the dialog mounts leaves the dialog
+          // nothing to hand focus back to when it closes.
+          autoFocus={onPage}
+        />
+        {isNavigating && pendingGene ? (
+          <div
+            role="status"
+            aria-live="polite"
+            className="flex flex-col items-center justify-center gap-3 px-6 py-10"
+          >
+            <DnaLoader className="h-8 w-20" />
+            <p className="text-sm text-muted-foreground">
+              {copy.opening(pendingGene.symbol)}
+            </p>
+          </div>
+        ) : (
+          <SpeciesToggle />
+        )}
+        {!isNavigating && showList && (
+          <>
+            {content === 'error' && (
+              <div className="flex flex-col items-center gap-2 p-4 text-center text-sm text-destructive-foreground">
+                <span>{error}</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 gap-1.5 px-2 text-xs"
+                  onClick={retry}
+                >
+                  <RefreshCwIcon className="size-3" />
+                  {copy.retry}
+                </Button>
+              </div>
+            )}
+            {content === 'prompt' && (
+              <ExampleGenes
+                onPick={(symbol) => {
+                  searchNow(symbol)
+                  setShowList(true)
+                  // Back to the input, so arrow keys reach the results.
+                  inputRef.current?.focus()
+                }}
+              />
+            )}
+            {content === 'searching' && <SearchingRow query={query} />}
+            {content === 'no-results' && (
+              <SearchEmptyState
+                className="items-center px-4 py-6 text-center"
+                query={query.trim()}
+                speciesLabel={
+                  species === 'both' ? undefined : SPECIES_DISPLAY_NAME[species]
+                }
+                allSpeciesAction={
+                  species === 'both' ? undefined : (
+                    <button
+                      type="button"
+                      onClick={() => handleSpeciesChange('both')}
+                      className="rounded-sm font-medium text-primary underline underline-offset-4 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                    >
+                      {geneSearchCopy.results.searchAllSpecies}
+                    </button>
+                  )
+                }
+                suggestions={suggestions}
+                onNavigate={() => {
+                  setIsOpen(false)
+                  setShowList(false)
+                }}
+              />
+            )}
+
+            {/* The listbox only when it has options; without it the input
+                drops aria-controls rather than pointing at an empty list. */}
+            {content === 'results' && (
+              <AutocompleteList
+                className={cn(
+                  'max-h-[300px] transition-opacity duration-200',
+                  // Dim the list while a fresh query is loading to telegraph
+                  // that newer results are on the way, without yanking the
+                  // current content out from under the user.
+                  showLoader && 'opacity-60',
+                )}
+              >
+                {(group: PaletteGroup) => (
+                  <AutocompleteGroup key={group.key} items={group.items}>
+                    <AutocompleteGroupLabel>
+                      {group.label}
+                    </AutocompleteGroupLabel>
+                    <AutocompleteCollection>
+                      {renderItem}
+                    </AutocompleteCollection>
+                  </AutocompleteGroup>
+                )}
+              </AutocompleteList>
+            )}
+            {/* Outside the listbox, which may only hold options and groups. */}
+            {content === 'results' && error && !hasGeneResults && hasQuery && (
+              <div className="flex items-center justify-between gap-2 border-t px-3 py-2 text-xs text-destructive-foreground">
+                <span>{error}</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 gap-1.5 px-2 text-xs"
+                  onClick={retry}
+                >
+                  <RefreshCwIcon className="size-3" />
+                  {copy.retry}
+                </Button>
+              </div>
+            )}
+            {/* Saved genes or jobs can match before the gene search returns;
+                say the search is still running rather than implying those are
+                all the results. */}
+            {content === 'results' && isLoading && !hasGeneResults && (
+              <SearchingRow query={query} className="border-t" />
+            )}
+          </>
+        )}
+      </Autocomplete>
+    </div>
   )
 }

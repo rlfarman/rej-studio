@@ -13,8 +13,9 @@ import type { JobSearchItem } from '../types/domain-types'
  * The header's search button, with the palette loaded only when it is
  * wanted.
  *
- * The palette (the command list, the dialog with its focus trap and scroll
- * lock) is ~35 KB of JavaScript that every page used to load up front. It
+ * The palette (the autocomplete list and its rows, and the search query
+ * hooks) is ~24 KB of gzipped JavaScript that every page used to load up
+ * front. It
  * now loads on the first hover, focus, click or ⌘K, which is well before it
  * is needed: hovering the button starts it.
  */
