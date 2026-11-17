@@ -5,12 +5,15 @@
 // A design takes seconds to minutes of solid computation, so running it on
 // the main thread would freeze the tab. The worker loads the WebAssembly
 // module once, then answers one design request at a time, posting progress
-// as it goes.
-//
-// The module exports a small hand-written ABI (see rust/optimizer/src/lib.rs):
-// strings cross as UTF-8 bytes in its own memory, and it calls back into
-// `env.report_progress` while it works.
+// as it goes. The ABI glue is shared with the Cloudflare Worker and the Node
+// scripts (./optimizer-abi.ts); only fetching the module is browser-specific.
 
+import {
+  loadOptimizer,
+  optimizerErrorCode,
+  optimizerErrorOf,
+  type OptimizerImports,
+} from './optimizer-abi'
 import {
   OPTIMIZER_WASM_DIGEST,
   OPTIMIZER_WASM_PATH,
@@ -22,64 +25,14 @@ import type {
   ReverseTranslateRequest,
 } from './optimizer-protocol'
 
-interface OptimizerExports {
-  memory: WebAssembly.Memory
-  alloc: (length: number) => number
-  dealloc: (pointer: number, length: number) => void
-  process: (pointer: number, length: number) => number
-  reverse_translate: (pointer: number, length: number) => number
-  free_response: (pointer: number) => void
-}
-
-/** The module's JSON-in/JSON-out entry points. */
-type OptimizerCall = 'process' | 'reverse_translate'
-
 const scope = self as unknown as DedicatedWorkerGlobalScope
-
-/** The run currently executing, so progress can be attributed to it. */
-let activeRunId: string | null = null
-
-/** Set once the module is live, so the progress import can reach its memory. */
-let instantiated: OptimizerExports | null = null
 
 function post(message: OptimizerResponse) {
   scope.postMessage(message)
 }
 
-/**
- * Instantiate the module, supplying the progress callback it imports.
- *
- * Started once and shared by every request: instantiation costs a fetch and
- * a compile, and the module holds no state between runs.
- */
-const modulePromise: Promise<OptimizerExports> = (async () => {
-  const imports = {
-    env: {
-      // Called from inside the design. The label lives in the module's
-      // memory and is only valid during this call, so it is decoded now.
-      report_progress(
-        fraction: number,
-        stagePointer: number,
-        stageLength: number,
-      ) {
-        if (!activeRunId) return
-        const exports = instantiated
-        if (!exports) return
-        const bytes = new Uint8Array(
-          exports.memory.buffer,
-          stagePointer,
-          stageLength,
-        )
-        post({
-          type: 'progress',
-          runId: activeRunId,
-          fraction,
-          stage: new TextDecoder().decode(bytes),
-        })
-      },
-    },
-  }
-
+/** Fetch and instantiate the module, streaming where the server allows. */
+async function instantiateFromNetwork(imports: OptimizerImports) {
   // The digest makes each build a distinct URL: files under public/ carry no
   // content hash, so without it a browser could keep an older optimizer.
   const url = `${OPTIMIZER_WASM_PATH}?v=${OPTIMIZER_WASM_DIGEST}`
@@ -90,122 +43,67 @@ const modulePromise: Promise<OptimizerExports> = (async () => {
 
   // Compiles while downloading where the server sets the right content type;
   // the fallback covers hosts that do not.
-  let instance: WebAssembly.Instance
   try {
-    ;({ instance } = await WebAssembly.instantiateStreaming(response, imports))
+    return (await WebAssembly.instantiateStreaming(response, imports)).instance
   } catch {
     const bytes = await (await fetch(url)).arrayBuffer()
-    ;({ instance } = await WebAssembly.instantiate(bytes, imports))
-  }
-
-  instantiated = instance.exports as unknown as OptimizerExports
-  return instantiated
-})()
-
-/** Call one of the module's entry points, returning the raw JSON it produced. */
-function call(
-  exports: OptimizerExports,
-  entry: OptimizerCall,
-  request: unknown,
-): string {
-  const payload = new TextEncoder().encode(JSON.stringify(request))
-
-  const requestPointer = exports.alloc(payload.length)
-  if (requestPointer === 0) throw new Error('the optimizer ran out of memory')
-  new Uint8Array(exports.memory.buffer, requestPointer, payload.length).set(
-    payload,
-  )
-
-  let responsePointer = 0
-  try {
-    responsePointer = exports[entry](requestPointer, payload.length)
-    // Read the length and bytes only after the call: growing the heap
-    // detaches any view created earlier.
-    const length = new DataView(exports.memory.buffer).getUint32(
-      responsePointer,
-      true,
-    )
-    const bytes = new Uint8Array(
-      exports.memory.buffer,
-      responsePointer + 4,
-      length,
-    ).slice()
-    return new TextDecoder().decode(bytes)
-  } finally {
-    if (responsePointer !== 0) exports.free_response(responsePointer)
-    exports.dealloc(requestPointer, payload.length)
+    // Compile, then instantiate the Module: the bytes overload of
+    // `instantiate` resolves ambiguously against the Workers runtime types
+    // (worker-configuration.d.ts), whose empty `Module` an ArrayBuffer
+    // structurally matches.
+    return WebAssembly.instantiate(await WebAssembly.compile(bytes), imports)
   }
 }
 
-/** The `{ "error": "..." }` shape every entry point reports failures with. */
-function errorFrom(parsed: unknown): string | null {
-  if (
-    parsed &&
-    typeof parsed === 'object' &&
-    'error' in parsed &&
-    typeof (parsed as { error: unknown }).error === 'string'
-  ) {
-    return (parsed as { error: string }).error
-  }
-  return null
-}
+/**
+ * Started once and shared by every request: instantiation costs a fetch and
+ * a compile, and the module holds no state between runs.
+ */
+const optimizerPromise = loadOptimizer(instantiateFromNetwork)
 
 /** Report a module error, telling bad input apart from a real failure. */
 function postError(runId: string, message: string) {
+  post({ type: 'error', runId, code: optimizerErrorCode(message), message })
+}
+
+function postCrash(runId: string, error: unknown) {
   post({
     type: 'error',
     runId,
-    // The module's messages for bad input name the sequence, codons, the
-    // WGGW site, an amino acid or the species; anything else is a genuine
-    // failure of the optimizer.
-    code: /sequence|codons|WGGW|multiple of 3|amino acid|species/i.test(message)
-      ? 'invalid_input'
-      : 'backend',
-    message,
+    code: 'unknown',
+    message: error instanceof Error ? error.message : 'the optimizer failed',
   })
 }
 
 async function runDesign(request: OptimizerRequest) {
-  activeRunId = request.runId
   try {
-    const exports = await modulePromise
-    const parsed: unknown = JSON.parse(
-      call(exports, 'process', {
-        CDS: request.CDS,
-        name: request.name,
-        options: request.options,
-      }),
+    const optimizer = await optimizerPromise
+    const parsed = optimizer.design(
+      { CDS: request.CDS, name: request.name, options: request.options },
+      (fraction, stage) =>
+        post({ type: 'progress', runId: request.runId, fraction, stage }),
     )
 
-    const error = errorFrom(parsed)
+    const error = optimizerErrorOf(parsed)
     if (error !== null) {
       postError(request.runId, error)
       return
     }
     post({ type: 'result', runId: request.runId, result: parsed })
   } catch (error) {
-    post({
-      type: 'error',
-      runId: request.runId,
-      code: 'unknown',
-      message: error instanceof Error ? error.message : 'the optimizer failed',
-    })
-  } finally {
-    activeRunId = null
+    postCrash(request.runId, error)
   }
 }
 
 async function runReverseTranslation(request: ReverseTranslateRequest) {
   try {
-    const exports = await modulePromise
-    const parsed: unknown = JSON.parse(
-      call(exports, 'reverse_translate', {
-        protein: request.protein,
-        species: request.species,
-      }),
-    )
+    const optimizer = await optimizerPromise
+    const parsed = optimizer.reverseTranslate({
+      protein: request.protein,
+      species: request.species,
+    })
 
-    const error = errorFrom(parsed)
+    const error = optimizerErrorOf(parsed)
     if (error !== null) {
       postError(request.runId, error)
       return
@@ -220,12 +118,7 @@ async function runReverseTranslation(request: ReverseTranslateRequest) {
     }
     post({ type: 'reverse-translated', runId: request.runId, CDS: cds })
   } catch (error) {
-    post({
-      type: 'error',
-      runId: request.runId,
-      code: 'unknown',
-      message: error instanceof Error ? error.message : 'the optimizer failed',
-    })
+    postCrash(request.runId, error)
   }
 }
 

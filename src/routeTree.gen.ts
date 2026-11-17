@@ -14,6 +14,9 @@ import { Route as ArchitectureRouteImport } from './routes/architecture'
 import { Route as DesignToolRouteImport } from './routes/design-tool'
 import { Route as DiseaseAssociationsRouteImport } from './routes/disease-associations'
 import { Route as GenesRouteRouteImport } from './routes/genes/route'
+import { Route as ApiHealthRouteImport } from './routes/api/health'
+import { Route as ApiMcpRouteImport } from './routes/api/mcp'
+import { Route as ApiVersionRouteImport } from './routes/api/version'
 import { Route as GenesIndexRouteImport } from './routes/genes/index'
 import { Route as GenesSymbolRouteImport } from './routes/genes/$symbol'
 
@@ -42,6 +45,21 @@ const GenesRouteRoute = GenesRouteRouteImport.update({
   path: '/genes',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiHealthRoute = ApiHealthRouteImport.update({
+  id: '/api/health',
+  path: '/api/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiMcpRoute = ApiMcpRouteImport.update({
+  id: '/api/mcp',
+  path: '/api/mcp',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiVersionRoute = ApiVersionRouteImport.update({
+  id: '/api/version',
+  path: '/api/version',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const GenesIndexRoute = GenesIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -59,6 +77,9 @@ export interface FileRoutesByFullPath {
   '/architecture': typeof ArchitectureRoute
   '/design-tool': typeof DesignToolRoute
   '/disease-associations': typeof DiseaseAssociationsRoute
+  '/api/health': typeof ApiHealthRoute
+  '/api/mcp': typeof ApiMcpRoute
+  '/api/version': typeof ApiVersionRoute
   '/genes/$symbol': typeof GenesSymbolRoute
   '/genes/': typeof GenesIndexRoute
 }
@@ -67,6 +88,9 @@ export interface FileRoutesByTo {
   '/architecture': typeof ArchitectureRoute
   '/design-tool': typeof DesignToolRoute
   '/disease-associations': typeof DiseaseAssociationsRoute
+  '/api/health': typeof ApiHealthRoute
+  '/api/mcp': typeof ApiMcpRoute
+  '/api/version': typeof ApiVersionRoute
   '/genes/$symbol': typeof GenesSymbolRoute
   '/genes': typeof GenesIndexRoute
 }
@@ -77,6 +101,9 @@ export interface FileRoutesById {
   '/architecture': typeof ArchitectureRoute
   '/design-tool': typeof DesignToolRoute
   '/disease-associations': typeof DiseaseAssociationsRoute
+  '/api/health': typeof ApiHealthRoute
+  '/api/mcp': typeof ApiMcpRoute
+  '/api/version': typeof ApiVersionRoute
   '/genes/$symbol': typeof GenesSymbolRoute
   '/genes/': typeof GenesIndexRoute
 }
@@ -88,6 +115,9 @@ export interface FileRouteTypes {
     | '/architecture'
     | '/design-tool'
     | '/disease-associations'
+    | '/api/health'
+    | '/api/mcp'
+    | '/api/version'
     | '/genes/$symbol'
     | '/genes/'
   fileRoutesByTo: FileRoutesByTo
@@ -96,6 +126,9 @@ export interface FileRouteTypes {
     | '/architecture'
     | '/design-tool'
     | '/disease-associations'
+    | '/api/health'
+    | '/api/mcp'
+    | '/api/version'
     | '/genes/$symbol'
     | '/genes'
   id:
@@ -105,6 +138,9 @@ export interface FileRouteTypes {
     | '/architecture'
     | '/design-tool'
     | '/disease-associations'
+    | '/api/health'
+    | '/api/mcp'
+    | '/api/version'
     | '/genes/$symbol'
     | '/genes/'
   fileRoutesById: FileRoutesById
@@ -115,6 +151,9 @@ export interface RootRouteChildren {
   ArchitectureRoute: typeof ArchitectureRoute
   DesignToolRoute: typeof DesignToolRoute
   DiseaseAssociationsRoute: typeof DiseaseAssociationsRoute
+  ApiHealthRoute: typeof ApiHealthRoute
+  ApiMcpRoute: typeof ApiMcpRoute
+  ApiVersionRoute: typeof ApiVersionRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -154,6 +193,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GenesRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/health': {
+      id: '/api/health'
+      path: '/api/health'
+      fullPath: '/api/health'
+      preLoaderRoute: typeof ApiHealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/mcp': {
+      id: '/api/mcp'
+      path: '/api/mcp'
+      fullPath: '/api/mcp'
+      preLoaderRoute: typeof ApiMcpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/version': {
+      id: '/api/version'
+      path: '/api/version'
+      fullPath: '/api/version'
+      preLoaderRoute: typeof ApiVersionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/genes/': {
       id: '/genes/'
       path: '/'
@@ -191,6 +251,9 @@ const rootRouteChildren: RootRouteChildren = {
   ArchitectureRoute: ArchitectureRoute,
   DesignToolRoute: DesignToolRoute,
   DiseaseAssociationsRoute: DiseaseAssociationsRoute,
+  ApiHealthRoute: ApiHealthRoute,
+  ApiMcpRoute: ApiMcpRoute,
+  ApiVersionRoute: ApiVersionRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -3,82 +3,35 @@
 //
 //   node scripts/wasm-harness.mjs <module.wasm> <cases.json>
 //
-// The module exposes a four-function ABI (see the wasm_abi module in
-// src/lib.rs): alloc, dealloc, process, free_response. Strings cross as
-// UTF-8 bytes in the module's own memory, and the response is length-prefixed.
+// The ABI glue is the app's own (src/features/design-tool/workers/
+// optimizer-abi.ts, run through Node's type stripping), so the smoke test
+// exercises the same wrapper the browser and the Cloudflare Worker use rather
+// than a copy of it.
 
 import fs from 'node:fs'
+import { loadOptimizer } from '../src/features/design-tool/workers/optimizer-abi.ts'
 
 /**
- * Instantiate the module and wrap both of its entry points.
+ * Instantiate the module from disk and wrap both of its entry points.
  *
- * `design` and `reverseTranslate` each take a request object and return the
- * parsed JSON response; they share one framing convention (see the wasm_abi
- * modules in the crate), so one wrapper covers both.
+ * `onProgress`, when given, hears every design's progress ticks.
  */
 export async function loadModule(wasmPath, onProgress) {
-  let memoryRef = null
-  const imports = {
-    env: {
-      report_progress(fraction, stagePointer, stageLength) {
-        if (!onProgress || !memoryRef) return
-        const bytes = new Uint8Array(
-          memoryRef.buffer,
-          stagePointer,
-          stageLength,
-        )
-        onProgress(fraction, new TextDecoder().decode(bytes))
-      },
-    },
-  }
-  const { instance } = await WebAssembly.instantiate(
-    fs.readFileSync(wasmPath),
-    imports,
+  const optimizer = await loadOptimizer(
+    async (imports) =>
+      (await WebAssembly.instantiate(fs.readFileSync(wasmPath), imports))
+        .instance,
   )
-  const exports = instance.exports
-  memoryRef = exports.memory
-
-  /** Read and free a length-prefixed response. */
-  function readResponse(responsePtr) {
-    // The view is created after the call: growing the heap detaches old ones.
-    const length = new DataView(exports.memory.buffer).getUint32(
-      responsePtr,
-      true,
-    )
-    const bytes = new Uint8Array(
-      exports.memory.buffer,
-      responsePtr + 4,
-      length,
-    ).slice()
-    exports.free_response(responsePtr)
-    return JSON.parse(new TextDecoder().decode(bytes))
-  }
-
-  /** Call a JSON-in/JSON-out export. */
-  function call(name, request) {
-    const payload = new TextEncoder().encode(JSON.stringify(request))
-    const requestPtr = exports.alloc(payload.length)
-    new Uint8Array(exports.memory.buffer, requestPtr, payload.length).set(
-      payload,
-    )
-    try {
-      return readResponse(exports[name](requestPtr, payload.length))
-    } finally {
-      exports.dealloc(requestPtr, payload.length)
-    }
-  }
-
   return {
-    design: (request) => call('process', request),
-    reverseTranslate: (request) => call('reverse_translate', request),
-    /** What the module exposes, so a caller can check nothing crept in. */
-    exportNames: Object.keys(exports).sort(),
+    design: (request) => optimizer.design(request, onProgress),
+    reverseTranslate: optimizer.reverseTranslate,
+    exportNames: optimizer.exportNames,
   }
 }
 
 /** Just the design entry point, for callers that want nothing else. */
-export async function loadOptimizer(wasmPath, onProgress) {
-  const { design } = await loadModule(wasmPath, onProgress)
+async function loadDesign(wasmPath) {
+  const { design } = await loadModule(wasmPath)
   return design
 }
 
@@ -107,7 +60,7 @@ async function main() {
     console.error('usage: wasm-harness.mjs <module.wasm> <cases.json>')
     process.exit(2)
   }
-  const design = await loadOptimizer(wasmPath)
+  const design = await loadDesign(wasmPath)
   const cases = JSON.parse(fs.readFileSync(casesPath, 'utf8'))
 
   for (const testCase of cases) {
