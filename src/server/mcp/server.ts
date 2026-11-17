@@ -15,6 +15,11 @@ import {
   listWggwSites,
   pickDefaultWggwSite,
 } from '@/features/design-tool/utils/default-wggw-site'
+import {
+  CLOUD_DESIGN_MAX_BASES,
+  estimateCloudSeconds,
+  isCloudDesignId,
+} from '@/features/design-tool/types/cloud-design'
 import { buildJobParams } from '@/features/design-tool/utils/form-handler'
 import { searchCorpus } from '@/features/gene-search/corpus/client'
 import type { GeneCorpus } from '@/features/gene-search/corpus/client'
@@ -22,6 +27,8 @@ import { SEARCH_LIMITS } from '@/features/gene-search/types/search'
 import { isSpecies } from '@/lib/bio/species'
 import { createLogger } from '@/lib/logger'
 
+import { withinDesignBudget } from '../designs/rate-limit'
+import { readCloudDesign, submitCloudDesign } from '../designs/service'
 import type { ServerEnv } from '../env'
 import { mcpCopy } from './copy'
 import { designOnWorker, reverseTranslateOnWorker } from './optimizer'
@@ -38,8 +45,10 @@ import { designViewHtml } from './ui/design-view'
  * validation the form uses, so there is one definition of a valid design and
  * one ranking of a search, not two that can drift.
  *
- * A design runs inline, in this Worker, on the same WebAssembly module the
- * browser runs: `submit_design` returns the finished design in its own call.
+ * A design up to 12 kb runs inline, in this Worker, on the same WebAssembly
+ * module the browser runs: `submit_design` returns the finished design in its
+ * own call. A longer one, up to the cloud cap, is handed to the cloud-design
+ * Workflow (src/server/designs/) and read back with `get_design`.
  */
 
 const log = createLogger('mcp')
@@ -51,7 +60,7 @@ const DESIGN_VIEW_URI = 'ui://rej-studio/design-result.html'
 const MAX_SEARCH_RESULTS = SEARCH_LIMITS.page
 
 /**
- * The longest coding sequence this endpoint will design.
+ * The longest coding sequence `submit_design` designs inline, in the call.
  *
  * Not a Cloudflare limit — a Worker on the Paid plan gets 5 minutes of CPU.
  * It is the MCP client's own request timeout: the design holds the request
@@ -62,9 +71,9 @@ const MAX_SEARCH_RESULTS = SEARCH_LIMITS.page
  * 15 kb 32 s, 18 kb 48 s. 12,000 bases keeps a run around 20 seconds — well
  * inside a 60-second client timeout and the Worker's CPU budget, with room
  * for a slower isolate — and still covers the largest coding sequence in the
- * gene data (BRCA2, 10,257 bases). Longer sequences go to the web app, where
- * the same optimizer runs in the user's own tab with no request waiting on
- * it.
+ * gene data (BRCA2, 10,257 bases). Longer sequences, up to
+ * `CLOUD_DESIGN_MAX_BASES`, are handed to the cloud-design Workflow instead,
+ * so the agent gets a job id in the call and the result from `get_design`.
  */
 export const MAX_DESIGN_LENGTH = 12_000
 
@@ -332,9 +341,9 @@ export function createRejStudioMcpServer({
       (input.sequence_type ?? 'dna') === 'protein'
         ? presented.length * 3
         : presented.length
-    if (bases > MAX_DESIGN_LENGTH) {
+    if (bases > CLOUD_DESIGN_MAX_BASES) {
       return {
-        ...text(mcpCopy.submitDesign.tooLong(bases, MAX_DESIGN_LENGTH)),
+        ...text(mcpCopy.submitDesign.tooLong(bases, CLOUD_DESIGN_MAX_BASES)),
         isError: true as const,
       }
     }
@@ -347,6 +356,12 @@ export function createRejStudioMcpServer({
         ...text(mcpCopy.submitDesign.invalid(explainValidation(error))),
         isError: true as const,
       }
+    }
+
+    // Measured on the coding sequence itself, which for protein input is the
+    // reverse translation: that is what the optimizer's time depends on.
+    if (values.codingSequence.length > MAX_DESIGN_LENGTH) {
+      return handOff(values, input.seed)
     }
 
     const refused = await overBudget('designs', 'designs')
@@ -384,8 +399,91 @@ export function createRejStudioMcpServer({
     })
   }
 
-  // The view travels with the design, so it has to be registered on the tool
-  // that returns one. A host that cannot show a view gets the structured
+  /**
+   * A design too long to run in the call goes to the cloud-design Workflow,
+   * the same one the web app's "Run in the cloud" uses, owned by this token.
+   * An identical request already in the cloud is answered from there: if it
+   * has finished, with the result, as an inline design would be.
+   */
+  const handOff = async (values: FormValues, seed: number | undefined) => {
+    const owner = `mcp:${token.name}`
+    const outcome = await submitCloudDesign(env, {
+      values,
+      seed,
+      owner,
+      spend: () => withinDesignBudget(env, owner),
+    })
+    if (!outcome.ok) {
+      return {
+        ...text(
+          outcome.reason === 'rate_limited'
+            ? mcpCopy.rateLimited('cloud designs')
+            : outcome.reason === 'unavailable'
+              ? mcpCopy.submitDesign.cloudUnavailable(
+                  values.codingSequence.length,
+                  MAX_DESIGN_LENGTH,
+                )
+              : outcome.message,
+        ),
+        isError: true as const,
+      }
+    }
+    log.info('mcp submit_design handed off', {
+      caller: token.name,
+      bases: values.codingSequence.length,
+      id: outcome.id,
+      existing: outcome.existing,
+    })
+    if (outcome.status === 'completed' || outcome.status === 'failed') {
+      return cloudDesignResult(outcome.id)
+    }
+    const seconds = estimateCloudSeconds(values.codingSequence.length)
+    return data(mcpCopy.submitDesign.queued(values.name, outcome.id, seconds), {
+      job_id: outcome.id,
+      name: values.name,
+      status: outcome.status,
+      estimated_seconds: seconds,
+    })
+  }
+
+  /** A cloud design, as submit_design (hand-off) and get_design report it. */
+  const cloudDesignResult = async (id: string) => {
+    const design = await readCloudDesign(env, id)
+    if (!design) return notFound(mcpCopy.getDesign.none(id))
+    const name = design.name ?? id
+    if (design.status === 'completed' && design.result) {
+      return data(mcpCopy.getDesign.done(name), {
+        job_id: id,
+        name,
+        status: 'completed',
+        result: design.result,
+      })
+    }
+    if (design.status === 'failed') {
+      const error = design.error ?? {
+        code: 'unknown',
+        message: 'the design failed',
+        retriable: true,
+      }
+      return failed(mcpCopy.getDesign.failed(name, error.message), {
+        job_id: id,
+        name,
+        status: 'failed',
+        error: { code: error.code, message: error.message },
+      })
+    }
+    const seconds =
+      design.bases === undefined ? null : estimateCloudSeconds(design.bases)
+    return data(mcpCopy.getDesign.pending(id, design.status, seconds), {
+      job_id: id,
+      name,
+      status: design.status,
+      ...(seconds === null ? {} : { estimated_seconds: seconds }),
+    })
+  }
+
+  // The view travels with the design, so it has to be registered on the tools
+  // that return one. A host that cannot show a view gets the structured
   // result instead, which this tool returns either way.
   registerAppTool(
     server,
@@ -424,11 +522,11 @@ export function createRejStudioMcpServer({
     }),
   )
 
-  // Kept, rather than removed, for an agent working from a stale schema: it
-  // answers what became of the id it is holding instead of failing as an
-  // unknown tool. Slice 4b gives it real work — reading a cloud design by id
-  // — so it keeps its name, its input and its structured shape.
-  server.registerTool(
+  // Reads a cloud design by id: one submit_design handed off, or one the web
+  // app ran in the cloud. Ids are request hashes, so reading one needs no
+  // ownership check (src/server/designs/service.ts, "Who may do what").
+  registerAppTool(
+    server,
     'get_design',
     {
       title: mcpCopy.getDesign.title,
@@ -437,11 +535,14 @@ export function createRejStudioMcpServer({
         job_id: z.string().min(1).max(200).describe(mcpCopy.getDesign.jobId),
       }),
       annotations: { readOnlyHint: true },
+      _meta: { ui: { resourceUri: DESIGN_VIEW_URI } },
     },
     async ({ job_id }) => {
       const refused = await overBudget('reads', 'design lookups')
       if (refused) return refused
-      return notFound(mcpCopy.getDesign.inlineOnly(job_id))
+      const id = job_id.trim()
+      if (!isCloudDesignId(id)) return notFound(mcpCopy.getDesign.none(id))
+      return cloudDesignResult(id)
     },
   )
 

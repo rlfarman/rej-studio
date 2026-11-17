@@ -18,9 +18,11 @@ export const mcpCopy = {
     'sequence and splits it into 5-prime and 3-prime fragments.',
     '',
     'Use search_genes and get_gene to find a sequence to work from, then',
-    'submit_design to optimize it. submit_design runs the design while you',
-    'wait and returns the finished result in the same call; there is nothing',
-    'to poll for.',
+    'submit_design to optimize it. A coding sequence up to 12,000 bases is',
+    'designed while you wait and the finished result comes back in the same',
+    'call. A longer one, up to 45,000 bases, runs in the cloud: submit_design',
+    'returns a job_id at once, and get_design with that job_id returns the',
+    'result when it is done.',
     '',
     'These tools do only what the web app does. They will not invent a',
     'sequence, adjust an option to make a design work, or report a gene that',
@@ -87,15 +89,23 @@ export const mcpCopy = {
     title: 'Run a design',
     description:
       'Optimizes a coding sequence and splits it into 5-prime and 3-prime ' +
-      'fragments, and returns the finished design in this call: the optimized ' +
-      'sequence, both fragments, the split point and the objectives before ' +
-      'and after. The design runs here, so expect the call to take a few ' +
-      'seconds for a typical gene; there is no job to poll. The sequence is ' +
-      'validated exactly as the web form validates it, so a sequence or ' +
-      'option it would refuse is an error here too, not something adjusted ' +
-      'to fit. Designs are deterministic: the same sequence, options and seed ' +
-      'always produce the same design, so re-running one gains nothing and ' +
-      'costs the same compute.',
+      'fragments: the optimized sequence, both fragments, the split point and ' +
+      'the objectives before and after. How it comes back depends on the ' +
+      'length of the coding sequence (for protein input, the DNA it ' +
+      'reverse-translates to, three bases per residue): up to 12,000 bases, ' +
+      'the design runs during this call and the finished result is returned ' +
+      'in it (status "completed"; typically a few seconds, about 20 at ' +
+      '12,000). From 12,001 to 45,000 bases, it runs in the cloud and this ' +
+      'call returns at once with a job_id and status "queued" or "running" ' +
+      'plus an estimated_seconds; call get_design with that job_id after ' +
+      'about that long to get the result. Longer than 45,000 bases is ' +
+      'refused. The sequence is validated exactly as the web form validates ' +
+      'it, so a sequence or option it would refuse is an error here too, not ' +
+      'something adjusted to fit. Designs are deterministic: the same ' +
+      'sequence, options and seed always produce the same design. ' +
+      'Resubmitting a cloud design returns the same job_id rather than ' +
+      'running it again; resubmitting an inline one costs the same compute ' +
+      'again.',
     input: {
       name: 'A label for this design, used in the result and the export.',
       sequence:
@@ -124,6 +134,13 @@ export const mcpCopy = {
         'attached. There is nothing to poll for.'
       )
     },
+    queued(name: string, id: string, seconds: number): string {
+      return (
+        `Design "${name}" is longer than an inline design, so it is running ` +
+        `in the cloud as job ${id}. It should take about ${seconds} s; call ` +
+        'get_design with this job_id then to get the result.'
+      )
+    },
     invalid(reason: string): string {
       return `That design cannot be run: ${reason}`
     },
@@ -131,17 +148,26 @@ export const mcpCopy = {
       return `Design "${name}" failed: ${reason}`
     },
     /**
-     * The length refusal. It names the limit and sends the caller to the web
-     * app, where the same optimizer runs in their own tab with no request
-     * waiting on it.
+     * The length refusal: over the cloud cap, nothing here can design it.
+     * It names the limit and what the caller can do about it in this
+     * conversation.
      */
     tooLong(length: number, limit: number): string {
       return (
-        `That sequence is ${length.toLocaleString()} bases; this endpoint ` +
-        `designs up to ${limit.toLocaleString()}. A longer design takes more ` +
-        'time than an MCP client will hold a request open for. Run it in the ' +
-        'web app instead, where it runs in the browser with no request ' +
-        'waiting on it, or split the sequence into shorter coding sequences.'
+        `That sequence is ${length.toLocaleString('en-US')} bases; designs ` +
+        `run here up to ${limit.toLocaleString('en-US')} (longer ones need ` +
+        'more than the 5 minutes of compute a cloud design gets). Split it ' +
+        'into shorter coding sequences and design each one.'
+      )
+    },
+    /** A hand-off with no cloud designs on this deployment. */
+    cloudUnavailable(length: number, inline: number): string {
+      return (
+        `That sequence is ${length.toLocaleString('en-US')} bases. Designs ` +
+        `up to ${inline.toLocaleString('en-US')} bases run in the call; ` +
+        'longer ones run in the cloud, which this deployment does not have ' +
+        'set up. Split it into coding sequences of at most ' +
+        `${inline.toLocaleString('en-US')} bases.`
       )
     },
   },
@@ -149,17 +175,37 @@ export const mcpCopy = {
   getDesign: {
     title: 'Get a design',
     description:
-      'Looks up a design by id. Designs run inline on this deployment: ' +
-      'submit_design returns the finished result in its own call, and nothing ' +
-      'is stored afterwards, so there is no id to look up and nothing to ' +
-      'poll. Call submit_design and read its result.',
-    jobId: 'A design id from an older version of this endpoint.',
-    inlineOnly(id: string): string {
+      'Reads a cloud design by the job_id submit_design returned for a ' +
+      'sequence over 12,000 bases (or one a colleague ran in the cloud from ' +
+      'the web app and shared the id of). Returns status "queued" or ' +
+      '"running" with an estimated_seconds while it runs — call again after ' +
+      'about that long — then status "completed" with the same result ' +
+      'submit_design returns inline, or "failed" with the reason. Designs of ' +
+      '12,000 bases or fewer are returned by submit_design itself and have ' +
+      'no job_id to read. Cloud designs are kept for 30 days (7 if they ' +
+      'failed), then not found.',
+    jobId: 'The job_id submit_design returned.',
+    done(name: string): string {
+      return `Design "${name}" is done and the result is attached.`
+    },
+    failed(name: string, reason: string): string {
+      return `Design "${name}" failed: ${reason}`
+    },
+    pending(id: string, status: string, seconds: number | null): string {
       return (
-        `There is no stored design "${id}". This deployment runs designs ` +
-        'inline: submit_design returns the finished design in the same call, ' +
-        'so call it again rather than polling. If you have a design id from ' +
-        'this deployment, the result was already returned with it.'
+        `Design ${id} is ${status} in the cloud. ` +
+        (seconds === null
+          ? 'Call get_design again in a minute.'
+          : `It takes about ${seconds} s in all; call get_design again then.`)
+      )
+    },
+    none(id: string): string {
+      return (
+        `There is no cloud design "${id}". Ids come from submit_design for ` +
+        'sequences over 12,000 bases; shorter designs are returned by ' +
+        'submit_design directly and have no id. A cloud design is kept for ' +
+        '30 days (7 if it failed) or until its owner deletes it; after that, ' +
+        'submit it again.'
       )
     },
   },

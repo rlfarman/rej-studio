@@ -9,10 +9,12 @@ import {
   type JobHistoryEntry,
 } from '@/features/design-tool/hooks/use-job-history'
 import { ExpandableSidebarList } from '@/components/expandable-sidebar-list'
-import { Loader2, CircleAlert, X } from 'lucide-react'
+import { Loader2, CircleAlert, Cloud, X } from 'lucide-react'
+import { estimateCloudSeconds } from '@/features/design-tool/types/cloud-design'
 import { designToolCopy } from '../copy'
 
 const copy = designToolCopy.recentJobs
+const cloudCopy = designToolCopy.cloud
 
 function formatTimeAgo(dateString: string): string {
   const seconds = Math.floor(
@@ -71,8 +73,11 @@ export function RecentJobs({ onSelectJob }: RecentJobsProps) {
         const isError =
           entry.status === 'failed' || entry.status === 'cancelled'
         const progress = progressById[entry.id]
-        const subline =
-          entry.status === 'running'
+        const runningInCloud = entry.status === 'running' && !!entry.cloudId
+        const subline = runningInCloud
+          ? // No live progress from the cloud: an estimate from the length.
+            cloudCopy.recentSubline(estimateCloudSeconds(entry.sequenceLength))
+          : entry.status === 'running'
             ? (progress?.stage ??
               (progress?.progress !== undefined
                 ? `${Math.round(progress.progress * 100)}%`
@@ -87,7 +92,8 @@ export function RecentJobs({ onSelectJob }: RecentJobsProps) {
               className="h-auto items-start py-1.5 [&>svg]:size-3"
               onClick={() => onSelectJob?.(entry)}
             >
-              {entry.status === 'running' && (
+              {runningInCloud && <Cloud className="mt-0.5 flex-shrink-0" />}
+              {entry.status === 'running' && !runningInCloud && (
                 <Loader2 className="mt-0.5 flex-shrink-0 animate-spin" />
               )}
               {isError && (

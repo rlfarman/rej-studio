@@ -15,7 +15,10 @@ import { sectionPending } from './-components/layout/section-pending'
 import { searchText } from './-components/search-params'
 
 const searchSchema = z.object({
-  /** A design from this browser's history. */
+  /**
+   * A design: one from this browser's history, or a cloud design's id, which
+   * resolves for anyone signed in.
+   */
   job: searchText,
   /** An isoform whose coding sequence prefills a new design. */
   isoform: searchText,
@@ -72,6 +75,16 @@ function DesignToolPage() {
       resetScroll: false,
     })
 
+  // A cloud design's id resolves anywhere, so it goes in the URL: a reload
+  // reopens the run, and the link can be sent to a colleague. The form
+  // remounts on the new key and reads the run from history.
+  const showCloudJob = (cloudJobId: string) =>
+    void navigate({
+      search: (prev) => ({ ...prev, job: cloudJobId }),
+      replace: true,
+      resetScroll: false,
+    })
+
   if (!isoformId || !prefill) {
     return (
       <DesignToolLayout>
@@ -80,6 +93,7 @@ function DesignToolPage() {
           defaultJobId={jobId}
           draftKey="new"
           onLeaveJob={leaveJob}
+          onCloudJob={showCloudJob}
         />
       </DesignToolLayout>
     )
@@ -103,6 +117,7 @@ function DesignToolPage() {
         defaultJobId={jobId}
         draftKey={`iso-${isoformId}`}
         onLeaveJob={leaveJob}
+        onCloudJob={showCloudJob}
       />
     </DesignToolLayout>
   )

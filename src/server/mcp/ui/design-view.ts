@@ -160,19 +160,24 @@ const SCRIPT = `
   }
 
   /**
-   * A tool result with no design in it: one the optimizer refused, or a
-   * refusal before it ran. Designs run inline, so there is no "still
-   * running" state to show — but the view is attached to every
-   * submit_design call, not only the ones that produced a design, so it has
-   * to say which. Leaving "Waiting for the result…" under text that says the
-   * design failed is the one thing it must not do.
+   * A tool result with no design in it: one the optimizer refused, a refusal
+   * before it ran, or a long design handed to the cloud that is still queued
+   * or running (submit_design above 12 kb, or get_design before it is done).
+   * The view is attached to every such call, not only the ones that produced
+   * a design, so it has to say which. Leaving "Waiting for the result…" under
+   * text that says the design failed is the one thing it must not do.
    */
   function renderWithoutResult(payload) {
     const error = payload?.error?.message;
     const name = payload?.name;
 
     $("name").textContent = name ? "Design " + name : "Design";
-    if (payload?.status === "failed" || error) {
+    if (payload?.status === "queued" || payload?.status === "running") {
+      $("summary").textContent =
+        "Running in the cloud. get_design with job " +
+        (payload.job_id ?? "") +
+        " returns the result when it is done.";
+    } else if (payload?.status === "failed" || error) {
       $("summary").textContent = error
         ? "This design did not finish: " + error
         : "This design did not finish.";

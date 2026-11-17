@@ -6,13 +6,13 @@ REJ Studio is a bioinformatics web app for RNA End-Joining sequence design. User
 
 ## Migration status (read first)
 
-This branch (`feat/tanstack-start`) is mid-way through step 4 of `docs/cloudflare-migration.md`: **Next.js is replaced by TanStack Start in SPA mode, built with Vite+ and served by one Cloudflare Worker.** Slices 1 (toolchain and app shell), 2 (pages), 3 (deletions) and 4a (health, version and the MCP endpoint) are done; slice 4b (cloud designs on Workflows) and the cutover remain:
+This branch (`feat/tanstack-start`) is mid-way through step 4 of `docs/cloudflare-migration.md`: **Next.js is replaced by TanStack Start in SPA mode, built with Vite+ and served by one Cloudflare Worker.** Slices 1 (toolchain and app shell), 2 (pages), 3 (deletions), 4a (health, version and the MCP endpoint) and 4b (cloud designs on Workflows) are done; the cutover remains:
 
-- **Every page runs in the browser.** Gene search and the gene pages read the static corpus (`src/features/gene-search/corpus/`) through route loaders, designs run in the in-browser optimizer, and the disease-associations table is a static JSON asset. Nothing a page does reaches a server.
+- **Every page runs in the browser.** Gene search and the gene pages read the static corpus (`src/features/gene-search/corpus/`) through route loaders, designs run in the in-browser optimizer, and the disease-associations table is a static JSON asset. The one exception is opt-in: "Run in the cloud" in the design tool sends that design to `/api/designs`.
 - **There is no server code, no database and no Python.** Slice 3 deleted the server design path, the Postgres reads, Drizzle/Neon/PGlite, the auth helpers, Upstash, `trackEvent`, the `next` package, and the whole Python stack (FastAPI, Modal, `pyproject.toml`/`uv.lock`, Python and DB CI). The optimizer's DNAChisel parity fixtures are frozen (`rust/optimizer/tests/fixtures/README.md`), and the two data scripts that survived are TypeScript (`pnpm data:genes`, `pnpm data:associations`).
-- **The Worker answers three routes** (`src/routes/api/`, slice 4a): `/api/health`, `/api/version` and `/api/mcp`. Nothing a page does reaches them — they exist for uptime monitors and for agents.
+- **The Worker answers four routes** (`src/routes/api/`): `/api/health`, `/api/version` and `/api/mcp` (slice 4a), and `/api/designs` (slice 4b), plus the cloud-design Workflow. Only `/api/designs` is called by a page, and only when the person asks for a cloud run.
 - **Gone already:** the OG-image and job route handlers, the proxy and password gate, `/login`, sitemap, OG images, JSON-LD, generated icons, Sentry for Next, GTM and Web Vitals. Cloudflare Access replaces the gate and Web Analytics replaces GTM at cutover.
-- **Still to come:** cloud designs (`POST /api/designs` on Workflows, slice 4b), which `get_design` is shaped for.
+- **Still to come:** the cutover (`docs/cloudflare-migration.md`, "Cutover checklist"), which binds Access (`ACCESS_TEAM_DOMAIN`/`ACCESS_AUD`) and the buckets.
 - **Bridges marked `TODO(cutover)`** in code: the Sentry hook in `error-state.tsx`.
 
 ## Architecture
@@ -25,10 +25,10 @@ This branch (`feat/tanstack-start`) is mid-way through step 4 of `docs/cloudflar
 - **Gene data** — A static, versioned corpus of JSON files (`src/features/gene-search/corpus/`), read in the browser; no database. See [Gene data](#gene-data).
 - **shadcn/ui on Base UI** — Component library: shadcn's `base-rhea` style, built on Base UI (`@base-ui/react`), with lucide icons. UI primitives live in `src/components/ui/`. Config in `components.json`.
 - **Zustand** — Global client state (favorites, recent genes, species filter) lives in `src/stores/` (shared) or `src/features/<feature>/stores/` (feature-owned).
-- **Auth** — None for the pages. The shared-password gate (proxy, `/login`, sessions) was removed in slice 1; Cloudflare Access gates the hostname at cutover, with a bypass for `/api/mcp`, which carries its own bearer tokens.
+- **Auth** — None for the pages. The shared-password gate (proxy, `/login`, sessions) was removed in slice 1; Cloudflare Access gates the hostname at cutover, with a bypass for `/api/mcp`, which carries its own bearer tokens. `/api/designs` stays behind Access and also verifies the Access JWT itself, failing closed (see [Server routes](#server-routes)).
 - **Server routes** — Start server routes in `src/routes/api/`, each a thin wrapper that reads the Worker's bindings (`env` from `cloudflare:workers`) and calls a handler in `src/server/`. See [Server routes](#server-routes).
-- **MCP (agent access)** — `/api/mcp` is REJ Studio for a scientist's own agent: `search_genes`, `get_gene`, `submit_design`, `get_design`, plus an MCP Apps view so a finished design renders inside the chat host. A design runs **inline**, in the Worker, on the same `.wasm` the browser runs. See [Server routes](#server-routes).
-- **Designs** — `design-tool/hooks/use-job.ts` runs a design and owns its history entry; `api/browser-optimizer.ts` owns the worker and turns its messages into a `JobActionResult`; `workers/optimizer.worker.ts` loads the `.wasm` (`public/optimizer/`, cache-busted by the digest in `optimizer-asset.generated.ts`). The request and result shapes are in `types/optimizer-contract.ts`, mirroring `rust/optimizer/src/contract.rs`; the result is zod-parsed. The optimizer itself is `rust/` (see `rust/README.md`).
+- **MCP (agent access)** — `/api/mcp` is REJ Studio for a scientist's own agent: `search_genes`, `get_gene`, `submit_design`, `get_design`, plus an MCP Apps view so a finished design renders inside the chat host. A design up to 12 kb runs **inline**, in the Worker, on the same `.wasm` the browser runs; a longer one (to 45 kb) is handed to the cloud-design Workflow and read back with `get_design`. See [Server routes](#server-routes).
+- **Designs** — `design-tool/hooks/use-job.ts` runs a design and owns its history entry; `api/browser-optimizer.ts` owns the worker and turns its messages into a `JobActionResult`; `workers/optimizer.worker.ts` loads the `.wasm` (`public/optimizer/`, cache-busted by the digest in `optimizer-asset.generated.ts`). The request and result shapes are in `types/optimizer-contract.ts`, mirroring `rust/optimizer/src/contract.rs`; the result is zod-parsed. The optimizer itself is `rust/` (see `rust/README.md`). A cloud design (opt-in) runs the same `.wasm` in a Workflow instead: `api/cloud-designs.ts` talks to `/api/designs`, and `types/cloud-design.ts` is the contract the browser, the Worker and the MCP hand-off share.
 - **Run records** — results from the retired Python backend carry a `run_record`: the options as applied, a digest and length of the input sequence, the seed, the algorithm/DNAChisel/Python versions, the gene dataset the deployment was serving and the timing. Designs saved in a browser's history still hold them, so `runRecordSchema` (`types/optimizer-contract.ts`), `run-record-card.tsx` and `utils/methods-paragraph.ts` stay; the Rust optimizer does not emit one yet (work on the release branch adds it). `corpus_version` says what the deployment was serving, never where a sequence came from — nothing downstream can tell a pasted sequence from an isoform's own CDS, so neither the record nor the copy may imply it. `methods-paragraph.ts` turns the record into prose by a plain template; it may state only what the record contains. Seeded runs are reproducible: the optimizer echoes the seed it used, and the same sequence and options with that seed reproduce the design.
 - **Codons and protein input belong to the crate** — `rust/optimizer` owns reverse translation (`reverse_translate`) and the codon-usage tables. TypeScript has neither: the design form asks the optimizer worker for the DNA a protein translates to (`reverseTranslateInBrowser`, debounced by `useReverseTranslation`, which clears the previous DNA while a request is in flight), and the codon charts read `src/features/design-tool/utils/codon-preference.generated.ts`, emitted from the crate by `cargo run --example codon-tables` inside `pnpm wasm:build`. Only `reverse_translate` is exported from the `.wasm`; the data the charts and the parity test need is generated into committed files instead, because an export nothing in a page calls is bytes every visitor downloads. Rust CI regenerates both files and fails if they are stale. A protein request's seed is the DNA's: `derive_seed` hashes the coding sequence it is given, and reverse translation is pure, so the same protein and species always reproduce the design. WGGW split sites are the one thing still implemented twice — the gene pages rank them synchronously without loading the wasm — and `src/lib/bio/sequence-utils.wggw-parity.test.ts` holds the two to the same answers, comparing against `rust/optimizer/tests/fixtures/wggw_reference.json` (`cargo run --release --example wggw-reference`).
 - **Every chart has a table** — `src/components/chart-data-table.tsx` renders the numbers a chart was drawn from, behind a "View as table" toggle, with an optional CSV. A new chart gets one, built from the same rows the chart draws so the two cannot disagree. The toggle is remembered per `storageKey` for the session through `useSyncExternalStore`, so charts of a kind open together and the server never renders a state the client disagrees with; blocked storage falls back to memory, because a reader who asks for the numbers must get them.
@@ -37,28 +37,28 @@ This branch (`feat/tanstack-start`) is mid-way through step 4 of `docs/cloudflar
 
 ## Key Directories
 
-| Path                  | Purpose                                                                                                                                            |
-| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `src/routes/`         | TanStack Start file routes (`__root.tsx` is the shell), `api/` server routes, and route-private `-components/`                                     |
-| `src/server/`         | What the Worker runs: health, version, gene data, and the MCP endpoint (`mcp/`). Server-only; no page imports it                                   |
-| `src/router.tsx`      | Router factory (`getRouter`): pending/error components, scroll reset; `src/routeTree.gen.ts` is generated                                          |
-| `src/features/`       | Self-contained feature modules (`gene-search`, `design-tool`, `disease-associations`)                                                              |
-| `src/components/ui/`  | shadcn/ui primitives                                                                                                                               |
-| `src/components/bio/` | Bio-domain widgets (species select, diagnostic badges, DNA icon)                                                                                   |
-| `src/components/`     | Generic shared widgets (top-level)                                                                                                                 |
-| `src/lib/bio/`        | Bio-domain utilities (species types, FASTA, sequence utils, design suitability); codons live in the crate                                          |
-| `src/lib/`            | Generic shared utilities (`cn`, file download, logger, search shortcut) at the top level                                                           |
-| `src/hooks/`          | Generic shared React hooks                                                                                                                         |
-| `src/stores/`         | Shared Zustand stores (e.g. species filter)                                                                                                        |
-| `src/copy/`           | Shared user-facing copy (`errors.ts`, `common.ts`, `app.ts`). Feature copy lives in `src/features/<f>/copy.ts`                                     |
-| `src/styles/`         | `globals.css` (Tailwind via `@tailwindcss/vite`) and `fonts.css` (self-hosted Fontsource families)                                                 |
-| `vite.config.ts`      | Vite+ config: Cloudflare + Start + React Compiler plugins, and the `lint` block (rules in `lint/`)                                                 |
-| `wrangler.jsonc`      | The Worker: Start's server entry, SPA asset handling, observability                                                                                |
-| `lint/`               | Oxlint config (`config.ts`) and the project's JS-plugin rules (`rej-plugin.mjs`)                                                                   |
-| `rust/`               | The optimizer: Rust, built to WebAssembly for the browser (see `rust/README.md`); the reference implementation                                     |
-| `docs/`               | Longer-form plans and decisions (e.g. `cloudflare-migration.md`)                                                                                   |
-| `scripts/`            | Dev tooling — worktree bootstrap, gene data pipeline (`lib/` holds its Python-compatible CSV and JSON helpers), wasm build and checks, bundle size |
-| `.github/workflows/`  | CI (tests, build + bundle budgets, Storybook, zizmor), Rust CI, security, Lighthouse, conventions                                                  |
+| Path                  | Purpose                                                                                                                                                                    |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/routes/`         | TanStack Start file routes (`__root.tsx` is the shell), `api/` server routes, and route-private `-components/`                                                             |
+| `src/server/`         | What the Worker runs: its entry (`worker-entry.ts`), health, version, gene data, the MCP endpoint (`mcp/`) and cloud designs (`designs/`). Server-only; no page imports it |
+| `src/router.tsx`      | Router factory (`getRouter`): pending/error components, scroll reset; `src/routeTree.gen.ts` is generated                                                                  |
+| `src/features/`       | Self-contained feature modules (`gene-search`, `design-tool`, `disease-associations`)                                                                                      |
+| `src/components/ui/`  | shadcn/ui primitives                                                                                                                                                       |
+| `src/components/bio/` | Bio-domain widgets (species select, diagnostic badges, DNA icon)                                                                                                           |
+| `src/components/`     | Generic shared widgets (top-level)                                                                                                                                         |
+| `src/lib/bio/`        | Bio-domain utilities (species types, FASTA, sequence utils, design suitability); codons live in the crate                                                                  |
+| `src/lib/`            | Generic shared utilities (`cn`, file download, logger, search shortcut) at the top level                                                                                   |
+| `src/hooks/`          | Generic shared React hooks                                                                                                                                                 |
+| `src/stores/`         | Shared Zustand stores (e.g. species filter)                                                                                                                                |
+| `src/copy/`           | Shared user-facing copy (`errors.ts`, `common.ts`, `app.ts`). Feature copy lives in `src/features/<f>/copy.ts`                                                             |
+| `src/styles/`         | `globals.css` (Tailwind via `@tailwindcss/vite`) and `fonts.css` (self-hosted Fontsource families)                                                                         |
+| `vite.config.ts`      | Vite+ config: Cloudflare + Start + React Compiler plugins, and the `lint` block (rules in `lint/`)                                                                         |
+| `wrangler.jsonc`      | The Worker: Start's server entry, SPA asset handling, observability                                                                                                        |
+| `lint/`               | Oxlint config (`config.ts`) and the project's JS-plugin rules (`rej-plugin.mjs`)                                                                                           |
+| `rust/`               | The optimizer: Rust, built to WebAssembly for the browser (see `rust/README.md`); the reference implementation                                                             |
+| `docs/`               | Longer-form plans and decisions (e.g. `cloudflare-migration.md`)                                                                                                           |
+| `scripts/`            | Dev tooling — worktree bootstrap, gene data pipeline (`lib/` holds its Python-compatible CSV and JSON helpers), wasm build and checks, bundle size                         |
+| `.github/workflows/`  | CI (tests, build + bundle budgets, Storybook, zizmor), Rust CI, security, Lighthouse, conventions                                                                          |
 
 ## Development Commands
 
@@ -76,7 +76,7 @@ pnpm test         # vp test run: Vitest, one-shot
 pnpm test:watch   # Vitest in watch mode
 pnpm test:coverage # Vitest with coverage
 pnpm test:e2e     # Playwright against `vp dev` on :3000 (E2E_SERVER=preview for the build)
-pnpm test:worker  # The server routes in workerd, over HTTP (after pnpm build)
+pnpm test:worker  # The server routes and a cloud design in workerd, over HTTP (after pnpm build)
 pnpm cf:types     # Regenerate worker-configuration.d.ts from wrangler.jsonc
 pnpm verify       # lint + format:check + knip + type-check + test: what CI runs (pre-push gate)
 pnpm storybook    # Storybook dev server on :6006
@@ -102,7 +102,7 @@ pnpm wasm:smoke   # Run the committed .wasm through Node against the parity fixt
 - **Lint** — Oxlint only, configured in `lint/config.ts` (the `lint` block of `vite.config.ts`): React Hooks / React Compiler and jsx-a11y rules, plus type-aware rules (`no-floating-promises`, `no-base-to-string`, `no-misused-spread`, …) through `oxlint-tsgolint` on the TypeScript 7 compiler (`options.typeAware`). The two rules ESLint used to exist for run as Oxlint JS plugins: eslint-plugin-import's `no-restricted-paths` as `import-js/no-restricted-paths` (aliased, since `import` is Oxlint's native plugin; it resolves `@/…` through `eslint-import-resolver-typescript`), and the react-hook-form `watch()` guard as `rej/no-rhf-watch` (`lint/rej-plugin.mjs`). Keep `eslint-disable` comments using the original rule names (`react-hooks/...`); Oxlint honors them and `pnpm lint` reports stale ones. Spread on sequence strings is flagged by `no-misused-spread`: use `split('')`, which also counts the same UTF-16 units as `indexOf`.
 - **Format** — Oxfmt (`.oxfmtrc.json`), including Tailwind class sorting (`sortTailwindcss`, reading `src/styles/globals.css` and sorting inside `cn(…)`) and `package.json` key sorting. It replaced Prettier and `prettier-plugin-tailwindcss`. Oxfmt sorts more than Prettier did here: it sorts strings inside `cn(…)` everywhere, where Prettier only sorted `className` values, so the switch re-sorted classes in about 70 files once. Multi-line unions also get one member per line. Sorting needs `node_modules` installed (the stylesheet imports `tailwindcss`); without it, Oxfmt silently skips sorting. Ignores live in `ignorePatterns`, not a separate ignore file.
 - **React Compiler** — enabled through `@rolldown/plugin-babel` with `reactCompilerPreset()` from `@vitejs/plugin-react` (in `vite.config.ts` and Storybook's), so components get automatic memoization; prefer plain code over hand-written `useMemo`/`useCallback`.
-- **Cloudflare** — `wrangler` and `@cloudflare/vite-plugin`; `workerd` is allowed to run its install script (`allowBuilds`). No `nodejs_compat`: nothing on the Worker needs Node APIs yet. Bump `compatibility_date` in `wrangler.jsonc` deliberately.
+- **Cloudflare** — `wrangler` and `@cloudflare/vite-plugin`; `workerd` is allowed to run its install script (`allowBuilds`). No `nodejs_compat`: nothing on the Worker needs Node APIs (jose, which verifies Access JWTs, is WebCrypto and fetch only). `limits.cpu_ms` is 300,000 (5 minutes, the Paid maximum) for the inline MCP design and each Workflow step. Bump `compatibility_date` in `wrangler.jsonc` deliberately.
 - **Python** — none. The data scripts are TypeScript run with `tsx`; `scripts/lib/` reproduces the Python built-ins (`csv.DictReader`, `json.dumps`, `str.split`/`strip`, `int`) their Python originals relied on, so the output stayed byte-identical.
 - **Rust** — pinned by `rust/rust-toolchain.toml` (version, clippy, rustfmt, the `wasm32-unknown-unknown` target); `(cd rust && rustup toolchain install)` installs exactly that, and CI does the same. Only needed for `pnpm wasm:build`: the `.wasm` is committed. Lint levels live in `[workspace.lints]` in `rust/Cargo.toml`; CI adds `-D warnings` and also clippy-checks the wasm32 build, because the unsafe ABI in `rust/optimizer/src/lib.rs` is `cfg(target_arch = "wasm32")` and a native run never compiles it. Every `unsafe` block needs a `// SAFETY:` comment. Dependencies are policed by `rust/deny.toml` (`cargo deny check`, in the Security workflow).
 
@@ -127,13 +127,14 @@ User-facing strings (headings, descriptions, toasts, validation messages, error 
 - Tailwind CSS for styling. No CSS modules.
 - Corner radius follows the Rhea primitives by role. Use `Card` for cards (its radius is `rounded-[min(var(--radius-4xl),24px)]`). Bordered or filled panels inside a card are `rounded-2xl`, and boxes nested in a panel are `rounded-xl`. Controls (inputs, buttons, segmented-control tracks) are `rounded-2xl`; segments and hoverable rows are `rounded-xl`, dense table/chart rows `rounded-lg`. Chips, badges, icon-only buttons, progress bars and dots are `rounded-full`. Use `Skeleton` for loading bars. Inline text highlights and focus rings around plain text stay `rounded-sm`, and chart marks keep whatever they're drawn with.
 - **Design history lives in IndexedDB**, not localStorage: `src/features/design-tool/hooks/use-job-history.ts` persists through `idb-keyval` (`utils/job-history-storage.ts`, database `rej-studio-job-history`). It loads asynchronously, so gate UI on `useJobHistoryHydrated()` (or `await whenJobHistoryHydrated()` outside React) before treating history as empty; in tests, await it before writing to the store (`fake-indexeddb` is loaded in `src/test/setup.ts`). The store holds writes until the first load, migrates the old `rej-studio:job-history` localStorage key once, and falls back to localStorage, then memory. Small preferences (favorites, recents, species filter, sidebar state, form drafts) stay in localStorage on purpose.
+- **Cloud runs** are history entries keyed by the cloud id (`cloudId` set, `cloudDeleted` once its cloud copy is deleted). `CloudRuns` in the app shell polls running ones (`utils/cloud-poller.ts`: 2 s doubling to a minute, reset and polled at once on focus) and writes the answer into the entry, so the result is local from then on; the stale-running sweep skips them. They show an estimate from the sequence length (`estimateCloudSeconds`), never a progress bar: a Workflow step cannot report progress. A cloud id goes in the URL (`?job=`), and a `?job=` this browser has no entry for is read from the cloud.
 - **In-browser runs** hold a Web Lock (`rej-studio:browser-run:<id>`) and a `beforeunload` guard until they settle (`utils/browser-run-guard.ts`). `BrowserRuns` in the app shell marks running browser entries whose lock is free as interrupted and offers a re-run. Finish notifications (`utils/finish-notification.ts`) fire only while the page is hidden, and permission is requested only from the opt-in button.
 - Oxlint for linting (`lint/config.ts`) and Oxfmt for formatting (`.oxfmtrc.json`).
 - Lint enforces feature boundaries: features cannot import from each other or from the app layer (`src/routes`, `src/router.tsx`), and shared layers (`src/components`, `src/lib`, `src/hooks`, `src/stores`, `src/copy`) cannot import from features or app. Features are discovered from `src/features/` at config load.
 
 ## Server routes
 
-Three routes, in `src/routes/api/`. Each is a few lines: it reads the Worker's
+Four routes, in `src/routes/api/`. Each is a few lines: it reads the Worker's
 bindings (`env` from `cloudflare:workers`) and calls a handler in
 `src/server/`, which takes the env as a parameter so it can be tested without
 a Worker. `src/server/` is a server-only layer: no page or feature imports it,
@@ -143,7 +144,10 @@ same direction the app layer depends in.
 `wrangler.jsonc` sends every `/api/*` request to the Worker
 (`assets.run_worker_first`); everything else is a static asset or the SPA
 shell. Bindings are typed by `worker-configuration.d.ts`, generated by `pnpm
-cf:types` after a change to `wrangler.jsonc` and committed.
+cf:types` after a change to `wrangler.jsonc` and committed. The Worker's
+`main` is `src/server/worker-entry.ts`, which re-exports Start's handler
+(`@tanstack/react-start/server-entry`) beside the `DesignWorkflow` class,
+because a Workflow must be a named export of the main module.
 
 - **`/api/version`** — which build is answering: the app version, the commit
   (`GIT_COMMIT_SHA`, inlined at build time by `workerBuildInfo` in
@@ -159,6 +163,7 @@ cf:types` after a change to `wrangler.jsonc` and committed.
   `.github/workflows/uptime.yml` parses them (`{ status }` for liveness;
   `{ status, timestamp, version, checks }` with 503 when degraded).
 - **`/api/mcp`** — the MCP endpoint (below).
+- **`/api/designs`** — cloud designs (below).
 
 **Gene data on the Worker** (`src/server/gene-data.ts`) is the browser's own
 corpus code (`features/gene-search/corpus/`) behind a different reader, so an
@@ -187,10 +192,15 @@ auth), `server.ts` (the tools), `tokens.ts`, `rate-limit.ts`, `optimizer.ts`,
   budget. **With none configured the endpoint answers 503** — it is never
   open. Cloudflare Access bypasses this path at cutover, since an agent has no
   browser to sign in with.
-- **Designs run inline.** `submit_design` runs the same `.wasm` the browser
-  runs, in the Worker, and returns the finished design in the same call: there
-  is no job id and nothing to poll (`docs/cloudflare-migration.md`, "The job
-  model"). The ABI glue is shared, not copied
+- **Designs up to 12 kb run inline.** `submit_design` runs the same `.wasm`
+  the browser runs, in the Worker, and returns the finished design in the
+  same call (`docs/cloudflare-migration.md`, "The job model"). From 12 kb to
+  45 kb it hands the design to the cloud-design Workflow (owner
+  `mcp:<token name>`, budget `DESIGN_LIMITER`) and returns
+  `{ job_id, status: 'queued' | 'running', estimated_seconds }`; `get_design`
+  reads it back, with the design view attached. The tool descriptions say
+  exactly when each path happens, and nothing tells an agent to open the web
+  app. The ABI glue is shared, not copied
   (`features/design-tool/workers/optimizer-abi.ts`, used by the browser
   worker, the Worker and `scripts/wasm-harness.mjs`), and the module is a
   static `import … from '…/rej-optimizer.wasm'`, because workerd cannot
@@ -198,30 +208,86 @@ auth), `server.ts` (the tools), `tokens.ts`, `rate-limit.ts`, `optimizer.ts`,
   import into a CompiledWasm module in the Worker bundle. Input is validated
   by the form's own zod schema, so an agent cannot run a design the UI would
   have refused.
-- **The length guard.** `MAX_DESIGN_LENGTH` is 12,000 bases. The limit is the
-  MCP client's request timeout, not Cloudflare's CPU budget: measured with the
-  committed `.wasm`, 1.2 kb takes 0.2 s, 6 kb 4.8 s, **12 kb 21 s**, 15 kb
-  32 s, 18 kb 48 s. A longer sequence is refused with a message pointing at
-  the web app, where the same optimizer runs in the user's tab with no request
-  waiting on it. It covers the largest coding sequence in the gene data
-  (BRCA2, 10,257 bases).
-- **`get_design` stays.** With designs returned inline it has nothing to read,
-  so it answers that designs come back from `submit_design` — kinder to an
-  agent working from a stale schema than an unknown-tool error. Slice 4b gives
-  it real work (reading a cloud design by id), so it keeps its name, its input
-  and its structured shape.
+- **The length guard.** `MAX_DESIGN_LENGTH` (inline) is 12,000 bases. That
+  limit is the MCP client's request timeout, not Cloudflare's CPU budget:
+  measured with the committed `.wasm`, 1.2 kb takes 0.2 s, 6 kb 4.8 s,
+  **12 kb 21 s**, 15 kb 32 s, 18 kb 48 s. It covers the largest coding
+  sequence in the gene data (BRCA2, 10,257 bases). Over
+  `CLOUD_DESIGN_MAX_BASES` (45,000) a design is refused, with advice the
+  agent can follow in its conversation (split the sequence).
+- **`get_design`** reads a cloud design by id (a 64-hex request hash):
+  queued/running with an estimate, completed with the result, or failed with
+  the reason. Any other id gets a plain "not found" that says where ids come
+  from.
 - **Rate limits** are Cloudflare Rate Limiting bindings
   (`ratelimits` in `wrangler.jsonc`): 60 reads and 10 designs a minute, keyed
   by token name, because an agent holds one token across many requests. With
   no binding (tests, or any run outside workerd) there is no limit, said once
   per isolate.
 - **The design view** (`ui/design-view.ts`) is one self-contained HTML
-  document served as an MCP Apps resource, attached to `submit_design` because
-  that is what returns a design. It loads one script, the MCP Apps client, from
+  document served as an MCP Apps resource, attached to `submit_design` and
+  `get_design` because those return a design. It loads one script, the MCP Apps client, from
   this deployment — `/mcp/app-bridge.js`, emitted by the build (`mcpAppBridge`
   in `vite.config.ts`, no gitignored copy in `public/`) — and that origin is
   the only one its content security policy allows. A host without views shows
   the structured result, which the tool returns either way.
+
+### Cloud designs
+
+`/api/designs` runs a design in a Cloudflare Workflow, so the person can
+close the tab (`docs/cloudflare-migration.md`, "Plan: cloud designs").
+`src/server/designs/` holds it: `handler.ts` (HTTP), `access.ts` (identity),
+`service.ts` (submit, read, delete on the binding), `id.ts`, `run.ts` (the
+step's body), `workflow.ts` (the `DesignWorkflow` class), `rate-limit.ts` and
+`copy.ts`.
+
+- **`POST /api/designs`** takes `{ values, seed? }`: the design form's values,
+  validated by the form's own schema (`cloudDesignSubmitSchema`), so the
+  Worker refuses what the form refuses. Over 45,000 bases is 413
+  (`CLOUD_DESIGN_MAX_BASES`, also checked in the browser before sending).
+  Answers 202 `{ id, status, existing: false }` for a new run, 200 with
+  `existing: true` for one that already exists.
+- **The id is the request.** `id.ts` hashes the canonical optimizer request
+  (`{ CDS, name, options }` with sorted keys, pinned in its doc comment) with
+  the `.wasm` digest; an identical request finds the existing instance and
+  spends nothing. `create()`'s "already exists" is the race signal: the
+  loser answers with the winner's instance. A failed instance is re-run on
+  resubmission only if its failure was transient; a CPU-limit or optimizer
+  refusal would only repeat.
+- **`GET /api/designs/:id`** returns queued, running (with its inputs, read
+  from the instance's start event), completed (with the result and the form
+  values, so a `?job=` link restores both) or failed. No ownership check, on
+  purpose: the id is a hash of the input, so its holder already knows the
+  input, and the output is deterministic (the reasoning is written down in
+  `service.ts`).
+- **`DELETE /api/designs/:id`** is owner-only (403 otherwise; 409 while the
+  instance is still queued and its owner unreadable). It deletes the instance
+  and any R2 result.
+- **Identity fails closed** (`access.ts`). With `ACCESS_TEAM_DOMAIN` and
+  `ACCESS_AUD` set, the `Cf-Access-Jwt-Assertion` JWT must verify against the
+  team's JWKS (cached per isolate by jose), issuer, audience and expiry, and
+  carry an email, which becomes the owner. With neither set the API answers
+  503, except for `DEV_ACCESS_EMAIL`, a local-only stand-in honoured on
+  loopback hosts and logged loudly every time. Half-configured is 503.
+- **The Workflow** (`DESIGN_WORKFLOW`, `rej-studio-designs`) has one step,
+  `design`, with no step retries: the optimizer is deterministic, so a retry
+  would repeat a failure, and a CPU-limit kill would spend another 5 minutes
+  first. Its CPU is the Worker's `limits.cpu_ms` (300,000). Retention is set
+  per instance: 30 days after success, 7 after an error. A result whose
+  output would exceed ~900 KB goes to the `DESIGN_RESULTS` R2 bucket
+  (optional; without it such a design fails saying so), with the write
+  retried inside the step. A CPU-limit failure reads as "too large for the
+  cloud — run it in the browser" (`describeFailure`).
+- **Rate limit:** `DESIGN_LIMITER`, 3 a minute per owner, spent only when a
+  run starts. The binding counts over 10 or 60 seconds only, so the plan's
+  "about 20 an hour" became a per-minute limit.
+- **Locally,** `vp dev`, `vp preview` and `wrangler dev` run the Workflow in
+  workerd, with state in `.wrangler/state`. Local workerd runs the step on
+  the same thread as everything else, so while a design runs locally no other
+  request is answered, static assets included (a 12 kb design held a page
+  load for 22 s); deployed, the instance runs on its own and pages are
+  unaffected. A short design such as TP53 goes from POST to completed in
+  about 0.3 s.
 
 ## Gene data
 
@@ -251,6 +317,8 @@ Both data scripts are TypeScript ports of the Python originals and write byte-id
 - **Observability** — `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_*` (read at cutover, when Sentry for Start is wired).
 - **Optional features** — `VITE_MAINTENANCE_MESSAGE`, `VITE_ENABLE_MULTI_SPLIT` (both build-time).
 - **Worker secrets** — `MCP_TOKENS` (named bearer tokens for `/api/mcp`; unset means the endpoint answers 503) and `HEALTH_AUTH_TOKEN` (unlocks `/api/health`'s deep check). Not build variables and not in `.env`: they are read from the Worker's environment per request. Locally they go in `.dev.vars` (copy `.dev.vars.example`), which `vp dev`, `vp preview` and `wrangler dev` load; deployed, `wrangler secret put`.
+- **Worker vars for cloud designs** — `ACCESS_TEAM_DOMAIN` (`<team>.cloudflareaccess.com`) and `ACCESS_AUD` (the Access application's AUD tag), set together in `wrangler.jsonc` `vars` at cutover; without them `/api/designs` answers 503. `DEV_ACCESS_EMAIL` is local development only (`.dev.vars`, or the e2e server's environment): it stands in for an Access sign-in on loopback hosts and must never be set on a deployed Worker.
+- **Worker bindings** — `DESIGN_WORKFLOW` (the cloud-design Workflow), the `MCP_READ_LIMITER`/`MCP_DESIGN_LIMITER`/`DESIGN_LIMITER` rate limits and `ASSETS`; `GENE_DATA` and `DESIGN_RESULTS` (R2) are commented out in `wrangler.jsonc` until cutover and typed as optional in `src/server/env.ts`.
 - **Build-time** — `GIT_COMMIT_SHA` (inlined for `/api/version`; blank reports `unknown`).
 
 Nothing is needed to run the app: it reads the committed sample corpus and designs in the browser. A deployment for the lab needs `VITE_GENE_DATA_URL` at build time; Cloudflare Access (cutover) replaces the password gate.
@@ -265,9 +333,9 @@ This repo enforces [Conventional Commits](https://www.conventionalcommits.org/en
 
 Storybook (`@storybook/react-vite`) stories live next to their components (`*.stories.tsx`); CI builds them with `pnpm build-storybook --test`.
 
-**The server routes in workerd** (`pnpm test:worker`, `scripts/smoke-worker.mjs`, after `pnpm build`): the only place the Worker is tested as it is deployed. It starts `wrangler dev` on the build output on a free port and, over HTTP, checks `/api/version`, `/api/health` (anonymous and authorized), `/api/mcp`'s auth (no token, a wrong token, a good one), `tools/list`, `search_genes` and `get_gene` against the committed sample read through the assets binding, a real inline TP53 design and its reproduction from the same seed, the length guard, the stale-id answer from `get_design`, and the design view with its bridge asset. It is a script rather than a Vitest project because `@cloudflare/vitest-pool-workers` supports Vitest 4 while this repo runs Vite+'s Vitest 5 — the pool's proxy worker fails to start (`SyntaxError` out of `proxy.worker.ts`) — so there is no workerd pool to put these in yet. Everything that does not need workerd is in Vitest: the MCP tools against the sample corpus with the optimizer mocked (`src/server/mcp/server.test.ts`), the tokens, the health route and the design view's own script.
+**The server routes in workerd** (`pnpm test:worker`, `scripts/smoke-worker.mjs`, after `pnpm build`): the only place the Worker is tested as it is deployed. It starts `wrangler dev` on the build output on a free port and, over HTTP, checks `/api/version`, `/api/health` (anonymous and authorized), `/api/mcp`'s auth (no token, a wrong token, a good one), `tools/list`, `search_genes` and `get_gene` against the committed sample read through the assets binding, a real inline TP53 design and its reproduction from the same seed, the length guard, the unknown-id answer from `get_design`, the design view with its bridge asset, and a cloud design end to end: POST, polling to completed, a deduplicated resubmission, parity with the browser's design (the same `.wasm` through the browser's ABI glue in Node, same seed), the 45 kb cap, DELETE, and `submit_design`'s hand-off of a 12 kb sequence read back with `get_design`. It runs with its own `--persist-to` temp directory, so no Workflow state carries over between runs, and kills wrangler's whole process group. It is a script rather than a Vitest project because `@cloudflare/vitest-pool-workers` supports Vitest 4 while this repo runs Vite+'s Vitest 5 — the pool's proxy worker fails to start (`SyntaxError` out of `proxy.worker.ts`) — so there is no workerd pool to put these in yet. Everything that does not need workerd is in Vitest: the MCP tools against the sample corpus with the optimizer mocked (`src/server/mcp/server.test.ts`), the tokens, the health route, the design view's own script, and cloud designs against an in-memory Workflow binding (`src/server/designs/`: the id derivation, Access JWT verification with real RS256 tokens, the handlers, the step body and the failure mapping — the CPU limit cannot be hit locally, so its mapping is pinned there).
 
-[Playwright](https://playwright.dev) tests live in `e2e/` (`pnpm test:e2e`) and run against `vp dev` (or `E2E_SERVER=preview pnpm test:e2e` against the production build on workerd, after `pnpm build`). `shell.spec.ts` covers the shell: every route renders in it without console errors, the sidebar navigates and marks the active page, deep links and hard refreshes get the SPA shell, the theme persists, unknown URLs get not-found, and the optimizer `.wasm` is served as `application/wasm`. `smoke.spec.ts` covers the pages on the committed sample corpus (search, a gene page with its table and charts, the symbol-case redirect, an unknown gene, the isoform prefill, the disease-associations filters) and `browser-optimizer.spec.ts` designs in the browser with no backend request, history in IndexedDB and the walk-away guards. Expected text comes from the copy files; otherwise assert on roles and data. The server uses port 3000, so stop a local `pnpm dev` first; first-time setup needs `pnpm exec playwright install chromium`.
+[Playwright](https://playwright.dev) tests live in `e2e/` (`pnpm test:e2e`) and run against `vp dev` (or `E2E_SERVER=preview pnpm test:e2e` against the production build on workerd, after `pnpm build`). `shell.spec.ts` covers the shell: every route renders in it without console errors, the sidebar navigates and marks the active page, deep links and hard refreshes get the SPA shell, the theme persists, unknown URLs get not-found, and the optimizer `.wasm` is served as `application/wasm`. `smoke.spec.ts` covers the pages on the committed sample corpus (search, a gene page with its table and charts, the symbol-case redirect, an unknown gene, the isoform prefill, the disease-associations filters) `browser-optimizer.spec.ts` designs in the browser with no backend request, history in IndexedDB and the walk-away guards, and `cloud-design.spec.ts` runs a cloud design, closes the page, reopens it and finds the result, opens the link in a fresh context, and deletes it. The dev server runs Workflows; Playwright starts it with `DEV_ACCESS_EMAIL` and `CLOUDFLARE_INCLUDE_PROCESS_ENV=true` (which the Cloudflare plugin honours only when there is no `.dev.vars`). Expected text comes from the copy files; otherwise assert on roles and data. The server uses port 3000, so stop a local `pnpm dev` first; first-time setup needs `pnpm exec playwright install chromium`.
 
 ## Working in Git Worktrees
 

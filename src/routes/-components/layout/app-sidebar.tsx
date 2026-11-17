@@ -15,6 +15,7 @@ import { FavoriteGenes } from '@/features/gene-search/components/favorites-panel
 import { RecentGenes } from '@/features/gene-search/components/recent-genes-panel'
 import { RecentJobs } from '@/features/design-tool/components/recent-jobs-panel'
 import { BrowserRuns } from '@/features/design-tool/components/browser-runs'
+import { CloudRuns } from '@/features/design-tool/components/cloud-runs'
 import { SalkLogo } from './salk-logo'
 import { SidebarMenu } from './sidebar-menu'
 import {
@@ -122,6 +123,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       {/* Outside <Sidebar>: on phones the sidebar is a sheet whose content
           unmounts while closed. */}
       <BrowserRuns />
+      <CloudRuns />
       <Sidebar collapsible="icon" {...props}>
         <SidebarHeader>
           <SidebarMenuPrimitive>

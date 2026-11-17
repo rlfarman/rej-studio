@@ -47,6 +47,15 @@ export default defineConfig({
   ],
   webServer: {
     command: server,
+    // The local stand-in for a Cloudflare Access sign-in, so cloud designs
+    // (cloud-design.spec.ts) have an owner. The Cloudflare plugin passes the
+    // process environment to the Worker only with this flag and only when
+    // there is no .dev.vars, which is the case in CI and a fresh worktree;
+    // src/server/designs/access.ts honours it on localhost only.
+    env: {
+      CLOUDFLARE_INCLUDE_PROCESS_ENV: 'true',
+      DEV_ACCESS_EMAIL: 'e2e@example.com',
+    },
     url: `${baseURL}/favicon.svg`,
     reuseExistingServer: false,
     timeout: 180_000,

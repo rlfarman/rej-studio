@@ -159,13 +159,20 @@ export const processResultSchema = z.object({
 
 /**
  * Design failure codes: what the in-browser run reports (`invalid_input`,
- * `backend`), a cancelled run, a `?job=` this browser has no record of, and
- * anything else. An unrecognized code (one the retired server backends
- * wrote, in an imported backup) collapses to 'unknown' rather than failing
- * the whole parse.
+ * `backend`), a cloud design that ran out of CPU (`too_large`), a cancelled
+ * run, a `?job=` that resolves nowhere, and anything else. An unrecognized
+ * code (one the retired server backends wrote, in an imported backup)
+ * collapses to 'unknown' rather than failing the whole parse.
  */
 const jobErrorCodeSchema = z
-  .enum(['invalid_input', 'backend', 'cancelled', 'not_found', 'unknown'])
+  .enum([
+    'invalid_input',
+    'backend',
+    'too_large',
+    'cancelled',
+    'not_found',
+    'unknown',
+  ])
   .catch('unknown')
 
 export type JobErrorCode = z.infer<typeof jobErrorCodeSchema>

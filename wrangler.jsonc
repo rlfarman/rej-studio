@@ -1,13 +1,20 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "rej-studio",
-  // Start's server entry. In SPA mode it only answers requests that reach
-  // the Worker: the server routes under /api (src/routes/api/); pages are
-  // static assets.
-  "main": "@tanstack/react-start/server-entry",
+  // Start's server entry, re-exported with the cloud-design Workflow class
+  // (a Workflow must be a named export of the main module). In SPA mode it
+  // only answers requests that reach the Worker: the server routes under /api
+  // (src/routes/api/); pages are static assets.
+  "main": "./src/server/worker-entry.ts",
   "compatibility_date": "2026-11-16",
   // No nodejs_compat: nothing on the Worker needs Node APIs. The MCP SDK
-  // (@modelcontextprotocol/server) and zod run on web standards alone.
+  // (@modelcontextprotocol/server), zod and jose (Access JWTs) run on web
+  // standards alone.
+  //
+  // 5 minutes of CPU per invocation, the Paid plan's maximum: what an inline
+  // MCP design and a cloud-design Workflow step each get. Workflow steps have
+  // no CPU setting of their own; every step invocation gets this.
+  "limits": { "cpu_ms": 300000 },
   "assets": {
     // Every navigation that doesn't match a file gets the prerendered SPA
     // shell (index.html, see `spa.prerender.outputPath` in vite.config.ts),
@@ -39,6 +46,29 @@
       "namespace_id": "4102",
       "simple": { "limit": 10, "period": 60 },
     },
+    {
+      // Cloud designs, per owner (an Access email or mcp:<token>). The plan
+      // said ~20 an hour; a binding counts over 10 or 60 seconds only, so it
+      // is 3 a minute (src/server/designs/rate-limit.ts).
+      "name": "DESIGN_LIMITER",
+      "namespace_id": "4103",
+      "simple": { "limit": 3, "period": 60 },
+    },
+  ],
+  // Cloud designs you can close the tab on: one Workflow, defined in this
+  // Worker (src/server/designs/workflow.ts). Retention is set per instance
+  // when it is created (30 days after success, 7 after an error); the default
+  // here matches, for instances made any other way (the dashboard, wrangler).
+  "workflows": [
+    {
+      "name": "rej-studio-designs",
+      "binding": "DESIGN_WORKFLOW",
+      "class_name": "DesignWorkflow",
+      "default_retention": {
+        "success_retention": "30 days",
+        "error_retention": "7 days",
+      },
+    },
   ],
   // The corpus bucket is bound at cutover, once it exists on the lab's
   // account (docs/cloudflare-migration.md, cutover checklist). Until then the
@@ -47,9 +77,26 @@
   //
   // "r2_buckets": [{ "binding": "GENE_DATA", "bucket_name": "rej-studio-gene-data" }],
   //
+  // The cloud-design results bucket, for the rare result over ~900 KB (more
+  // than a Workflow step may return), is bound at cutover the same way. Give
+  // it a 30-day lifecycle rule to match the Workflow's retention. Until then
+  // such a design fails with a message saying so; it is typed as optional in
+  // src/server/env.ts.
+  //
+  // { "binding": "DESIGN_RESULTS", "bucket_name": "rej-studio-design-results" },
+  //
+  // Cloudflare Access, for /api/designs (src/server/designs/access.ts): the
+  // team domain and this application's AUD tag, set at cutover. Without them
+  // the cloud-designs API answers 503.
+  //
+  // "vars": {
+  //   "ACCESS_TEAM_DOMAIN": "<team>.cloudflareaccess.com",
+  //   "ACCESS_AUD": "<application AUD tag>",
+  // },
+  //
   // Secrets (never in this file): MCP_TOKENS and HEALTH_AUTH_TOKEN. Locally
   // they go in .dev.vars (see .dev.vars.example); deployed, `wrangler secret
-  // put`.
+  // put`. DEV_ACCESS_EMAIL is local-only and never set on a deployment.
   "observability": {
     "enabled": true,
   },
