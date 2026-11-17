@@ -151,8 +151,8 @@ scope.addEventListener('message', (event: MessageEvent<OptimizerRequest>) => {
         post({
           type: 'error',
           runId: request.runId,
-          // The module reports bad input in the same words the server does;
-          // anything else is a genuine failure of the optimizer.
+          // The module's messages for bad input name the sequence, codons or
+          // WGGW site; anything else is a genuine failure of the optimizer.
           code: /sequence|codons|WGGW|multiple of 3/i.test(message)
             ? 'invalid_input'
             : 'backend',

@@ -5,7 +5,6 @@ import { z } from 'zod'
 
 import { SpeciesIcon } from '@/components/bio/species-icon'
 import { PageTitle } from '@/components/page-title'
-import { TrackOnMount } from '@/components/track-on-mount'
 import { Badge } from '@/components/ui/badge'
 import { appCopy } from '@/copy/app'
 import {
@@ -154,15 +153,6 @@ function GenePage() {
           )}
         </div>
       </header>
-      <TrackOnMount
-        key={gene.id}
-        event={{
-          event: 'isoform_view',
-          gene_symbol: gene.symbol,
-          gene_id: gene.id,
-          isoform_count: isoforms.length,
-        }}
-      />
       <div className="flex flex-col gap-3">
         <IsoformSummary geneSymbol={gene.symbol} isoforms={isoforms} />
         <IsoformTable

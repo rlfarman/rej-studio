@@ -1,8 +1,8 @@
 //! Time the optimizer on real coding sequences.
 //!
-//! Prints one JSON line per case so the numbers can be compared directly with
-//! the Python and Pyodide runs (`scripts/bench-python.py` uses the same
-//! sequences, options and seed).
+//! Prints one JSON line per case. The Python and Pyodide timings in
+//! `rust/README.md` were taken on the same sequences, options and seed with a
+//! script deleted along with the Python backend.
 //!
 //!     cargo run --release --example bench -- cases.json
 

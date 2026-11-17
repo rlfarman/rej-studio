@@ -29,12 +29,12 @@ export function RunningPlaceholder({
   stage,
   progress,
 }: RunningPlaceholderProps) {
-  // Backend emits progress as a 0-1 fraction.
+  // The optimizer reports progress as a 0-1 fraction.
   const pct =
     typeof progress === 'number' && progress >= 0 && progress <= 1
       ? Math.round(progress * 100)
       : null
-  // Ease toward the target so the bar never feels frozen between polls, and
+  // Ease toward the target so the bar never feels frozen between ticks, and
   // always advances visibly when a new checkpoint lands.
   const displayedPct = useSmoothedProgress(pct)
   return (
@@ -82,9 +82,9 @@ export function RunningPlaceholder({
 }
 
 /**
- * Eases displayed percentage toward the target. Between polls (every ~2s) the
- * real progress value doesn't move, so we creep forward on an asymptotic curve
- * that caps a few points below the target. When a new poll lands, the
+ * Eases displayed percentage toward the target. Between progress ticks the
+ * real value doesn't move, so we creep forward on an asymptotic curve that
+ * caps a few points below the target. When a new tick lands, the
  * displayed value snaps to the new floor and resumes creeping.
  */
 function useSmoothedProgress(target: number | null): number | null {
@@ -92,7 +92,7 @@ function useSmoothedProgress(target: number | null): number | null {
   const [prevTarget, setPrevTarget] = React.useState(target)
   const targetRef = React.useRef(target)
 
-  // When a new poll lands, snap during render (React's "adjust state when a
+  // When a new tick lands, snap during render (React's "adjust state when a
   // prop changes" pattern): clear on null, jump up when the target moves past
   // the displayed value. The effect below only runs the creep animation.
   if (target !== prevTarget) {

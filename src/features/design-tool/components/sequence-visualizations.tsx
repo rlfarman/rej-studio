@@ -16,7 +16,7 @@ interface Props {
 }
 
 // Target GC band — the one the optimizer actually enforces
-// (EnforceGCContent(mini=0.35, maxi=0.60) in python/algorithm.py), so the
+// (EnforceGCContent(mini=0.35, maxi=0.60) in rust/optimizer/src/problem.rs), so the
 // chart can't promise a band the solver isn't aiming for.
 const TARGET_GC_MIN = GC_TARGET_MIN_PERCENT
 const TARGET_GC_MAX = GC_TARGET_MAX_PERCENT

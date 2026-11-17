@@ -201,7 +201,9 @@ describe('useJob resuming ?job= before the history loads', () => {
     await waitFor(() => expect(result.current.status).toBe('completed'))
     expect(result.current.isRestoring).toBe(false)
     // Never read as missing while the history was still loading.
-    expect(useJobHistory.getState().getRunningIds()).toEqual([])
+    expect(
+      useJobHistory.getState().entries.some((e) => e.status === 'running'),
+    ).toBe(false)
   })
 
   it('reads an unknown job as unavailable once loaded, writing nothing', async () => {

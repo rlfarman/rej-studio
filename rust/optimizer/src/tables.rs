@@ -1,10 +1,12 @@
 //! Genetic code and codon-usage tables.
 //!
-//! GENERATED FILE — do not edit by hand. Produced by
-//! scripts/gen-codon-tables.py from Biopython's Standard genetic code
-//! and python_codon_tables, so the optimizer carries its tables in the
-//! binary instead of fetching data files in the browser.
-//! tests/table_parity.rs checks this file still matches Python.
+//! FROZEN — do not edit. Generated once by scripts/gen-codon-tables.py
+//! (deleted with the Python backend; last at commit 8ea23611) from
+//! Biopython 1.88's Standard genetic code and python_codon_tables 0.1.18,
+//! as DNAChisel 3.2.16 used them, so the optimizer carries its tables in
+//! the binary instead of fetching data files in the browser. Nothing can
+//! regenerate it now; tests/table_parity.rs checks it against the frozen
+//! tests/fixtures/tables.json (see tests/fixtures/README.md).
 
 // A codon used exactly half the time has log frequency -0.693...,
 // which clippy reads as an approximation of LN_2. These are data,

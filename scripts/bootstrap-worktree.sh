@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # Bootstrap a git worktree so the app can run from it.
 #
-# Symlinks .env from the main repo, creates the Python environment with
-# `uv sync`, then runs pnpm install in the worktree (a real install, not a
-# node_modules symlink — Next 16's Turbopack rejects symlinks that point
-# outside the project root).
+# Symlinks .env from the main repo, then runs pnpm install in the worktree (a
+# real install, not a node_modules symlink: a worktree nested in the main
+# checkout must resolve its own copies, or tools like vp pick up the main
+# checkout's).
 # Safe to re-run: skips steps that are already done.
 set -euo pipefail
 
@@ -13,7 +13,10 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORKTREE_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 # Find the main repo: git worktree list's first entry is the main checkout.
-MAIN_REPO="$(git -C "$WORKTREE_ROOT" worktree list --porcelain | awk '/^worktree / {print $2; exit}')"
+# awk reads to the end rather than exiting early: with many worktrees an early
+# exit closes the pipe mid-write, and pipefail turns git's SIGPIPE into a
+# silent exit 141.
+MAIN_REPO="$(git -C "$WORKTREE_ROOT" worktree list --porcelain | awk '/^worktree / && !found {print $2; found = 1}')"
 
 if [ -z "$MAIN_REPO" ] || [ "$MAIN_REPO" = "$WORKTREE_ROOT" ]; then
   echo "This script must be run from a secondary worktree, not the main repo." >&2
@@ -33,25 +36,13 @@ if [ ! -e "$WORKTREE_ROOT/.env" ]; then
   fi
 fi
 
-# Python: uv creates the worktree's own .venv from uv.lock (runtime + dev
-# tools). uv's global cache hardlinks packages, so a per-worktree environment
-# is cheap and can't drift from the lock the way a shared venv symlink could.
-if command -v uv >/dev/null 2>&1; then
-  echo "Running uv sync..."
-  (cd "$WORKTREE_ROOT" && uv sync --frozen --quiet)
-  echo "Python environment ready at $WORKTREE_ROOT/.venv"
-else
-  echo "Warning: uv not found — install it (https://docs.astral.sh/uv/) to run the Python backend." >&2
-fi
-
-# Node deps: run a real install in the worktree. Symlinking node_modules from the
-# main repo breaks Next 16's Turbopack ("Symlink [project]/node_modules is invalid,
-# it points out of the filesystem root"). pnpm's global content-addressed store
-# makes --prefer-offline cheap — packages are hardlinked from ~/.pnpm-store rather
+# Node deps: run a real install in the worktree rather than symlinking the main
+# repo's node_modules. pnpm's global content-addressed store makes
+# --prefer-offline cheap — packages are hardlinked from ~/.pnpm-store rather
 # than re-downloaded.
 # Use a login shell so pnpm is on PATH in minimal-env contexts (e.g. Claude Code).
 if [ -L "$WORKTREE_ROOT/node_modules" ]; then
-  echo "Removing stale node_modules symlink (incompatible with Next 16 Turbopack)..."
+  echo "Removing stale node_modules symlink..."
   unlink "$WORKTREE_ROOT/node_modules"
 fi
 if [ ! -e "$WORKTREE_ROOT/node_modules" ]; then

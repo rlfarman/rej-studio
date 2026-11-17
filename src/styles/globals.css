@@ -380,7 +380,7 @@ body {
 }
 
 /* Indeterminate progress — sweeps a segment across the bar when we have
-   no numeric progress yet. Covers the gap before the first poll lands. */
+   no numeric progress yet. Covers the gap before the first tick lands. */
 @keyframes indeterminate {
   0% {
     transform: translateX(-100%);

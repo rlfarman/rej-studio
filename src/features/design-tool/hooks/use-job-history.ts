@@ -4,7 +4,7 @@ import { useSyncExternalStore } from 'react'
 import { create } from 'zustand'
 import { persist, type PersistStorage } from 'zustand/middleware'
 import type { ProcessResult } from '@/features/design-tool/types/process-result'
-import type { JobErrorCode } from '@/features/design-tool/types/backend-contract'
+import type { JobError } from '@/features/design-tool/types/job-result'
 import type { FormValues } from '@/features/design-tool/types/form-schema'
 import {
   createJobHistoryStorage,
@@ -21,39 +21,33 @@ const STORAGE_KEY = 'rej-studio:job-history'
 const PERSIST_VERSION = 0
 const MAX_ENTRIES = 50
 
-// Prefix for all seed-demo entries. Used by JobWatcher to skip polling the
-// backend for seeded running jobs (they have no backend counterpart), by
-// the user-data export to exclude seeded rows from backups, and by the
-// "Clear seed data" action to identify which entries to drop.
+// Prefix for all seed-demo entries. Used by the user-data export to exclude
+// seeded rows from backups, and by the "Clear seed data" action to identify
+// which entries to drop.
 const SEED_ID_PREFIX = 'seed-'
 
 export function isSeedId(id: string): boolean {
   return id.startsWith(SEED_ID_PREFIX)
 }
 
-// Prefix for designs computed in this browser. They have no backend job, so
-// JobWatcher must not poll them and they are never written to the URL — the
-// result exists only on this device.
+// Prefix for designs computed in this browser. They are never written to the
+// URL: the result exists only on this device.
 export const BROWSER_ID_PREFIX = 'browser-'
 
 export function isBrowserJobId(id: string): boolean {
   return id.startsWith(BROWSER_ID_PREFIX)
 }
-// How long to keep an entry stuck in the running state before we assume the
-// poll was abandoned (tab closed, Modal call_id expired) and drop it.
+// How long to keep an entry stuck in the running state before we assume its
+// run was abandoned and drop it. BrowserRuns settles interrupted browser runs
+// as soon as it sees them; this catches anything it never did.
 const STALE_RUNNING_TTL_MS = 24 * 60 * 60 * 1000
 
 export type JobStatus = 'running' | 'completed' | 'failed' | 'cancelled'
 
-// Structured failure shape, mirroring the backend contract. `code` lets the
-// UI branch (retry vs user-action) without string sniffing; `retriable` is
-// the backend's hint about whether the same inputs would likely succeed on
-// another attempt.
-export interface JobError {
-  code: JobErrorCode
-  message: string
-  retriable: boolean
-}
+// Structured failure shape (see job-result.ts). `code` lets the UI branch
+// (retry vs user-action) without string sniffing; `retriable` says whether
+// the same inputs would likely succeed on another attempt.
+export type { JobError }
 
 export interface JobHistoryEntry {
   id: string
@@ -104,7 +98,6 @@ interface JobHistoryState {
   clearHistory: () => void
   getEntry: (id: string) => JobHistoryEntry | null
   getProgress: (id: string) => JobProgress | undefined
-  getRunningIds: () => string[]
 }
 
 // ── Hydration ────────────────────────────────────────────────────────────
@@ -151,9 +144,9 @@ export function whenJobHistoryHydrated(): Promise<void> {
 }
 
 // Cross-tab sync: after a write lands, tell the other tabs to reload, so
-// every open tab converges on the same history. Without this, a job submitted
-// in Tab A is invisible to Tab B, and two tabs can race to poll and clobber
-// each other's writes. IndexedDB has no equivalent of localStorage's
+// every open tab converges on the same history. Without this, a design run
+// in Tab A is invisible to Tab B, and two tabs can clobber each other's
+// writes. IndexedDB has no equivalent of localStorage's
 // `storage` event; a channel never delivers to its own sender.
 const channel =
   typeof window !== 'undefined' && typeof BroadcastChannel !== 'undefined'
@@ -200,7 +193,7 @@ function finishHydration(entries: JobHistoryEntry[], error: unknown) {
   for (const listener of hydrationListeners) listener()
 }
 
-/** Drops running entries older than the TTL: tabs closed mid-poll. */
+/** Drops running entries older than the TTL: runs that never settled. */
 function sweepStaleRunning(entries: JobHistoryEntry[]): JobHistoryEntry[] {
   const cutoff = Date.now() - STALE_RUNNING_TTL_MS
   return entries.filter(
@@ -293,11 +286,6 @@ export const useJobHistory = create<JobHistoryState>()(
       getEntry: (id) => get().entries.find((e) => e.id === id) ?? null,
 
       getProgress: (id) => get().progressById[id],
-
-      getRunningIds: () =>
-        get()
-          .entries.filter((e) => e.status === 'running')
-          .map((e) => e.id),
     }),
     {
       name: STORAGE_KEY,
@@ -308,8 +296,8 @@ export const useJobHistory = create<JobHistoryState>()(
         const raw = (persisted as Partial<PersistedJobHistory> | undefined)
           ?.entries
         const saved = Array.isArray(raw) ? raw : []
-        // Orphans come from tabs closed mid-poll; after the TTL we assume
-        // they'll never resolve.
+        // Orphans come from runs that never settled; after the TTL we assume
+        // they never will.
         const fresh = sweepStaleRunning(saved)
         // Another tab wrote, and its copy is the latest.
         if (hydrated) return { ...current, entries: fresh }

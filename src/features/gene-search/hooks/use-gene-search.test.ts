@@ -12,14 +12,6 @@ vi.mock('@/stores/species-store', () => ({
   }),
 }))
 
-// Track analytics calls
-const { mockTrackEvent } = vi.hoisted(() => ({
-  mockTrackEvent: vi.fn(),
-}))
-vi.mock('@/lib/analytics', () => ({
-  trackEvent: mockTrackEvent,
-}))
-
 // The corpus the hook searches: a stub by default, so each test controls
 // what a search returns; the last tests use the committed sample.
 const { mockGetBrowserCorpus } = vi.hoisted(() => ({
@@ -261,39 +253,6 @@ describe('useGeneSearch', () => {
       result.current.retry()
     })
     await waitFor(() => expect(mockSearch).toHaveBeenCalledTimes(2))
-  })
-
-  // --- Analytics ---
-
-  it('tracks search event once per unique query', async () => {
-    mockSearch.mockImplementation(async () => page([gene]))
-    const { result } = renderHook(
-      () => useGeneSearch({ defaultQuery: 'BRCA1' }),
-      { wrapper: createWrapper() },
-    )
-    await waitFor(() => expect(result.current.hasSearched).toBe(true))
-
-    const searchEvents = mockTrackEvent.mock.calls.filter(
-      (c: any[]) => c[0]?.event === 'gene_search',
-    )
-    expect(searchEvents).toHaveLength(1)
-    expect(searchEvents[0][0]).toEqual(
-      expect.objectContaining({ query: 'BRCA1', result_count: 1 }),
-    )
-  })
-
-  it("doesn't track a failed search", async () => {
-    mockSearch.mockRejectedValue(new Error('down'))
-    const { result } = renderHook(
-      () => useGeneSearch({ defaultQuery: 'BRCA1' }),
-      { wrapper: createWrapper() },
-    )
-    await waitFor(() =>
-      expect(result.current.error).toBe('Search failed. Please try again.'),
-    )
-    expect(
-      mockTrackEvent.mock.calls.some((c) => c[0]?.event === 'gene_search'),
-    ).toBe(false)
   })
 
   // --- In-browser search (static corpus) ---

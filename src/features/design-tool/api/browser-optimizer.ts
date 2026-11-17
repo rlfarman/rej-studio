@@ -1,8 +1,7 @@
 // Client for the in-browser optimizer.
 //
-// Owns the worker's lifecycle and turns its messages into the same
-// `JobActionResult` the server backends return, so `useJob` treats a browser
-// design like any other.
+// Owns the worker's lifecycle and turns its messages into a
+// `JobActionResult` for `useJob`.
 //
 // The worker is created on first use and kept for the session: loading and
 // compiling the WebAssembly costs about as much as a short design, and
@@ -16,9 +15,9 @@ import {
 } from '@/features/design-tool/types/job-result'
 import {
   processResultSchema,
-  type BackendProcessResult,
   type ProcessOptions,
-} from '@/features/design-tool/types/backend-contract'
+} from '@/features/design-tool/types/optimizer-contract'
+import type { ProcessResult } from '@/features/design-tool/types/process-result'
 import type {
   OptimizerRequest,
   OptimizerResponse,
@@ -62,7 +61,8 @@ export function terminateOptimizerWorker() {
  * True when this browser can run the optimizer.
  *
  * Both are needed: a Worker to keep the tab responsive, and WebAssembly to
- * run the optimizer at all. Callers fall back to the server when false.
+ * run the optimizer at all. Without them a run fails with a message saying
+ * why.
  */
 export function browserOptimizerSupported(): boolean {
   return typeof Worker !== 'undefined' && typeof WebAssembly !== 'undefined'
@@ -89,13 +89,12 @@ export function warmOptimizerWorker() {
 /**
  * Design a sequence in this browser.
  *
- * Resolves with the same shape the server backends return, so callers need no
- * branch of their own. Never rejects: a failure comes back as `ok: false`.
+ * Never rejects: a failure comes back as `ok: false`.
  */
 export function designInBrowser(
   params: BrowserDesignParams,
   { onProgress, signal }: BrowserDesignCallbacks = {},
-): Promise<JobActionResult<BackendProcessResult>> {
+): Promise<JobActionResult<ProcessResult>> {
   if (!browserOptimizerSupported()) {
     return Promise.resolve(jobError('backend', copy.browserUnsupported, false))
   }
@@ -109,7 +108,7 @@ export function designInBrowser(
     let settled = false
     const active = getWorker()
 
-    const finish = (outcome: JobActionResult<BackendProcessResult>) => {
+    const finish = (outcome: JobActionResult<ProcessResult>) => {
       if (settled) return
       settled = true
       active.removeEventListener('message', onMessage)
@@ -142,8 +141,8 @@ export function designInBrowser(
         return
       }
 
-      // Parse with the same schema the server responses go through, so a
-      // mismatch surfaces here rather than three layers into the UI.
+      // Parse the result, so a contract mismatch surfaces here rather than
+      // three layers into the UI.
       const parsed = processResultSchema.safeParse(message.result)
       if (!parsed.success) {
         log.error('unexpected browser optimizer result', parsed.error)

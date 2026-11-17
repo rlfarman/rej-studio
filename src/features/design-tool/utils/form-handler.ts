@@ -1,4 +1,5 @@
 import type { FormValues, SelectedWggwSite } from '../types/form-schema'
+import type { ProcessOptions } from '../types/optimizer-contract'
 
 export function buildJobParams(values: FormValues) {
   return {
@@ -8,13 +9,12 @@ export function buildJobParams(values: FormValues) {
   }
 }
 
-function buildOptions(values: FormValues) {
+function buildOptions(values: FormValues): ProcessOptions {
   const positions = values.spliceJunctionPositions
   const sites = values.selectedWggwSites
-  // One split point, always: the optimizer answers 422 for more than one
-  // (ProcessOptions in python/index.py takes a single `split_point`), and
-  // the form schema blocks a second position before we get here. Emitting
-  // array forms would have shipped a payload the backend rejects.
+  // One split point, always: the optimizer takes a single `split_point`
+  // (ProcessOptions in rust/optimizer/src/contract.rs), and the form schema
+  // blocks a second position before we get here.
   return {
     codon_optimize: values.species !== 'none' ? values.species : null,
     codon_optimize_weight: values.codonOptimizeWeight,
@@ -34,7 +34,7 @@ function buildOptions(values: FormValues) {
   }
 }
 
-/** Uppercase DNA, with RNA U folded back to T — the backend expects DNA. */
+/** Uppercase DNA, with RNA U folded back to T — the optimizer expects DNA. */
 function toDna(codon: string) {
   return codon.toUpperCase().replace(/U/g, 'T')
 }
@@ -46,8 +46,8 @@ function serializeSelectedWggwSite(site: SelectedWggwSite | null | undefined) {
     motif_start: site.motifStart,
     motif: toDna(site.motif),
     hexamer_start: site.hexamerStart,
-    // Tuples, not arrays: the backend's SelectedWggwSite takes exactly two
-    // codons either side of the junction (see python/index.py).
+    // Tuples, not arrays: the optimizer's SelectedWggwSiteInput takes exactly
+    // two codons either side of the junction (rust/optimizer/src/contract.rs).
     original_codons: site.originalCodons.map(toDna) as [string, string],
     new_codons: site.newCodons.map(toDna) as [string, string],
     new_hexamer: toDna(site.newHexamer),

@@ -1,12 +1,11 @@
 /**
- * Structured logger. In production (server-side), outputs newline-delimited
- * JSON for log aggregation (Axiom, Datadog, CloudWatch, etc.). In development
- * or in the browser, falls back to human-readable console output.
+ * Scoped console logger. Everything runs in the browser, so this is a thin
+ * prefix over `console`; error boundaries report through it.
  *
  * Usage:
- *   const log = createLogger('job-watcher')
- *   log.info('polling started', { jobId })
- *   log.error('poll failed', err, { jobId })
+ *   const log = createLogger('browser-optimizer')
+ *   log.warn('could not pre-warm the optimizer worker', { reason })
+ *   log.error('optimizer worker crashed', err)
  */
 
 type LogLevel = 'debug' | 'info' | 'warn' | 'error'
@@ -22,37 +21,7 @@ interface Logger {
   error: (msg: string, error?: unknown, context?: LogContext) => void
 }
 
-const isServer = typeof window === 'undefined'
-const isProduction = process.env.NODE_ENV === 'production'
-const useJson = isServer && isProduction
-
-function emitJson(
-  level: LogLevel,
-  scope: string,
-  msg: string,
-  extras: LogContext,
-) {
-  const entry = JSON.stringify({
-    level,
-    scope,
-    msg,
-    ts: new Date().toISOString(),
-    ...(Object.keys(extras).length > 0 ? extras : undefined),
-  })
-  // Use stderr for warn/error so log routers can split by stream
-  if (level === 'error' || level === 'warn') {
-    process.stderr.write(entry + '\n')
-  } else {
-    process.stdout.write(entry + '\n')
-  }
-}
-
-function emitConsole(
-  level: LogLevel,
-  scope: string,
-  msg: string,
-  extras: LogContext,
-) {
+function emit(level: LogLevel, scope: string, msg: string, extras: LogContext) {
   const prefix = `[${scope}]`
   const payload = Object.keys(extras).length > 0 ? extras : undefined
   const sink = console[level] ?? console.log
@@ -62,8 +31,6 @@ function emitConsole(
     sink(prefix, msg)
   }
 }
-
-const emit = useJson ? emitJson : emitConsole
 
 function serializeError(error: unknown): LogContext {
   if (error instanceof Error) {

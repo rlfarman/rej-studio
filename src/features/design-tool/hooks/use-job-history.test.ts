@@ -95,12 +95,6 @@ describe('useJobHistory', () => {
     expect(useJobHistory.getState().getProgress('job-1')).toBeUndefined()
   })
 
-  it('lists running ids for best-effort cancellation', () => {
-    useJobHistory.getState().upsertEntry({ id: 'job-1', status: 'running' })
-    useJobHistory.getState().upsertEntry({ id: 'job-2', status: 'completed' })
-    expect(useJobHistory.getState().getRunningIds()).toEqual(['job-1'])
-  })
-
   it.each(['QuotaExceededError', 'UnknownError', 'InvalidStateError'])(
     'survives a storage write that throws %s',
     async (name) => {
