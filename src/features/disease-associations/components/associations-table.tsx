@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import { Link } from '@tanstack/react-router'
 import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
@@ -20,23 +20,13 @@ type Props = {
   rows: AssociationRow[]
   sortKey: SortKey
   sortDir: SortDir
-  /**
-   * Current search params serialized as a plain object, so the sortable
-   * header links can preserve query + inheritance filters when toggling sort.
-   */
-  searchParams: Record<string, string | string[] | undefined>
 }
 
 const cdsFormatter = new Intl.NumberFormat('en-US')
 const { largestCdsUnit, largestCdsUnknown, phenotypeUnknown } =
   diseaseAssociationsCopy.table
 
-export function AssociationsTable({
-  rows,
-  sortKey,
-  sortDir,
-  searchParams,
-}: Props) {
+export function AssociationsTable({ rows, sortKey, sortDir }: Props) {
   if (rows.length === 0) {
     return (
       <Card>
@@ -47,7 +37,7 @@ export function AssociationsTable({
     )
   }
 
-  const headerProps = { sortKey, sortDir, searchParams }
+  const headerProps = { sortKey, sortDir }
 
   // TableCell defaults to nowrap, which let a 120-character gene name push
   // the numeric columns off-screen. Text columns wrap (names clamp to two
@@ -107,7 +97,9 @@ export function AssociationsTable({
               <TableRow key={row.symbol} className="bg-card hover:bg-muted/25">
                 <TableCell className="px-4 py-2.5">
                   <Link
-                    href={`/genes/${encodeURIComponent(row.symbol)}?species=human`}
+                    to="/genes/$symbol"
+                    params={{ symbol: row.symbol }}
+                    search={{ species: 'human' }}
                     className="-my-1 inline-flex min-h-6 items-center py-1 font-mono font-semibold text-primary hover:underline"
                     aria-label={diseaseAssociationsCopy.table.viewGeneAria(
                       row.symbol,
@@ -211,7 +203,6 @@ type SortHeaderProps = {
   align?: 'left' | 'right'
   sortKey: SortKey
   sortDir: SortDir
-  searchParams: Record<string, string | string[] | undefined>
 }
 
 function SortHeader({
@@ -221,7 +212,6 @@ function SortHeader({
   align = 'left',
   sortKey,
   sortDir,
-  searchParams,
 }: SortHeaderProps) {
   const active = sortKey === column
   const nextDir: SortDir = active
@@ -230,26 +220,16 @@ function SortHeader({
       : 'asc'
     : defaultDir
 
-  const params = new URLSearchParams()
-  for (const [key, value] of Object.entries(searchParams)) {
-    if (key === 'sort' || key === 'dir') continue
-    if (value == null) continue
-    if (Array.isArray(value)) {
-      for (const v of value) params.append(key, v)
-    } else {
-      params.set(key, value)
-    }
-  }
-  params.set('sort', column)
-  params.set('dir', nextDir)
-  const href = `?${params.toString()}`
-
   const Icon = active ? (sortDir === 'asc' ? ArrowUp : ArrowDown) : ArrowUpDown
 
   return (
     <Link
-      href={href}
-      scroll={false}
+      // Keeps the filters and the page; replaces the history entry, since a
+      // re-sort isn't a step to go back through.
+      from="/disease-associations"
+      to="."
+      search={(prev) => ({ ...prev, sort: column, dir: nextDir })}
+      resetScroll={false}
       replace
       className={cn(
         '-my-2 inline-flex min-h-9 items-center gap-1 py-2 transition-colors hover:text-foreground',
