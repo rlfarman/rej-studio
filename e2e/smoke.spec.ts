@@ -357,3 +357,19 @@ test('the home page search opens a gene from the keyboard', async ({
   await input.press('Enter')
   await expect(page).toHaveURL(/\/genes\/TP53/)
 })
+
+test('a term hint opens on click, closes on Escape, and leaves the table alone', async ({
+  page,
+}) => {
+  // An infotip is a popover, not a tooltip, so a tap (a click here) opens it
+  // on touch devices too.
+  await page.goto('/genes/TP53', { waitUntil: 'networkidle' })
+  const { gc } = geneSearchCopy.terms
+  const hint = page.getByRole('button', {
+    name: geneSearchCopy.terms.termAria(gc.label),
+  })
+  await hint.first().click()
+  await expect(page.getByText(gc.hint)).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(page.getByText(gc.hint)).toBeHidden()
+})
