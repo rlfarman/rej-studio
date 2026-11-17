@@ -1,5 +1,3 @@
-'use client'
-
 import { Activity, GitCompareArrows } from 'lucide-react'
 import { type ChartCell, ChartDataTable } from '@/components/chart-data-table'
 import { designToolCopy } from '../copy'

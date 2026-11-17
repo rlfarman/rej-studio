@@ -29,7 +29,7 @@ vi.mock('@/features/design-tool/utils/cloud-runs', async (importOriginal) => ({
   >()),
   cloudRuns: { start: vi.fn(), wake: vi.fn(), stop: vi.fn() },
 }))
-vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
+vi.mock('@/lib/toast', () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
 
 import {
   deleteCloudDesign,

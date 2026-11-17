@@ -1,5 +1,3 @@
-'use client'
-
 import { Link } from '@tanstack/react-router'
 import { Grid3x3 } from 'lucide-react'
 import { cn } from '@/lib/utils'

@@ -16,6 +16,9 @@ export const geneSearchCopy = {
     kbdHintPrefix: 'Press',
   },
   command: {
+    dialogTitle: 'Search genes',
+    dialogDescription:
+      'Find a gene by symbol, name or Ensembl ID, or reopen a recent gene or design job.',
     inputAria: 'Search genes',
     // Search covers symbols, names, aliases and Ensembl IDs, not diseases;
     // the no-match state points disease searches at the associations page.

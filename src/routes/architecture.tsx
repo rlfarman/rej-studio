@@ -145,7 +145,7 @@ function ArchitecturePage() {
               tech="TanStack Query + static index"
               details={[
                 'Index fetched once per load',
-                'Postgres-equivalent ranking',
+                'MiniSearch: prefix + typo matching',
                 'Favorites & recents (localStorage)',
               ]}
             />
@@ -160,7 +160,7 @@ function ArchitecturePage() {
             />
             <ServiceBox
               name="Shared UI"
-              tech="shadcn/ui + Base UI + cmdk"
+              tech="shadcn/ui + Base UI"
               details={[
                 'Dark/light theme',
                 'Command palette (⌘K)',
@@ -216,8 +216,8 @@ function ArchitecturePage() {
               name="Worker"
               tech="TanStack Start server entry"
               details={[
-                'Renders the shell for unmatched requests',
-                'Server routes arrive in slice 4',
+                'Gate first, then pages or /api',
+                'MCP endpoint and cloud-design Workflow',
               ]}
               variant="muted"
             />

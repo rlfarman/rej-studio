@@ -1,6 +1,10 @@
-'use client'
-import { useRef, useState, useTransition } from 'react'
-import { CommandDialog } from '@/components/ui/command'
+import { useState, useTransition } from 'react'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { useNavigate } from '@tanstack/react-router'
 import { useGeneSearch } from '@/features/gene-search/hooks/use-gene-search'
 import { usePrefetchGeneIndex } from '@/features/gene-search/hooks/use-prefetch-gene-index'
@@ -16,7 +20,7 @@ import type {
   SavedGene,
   JobSearchItem,
 } from '@/features/gene-search/types/domain-types'
-import { useSearchShortcut } from '@/hooks/use-search-shortcut'
+import { geneSearchCopy } from '../copy'
 
 interface GeneSearchProperties {
   defaultQuery?: string
@@ -95,40 +99,42 @@ export function GeneSearch({
     void navigate(searchPageLink(query.trim(), species))
   }
 
-  // On a page with the inline search (home), ⌘K focuses that box. The
-  // dialog's ⌘K belongs to GeneSearchTrigger, which is always mounted.
-  const inputRef = useRef<HTMLInputElement>(null)
-  useSearchShortcut(() => {
-    if (isDialog) return
-    inputRef.current?.focus()
-    inputRef.current?.select()
-  })
-
   if (isDialog) {
     return (
       <>
-        <CommandDialog open={isOpen} onOpenChange={setIsOpen}>
-          <GeneSearchCommand
-            query={query}
-            setQuery={setQuery}
-            searchNow={searchNow}
-            hasSearched={hasSearched}
-            searchResults={searchResults}
-            truncated={truncated}
-            suggestions={suggestions}
-            onSeeAll={handleSeeAll}
-            isLoading={isLoading}
-            setIsOpen={setIsOpen}
-            handleSelect={handleSelect}
-            error={error}
-            retry={retry}
-            recentGenes={recentGenes}
-            favoriteGenes={favoriteGenes}
-            jobs={jobs}
-            handleSelectJob={handleSelectJob}
-            pendingGene={pendingGene}
-          />
-        </CommandDialog>
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+          <DialogContent
+            className="top-1/3 translate-y-0 overflow-hidden rounded-3xl! p-0"
+            showCloseButton={false}
+          >
+            <DialogTitle className="sr-only">
+              {geneSearchCopy.command.dialogTitle}
+            </DialogTitle>
+            <DialogDescription className="sr-only">
+              {geneSearchCopy.command.dialogDescription}
+            </DialogDescription>
+            <GeneSearchCommand
+              query={query}
+              setQuery={setQuery}
+              searchNow={searchNow}
+              hasSearched={hasSearched}
+              searchResults={searchResults}
+              truncated={truncated}
+              suggestions={suggestions}
+              onSeeAll={handleSeeAll}
+              isLoading={isLoading}
+              setIsOpen={setIsOpen}
+              handleSelect={handleSelect}
+              error={error}
+              retry={retry}
+              recentGenes={recentGenes}
+              favoriteGenes={favoriteGenes}
+              jobs={jobs}
+              handleSelectJob={handleSelectJob}
+              pendingGene={pendingGene}
+            />
+          </DialogContent>
+        </Dialog>
       </>
     )
   }
@@ -138,8 +144,7 @@ export function GeneSearch({
       query={query}
       setQuery={setQuery}
       searchNow={searchNow}
-      inputRef={inputRef}
-      shortcutHint
+      onPage
       hasSearched={hasSearched}
       searchResults={searchResults}
       truncated={truncated}

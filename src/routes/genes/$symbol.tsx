@@ -7,10 +7,7 @@ import { SpeciesIcon } from '@/components/bio/species-icon'
 import { PageTitle } from '@/components/page-title'
 import { Badge } from '@/components/ui/badge'
 import { appCopy } from '@/copy/app'
-import {
-  associationsQuery,
-  findBySymbol,
-} from '@/features/disease-associations/api/associations'
+import { associationQuery } from '@/features/disease-associations/api/associations'
 import { GenePhenotypes } from '@/features/disease-associations/components/gene-phenotypes'
 import { geneSearchCopy } from '@/features/gene-search/copy'
 import { FavoriteGeneButton } from '@/features/gene-search/components/favorite-gene-button'
@@ -48,13 +45,13 @@ export const Route = createFileRoute('/genes/$symbol')({
     params: { symbol },
     deps: { species },
   }) => {
-    // Disease associations are human-only. They load alongside the gene
-    // (unless the URL already says mouse), so a human gene page doesn't
-    // wait for them afterwards; a mouse gene leaves them in the cache.
+    // Disease associations are human-only. This gene's row loads alongside
+    // the gene (unless the URL already says mouse), so a human gene page
+    // doesn't wait for it afterwards; a mouse gene leaves it in the cache.
     const associations =
       species === 'mouse'
         ? null
-        : queryClient.ensureQueryData(associationsQuery)
+        : queryClient.ensureQueryData(associationQuery(symbol))
     // Phenotypes are extra: the gene page shows without them.
     associations?.catch(noop)
 
@@ -105,18 +102,14 @@ function GenePage() {
   // Associations are human-only; key by symbol since a gene may resolve to
   // mouse and mouse Ensembl IDs (ENSMUSG...) never match human data.
   const isHuman = data?.gene.species === 'human'
-  const { data: associations } = useQuery({
-    ...associationsQuery,
+  const { data: associationRow } = useQuery({
+    ...associationQuery(data?.gene.symbol ?? symbol),
     enabled: isHuman,
   })
   // The loader has thrown notFound() for a missing gene.
   if (!data) return null
 
   const { gene, isoforms, identity } = data
-  const associationRow =
-    isHuman && associations
-      ? findBySymbol(associations, gene.symbol)
-      : undefined
 
   return (
     <div className="flex flex-col gap-5 pt-6 md:pt-10">
@@ -162,7 +155,7 @@ function GenePage() {
           highlightedIsoformId={highlightedIsoformId}
         />
       </div>
-      {associationRow && <GenePhenotypes row={associationRow} />}
+      {isHuman && associationRow && <GenePhenotypes row={associationRow} />}
       <div className="mt-6 flex min-w-0 flex-col gap-10">
         <IsoformLengthChart isoforms={isoforms} />
         {/* The matrix grows with isoform count; scroll it rather than let

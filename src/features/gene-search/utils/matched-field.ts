@@ -9,9 +9,9 @@ export type MatchedField =
 
 /**
  * Which field a search result most likely matched on, so a result row can
- * say why it's there. Search ranks with full-text search plus substring
- * matches over symbol, name, and alternate symbols; anything not visibly in
- * the symbol or name matched an alias or a full-text term.
+ * say why it's there. Search matches words and prefixes of the symbol, name
+ * and alternate symbols (and, failing that, close spellings); anything not
+ * visibly in the symbol or name matched an alias or a close spelling.
  */
 export function matchedField(
   gene: { symbol: string; name: string; matchedIsoformId?: string },

@@ -1,8 +1,9 @@
 import { queryOptions } from '@tanstack/react-query'
 // The table is ~376 KB of JSON (built offline by `pnpm data:associations`).
-// `?url` makes it a hashed static asset, fetched by the pages that need it
-// and cached for good, rather than code in every bundle that imports this.
+// `?url` makes it a hashed static asset, fetched by the explorer and cached
+// for good, rather than code in every bundle that imports this.
 import associationsUrl from '../data/associations.json?url'
+import { fetchAssociation } from '../shards'
 import type {
   AssociationData,
   AssociationRow,
@@ -10,7 +11,7 @@ import type {
 } from '../types'
 import { INHERITANCE_BUCKETS } from '../types'
 
-/** Every disease-associated gene, for the explorer and the gene pages. */
+/** Every disease-associated gene, for the explorer. */
 export const associationsQuery = queryOptions({
   queryKey: ['disease-associations'],
   queryFn: async (): Promise<AssociationRow[]> => {
@@ -24,12 +25,22 @@ export const associationsQuery = queryOptions({
   staleTime: Infinity,
 })
 
-export function findBySymbol(
-  rows: AssociationRow[],
-  symbol: string,
-): AssociationRow | undefined {
-  const q = symbol.toUpperCase()
-  return rows.find((r) => r.symbol.toUpperCase() === q)
+/**
+ * One gene's row (null if it has none), for the gene pages: a file of a few
+ * KB for its symbol prefix rather than the whole table (see ../shards.ts).
+ * Keyed by the uppercased symbol, so /genes/tp53, which the page redirects
+ * to /genes/TP53, starts the same request the page then reads.
+ */
+export function associationQuery(symbol: string) {
+  const key = symbol.toUpperCase()
+  return queryOptions({
+    queryKey: ['disease-associations', 'gene', key],
+    queryFn: () =>
+      fetchAssociation(key, import.meta.env.REJ_ASSOCIATION_SHARDS),
+    // Built with the app, under a content-named path: it can't change while
+    // the page is open.
+    staleTime: Infinity,
+  })
 }
 
 /**

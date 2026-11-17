@@ -1,5 +1,3 @@
-'use client'
-
 import { useSyncExternalStore, useState } from 'react'
 import { X, TriangleAlert } from 'lucide-react'
 import { cn } from '@/lib/utils'

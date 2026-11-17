@@ -64,18 +64,36 @@ test('/genes searches the corpus in the browser', async ({ page }) => {
   expect(serverCalls).toEqual([])
 })
 
-test('/genes suggests other symbols when nothing matches', async ({ page }) => {
-  await page.goto('/genes?q=BRCA3')
+test('/genes forgives a typo in a symbol', async ({ page }) => {
+  await page.goto('/genes?q=brac1')
+  const results = page.getByRole('region', {
+    name: geneSearchCopy.searchPage.resultsTitle('brac1'),
+  })
   await expect(
-    page.getByText(geneSearchCopy.results.noMatches('BRCA3')),
+    results.getByRole('link', { name: /BRCA1/ }).first(),
   ).toBeVisible()
-  await expect(page.getByRole('link', { name: 'BRCA1' }).first()).toBeVisible()
+})
+
+test('/genes suggests other symbols when nothing matches', async ({ page }) => {
+  // The sample corpus has EGFR for human only.
+  await page.goto('/genes?q=EGFR&species=mouse')
+  await expect(
+    page.getByText(geneSearchCopy.results.noMatchesInSpecies('EGFR', 'Mouse')),
+  ).toBeVisible()
+  await expect(page.getByRole('link', { name: 'EGFR' }).first()).toBeVisible()
 })
 
 test('a gene page lists its isoforms, with charts and phenotypes', async ({
   page,
 }) => {
   const serverCalls = watchForServerCalls(page)
+  const associationFiles: string[] = []
+  page.on('request', (request) => {
+    const { pathname } = new URL(request.url())
+    // Data only: under `vp dev` the feature's modules match too.
+    if (request.resourceType() === 'fetch' && pathname.includes('associations'))
+      associationFiles.push(pathname)
+  })
   await page.goto('/genes/BRCA1?species=human')
   await expect(
     page.getByRole('heading', { level: 1, name: 'BRCA1' }),
@@ -107,6 +125,10 @@ test('a gene page lists its isoforms, with charts and phenotypes', async ({
       name: diseaseAssociationsCopy.geneDetail.heading,
     }),
   ).toBeVisible()
+  // From BRCA1's own small file, not the explorer's whole table.
+  expect(associationFiles).toEqual([
+    expect.stringMatching(/^\/assets\/disease-associations\/\w+\/br\.json$/),
+  ])
 
   // A chart row opens that isoform in the table, without a page load.
   const firstRowLink = page.locator('a[href*="#isoform-row-"]').first()
@@ -266,4 +288,88 @@ test('a build on the sample corpus says so', async ({ page }) => {
   await expect(
     page.getByText(appCopy.sampleData.label(SAMPLE_GENE_COUNT)),
   ).toBeVisible()
+})
+
+test('highlighting a palette result preloads its gene page', async ({
+  page,
+}) => {
+  // Palette rows open with navigate(), so the router's hover preloading
+  // doesn't apply; the palette preloads the highlighted gene itself.
+  // Prerendered: the button is on screen before the page hydrates, and a
+  // click before then does nothing. Wait for the app to be live.
+  await page.goto('/design-tool', { waitUntil: 'networkidle' })
+  await page.getByRole('button', { name: geneSearchCopy.trigger.label }).click()
+  await page.getByRole('dialog').getByRole('combobox').fill('tp53')
+  const geneFile = page.waitForRequest((request) =>
+    new URL(request.url()).pathname.endsWith('/genes/ENSG00000141510.json'),
+  )
+  await page.getByRole('option', { name: /TP53/ }).first().hover()
+  await geneFile
+  await page.keyboard.press('Enter')
+  await expect(page).toHaveURL(/\/genes\/TP53/)
+})
+
+test('the palette works from the keyboard', async ({ page }) => {
+  await page.goto('/design-tool', { waitUntil: 'networkidle' })
+  const trigger = page.getByRole('button', {
+    name: geneSearchCopy.trigger.label,
+  })
+  await trigger.click()
+  const dialog = page.getByRole('dialog')
+  const input = dialog.getByRole('combobox', {
+    name: geneSearchCopy.command.inputAria,
+  })
+  await expect(input).toBeFocused()
+
+  // Escape closes the dialog and hands focus back to the button.
+  await input.fill('brca1')
+  await expect(dialog.getByRole('option').first()).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(dialog).toBeHidden()
+  await expect(trigger).toBeFocused()
+
+  // The first result starts highlighted; ArrowDown moves to the next, and
+  // Enter opens it.
+  await trigger.click()
+  await expect(input).toBeFocused()
+  await input.fill('brca1')
+  const options = dialog.getByRole('option', { name: /BRCA1/ })
+  await expect(options).toHaveCount(2)
+  const second = await options.nth(1).getAttribute('id')
+  await page.keyboard.press('ArrowDown')
+  await expect(input).toHaveAttribute('aria-activedescendant', second!)
+  await page.keyboard.press('Enter')
+  await expect(page).toHaveURL(/\/genes\/BRCA1\?species=mouse/)
+  await expect(dialog).toBeHidden()
+})
+
+test('the home page search opens a gene from the keyboard', async ({
+  page,
+}) => {
+  await page.goto('/', { waitUntil: 'networkidle' })
+  const input = page.getByRole('combobox', {
+    name: geneSearchCopy.command.inputAria,
+  })
+  await input.fill('tp53')
+  await expect(page.getByRole('option', { name: /TP53/ }).first()).toBeVisible()
+  await input.press('ArrowDown')
+  await input.press('ArrowUp')
+  await input.press('Enter')
+  await expect(page).toHaveURL(/\/genes\/TP53/)
+})
+
+test('a term hint opens on click, closes on Escape, and leaves the table alone', async ({
+  page,
+}) => {
+  // An infotip is a popover, not a tooltip, so a tap (a click here) opens it
+  // on touch devices too.
+  await page.goto('/genes/TP53', { waitUntil: 'networkidle' })
+  const { gc } = geneSearchCopy.terms
+  const hint = page.getByRole('button', {
+    name: geneSearchCopy.terms.termAria(gc.label),
+  })
+  await hint.first().click()
+  await expect(page.getByText(gc.hint)).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(page.getByText(gc.hint)).toBeHidden()
 })

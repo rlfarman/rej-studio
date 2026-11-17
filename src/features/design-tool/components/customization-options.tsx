@@ -1,4 +1,3 @@
-'use client'
 import { NameInput } from './name-input'
 import { CodingSequenceInput } from './coding-sequence-input'
 

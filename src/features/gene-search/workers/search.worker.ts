@@ -36,12 +36,10 @@ async function handle(message: SearchWorkerRequest) {
       return searchCorpus(corpus, message.request)
     case 'similar':
       return corpus.similarGenes(message.symbol)
-    case 'prefetch': {
-      const index = await corpus.loadIndex()
+    case 'prefetch':
       // Built now, while nobody is waiting, rather than on the first query.
-      index.warm()
+      await corpus.loadTextSearch()
       return null
-    }
   }
 }
 

@@ -1,6 +1,5 @@
-'use client'
 import * as React from 'react'
-import { useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Undo2, X } from 'lucide-react'
@@ -26,15 +25,23 @@ import { SubmitButton } from './submit-button'
 import { FinishNotificationOptIn } from './finish-notification-opt-in'
 import { FieldHelp } from './field-help'
 import { RunSummary } from './run-summary'
-import { ResultsPanel } from './results-panel'
 import {
   CloudRunningPlaceholder,
   JobHeader,
   RunningPlaceholder,
 } from './job-header'
 import { CloudRunToggle } from './cloud-run-toggle'
-import { toast } from 'sonner'
+import { toast } from '@/lib/toast'
 import { designToolCopy } from '../copy'
+
+// The results UI (the panel, objectives, replay, maps, run record) is about a
+// third of the design tool's code and is only needed once a run finishes.
+// It loads when a run starts, so it is usually there by the time the result
+// is, and the form itself arrives without it.
+const loadResultsPanel = () => import('./results-panel')
+const ResultsPanel = lazy(() =>
+  loadResultsPanel().then((module) => ({ default: module.ResultsPanel })),
+)
 
 const copy = designToolCopy.form
 const draftCopy = designToolCopy.draft
@@ -182,6 +189,10 @@ export function GeneSplitterForm({
   // missing: show a placeholder rather than flashing an empty form.
   const showForm = (job.status === 'idle' && !job.isRestoring) || isEditing
   const isRunning = job.status === 'submitting' || job.status === 'running'
+  // A run (or a restored job) is under way: fetch the results UI now.
+  useEffect(() => {
+    if (job.status !== 'idle') void loadResultsPanel()
+  }, [job.status])
   // 'submitting' is the brief window while the POST is in flight; treat it
   // as running for header/placeholder purposes so the UI doesn't blank out.
   const headerStatus: 'running' | 'completed' | 'failed' | 'cancelled' | null =
@@ -346,13 +357,15 @@ export function GeneSplitterForm({
         )}
 
         {result && (
-          <div>
+          <Suspense
+            fallback={<Skeleton className="h-[36rem] w-full rounded-2xl" />}
+          >
             <ResultsPanel
               result={result}
               optionsUsed={formatOptionsForReport(methods.getValues())}
               species={methods.getValues('species')}
             />
-          </div>
+          </Suspense>
         )}
       </form>
       {/* eslint-enable react-hooks/refs */}

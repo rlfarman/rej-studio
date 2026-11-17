@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto'
 import { createRequire } from 'node:module'
 import { readFileSync, writeFileSync } from 'node:fs'
 import { join, relative } from 'node:path'
@@ -9,6 +10,12 @@ import { tanstackStart } from '@tanstack/react-start/plugin/vite'
 import react, { reactCompilerPreset } from '@vitejs/plugin-react'
 import { defineConfig, type Plugin } from 'vite-plus'
 
+import {
+  associationShardUrl,
+  buildAssociationShards,
+  type AssociationShardManifest,
+} from './src/features/disease-associations/shards'
+import type { AssociationData } from './src/features/disease-associations/types'
 import { lintConfig } from './lint/config'
 import {
   PRERENDERED_PAGES,
@@ -124,6 +131,74 @@ function mcpAppBridge(): Plugin {
 }
 
 /**
+ * Splits the disease-associations table into one small file per symbol
+ * prefix (src/features/disease-associations/shards.ts), so a gene page
+ * fetches a few KB rather than the whole ~376 KB table.
+ *
+ * Generated from the committed associations.json at build time, rather than
+ * committed as ~200 more files. They go under /assets/, in a directory named
+ * for their content: Vite's hashed assets already skip the Worker
+ * (`run_worker_first` in wrangler.jsonc) and are cached as immutable
+ * (public/_headers), and new data is a new directory. The client gets the
+ * directory and the list of files as `import.meta.env.REJ_ASSOCIATION_SHARDS`,
+ * so a symbol without a file costs no request.
+ */
+function associationShards(): Plugin {
+  const source = join(
+    import.meta.dirname,
+    'src/features/disease-associations/data/associations.json',
+  )
+  const shards = () =>
+    buildAssociationShards(
+      JSON.parse(readFileSync(source, 'utf8')) as AssociationData,
+    )
+  const files = (base: string) =>
+    [...shards()].map(([key, data]) => ({
+      path: associationShardUrl(base, key),
+      key,
+      body: JSON.stringify(data),
+    }))
+  // Named for the files themselves (keys and contents), so a change to the
+  // data or to how it is split moves every URL.
+  const hash = createHash('sha256')
+  for (const file of files('')) hash.update(file.path).update(file.body)
+  const manifest: AssociationShardManifest = {
+    base: `/assets/disease-associations/${hash.digest('hex').slice(0, 12)}`,
+    keys: files('').map((file) => file.key),
+  }
+  return {
+    name: 'rej:association-shards',
+    config: () => ({
+      define: {
+        'import.meta.env.REJ_ASSOCIATION_SHARDS': JSON.stringify(manifest),
+      },
+    }),
+    generateBundle() {
+      if (this.environment.name !== 'client') return
+      for (const file of files(manifest.base)) {
+        this.emitFile({
+          type: 'asset',
+          fileName: file.path.slice(1),
+          source: file.body,
+        })
+      }
+    },
+    // Dev serves them from the JSON as it is now, under the directory named
+    // at startup (restart the dev server after `pnpm data:associations`).
+    configureServer(server) {
+      server.middlewares.use(manifest.base, (request, response, next) => {
+        const file = files(manifest.base).find(
+          (f) => f.path === `${manifest.base}${request.url}`,
+        )
+        if (!file) return next()
+        response.setHeader('content-type', 'application/json')
+        response.end(file.body)
+      })
+    },
+  }
+}
+
+/**
  * What the Worker reports at /api/version. The Worker has no git and no
  * package.json at runtime, so the build inlines them; they are defined for
  * the Worker only, because a page has no use for them.
@@ -175,6 +250,7 @@ export default defineConfig({
     workerBuildInfo(),
     clientChunkGraph(),
     mcpAppBridge(),
+    associationShards(),
     tailwindcss(),
     tanstackStart({
       // SPA mode: the build prerenders an HTML shell (the root route, with

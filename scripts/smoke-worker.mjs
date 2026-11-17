@@ -27,7 +27,7 @@
 // worker fails to start. See AGENTS.md ("Testing").
 
 import { spawn } from 'node:child_process'
-import { mkdtempSync, rmSync } from 'node:fs'
+import { mkdtempSync, readdirSync, rmSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { createServer } from 'node:net'
 import { tmpdir } from 'node:os'
@@ -259,6 +259,22 @@ async function passcodeGate(url) {
     wasm.status === 200 &&
       (wasm.headers.get('cache-control') ?? '').includes('immutable'),
     wasm.headers.get('cache-control') ?? '',
+  )
+  // BRCA1's disease associations: the one shard the build emitted under a
+  // content-named directory (associationShards in vite.config.ts).
+  const [shardDir] = readdirSync(
+    path.join(root, 'dist/client/assets/disease-associations'),
+  )
+  const shard = await request(
+    `${url}/assets/disease-associations/${shardDir}/br.json`,
+  )
+  const shardBody = shard.ok ? await shard.json() : null
+  check(
+    'a disease-associations shard loads without a session, cached as immutable',
+    shard.status === 200 &&
+      (shard.headers.get('cache-control') ?? '').includes('immutable') &&
+      shardBody?.rows?.some((row) => row.symbol === 'BRCA1'),
+    `HTTP ${shard.status} ${shard.headers.get('cache-control') ?? ''}`,
   )
 
   const signIn = (password) =>

@@ -1,5 +1,3 @@
-'use client'
-
 import { Scissors } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {

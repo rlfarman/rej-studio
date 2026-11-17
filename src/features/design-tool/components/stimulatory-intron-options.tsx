@@ -1,4 +1,3 @@
-'use client'
 import { ToggleCard } from './toggle-card'
 import { designToolCopy } from '../copy'
 

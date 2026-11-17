@@ -1,4 +1,3 @@
-'use client'
 import { useId, useState } from 'react'
 import { useFormContext, useWatch } from 'react-hook-form'
 import { ChevronDown } from 'lucide-react'

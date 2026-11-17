@@ -1,4 +1,3 @@
-'use client'
 import { useFormContext, useWatch } from 'react-hook-form'
 import {
   FormField,
