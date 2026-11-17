@@ -19,6 +19,7 @@ import { detectSequenceType } from '@/lib/bio/sequence-utils'
 import { toast } from 'sonner'
 import { isSpecies } from '@/lib/bio/species'
 import { pickDefaultSplitPoints } from '../utils/default-split-point'
+import { rescaleSplitPoints, type SplitAnchor } from '../utils/split-points'
 import { useReverseTranslation } from '../hooks/use-reverse-translation'
 import { translate } from '@/lib/bio/genetic-code'
 import { designToolCopy } from '../copy'
@@ -100,8 +101,11 @@ export function CodingSequenceInput() {
   // into it here.
   //
   // Controlled, it dropped keystrokes. Typing re-renders the split-point
-  // editor, whose effects write derived values (scaled split points, the
-  // selected WGGW sites) back into the form. When one of those landed
+  // editor, whose effects write derived values back into the form: the
+  // clamped split points and the selected WGGW sites
+  // (splice-slider-context.tsx, the effects calling onPositionsChange and
+  // onSelectionChange). Split points no longer rescale in an effect, but
+  // those two remain. When one of those landed
   // between a keystroke and its render, React ended the input event by
   // restoring the field to the value it had last rendered, and the next key
   // was typed onto the shorter text. Uncontrolled, there is no rendered value
@@ -111,6 +115,26 @@ export function CodingSequenceInput() {
   // the form. A form value found there is this field's own keystroke catching
   // up, possibly behind newer ones, and must not be written back over them.
   const typedRef = useRef(new Set<string>())
+  // Where the split points were last rescaled to (see rescaleSplitPoints).
+  const splitAnchorRef = useRef<SplitAnchor | null>(null)
+
+  // Typing moves the split points with the sequence, here in the change
+  // handler rather than in an effect after the render, so a keystroke is one
+  // batched form update. Writes that set a sequence together with its split
+  // points (paste, upload, reverse translation, restores) bypass this.
+  const rescaleSplitPointsForTyping = (nextLength: number) => {
+    const positions = getValues('spliceJunctionPositions') ?? []
+    const anchor = rescaleSplitPoints(
+      positions,
+      getValues('codingSequence')?.length ?? 0,
+      nextLength,
+      splitAnchorRef.current,
+    )
+    splitAnchorRef.current = anchor
+    if (anchor.positions.some((p, i) => p !== positions[i])) {
+      setValue('spliceJunctionPositions', anchor.positions)
+    }
+  }
   useLayoutEffect(() => {
     const el = textareaRef.current
     if (!el) return
@@ -359,6 +383,9 @@ export function CodingSequenceInput() {
                 onBlur={field.onBlur}
                 onChange={(event) => {
                   typedRef.current.add(event.target.value)
+                  if (!isProtein) {
+                    rescaleSplitPointsForTyping(event.target.value.length)
+                  }
                   field.onChange(event)
                 }}
                 ref={(el) => {
