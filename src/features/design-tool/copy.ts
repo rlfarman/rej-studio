@@ -92,6 +92,17 @@ export const designToolCopy = {
     // privacy trade-off, so it stays next to the checkbox, not in a tooltip.
     toggleHint:
       'Your sequence leaves this machine, is kept for up to 30 days, and can be deleted.',
+    // Shown instead, to someone without an account: cloud runs are an
+    // account feature, and this is the way to one.
+    signInHint: 'Cloud runs need an account, so your designs follow you.',
+    signInAction: 'Sign in',
+    unavailableHint: 'Cloud runs are not available on this deployment.',
+    myDesigns: {
+      label: 'My cloud designs',
+      menuAria: 'My cloud designs',
+      subline: (bp: number) =>
+        `in the cloud · ${bp.toLocaleString('en-US')} bp`,
+    },
     tooLong: (bases: number, limit: number) =>
       `That sequence is ${bases.toLocaleString('en-US')} bp; cloud designs take up to ${limit.toLocaleString('en-US')}. Turn off “Run in the cloud” to design it in this browser.`,
     unreachable:

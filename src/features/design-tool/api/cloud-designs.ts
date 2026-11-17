@@ -1,3 +1,6 @@
+import { queryOptions } from '@tanstack/react-query'
+
+import { accountScopedKey } from '@/lib/account/account'
 import {
   CLOUD_REFUSAL_STATUS,
   type CloudAnswer,
@@ -79,6 +82,21 @@ export function deleteCloudDesign(id: string): Promise<CloudCall<null>> {
 }
 
 /** The signed-in account's cloud designs, newest first. */
-export function listMyCloudDesigns(): Promise<CloudCall<CloudDesignSummary[]>> {
+function listMyCloudDesigns(): Promise<CloudCall<CloudDesignSummary[]>> {
   return call(() => listMyCloudDesignsFn())
 }
+
+/**
+ * "My cloud designs": the signed-in account's designs, from any device.
+ * Keyed under the account (`accountScopedKey`), so signing out drops it.
+ */
+export const myCloudDesignsQuery = queryOptions({
+  queryKey: accountScopedKey('cloud-designs'),
+  queryFn: async () => {
+    const answer = await listMyCloudDesigns()
+    if (answer.ok) return answer.data
+    throw new Error(answer.message)
+  },
+  staleTime: 60_000,
+  retry: 1,
+})

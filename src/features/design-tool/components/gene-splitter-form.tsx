@@ -18,6 +18,7 @@ import type { DesignToolSpecies } from '@/features/design-tool/types/species-opt
 import { validationSchema, FormValues } from '../types/form-schema'
 import { formatOptionsForReport } from '../utils/form-handler'
 import { useJob } from '@/features/design-tool/hooks/use-job'
+import { useAccount } from '@/lib/account/account'
 import { useFormDraft } from '@/features/design-tool/hooks/use-form-draft'
 import { CustomizationOptions } from './customization-options'
 import { DesignObjectives } from './optimization-options'
@@ -72,8 +73,11 @@ export function GeneSplitterForm({
 }: GeneSplitterFormProperties) {
   const [isEditing, setIsEditing] = useState(false)
   // Off by default: a cloud run sends the sequence off this machine, so it
-  // is only ever the person's explicit choice, made each time.
-  const [runInCloud, setRunInCloud] = useState(false)
+  // is only ever the person's explicit choice, made each time. It also needs
+  // an account: signed out, nothing runs in the cloud whatever was ticked.
+  const [cloudChosen, setCloudChosen] = useState(false)
+  const account = useAccount()
+  const runInCloud = cloudChosen && account.status === 'signed-in'
   // Guards the one-shot form restore. Set true after we hydrate from a
   // resumed URL job, or eagerly on submit so the new job's own persisted
   // formValues don't ricochet back and overwrite the live form.
@@ -339,7 +343,7 @@ export function GeneSplitterForm({
               <div className="flex flex-wrap items-center gap-3">
                 <CloudRunToggle
                   checked={runInCloud}
-                  onCheckedChange={setRunInCloud}
+                  onCheckedChange={setCloudChosen}
                   disabled={job.isLoading}
                 />
                 {/* Only browser runs can finish unseen in a background tab. */}
