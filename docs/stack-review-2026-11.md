@@ -171,6 +171,11 @@ multi-maintainer housekeeping on a single-maintainer repo.
 
 ### Python, and why it should go entirely
 
+**Done** in slice 3 of step 4 (docs/cloudflare-migration.md): the server
+path, the generators and Python CI are deleted, the fixtures are frozen
+(`rust/optimizer/tests/fixtures/README.md`), and both data scripts are
+TypeScript. The reasoning below is kept as written.
+
 Python still has two jobs, and both should end.
 
 **It serves production today.** The browser optimizer sits behind

@@ -2,16 +2,16 @@
 
 ## Project Overview
 
-REJ Studio is a bioinformatics web app for RNA End-Joining sequence design. Users search genes, view isoforms, and submit coding sequences (DNA or protein) for optimization via a Python/FastAPI backend that uses the dnachisel library. Protein sequences are reverse-translated to DNA on the frontend using species-preferred codons before optimization.
+REJ Studio is a bioinformatics web app for RNA End-Joining sequence design. Users search genes, view isoforms, and optimize coding sequences (DNA or protein). Everything runs in the browser: gene data is a static, versioned corpus, and designs run in a WebAssembly build of the Rust optimizer (`rust/`), a port of the DNAChisel pipeline the retired Python backend ran. Protein sequences are reverse-translated to DNA using species-preferred codons before optimization.
 
 ## Migration status (read first)
 
-This branch (`feat/tanstack-start`) is mid-way through step 4 of `docs/cloudflare-migration.md`: **Next.js is replaced by TanStack Start in SPA mode, built with Vite+ and served by one Cloudflare Worker.** Slices 1 (toolchain and app shell) and 2 (pages) are done; the rest is transitional until slice 3:
+This branch (`feat/tanstack-start`) is mid-way through step 4 of `docs/cloudflare-migration.md`: **Next.js is replaced by TanStack Start in SPA mode, built with Vite+ and served by one Cloudflare Worker.** Slices 1 (toolchain and app shell), 2 (pages) and 3 (deletions) are done; slice 4 (server routes) and the cutover remain:
 
 - **Every page runs in the browser.** Gene search and the gene pages read the static corpus (`src/features/gene-search/corpus/`) through route loaders, designs run in the in-browser optimizer, and the disease-associations table is a static JSON asset. Nothing a page does reaches a server.
-- **The Next-era server side is kept, not wired.** The server design path (`design-tool/api/{jobs,job-backend,job-status-client,corpus-version}.ts`, `components/job-watcher.tsx`), the Postgres gene reads (`gene-search/api/*`), `src/drizzle/`, `src/lib/auth/`, `src/lib/env.ts`, the Upstash limiter and the `next` package itself still compile and are tested, but nothing in the Start app imports them (knip's `AWAITING_PORT` lists them). Slice 3 deletes them. Don't import them from client code.
+- **There is no server code, no database and no Python.** Slice 3 deleted the server design path, the Postgres reads, Drizzle/Neon/PGlite, the auth helpers, Upstash, `trackEvent`, the `next` package, and the whole Python stack (FastAPI, Modal, `pyproject.toml`/`uv.lock`, Python and DB CI). The optimizer's DNAChisel parity fixtures are frozen (`rust/optimizer/tests/fixtures/README.md`), and the two data scripts that survived are TypeScript (`pnpm data:genes`, `pnpm data:associations`).
 - **Gone already:** route handlers (`/api/*`, including MCP, health, OG images), the proxy and password gate, `/login`, sitemap, OG images, JSON-LD, generated icons, Sentry for Next, GTM and Web Vitals. Cloudflare Access replaces the gate and Web Analytics replaces GTM at cutover; slice 4 restores the server routes (MCP from git history).
-- **Bridges marked `TODO(slice-3)` / `TODO(cutover)`** in code: knip's `AWAITING_PORT` list, `trackEvent` pushing to a dataLayer nothing reads, and the Sentry hook in `error-state.tsx`.
+- **Bridges marked `TODO(cutover)`** in code: the Sentry hook in `error-state.tsx`.
 
 ## Architecture
 
@@ -20,45 +20,40 @@ This branch (`feat/tanstack-start`) is mid-way through step 4 of `docs/cloudflar
 - **Page data and URLs** — Loaders fill the router's query client with `context.queryClient.ensureQueryData(...)` (or `prefetchQuery` where a failure should show in place), using the query options the features export (`gene-search/corpus/queries.ts`, `disease-associations/api/associations.ts`); components read the same entries with `useSuspenseQuery`/`useQuery`. A gene symbol the corpus lacks throws `notFound()`, and a symbol in the wrong case redirects to the canonical one. The router reads and writes plain query strings (`routes/-components/search-codec.ts`: every value is text, a repeated key is a list, `?q=53` stays `?q=53`; JSON values from older links still read). Search params are typed by `validateSearch: (s) => schema.parse(s)` with the zod building blocks in `routes/-components/search-params.ts`; every field `.catch`es, so a bad param is dropped rather than failing the page. Each section sets its own `pendingComponent` / `errorComponent` / `notFoundComponent` (the gene pages' `-components/genes/`, the design tool's `design-tool-error.tsx`).
 - **The shell** (`src/routes/__root.tsx`) — `shellComponent` renders `<html>`, `HeadContent`, the sidebar-preload script, `next-themes`, the sonner Toaster and `Scripts`; `component` is the old `(app)` layout (tooltip and sidebar providers, `AppSidebar`, `Header`, `<main id="main-content">`, the maintenance banner). `BrowserRuns` (settles designs interrupted by a closed tab) lives in `AppSidebar`; the router's `Wrap` provides the query client around everything. The root `errorComponent` is standalone (the layout itself failed); page errors and unknown URLs render in the page slot. Anything in the shell that depends on the URL must render neutrally in the prerendered shell and during hydration: use `useShellPathname()` (null until hydrated), never the raw location, or React discards the tree with a hydration mismatch (`e2e/shell.spec.ts` fails on any console error).
 - **Bulletproof-react structure** — Code is organized into `src/features/<feature>/` (self-contained: `api/`, `components/`, `hooks/`, `stores/`, `types/`, `utils/`) plus shared layers (`src/components/`, `src/lib/`, `src/hooks/`, `src/stores/`, `src/copy/`). The app layer is `src/routes/` plus `src/router.tsx`. Cross-feature imports, shared→feature/app and feature→app imports are lint errors (`import-js/no-restricted-paths`, see `lint/config.ts`).
-- **FastAPI (Python)** — Runs the DNA optimization algorithm. Canonical code lives in `python/`. Single endpoint: `POST /api/py/process`. Deployed to Modal and called from the (transitional) server actions; the Start app doesn't call it, and `pnpm dev` no longer starts it. Leaves in slice 3.
-- **Postgres + Drizzle ORM** — Read-only gene/isoform/sequence data. Production uses Neon over HTTP via `@neondatabase/serverless`. Local dev and CI fall back to PGlite (embedded Postgres) when `DATABASE_URL` is empty, a `file:` path, or `memory://` — full Postgres compatibility including `tsvector` and GIN indexes. Driver selection is in `src/drizzle/client.ts`; app code imports it through `src/drizzle/db.ts`, which adds `import 'server-only'` (CLI scripts import `client.ts` directly). Schema is in `src/drizzle/schema.ts`. On first PGlite boot, `initPglite()` loads the `pg_trgm` extension, applies the committed migrations in `src/drizzle/migrations/`, and loads the committed sample seed (`data/sample-genes.jsonl` + `data/sample-isoforms.jsonl`, 24 genes / 228 isoforms with real CDS) so gene search and the design-tool optimizer work end-to-end with zero setup. Run `pnpm db:fetch` to swap the sample seed for the full prebuilt corpus tarball pinned in `package.json` (downloaded from a GitHub Release, SHA-256 verified).
+- **Gene data** — A static, versioned corpus of JSON files (`src/features/gene-search/corpus/`), read in the browser; no database. See [Gene data](#gene-data).
 - **shadcn/ui on Base UI** — Component library: shadcn's `base-rhea` style, built on Base UI (`@base-ui/react`), with lucide icons. UI primitives live in `src/components/ui/`. Config in `components.json`.
 - **Zustand** — Global client state (favorites, recent genes, species filter) lives in `src/stores/` (shared) or `src/features/<feature>/stores/` (feature-owned).
-- **Auth** — None in the Start app. The shared-password gate (proxy, `/login`, sessions) was removed in slice 1; Cloudflare Access gates the hostname at cutover. `src/lib/auth/` remains only for the transitional server actions (slice 3).
+- **Auth** — None in the app. The shared-password gate (proxy, `/login`, sessions) was removed in slice 1; Cloudflare Access gates the hostname at cutover.
 - **MCP (agent access)** — Removed with the Next route handlers in slice 1; slice 4 ports it to the Worker. The implementation to port (tools, tokens, the MCP Apps design view and its tests) is `src/app/api/mcp/` and `scripts/copy-mcp-app-bridge.mjs` at `origin/feat/tanstack-start` before slice 1 (commit `bdc15a20`). The previous version of this file describes its contract.
-- **Job actions vs. the work** — `design-tool/api/job-backend.ts` runs a server job: backend routing, the circuit breaker, idempotency, and submit/status/cancel. `design-tool/api/jobs.ts` is the `'use server'` wrapper. Both are transitional (slice 3); the Start app runs designs in the browser.
-- **Run records** — every design result carries a `run_record`: the options as applied, a digest and length of the input sequence, the seed the run used, the algorithm/dnachisel/Python versions, the gene dataset the deployment was serving and the timing. Built in `python/run_record.py`, mirrored as a zod schema in `src/features/design-tool/types/backend-contract.ts`, and kept in step by `python/tests/test_contract.py`. DNAChisel's mutation sampling draws on the global RNGs, so the algorithm seeds them per run (`resolve_seed`/`apply_seed` in `python/algorithm.py`) and the record carries that seed: the same sequence and options submitted with it reproduce the design. `corpus_version` says what the deployment was serving, never where a sequence came from — nothing downstream can tell a pasted sequence from an isoform's own CDS, so neither the record nor the copy may imply it. The reproducibility tests in `python/tests/test_run_record.py` run the optimizer on a sequence whose design actually depends on the seed; a shorter one optimizes identically whatever the RNG does and would pass with the seeding deleted. `src/features/design-tool/utils/methods-paragraph.ts` turns the record into prose by a plain template; it may state only what the record contains.
+- **Designs** — `design-tool/hooks/use-job.ts` runs a design and owns its history entry; `api/browser-optimizer.ts` owns the worker and turns its messages into a `JobActionResult`; `workers/optimizer.worker.ts` loads the `.wasm` (`public/optimizer/`, cache-busted by the digest in `optimizer-asset.generated.ts`). The request and result shapes are in `types/optimizer-contract.ts`, mirroring `rust/optimizer/src/contract.rs`; the result is zod-parsed. The optimizer itself is `rust/` (see `rust/README.md`).
+- **Run records** — results from the retired Python backend carry a `run_record`: the options as applied, a digest and length of the input sequence, the seed, the algorithm/DNAChisel/Python versions, the gene dataset the deployment was serving and the timing. Designs saved in a browser's history still hold them, so `runRecordSchema` (`types/optimizer-contract.ts`), `run-record-card.tsx` and `utils/methods-paragraph.ts` stay; the Rust optimizer does not emit one yet (work on the release branch adds it). `corpus_version` says what the deployment was serving, never where a sequence came from — nothing downstream can tell a pasted sequence from an isoform's own CDS, so neither the record nor the copy may imply it. `methods-paragraph.ts` turns the record into prose by a plain template; it may state only what the record contains. Seeded runs are reproducible: the optimizer echoes the seed it used, and the same sequence and options with that seed reproduce the design.
 - **Every chart has a table** — `src/components/chart-data-table.tsx` renders the numbers a chart was drawn from, behind a "View as table" toggle, with an optional CSV. A new chart gets one, built from the same rows the chart draws so the two cannot disagree. The toggle is remembered per `storageKey` for the session through `useSyncExternalStore`, so charts of a kind open together and the server never renders a state the client disagrees with; blocked storage falls back to memory, because a reader who asks for the numbers must get them.
 - **"What changed"** — `design-tool/components/objective-replay.tsx` steps through the objectives one at a time, pairing `objectives_report_before` with `objectives_report_after` (`utils/objective-steps.ts`). It is a view over data the result already carries: there is no record of the order the optimizer worked in, so it must not present itself as a replay of the run, and it must not invent states between the two reports. A run with only one of the two reports says so rather than reading as "nothing changed" — the backend swallows a failure in the final evaluation, so that case is real.
-- **Observability** — Not wired yet: error boundaries log to the console through `src/lib/logger.ts`, and `TODO(cutover)` in `src/components/error-state.tsx` marks where Sentry for Start plugs in. `wrangler.jsonc` enables Workers observability. Cloudflare Web Analytics replaces GTM at cutover. Upstash Redis (`src/lib/rate-limit.ts`) serves only the transitional server side.
+- **Observability** — Not wired yet: error boundaries log to the console through `src/lib/logger.ts`, and `TODO(cutover)` in `src/components/error-state.tsx` marks where Sentry for Start plugs in. `wrangler.jsonc` enables Workers observability. Cloudflare Web Analytics replaces GTM at cutover (page views only; there are no custom events).
 
 ## Key Directories
 
-| Path                  | Purpose                                                                                                        |
-| --------------------- | -------------------------------------------------------------------------------------------------------------- |
-| `src/routes/`         | TanStack Start file routes (`__root.tsx` is the shell) and route-private `-components/` (sidebar, header, …)   |
-| `src/router.tsx`      | Router factory (`getRouter`): pending/error components, scroll reset; `src/routeTree.gen.ts` is generated      |
-| `src/features/`       | Self-contained feature modules (`gene-search`, `design-tool`, `disease-associations`)                          |
-| `src/components/ui/`  | shadcn/ui primitives                                                                                           |
-| `src/components/bio/` | Bio-domain widgets (species select, diagnostic badges, DNA icon)                                               |
-| `src/components/`     | Generic shared widgets (top-level)                                                                             |
-| `src/lib/bio/`        | Bio-domain utilities (species types, FASTA, sequence utils, reverse translation, design suitability)           |
-| `src/lib/analytics/`  | `trackEvent` (inert since GTM went; deleted in slice 3)                                                        |
-| `src/lib/`            | Generic shared utilities (`cn`, file download, rate-limit, env, logger, retry) at the top level                |
-| `src/hooks/`          | Generic shared React hooks                                                                                     |
-| `src/stores/`         | Shared Zustand stores (e.g. species filter)                                                                    |
-| `src/copy/`           | Shared user-facing copy (`errors.ts`, `common.ts`, `app.ts`). Feature copy lives in `src/features/<f>/copy.ts` |
-| `src/drizzle/`        | DB schema, client, migrations (transitional: unused by the Start app, removed in slice 3)                      |
-| `src/styles/`         | `globals.css` (Tailwind via `@tailwindcss/vite`) and `fonts.css` (self-hosted Fontsource families)             |
-| `vite.config.ts`      | Vite+ config: Cloudflare + Start + React Compiler plugins, and the `lint` block (rules in `lint/`)             |
-| `wrangler.jsonc`      | The Worker: Start's server entry, SPA asset handling, observability                                            |
-| `lint/`               | Oxlint config (`config.ts`) and the project's JS-plugin rules (`rej-plugin.mjs`)                               |
-| `python/`             | FastAPI Python backend (`index.py`, `algorithm.py`); dependencies in the root `pyproject.toml` + `uv.lock`     |
-| `rust/`               | Rust port of the optimizer, built to WebAssembly so designs can run in the browser (see `rust/README.md`)      |
-| `docs/`               | Longer-form plans and decisions (e.g. `cloudflare-migration.md`)                                               |
-| `modal/`              | Modal deployment for the Python backend (production compute)                                                   |
-| `scripts/`            | Dev tooling — worktree bootstrap, DB build/load, bundle-size checks, schema verify, type generation            |
-| `.github/workflows/`  | CI (tests, build + bundle budgets, Storybook, zizmor), security, DB/Python CI, Lighthouse, deploys             |
+| Path                  | Purpose                                                                                                                                            |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/routes/`         | TanStack Start file routes (`__root.tsx` is the shell) and route-private `-components/` (sidebar, header, …)                                       |
+| `src/router.tsx`      | Router factory (`getRouter`): pending/error components, scroll reset; `src/routeTree.gen.ts` is generated                                          |
+| `src/features/`       | Self-contained feature modules (`gene-search`, `design-tool`, `disease-associations`)                                                              |
+| `src/components/ui/`  | shadcn/ui primitives                                                                                                                               |
+| `src/components/bio/` | Bio-domain widgets (species select, diagnostic badges, DNA icon)                                                                                   |
+| `src/components/`     | Generic shared widgets (top-level)                                                                                                                 |
+| `src/lib/bio/`        | Bio-domain utilities (species types, FASTA, sequence utils, reverse translation, design suitability)                                               |
+| `src/lib/`            | Generic shared utilities (`cn`, file download, logger, search shortcut) at the top level                                                           |
+| `src/hooks/`          | Generic shared React hooks                                                                                                                         |
+| `src/stores/`         | Shared Zustand stores (e.g. species filter)                                                                                                        |
+| `src/copy/`           | Shared user-facing copy (`errors.ts`, `common.ts`, `app.ts`). Feature copy lives in `src/features/<f>/copy.ts`                                     |
+| `src/styles/`         | `globals.css` (Tailwind via `@tailwindcss/vite`) and `fonts.css` (self-hosted Fontsource families)                                                 |
+| `vite.config.ts`      | Vite+ config: Cloudflare + Start + React Compiler plugins, and the `lint` block (rules in `lint/`)                                                 |
+| `wrangler.jsonc`      | The Worker: Start's server entry, SPA asset handling, observability                                                                                |
+| `lint/`               | Oxlint config (`config.ts`) and the project's JS-plugin rules (`rej-plugin.mjs`)                                                                   |
+| `rust/`               | The optimizer: Rust, built to WebAssembly for the browser (see `rust/README.md`); the reference implementation                                     |
+| `docs/`               | Longer-form plans and decisions (e.g. `cloudflare-migration.md`)                                                                                   |
+| `scripts/`            | Dev tooling — worktree bootstrap, gene data pipeline (`lib/` holds its Python-compatible CSV and JSON helpers), wasm build and checks, bundle size |
+| `.github/workflows/`  | CI (tests, build + bundle budgets, Storybook, zizmor), Rust CI, security, Lighthouse, conventions                                                  |
 
 ## Development Commands
 
@@ -77,20 +72,18 @@ pnpm test:watch   # Vitest in watch mode
 pnpm test:coverage # Vitest with coverage
 pnpm test:e2e     # Playwright against `vp dev` on :3000 (E2E_SERVER=preview for the build)
 pnpm verify       # lint + format:check + knip + type-check + test: what CI runs (pre-push gate)
-uv sync           # Python env (.venv) for the FastAPI backend, from uv.lock
 pnpm storybook    # Storybook dev server on :6006
 pnpm build-storybook --test # What CI's Storybook job runs
 node scripts/bundle-size.mjs # Per-route first-load JS budgets (after pnpm build)
 node scripts/serve-compressed.mjs # The build behind a brotli/gzip proxy on :3000, as Lighthouse CI audits it
 pnpm images:build # Regenerate the logo variants in public/branding/ from assets/branding/ (sharp)
-pnpm db:build     # Emit neutral JSONL seed from source CSV (data/*.jsonl)
-pnpm db:migrate   # Apply the committed migrations (src/drizzle/migrations) to $DATABASE_URL
-pnpm db:generate  # Write a migration for schema.ts changes (commit it with the schema)
-pnpm db:upload    # Load JSONL into $DATABASE_URL via Drizzle (dialect-neutral)
-pnpm db:studio    # Browse DB in Drizzle Studio (local.drizzle.studio)
+pnpm data:genes   # Source CSV (data/transcript_metadata.csv) → data/genes.jsonl + data/isoforms.jsonl
+pnpm data:associations # OMIM CSV → src/features/disease-associations/data/associations.json
+pnpm corpus:build # JSONL seed → a static corpus version (default: the committed sample)
 pnpm wasm:build   # Build the Rust optimizer and install it in public/ (needs Rust)
 pnpm wasm:verify  # Check the committed .wasm matches its digest manifest
 pnpm wasm:smoke   # Run the committed .wasm through Node against the parity fixtures
+(cd rust && cargo test --release) # The optimizer's tests, incl. parity with the frozen DNAChisel fixtures
 ```
 
 ## Toolchain
@@ -103,7 +96,7 @@ pnpm wasm:smoke   # Run the committed .wasm through Node against the parity fixt
 - **Format** — Oxfmt (`.oxfmtrc.json`), including Tailwind class sorting (`sortTailwindcss`, reading `src/styles/globals.css` and sorting inside `cn(…)`) and `package.json` key sorting. It replaced Prettier and `prettier-plugin-tailwindcss`. Oxfmt sorts more than Prettier did here: it sorts strings inside `cn(…)` everywhere, where Prettier only sorted `className` values, so the switch re-sorted classes in about 70 files once. Multi-line unions also get one member per line. Sorting needs `node_modules` installed (the stylesheet imports `tailwindcss`); without it, Oxfmt silently skips sorting. Ignores live in `ignorePatterns`, not a separate ignore file.
 - **React Compiler** — enabled through `@rolldown/plugin-babel` with `reactCompilerPreset()` from `@vitejs/plugin-react` (in `vite.config.ts` and Storybook's), so components get automatic memoization; prefer plain code over hand-written `useMemo`/`useCallback`.
 - **Cloudflare** — `wrangler` and `@cloudflare/vite-plugin`; `workerd` is allowed to run its install script (`allowBuilds`). No `nodejs_compat`: nothing on the Worker needs Node APIs yet. Bump `compatibility_date` in `wrangler.jsonc` deliberately.
-- **Python** — managed with [uv](https://docs.astral.sh/uv/): `uv sync` creates `.venv` from `uv.lock` using the interpreter in `.python-version`; run tools with `uv run` (e.g. `uv run pytest`). Slated for removal once the browser optimizer serves production; see `docs/stack-review-2026-11.md`.
+- **Python** — none. The data scripts are TypeScript run with `tsx`; `scripts/lib/` reproduces the Python built-ins (`csv.DictReader`, `json.dumps`, `str.split`/`strip`, `int`) their Python originals relied on, so the output stayed byte-identical.
 - **Rust** — pinned by `rust/rust-toolchain.toml` (version, clippy, rustfmt, the `wasm32-unknown-unknown` target); `(cd rust && rustup toolchain install)` installs exactly that, and CI does the same. Only needed for `pnpm wasm:build`: the `.wasm` is committed. Lint levels live in `[workspace.lints]` in `rust/Cargo.toml`; CI adds `-D warnings` and also clippy-checks the wasm32 build, because the unsafe ABI in `rust/optimizer/src/lib.rs` is `cfg(target_arch = "wasm32")` and a native run never compiles it. Every `unsafe` block needs a `// SAFETY:` comment. Dependencies are policed by `rust/deny.toml` (`cargo deny check`, in the Security workflow).
 
 ## User-Facing Copy
@@ -131,44 +124,33 @@ User-facing strings (headings, descriptions, toasts, validation messages, error 
 - Oxlint for linting (`lint/config.ts`) and Oxfmt for formatting (`.oxfmtrc.json`).
 - Lint enforces feature boundaries: features cannot import from each other or from the app layer (`src/routes`, `src/router.tsx`), and shared layers (`src/components`, `src/lib`, `src/hooks`, `src/stores`, `src/copy`) cannot import from features or app. Features are discovered from `src/features/` at config load.
 
-## Database
+## Gene data
 
-Primary store is a Neon (Postgres) database. The Next.js server connects via the Neon HTTP driver (`src/drizzle/db.ts`); every query is a serverless HTTP round-trip. Schema is in `src/drizzle/schema.ts`; tables: `genes`, `isoforms`.
+There is no database. Gene and isoform data is a static, versioned set of files (`src/features/gene-search/corpus/format.ts`): `index.json` (searchable fields, columnar), `genes/<id>.json`, `transcripts/<n>.json` and `symbols/<key>.json`. The browser reads them directly. `VITE_GENE_DATA_URL` (build-time) points at one version, as an absolute URL or a `/path` under `public/`.
 
-App code uses dialect-neutral SQL (Drizzle query builder + `LOWER(col) LIKE '%x%'`) so the DB backend can be swapped without touching queries.
-
-**Local dev (PGlite):** No setup needed. On first `getDb()` call, `initPglite()` checks for the `genes` table and, if missing, applies `src/drizzle/migrations/0000_initial.sql` and loads the committed sample seed at `data/sample-genes.jsonl` + `data/sample-isoforms.jsonl`. Delete `data/local.db/` to re-bootstrap. The sample covers 24 well-known genes (TP53, BRCA1/2, EGFR, KRAS, MYC, INS, etc.) with real CDS + protein sequences for all 228 isoforms — gene search and the design-tool optimizer both work end-to-end with no further setup.
-
-**Full corpus locally (`pnpm db:fetch`):** Downloads the prebuilt PGlite tarball pinned in `package.json`'s `corpus` field from a GitHub Release via `gh release download` (auth flows through your existing `gh auth login`), verifies SHA-256, and extracts to `data/local.db/`. One command, no Python, no CSV. `initPglite()` reads the version from `data/local.db/.corpus-version` and logs `[pglite] Full corpus (vN, …)` on boot. Run `pnpm db:reset` to wipe `data/local.db/` and fall back to the sample seed.
-
-**Maintainer-only — publishing a new corpus version:**
-
-1. Build a fresh `data/local.db/` from Neon (e.g. via `pnpm db:build && pnpm db:migrate && pnpm db:upload` against `drizzle/transcript_metadata.csv`, or by snapshotting Neon directly).
-2. `tar czf rej-corpus-vN.tar.gz -C data local.db && shasum -a 256 rej-corpus-vN.tar.gz`
-3. `gh release create corpus-vN --title "Corpus vN" --notes "…"` (creates the release with no asset).
-4. `gh release upload corpus-vN rej-corpus-vN.tar.gz` (upload separately — uploading at create time has hit `HTTP 400` for ~250 MB assets).
-5. Bump `package.json`'s `corpus.{version,tag,asset,sha256}` and open a PR. Contributors pick up the new version on next `pnpm db:fetch`.
-
-For seeding a Neon database (production), the same `db:build`/`db:migrate`/`db:upload` pipeline works against `$DATABASE_URL`. New or updated databases always get their schema from `pnpm db:migrate`; `pnpm db:push` syncs `schema.ts` directly and skips the migration files, so keep it for throwaway prototyping.
-
-**Disease associations.** `pnpm data:associations` (`scripts/build-disease-associations.py`) builds `src/features/disease-associations/data/associations.json` offline from the OMIM CSV, with each gene's largest CDS baked in. Nothing reads a database at runtime: the app imports the file with `?url`, so it ships as a hashed static asset, fetched once by `/disease-associations` and the human gene pages (`associationsQuery`) and kept out of the JS bundles.
-
-**Gene data as a static corpus (replacing the database).** Gene and isoform data can be served as a static, versioned set of files (`src/features/gene-search/corpus/format.ts`): `index.json` (searchable fields, columnar), `genes/<id>.json`, `transcripts/<n>.json` and `symbols/<key>.json`. Build it from the JSONL seed with `pnpm corpus:build`. By default it builds the committed sample into `public/gene-data/sample`; for the full corpus, pass `--genes … --isoforms … --version vN --out <dir>`. Versions are immutable: publish a new one rather than rebuilding. `VITE_GENE_DATA_URL` (build-time) points at one version, as an absolute URL or a `/path` under `public/`.
-
-- **When it's unset,** every build reads the committed sample (`/gene-data/sample`), which ships with it, so dev, tests, CI and the e2e preview need no setup. It fails closed for a deploy: `pnpm cf:deploy` runs `scripts/check-deploy-env.mjs` first, which refuses to build without `VITE_GENE_DATA_URL` (or with it pointing at the sample), and any build on the sample shows a "Sample data — 24 genes" badge in the header (`usesSampleCorpus()`).
-- **The browser does all of it:** the palette and `/genes` search the index, the gene page reads one `genes/<id>.json`, and the design tool's `?isoform=` prefill reads one transcript shard and gene file (`corpus/queries.ts`). `corpus/search-index.ts` ports the Postgres ranking exactly; `corpus/text-search.ts` implements Postgres's `'simple'` parser and `ts_rank`.
+- **When it's unset,** every build reads the committed sample (`public/gene-data/sample`: 24 genes, 228 isoforms with real CDS and protein sequences, built from `data/sample-genes.jsonl` + `data/sample-isoforms.jsonl`), so dev, tests, CI and the e2e preview need no setup. It fails closed for a deploy: `pnpm cf:deploy` runs `scripts/check-deploy-env.mjs` first, which refuses to build without `VITE_GENE_DATA_URL` (or with it pointing at the sample), and any build on the sample shows a "Sample data — 24 genes" badge in the header (`usesSampleCorpus()`).
+- **The browser does all of it:** the palette and `/genes` search the index, the gene page reads one `genes/<id>.json`, and the design tool's `?isoform=` prefill reads one transcript shard and gene file (`corpus/queries.ts`). `corpus/search-index.ts` ports the old Postgres ranking exactly (`search-index.test.ts` pins it); `corpus/text-search.ts` implements Postgres's `'simple'` parser and `ts_rank`.
 - **After changing the seed or the format,** rerun `pnpm corpus:build --force` and commit `public/gene-data/sample`. `corpus/build.test.ts` checks it byte for byte.
+
+**Building a corpus version (maintainers).** The pipeline is CSV → JSONL → static files:
+
+1. Put the source export at `data/transcript_metadata.csv` (gitignored; not in the repo) and run `pnpm data:genes`. It writes `data/genes.jsonl` and `data/isoforms.jsonl`, recasing the CSV's title-cased gene names (`--csv`/`--out` for other paths; `--recase-names <file>` fixes names in an existing genes JSONL in place).
+2. `pnpm corpus:build --genes data/genes.jsonl --isoforms data/isoforms.jsonl --version vN --out dist/gene-data` writes `dist/gene-data/vN/` (about 330 MB, ~40k gene files for the current snapshot). Versions are immutable: the script refuses an existing directory unless `--force`, and a published version is never rebuilt in place — publish `vN+1` instead, so caches never serve a mix.
+3. **Publish to R2** (at cutover, on the lab's Cloudflare account): upload `dist/gene-data/vN/` to the corpus bucket under `vN/`, then build and deploy with `VITE_GENE_DATA_URL` set to that prefix's public URL (`https://…/vN`). The cutover checklist in `docs/cloudflare-migration.md` covers creating the bucket. Until then, the release branch's Vercel deployment still serves genes from Neon.
+
+**Disease associations.** `pnpm data:associations` (`scripts/build-disease-associations.ts`) builds `src/features/disease-associations/data/associations.json` from the OMIM CSV (`data/disease_associated_genes.csv`, gitignored), with each gene's largest human CDS baked in from `data/isoforms.jsonl` (step 1 above; without it `largestCds` is null). Commit the result; lint-staged formats it with Oxfmt. The app imports the file with `?url`, so it ships as a hashed static asset, fetched once by `/disease-associations` and the human gene pages (`associationsQuery`) and kept out of the JS bundles.
+
+Both data scripts are TypeScript ports of the Python originals and write byte-identical output (the commits that ported them record the comparison).
 
 ## Environment Variables
 
 `.env.example` is the source of truth — consult it when adding new config. Variables group by purpose:
 
-- **Core** — `DATABASE_URL` (omit for PGlite dev), `COMPUTE_BACKEND`, `MODAL_API_URL`, `MODAL_API_TOKEN` (bearer token for the Modal API; must equal `JOB_API_TOKEN` in the Modal secret), `LOCAL_API_URL`.
-- **Auth** — `BASIC_AUTH_PASSWORD`, `SESSION_SECRET` (32+ chars, required with the password), `BYPASS_AUTH` (dev only).
-- **Public / client** — `VITE_GENE_DATA_URL`. Client values are build-time: Vite inlines `VITE_*` into the bundle through `import.meta.env` (typed in `src/vite-env.d.ts`), so they never hold secrets and a change needs a rebuild.
-- **Observability** — `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_*` (not read by the Start app until cutover).
-- **Optional features** — `HEALTH_AUTH_TOKEN`, `VITE_MAINTENANCE_MESSAGE` (build-time), `UPSTASH_REDIS_REST_*` (transitional), `VITE_ENABLE_MULTI_SPLIT` (build-time).
-- **Build-time** — `GIT_COMMIT_SHA`.
+- **Core** — `VITE_GENE_DATA_URL` (build-time): the corpus version to read. Unset reads the committed sample.
+- **Public / client** — Client values are build-time: Vite inlines `VITE_*` into the bundle through `import.meta.env` (typed in `src/vite-env.d.ts`), so they never hold secrets and a change needs a rebuild.
+- **Observability** — `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_*` (read at cutover, when Sentry for Start is wired).
+- **Optional features** — `VITE_MAINTENANCE_MESSAGE`, `VITE_ENABLE_MULTI_SPLIT` (both build-time); `HEALTH_AUTH_TOKEN` and `MCP_TOKENS` for the server routes slice 4 restores.
+- **Build-time** — `GIT_COMMIT_SHA` (for `/api/version`, slice 4).
 
 Nothing is needed to run the app: it reads the committed sample corpus and designs in the browser. A deployment for the lab needs `VITE_GENE_DATA_URL` at build time; Cloudflare Access (cutover) replaces the password gate.
 
@@ -179,10 +161,6 @@ This repo enforces [Conventional Commits](https://www.conventionalcommits.org/en
 ## Testing
 
 [Vitest](https://vitest.dev), run by `vp test`, is configured in `vitest.config.ts` (separate from `vite.config.ts`, which it can't load). Tests import from `vite-plus/test`. They are co-located with the code they cover (`*.test.ts` / `*.test.tsx`) across features, lib, stores, components and `src/routes/-components`. A component that uses TanStack Router hooks needs a router in the test (see `route-error.test.tsx`) or a mock of `@tanstack/react-router` (see `browser-runs.test.tsx`). Run `pnpm test` (one-shot), `pnpm test:watch`, or `pnpm test:coverage`. `pnpm verify` runs what CI runs (lint, format check, knip, type-check, tests) and is the pre-push gate.
-
-Drizzle has an integration test at `src/drizzle/queries.integration.test.ts` that runs against PGlite — it needs no real DB.
-
-The transitional server modules `import 'server-only'`. Vitest aliases it to Next's empty module (`vitest.config.ts`), and tsx scripts that reach them run with `--conditions=react-server` (see the `db:*` scripts); without either, the package throws on import.
 
 Storybook (`@storybook/react-vite`) stories live next to their components (`*.stories.tsx`); CI builds them with `pnpm build-storybook --test`.
 
@@ -198,7 +176,7 @@ Claude agents often run in git worktrees at `.claude/worktrees/<name>/`. A fresh
 ./scripts/bootstrap-worktree.sh
 ```
 
-This symlinks `.env` from the main repo, creates the Python environment with `uv sync`, and runs `pnpm install` in the worktree.
+This symlinks `.env` from the main repo and runs `pnpm install` in the worktree.
 
 **Always use absolute paths or paths relative to the worktree root** — do not assume the working directory is the main repo. When in doubt, `pwd` first. Edits, commits, and commands must happen inside the worktree (`.claude/worktrees/<name>/`), not the main repo at the project root.
 
@@ -224,12 +202,11 @@ Shared Claude Code permissions, deny rules, and sandbox config live in `.agents/
 
 - **Adding a new UI primitive**: Use `pnpm exec shadcn add <component>` (the pinned CLI, which reads the `base-rhea` style from `components.json`). Components go in `src/components/ui/`.
 - **Adding a page**: Add a file route in `src/routes/` (`createFileRoute`), with `head()` for the title (from the copy files) and `validateSearch` for any search params. The dev server and build regenerate `src/routeTree.gen.ts`; commit it. Add the path to `ROUTES` in `e2e/shell.spec.ts`.
-- **Server code**: Don't add server actions. Server routes (health, MCP, the cloud-designs API) arrive in slice 4 as Start server routes on the Worker.
+- **Server code**: There is none. Server routes (health, MCP, the cloud-designs API) arrive in slice 4 as Start server routes on the Worker.
 - **Adding a new feature**: Create `src/features/<name>/` with the standard subfolders. The boundary lint rules pick it up automatically (no config changes needed).
 - **Adding shared code**: If used by ≥2 features, decide by domain: bio-specific → `src/lib/bio/` or `src/components/bio/`; generic → `src/lib/` or `src/components/`.
-- **Modifying the optimization algorithm**: Edit `python/algorithm.py`. The FastAPI endpoint is in `python/index.py`. In production this runs on Modal (see `modal/app.py`); `.github/workflows/modal-deploy.yml` redeploys it when the change merges to `main`. **There is a second implementation** — the Rust port in `rust/` that runs in the browser — so an algorithm change must be made in both, or the two will disagree. Regenerate the parity fixtures (`scripts/gen-parity-fixtures.py`) and run `cd rust && cargo test`; the tests compare the two directly. See `rust/README.md`.
-- **Database schema changes**: Edit `src/drizzle/schema.ts`, run `pnpm db:generate` and commit the new SQL in `src/drizzle/migrations/` (DB CI fails if `schema.ts` and the migrations disagree), then `pnpm db:migrate` against each database. Update `scripts/build-db.py` too if the JSONL shape changes, then `pnpm db:build && pnpm db:upload`.
-- **Switching DB backend**: Edit `src/drizzle/client.ts` and the connection driver — it's a 5-file change.
+- **Modifying the optimization algorithm**: Edit the Rust crate in `rust/optimizer/src/` — it is the reference implementation; there is no Python version to keep in step. Run `cd rust && cargo test --release`, then `pnpm wasm:build` and commit `public/optimizer/rej-optimizer.wasm` with `optimizer-asset.generated.ts` (Rust CI refuses a code change without a rebuilt asset). The DNAChisel parity fixtures are frozen: if a change is meant to alter designs, they will fail; add new Rust-owned tests for the new behaviour rather than editing them (`rust/optimizer/tests/fixtures/README.md`).
+- **Changing the gene data shape**: Edit `src/features/gene-search/corpus/format.ts` and `build.ts` (and `scripts/build-gene-seed.ts` if the JSONL changes), rerun `pnpm corpus:build --force`, and commit `public/gene-data/sample`. A new shape is a new corpus version.
 
 ## Libraries that moved in 2026
 

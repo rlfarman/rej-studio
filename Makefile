@@ -1,4 +1,4 @@
-.PHONY: dev build lint lint-fix format type-check verify doctor help
+.PHONY: dev build gene-seed associations lint lint-fix format type-check verify doctor help
 
 # ---------- Development ----------
 
@@ -7,6 +7,14 @@ dev: ## Start the TanStack Start dev server (vp dev, Worker in workerd)
 
 build: ## Production build (TanStack Start + Cloudflare Worker, in dist/)
 	pnpm build
+
+# ---------- Gene data ----------
+
+gene-seed: ## Rebuild data/genes.jsonl + data/isoforms.jsonl from data/transcript_metadata.csv
+	pnpm data:genes
+
+associations: ## Rebuild the disease-associations JSON from data/disease_associated_genes.csv
+	pnpm data:associations
 
 # ---------- Quality ----------
 
@@ -22,7 +30,7 @@ format: ## Run Oxfmt
 type-check: ## Run TypeScript type checker
 	pnpm type-check
 
-verify: ## Lint, type-check and unit tests (the pre-push gate)
+verify: ## Lint, format check, knip, type-check and unit tests (the pre-push gate)
 	pnpm verify
 
 doctor: ## Check local environment health
