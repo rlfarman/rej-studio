@@ -1,5 +1,3 @@
-'use client'
-
 import { useMemo } from 'react'
 import { ArrowRight } from 'lucide-react'
 import { cn } from '@/lib/utils'

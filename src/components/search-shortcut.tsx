@@ -1,5 +1,3 @@
-'use client'
-
 import { Kbd, ModKey } from '@/components/ui/kbd'
 import { useSearchShortcut } from '@/hooks/use-search-shortcut'
 import { cn } from '@/lib/utils'

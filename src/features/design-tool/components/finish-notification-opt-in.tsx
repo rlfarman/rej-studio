@@ -1,5 +1,3 @@
-'use client'
-
 import { useSyncExternalStore } from 'react'
 import { Bell } from 'lucide-react'
 import { Button } from '@/components/ui/button'

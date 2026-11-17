@@ -1,5 +1,3 @@
-'use client'
-
 import { useMemo } from 'react'
 import { useFormContext, useWatch } from 'react-hook-form'
 import { FormValues } from '../types/form-schema'

@@ -1,5 +1,3 @@
-'use client'
-
 import { useMemo } from 'react'
 import { toCodons } from '@/lib/bio/genetic-code'
 import { getRelativePreference } from '../utils/codon-preference'

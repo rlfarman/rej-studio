@@ -1,5 +1,3 @@
-'use client'
-
 import { useSyncExternalStore } from 'react'
 import { Download, Table2 } from 'lucide-react'
 

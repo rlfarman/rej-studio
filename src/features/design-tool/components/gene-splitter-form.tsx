@@ -1,4 +1,3 @@
-'use client'
 import * as React from 'react'
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'

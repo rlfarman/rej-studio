@@ -1,5 +1,3 @@
-'use client'
-
 import { useFavoriteGenes } from '@/features/gene-search/stores/favorite-genes-store'
 import { useRecentGenes } from '@/features/gene-search/stores/recent-genes-store'
 import type { SavedGene } from '@/features/gene-search/types/domain-types'

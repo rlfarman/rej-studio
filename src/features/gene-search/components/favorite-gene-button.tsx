@@ -1,4 +1,3 @@
-'use client'
 import { Button } from '@/components/ui/button'
 import { Star } from 'lucide-react'
 import { useFavoriteGenes } from '@/features/gene-search/stores/favorite-genes-store'

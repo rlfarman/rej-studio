@@ -1,5 +1,3 @@
-'use client'
-
 import type React from 'react'
 import { useMemo, useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'

@@ -1,5 +1,3 @@
-'use client'
-
 import { useCallback, useDeferredValue, useMemo, useRef, useState } from 'react'
 import {
   ChevronRight,
