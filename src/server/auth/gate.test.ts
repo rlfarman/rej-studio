@@ -240,6 +240,15 @@ describe('signing in', () => {
     expect(response.status).toBe(303)
     expect(response.headers.get('location')).toBe(`${SITE}/login`)
     expect(response.headers.get('set-cookie')).toContain('Max-Age=0')
+    // The account's cookie goes too (src/server/accounts/).
+    const cleared = response.headers
+      .getSetCookie()
+      .map((cookie) => cookie.split('=')[0])
+    expect(cleared).toEqual([
+      SESSION_COOKIE_NAME,
+      'rej-account.session_token',
+      '__Secure-rej-account.session_token',
+    ])
   })
 })
 

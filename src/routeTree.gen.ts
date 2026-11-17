@@ -15,11 +15,14 @@ import { Route as DesignToolRouteImport } from './routes/design-tool'
 import { Route as DiseaseAssociationsRouteImport } from './routes/disease-associations'
 import { Route as GenesRouteRouteImport } from './routes/genes/route'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as ApiAccountRouteImport } from './routes/api/account'
 import { Route as ApiHealthRouteImport } from './routes/api/health'
 import { Route as ApiMcpRouteImport } from './routes/api/mcp'
 import { Route as ApiVersionRouteImport } from './routes/api/version'
 import { Route as GenesIndexRouteImport } from './routes/genes/index'
 import { Route as GenesSymbolRouteImport } from './routes/genes/$symbol'
+import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as ApiDevSignInCodeRouteImport } from './routes/api/dev/sign-in-code'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -51,6 +54,11 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAccountRoute = ApiAccountRouteImport.update({
+  id: '/api/account',
+  path: '/api/account',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiHealthRoute = ApiHealthRouteImport.update({
   id: '/api/health',
   path: '/api/health',
@@ -76,6 +84,16 @@ const GenesSymbolRoute = GenesSymbolRouteImport.update({
   path: '/$symbol',
   getParentRoute: () => GenesRouteRoute,
 } as any)
+const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
+  id: '/api/auth/$',
+  path: '/api/auth/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiDevSignInCodeRoute = ApiDevSignInCodeRouteImport.update({
+  id: '/api/dev/sign-in-code',
+  path: '/api/dev/sign-in-code',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -84,11 +102,14 @@ export interface FileRoutesByFullPath {
   '/design-tool': typeof DesignToolRoute
   '/disease-associations': typeof DiseaseAssociationsRoute
   '/login': typeof LoginRoute
+  '/api/account': typeof ApiAccountRoute
   '/api/health': typeof ApiHealthRoute
   '/api/mcp': typeof ApiMcpRoute
   '/api/version': typeof ApiVersionRoute
   '/genes/$symbol': typeof GenesSymbolRoute
   '/genes/': typeof GenesIndexRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/dev/sign-in-code': typeof ApiDevSignInCodeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -96,11 +117,14 @@ export interface FileRoutesByTo {
   '/design-tool': typeof DesignToolRoute
   '/disease-associations': typeof DiseaseAssociationsRoute
   '/login': typeof LoginRoute
+  '/api/account': typeof ApiAccountRoute
   '/api/health': typeof ApiHealthRoute
   '/api/mcp': typeof ApiMcpRoute
   '/api/version': typeof ApiVersionRoute
   '/genes/$symbol': typeof GenesSymbolRoute
   '/genes': typeof GenesIndexRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/dev/sign-in-code': typeof ApiDevSignInCodeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -110,11 +134,14 @@ export interface FileRoutesById {
   '/design-tool': typeof DesignToolRoute
   '/disease-associations': typeof DiseaseAssociationsRoute
   '/login': typeof LoginRoute
+  '/api/account': typeof ApiAccountRoute
   '/api/health': typeof ApiHealthRoute
   '/api/mcp': typeof ApiMcpRoute
   '/api/version': typeof ApiVersionRoute
   '/genes/$symbol': typeof GenesSymbolRoute
   '/genes/': typeof GenesIndexRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/dev/sign-in-code': typeof ApiDevSignInCodeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -125,11 +152,14 @@ export interface FileRouteTypes {
     | '/design-tool'
     | '/disease-associations'
     | '/login'
+    | '/api/account'
     | '/api/health'
     | '/api/mcp'
     | '/api/version'
     | '/genes/$symbol'
     | '/genes/'
+    | '/api/auth/$'
+    | '/api/dev/sign-in-code'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -137,11 +167,14 @@ export interface FileRouteTypes {
     | '/design-tool'
     | '/disease-associations'
     | '/login'
+    | '/api/account'
     | '/api/health'
     | '/api/mcp'
     | '/api/version'
     | '/genes/$symbol'
     | '/genes'
+    | '/api/auth/$'
+    | '/api/dev/sign-in-code'
   id:
     | '__root__'
     | '/'
@@ -150,11 +183,14 @@ export interface FileRouteTypes {
     | '/design-tool'
     | '/disease-associations'
     | '/login'
+    | '/api/account'
     | '/api/health'
     | '/api/mcp'
     | '/api/version'
     | '/genes/$symbol'
     | '/genes/'
+    | '/api/auth/$'
+    | '/api/dev/sign-in-code'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -164,9 +200,12 @@ export interface RootRouteChildren {
   DesignToolRoute: typeof DesignToolRoute
   DiseaseAssociationsRoute: typeof DiseaseAssociationsRoute
   LoginRoute: typeof LoginRoute
+  ApiAccountRoute: typeof ApiAccountRoute
   ApiHealthRoute: typeof ApiHealthRoute
   ApiMcpRoute: typeof ApiMcpRoute
   ApiVersionRoute: typeof ApiVersionRoute
+  ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  ApiDevSignInCodeRoute: typeof ApiDevSignInCodeRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -213,6 +252,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/account': {
+      id: '/api/account'
+      path: '/api/account'
+      fullPath: '/api/account'
+      preLoaderRoute: typeof ApiAccountRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/health': {
       id: '/api/health'
       path: '/api/health'
@@ -248,6 +294,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GenesSymbolRouteImport
       parentRoute: typeof GenesRouteRoute
     }
+    '/api/auth/$': {
+      id: '/api/auth/$'
+      path: '/api/auth/$'
+      fullPath: '/api/auth/$'
+      preLoaderRoute: typeof ApiAuthSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/dev/sign-in-code': {
+      id: '/api/dev/sign-in-code'
+      path: '/api/dev/sign-in-code'
+      fullPath: '/api/dev/sign-in-code'
+      preLoaderRoute: typeof ApiDevSignInCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -272,9 +332,12 @@ const rootRouteChildren: RootRouteChildren = {
   DesignToolRoute: DesignToolRoute,
   DiseaseAssociationsRoute: DiseaseAssociationsRoute,
   LoginRoute: LoginRoute,
+  ApiAccountRoute: ApiAccountRoute,
   ApiHealthRoute: ApiHealthRoute,
   ApiMcpRoute: ApiMcpRoute,
   ApiVersionRoute: ApiVersionRoute,
+  ApiAuthSplatRoute: ApiAuthSplatRoute,
+  ApiDevSignInCodeRoute: ApiDevSignInCodeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
