@@ -267,3 +267,22 @@ test('a build on the sample corpus says so', async ({ page }) => {
     page.getByText(appCopy.sampleData.label(SAMPLE_GENE_COUNT)),
   ).toBeVisible()
 })
+
+test('highlighting a palette result preloads its gene page', async ({
+  page,
+}) => {
+  // Palette rows open with navigate(), so the router's hover preloading
+  // doesn't apply; the palette preloads the highlighted gene itself.
+  // Prerendered: the button is on screen before the page hydrates, and a
+  // click before then does nothing. Wait for the app to be live.
+  await page.goto('/design-tool', { waitUntil: 'networkidle' })
+  await page.getByRole('button', { name: geneSearchCopy.trigger.label }).click()
+  await page.getByRole('dialog').getByRole('combobox').fill('tp53')
+  const geneFile = page.waitForRequest((request) =>
+    new URL(request.url()).pathname.endsWith('/genes/ENSG00000141510.json'),
+  )
+  await page.getByRole('option', { name: /TP53/ }).first().hover()
+  await geneFile
+  await page.keyboard.press('Enter')
+  await expect(page).toHaveURL(/\/genes\/TP53/)
+})

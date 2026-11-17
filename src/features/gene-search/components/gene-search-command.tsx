@@ -6,13 +6,13 @@ import {
   CommandList,
   CommandSeparator,
 } from '@/components/ui/command'
-import { Link } from '@tanstack/react-router'
+import { Link, useRouter } from '@tanstack/react-router'
 import type { GeneSearchResult } from '@/features/gene-search/types/search'
 import type { SimilarGene } from '@/features/gene-search/types/search'
 import { SpeciesIcon } from '@/components/bio/species-icon'
 import { TruncatedText } from '@/components/truncated-text'
 import { HighlightMatch } from '@/features/gene-search/utils/highlight-match'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { cn } from '@/lib/utils'
 import {
   CircleAlert,
@@ -34,6 +34,7 @@ import { useSpeciesContext } from '@/stores/species-store'
 import { SPECIES_DISPLAY_NAME, type SpeciesFilter } from '@/lib/bio/species'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { geneSearchCopy } from '../copy'
+import { geneLink } from '../utils/search-href'
 import { SearchEmptyState } from './search-empty-state'
 import { SearchShortcutHint } from '@/components/search-shortcut'
 import { SEARCH_SHORTCUT_ARIA } from '@/lib/search-shortcut'
@@ -295,6 +296,37 @@ export function GeneSearchCommand({
   const { species, handleSpeciesChange } = useSpeciesContext()
   const isMobile = useIsMobile()
 
+  // Highlighting a gene (arrow keys or hover) preloads its page, as hovering
+  // a link does elsewhere (the router's `defaultPreload: 'intent'`): palette
+  // rows open with navigate(), so the router never sees an intent. After the
+  // same short pause the router uses, so arrowing past a row costs nothing.
+  const router = useRouter()
+  // Controlled: cmdk reports a highlight change only to a controlled
+  // `value`.
+  const [highlighted, setHighlighted] = useState('')
+  const preloadTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
+  const genesByValue = new Map<string, SavedGene>([
+    ...favoriteGenes.map((gene) => [`fav-${gene.id}`, gene] as const),
+    ...recentGenes.map((gene) => [`recent-${gene.id}`, gene] as const),
+    ...searchResults.map((gene) => [gene.id, gene] as const),
+  ])
+  const preloadHighlighted = (value: string) => {
+    setHighlighted(value)
+    clearTimeout(preloadTimer.current)
+    const gene = genesByValue.get(value)
+    if (!gene) return
+    preloadTimer.current = setTimeout(() => {
+      void router
+        .preloadRoute(
+          geneLink(gene.symbol, gene.species, gene.matchedIsoformId),
+        )
+        .catch(() => {
+          // A failed preload is the click's to report, if it fails too.
+        })
+    }, 50)
+  }
+  useEffect(() => () => clearTimeout(preloadTimer.current), [])
+
   const internalHandleSelect = (gene: SavedGene) => {
     setShowList(false)
     handleSelect(gene)
@@ -369,7 +401,12 @@ export function GeneSearchCommand({
   const isNavigating = Boolean(pendingGene)
 
   return (
-    <Command className="border md:min-w-[450px]" shouldFilter={false}>
+    <Command
+      className="border md:min-w-[450px]"
+      shouldFilter={false}
+      value={highlighted}
+      onValueChange={preloadHighlighted}
+    >
       <CommandInput
         ref={inputRef}
         aria-label={copy.inputAria}
