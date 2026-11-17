@@ -16,6 +16,7 @@ import {
   prerenderJobPath,
   prerenderedFile,
 } from './src/server/prerendered-pages'
+import { SERVER_FN_BASE, serverFnId } from './src/server/server-fns'
 
 /**
  * How the Worker decides between the SPA shell and a full page.
@@ -186,6 +187,13 @@ export default defineConfig({
       // Only the listed pages: no following their links, no discovering
       // other routes (both on by default).
       prerender: { crawlLinks: false, autoStaticPathsDiscovery: false },
+      // Under /api/, behind the gate as an API, with ids a script can name
+      // (src/server/server-fns.ts).
+      serverFns: {
+        base: SERVER_FN_BASE,
+        generateFunctionId: ({ filename, functionName }) =>
+          serverFnId(filename, functionName),
+      },
       pages: PRERENDERED_PAGES.map((path) => ({
         path: prerenderJobPath(path),
         prerender: { enabled: true, outputPath: prerenderedFile(path) },

@@ -27,3 +27,18 @@ vi.mock('@/lib/logger', () => ({
     error: vi.fn(),
   }),
 }))
+
+// --- Server functions ---
+// The cloud-design server functions only exist after Start's compiler has
+// turned them into RPC stubs, which Vitest does not run; loading the real
+// module would pull in the Worker (`cloudflare:workers`). Here every call
+// fails as if offline, unless a test mocks it otherwise.
+vi.mock('@/features/design-tool/api/cloud-designs.functions', () => {
+  const offline = () =>
+    Promise.reject(new TypeError('server functions do not run under Vitest'))
+  return {
+    submitCloudDesignFn: vi.fn(offline),
+    readCloudDesignFn: vi.fn(offline),
+    deleteCloudDesignFn: vi.fn(offline),
+  }
+})

@@ -1,5 +1,5 @@
 /**
- * What `/api/designs` and the cloud-design Workflow say: HTTP refusals, and
+ * What the cloud-design server functions and Workflow say: HTTP refusals, and
  * the failure messages a design carries back to whoever reads it (the design
  * tool shows them as they are, and an agent reads them through get_design).
  */
@@ -10,7 +10,6 @@ export const designsCopy = {
       'Cloud designs are not configured on this deployment (no passcode set).',
     unauthorized: 'Sign in with the passcode to use cloud designs.',
     unavailable: 'Cloud designs are not available on this deployment.',
-    badJson: 'The request body must be JSON.',
     bodyTooLarge: 'That request is too large.',
     invalid: (reason: string) => `That design cannot be run: ${reason}`,
     tooLong: (bases: number, limit: number) =>

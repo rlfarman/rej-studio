@@ -3,7 +3,7 @@ import { gateConfig, isLoopback, readSession } from '../auth/session'
 import { designsCopy } from './copy'
 
 /**
- * Who is asking, for `/api/designs`. Fails closed.
+ * Who is asking, for the cloud-design server functions. Fails closed.
  *
  * The Worker's passcode gate (src/server/auth/gate.ts) has already turned
  * away requests without a session, but this checks again rather than trust

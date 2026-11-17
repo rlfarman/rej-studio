@@ -11,6 +11,7 @@ vi.mock('@/lib/logger', () => ({
 }))
 
 import type { ServerEnv } from '../env'
+import { SERVER_FN_BASE } from '../server-fns'
 import { gate, safeReturnTo } from './gate'
 import { handleLogin, handleLogout } from './login'
 import { SESSION_COOKIE_NAME, SESSION_MAX_AGE_SECONDS } from './session'
@@ -67,7 +68,43 @@ describe('the gate, with a passcode set', () => {
   })
 
   it('answers a signed-out API call with 401, not a redirect', async () => {
-    const response = await gate(get('/api/designs/abc'), ON)
+    const response = await gate(get('/api/version'), ON)
+    expect(response?.status).toBe(401)
+  })
+
+  // A server function read is a GET, which outside /api would count as a
+  // page load and be sent to the login page: fetch() would follow that to
+  // HTML. Under SERVER_FN_BASE it is an API call.
+  it.each(['GET', 'POST'])(
+    'answers a signed-out %s server-function call with 401 JSON',
+    async (method) => {
+      const response = await gate(
+        new Request(
+          `${SITE}${SERVER_FN_BASE}/cloud-designs.readCloudDesignFn`,
+          {
+            method,
+            headers: { 'x-tsr-serverfn': 'true' },
+          },
+        ),
+        ON,
+      )
+      expect(response?.status).toBe(401)
+      expect(response!.headers.get('content-type')).toMatch(/json/)
+      expect(await response!.json()).toHaveProperty('error')
+    },
+  )
+
+  it('serves server functions under /api/', () => {
+    expect(SERVER_FN_BASE.startsWith('/api/')).toBe(true)
+  })
+
+  it('never redirects a server-function call, wherever it is served', async () => {
+    const response = await gate(
+      new Request(`${SITE}/_serverFn/abc`, {
+        headers: { 'x-tsr-serverfn': 'true' },
+      }),
+      ON,
+    )
     expect(response?.status).toBe(401)
   })
 

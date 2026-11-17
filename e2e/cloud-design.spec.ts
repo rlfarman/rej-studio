@@ -1,11 +1,20 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Response } from '@playwright/test'
 
 import { designToolCopy } from '../src/features/design-tool/copy'
+import { SERVER_FN_BASE } from '../src/server/server-fns'
 import { signIn } from './sign-in'
 
-// A cloud design, end to end: the toggle, POST /api/designs, the Workflow
-// running in workerd under `vp dev`, and the result found again after the
-// page that submitted it has closed.
+// A cloud design, end to end: the toggle, the submit server function, the
+// Workflow running in workerd under `vp dev`, and the result found again
+// after the page that submitted it has closed.
+
+/** A call to one of the cloud-design server functions. */
+function isServerFn(response: Response, method: 'GET' | 'POST'): boolean {
+  return (
+    new URL(response.url()).pathname.startsWith(`${SERVER_FN_BASE}/`) &&
+    response.request().method() === method
+  )
+}
 
 const GENE_PAGE = '/design-tool?isoform=ENST00000269305'
 const copy = designToolCopy.cloud
@@ -28,13 +37,16 @@ test('runs a design in the cloud, and finds it after the page closes', async ({
   await expect(page.getByText(copy.toggleHint)).toBeVisible()
   await toggle.click()
 
+  // The submission carries the sequence; nothing else posted here does.
   const submitted = page.waitForResponse(
     (response) =>
-      response.url().endsWith('/api/designs') &&
-      response.request().method() === 'POST',
+      isServerFn(response, 'POST') &&
+      (response.request().postData() ?? '').includes('codingSequence'),
   )
   await page.getByRole('button', { name: /run designer/i }).click()
-  expect((await submitted).status()).toBe(202)
+  const answer = await submitted
+  expect(answer.status()).toBe(202)
+  expect(answer.headers()['cache-control']).toBe('no-store')
 
   // The cloud id goes in the URL, so the link reopens this design anywhere.
   await expect(page).toHaveURL(/[?&]job=[0-9a-f]{64}/)
@@ -89,6 +101,12 @@ test('a cloud design link opens on another device, and its owner can delete it',
   await expect(page.getByText(copy.deletedNote)).toBeVisible()
   await expect(page.getByText(/split after base/i).first()).toBeVisible()
 
-  const gone = await page.request.get(`/api/designs/${jobId}`)
-  expect(gone.status()).toBe(404)
+  // Gone from the cloud: a browser with no copy of its own is told so.
+  const fresh = await browser.newContext({ storageState: undefined })
+  const late = await fresh.newPage()
+  await signIn(late)
+  const read = late.waitForResponse((response) => isServerFn(response, 'GET'))
+  await late.goto(`/design-tool?job=${jobId}`)
+  expect((await read).status()).toBe(404)
+  await fresh.close()
 })

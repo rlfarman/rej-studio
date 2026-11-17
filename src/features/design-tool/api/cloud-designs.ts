@@ -1,22 +1,27 @@
-import {
-  cloudDesignRefusalSchema,
-  cloudDesignSchema,
-  cloudDesignSubmittedSchema,
-  type CloudDesign,
-  type CloudDesignSubmitted,
+import type {
+  CloudDesign,
+  CloudDesignSubmitted,
 } from '@/features/design-tool/types/cloud-design'
 import type { FormValues } from '@/features/design-tool/types/form-schema'
 import { designToolCopy } from '@/features/design-tool/copy'
 
+import { CloudDesignRefusal } from './cloud-design-fetch'
+import {
+  deleteCloudDesignFn,
+  readCloudDesignFn,
+  submitCloudDesignFn,
+} from './cloud-designs.functions'
+
 /**
- * The design tool's client for `/api/designs`: the one place a page talks to
- * the Worker. Everything else the design tool does stays in the browser.
+ * The design tool's client for cloud designs: the one place a page talks to
+ * the Worker, through the server functions in ./cloud-designs.functions.ts.
+ * Everything else the design tool does stays in the browser.
  *
  * Expected failures come back as values, with the server's own message when
  * it sent one (it is written for the person reading it), so callers never
- * need a try/catch. `status` is 0 when no answer arrived (offline). An
- * expired sign-in is a 401 from the passcode gate, whose message says to
- * sign in again.
+ * need a try/catch. `status` is the HTTP status, or 0 when no answer arrived
+ * (offline). An expired sign-in is a 401 from the passcode gate, whose
+ * message says to sign in again.
  */
 
 const copy = designToolCopy.cloud
@@ -25,53 +30,25 @@ export type CloudCall<T> =
   | { ok: true; data: T }
   | { ok: false; status: number; message: string }
 
-const BASE = '/api/designs'
-
-interface CallInit extends Omit<RequestInit, 'headers'> {
-  headers?: Record<string, string>
-}
-
-async function call<T>(
-  input: string,
-  init: CallInit,
-  parse: (body: unknown) => T,
-): Promise<CloudCall<T>> {
-  let response: Response
+async function call<T>(run: () => Promise<T>): Promise<CloudCall<T>> {
   try {
-    response = await fetch(input, {
-      ...init,
-      // Same origin only: the session cookie must go with it, and nothing
-      // else should.
-      credentials: 'same-origin',
-      headers: { accept: 'application/json', ...init.headers },
-    })
-  } catch {
-    return { ok: false, status: 0, message: copy.unreachable }
-  }
-
-  if (response.status === 204) return { ok: true, data: parse(null) }
-
-  let body: unknown = null
-  try {
-    body = await response.json()
-  } catch {
-    // An HTML page where JSON was expected: something between here and the
-    // Worker answered instead of it.
-    return { ok: false, status: response.status, message: copy.unreachable }
-  }
-
-  if (!response.ok) {
-    const refusal = cloudDesignRefusalSchema.safeParse(body)
-    return {
-      ok: false,
-      status: response.status,
-      message: refusal.success ? refusal.data.error : copy.failedGeneric,
+    return { ok: true, data: await run() }
+  } catch (error) {
+    if (error instanceof CloudDesignRefusal) {
+      return {
+        ok: false,
+        status: error.status,
+        // Not JSON means something else answered instead of the Worker.
+        message:
+          error.serverMessage ??
+          (error.json ? copy.failedGeneric : copy.unreachable),
+      }
     }
-  }
-  try {
-    return { ok: true, data: parse(body) }
-  } catch {
-    return { ok: false, status: response.status, message: copy.failedGeneric }
+    // fetch itself failed: offline, or the connection dropped.
+    if (error instanceof TypeError) {
+      return { ok: false, status: 0, message: copy.unreachable }
+    }
+    return { ok: false, status: 0, message: copy.failedGeneric }
   }
 }
 
@@ -79,31 +56,15 @@ async function call<T>(
 export function submitCloudDesign(
   values: FormValues,
 ): Promise<CloudCall<CloudDesignSubmitted>> {
-  return call(
-    BASE,
-    {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ values }),
-    },
-    (body) => cloudDesignSubmittedSchema.parse(body),
-  )
+  return call(() => submitCloudDesignFn({ data: { values } }))
 }
 
 /** Reads a cloud design: its status, and its inputs and result once known. */
 export function fetchCloudDesign(id: string): Promise<CloudCall<CloudDesign>> {
-  return call(
-    `${BASE}/${encodeURIComponent(id)}`,
-    { method: 'GET', cache: 'no-store' },
-    (body) => cloudDesignSchema.parse(body),
-  )
+  return call(() => readCloudDesignFn({ data: { id } }))
 }
 
 /** Deletes a cloud design and its stored result. Its owner only. */
 export function deleteCloudDesign(id: string): Promise<CloudCall<null>> {
-  return call(
-    `${BASE}/${encodeURIComponent(id)}`,
-    { method: 'DELETE' },
-    () => null,
-  )
+  return call(() => deleteCloudDesignFn({ data: { id } }))
 }

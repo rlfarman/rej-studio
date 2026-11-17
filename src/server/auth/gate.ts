@@ -50,10 +50,18 @@ function isPublicPath(pathname: string): boolean {
   )
 }
 
+/**
+ * A browser navigation, which a redirect to /login serves. Server functions
+ * live under /api/ (../server-fns.ts), and Start's client marks every call
+ * with `x-tsr-serverfn`, so a server-function read (a GET) is never taken
+ * for one even if its base moves: fetch() would follow the redirect and get
+ * the login page's HTML.
+ */
 function isPageLoad(request: Request, pathname: string): boolean {
   return (
     (request.method === 'GET' || request.method === 'HEAD') &&
-    !pathname.startsWith('/api/')
+    !pathname.startsWith('/api/') &&
+    request.headers.get('x-tsr-serverfn') !== 'true'
   )
 }
 
