@@ -249,6 +249,8 @@ Done on the `rlfarman` account; the preview is live at
   version has its own path). The index then loaded in under 1 s. Responses
   still carry the right `Access-Control-Allow-Origin` per requesting origin
   (checked for the workers.dev URL, `rejstudio.com` and localhost).
+  Smart Tiered Cache is on for the zone too, so a cache miss at one edge
+  location fills from a regional tier before going to R2.
 - **Buckets bound** in `wrangler.jsonc`: `GENE_DATA` and `DESIGN_RESULTS`
   (`rej-studio-design-results`, 30-day lifecycle rule).
 - **Passcode gate instead of Access (decided 2026-11-17).** Access was set

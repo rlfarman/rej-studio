@@ -1,3 +1,4 @@
+// eslint-disable-next-line no-restricted-imports -- this module is the wrapper the rule points to
 import type { toast as sonnerToast } from 'sonner'
 
 /**
