@@ -31,17 +31,12 @@ yarn-error.log*
 .env.local
 .env.production
 
-/venv
-/.venv
 
 # vercel
 .vercel
 
 # typescript
 *.tsbuildinfo
-
-# python
-__pycache__/
 
 # notes
 notes.md

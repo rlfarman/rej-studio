@@ -8,11 +8,6 @@ dev: ## Start the TanStack Start dev server (vp dev, Worker in workerd)
 build: ## Production build (TanStack Start + Cloudflare Worker, in dist/)
 	pnpm build
 
-# ---------- Deploy ----------
-# The Python backend deploys from CI (.github/workflows/modal-deploy.yml) on
-# merges to main, with the pinned image builder and locked Modal client. To
-# redeploy by hand: gh workflow run modal-deploy.yml
-
 # ---------- Quality ----------
 
 lint: ## Run Oxlint (vp lint), with the boundary rules as JS plugins

@@ -14,7 +14,6 @@
     ".agents/skills",
     "CHANGELOG.md",
     "pnpm-lock.yaml",
-    ".pytest_cache",
     "rust/optimizer/tests/fixtures",
     "rust/target",
     "public/gene-data",
