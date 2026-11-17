@@ -64,12 +64,23 @@ test('/genes searches the corpus in the browser', async ({ page }) => {
   expect(serverCalls).toEqual([])
 })
 
-test('/genes suggests other symbols when nothing matches', async ({ page }) => {
-  await page.goto('/genes?q=BRCA3')
+test('/genes forgives a typo in a symbol', async ({ page }) => {
+  await page.goto('/genes?q=brac1')
+  const results = page.getByRole('region', {
+    name: geneSearchCopy.searchPage.resultsTitle('brac1'),
+  })
   await expect(
-    page.getByText(geneSearchCopy.results.noMatches('BRCA3')),
+    results.getByRole('link', { name: /BRCA1/ }).first(),
   ).toBeVisible()
-  await expect(page.getByRole('link', { name: 'BRCA1' }).first()).toBeVisible()
+})
+
+test('/genes suggests other symbols when nothing matches', async ({ page }) => {
+  // The sample corpus has EGFR for human only.
+  await page.goto('/genes?q=EGFR&species=mouse')
+  await expect(
+    page.getByText(geneSearchCopy.results.noMatchesInSpecies('EGFR', 'Mouse')),
+  ).toBeVisible()
+  await expect(page.getByRole('link', { name: 'EGFR' }).first()).toBeVisible()
 })
 
 test('a gene page lists its isoforms, with charts and phenotypes', async ({
