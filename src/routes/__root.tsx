@@ -24,6 +24,19 @@ import { Header } from './-components/layout/header'
 import { RouteError } from './-components/route-error'
 import { useShellPathname } from './-components/layout/use-shell-pathname'
 import globalsCss from '@/styles/globals.css?url'
+import { geneDataUrl } from '@/features/gene-search/corpus/gene-data-url'
+
+/**
+ * The gene data's origin when it is not this site's (the R2 custom domain).
+ * Opening that connection while the page loads takes its DNS lookup and TLS
+ * handshake (often 100–300 ms on a phone) off the first search or gene page.
+ * `crossorigin`: the data is fetched with CORS and no credentials, which
+ * uses a connection of its own.
+ */
+const geneDataOrigin = (() => {
+  const url = geneDataUrl()
+  return /^https?:\/\//.test(url) ? new URL(url).origin : null
+})()
 
 // Reads the user's sidebar preferences from localStorage and applies them to
 // <html> before React renders, so the prerendered shell opens the sidebar
@@ -67,6 +80,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         { rel: 'stylesheet', href: globalsCss },
         { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
         { rel: 'manifest', href: '/manifest.webmanifest' },
+        ...(geneDataOrigin
+          ? [
+              {
+                rel: 'preconnect',
+                href: geneDataOrigin,
+                crossOrigin: 'anonymous' as const,
+              },
+            ]
+          : []),
       ],
     }),
     shellComponent: RootDocument,
