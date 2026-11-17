@@ -87,10 +87,10 @@
     "happy-dom": "^21.0.4",
     "husky": "^9.1.7",
     "knip": "^6.45.1",
-    "lint-staged": "^17.6.0",
+    "lint-staged": "^17.6.1",
     "oxfmt": "0.79.0",
-    "oxlint": "1.93.0",
-    "oxlint-tsgolint": "7.0.2006",
+    "oxlint": "1.94.0",
+    "oxlint-tsgolint": "7.0.2007",
     "shadcn": "^4.23.0",
     "sharp": "0.35.5",
     "storybook": "^10.6.7",
@@ -100,7 +100,7 @@
     "typescript": "catalog:",
     "typescript-native": "npm:typescript@^7.0.2",
     "vite-plus": "^1.6.0",
-    "wrangler": "^4.162.0"
+    "wrangler": "^4.163.0"
   },
   "engines": {
     "node": "26.x"
