@@ -15,11 +15,11 @@
   // no CPU setting of their own; every step invocation gets this.
   "limits": { "cpu_ms": 300000 },
   "assets": {
-    // Every navigation that doesn't match a file gets the prerendered SPA
-    // shell (index.html, see `spa.prerender.outputPath` in vite.config.ts),
-    // served as a free static asset without invoking the Worker. The
-    // directory is set by the Cloudflare Vite plugin.
-    "not_found_handling": "single-page-application",
+    // No fallback here: the Worker decides which HTML a navigation gets, a
+    // prerendered page or the SPA shell (src/server/worker-entry.ts,
+    // src/server/prerendered-pages.ts). The directory is set by the
+    // Cloudflare Vite plugin.
+    "not_found_handling": "none",
     // Everything goes through the Worker first, so the passcode gate
     // (src/server/auth/gate.ts) sees every page load and API call; it hands
     // pages back to the asset layer once a session checks out. The

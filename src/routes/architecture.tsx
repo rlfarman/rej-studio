@@ -198,9 +198,9 @@ function ArchitecturePage() {
           <div className="grid grid-cols-3 gap-3">
             <ServiceBox
               name="Static assets"
-              tech="Prerendered SPA shell"
+              tech="Prerendered pages + SPA shell"
               details={[
-                'Every navigation gets the shell',
+                'Static pages arrive as HTML; the rest get the shell',
                 'Hashed /assets/* cached a year',
                 'Optimizer .wasm, ?v=<sha256>',
               ]}

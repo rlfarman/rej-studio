@@ -262,6 +262,22 @@ async function passcodeGate(url) {
       session.startsWith('rej_session='),
     `HTTP ${right.status} ${right.headers.get('location')}`,
   )
+  const heading = async (path) => {
+    const html = await (await request(`${url}${path}`)).text()
+    return /<h1[^>]*>([^<]*)/.exec(html)?.[1] ?? ''
+  }
+  check(
+    'a prerendered page arrives with its content',
+    (await heading('/design-tool')) === 'Design a sequence',
+  )
+  check(
+    'the same page with a query string gets the shell',
+    (await heading('/design-tool?isoform=ENST00000269305')) === '',
+  )
+  check(
+    'a route that is not prerendered gets the shell',
+    (await heading('/genes/TP53')) === '',
+  )
   const signedIn = await request(`${url}/genes/TP53`, { redirect: 'manual' })
   check(
     'a signed-in page load gets the app',

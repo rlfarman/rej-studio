@@ -10,28 +10,40 @@ import react, { reactCompilerPreset } from '@vitejs/plugin-react'
 import { defineConfig, type Plugin } from 'vite-plus'
 
 import { lintConfig } from './lint/config'
+import {
+  PRERENDERED_PAGES,
+  SHELL_FILE,
+  prerenderJobPath,
+  prerenderedFile,
+} from './src/server/prerendered-pages'
 
 /**
- * Makes every page the Worker renders the SPA shell, in production as in
- * `vp dev` (where Start itself sets TSS_SHELL when SPA mode is on).
+ * How the Worker decides between the SPA shell and a full page.
  *
- * Start's shell prerender tells the server it wants the shell through an
- * `X-TSS_SHELL` header, honoured only when `process.env.TSS_PRERENDERING` is
- * set. Start sets that in the Node build process, but with the Cloudflare
- * plugin the prerender requests are served by workerd, which never sees it,
- * so the "shell" came out as the fully rendered home page. In SPA mode the
- * Worker has no other page to render, so inlining TSS_SHELL=true for the
- * `ssr` (Worker) environment is the same contract the dev server runs under.
+ * Start renders the shell when `process.env.TSS_SHELL` is set, or, while
+ * `TSS_PRERENDERING` is set, when the request carries `X-TSS_SHELL`, which
+ * the build's shell prerender sends. Start sets those in the Node build
+ * process, but with the Cloudflare plugin the prerender requests are served
+ * by workerd, which never sees them, so they are inlined here:
+ *
+ * - `vp build`: TSS_PRERENDERING, so the shell prerender gets the shell and
+ *   the pages in PRERENDERED_PAGES are rendered in full.
+ * - `vp dev`: TSS_SHELL, the same contract Start's own dev server runs under
+ *   in SPA mode (every page is the shell, filled in by the client).
+ *
+ * Deployed, the Worker serves pages from static assets and renders nothing
+ * itself (src/server/worker-entry.ts).
  */
-function spaShellOnWorker(): Plugin {
+function shellOrPageOnWorker(): Plugin {
   return {
-    name: 'rej:spa-shell-on-worker',
-    configEnvironment(name) {
+    name: 'rej:shell-or-page-on-worker',
+    configEnvironment(name, _config, { command }) {
       if (name !== 'ssr') return
+      const flag = command === 'build' ? 'TSS_PRERENDERING' : 'TSS_SHELL'
       return {
         define: {
-          'process.env.TSS_SHELL': JSON.stringify('true'),
-          'import.meta.env.TSS_SHELL': JSON.stringify('true'),
+          [`process.env.${flag}`]: JSON.stringify('true'),
+          [`import.meta.env.${flag}`]: JSON.stringify('true'),
         },
       }
     },
@@ -158,19 +170,26 @@ export default defineConfig({
     // First, per Cloudflare's TanStack Start guide: the Worker is Start's
     // `ssr` environment and runs in workerd in dev, preview and production.
     cloudflare({ viteEnvironment: { name: 'ssr' } }),
-    spaShellOnWorker(),
+    shellOrPageOnWorker(),
     workerBuildInfo(),
     clientChunkGraph(),
     mcpAppBridge(),
     tailwindcss(),
     tanstackStart({
-      // SPA mode: the build prerenders one HTML shell (the root route, with
-      // the router's pending component where a page would go) and the
-      // client renders every page. It is written as index.html because
-      // that is the file Workers' `not_found_handling:
-      // "single-page-application"` (wrangler.jsonc) serves for every
-      // navigation that matches no asset.
-      spa: { enabled: true, prerender: { outputPath: '/index.html' } },
+      // SPA mode: the build prerenders an HTML shell (the root route, with
+      // the router's pending component where a page would go), which the
+      // Worker serves for every route that is not prerendered, and the
+      // client renders those pages. The pages that render the same for
+      // everyone are prerendered in full (src/server/prerendered-pages.ts),
+      // so their content arrives with the HTML.
+      spa: { enabled: true, prerender: { outputPath: SHELL_FILE } },
+      // Only the listed pages: no following their links, no discovering
+      // other routes (both on by default).
+      prerender: { crawlLinks: false, autoStaticPathsDiscovery: false },
+      pages: PRERENDERED_PAGES.map((path) => ({
+        path: prerenderJobPath(path),
+        prerender: { enabled: true, outputPath: prerenderedFile(path) },
+      })),
     }),
     // After Start, as its docs require.
     react(),

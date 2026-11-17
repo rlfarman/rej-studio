@@ -13,7 +13,33 @@ import handler from '@tanstack/react-start/server-entry'
 import { gate } from './auth/gate'
 import { handleLogin, handleLogout } from './auth/login'
 
+import { SHELL_PATH, isPrerenderedPage } from './prerendered-pages'
+
 export { DesignWorkflow } from './designs/workflow'
+
+/**
+ * A file, a prerendered page, or the SPA shell.
+ *
+ * - A prerendered page without a query string is its own HTML file.
+ * - Any other navigation gets the shell, which the client fills in. That
+ *   includes a prerendered page with a query string, whose content depends
+ *   on it (prerendered-pages.ts).
+ * - Where there is no shell file yet (`vp dev`, and the build's prerender,
+ *   which fetches its pages through this Worker), Start renders the page.
+ */
+async function servePage(request: Request, env: Env): Promise<Response> {
+  const url = new URL(request.url)
+  if (!(url.search && isPrerenderedPage(url.pathname))) {
+    const asset = await env.ASSETS.fetch(request)
+    if (asset.status !== 404) return asset
+  }
+  const shell = await env.ASSETS.fetch(
+    new Request(new URL(SHELL_PATH, url), request),
+  )
+  // 304 too: a reload revalidates the shell with the ETag it was given.
+  if (shell.ok || shell.status === 304) return shell
+  return handler.fetch(request)
+}
 
 export default {
   async fetch(request, env) {
@@ -30,14 +56,6 @@ export default {
     // bindings through `env` from `cloudflare:workers`.
     if (pathname.startsWith('/api/')) return handler.fetch(request)
 
-    // Anything else is a file or a page. The asset layer serves files and,
-    // deployed, answers an app route with the prerendered SPA shell
-    // (`not_found_handling`), as it would without the Worker in front. Under
-    // `vp dev` the binding is Vite's dev server, which also serves the
-    // client modules. Where it has no shell to give — `vp dev`, and the
-    // build's own prerender of the shell, which fetches / through this
-    // Worker — Start renders it.
-    const asset = await env.ASSETS.fetch(request)
-    return asset.status === 404 ? handler.fetch(request) : asset
+    return servePage(request, env)
   },
 } satisfies ExportedHandler<Env>
