@@ -1,7 +1,5 @@
-'use client'
-
-import { useState, useTransition } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useState } from 'react'
+import { useNavigate } from '@tanstack/react-router'
 import { useDebouncedCallback } from 'use-debounce'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -14,56 +12,53 @@ import {
 } from '../types'
 import { diseaseAssociationsCopy } from '../copy'
 
-const SEARCH_PARAM = 'q'
-const INHERIT_PARAM = 'i'
 const DEBOUNCE_MS = 200
 
 type Props = {
   bucketCounts: Record<InheritanceBucket, number>
+  /** The URL's text filter. */
+  query: string
+  /** The URL's inheritance filter. */
+  inheritance: InheritanceBucket[]
 }
 
-export function AssociationsFilters({ bucketCounts }: Props) {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const [, startTransition] = useTransition()
+export function AssociationsFilters({
+  bucketCounts,
+  query: urlQuery,
+  inheritance,
+}: Props) {
+  const navigate = useNavigate({ from: '/disease-associations' })
 
-  const activeBuckets = new Set(searchParams.getAll(INHERIT_PARAM))
-  const initialQuery = searchParams.get(SEARCH_PARAM) ?? ''
-  const [query, setQuery] = useState(initialQuery)
+  const activeBuckets = new Set<string>(inheritance)
+  const [query, setQuery] = useState(urlQuery)
 
-  const pushParams = (next: URLSearchParams) => {
-    const qs = next.toString()
-    startTransition(() => {
-      router.replace(qs ? `?${qs}` : '?', { scroll: false })
+  // Filters live in the URL. Replacing the entry keeps typing out of the
+  // back history; the table re-filters on the client, so nothing reloads.
+  const setFilters = (next: { q?: string; i?: InheritanceBucket[] }) => {
+    void navigate({
+      search: (prev) => ({ ...prev, ...next }),
+      replace: true,
+      resetScroll: false,
     })
   }
 
   // Debounce query updates so the table doesn't re-render on every keystroke.
   // Driven from the input's change event rather than an effect.
   const pushQuery = useDebouncedCallback((value: string) => {
-    const next = new URLSearchParams(searchParams)
-    if (value) next.set(SEARCH_PARAM, value)
-    else next.delete(SEARCH_PARAM)
-    if (next.toString() !== searchParams.toString()) pushParams(next)
+    if (value !== urlQuery) setFilters({ q: value || undefined })
   }, DEBOUNCE_MS)
 
   const toggleBucket = (bucket: InheritanceBucket) => {
-    const next = new URLSearchParams(searchParams)
-    const current = next.getAll(INHERIT_PARAM)
-    next.delete(INHERIT_PARAM)
-    if (current.includes(bucket)) {
-      for (const b of current) if (b !== bucket) next.append(INHERIT_PARAM, b)
-    } else {
-      for (const b of current) next.append(INHERIT_PARAM, b)
-      next.append(INHERIT_PARAM, bucket)
-    }
-    pushParams(next)
+    const next = activeBuckets.has(bucket)
+      ? inheritance.filter((b) => b !== bucket)
+      : [...inheritance, bucket]
+    setFilters({ i: next.length > 0 ? next : undefined })
   }
 
   const clearAll = () => {
     pushQuery.cancel()
     setQuery('')
-    pushParams(new URLSearchParams())
+    void navigate({ search: {}, replace: true, resetScroll: false })
   }
 
   const hasFilters = query.length > 0 || activeBuckets.size > 0

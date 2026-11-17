@@ -1,7 +1,6 @@
 'use client'
 
-import Link from 'next/link'
-import { usePathname, useSearchParams } from 'next/navigation'
+import { Link } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
 import {
   assessDesignSuitability,
@@ -24,15 +23,6 @@ interface Props {
  * genes it would just restate the table's CDS column.
  */
 export function IsoformLengthChart({ isoforms }: Props) {
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
-
-  const buildHref = (id: string) => {
-    const params = new URLSearchParams(searchParams?.toString() ?? '')
-    params.set('isoform', id)
-    return `${pathname}?${params.toString()}#isoform-row-${id}`
-  }
-
   const rows = [...isoforms]
     // Shortest first so the bars read as a ramp toward the limits.
     .sort((a, b) => a.codingSequenceLength - b.codingSequenceLength)
@@ -78,8 +68,13 @@ export function IsoformLengthChart({ isoforms }: Props) {
           return (
             <li key={row.id}>
               <Link
-                href={buildHref(row.id)}
-                scroll={false}
+                from="/genes/$symbol"
+                to="."
+                // Opens and highlights the isoform's row and scrolls to it,
+                // keeping the rest of the URL and the page's scroll.
+                search={(prev) => ({ ...prev, isoform: row.id })}
+                hash={`isoform-row-${row.id}`}
+                resetScroll={false}
                 className="group -mx-1 grid grid-cols-[5.5rem_1fr_3.5rem] items-center gap-2 rounded-lg px-1 py-1 type-micro transition-colors hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none sm:grid-cols-[8rem_1fr_2rem_4rem]"
                 aria-label={`${row.id}, ${row.length.toLocaleString()} base pairs, ${cfg.label}`}
               >

@@ -1,18 +1,593 @@
 import { createFileRoute } from '@tanstack/react-router'
 
+import { PageTitle } from '@/components/page-title'
+import { Badge } from '@/components/ui/badge'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Separator } from '@/components/ui/separator'
 import { appCopy } from '@/copy/app'
 import { commonCopy } from '@/copy/common'
-import { PagePlaceholder } from './-components/page-placeholder'
-
-const title = commonCopy.pageContext.architecture
 
 export const Route = createFileRoute('/architecture')({
   // Internal page: kept out of search engines, as before.
   head: () => ({
     meta: [
-      { title: appCopy.metadata.title(title) },
+      { title: appCopy.metadata.title(commonCopy.pageContext.architecture) },
       { name: 'robots', content: 'noindex, nofollow' },
     ],
   }),
-  component: () => <PagePlaceholder title={title} />,
+  component: ArchitecturePage,
 })
+
+// ── Shared primitives ───────────────────────────────────────────────────────
+
+function Arrow({
+  direction = 'down',
+  label,
+}: {
+  direction?: 'down' | 'right' | 'left' | 'bidirectional'
+  label?: string
+}) {
+  if (direction === 'right') {
+    return (
+      <div className="flex flex-col items-center justify-center gap-0.5 px-2">
+        {label && (
+          <span className="type-micro whitespace-nowrap text-muted-foreground">
+            {label}
+          </span>
+        )}
+        <div className="text-lg leading-none text-muted-foreground">→</div>
+      </div>
+    )
+  }
+  if (direction === 'left') {
+    return (
+      <div className="flex flex-col items-center justify-center gap-0.5 px-2">
+        {label && (
+          <span className="type-micro whitespace-nowrap text-muted-foreground">
+            {label}
+          </span>
+        )}
+        <div className="text-lg leading-none text-muted-foreground">←</div>
+      </div>
+    )
+  }
+  if (direction === 'bidirectional') {
+    return (
+      <div className="flex flex-col items-center justify-center gap-0.5 px-2">
+        {label && (
+          <span className="type-micro whitespace-nowrap text-muted-foreground">
+            {label}
+          </span>
+        )}
+        <div className="text-lg leading-none text-muted-foreground">↔</div>
+      </div>
+    )
+  }
+  return (
+    <div className="flex flex-col items-center gap-0.5 py-1">
+      {label && (
+        <span className="type-micro whitespace-nowrap text-muted-foreground">
+          {label}
+        </span>
+      )}
+      <div className="text-lg leading-none text-muted-foreground">↓</div>
+    </div>
+  )
+}
+
+function ServiceBox({
+  name,
+  tech,
+  details,
+  variant = 'default',
+}: {
+  name: string
+  tech: string
+  details?: string[]
+  variant?: 'default' | 'primary' | 'accent' | 'muted'
+}) {
+  const bg = {
+    default: 'bg-card border',
+    primary: 'bg-primary/5 border border-primary/20',
+    accent: 'bg-chart-1/5 border border-chart-1/20',
+    muted: 'bg-muted border border-border',
+  }[variant]
+
+  return (
+    <div className={`rounded-2xl p-3 ${bg}`}>
+      <div className="mb-0.5 text-sm font-semibold">{name}</div>
+      <div className="font-mono type-nano text-muted-foreground">{tech}</div>
+      {details && (
+        <div className="mt-1.5 space-y-0.5 type-micro text-muted-foreground">
+          {details.map((d) => (
+            <div key={d}>• {d}</div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Main diagram ────────────────────────────────────────────────────────────
+
+function ArchitecturePage() {
+  return (
+    // Focusable region: this page has no links or controls, so without it
+    // keyboard users couldn't scroll the main content (axe
+    // scrollable-region-focusable).
+    <div
+      role="region"
+      tabIndex={0}
+      aria-labelledby="architecture-title"
+      className="mx-auto max-w-5xl space-y-6 rounded-2xl p-6 outline-none focus-visible:ring-2 focus-visible:ring-ring"
+    >
+      <div>
+        <PageTitle id="architecture-title">REJ Studio — Architecture</PageTitle>
+        <p className="mt-1 text-sm text-muted-foreground">
+          System overview of data flow, infrastructure, and deployment topology.
+        </p>
+      </div>
+
+      {/* ── Layer 1: Client ──────────────────────────────────────────── */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Badge variant="outline" className="font-mono text-xs">
+              Client
+            </Badge>
+            Browser
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-3 gap-3">
+            <ServiceBox
+              name="Gene Search"
+              tech="React Query + Zustand"
+              details={[
+                'Debounced search',
+                'Favorites & recents',
+                'Species filter',
+              ]}
+            />
+            <ServiceBox
+              name="Design Tool"
+              tech="React Hook Form + Zod"
+              details={['CDS validation', 'Option toggles', 'Job polling']}
+            />
+            <ServiceBox
+              name="Shared UI"
+              tech="shadcn/ui + Radix + cmdk"
+              details={[
+                'Dark/light theme',
+                'Command palette (⌘K)',
+                'Responsive layout',
+              ]}
+            />
+          </div>
+          <div className="mt-3 flex flex-wrap gap-2 type-micro text-muted-foreground">
+            <Badge variant="secondary" className="type-micro">
+              Source Sans/Serif/Mono
+            </Badge>
+            <Badge variant="secondary" className="type-micro">
+              Tailwind v4
+            </Badge>
+            <Badge variant="secondary" className="type-micro">
+              Web Vitals → GTM
+            </Badge>
+            <Badge variant="secondary" className="type-micro">
+              Sentry (client)
+            </Badge>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Arrow label="Server Actions / RSC streaming" />
+
+      {/* ── Layer 2: Edge ────────────────────────────────────────────── */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Badge variant="outline" className="font-mono text-xs">
+              Edge
+            </Badge>
+            Proxy (src/proxy.ts)
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-4 gap-3">
+            <ServiceBox
+              name="CSP"
+              tech="Nonce-based"
+              details={['strict-dynamic', 'report-to /api/csp-report']}
+              variant="muted"
+            />
+            <ServiceBox
+              name="CSRF"
+              tech="Origin check"
+              details={['Shared allowlist', 'Mutating reqs only']}
+              variant="muted"
+            />
+            <ServiceBox
+              name="Auth"
+              tech="Basic auth"
+              details={['Rate-limited 5/min', 'Timing-safe compare']}
+              variant="muted"
+            />
+            <ServiceBox
+              name="Body Cap"
+              tech="256 KB limit"
+              details={['POST/PUT/PATCH', 'Before server actions']}
+              variant="muted"
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Arrow label="Next.js App Router" />
+
+      {/* ── Layer 3: Server ──────────────────────────────────────────── */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Badge variant="outline" className="font-mono text-xs">
+              Server
+            </Badge>
+            Next.js 16 (App Router)
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Features */}
+          <div>
+            <div className="mb-2 type-overline">Features</div>
+            <div className="grid grid-cols-2 gap-3">
+              <ServiceBox
+                name="gene-search"
+                tech="Server Actions + RSC"
+                details={[
+                  'Full-text + LIKE search',
+                  'React cache() dedup',
+                  'Rate limited (30/min)',
+                  'Fuzzy 404 suggestions',
+                ]}
+                variant="primary"
+              />
+              <ServiceBox
+                name="design-tool"
+                tech="Server Action submit + route-handler polling"
+                details={[
+                  'Job submit → Modal (bearer token)',
+                  'Idempotency (SHA-256)',
+                  'Circuit breaker (transient errors)',
+                  'Zod-checked backend contract',
+                ]}
+                variant="accent"
+              />
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* API Routes */}
+          <div>
+            <div className="mb-2 type-overline">API Routes</div>
+            <div className="grid grid-cols-4 gap-3">
+              <ServiceBox
+                name="/api/health"
+                tech="GET"
+                details={[
+                  'DB ping + p50/p95/p99',
+                  'Modal probe',
+                  'Auth-gated details',
+                ]}
+                variant="muted"
+              />
+              <ServiceBox
+                name="/api/version"
+                tech="GET"
+                details={['Build SHA', 'Timestamp', 'Package version']}
+                variant="muted"
+              />
+              <ServiceBox
+                name="/api/csp-report"
+                tech="POST"
+                details={['CSP violations', 'Structured logging']}
+                variant="muted"
+              />
+              <ServiceBox
+                name="/api/login"
+                tech="POST"
+                details={['Shared password', 'Signed session cookie']}
+                variant="muted"
+              />
+              <ServiceBox
+                name="/api/logout"
+                tech="POST"
+                details={['Clears session cookie']}
+                variant="muted"
+              />
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Infrastructure */}
+          <div>
+            <div className="mb-2 type-overline">Shared Infrastructure</div>
+            <div className="grid grid-cols-3 gap-3">
+              <ServiceBox
+                name="Rate Limiting"
+                tech="Upstash → in-memory"
+                details={[
+                  'Sliding window',
+                  'Per-IP keyed',
+                  'Retry-After headers',
+                ]}
+                variant="muted"
+              />
+              <ServiceBox
+                name="Env Validation"
+                tech="Zod schemas"
+                details={[
+                  'Server + client',
+                  'Prod guardrails',
+                  'Fail-fast boot',
+                ]}
+                variant="muted"
+              />
+              <ServiceBox
+                name="Observability"
+                tech="Logger + OTel + Sentry"
+                details={[
+                  'Structured JSON logs',
+                  'Distributed traces',
+                  'Error tracking',
+                ]}
+                variant="muted"
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* ── Layer 4: External services ───────────────────────────────── */}
+      <div className="grid grid-cols-3 gap-4">
+        {/* Database */}
+        <div className="space-y-2">
+          <Arrow label="HTTP driver" />
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-sm">
+                <Badge className="border border-chart-2/20 bg-chart-2/10 font-mono type-micro text-foreground">
+                  DB
+                </Badge>
+                Neon (Postgres)
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="type-nano">
+              <div className="space-y-1">
+                <div className="font-mono text-muted-foreground">
+                  Drizzle ORM
+                </div>
+                <div>
+                  • <span className="font-semibold">genes</span> — symbol, name,
+                  species, tsvector
+                </div>
+                <div>
+                  • <span className="font-semibold">isoforms</span> — CDS,
+                  protein, lengths
+                </div>
+                <div className="mt-1.5 text-muted-foreground">
+                  GIN index on search_vector
+                </div>
+                <div className="text-muted-foreground">
+                  Indexes on species, CDS length
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Redis */}
+        <div className="space-y-2">
+          <Arrow label="REST API" />
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-sm">
+                <Badge className="border border-chart-4/20 bg-chart-4/10 font-mono type-micro text-foreground">
+                  Cache
+                </Badge>
+                Upstash Redis
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="type-nano">
+              <div className="space-y-1">
+                <div className="font-mono text-muted-foreground">
+                  Free tier (10k req/day)
+                </div>
+                <div>
+                  • <span className="font-mono">rl:*</span> — rate limits
+                </div>
+                <div>
+                  • <span className="font-mono">inflight:*</span> — idempotency
+                </div>
+                <div>
+                  • <span className="font-mono">circuit:modal</span> — breaker
+                </div>
+                <div>
+                  • <span className="font-mono">inflight-job:*</span> — job →
+                  idempotency key, cleared on cancel/failure
+                </div>
+                <div>
+                  • <span className="font-mono">health:db_latency</span> —
+                  p50/p95/p99
+                </div>
+                <div className="mt-1.5 text-muted-foreground">
+                  Falls back to in-memory if unavailable
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Modal */}
+        <div className="space-y-2">
+          <Arrow label="HTTPS + JSON" />
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-sm">
+                <Badge className="border border-chart-1/20 bg-chart-1/10 font-mono type-micro text-foreground">
+                  Compute
+                </Badge>
+                Modal
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="type-nano">
+              <div className="space-y-1">
+                <div className="font-mono text-muted-foreground">
+                  FastAPI + DNAChisel
+                </div>
+                <div>
+                  • <span className="font-mono">POST /jobs</span> — submit
+                </div>
+                <div>
+                  • <span className="font-mono">GET /jobs/:id</span> — poll
+                  status
+                </div>
+                <div>
+                  • <span className="font-mono">DELETE /jobs/:id</span> — cancel
+                </div>
+                <div className="mt-1.5 text-muted-foreground">
+                  Cold start → warm container
+                </div>
+                <div className="text-muted-foreground">
+                  Structured JSON logs with timings
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {/* ── Layer 5: Deployment topology ─────────────────────────────── */}
+      <Separator className="my-2" />
+
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Badge variant="outline" className="font-mono text-xs">
+              Deploy
+            </Badge>
+            Deployment Topology
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div>
+            {/* Vercel path */}
+            <div className="space-y-2">
+              <div className="text-sm font-semibold">Vercel</div>
+              <div className="space-y-1 rounded-xl bg-muted/50 p-3 type-nano">
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary" className="text-[9px]">
+                    Edge
+                  </Badge>
+                  <span>proxy.ts → Edge Runtime</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary" className="text-[9px]">
+                    Serverless
+                  </Badge>
+                  <span>Server Actions + API routes</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary" className="text-[9px]">
+                    CDN
+                  </Badge>
+                  <span>Static assets + ISR</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <Separator className="my-3" />
+
+          <div>
+            <div className="mb-2 type-overline">Observability Stack</div>
+            <div className="flex flex-wrap gap-2">
+              <Badge className="border border-chart-5/20 bg-chart-5/10 type-micro text-foreground">
+                Sentry — errors
+              </Badge>
+              <Badge className="border border-chart-2/20 bg-chart-2/10 type-micro text-foreground">
+                OpenTelemetry — traces
+              </Badge>
+              <Badge className="border border-chart-3/20 bg-chart-3/10 type-micro text-foreground">
+                GTM + GA4 — analytics
+              </Badge>
+              <Badge className="border border-chart-4/20 bg-chart-4/10 type-micro text-foreground">
+                Structured logs — stdout
+              </Badge>
+              <Badge className="border border-chart-1/20 bg-chart-1/10 type-micro text-foreground">
+                CSP reports — /api/csp-report
+              </Badge>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* ── Data flow legend ─────────────────────────────────────────── */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Data Flow</CardTitle>
+        </CardHeader>
+        <CardContent className="type-nano">
+          <div className="grid grid-cols-2 gap-x-8 gap-y-2">
+            <div>
+              <div className="mb-1 font-semibold">Gene Search</div>
+              <div className="space-y-0.5 text-muted-foreground">
+                <div>1. User types query → 250ms debounce</div>
+                <div>2. GET /api/genes/search → Neon (FTS + trigram LIKE)</div>
+                <div>3. Results stream via RSC</div>
+                <div>4. React Query caches 30s</div>
+              </div>
+            </div>
+            <div>
+              <div className="mb-1 font-semibold">Design Tool (Modal)</div>
+              <div className="space-y-0.5 text-muted-foreground">
+                <div>1. Form validated (Zod) → Server Action</div>
+                <div>2. Rate limit → circuit check → idempotency</div>
+                <div>3. POST to Modal /jobs → call_id returned</div>
+                <div>
+                  4. Client polls GET /api/jobs/:id (route handler → Modal)
+                  until complete
+                </div>
+              </div>
+            </div>
+            <div>
+              <div className="mt-2 mb-1 font-semibold">
+                Design Tool (Local Dev)
+              </div>
+              <div className="space-y-0.5 text-muted-foreground">
+                <div>1. Form → Server Action</div>
+                <div>2. Synchronous POST to FastAPI :8000</div>
+                <div>3. Result returned inline (no polling)</div>
+              </div>
+            </div>
+            <div>
+              <div className="mt-2 mb-1 font-semibold">Resilience</div>
+              <div className="space-y-0.5 text-muted-foreground">
+                <div>• Redis down → in-memory fallback</div>
+                <div>• Modal down → circuit trips after 5 failures</div>
+                <div>• Circuit resets after 30s half-open probe</div>
+                <div>• Failed or cancelled jobs can be rerun at once</div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <p className="pb-8 text-center text-xs text-muted-foreground">
+        Generated from the codebase design system — shadcn/ui, Tailwind v4,
+        Source typeface family (Sans, Serif, Mono).
+      </p>
+    </div>
+  )
+}

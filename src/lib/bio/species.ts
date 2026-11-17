@@ -19,16 +19,7 @@ export function isSpeciesFilter(value: string): value is SpeciesFilter {
   return value === 'human' || value === 'mouse' || value === 'both'
 }
 
-export function geneHref(symbol: string, species?: string, isoformId?: string) {
-  const params = new URLSearchParams()
-  if (species) params.set('species', species)
-  if (isoformId) params.set('isoform', isoformId)
-  const qs = params.toString()
-  return qs ? `/genes/${symbol}?${qs}` : `/genes/${symbol}`
-}
-
-export function parseSpeciesParam(
-  value: string | undefined,
-): SpeciesFilter | undefined {
-  return value && isSpeciesFilter(value) ? value : undefined
+/** A species filter from a URL, or undefined for anything else. */
+export function parseSpeciesParam(value: unknown): SpeciesFilter | undefined {
+  return typeof value === 'string' && isSpeciesFilter(value) ? value : undefined
 }

@@ -7,11 +7,11 @@ export const appCopy = {
       'Search genes, browse isoforms, and design optimized RNA End-Joining sequences — all in one tool.',
   },
   skipToContent: 'Skip to content',
-  // Stand-in for pages not ported to TanStack Start yet.
-  // TODO(slice-2): remove once every page is ported.
-  placeholder: {
-    eyebrow: 'Migration in progress',
-    detail: 'This page is ported in slice 2 of the TanStack Start migration.',
+  // Shown in the header while the build reads the committed sample corpus.
+  sampleData: {
+    label: (genes: number) => `Sample data — ${genes} genes`,
+    detail:
+      'This build reads the small sample gene set, not the full corpus. Set VITE_GENE_DATA_URL and rebuild to serve the real data.',
   },
   errorBoundary: {
     eyebrow: 'Unexpected error',

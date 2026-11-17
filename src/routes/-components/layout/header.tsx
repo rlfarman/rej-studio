@@ -8,7 +8,13 @@ import {
 } from '@/components/ui/tooltip'
 import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar'
 import { BrandMark } from '@/components/brand-mark'
+import { Badge } from '@/components/ui/badge'
+import { appCopy } from '@/copy/app'
 import { commonCopy } from '@/copy/common'
+import {
+  SAMPLE_GENE_COUNT,
+  usesSampleCorpus,
+} from '@/features/gene-search/corpus/gene-data-url'
 import { cn } from '@/lib/utils'
 
 const HIDE_AFTER = 80
@@ -192,8 +198,33 @@ function HeaderContent({ scrolled }: { scrolled: boolean }) {
             /genes/BRCA1 search for "BRCA1kras". */}
         {!pageHasSearch && <GeneSearchShell isDialog />}
       </div>
-      {/* Empty right column keeps the search centered in the 1fr/auto/1fr grid. */}
-      <div />
+      {/* The right column keeps the search centered in the 1fr/auto/1fr
+          grid. A build-time constant, so the shell renders it too. */}
+      <div className="flex min-w-0 justify-end">
+        {usesSampleCorpus() && <SampleDataBadge />}
+      </div>
     </>
+  )
+}
+
+/** Says plainly that this build serves the sample gene set. */
+function SampleDataBadge() {
+  return (
+    <Tooltip>
+      <TooltipTrigger
+        render={
+          <Badge
+            variant="outline"
+            tabIndex={0}
+            className="truncate border-warning/40 bg-warning/15 text-warning-soft"
+          />
+        }
+      >
+        {appCopy.sampleData.label(SAMPLE_GENE_COUNT)}
+      </TooltipTrigger>
+      <TooltipContent className="max-w-64">
+        {appCopy.sampleData.detail}
+      </TooltipContent>
+    </Tooltip>
   )
 }

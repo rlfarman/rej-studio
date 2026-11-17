@@ -1,7 +1,6 @@
 'use client'
 
-import Link from 'next/link'
-import { usePathname, useSearchParams } from 'next/navigation'
+import { Link } from '@tanstack/react-router'
 import { Grid3x3 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { IsoformListItem } from '@/features/gene-search/types/domain-types'
@@ -79,15 +78,6 @@ function proteinIdentity(a: string, b: string): number {
  * carries its value for screen readers and as a hover title.
  */
 export function IsoformIdentityMatrix({ isoforms }: Props) {
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
-
-  const buildHref = (id: string) => {
-    const params = new URLSearchParams(searchParams?.toString() ?? '')
-    params.set('isoform', id)
-    return `${pathname}?${params.toString()}#isoform-row-${id}`
-  }
-
   // Sort by protein length descending so the longest (usually canonical)
   // isoform is in the top-left corner.
   const trimmed = [...isoforms]
@@ -143,14 +133,7 @@ export function IsoformIdentityMatrix({ isoforms }: Props) {
           </thead>
           <tbody>
             {rows.map((row, i) => (
-              <Row
-                key={ids[i]}
-                index={i}
-                id={ids[i]}
-                ids={ids}
-                values={row}
-                href={buildHref(ids[i])}
-              />
+              <Row key={ids[i]} index={i} id={ids[i]} ids={ids} values={row} />
             ))}
           </tbody>
         </table>
@@ -204,13 +187,11 @@ function Row({
   id,
   ids,
   values,
-  href,
 }: {
   index: number
   id: string
   ids: string[]
   values: number[]
-  href: string
 }) {
   return (
     <tr>
@@ -219,8 +200,13 @@ function Row({
         className="sticky left-0 z-10 bg-card pr-3 text-right font-normal whitespace-nowrap"
       >
         <Link
-          href={href}
-          scroll={false}
+          from="/genes/$symbol"
+          to="."
+          // Opens and highlights the isoform's row and scrolls to it,
+          // keeping the rest of the URL and the page's scroll.
+          search={(prev) => ({ ...prev, isoform: id })}
+          hash={`isoform-row-${id}`}
+          resetScroll={false}
           className="inline-flex min-h-6 items-center gap-2 rounded-sm font-mono type-nano text-muted-foreground outline-none hover:text-foreground hover:underline focus-visible:ring-[3px] focus-visible:ring-ring/50 sm:min-h-0 sm:items-baseline"
           title={geneSearchCopy.identityMatrix.jumpTo(id)}
         >

@@ -8,7 +8,7 @@
     "dev": "vp dev",
     "build": "vp build",
     "preview": "vp preview",
-    "cf:deploy": "pnpm build && wrangler deploy",
+    "cf:deploy": "node scripts/check-deploy-env.mjs && pnpm build && wrangler deploy",
     "db:build": "python3 scripts/build-db.py",
     "data:associations": "python3 scripts/build-disease-associations.py",
     "db:generate": "drizzle-kit generate",

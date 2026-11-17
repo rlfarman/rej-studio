@@ -3,10 +3,11 @@ import {
   Link,
   Outlet,
   Scripts,
-  createRootRoute,
+  createRootRouteWithContext,
   useRouter,
   type ErrorComponentProps,
 } from '@tanstack/react-router'
+import type { QueryClient } from '@tanstack/react-query'
 import { ThemeProvider } from 'next-themes'
 import type { ReactNode } from 'react'
 
@@ -20,7 +21,6 @@ import { appCopy } from '@/copy/app'
 import { commonCopy } from '@/copy/common'
 import { AppSidebar } from './-components/layout/app-sidebar'
 import { Header } from './-components/layout/header'
-import { QueryProvider } from './-components/providers/query-provider'
 import { RouteError } from './-components/route-error'
 import globalsCss from '@/styles/globals.css?url'
 
@@ -33,38 +33,42 @@ const SIDEBAR_PRELOAD_SCRIPT = `(function(){try{var d=document.documentElement;v
 // Build-time, like every Vite env var: set it and rebuild to show a banner.
 const maintenanceMessage = import.meta.env.VITE_MAINTENANCE_MESSAGE?.trim()
 
-export const Route = createRootRoute({
-  head: () => ({
-    meta: [
-      { charSet: 'utf-8' },
-      { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-      // Pages set their own title; this is the fallback.
-      { title: appCopy.metadata.siteName },
-      { name: 'description', content: appCopy.metadata.description },
-      { property: 'og:type', content: 'website' },
-      { property: 'og:site_name', content: appCopy.metadata.siteName },
-      { property: 'og:locale', content: 'en_US' },
-      { name: 'twitter:card', content: 'summary_large_image' },
-      { name: 'apple-mobile-web-app-capable', content: 'yes' },
-      {
-        name: 'apple-mobile-web-app-status-bar-style',
-        content: 'black-translucent',
-      },
-      {
-        name: 'apple-mobile-web-app-title',
-        content: appCopy.metadata.siteName,
-      },
-    ],
-    links: [
-      { rel: 'stylesheet', href: globalsCss },
-      { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
-    ],
-  }),
-  shellComponent: RootDocument,
-  component: AppLayout,
-  errorComponent: RootError,
-  notFoundComponent: NotFound,
-})
+// Route loaders read through the router's query client (src/router.tsx).
+export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
+  {
+    head: () => ({
+      meta: [
+        { charSet: 'utf-8' },
+        { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+        // Pages set their own title; this is the fallback.
+        { title: appCopy.metadata.siteName },
+        { name: 'description', content: appCopy.metadata.description },
+        { property: 'og:type', content: 'website' },
+        { property: 'og:site_name', content: appCopy.metadata.siteName },
+        { property: 'og:locale', content: 'en_US' },
+        { name: 'twitter:card', content: 'summary_large_image' },
+        { name: 'apple-mobile-web-app-capable', content: 'yes' },
+        {
+          name: 'apple-mobile-web-app-status-bar-style',
+          content: 'black-translucent',
+        },
+        {
+          name: 'apple-mobile-web-app-title',
+          content: appCopy.metadata.siteName,
+        },
+      ],
+      links: [
+        { rel: 'stylesheet', href: globalsCss },
+        { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
+        { rel: 'manifest', href: '/manifest.webmanifest' },
+      ],
+    }),
+    shellComponent: RootDocument,
+    component: AppLayout,
+    errorComponent: RootError,
+    notFoundComponent: NotFound,
+  },
+)
 
 /** The document: always prerendered, around the layout or a boundary. */
 function RootDocument({ children }: { children: ReactNode }) {
@@ -82,16 +86,14 @@ function RootDocument({ children }: { children: ReactNode }) {
           enableSystem
           disableTransitionOnChange
         >
-          <QueryProvider>
-            <a
-              href="#main-content"
-              className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:rounded-2xl focus:bg-background focus:px-4 focus:py-2 focus:text-foreground focus:shadow-md focus:ring-2 focus:ring-ring"
-            >
-              {appCopy.skipToContent}
-            </a>
-            {children}
-            <Toaster />
-          </QueryProvider>
+          <a
+            href="#main-content"
+            className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:rounded-2xl focus:bg-background focus:px-4 focus:py-2 focus:text-foreground focus:shadow-md focus:ring-2 focus:ring-ring"
+          >
+            {appCopy.skipToContent}
+          </a>
+          {children}
+          <Toaster />
         </ThemeProvider>
         <Scripts />
       </body>

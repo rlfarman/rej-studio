@@ -1,22 +1,17 @@
 import type { KnipConfig } from 'knip'
 
-// Modules the deleted Next pages, route handlers and proxy used, which the
-// Start app doesn't reach yet. They stay compiling and tested so slice 2 can
-// port the pages and slice 3 can port or delete the server side.
-// TODO(slice-2/3): shrink this as pages land; delete it after slice 3.
+// The Next-era server side, which no page reaches any more: designs and
+// gene search run in the browser. Kept compiling and tested until slice 3
+// deletes it (or ports what the Worker needs).
+// TODO(slice-3): delete this list with the modules.
 const AWAITING_PORT = [
-  // Feature components, hooks, server actions and queries.
-  'src/features/**/*.{ts,tsx}',
+  // Server design jobs: the server action, backend routing, status polling.
+  'src/features/design-tool/api/{jobs,job-backend,job-status-client,corpus-version}.ts',
+  'src/features/design-tool/components/job-watcher.tsx',
+  // Postgres-backed gene reads and the search API's rate limit.
+  'src/features/gene-search/api/*.ts',
   'src/drizzle/**/*.ts',
   'src/lib/auth/**/*.ts',
-  // Shared modules whose only importers were Next pages.
-  'src/components/bio/diag-badge.tsx',
-  'src/components/chart-data-table.tsx',
-  'src/components/page-title.tsx',
-  'src/components/search-shortcut.tsx',
-  'src/components/track-on-mount.tsx',
-  'src/lib/bio/aav.ts',
-  'src/lib/bio/sequence-utils.ts',
 ]
 
 const config: KnipConfig = {

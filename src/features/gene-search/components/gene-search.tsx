@@ -9,9 +9,11 @@ import { useGeneSearch } from '@/features/gene-search/hooks/use-gene-search'
 import { GeneSearchCommand } from './gene-search-command'
 import { useRecentGenes } from '@/features/gene-search/stores/recent-genes-store'
 import { useFavoriteGenes } from '@/features/gene-search/stores/favorite-genes-store'
-import { geneHref } from '@/lib/bio/species'
 import { useSpeciesContext } from '@/stores/species-store'
-import { searchPageHref } from '@/features/gene-search/utils/search-href'
+import {
+  geneLink,
+  searchPageLink,
+} from '@/features/gene-search/utils/search-href'
 import type {
   SavedGene,
   JobSearchItem,
@@ -70,9 +72,7 @@ export function GeneSearch({
     // Close the dialog, reset the query and clear the loader together once
     // the router has loaded the destination (navigate() resolves then).
     startTransition(async () => {
-      await navigate({
-        href: geneHref(gene.symbol, gene.species, gene.matchedIsoformId),
-      })
+      await navigate(geneLink(gene.symbol, gene.species, gene.matchedIsoformId))
       startTransition(() => {
         setIsOpen(false)
         setQuery(gene.symbol)
@@ -89,7 +89,7 @@ export function GeneSearch({
   // The palette shows a handful of genes; the /genes page shows the rest.
   const handleSeeAll = () => {
     setIsOpen(false)
-    void navigate({ href: searchPageHref(query.trim(), species) })
+    void navigate(searchPageLink(query.trim(), species))
   }
 
   // ⌘K toggles the palette; on a page with the inline search (home), it

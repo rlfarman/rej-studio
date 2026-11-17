@@ -20,7 +20,8 @@ vi.mock('@/lib/analytics', () => ({
   trackEvent: mockTrackEvent,
 }))
 
-// The API path by default; the in-browser tests at the end swap in a corpus.
+// The corpus the hook searches: a stub by default, so each test controls
+// what a search returns; the last tests use the committed sample.
 const { mockGetBrowserCorpus } = vi.hoisted(() => ({
   mockGetBrowserCorpus: vi.fn(),
 }))
@@ -42,32 +43,29 @@ function createWrapper(client = createClient()) {
   return Wrapper
 }
 
-function jsonResponse(body: unknown, status = 200) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { 'content-type': 'application/json' },
-  })
+function page(results: unknown[] = [], truncated = false) {
+  return { results, truncated }
 }
 
-function okBody(results: unknown[] = [], extra: object = {}) {
-  return { results, truncated: false, suggestions: [], ...extra }
-}
+/** The (query, species, limit) of the nth corpus search (0-based). */
+const searchCall = (n: number) => mockSearch.mock.calls[n]
 
-/** The search params of the nth fetch call (0-based). */
-function requestParams(n: number): Record<string, string> {
-  const url = new URL(String(mockFetch.mock.calls[n][0]), 'http://localhost')
-  return { path: url.pathname, ...Object.fromEntries(url.searchParams) }
-}
-
+const mockSearch = vi.fn()
+const mockSimilar = vi.fn()
 const mockFetch = vi.fn()
 const gene = { id: '1', symbol: 'BRCA1', name: 'BRCA1', species: 'human' }
 
 describe('useGeneSearch', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mockGetBrowserCorpus.mockReturnValue(null)
+    mockGetBrowserCorpus.mockReturnValue({
+      searchGenes: mockSearch,
+      similarGenes: mockSimilar,
+    })
     speciesRef.current = 'both'
-    mockFetch.mockImplementation(async () => jsonResponse(okBody()))
+    mockSearch.mockImplementation(async () => page())
+    mockSimilar.mockResolvedValue([])
+    // Searching never goes over the network once the index is in.
     vi.stubGlobal('fetch', mockFetch)
   })
 
@@ -84,25 +82,25 @@ describe('useGeneSearch', () => {
     expect(result.current.searchResults).toEqual([])
     expect(result.current.hasSearched).toBe(false)
     expect(result.current.isLoading).toBe(false)
-    expect(mockFetch).not.toHaveBeenCalled()
+    expect(mockSearch).not.toHaveBeenCalled()
   })
 
-  it('does not fetch for whitespace-only query', async () => {
+  it('does not search for whitespace-only query', async () => {
     const { result } = renderHook(
       () => useGeneSearch({ defaultQuery: '   ' }),
       { wrapper: createWrapper() },
     )
     // Wait a tick to ensure debounce fires
     await new Promise((r) => setTimeout(r, 300))
-    expect(mockFetch).not.toHaveBeenCalled()
+    expect(mockSearch).not.toHaveBeenCalled()
     expect(result.current.hasSearched).toBe(false)
   })
 
   // --- Request ---
 
-  it('GETs the search route with query, species and the palette limit', async () => {
+  it('searches the corpus with query, species and the palette limit', async () => {
     speciesRef.current = 'mouse'
-    mockFetch.mockResolvedValue(jsonResponse(okBody([gene])))
+    mockSearch.mockResolvedValue(page([gene]))
 
     const { result } = renderHook(
       () => useGeneSearch({ defaultQuery: 'BRCA1' }),
@@ -111,25 +109,13 @@ describe('useGeneSearch', () => {
 
     await waitFor(() => expect(result.current.hasSearched).toBe(true))
     expect(result.current.searchResults).toEqual([gene])
-    expect(requestParams(0)).toEqual({
-      path: '/api/genes/search',
-      q: 'BRCA1',
-      species: 'mouse',
-      limit: '6',
-    })
-    const init = mockFetch.mock.calls[0][1] as RequestInit
-    expect(init.signal).toBeInstanceOf(AbortSignal)
+    expect(searchCall(0)).toEqual(['BRCA1', 'mouse', 6])
+    expect(mockFetch).not.toHaveBeenCalled()
   })
 
-  it('exposes truncation and suggestions from the response', async () => {
-    mockFetch.mockResolvedValue(
-      jsonResponse(
-        okBody([], {
-          truncated: true,
-          suggestions: [{ symbol: 'BRCA1', species: 'human' }],
-        }),
-      ),
-    )
+  it('exposes truncation, and suggestions when nothing matched', async () => {
+    mockSearch.mockResolvedValue(page([], true))
+    mockSimilar.mockResolvedValue([{ symbol: 'BRCA1', species: 'human' }])
     const { result } = renderHook(
       () => useGeneSearch({ defaultQuery: 'BRAC1' }),
       { wrapper: createWrapper() },
@@ -139,30 +125,6 @@ describe('useGeneSearch', () => {
     expect(result.current.suggestions).toEqual([
       { symbol: 'BRCA1', species: 'human' },
     ])
-  })
-
-  it('aborts the previous request when the query changes', async () => {
-    const signals: AbortSignal[] = []
-    mockFetch.mockImplementation(
-      (_url: string, init: RequestInit) =>
-        new Promise((_resolve, reject) => {
-          signals.push(init.signal!)
-          init.signal!.addEventListener('abort', () =>
-            reject(new DOMException('Aborted', 'AbortError')),
-          )
-        }),
-    )
-    const { result } = renderHook(() => useGeneSearch(), {
-      wrapper: createWrapper(),
-    })
-
-    act(() => result.current.searchNow('TP53'))
-    await waitFor(() => expect(signals).toHaveLength(1))
-    act(() => result.current.searchNow('KRAS'))
-    await waitFor(() => expect(signals).toHaveLength(2))
-
-    expect(signals[0].aborted).toBe(true)
-    expect(signals[1].aborted).toBe(false)
   })
 
   // --- Query + debounce ---
@@ -187,9 +149,9 @@ describe('useGeneSearch', () => {
     act(() => result.current.setQuery('BRC'))
     act(() => result.current.setQuery('BRCA'))
 
-    await waitFor(() => expect(mockFetch).toHaveBeenCalled())
-    expect(mockFetch).toHaveBeenCalledTimes(1)
-    expect(requestParams(0).q).toBe('BRCA')
+    await waitFor(() => expect(mockSearch).toHaveBeenCalled())
+    expect(mockSearch).toHaveBeenCalledTimes(1)
+    expect(searchCall(0)[0]).toBe('BRCA')
   })
 
   // --- Pending state ---
@@ -200,7 +162,7 @@ describe('useGeneSearch', () => {
     })
     act(() => result.current.setQuery('TP53'))
 
-    expect(mockFetch).not.toHaveBeenCalled()
+    expect(mockSearch).not.toHaveBeenCalled()
     expect(result.current.isLoading).toBe(true)
     expect(result.current.hasSearched).toBe(false)
   })
@@ -213,15 +175,15 @@ describe('useGeneSearch', () => {
 
     expect(result.current.query).toBe('TP53')
     // Well inside the 250ms debounce.
-    await waitFor(() => expect(mockFetch).toHaveBeenCalled(), {
+    await waitFor(() => expect(mockSearch).toHaveBeenCalled(), {
       timeout: 100,
     })
-    expect(requestParams(0).q).toBe('TP53')
+    expect(searchCall(0)[0]).toBe('TP53')
   })
 
   it("doesn't count the previous query's results as searched", async () => {
     const tp53 = { id: '1', symbol: 'TP53', name: 'TP53', species: 'human' }
-    mockFetch.mockResolvedValueOnce(jsonResponse(okBody([tp53])))
+    mockSearch.mockResolvedValueOnce(page([tp53]))
     const { result } = renderHook(() => useGeneSearch(), {
       wrapper: createWrapper(),
     })
@@ -229,9 +191,9 @@ describe('useGeneSearch', () => {
     await waitFor(() => expect(result.current.hasSearched).toBe(true))
 
     // Next query never resolves, so the previous results stay as placeholder.
-    mockFetch.mockReturnValueOnce(new Promise(() => {}))
+    mockSearch.mockReturnValueOnce(new Promise(() => {}))
     act(() => result.current.searchNow('KRAS'))
-    await waitFor(() => expect(mockFetch).toHaveBeenCalledTimes(2))
+    await waitFor(() => expect(mockSearch).toHaveBeenCalledTimes(2))
 
     expect(result.current.searchResults).toEqual([tp53])
     expect(result.current.hasSearched).toBe(false)
@@ -241,7 +203,7 @@ describe('useGeneSearch', () => {
   // --- Cache behavior ---
 
   it('uses cached results on second render with same query', async () => {
-    mockFetch.mockImplementation(async () => jsonResponse(okBody([gene])))
+    mockSearch.mockImplementation(async () => page([gene]))
     const client = createClient()
 
     const { result, unmount } = renderHook(
@@ -249,7 +211,7 @@ describe('useGeneSearch', () => {
       { wrapper: createWrapper(client) },
     )
     await waitFor(() => expect(result.current.hasSearched).toBe(true))
-    expect(mockFetch).toHaveBeenCalledTimes(1)
+    expect(mockSearch).toHaveBeenCalledTimes(1)
     unmount()
 
     const { result: result2 } = renderHook(
@@ -258,13 +220,13 @@ describe('useGeneSearch', () => {
     )
     await waitFor(() => expect(result2.current.hasSearched).toBe(true))
     expect(result2.current.searchResults).toEqual([gene])
-    expect(mockFetch).toHaveBeenCalledTimes(1)
+    expect(mockSearch).toHaveBeenCalledTimes(1)
   })
 
   // --- Error handling ---
 
-  it('shows a generic message when the network request fails', async () => {
-    mockFetch.mockRejectedValue(new TypeError('Failed to fetch'))
+  it('shows a generic message when the index fails to load', async () => {
+    mockSearch.mockRejectedValue(new Error('Gene data index.json: HTTP 503'))
     const { result } = renderHook(
       () => useGeneSearch({ defaultQuery: 'BRCA1' }),
       { wrapper: createWrapper() },
@@ -272,31 +234,7 @@ describe('useGeneSearch', () => {
     await waitFor(() => {
       expect(result.current.error).toBe('Search failed. Please try again.')
     })
-  })
-
-  it.each([
-    [429, 'Too many searches. Try again in 12s.'],
-    [503, 'Search is temporarily unavailable.'],
-    [401, 'Your session has expired. Sign in again to search.'],
-  ])('shows the server message for a %i', async (status, message) => {
-    mockFetch.mockResolvedValue(jsonResponse({ error: message }, status))
-    const { result } = renderHook(
-      () => useGeneSearch({ defaultQuery: 'BRCA1' }),
-      { wrapper: createWrapper() },
-    )
-    await waitFor(() => expect(result.current.error).toBe(message))
     expect(result.current.searchResults).toEqual([])
-  })
-
-  it('falls back to the generic message for a non-JSON error', async () => {
-    mockFetch.mockResolvedValue(new Response('Bad Gateway', { status: 502 }))
-    const { result } = renderHook(
-      () => useGeneSearch({ defaultQuery: 'BRCA1' }),
-      { wrapper: createWrapper() },
-    )
-    await waitFor(() =>
-      expect(result.current.error).toBe('Search failed. Please try again.'),
-    )
   })
 
   it('returns null error for successful empty results', async () => {
@@ -317,18 +255,18 @@ describe('useGeneSearch', () => {
       { wrapper: createWrapper() },
     )
     await waitFor(() => expect(result.current.hasSearched).toBe(true))
-    expect(mockFetch).toHaveBeenCalledTimes(1)
+    expect(mockSearch).toHaveBeenCalledTimes(1)
 
     act(() => {
       result.current.retry()
     })
-    await waitFor(() => expect(mockFetch).toHaveBeenCalledTimes(2))
+    await waitFor(() => expect(mockSearch).toHaveBeenCalledTimes(2))
   })
 
   // --- Analytics ---
 
   it('tracks search event once per unique query', async () => {
-    mockFetch.mockImplementation(async () => jsonResponse(okBody([gene])))
+    mockSearch.mockImplementation(async () => page([gene]))
     const { result } = renderHook(
       () => useGeneSearch({ defaultQuery: 'BRCA1' }),
       { wrapper: createWrapper() },
@@ -345,12 +283,14 @@ describe('useGeneSearch', () => {
   })
 
   it("doesn't track a failed search", async () => {
-    mockFetch.mockResolvedValue(jsonResponse({ error: 'down' }, 503))
+    mockSearch.mockRejectedValue(new Error('down'))
     const { result } = renderHook(
       () => useGeneSearch({ defaultQuery: 'BRCA1' }),
       { wrapper: createWrapper() },
     )
-    await waitFor(() => expect(result.current.error).toBe('down'))
+    await waitFor(() =>
+      expect(result.current.error).toBe('Search failed. Please try again.'),
+    )
     expect(
       mockTrackEvent.mock.calls.some((c) => c[0]?.event === 'gene_search'),
     ).toBe(false)
@@ -358,12 +298,12 @@ describe('useGeneSearch', () => {
 
   // --- In-browser search (static corpus) ---
 
-  describe('with a static corpus', () => {
+  describe('with the committed sample corpus', () => {
     beforeEach(() => {
       mockGetBrowserCorpus.mockReturnValue(sampleCorpus())
     })
 
-    it('searches the corpus without calling the API', async () => {
+    it('ranks matches across species', async () => {
       const { result } = renderHook(
         () => useGeneSearch({ defaultQuery: 'brca' }),
         { wrapper: createWrapper() },

@@ -42,6 +42,8 @@ interface GeneSplitterFormProperties {
   defaultSpliceJunctionPosition?: number
   /** Scope for the saved draft — the isoform id, or 'new'. */
   draftKey?: string
+  /** A new run replaced the design `defaultJobId` named (see useJob). */
+  onLeaveJob?: (jobId: string) => void
 }
 
 export function GeneSplitterForm({
@@ -51,6 +53,7 @@ export function GeneSplitterForm({
   defaultJobId,
   defaultSpliceJunctionPosition,
   draftKey = 'new',
+  onLeaveJob,
 }: GeneSplitterFormProperties) {
   const [isEditing, setIsEditing] = useState(false)
   // Guards the one-shot form restore. Set true after we hydrate from a
@@ -61,7 +64,7 @@ export function GeneSplitterForm({
   // navigating back to a previously-failed job doesn't spam. Keyed by the
   // error itself, not just the job id, so a fresh failure always speaks up.
   const toastedFailuresRef = useRef<Set<string>>(new Set())
-  const job = useJob({ initialJobId: defaultJobId ?? null })
+  const job = useJob({ initialJobId: defaultJobId ?? null, onLeaveJob })
 
   const methods = useForm<FormValues>({
     resolver: zodResolver(validationSchema),
@@ -95,11 +98,14 @@ export function GeneSplitterForm({
   })
 
   // Draft persistence — only when starting fresh. Resuming a job (?job=…)
-  // restores that job's own inputs instead, below.
+  // restores that job's own inputs instead, below. Decided at mount: a new
+  // run drops ?job= from the URL without remounting, and a draft restored
+  // then would overwrite the inputs of the run in progress.
+  const [resumedJob] = useState(defaultJobId)
   const draft = useFormDraft({
     draftKey,
     methods,
-    enabled: !defaultJobId,
+    enabled: !resumedJob,
   })
 
   // Hydrate the form from a resumed URL job's stored formValues — once they
@@ -121,11 +127,12 @@ export function GeneSplitterForm({
 
   // Results are derived, not mirrored into local state: the entry in history
   // is the single source of truth, and a completed job's result is already
-  // there (set by useJob on a local run, by JobWatcher on a polled one).
+  // there (set by useJob when the run settles).
   const result = job.status === 'completed' ? job.result : null
 
-  // Announce failures. Storage is handled centrally (useJob on submit,
-  // JobWatcher on poll settle), so the form just presents.
+  // Announce failures. Storage is handled centrally (useJob, and
+  // BrowserRuns for a run its tab didn't live to finish), so the form just
+  // presents.
   React.useEffect(() => {
     if (job.status !== 'failed' || !job.error) return
     const signature = `${job.jobId ?? 'unknown'}:${job.error.code}:${job.error.message}`

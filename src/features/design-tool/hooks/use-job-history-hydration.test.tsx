@@ -10,11 +10,6 @@ import { createStore, get, set } from 'idb-keyval'
 import { JOB_HISTORY_IDB } from '@/features/design-tool/utils/job-history-storage'
 import type { JobHistoryEntry } from './use-job-history'
 
-vi.mock('@/features/design-tool/api/jobs', () => ({
-  submitJob: vi.fn(),
-  cancelJob: vi.fn(),
-}))
-
 const KEY = 'rej-studio:job-history'
 
 const idbStore = () =>
@@ -177,7 +172,7 @@ describe('useJob resuming ?job= before the history loads', () => {
     return createElement(QueryClientProvider, { client }, children)
   }
 
-  it('waits for the saved entry instead of creating a running stub', async () => {
+  it('waits for the saved entry instead of calling it unavailable', async () => {
     await seedIdb(entry('done-job', { status: 'completed' }))
     // Hold the history read so the hook renders before it lands.
     let releaseRead!: () => void
@@ -205,11 +200,11 @@ describe('useJob resuming ?job= before the history loads', () => {
     releaseRead()
     await waitFor(() => expect(result.current.status).toBe('completed'))
     expect(result.current.isRestoring).toBe(false)
-    // Never flipped to running, so the watcher has nothing to poll.
+    // Never read as missing while the history was still loading.
     expect(useJobHistory.getState().getRunningIds()).toEqual([])
   })
 
-  it('creates the running stub once loaded if the job is unknown', async () => {
+  it('reads an unknown job as unavailable once loaded, writing nothing', async () => {
     const { useJobHistory } = await loadStore()
     const { useJob } = await import('./use-job')
 
@@ -217,8 +212,9 @@ describe('useJob resuming ?job= before the history loads', () => {
       () => useJob({ initialJobId: 'shared-job' }),
       { wrapper },
     )
-    await waitFor(() => expect(result.current.status).toBe('running'))
+    await waitFor(() => expect(result.current.status).toBe('failed'))
+    expect(result.current.error?.code).toBe('not_found')
     expect(result.current.isRestoring).toBe(false)
-    expect(useJobHistory.getState().getRunningIds()).toEqual(['shared-job'])
+    expect(useJobHistory.getState().entries).toEqual([])
   })
 })

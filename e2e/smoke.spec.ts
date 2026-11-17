@@ -1,24 +1,258 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 
-// Assertions target roles and data rather than copy, so wording and layout
-// changes don't break them.
-//
-// fixme: the pages are placeholders until slice 2 ports them to TanStack Start.
+import { appCopy } from '../src/copy/app'
+import { diseaseAssociationsCopy } from '../src/features/disease-associations/copy'
+import { formatInheritanceLabel } from '../src/features/disease-associations/types'
+import { geneSearchCopy } from '../src/features/gene-search/copy'
+import { SAMPLE_GENE_COUNT } from '../src/features/gene-search/corpus/gene-data-url'
 
-test.fixme('home renders the gene search', async ({ page }) => {
+// The pages, on the committed sample corpus (public/gene-data/sample), with
+// no server behind them. Expected text comes from the copy files; otherwise
+// assertions target roles and data.
+
+/** Fails the test on any request that isn't a static file or the app. */
+function watchForServerCalls(page: Page) {
+  const calls: string[] = []
+  page.on('request', (request) => {
+    const { pathname } = new URL(request.url())
+    if (pathname.startsWith('/api/')) calls.push(pathname)
+  })
+  return calls
+}
+
+test('home renders the gene search', async ({ page }) => {
   await page.goto('/')
   await expect(page.getByRole('combobox').first()).toBeVisible()
 })
 
-test.fixme('the TP53 gene page lists its isoforms', async ({ page }) => {
+test('/genes searches the corpus in the browser', async ({ page }) => {
+  const serverCalls = watchForServerCalls(page)
+  await page.goto('/genes')
+  const box = page.getByRole('searchbox', {
+    name: geneSearchCopy.searchPage.inputLabel,
+  })
+  await box.fill('brca')
+  await box.press('Enter')
+
+  await expect(page).toHaveURL(/\/genes\?q=brca$/)
+  await expect(
+    page.getByRole('heading', {
+      level: 1,
+      name: geneSearchCopy.searchPage.resultsTitle('brca'),
+    }),
+  ).toBeVisible()
+  // Human and mouse BRCA1/BRCA2.
+  const results = page.getByRole('region', {
+    name: geneSearchCopy.searchPage.resultsTitle('brca'),
+  })
+  await expect(results.getByRole('listitem')).toHaveCount(4)
+
+  // The species filter narrows the same query.
+  await page
+    .getByRole('navigation', { name: geneSearchCopy.searchPage.speciesLabel })
+    .getByRole('link', { name: geneSearchCopy.command.speciesOptions.mouse })
+    .click()
+  await expect(page).toHaveURL(/species=mouse/)
+  await expect(results.getByRole('listitem')).toHaveCount(2)
+
+  // A result opens its gene page.
+  await results.getByRole('link', { name: /BRCA1/ }).first().click()
+  await expect(page).toHaveURL(/\/genes\/BRCA1\?species=mouse/)
+  await expect(
+    page.getByRole('heading', { level: 1, name: 'BRCA1' }),
+  ).toBeVisible()
+  expect(serverCalls).toEqual([])
+})
+
+test('/genes suggests other symbols when nothing matches', async ({ page }) => {
+  await page.goto('/genes?q=BRCA3')
+  await expect(
+    page.getByText(geneSearchCopy.results.noMatches('BRCA3')),
+  ).toBeVisible()
+  await expect(page.getByRole('link', { name: 'BRCA1' }).first()).toBeVisible()
+})
+
+test('a gene page lists its isoforms, with charts and phenotypes', async ({
+  page,
+}) => {
+  const serverCalls = watchForServerCalls(page)
+  await page.goto('/genes/BRCA1?species=human')
+  await expect(
+    page.getByRole('heading', { level: 1, name: 'BRCA1' }),
+  ).toBeVisible()
+  await expect(page).toHaveTitle(appCopy.metadata.title('BRCA1'))
+
+  // The isoform table, one row per isoform.
+  await expect(page.locator('[id^="isoform-row-ENST"]').first()).toBeVisible()
+  // The charts.
+  await expect(
+    page.getByRole('heading', {
+      name: geneSearchCopy.identityMatrix.title,
+    }),
+  ).toBeVisible()
+  // BRCA1 is disease-associated, so its OMIM phenotypes show.
+  await expect(
+    page.getByRole('heading', {
+      name: diseaseAssociationsCopy.geneDetail.heading,
+    }),
+  ).toBeVisible()
+
+  // A chart row opens that isoform in the table, without a page load.
+  const firstRowLink = page.locator('a[href*="#isoform-row-"]').first()
+  const isoform = (await firstRowLink.getAttribute('href'))!.match(
+    /isoform-row-(ENST\d+)/,
+  )![1]
+  await firstRowLink.click()
+  await expect(page).toHaveURL(new RegExp(`isoform=${isoform}`))
+  await expect(page.locator(`#isoform-row-${isoform}`)).toBeInViewport()
+  expect(serverCalls).toEqual([])
+})
+
+test('the TP53 gene page lists its isoforms', async ({ page }) => {
   await page.goto('/genes/TP53?species=human')
   await expect(page.getByRole('heading', { name: 'TP53' })).toBeVisible()
   await expect(page.getByText('ENST00000269305').first()).toBeVisible()
 })
 
-test.fixme('the design tool prefills the coding sequence from an isoform', async ({
+test('a symbol in another case redirects to the canonical one', async ({
+  page,
+}) => {
+  await page.goto('/genes/tp53?species=human')
+  await expect(page).toHaveURL('/genes/TP53?species=human')
+  await expect(page.getByRole('heading', { name: 'TP53' })).toBeVisible()
+})
+
+test('an unknown gene shows not-found, with suggestions', async ({ page }) => {
+  await page.goto('/genes/BRCA9')
+  await expect(
+    page.getByRole('heading', {
+      name: appCopy.geneNotFound.title('BRCA9'),
+    }),
+  ).toBeVisible()
+  // In the page slot, with the shell around it.
+  await expect(page.locator('main#main-content h1')).toHaveCount(1)
+  await expect(page.getByText(appCopy.geneNotFound.didYouMean)).toBeVisible()
+  await page.getByRole('link', { name: 'BRCA1' }).first().click()
+  await expect(page).toHaveURL(/\/genes\/BRCA1\?species=/)
+})
+
+test('the design tool prefills the coding sequence from an isoform', async ({
   page,
 }) => {
   await page.goto('/design-tool?isoform=ENST00000269305')
   await expect(page.locator('textarea').first()).toHaveValue(/^ATG[ACGT]+$/i)
+  await expect(page.locator('input[name="name"]')).toHaveValue('Custom TP53')
+})
+
+test('the disease-associations filters narrow and sort the table', async ({
+  page,
+}) => {
+  const copy = diseaseAssociationsCopy
+  await page.goto('/disease-associations')
+  const summary = page.getByText(/^\d+ genes$/)
+  await expect(summary).toBeVisible()
+  const total = Number((await summary.textContent())!.split(' ')[0])
+
+  // The text filter is debounced into the URL.
+  await page
+    .getByRole('searchbox', { name: copy.filters.searchAria })
+    .fill('BRCA')
+  await expect(page).toHaveURL(/q=BRCA/)
+  await expect(
+    page.getByText(new RegExp(`^\\d+ of ${total} genes$`)),
+  ).toBeVisible()
+  await expect(
+    page.getByRole('link', { name: copy.table.viewGeneAria('BRCA1') }),
+  ).toBeVisible()
+
+  // An inheritance chip toggles.
+  const chip = page.getByRole('button', {
+    name: new RegExp(`^${formatInheritanceLabel('Autosomal dominant')}`),
+  })
+  await chip.click()
+  await expect(chip).toHaveAttribute('aria-pressed', 'true')
+  await expect(page).toHaveURL(/i=/)
+
+  // Sorting by largest CDS, then the gene link opens the gene page.
+  await page.getByRole('link', { name: copy.table.columns.largestCds }).click()
+  await expect(page).toHaveURL(/sort=cds/)
+  await page
+    .getByRole('link', { name: copy.table.viewGeneAria('BRCA1') })
+    .click()
+  await expect(page).toHaveURL('/genes/BRCA1?species=human')
+
+  // Back keeps the filters; Clear drops them.
+  await page.goBack()
+  await expect(chip).toHaveAttribute('aria-pressed', 'true')
+  await page.getByRole('button', { name: copy.filters.clearAll }).click()
+  await expect(page).toHaveURL('/disease-associations')
+  await expect(page.getByText(`${total} genes`, { exact: true })).toBeVisible()
+})
+
+test('disease-association pages navigate without a reload', async ({
+  page,
+}) => {
+  await page.goto('/disease-associations')
+  await page.evaluate(() => {
+    ;(window as unknown as { marker: number }).marker = 1
+  })
+  // The numbered links are anchors the button primitive gives role=button.
+  await page
+    .getByRole('navigation', {
+      name: diseaseAssociationsCopy.table.paginationAria,
+    })
+    .getByRole('button', { name: '2', exact: true })
+    .click()
+  await expect(page).toHaveURL('/disease-associations?page=2')
+  await expect(page.getByText(/^51–100 of/)).toBeVisible()
+  expect(
+    await page.evaluate(
+      () => (window as unknown as { marker?: number }).marker,
+    ),
+  ).toBe(1)
+})
+
+test('search URLs stay plain query strings', async ({ page }) => {
+  await page.goto('/genes')
+  const box = page.getByRole('searchbox', {
+    name: geneSearchCopy.searchPage.inputLabel,
+  })
+  await box.fill('53')
+  await box.press('Enter')
+  await expect(page).toHaveURL(/\/genes\?q=53$/)
+  await expect(
+    page.getByRole('heading', {
+      level: 1,
+      name: geneSearchCopy.searchPage.resultsTitle('53'),
+    }),
+  ).toBeVisible()
+
+  // Repeated keys for a list, and a single value from an older link.
+  await page.goto('/disease-associations?i=X-linked')
+  const xLinked = page.getByRole('button', {
+    name: new RegExp(`^${formatInheritanceLabel('X-linked')}`),
+  })
+  await expect(xLinked).toHaveAttribute('aria-pressed', 'true')
+  await page
+    .getByRole('button', {
+      name: new RegExp(`^${formatInheritanceLabel('Digenic')}`),
+    })
+    .click()
+  await expect(page).toHaveURL('/disease-associations?i=X-linked&i=Digenic')
+
+  // A JSON-encoded link copied while the router wrote JSON values.
+  await page.goto('/genes?q=%2253%22')
+  await expect(
+    page.getByRole('heading', {
+      level: 1,
+      name: geneSearchCopy.searchPage.resultsTitle('53'),
+    }),
+  ).toBeVisible()
+})
+
+test('a build on the sample corpus says so', async ({ page }) => {
+  await page.goto('/')
+  await expect(
+    page.getByText(appCopy.sampleData.label(SAMPLE_GENE_COUNT)),
+  ).toBeVisible()
 })

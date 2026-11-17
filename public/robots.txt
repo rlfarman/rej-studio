@@ -1,0 +1,4 @@
+# Cloudflare Access gates the whole hostname, so a crawler only ever sees
+# its sign-in page: ask crawlers not to try.
+User-agent: *
+Disallow: /
