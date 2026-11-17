@@ -7,12 +7,8 @@
 export const designsCopy = {
   http: {
     notConfigured:
-      'Cloud designs are not configured on this deployment (no Cloudflare Access settings).',
-    unauthorized: 'Sign in through Cloudflare Access to use cloud designs.',
-    noEmail:
-      'This Access token has no email, so it cannot own a design. Sign in as a person, not a service token.',
-    accessUnavailable:
-      'Could not check your sign-in with Cloudflare Access just now. Try again in a moment.',
+      'Cloud designs are not configured on this deployment (no passcode set).',
+    unauthorized: 'Sign in with the passcode to use cloud designs.',
     unavailable: 'Cloud designs are not available on this deployment.',
     badJson: 'The request body must be JSON.',
     bodyTooLarge: 'That request is too large.',

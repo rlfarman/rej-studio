@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { beforeEach, describe, expect, it, vi } from 'vite-plus/test'
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vite-plus/test'
 
 // The optimizer's module is WebAssembly imported the Cloudflare way, which
 // only instantiates in workerd; nothing here runs a design.
@@ -10,6 +10,12 @@ import {
   cloudDesignSchema,
 } from '@/features/design-tool/types/cloud-design'
 
+import {
+  gateConfig,
+  SESSION_COOKIE_NAME,
+  signSession,
+  verifySession,
+} from '../auth/session'
 import type { ServerEnv } from '../env'
 import {
   handleCreateDesign,
@@ -28,17 +34,46 @@ import {
 } from './test-utils'
 
 // The HTTP surface of /api/designs, through the real handlers and service,
-// against an in-memory Workflow binding. Identity comes from
-// DEV_ACCESS_EMAIL on a loopback URL — the Access JWT itself is covered in
-// access.test.ts — so a test can switch who is asking by changing it.
+// against an in-memory Workflow binding. Identity is a real session cookie
+// signed under the passcode, so a test switches who is asking by sending
+// another caller's cookie.
 
 const BASE = 'http://localhost:3000/api/designs'
-const ADA = 'ada@lab.example'
-const BOB = 'bob@lab.example'
+const GATE = {
+  BASIC_AUTH_PASSWORD: 'splice-test',
+  SESSION_SECRET: 'a-test-session-secret-of-at-least-32-chars',
+}
+
+interface Caller {
+  owner: string
+  cookie: string
+}
+
+async function signIn(): Promise<Caller> {
+  const config = gateConfig(GATE)
+  if (config.mode !== 'on') throw new Error('test gate is not on')
+  const token = await signSession(config)
+  const session = await verifySession(config, token)
+  return {
+    owner: `session:${session!.sid}`,
+    cookie: `${SESSION_COOKIE_NAME}=${token}`,
+  }
+}
+
+let ADA: Caller
+let BOB: Caller
+
+beforeAll(async () => {
+  ADA = await signIn()
+  BOB = await signIn()
+})
 
 let workflow: FakeWorkflow
 let limiter: ReturnType<typeof fakeLimiter>
 let env: ServerEnv
+
+/** Which caller each env stands for: a request built for it carries their cookie. */
+const callers = new WeakMap<ServerEnv, Caller>()
 
 beforeEach(() => {
   workflow = new FakeWorkflow()
@@ -46,36 +81,70 @@ beforeEach(() => {
   env = {
     DESIGN_WORKFLOW: workflow.binding(),
     DESIGN_LIMITER: limiter.binding,
-    DEV_ACCESS_EMAIL: ADA,
+    ...GATE,
   }
+  callers.set(env, ADA)
 })
 
-function as(email: string): ServerEnv {
-  return { ...env, DEV_ACCESS_EMAIL: email }
+function as(caller: Caller, base: ServerEnv = env): ServerEnv {
+  const e = { ...base }
+  callers.set(e, caller)
+  return e
 }
 
-function post(body: unknown, init: RequestInit = {}) {
+/** A caller with no session at all. */
+const NOBODY: Caller = { owner: '', cookie: '' }
+
+/** Ada, unless the env was made for someone else with as(). */
+function headersFor(e: ServerEnv): Record<string, string> {
+  const caller = callers.get(e) ?? ADA
+  return caller.cookie ? { cookie: caller.cookie } : {}
+}
+
+/**
+ * Runs a request whose retries wait on setTimeout to completion under fake
+ * timers. The session check is WebCrypto, which settles on the real event
+ * loop, so time is advanced in steps with a real turn between them rather
+ * than all at once before the request has reached its first timer.
+ */
+async function settle<T>(pending: Promise<T>): Promise<T> {
+  let done = false
+  void pending.finally(() => {
+    done = true
+  })
+  while (!done) {
+    await vi.advanceTimersByTimeAsync(250)
+    await new Promise((resolve) => setImmediate(resolve))
+  }
+  return pending
+}
+
+function post(body: unknown, e: ServerEnv, init: RequestInit = {}) {
   return new Request(BASE, {
     method: 'POST',
-    headers: { 'content-type': 'application/json' },
+    headers: { 'content-type': 'application/json', ...headersFor(e) },
     body: typeof body === 'string' ? body : JSON.stringify(body),
     ...init,
   })
 }
 
 async function submit(body: unknown = { values: formValues() }, e = env) {
-  const response = await handleCreateDesign(post(body), e)
+  const response = await handleCreateDesign(post(body, e), e)
   return { response, json: (await response.json()) as Record<string, unknown> }
 }
 
 async function read(id: string, e = env) {
-  const response = await handleGetDesign(new Request(`${BASE}/${id}`), e, id)
+  const response = await handleGetDesign(
+    new Request(`${BASE}/${id}`, { headers: headersFor(e) }),
+    e,
+    id,
+  )
   return { response, json: (await response.json()) as Record<string, unknown> }
 }
 
 function remove(id: string, e = env) {
   return handleDeleteDesign(
-    new Request(`${BASE}/${id}`, { method: 'DELETE' }),
+    new Request(`${BASE}/${id}`, { method: 'DELETE', headers: headersFor(e) }),
     e,
     id,
   )
@@ -110,14 +179,14 @@ describe('POST /api/designs', () => {
     expect(response.headers.get('location')).toBe(`/api/designs/${id}`)
 
     const instance = workflow.instances.get(id)!
-    expect(instance.params.owner).toBe(ADA)
+    expect(instance.params.owner).toBe(ADA.owner)
     expect(instance.params.bases).toBe(CDS.length)
     expect(instance.params.request.CDS).toBe(CDS)
     expect(instance.retention).toEqual({
       successRetention: '30 days',
       errorRetention: '7 days',
     })
-    expect(limiter.keys).toEqual([`cloud:${ADA}`])
+    expect(limiter.keys).toEqual([`cloud:${ADA.owner}`])
   })
 
   it('returns the existing design for an identical request, without running or spending again', async () => {
@@ -154,7 +223,7 @@ describe('POST /api/designs', () => {
         params: {
           values: formValues(),
           request: { CDS, name: 'x', options: {} as never },
-          owner: BOB,
+          owner: BOB.owner,
           bases: CDS.length,
           submittedAt: new Date().toISOString(),
         },
@@ -211,12 +280,15 @@ describe('POST /api/designs', () => {
   })
 
   it('refuses an oversized body before parsing it', async () => {
-    const response = await handleCreateDesign(post('x'.repeat(300_000)), env)
+    const response = await handleCreateDesign(
+      post('x'.repeat(300_000), env),
+      env,
+    )
     expect(response.status).toBe(413)
   })
 
   it('refuses a body that is not JSON', async () => {
-    const response = await handleCreateDesign(post('{nope'), env)
+    const response = await handleCreateDesign(post('{nope', env), env)
     expect(response.status).toBe(400)
   })
 
@@ -231,18 +303,42 @@ describe('POST /api/designs', () => {
   })
 
   it('answers 503 when the Workflow is not bound', async () => {
-    const { response } = await submit(undefined, {
-      DEV_ACCESS_EMAIL: ADA,
-    })
+    const { response } = await submit(undefined, as(ADA, { ...GATE }))
     expect(response.status).toBe(503)
   })
 
-  it('answers 503 with no identity configured, and creates nothing', async () => {
-    const { response } = await submit(undefined, {
-      DESIGN_WORKFLOW: workflow.binding(),
-    })
+  it('answers 401 without a session, and creates nothing', async () => {
+    const { response } = await submit(undefined, as(NOBODY))
+    expect(response.status).toBe(401)
+    expect(workflow.creates).toBe(0)
+  })
+
+  it('answers 401 for a session signed under another passcode', async () => {
+    const changed = as(ADA, { ...env, BASIC_AUTH_PASSWORD: 'rotated' })
+    const { response } = await submit(undefined, changed)
+    expect(response.status).toBe(401)
+  })
+
+  it('answers 503 with the passcode half-configured, and creates nothing', async () => {
+    const { response } = await submit(
+      undefined,
+      as(ADA, {
+        DESIGN_WORKFLOW: workflow.binding(),
+        BASIC_AUTH_PASSWORD: 'x',
+      }),
+    )
     expect(response.status).toBe(503)
     expect(workflow.creates).toBe(0)
+  })
+
+  it('treats local development with no passcode as one local owner', async () => {
+    const { response, json } = await submit(undefined, {
+      DESIGN_WORKFLOW: workflow.binding(),
+    })
+    expect(response.status).toBe(202)
+    expect(workflow.instances.get(json.id as string)!.params.owner).toBe(
+      'local',
+    )
   })
 })
 
@@ -264,7 +360,7 @@ describe('GET /api/designs/:id', () => {
       status: 'running',
       name: 'Cloud test',
       bases: CDS.length,
-      owner: ADA,
+      owner: ADA.owner,
       ownedByCaller: true,
     })
   })
@@ -278,7 +374,7 @@ describe('GET /api/designs/:id', () => {
     const design = cloudDesignSchema.parse(json)
     expect(design).toMatchObject({
       status: 'completed',
-      owner: ADA,
+      owner: ADA.owner,
       ownedByCaller: false,
     })
     expect(design.result?.optimized_sequence).toBe(CDS)
@@ -319,10 +415,8 @@ describe('GET /api/designs/:id', () => {
 
   it('needs an identity like everything else', async () => {
     const { json: submitted } = await submit()
-    const { response } = await read(submitted.id as string, {
-      DESIGN_WORKFLOW: workflow.binding(),
-    })
-    expect(response.status).toBe(503)
+    const { response } = await read(submitted.id as string, as(NOBODY))
+    expect(response.status).toBe(401)
   })
 
   describe('when the Workflow binding stumbles on a read', () => {
@@ -339,13 +433,11 @@ describe('GET /api/designs/:id', () => {
     }
 
     it('retries and answers once the binding recovers', async () => {
-      vi.useFakeTimers()
+      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
       try {
         const { json: submitted } = await submit()
         failStatus(submitted.id as string, STATUS_RETRY_DELAYS_MS.length)
-        const pending = read(submitted.id as string)
-        await vi.runAllTimersAsync()
-        const { response, json } = await pending
+        const { response, json } = await settle(read(submitted.id as string))
         expect(response.status).toBe(200)
         expect(json).toEqual({ id: submitted.id, status: 'queued' })
       } finally {
@@ -354,7 +446,7 @@ describe('GET /api/designs/:id', () => {
     })
 
     it('retries a stumbling get() too', async () => {
-      vi.useFakeTimers()
+      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
       try {
         const { json: submitted } = await submit()
         const real = workflow.get
@@ -363,9 +455,7 @@ describe('GET /api/designs/:id', () => {
           if (failures++ < 2) throw new Error('internal error')
           return real(id)
         }
-        const pending = read(submitted.id as string)
-        await vi.runAllTimersAsync()
-        const { response } = await pending
+        const { response } = await settle(read(submitted.id as string))
         expect(response.status).toBe(200)
       } finally {
         vi.useRealTimers()
@@ -378,13 +468,11 @@ describe('GET /api/designs/:id', () => {
     })
 
     it('asks the client to retry, not fail, when it does not recover', async () => {
-      vi.useFakeTimers()
+      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
       try {
         const { json: submitted } = await submit()
         failStatus(submitted.id as string, Infinity)
-        const pending = read(submitted.id as string)
-        await vi.runAllTimersAsync()
-        const { response } = await pending
+        const { response } = await settle(read(submitted.id as string))
         expect(response.status).toBe(503)
         expect(response.headers.get('retry-after')).toBe('2')
       } finally {

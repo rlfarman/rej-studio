@@ -506,6 +506,12 @@ body {
   }
 }
 
+/* The login page arrives as the app's shell; its chrome stays hidden until
+   the client renders the form on its own (LOGIN_PRELOAD_SCRIPT, __root.tsx). */
+html[data-login-page] [data-app-chrome] {
+  visibility: hidden;
+}
+
 /* Honor reduced-motion globally: kills scanning/breathing effects that would
    otherwise run forever, and shortens transitions to effectively instant. */
 @media (prefers-reduced-motion: reduce) {

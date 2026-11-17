@@ -14,9 +14,9 @@ import { designToolCopy } from '@/features/design-tool/copy'
  *
  * Expected failures come back as values, with the server's own message when
  * it sent one (it is written for the person reading it), so callers never
- * need a try/catch. `status` is 0 when no answer arrived — offline, or an
- * expired Cloudflare Access session, whose sign-in redirect a fetch cannot
- * follow.
+ * need a try/catch. `status` is 0 when no answer arrived (offline). An
+ * expired sign-in is a 401 from the passcode gate, whose message says to
+ * sign in again.
  */
 
 const copy = designToolCopy.cloud
@@ -40,7 +40,7 @@ async function call<T>(
   try {
     response = await fetch(input, {
       ...init,
-      // Same origin only: the Access cookie must go with it, and nothing
+      // Same origin only: the session cookie must go with it, and nothing
       // else should.
       credentials: 'same-origin',
       headers: { accept: 'application/json', ...init.headers },
@@ -55,7 +55,8 @@ async function call<T>(
   try {
     body = await response.json()
   } catch {
-    // An HTML page where JSON was expected is Access's sign-in page.
+    // An HTML page where JSON was expected: something between here and the
+    // Worker answered instead of it.
     return { ok: false, status: response.status, message: copy.unreachable }
   }
 

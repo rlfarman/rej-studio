@@ -8,8 +8,7 @@
   "main": "./src/server/worker-entry.ts",
   "compatibility_date": "2026-11-16",
   // No nodejs_compat: nothing on the Worker needs Node APIs. The MCP SDK
-  // (@modelcontextprotocol/server), zod and jose (Access JWTs) run on web
-  // standards alone.
+  // (@modelcontextprotocol/server) and zod run on web standards alone.
   //
   // 5 minutes of CPU per invocation, the Paid plan's maximum: what an inline
   // MCP design and a cloud-design Workflow step each get. Workflow steps have
@@ -21,10 +20,25 @@
     // served as a free static asset without invoking the Worker. The
     // directory is set by the Cloudflare Vite plugin.
     "not_found_handling": "single-page-application",
-    // /api is the Worker's, always. Without this, a browser navigation to
-    // /api/health would be answered with the SPA shell by the asset layer
-    // and never reach the route.
-    "run_worker_first": ["/api/*"],
+    // Everything goes through the Worker first, so the passcode gate
+    // (src/server/auth/gate.ts) sees every page load and API call; it hands
+    // pages back to the asset layer once a session checks out. The
+    // exceptions are static files that carry nothing worth gating and must
+    // load without a session: the content-hashed bundles (the login page
+    // needs them), the optimizer's .wasm, icons, the committed sample
+    // corpus (public Ensembl data, like the R2 corpus), and the MCP view's
+    // client library, which a chat host loads with no cookie for this site.
+    "run_worker_first": [
+      "/*",
+      "!/assets/*",
+      "!/optimizer/*",
+      "!/branding/*",
+      "!/gene-data/*",
+      "!/mcp/*",
+      "!/favicon.svg",
+      "!/manifest.webmanifest",
+      "!/robots.txt",
+    ],
     // Lets the Worker read static assets without a network round trip: the
     // MCP endpoint reads the committed sample corpus (public/gene-data/
     // sample) through it when no R2 corpus is configured.
@@ -47,12 +61,18 @@
       "simple": { "limit": 10, "period": 60 },
     },
     {
-      // Cloud designs, per owner (an Access email or mcp:<token>). The plan
+      // Cloud designs, per owner (a sign-in session or mcp:<token>). The plan
       // said ~20 an hour; a binding counts over 10 or 60 seconds only, so it
       // is 3 a minute (src/server/designs/rate-limit.ts).
       "name": "DESIGN_LIMITER",
       "namespace_id": "4103",
       "simple": { "limit": 3, "period": 60 },
+    },
+    {
+      // Passcode attempts, per client address (src/server/auth/login.ts).
+      "name": "LOGIN_LIMITER",
+      "namespace_id": "4104",
+      "simple": { "limit": 10, "period": 60 },
     },
   ],
   // Cloud designs you can close the tab on: one Workflow, defined in this
@@ -79,17 +99,10 @@
     { "binding": "GENE_DATA", "bucket_name": "rej-studio-gene-data" },
     { "binding": "DESIGN_RESULTS", "bucket_name": "rej-studio-design-results" },
   ],
-  // Cloudflare Access, for /api/designs (src/server/designs/access.ts): the
-  // team domain and the "REJ Studio" Access application's AUD tag. Neither is
-  // a secret: the AUD only names which application a token must be for.
-  "vars": {
-    "ACCESS_TEAM_DOMAIN": "rlfarman.cloudflareaccess.com",
-    "ACCESS_AUD": "c43327af6399ff82f387e91d3c02d6550445e2eb3a51d6585fa5d255d49a6c2e",
-  },
-  //
-  // Secrets (never in this file): MCP_TOKENS and HEALTH_AUTH_TOKEN. Locally
-  // they go in .dev.vars (see .dev.vars.example); deployed, `wrangler secret
-  // put`. DEV_ACCESS_EMAIL is local-only and never set on a deployment.
+  // Secrets (never in this file): BASIC_AUTH_PASSWORD and SESSION_SECRET
+  // (the passcode gate), MCP_TOKENS and HEALTH_AUTH_TOKEN. Locally they go in
+  // .dev.vars (see .dev.vars.example); deployed, `wrangler secret put` or
+  // `wrangler deploy --secrets-file`.
   "observability": {
     "enabled": true,
   },

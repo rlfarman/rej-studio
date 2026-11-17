@@ -1,14 +1,11 @@
 import { expect, test } from '@playwright/test'
 
 import { designToolCopy } from '../src/features/design-tool/copy'
+import { signIn } from './sign-in'
 
 // A cloud design, end to end: the toggle, POST /api/designs, the Workflow
 // running in workerd under `vp dev`, and the result found again after the
 // page that submitted it has closed.
-//
-// The dev server is started with DEV_ACCESS_EMAIL (playwright.config.ts),
-// the local stand-in for a Cloudflare Access sign-in, honoured on localhost
-// only.
 
 const GENE_PAGE = '/design-tool?isoform=ENST00000269305'
 const copy = designToolCopy.cloud
@@ -76,10 +73,11 @@ test('a cloud design link opens on another device, and its owner can delete it',
     timeout: 60_000,
   })
 
-  // A fresh browser context has no history at all: the design comes from
-  // the cloud.
-  const elsewhere = await browser.newContext()
+  // A fresh browser context has no history at all, and its own sign-in: the
+  // design comes from the cloud.
+  const elsewhere = await browser.newContext({ storageState: undefined })
   const other = await elsewhere.newPage()
+  await signIn(other)
   await other.goto(`/design-tool?job=${jobId}`)
   await expect(other.getByText(/split after base/i).first()).toBeVisible({
     timeout: 60_000,

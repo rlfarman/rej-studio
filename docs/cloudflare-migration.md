@@ -229,7 +229,7 @@ Cloudflare cutover are done. Everything here is reversible until DNS moves.
 ### Cutover status (2026-11-17)
 
 Done on the `rlfarman` account; the preview is live at
-`https://rej-studio.rejstudio.workers.dev`, behind Access.
+`https://rej-studio.rejstudio.workers.dev`, behind the passcode gate.
 
 - **Workers Paid** is on, with a $10 Workers spending limit that blocks
   usage (Billing → Spend limits) and email alerts at $2 and $5. The limit is
@@ -239,22 +239,21 @@ Done on the `rlfarman` account; the preview is live at
   uploaded to the R2 bucket `rej-studio-gene-data` under `v1/`, and is served
   to browsers from `https://gene-data.rejstudio.com/v1` with long-lived
   immutable caching and CORS for the app's origins. It is public reference
-  data, so it sits outside Access.
+  data, so it sits outside the gate.
 - **Buckets bound** in `wrangler.jsonc`: `GENE_DATA` and `DESIGN_RESULTS`
   (`rej-studio-design-results`, 30-day lifecycle rule).
-- **Access.** The `rlfarman` Zero Trust team has two applications:
-  - "REJ Studio" covers the Worker's production and preview URLs. Its reusable
-    policy "REJ Studio users" allows `@salk.edu` plus two named addresses.
-    Its AUD and team domain are the `vars` in `wrangler.jsonc`.
-  - "REJ Studio MCP (agents)" bypasses Access for
-    `rej-studio.rejstudio.workers.dev/api/mcp`, because agents use bearer
-    tokens.
+- **Passcode gate instead of Access (decided 2026-11-17).** Access was set
+  up and verified, then dropped at Richie's request for the old shared
+  passcode: one code is simpler to hand to the lab than per-person sign-in.
+  The gate lives in the Worker (`src/server/auth/`, AGENTS.md "Auth"). What
+  that gives up: per-person identity (cloud designs are owned by a sign-in
+  session, so only the browser that submitted one can delete it), revoking
+  one person (changing the passcode signs everyone out), and per-person
+  rate limits. Both Access applications were deleted; the `rlfarman` Zero
+  Trust team remains, unused and free.
 
-  At DNS cutover, add `rejstudio.com` to the first application and
-  `rejstudio.com/api/mcp` to the second.
-
-- **Secrets** `MCP_TOKENS` (one token, `richie`) and `HEALTH_AUTH_TOKEN` are
-  set. The owner keeps them in `~/.config/rej-studio/worker-secrets.json`,
+- **Secrets** `BASIC_AUTH_PASSWORD`, `SESSION_SECRET`, `MCP_TOKENS` (one
+  token, `richie`) and `HEALTH_AUTH_TOKEN` are set. The owner keeps them in `~/.config/rej-studio/worker-secrets.json`,
   which is never committed. Deploy with that file so the secrets travel with
   the version:
 
@@ -262,8 +261,8 @@ Done on the `rlfarman` account; the preview is live at
   VITE_GENE_DATA_URL=https://gene-data.rejstudio.com/v1 pnpm cf:deploy -- --secrets-file ~/.config/rej-studio/worker-secrets.json
   ```
 
-Still to do: verify the preview while signed in (including reloading the page
-while a cloud design runs), Web Analytics, Sentry for Start, the DNS move, the
+Verified signed in on the preview: the full corpus, an in-browser design, and
+a cloud design through reload, history and delete. Still to do: Web Analytics, Sentry for Start, the DNS move, the
 required-checks swap, repointing the uptime monitor, and the teardown.
 
 ### Cutover checklist
@@ -298,17 +297,9 @@ can do:
   cf:types`. Until it is bound, the MCP endpoint reads gene data over HTTP
   (or the committed sample through the assets binding) and the health check
   stays shallow.
-- **Access: add a bypass policy for `/api/mcp`** on the hostname, since an
-  agent has no browser to sign in with and the endpoint carries its own
-  bearer tokens. Everything else, including `/api/health` and
-  `/api/version`, sits behind Access; a monitor probing health needs either a
-  service token or a bypass of its own.
-- **Cloud designs (slice 4b).** Set `ACCESS_TEAM_DOMAIN` and `ACCESS_AUD`
-  (the Access application's AUD tag) in `wrangler.jsonc` `vars` once the
-  Access application exists; until both are set `/api/designs` answers 503.
-  Keep `/api/designs` behind Access — unlike `/api/mcp` it has no bypass,
-  and the Worker verifies the Access JWT itself as well. Never set
-  `DEV_ACCESS_EMAIL` on the deployed Worker.
+- **The passcode.** Deployed, `BASIC_AUTH_PASSWORD` and `SESSION_SECRET`
+  must both be set (the Worker refuses everything otherwise). `/api/mcp` and
+  `/api/health` are outside the gate; `/api/version` is behind it.
 - **The design-results bucket.** Create an R2 bucket for results over ~900
   KB, give it a 30-day lifecycle rule to match the Workflow's retention, and
   uncomment the `DESIGN_RESULTS` binding in `wrangler.jsonc` (then `pnpm

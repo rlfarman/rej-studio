@@ -22,6 +22,7 @@ import { commonCopy } from '@/copy/common'
 import { AppSidebar } from './-components/layout/app-sidebar'
 import { Header } from './-components/layout/header'
 import { RouteError } from './-components/route-error'
+import { useShellPathname } from './-components/layout/use-shell-pathname'
 import globalsCss from '@/styles/globals.css?url'
 
 // Reads the user's sidebar preferences from localStorage and applies them to
@@ -29,6 +30,11 @@ import globalsCss from '@/styles/globals.css?url'
 // at the saved state and width without a flash. Same pattern next-themes
 // uses for dark mode. src/components/ui/sidebar.tsx reads the attributes.
 const SIDEBAR_PRELOAD_SCRIPT = `(function(){try{var d=document.documentElement;var s=localStorage.getItem('rej-sidebar-state');if(s==='true'||s==='false')d.dataset.sidebarPreloadOpen=s;var w=localStorage.getItem('rej-sidebar-width');if(w&&/^\\d+$/.test(w)){var n=parseInt(w,10);if(n>=200&&n<=480){d.dataset.sidebarPreloadWidth=String(n);d.style.setProperty('--sidebar-width',n+'px');}}}catch(e){}})();`
+
+// The login page is served the same prerendered shell as every route, with
+// the sidebar and header in it. Marking <html> before the first paint lets
+// globals.css hide that chrome until the client renders the form alone.
+const LOGIN_PRELOAD_SCRIPT = `(function(){if(location.pathname==='/login')document.documentElement.dataset.loginPage='';})();`
 
 // Build-time, like every Vite env var: set it and rebuild to show a banner.
 const maintenanceMessage = import.meta.env.VITE_MAINTENANCE_MESSAGE?.trim()
@@ -77,6 +83,7 @@ function RootDocument({ children }: { children: ReactNode }) {
     <html lang="en" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: SIDEBAR_PRELOAD_SCRIPT }} />
+        <script dangerouslySetInnerHTML={{ __html: LOGIN_PRELOAD_SCRIPT }} />
         <HeadContent />
       </head>
       <body>
@@ -101,13 +108,21 @@ function RootDocument({ children }: { children: ReactNode }) {
   )
 }
 
-/** Sidebar, header and the page. */
+/**
+ * Sidebar, header and the page. The login page stands alone: once hydrated
+ * (the shell is the same for every URL, so hydration must reproduce it),
+ * and hidden by LOGIN_PRELOAD_SCRIPT until then.
+ */
 function AppLayout() {
+  if (useShellPathname() === '/login') return <Outlet />
   return (
     // Tooltips only appear inside the app shell; providing them here keeps
     // Base UI's tooltip out of the error and not-found pages.
     <TooltipProvider>
-      <SidebarProvider className="relative h-svh min-h-0 w-full flex-row overflow-hidden">
+      <SidebarProvider
+        data-app-chrome=""
+        className="relative h-svh min-h-0 w-full flex-row overflow-hidden"
+      >
         <AppSidebar />
         <SidebarInset className="relative flex h-svh min-h-0 max-w-full flex-1 flex-col overflow-hidden">
           {maintenanceMessage && (

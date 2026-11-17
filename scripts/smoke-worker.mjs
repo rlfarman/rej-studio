@@ -14,7 +14,9 @@
 // resubmission is deduplicated, that the result is the browser's design (the
 // same .wasm run through Node with the browser's ABI glue), and deletes it;
 // and that submit_design hands a sequence over 12 kb to the same Workflow.
-// The identity is DEV_ACCESS_EMAIL, honoured only on this loopback host.
+// The passcode gate is on, as deployed: the script checks that it turns away
+// signed-out requests, signs in through /api/login, and sends that session
+// cookie with everything after.
 //
 // It lives here rather than in Vitest because @cloudflare/vitest-pool-workers
 // supports Vitest 4 and this repo runs Vite+'s Vitest 5; the pool's proxy
@@ -34,14 +36,20 @@ const worker = path.join(root, 'dist/server/wrangler.json')
 const TOKEN = `smoke-agent:${'s'.repeat(32)}`
 const SECRET = 's'.repeat(32)
 const HEALTH_TOKEN = 'h'.repeat(40)
-const DEV_EMAIL = 'smoke@example.com'
+const PASSCODE = 'smoke-passcode'
+const SESSION_SECRET = 'x'.repeat(40)
+
+/** The session cookie from signing in; sent with every request once set. */
+let session = ''
 
 /**
  * fetch with a deadline. A request that workerd accepts but never answers
  * would otherwise hang the script, and with it the CI job, indefinitely.
  */
 function request(url, init = {}, ms = 60_000) {
-  return fetch(url, { ...init, signal: AbortSignal.timeout(ms) })
+  const headers = new Headers(init.headers)
+  if (session && !headers.has('cookie')) headers.set('cookie', session)
+  return fetch(url, { ...init, headers, signal: AbortSignal.timeout(ms) })
 }
 
 const checks = []
@@ -68,7 +76,8 @@ async function waitForReady(url, child) {
       throw new Error(`wrangler dev exited with ${child.exitCode}`)
     }
     try {
-      const response = await request(`${url}/api/version`, {}, 2_000)
+      // Public, so it answers before anyone has signed in.
+      const response = await request(`${url}/api/health`, {}, 2_000)
       if (response.ok) return
     } catch {
       // Not listening yet.
@@ -200,6 +209,61 @@ async function browserDesign(values, seed) {
   return design({ ...request, options: { ...request.options, seed } })
 }
 
+async function passcodeGate(url) {
+  const page = await request(`${url}/genes/TP53`, { redirect: 'manual' })
+  check(
+    'a signed-out page load is sent to the login page',
+    page.status === 302 &&
+      page.headers.get('location') === `${url}/login?return_to=%2Fgenes%2FTP53`,
+    `HTTP ${page.status} ${page.headers.get('location')}`,
+  )
+  const api = await request(`${url}/api/version`)
+  check('a signed-out API call is refused with 401', api.status === 401)
+  const login = await request(`${url}/login`)
+  check(
+    'the login page is served to anyone',
+    login.status === 200 &&
+      (login.headers.get('content-type') ?? '').includes('text/html'),
+  )
+  const asset = await request(`${url}/optimizer/THIRD-PARTY-NOTICES.md`)
+  check('static files load without a session', asset.status === 200)
+
+  const signIn = (password) =>
+    request(`${url}/api/login`, {
+      method: 'POST',
+      redirect: 'manual',
+      headers: {
+        'content-type': 'application/x-www-form-urlencoded',
+        origin: url,
+      },
+      body: new URLSearchParams({ password, return_to: '/design-tool' }),
+    })
+  const wrong = await signIn('not-the-passcode')
+  check(
+    'a wrong passcode goes back to the form, with no cookie',
+    wrong.status === 303 &&
+      wrong.headers.get('location')?.includes('error=passcode') &&
+      !wrong.headers.get('set-cookie'),
+    `HTTP ${wrong.status} ${wrong.headers.get('location')}`,
+  )
+  const right = await signIn(PASSCODE)
+  session = (right.headers.get('set-cookie') ?? '').split(';')[0]
+  check(
+    'the passcode signs in and returns to the page asked for',
+    right.status === 303 &&
+      right.headers.get('location') === `${url}/design-tool` &&
+      session.startsWith('rej_session='),
+    `HTTP ${right.status} ${right.headers.get('location')}`,
+  )
+  const signedIn = await request(`${url}/genes/TP53`, { redirect: 'manual' })
+  check(
+    'a signed-in page load gets the app',
+    signedIn.status === 200 &&
+      (signedIn.headers.get('content-type') ?? '').includes('text/html'),
+    `HTTP ${signedIn.status}`,
+  )
+}
+
 async function cloudDesigns(url, cds) {
   const designs = `${url}/api/designs`
   const values = formValues(cds, 'TP53 cloud smoke')
@@ -235,7 +299,7 @@ async function cloudDesigns(url, cds) {
     'the cloud design completes with a result, owned by the caller',
     finished.status === 'completed' &&
       finished.result?.optimized_sequence?.length === cds.length &&
-      finished.owner === DEV_EMAIL &&
+      finished.owner?.startsWith('session:') &&
       finished.ownedByCaller === true &&
       finished.values?.codingSequence === cds,
     JSON.stringify({ ...finished, result: undefined, values: undefined }),
@@ -375,13 +439,9 @@ async function main() {
       '--var',
       `HEALTH_AUTH_TOKEN:${HEALTH_TOKEN}`,
       '--var',
-      `DEV_ACCESS_EMAIL:${DEV_EMAIL}`,
-      // wrangler.jsonc carries the deployed Access settings, and a configured
-      // Access outranks DEV_ACCESS_EMAIL; blank them so the stand-in applies.
+      `BASIC_AUTH_PASSWORD:${PASSCODE}`,
       '--var',
-      'ACCESS_TEAM_DOMAIN:',
-      '--var',
-      'ACCESS_AUD:',
+      `SESSION_SECRET:${SESSION_SECRET}`,
     ],
     {
       cwd: root,
@@ -396,6 +456,9 @@ async function main() {
 
   try {
     await waitForReady(url, child)
+
+    // --- the passcode gate --------------------------------------------------
+    await passcodeGate(url)
 
     // --- version -----------------------------------------------------------
     const version = await (await request(`${url}/api/version`)).json()

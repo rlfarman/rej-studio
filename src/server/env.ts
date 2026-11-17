@@ -29,16 +29,11 @@ export interface ServerEnv extends Partial<Env> {
    */
   DESIGN_RESULTS?: R2Bucket
   /**
-   * The Cloudflare Access team (`team.cloudflareaccess.com`) and this
-   * application's AUD tag. Both or neither: with neither, /api/designs answers
-   * 503; set at cutover (./designs/access.ts).
+   * The passcode gate (./auth/). A secret each; set both, or neither for
+   * local development, where only loopback requests get through. One
+   * without the other refuses everything.
    */
-  ACCESS_TEAM_DOMAIN?: string
-  ACCESS_AUD?: string
-  /**
-   * Local development only: the email to treat a loopback request as, in
-   * place of an Access token. Never set on a deployed Worker
-   * (./designs/access.ts ignores it off localhost anyway).
-   */
-  DEV_ACCESS_EMAIL?: string
+  BASIC_AUTH_PASSWORD?: string
+  /** 32+ characters; signs the session cookie, keyed with the passcode. */
+  SESSION_SECRET?: string
 }

@@ -4,9 +4,10 @@
 # `wrangler dev` load that file and bind each entry as a Worker secret;
 # deployed, the same names are set with `wrangler secret put`.
 #
-# Nothing here is needed to run the app: the pages, the gene data and the
-# in-browser optimizer need no secrets. Without these two, /api/mcp answers
-# 503 (agent access is off) and /api/health answers liveness only.
+# Nothing here is needed to run the app locally: the pages, the gene data and
+# the in-browser optimizer need no secrets. Without MCP_TOKENS, /api/mcp
+# answers 503 (agent access is off); without HEALTH_AUTH_TOKEN, /api/health
+# answers liveness only.
 
 # Named bearer tokens for the MCP endpoint at /api/mcp, which lets a
 # scientist's own AI assistant search genes and run designs. Format:
@@ -21,18 +22,11 @@ MCP_TOKENS=lab-agent:replace-me-with-at-least-24-characters
 # get liveness only.
 HEALTH_AUTH_TOKEN=
 
-# Local stand-in for a Cloudflare Access sign-in, so /api/designs (cloud
-# designs) works under `vp dev` and `wrangler dev`: requests to localhost are
-# treated as this email, and every one logs a loud warning. NEVER set this on
-# a deployed Worker — it is not declared in wrangler.jsonc, and the Worker
-# ignores it for any non-loopback host anyway. Deployed, cloud designs verify
-# the Access JWT against ACCESS_TEAM_DOMAIN and ACCESS_AUD (wrangler.jsonc
-# `vars`); with neither, /api/designs answers 503.
-DEV_ACCESS_EMAIL=
-
-# Blank the deployed Access settings locally. A configured Access takes
-# precedence over DEV_ACCESS_EMAIL, and no request to localhost carries an
-# Access token, so leaving wrangler.jsonc's values in place makes every
-# cloud-design request a 401.
-ACCESS_TEAM_DOMAIN=
-ACCESS_AUD=
+# The passcode gate (src/server/auth/). Leave both empty to work without it:
+# the Worker then lets only localhost through, and every cloud design belongs
+# to one owner, `local`. Set both to sign in locally as the deployed app
+# does. SESSION_SECRET must be at least 32 characters; generate with:
+#   openssl rand -hex 32
+# Deployed, both are required: without them the Worker refuses everything.
+BASIC_AUTH_PASSWORD=
+SESSION_SECRET=

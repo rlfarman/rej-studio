@@ -8,7 +8,7 @@ import {
 import { createLogger } from '@/lib/logger'
 
 import type { ServerEnv } from '../env'
-import { identify, type Identity } from './access'
+import { identify, type Identity } from './identity'
 import { designsCopy } from './copy'
 import { withinDesignBudget } from './rate-limit'
 import {
@@ -21,8 +21,8 @@ import {
 /**
  * `/api/designs`: submit, read and delete cloud designs, for the design tool.
  *
- * Behind Cloudflare Access like the rest of the app (unlike `/api/mcp`), and
- * checked here as well, fail-closed (./access.ts). Every answer is JSON and
+ * Behind the passcode gate like the rest of the app (unlike `/api/mcp`), and
+ * checked here as well, fail-closed (./identity.ts). Every answer is JSON and
  * `no-store`: a design is someone's unpublished sequence, so no cache between
  * here and the browser may keep a copy.
  */
@@ -124,8 +124,8 @@ export async function handleCreateDesign(
     const outcome = await submitCloudDesign(env, {
       values: parsed.data.values,
       seed: parsed.data.seed,
-      owner: identity.email,
-      spend: () => withinDesignBudget(env, identity.email),
+      owner: identity.owner,
+      spend: () => withinDesignBudget(env, identity.owner),
     })
     if (!outcome.ok) {
       switch (outcome.reason) {
@@ -147,7 +147,7 @@ export async function handleCreateDesign(
     })
   } catch (error) {
     return refuseFailure(error, 'cloud design submit failed', {
-      owner: identity.email,
+      owner: identity.owner,
     })
   }
 }
@@ -164,7 +164,7 @@ export async function handleGetDesign(
 
   try {
     // No ownership check: see "Who may do what" in ./service.ts.
-    const design = await readCloudDesign(env, id, identity.email)
+    const design = await readCloudDesign(env, id, identity.owner)
     if (!design) return refuse(404, designsCopy.http.notFound)
     return json(design)
   } catch (error) {
@@ -183,7 +183,7 @@ export async function handleDeleteDesign(
   if (!isCloudDesignId(id)) return refuse(404, designsCopy.http.badId)
 
   try {
-    const outcome = await deleteCloudDesign(env, id, identity.email)
+    const outcome = await deleteCloudDesign(env, id, identity.owner)
     switch (outcome) {
       case 'deleted':
         return new Response(null, {

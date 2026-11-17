@@ -6,8 +6,8 @@ import { handleCreateDesign } from '@/server/designs/handler'
 /**
  * `POST /api/designs` — submit a cloud design (src/server/designs/).
  *
- * Behind Cloudflare Access, and verified again in the Worker: the caller's
- * Access email owns the design.
+ * Behind the passcode gate, and checked again in the handler: the caller's
+ * sign-in session owns the design.
  */
 export const Route = createFileRoute('/api/designs/')({
   server: {

@@ -207,9 +207,9 @@ function ArchitecturePage() {
               variant="muted"
             />
             <ServiceBox
-              name="Access"
-              tech="Cloudflare Access (cutover)"
-              details={['Per-person sign-in', 'Replaces the shared password']}
+              name="Passcode gate"
+              tech="In the Worker, signed cookie"
+              details={['One shared passcode', 'MCP keeps its own tokens']}
               variant="muted"
             />
             <ServiceBox
