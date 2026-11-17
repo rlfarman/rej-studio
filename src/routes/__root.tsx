@@ -15,7 +15,7 @@ import { MaintenanceBanner } from '@/components/maintenance-banner'
 import { StatusPage } from '@/components/status-page'
 import { Button } from '@/components/ui/button'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
-import { Toaster } from '@/components/ui/sonner'
+import { LazyToaster } from '@/components/lazy-toaster'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { appCopy } from '@/copy/app'
 import { commonCopy } from '@/copy/common'
@@ -122,7 +122,7 @@ function RootDocument({ children }: { children: ReactNode }) {
             {appCopy.skipToContent}
           </a>
           {children}
-          <Toaster />
+          <LazyToaster />
         </ThemeProvider>
         <Scripts />
       </body>

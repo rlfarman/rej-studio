@@ -14,7 +14,7 @@ const { navigate, toastWarning } = vi.hoisted(() => ({
   toastWarning: vi.fn(),
 }))
 vi.mock('@tanstack/react-router', () => ({ useNavigate: () => navigate }))
-vi.mock('sonner', () => ({ toast: { warning: toastWarning } }))
+vi.mock('@/lib/toast', () => ({ toast: { warning: toastWarning } }))
 
 let locks: ReturnType<typeof installFakeLocks> | undefined
 

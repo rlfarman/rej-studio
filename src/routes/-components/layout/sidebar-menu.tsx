@@ -24,7 +24,7 @@ import {
 // which doesn't belong in every page. Seeding is development-only.
 const loadUserData = () => import('@/routes/-components/user-data')
 const loadSeedData = () => import('@/routes/-components/seed-data')
-import { toast } from 'sonner'
+import { toast } from '@/lib/toast'
 import {
   SidebarMenu as SidebarMenuPrimitive,
   SidebarMenuItem,

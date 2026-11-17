@@ -49,7 +49,7 @@ import {
 } from '@/components/ui/tooltip'
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
 import type { ProcessResult } from '@/features/design-tool/types/process-result'
-import { toast } from 'sonner'
+import { toast } from '@/lib/toast'
 import { SequenceVisualizations } from './sequence-visualizations'
 import { CodonChanges } from './codon-changes'
 import { JunctionContext } from './junction-context'

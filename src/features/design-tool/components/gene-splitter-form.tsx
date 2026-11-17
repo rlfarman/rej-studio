@@ -31,7 +31,7 @@ import {
   RunningPlaceholder,
 } from './job-header'
 import { CloudRunToggle } from './cloud-run-toggle'
-import { toast } from 'sonner'
+import { toast } from '@/lib/toast'
 import { designToolCopy } from '../copy'
 
 // The results UI (the panel, objectives, replay, maps, run record) is about a
