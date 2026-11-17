@@ -76,6 +76,39 @@ impl Default for ProcessOptions {
 }
 
 impl ProcessOptions {
+    /// The options as the optimizer applies them: defaults resolved and
+    /// sequences normalised the way the input CDS is (uppercase, U → T).
+    ///
+    /// The design and the run record both read this, so the record's
+    /// `options` are what the run used rather than what the caller sent. The
+    /// seed is derived from the options as sent (see [`Self::canonical_seed_payload`]),
+    /// because that is what Python hashes.
+    pub(crate) fn applied(&self) -> Self {
+        let site = self
+            .selected_wggw_site
+            .as_ref()
+            .map(|site| SelectedWggwSiteInput {
+                position: site.position,
+                motif_start: site.motif_start,
+                motif: as_dna(&site.motif),
+                hexamer_start: site.hexamer_start,
+                original_codons: (
+                    as_dna(&site.original_codons.0),
+                    as_dna(&site.original_codons.1),
+                ),
+                new_codons: (as_dna(&site.new_codons.0), as_dna(&site.new_codons.1)),
+                new_hexamer: as_dna(&site.new_hexamer),
+            });
+        Self {
+            reduce_kmer_complexity_k: Some(
+                self.reduce_kmer_complexity_k
+                    .unwrap_or(crate::DEFAULT_KMER_K),
+            ),
+            selected_wggw_site: site,
+            ..self.clone()
+        }
+    }
+
     pub(crate) fn species(&self) -> Option<Species> {
         match self.codon_optimize.as_deref() {
             Some("human") => Some(Species::Human),
@@ -147,6 +180,11 @@ impl ProcessOptions {
             .join(", ");
         format!("[\"{cds}\", {{{body}}}]")
     }
+}
+
+/// Normalise a sequence the way the input CDS is: uppercase, RNA to DNA.
+pub(crate) fn as_dna(sequence: &str) -> String {
+    sequence.to_uppercase().replace('U', "T")
 }
 
 fn json_bool(value: bool) -> String {
@@ -221,7 +259,73 @@ pub struct ProcessResult {
     pub wggw_info: Option<BTreeMap<String, WggwSiteInfo>>,
     pub processing_time_seconds: f64,
     pub seed: Option<u32>,
+    pub run_record: RunRecord,
 }
+
+/// Facts about the build that only the host knows, passed in with a request.
+///
+/// A `.wasm` cannot hash itself, and the commit it was built from is not the
+/// commit that ships it (the module is committed after it is built), so the
+/// host supplies both. Either may be absent; the record then leaves it out
+/// rather than guessing.
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(default)]
+pub struct BuildInfo {
+    /// SHA-256 of the WebAssembly module that ran the design.
+    pub wasm_sha256: Option<String>,
+    /// The commit of the deployment serving the module.
+    pub commit: Option<String>,
+}
+
+/// What a run was, in enough detail to repeat or cite it.
+///
+/// Mirrors `runRecordSchema` in
+/// `src/features/design-tool/types/backend-contract.ts` and the Python
+/// original in `python/run_record.py`. Shared fields mean the same thing in
+/// both runtimes; the `versions` block differs, because the two runtimes are
+/// pinned by different things.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct RunRecord {
+    pub record_version: u32,
+    /// ISO 8601, UTC.
+    pub started_at: String,
+    pub duration_seconds: f64,
+    /// The seed the run used, supplied or derived.
+    pub seed: u32,
+    pub input: RunRecordInput,
+    /// The options as applied, sorted by key, without the seed (recorded on
+    /// its own above).
+    pub options: BTreeMap<String, serde_json::Value>,
+    pub versions: RunRecordVersions,
+}
+
+/// The sequence that went in, identified without being copied again.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct RunRecordInput {
+    /// SHA-256 of the normalised CDS, so the same input gives the same digest
+    /// whichever runtime designed it.
+    pub sha256: String,
+    pub length: usize,
+}
+
+/// What produced the result.
+///
+/// Only facts the Rust build can know: there is no DNAChisel or Python here,
+/// so those fields of a Python record are absent, not filled in.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct RunRecordVersions {
+    /// Always [`RUNTIME_RUST`]. Python records predate this field and omit it.
+    pub runtime: String,
+    /// The `rej-optimizer` crate version.
+    pub optimizer: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub wasm_sha256: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub commit: Option<String>,
+}
+
+/// The `versions.runtime` value for a record built by this crate.
+pub const RUNTIME_RUST: &str = "rust";
 
 #[cfg(test)]
 mod tests {
@@ -262,6 +366,39 @@ mod tests {
         let gc = payload.find("enforce_gc").unwrap();
         let ensure = payload.find("ensure_wggw").unwrap();
         assert!(codon < gc && gc < ensure, "keys not sorted: {payload}");
+    }
+
+    #[test]
+    fn applied_options_resolve_defaults_and_normalise_sequences() {
+        let options = ProcessOptions {
+            selected_wggw_site: Some(SelectedWggwSiteInput {
+                position: 3,
+                motif_start: 3,
+                motif: "ugga".to_string(),
+                hexamer_start: 1,
+                original_codons: ("gcu".to_string(), "Gga".to_string()),
+                new_codons: ("gcU".to_string(), "uGG".to_string()),
+                new_hexamer: "gcuugg".to_string(),
+            }),
+            ..ProcessOptions::default()
+        };
+        let applied = options.applied();
+        assert_eq!(
+            applied.reduce_kmer_complexity_k,
+            Some(crate::DEFAULT_KMER_K)
+        );
+        let site = applied.selected_wggw_site.unwrap();
+        assert_eq!(site.motif, "TGGA");
+        assert_eq!(site.original_codons, ("GCT".to_string(), "GGA".to_string()));
+        assert_eq!(site.new_codons, ("GCT".to_string(), "TGG".to_string()));
+        assert_eq!(site.new_hexamer, "GCTTGG");
+
+        // An explicit k is kept as sent.
+        let explicit = ProcessOptions {
+            reduce_kmer_complexity_k: Some(12),
+            ..ProcessOptions::default()
+        };
+        assert_eq!(explicit.applied().reduce_kmer_complexity_k, Some(12));
     }
 
     #[test]

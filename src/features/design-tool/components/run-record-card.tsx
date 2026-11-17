@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/table'
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
 import { downloadTextFile } from '@/lib/download-file'
+import { runRecordRuntime } from '@/features/design-tool/types/backend-contract'
 import type { RunRecord } from '@/features/design-tool/types/process-result'
 import { buildMethodsParagraph } from '@/features/design-tool/utils/methods-paragraph'
 
@@ -56,7 +57,14 @@ function formatOptionValue(value: unknown): string {
 
 function factsFrom(record: RunRecord): Fact[] {
   const { fields } = copy
-  const facts: Fact[] = [
+  const { versions } = record
+  const runtime = runRecordRuntime(record)
+  // Each runtime is pinned by different facts, and a fact the record does
+  // not carry is left off rather than shown as blank.
+  const optional = (label: string, value: string | null | undefined) =>
+    value ? [{ label, value }] : []
+
+  return [
     { label: fields.startedAt, value: formatStartedAt(record.started_at) },
     { label: fields.duration, value: formatDuration(record.duration_seconds) },
     {
@@ -67,21 +75,15 @@ function factsFrom(record: RunRecord): Fact[] {
       ),
     },
     { label: fields.seed, value: String(record.seed) },
-    { label: fields.algorithm, value: record.versions.algorithm_sha256 },
+    { label: fields.runtime, value: copy.runtimes[runtime] },
+    ...optional(fields.algorithm, versions.algorithm_sha256),
+    ...optional(fields.optimizer, versions.optimizer),
+    ...optional(fields.wasmBuild, versions.wasm_sha256),
+    ...optional(fields.commit, versions.commit),
+    ...optional(fields.dnachisel, versions.dnachisel),
+    ...optional(fields.python, versions.python),
+    ...optional(fields.corpus, record.corpus_version),
   ]
-
-  if (record.versions.commit) {
-    facts.push({ label: fields.commit, value: record.versions.commit })
-  }
-  facts.push(
-    { label: fields.dnachisel, value: record.versions.dnachisel },
-    { label: fields.python, value: record.versions.python },
-  )
-  if (record.corpus_version) {
-    facts.push({ label: fields.corpus, value: record.corpus_version })
-  }
-
-  return facts
 }
 
 /**

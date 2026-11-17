@@ -1,3 +1,4 @@
+import { runRecordRuntime } from '@/features/design-tool/types/backend-contract'
 import type { RunRecord } from '@/features/design-tool/types/process-result'
 
 /**
@@ -97,6 +98,16 @@ export function describeObjectives(options: RunRecord['options']): string[] {
   return steps
 }
 
+/** The software that ran the design, as the methods sentence names it. */
+function describeSoftware(record: RunRecord): string {
+  const { versions } = record
+  if (runRecordRuntime(record) === 'rust') {
+    const version = versions.optimizer ? ` ${versions.optimizer}` : ''
+    return `the REJ Studio optimizer${version}, a Rust port of DNAChisel`
+  }
+  return versions.dnachisel ? `DNAChisel ${versions.dnachisel}` : 'DNAChisel'
+}
+
 export function buildMethodsParagraph(record: RunRecord): string {
   const { input, options, versions } = record
   const sentences: string[] = []
@@ -105,7 +116,7 @@ export function buildMethodsParagraph(record: RunRecord): string {
   const withSteps = steps.length > 0 ? ` with ${joinWithAnd(steps)}` : ''
   sentences.push(
     `A ${input.length.toLocaleString()} nt coding sequence (SHA-256 ${input.sha256.slice(0, 12)}…) ` +
-      `was optimized${withSteps} using DNAChisel ${versions.dnachisel}.`,
+      `was optimized${withSteps} using ${describeSoftware(record)}.`,
   )
 
   const splitPoint = options.split_point
@@ -128,16 +139,23 @@ export function buildMethodsParagraph(record: RunRecord): string {
   )
 
   const provenance = [
-    `algorithm build ${versions.algorithm_sha256}`,
+    versions.algorithm_sha256
+      ? `algorithm build ${versions.algorithm_sha256}`
+      : null,
+    versions.wasm_sha256
+      ? `WebAssembly build ${versions.wasm_sha256.slice(0, 12)}`
+      : null,
     versions.commit ? `commit ${versions.commit.slice(0, 7)}` : null,
-    `Python ${versions.python}`,
+    versions.python ? `Python ${versions.python}` : null,
     // What the deployment was serving, not where the sequence came from: the
     // record cannot tell, and a methods section must not imply it can.
     record.corpus_version
       ? `gene corpus ${record.corpus_version} loaded`
       : null,
   ].filter((part): part is string => part !== null)
-  sentences.push(`Run provenance: ${provenance.join('; ')}.`)
+  if (provenance.length > 0) {
+    sentences.push(`Run provenance: ${provenance.join('; ')}.`)
+  }
 
   return sentences.join(' ')
 }

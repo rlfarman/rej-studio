@@ -12,4 +12,4 @@ export const OPTIMIZER_WASM_PATH = '/optimizer/rej-optimizer.wasm'
  * browser could keep an older optimizer after a deploy.
  */
 export const OPTIMIZER_WASM_DIGEST =
-  '32bc6b3b41c95c4e540eca379eb965f9ace36a2394ce248ddbcf13e513a2a646'
+  '701a2bfe5805724002bf8b7d2ab5219f0048ee70327342a8c1de67cb05e43130'

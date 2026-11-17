@@ -427,7 +427,10 @@ export const designToolCopy = {
         inputValue: (length: string, sha256: string) =>
           `${length} nt \u00b7 SHA-256 ${sha256}`,
         seed: 'Seed',
+        runtime: 'Runtime',
         algorithm: 'Algorithm',
+        optimizer: 'Optimizer version',
+        wasmBuild: 'WebAssembly build',
         commit: 'Commit',
         dnachisel: 'DNAChisel',
         python: 'Python',
@@ -435,6 +438,10 @@ export const designToolCopy = {
         // where this sequence came from.
         corpus: 'Gene corpus loaded',
         options: 'Options applied',
+      },
+      runtimes: {
+        python: 'Python (DNAChisel), on the server',
+        rust: 'Rust port of DNAChisel, in the browser',
       },
       optionsCount: (count: number) =>
         `${count} option${count === 1 ? '' : 's'}`,

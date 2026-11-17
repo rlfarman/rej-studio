@@ -12,8 +12,13 @@ import {
   jobStatusResponseSchema,
   processOptionsSchema,
   processResultSchema,
+  runRecordRuntime,
+  runRecordSchema,
 } from './backend-contract'
 import realResult from '../../../../python/tests/fixtures/process-result.json'
+// Pinned by rust/optimizer/tests/run_record.rs, which fails if the crate's
+// record stops matching it.
+import rustRecord from '../../../../rust/optimizer/tests/fixtures/run_record.json'
 
 const BASE_OPTIONS = {
   codon_optimize: 'human',
@@ -67,6 +72,42 @@ describe('processResultSchema', () => {
       seq3: '',
     }
     expect(processResultSchema.safeParse(empty).success).toBe(false)
+  })
+})
+
+describe('runRecordSchema', () => {
+  it('reads a record from the Python backend as a Python run', () => {
+    const record = runRecordSchema.parse(realResult.run_record)
+    expect(runRecordRuntime(record)).toBe('python')
+    expect(record.versions.dnachisel).toBe('3.2.16')
+  })
+
+  it('reads a record from the Rust optimizer as a Rust run', () => {
+    const parsed = runRecordSchema.safeParse(rustRecord)
+    expect(parsed.success).toBe(true)
+    if (!parsed.success) return
+    const record = parsed.data
+    expect(runRecordRuntime(record)).toBe('rust')
+    expect(record.versions.optimizer).toBe('0.1.0')
+    expect(record.versions.wasm_sha256).toHaveLength(64)
+    // Nothing is filled in for what the Rust build cannot know.
+    expect(record.versions.dnachisel).toBeUndefined()
+    expect(record.versions.python).toBeUndefined()
+  })
+
+  it('identifies the same input the same way in both runtimes', () => {
+    const python = runRecordSchema.parse(realResult.run_record)
+    const rust = runRecordSchema.parse(rustRecord)
+    expect(rust.input).toEqual(python.input)
+    expect(rust.seed).toBe(python.seed)
+  })
+
+  it('rejects a runtime it does not know', () => {
+    const unknown = {
+      ...rustRecord,
+      versions: { ...rustRecord.versions, runtime: 'fortran' },
+    }
+    expect(runRecordSchema.safeParse(unknown).success).toBe(false)
   })
 })
 

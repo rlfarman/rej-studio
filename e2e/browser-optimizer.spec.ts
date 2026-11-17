@@ -1,5 +1,7 @@
 import { expect, test, type Page } from '@playwright/test'
 
+import { OPTIMIZER_WASM_DIGEST } from '../src/features/design-tool/workers/optimizer-asset.generated'
+
 // The in-browser optimizer, end to end through the real UI.
 //
 // The unit tests mock the worker and the Rust suite covers the optimizer
@@ -39,6 +41,21 @@ test('designs a sequence in the browser without calling the backend', async ({
   // The optimizer was fetched once, and no job was ever submitted or polled.
   expect(wasmRequests.length).toBeGreaterThan(0)
   expect(backendCalls).toEqual([])
+})
+
+test('a design made in the browser carries its run record', async ({
+  page,
+}) => {
+  await page.goto(GENE_PAGE)
+  await expect(page.locator('textarea').first()).toHaveValue(/^ATG[ACGT]+$/i)
+  await page.getByRole('button', { name: /run designer/i }).click()
+  await expect(page.getByText(/split after base/i).first()).toBeVisible({
+    timeout: 120_000,
+  })
+
+  // The record names the exact module that ran, which only the worker knows.
+  await page.getByRole('button', { name: /run record/i }).click()
+  await expect(page.getByText(OPTIMIZER_WASM_DIGEST)).toBeVisible()
 })
 
 test('shows progress and offers to cancel while designing', async ({

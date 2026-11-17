@@ -8,8 +8,9 @@
 // as it goes.
 //
 // The module exports a small hand-written ABI (see rust/optimizer/src/lib.rs):
-// strings cross as UTF-8 bytes in its own memory, and it calls back into
-// `env.report_progress` while it works.
+// strings cross as UTF-8 bytes in its own memory, it calls back into
+// `env.report_progress` while it works, and it reads the time through
+// `env.now_ms`, since WebAssembly has no clock of its own.
 
 import {
   OPTIMIZER_WASM_DIGEST,
@@ -26,6 +27,15 @@ interface OptimizerExports {
 }
 
 const scope = self as unknown as DedicatedWorkerGlobalScope
+
+/**
+ * The deployment's commit, inlined at build time by `env` in next.config.ts,
+ * which spells "not known" as 'unknown'. The run record leaves it out then.
+ */
+const DEPLOYMENT_COMMIT =
+  process.env.GIT_COMMIT_SHA && process.env.GIT_COMMIT_SHA !== 'unknown'
+    ? process.env.GIT_COMMIT_SHA
+    : undefined
 
 /** The run currently executing, so progress can be attributed to it. */
 let activeRunId: string | null = null
@@ -46,6 +56,8 @@ function post(message: OptimizerResponse) {
 const modulePromise: Promise<OptimizerExports> = (async () => {
   const imports = {
     env: {
+      // The run record's start time and duration.
+      now_ms: () => Date.now(),
       // Called from inside the design. The label lives in the module's
       // memory and is only valid during this call, so it is decoded now.
       report_progress(
@@ -100,6 +112,9 @@ function design(exports: OptimizerExports, request: OptimizerRequest): string {
       CDS: request.CDS,
       name: request.name,
       options: request.options,
+      // Facts for the run record that the module cannot know about itself:
+      // the digest of its own bytes, and the deployment serving it.
+      build: { wasm_sha256: OPTIMIZER_WASM_DIGEST, commit: DEPLOYMENT_COMMIT },
     }),
   )
 
