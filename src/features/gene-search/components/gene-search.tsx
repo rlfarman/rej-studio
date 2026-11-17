@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Kbd, ModKey } from '@/components/ui/kbd'
 import { SearchIcon } from 'lucide-react'
 import { useGeneSearch } from '@/features/gene-search/hooks/use-gene-search'
+import { usePrefetchGeneIndex } from '@/features/gene-search/hooks/use-prefetch-gene-index'
 import { GeneSearchCommand } from './gene-search-command'
 import { useRecentGenes } from '@/features/gene-search/stores/recent-genes-store'
 import { useFavoriteGenes } from '@/features/gene-search/stores/favorite-genes-store'
@@ -38,6 +39,9 @@ export function GeneSearch({
   jobs = EMPTY_JOBS,
   onSelectJob,
 }: GeneSearchProperties) {
+  // The search box is in the header of every page: start the index download
+  // from here, before anyone types.
+  usePrefetchGeneIndex()
   const navigate = useNavigate()
   const {
     query,

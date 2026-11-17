@@ -104,6 +104,14 @@ export class GeneSearchIndex {
     return this.postings
   }
 
+  /**
+   * Builds what the first full-text search would otherwise build while
+   * someone waits: called when the browser is idle after the index loads.
+   */
+  warm(): void {
+    this.getPostings()
+  }
+
   /** A gene by exact Ensembl id. */
   gene(id: string): GeneSearchResult | null {
     const gene = this.byId.get(id)
