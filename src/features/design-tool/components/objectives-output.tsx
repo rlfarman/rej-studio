@@ -1,4 +1,4 @@
-import { useCallback, useDeferredValue, useMemo, useRef, useState } from 'react'
+import { useDeferredValue, useRef, useState } from 'react'
 import {
   ChevronRight,
   FileText,
@@ -89,10 +89,7 @@ function EntryRow({
   showDiffMarker,
   isDimmed,
 }: EntryRowProps) {
-  const parsed = useMemo(
-    () => parseObjectiveString(entry.objective),
-    [entry.objective],
-  )
+  const parsed = parseObjectiveString(entry.objective)
   const locationCount = entry.locations?.length ?? 0
 
   return (
@@ -679,24 +676,15 @@ export function ObjectivesSummary({
   textBefore,
   textAfter,
 }: ObjectivesSummaryProps) {
-  const summaryItems = useMemo(
-    () => buildSummaryItems(reportBefore, reportAfter),
-    [reportBefore, reportAfter],
-  )
+  const summaryItems = buildSummaryItems(reportBefore, reportAfter)
 
   const scoreDelta =
     reportBefore.total_score !== null && reportAfter.total_score !== null
       ? reportAfter.total_score - reportBefore.total_score
       : null
 
-  const beforeMap = useMemo(
-    () => new Map(reportBefore.entries.map((e) => [e.objective, e])),
-    [reportBefore.entries],
-  )
-  const afterMap = useMemo(
-    () => new Map(reportAfter.entries.map((e) => [e.objective, e])),
-    [reportAfter.entries],
-  )
+  const beforeMap = new Map(reportBefore.entries.map((e) => [e.objective, e]))
+  const afterMap = new Map(reportAfter.entries.map((e) => [e.objective, e]))
 
   const hasStructured =
     reportBefore.entries.length > 0 || reportAfter.entries.length > 0
@@ -704,44 +692,32 @@ export function ObjectivesSummary({
   const [search, setSearch] = useState('')
   const deferredSearch = useDeferredValue(search)
 
-  const visibleKeys = useMemo<Set<string> | null>(() => {
-    if (!deferredSearch.trim()) return null
-    const q = deferredSearch.toLowerCase()
-    const keys = new Set<string>()
-    const check = (e: ObjectiveEvaluationEntry) =>
-      e.objective.toLowerCase().includes(q) ||
-      e.message.toLowerCase().includes(q)
-    for (const e of reportBefore.entries) if (check(e)) keys.add(e.objective)
-    for (const e of reportAfter.entries) if (check(e)) keys.add(e.objective)
-    return keys
-  }, [deferredSearch, reportBefore.entries, reportAfter.entries])
+  const visibleKeys = matchingObjectives(
+    deferredSearch,
+    reportBefore.entries,
+    reportAfter.entries,
+  )
 
   const beforeRef = useRef<HTMLDivElement | null>(null)
   const afterRef = useRef<HTMLDivElement | null>(null)
   const syncingRef = useRef(false)
 
-  const markdownReport = useMemo(
-    () => buildMarkdownReport(reportBefore, reportAfter),
-    [reportBefore, reportAfter],
-  )
+  const markdownReport = buildMarkdownReport(reportBefore, reportAfter)
 
-  const syncScroll = useCallback(
+  const syncScroll =
     (source: 'before' | 'after'): React.UIEventHandler<HTMLDivElement> =>
-      (e) => {
-        if (syncingRef.current) {
-          syncingRef.current = false
-          return
-        }
-        const src = e.currentTarget
-        const target =
-          source === 'before' ? afterRef.current : beforeRef.current
-        if (!target) return
-        if (target.scrollTop === src.scrollTop) return
-        syncingRef.current = true
-        target.scrollTop = src.scrollTop
-      },
-    [],
-  )
+    (e) => {
+      if (syncingRef.current) {
+        syncingRef.current = false
+        return
+      }
+      const src = e.currentTarget
+      const target = source === 'before' ? afterRef.current : beforeRef.current
+      if (!target) return
+      if (target.scrollTop === src.scrollTop) return
+      syncingRef.current = true
+      target.scrollTop = src.scrollTop
+    }
 
   return (
     <div className="space-y-3">
@@ -844,4 +820,20 @@ export function ObjectivesSummary({
       </details>
     </div>
   )
+}
+
+/** The objectives whose name or message matches the search; null shows all. */
+function matchingObjectives(
+  search: string,
+  before: ObjectiveEvaluationEntry[],
+  after: ObjectiveEvaluationEntry[],
+): Set<string> | null {
+  if (!search.trim()) return null
+  const q = search.toLowerCase()
+  const keys = new Set<string>()
+  const check = (e: ObjectiveEvaluationEntry) =>
+    e.objective.toLowerCase().includes(q) || e.message.toLowerCase().includes(q)
+  for (const e of before) if (check(e)) keys.add(e.objective)
+  for (const e of after) if (check(e)) keys.add(e.objective)
+  return keys
 }

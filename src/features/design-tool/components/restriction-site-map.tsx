@@ -1,4 +1,3 @@
-import { useMemo } from 'react'
 import { cn } from '@/lib/utils'
 import {
   findRestrictionSites,
@@ -50,32 +49,10 @@ function diffHits(
  * cloning strategy still works.
  */
 export function RestrictionSiteMap({ original, optimized }: Props) {
-  const { rows, maxLen, totalBefore, totalAfter } = useMemo(() => {
-    const beforeHits = findRestrictionSites(original)
-    const afterHits = findRestrictionSites(optimized)
-    const maxLen = Math.max(original.length, optimized.length)
-    // Match window: 6 bp or 0.5% of the sequence, whichever is larger. Codon
-    // harmonization can shift sites by a few bp without really changing them.
-    const windowSize = Math.max(6, Math.round(maxLen * 0.005))
-
-    const enzymes = Array.from(
-      new Set([...beforeHits, ...afterHits].map((h) => h.enzyme)),
-    ).sort()
-
-    const rows: EnzymeRow[] = enzymes.map((enzyme) => {
-      const before = beforeHits.filter((h) => h.enzyme === enzyme)
-      const after = afterHits.filter((h) => h.enzyme === enzyme)
-      const { added, removed } = diffHits(before, after, windowSize)
-      return { enzyme, before, after, added, removed }
-    })
-
-    return {
-      rows,
-      maxLen,
-      totalBefore: beforeHits.length,
-      totalAfter: afterHits.length,
-    }
-  }, [original, optimized])
+  const { rows, maxLen, totalBefore, totalAfter } = compareRestrictionSites(
+    original,
+    optimized,
+  )
 
   if (rows.length === 0) {
     return (
@@ -159,24 +136,7 @@ function EnzymeTrack({
   originalLen: number
   optimizedLen: number
 }) {
-  const { beforeChanges, afterChanges } = useMemo(() => {
-    const windowSize = Math.max(6, Math.round(maxLen * 0.005))
-    const beforeChanges: { hit: RestrictionHit; change: Change }[] =
-      row.before.map((b) => {
-        const kept = row.after.some(
-          (a) => Math.abs(a.position - b.position) <= windowSize,
-        )
-        return { hit: b, change: kept ? 'kept' : 'removed' }
-      })
-    const afterChanges: { hit: RestrictionHit; change: Change }[] =
-      row.after.map((a) => {
-        const kept = row.before.some(
-          (b) => Math.abs(b.position - a.position) <= windowSize,
-        )
-        return { hit: a, change: kept ? 'kept' : 'added' }
-      })
-    return { beforeChanges, afterChanges }
-  }, [row, maxLen])
+  const { beforeChanges, afterChanges } = classifyHitChanges(row, maxLen)
 
   return (
     <div className="group flex items-center gap-2 type-micro">
@@ -254,4 +214,53 @@ function Lane({
       })}
     </div>
   )
+}
+
+/** Each enzyme's sites before and after, with what optimization added or removed. */
+function compareRestrictionSites(original: string, optimized: string) {
+  const beforeHits = findRestrictionSites(original)
+  const afterHits = findRestrictionSites(optimized)
+  const maxLen = Math.max(original.length, optimized.length)
+  // Match window: 6 bp or 0.5% of the sequence, whichever is larger. Codon
+  // harmonization can shift sites by a few bp without really changing them.
+  const windowSize = Math.max(6, Math.round(maxLen * 0.005))
+
+  const enzymes = Array.from(
+    new Set([...beforeHits, ...afterHits].map((h) => h.enzyme)),
+  ).sort()
+
+  const rows: EnzymeRow[] = enzymes.map((enzyme) => {
+    const before = beforeHits.filter((h) => h.enzyme === enzyme)
+    const after = afterHits.filter((h) => h.enzyme === enzyme)
+    const { added, removed } = diffHits(before, after, windowSize)
+    return { enzyme, before, after, added, removed }
+  })
+
+  return {
+    rows,
+    maxLen,
+    totalBefore: beforeHits.length,
+    totalAfter: afterHits.length,
+  }
+}
+
+/** Whether each site was kept, removed or added, within the match window. */
+function classifyHitChanges(row: EnzymeRow, maxLen: number) {
+  const windowSize = Math.max(6, Math.round(maxLen * 0.005))
+  const beforeChanges: { hit: RestrictionHit; change: Change }[] =
+    row.before.map((b) => {
+      const kept = row.after.some(
+        (a) => Math.abs(a.position - b.position) <= windowSize,
+      )
+      return { hit: b, change: kept ? 'kept' : 'removed' }
+    })
+  const afterChanges: { hit: RestrictionHit; change: Change }[] = row.after.map(
+    (a) => {
+      const kept = row.before.some(
+        (b) => Math.abs(b.position - a.position) <= windowSize,
+      )
+      return { hit: a, change: kept ? 'kept' : 'added' }
+    },
+  )
+  return { beforeChanges, afterChanges }
 }

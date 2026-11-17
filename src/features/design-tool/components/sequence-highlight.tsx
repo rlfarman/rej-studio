@@ -1,4 +1,3 @@
-import { useMemo } from 'react'
 import {
   Tooltip,
   TooltipContent,
@@ -56,7 +55,7 @@ interface SequenceHighlightProps {
 }
 
 export function SequenceHighlight({ sequence }: SequenceHighlightProps) {
-  const segments = useMemo(() => segmentSequence(sequence), [sequence])
+  const segments = segmentSequence(sequence)
 
   if (segments.length === 0) return null
 

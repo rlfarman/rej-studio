@@ -1,5 +1,5 @@
 import type React from 'react'
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
@@ -118,12 +118,9 @@ export function ObjectiveReplay({
   reportAfter,
   sequenceLength,
 }: ObjectiveReplayProps) {
-  const allSteps = useMemo(
-    () => buildObjectiveSteps(reportBefore, reportAfter),
-    [reportBefore, reportAfter],
-  )
-  const notable = useMemo(() => allSteps.filter(isNotable), [allSteps])
-  const counts = useMemo(() => countOutcomes(allSteps), [allSteps])
+  const allSteps = buildObjectiveSteps(reportBefore, reportAfter)
+  const notable = allSteps.filter(isNotable)
+  const counts = countOutcomes(allSteps)
 
   const [showAll, setShowAll] = useState(false)
   const [index, setIndex] = useState(0)

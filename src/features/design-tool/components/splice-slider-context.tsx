@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useEffectEvent, useRef, useState } from 'react'
 import { cn } from '@/lib/utils'
 import { rankInducibleWggwByBalance } from '@/lib/bio/sequence-utils'
 import { ChevronLeft, ChevronRight, Plus } from 'lucide-react'
@@ -86,25 +86,18 @@ export function SpliceSliderContext({
   const queryMode = detectQueryMode(queryValue)
   const searchValue = queryMode === 'sequence' ? queryValue : ''
 
-  const wggwSites = useMemo<WggwSiteCandidate[]>(() => {
-    if (seqLen < MIN_SEQUENCE_LENGTH) return []
-    return groupWggwSites(rankInducibleWggwByBalance(sequence))
-  }, [sequence, seqLen])
-  const normalizedSequence = useMemo(
-    () => sequence.toUpperCase().replace(/U/g, 'T'),
-    [sequence],
-  )
-  const normalizedSearch = useMemo(
-    () =>
-      searchValue
-        .toUpperCase()
-        .replace(/U/g, 'T')
-        .replace(/[^ACGT]/g, ''),
-    [searchValue],
-  )
-  const searchMatches = useMemo(
-    () => findSequenceMatches(normalizedSequence, normalizedSearch),
-    [normalizedSearch, normalizedSequence],
+  const wggwSites: WggwSiteCandidate[] =
+    seqLen < MIN_SEQUENCE_LENGTH
+      ? []
+      : groupWggwSites(rankInducibleWggwByBalance(sequence))
+  const normalizedSequence = sequence.toUpperCase().replace(/U/g, 'T')
+  const normalizedSearch = searchValue
+    .toUpperCase()
+    .replace(/U/g, 'T')
+    .replace(/[^ACGT]/g, '')
+  const searchMatches = findSequenceMatches(
+    normalizedSequence,
+    normalizedSearch,
   )
   const activeSearchMatch =
     searchMatches.length > 0 ? (searchMatches[searchMatchIndex] ?? null) : null
@@ -113,14 +106,7 @@ export function SpliceSliderContext({
   // Multi-split is hidden behind a flag for the preview release: by default
   // we clamp to a single split point. With the flag on, all positions are
   // kept (clamped into range) so the slider/strip render two carets.
-  const positions = useMemo(() => {
-    const clamp = (n: number) => Math.max(1, Math.min(seqLen - 1, n))
-    if (MULTI_SPLIT_ENABLED) {
-      const src = inputPositions.length ? inputPositions : [midpoint]
-      return src.map(clamp)
-    }
-    return [clamp(inputPositions[0] ?? midpoint)]
-  }, [inputPositions, midpoint, seqLen])
+  const positions = normalizePositions(inputPositions, midpoint, seqLen)
 
   // Write the normalized positions back to the parent when they diverge from
   // the incoming prop (e.g. flag-off collapse to one, or out-of-range clamp).
@@ -142,14 +128,11 @@ export function SpliceSliderContext({
   const [activeSitePositionsRaw, setActiveSitePositions] = useState<
     (number | null)[]
   >(() => positions.map(() => null))
-  const activeSitePositions = useMemo(() => {
-    if (activeSitePositionsRaw.length === spliceCount) {
-      return activeSitePositionsRaw
-    }
-    const next = activeSitePositionsRaw.slice(0, spliceCount)
-    while (next.length < spliceCount) next.push(null)
-    return next
-  }, [activeSitePositionsRaw, spliceCount])
+  const activeSitePositions = fitToLength(
+    activeSitePositionsRaw,
+    spliceCount,
+    () => null,
+  )
 
   // An unset splice shows the WGGW site nearest its caret rather than an
   // empty inspector. The backend already relocates the split to a motif near
@@ -157,23 +140,15 @@ export function SpliceSliderContext({
   // surfaces the motif and its synonymous rewrites for review instead of
   // hiding the decision. Derived during render — no effect, so there's no
   // state write to sync.
-  const selectedSites = useMemo(
-    () =>
-      activeSitePositions.map((pos, i) =>
-        pos !== null
-          ? (wggwSites.find((s) => s.position === pos) ?? null)
-          : pickDefaultWggwSite(wggwSites, positions[i] ?? midpoint),
-      ),
-    [activeSitePositions, wggwSites, positions, midpoint],
+  const selectedSites = activeSitePositions.map((pos, i) =>
+    pos !== null
+      ? (wggwSites.find((s) => s.position === pos) ?? null)
+      : pickDefaultWggwSite(wggwSites, positions[i] ?? midpoint),
   )
   // Which splices are showing a derived site rather than one the user chose,
   // so the inspector can say so.
-  const defaultedSiteFlags = useMemo(
-    () =>
-      activeSitePositions.map(
-        (pos, i) => pos === null && selectedSites[i] !== null,
-      ),
-    [activeSitePositions, selectedSites],
+  const defaultedSiteFlags = activeSitePositions.map(
+    (pos, i) => pos === null && selectedSites[i] !== null,
   )
   const selectedSiteIndices = selectedSites.map((site) =>
     site ? wggwSites.findIndex((s) => s.position === site.position) : -1,
@@ -182,14 +157,14 @@ export function SpliceSliderContext({
   const [rewriteSelectionsRaw, setRewriteSelections] = useState<
     { position: number | null; index: number }[]
   >(() => positions.map(() => ({ position: null, index: 0 })))
-  const rewriteSelections = useMemo(() => {
-    if (rewriteSelectionsRaw.length === spliceCount) {
-      return rewriteSelectionsRaw
-    }
-    const next = rewriteSelectionsRaw.slice(0, spliceCount)
-    while (next.length < spliceCount) next.push({ position: null, index: 0 })
-    return next
-  }, [rewriteSelectionsRaw, spliceCount])
+  const rewriteSelections = fitToLength(
+    rewriteSelectionsRaw,
+    spliceCount,
+    () => ({
+      position: null,
+      index: 0,
+    }),
+  )
 
   const currentRewrites = selectedSites.map((site, i) => {
     if (!site) return null
@@ -200,7 +175,7 @@ export function SpliceSliderContext({
     )
   })
 
-  const frameContext = useMemo(() => buildSequenceContext(sequence), [sequence])
+  const frameContext = buildSequenceContext(sequence)
 
   // Throttle the swap toast so a single drag-cross emits one notification,
   // not one per pointermove that crosses. Only used in multi-split mode.
@@ -211,41 +186,38 @@ export function SpliceSliderContext({
   // stay sorted (Splice 1 always 5′-most); the parallel state arrays
   // (activeSitePositions, rewriteSelections) and activeSpliceIndex are
   // permuted to match so the user keeps controlling the same caret visually.
-  const setPositionAt = useCallback(
-    (idx: number, value: number) => {
-      const v = Math.max(1, Math.min(seqLen - 1, value))
-      if (!MULTI_SPLIT_ENABLED) {
-        onPositionsChange([v])
-        return
-      }
-      const next = [...positions]
-      next[idx] = v
-      const indexed = next.map((p, i) => ({ p, original: i }))
-      indexed.sort((a, b) => a.p - b.p)
-      const permuted = indexed.some((x, i) => x.original !== i)
-      if (permuted) {
-        setActiveSitePositions((prev) =>
-          indexed.map((x) => prev[x.original] ?? null),
-        )
-        setRewriteSelections((prev) =>
-          indexed.map((x) => prev[x.original] ?? { position: null, index: 0 }),
-        )
-        setActiveSpliceIndex((prev) => {
-          const i = indexed.findIndex((x) => x.original === prev)
-          return i === -1 ? prev : i
+  const setPositionAt = (idx: number, value: number) => {
+    const v = Math.max(1, Math.min(seqLen - 1, value))
+    if (!MULTI_SPLIT_ENABLED) {
+      onPositionsChange([v])
+      return
+    }
+    const next = [...positions]
+    next[idx] = v
+    const indexed = next.map((p, i) => ({ p, original: i }))
+    indexed.sort((a, b) => a.p - b.p)
+    const permuted = indexed.some((x, i) => x.original !== i)
+    if (permuted) {
+      setActiveSitePositions((prev) =>
+        indexed.map((x) => prev[x.original] ?? null),
+      )
+      setRewriteSelections((prev) =>
+        indexed.map((x) => prev[x.original] ?? { position: null, index: 0 }),
+      )
+      setActiveSpliceIndex((prev) => {
+        const i = indexed.findIndex((x) => x.original === prev)
+        return i === -1 ? prev : i
+      })
+      const now = Date.now()
+      if (now - lastSwapToastRef.current > SWAP_TOAST_THROTTLE_MS) {
+        lastSwapToastRef.current = now
+        toast('Splices reordered to keep Splice 1 5′-most', {
+          duration: SWAP_TOAST_DURATION_MS,
         })
-        const now = Date.now()
-        if (now - lastSwapToastRef.current > SWAP_TOAST_THROTTLE_MS) {
-          lastSwapToastRef.current = now
-          toast('Splices reordered to keep Splice 1 5′-most', {
-            duration: SWAP_TOAST_DURATION_MS,
-          })
-        }
       }
-      onPositionsChange(indexed.map((x) => x.p))
-    },
-    [onPositionsChange, positions, seqLen],
-  )
+    }
+    onPositionsChange(indexed.map((x) => x.p))
+  }
 
   // Brief pulse on a splice's readout right after a tick is assigned to
   // it — closes the "silent magic" loop for nearest-caret routing.
@@ -258,7 +230,7 @@ export function SpliceSliderContext({
   // variants on the tick spans render the hover decoration without React.
   const wggwStripRef = useRef<HTMLDivElement>(null)
   const hoveredTickRef = useRef<HTMLElement | null>(null)
-  const setHoveredTick = useCallback((sitePosition: number | null) => {
+  const setHoveredTick = (sitePosition: number | null) => {
     const strip = wggwStripRef.current
     if (!strip) return
     const next = sitePosition
@@ -272,68 +244,56 @@ export function SpliceSliderContext({
       next.dataset.tickHovered = 'true'
     }
     hoveredTickRef.current = next
-  }, [])
+  }
 
   // When a tick is clicked without an explicit splice index, assign it to
   // the splice whose caret is nearest the chosen site. This matches the
   // user's spatial intuition (clicking a tick on the right side of the
   // sequence "obviously" wants the right-side splice).
-  const handleSelectSite = useCallback(
-    (site: WggwSiteCandidate, spliceIdx?: number) => {
-      let idx = spliceIdx ?? clampedActiveIndex
-      if (
-        MULTI_SPLIT_ENABLED &&
-        spliceIdx === undefined &&
-        positions.length > 1
-      ) {
-        let best = 0
-        let bestDist = Infinity
-        positions.forEach((p, i) => {
-          const d = Math.abs(p - site.position)
-          if (d < bestDist) {
-            best = i
-            bestDist = d
-          }
-        })
-        idx = best
-      }
-      setActiveSitePositions((prev) => {
-        const next = [...prev]
-        next[idx] = site.position
-        return next
+  const handleSelectSite = (site: WggwSiteCandidate, spliceIdx?: number) => {
+    let idx = spliceIdx ?? clampedActiveIndex
+    if (
+      MULTI_SPLIT_ENABLED &&
+      spliceIdx === undefined &&
+      positions.length > 1
+    ) {
+      let best = 0
+      let bestDist = Infinity
+      positions.forEach((p, i) => {
+        const d = Math.abs(p - site.position)
+        if (d < bestDist) {
+          best = i
+          bestDist = d
+        }
       })
-      setActiveSpliceIndex(idx)
-      setPositionAt(idx, site.position)
-      setRecentlyAssignedSplice(idx)
-      window.setTimeout(() => {
-        setRecentlyAssignedSplice((prev) => (prev === idx ? null : prev))
-      }, RECENTLY_ASSIGNED_DURATION_MS)
-    },
-    [clampedActiveIndex, positions, setPositionAt],
-  )
+      idx = best
+    }
+    setActiveSitePositions((prev) => {
+      const next = [...prev]
+      next[idx] = site.position
+      return next
+    })
+    setActiveSpliceIndex(idx)
+    setPositionAt(idx, site.position)
+    setRecentlyAssignedSplice(idx)
+    window.setTimeout(() => {
+      setRecentlyAssignedSplice((prev) => (prev === idx ? null : prev))
+    }, RECENTLY_ASSIGNED_DURATION_MS)
+  }
 
-  const jumpToSibling = useCallback(
-    (dir: -1 | 1) => {
-      if (wggwSites.length === 0) return
-      const idx = clampedActiveIndex
-      const currentSiteIndex = selectedSiteIndices[idx] ?? -1
-      if (currentSiteIndex === -1) {
-        const nextIdx = nearestSiteIndex(wggwSites, activePosition)
-        if (nextIdx !== -1) handleSelectSite(wggwSites[nextIdx], idx)
-        return
-      }
-      const target = currentSiteIndex + dir
-      if (target < 0 || target >= wggwSites.length) return
-      handleSelectSite(wggwSites[target], idx)
-    },
-    [
-      activePosition,
-      clampedActiveIndex,
-      handleSelectSite,
-      selectedSiteIndices,
-      wggwSites,
-    ],
-  )
+  const jumpToSibling = (dir: -1 | 1) => {
+    if (wggwSites.length === 0) return
+    const idx = clampedActiveIndex
+    const currentSiteIndex = selectedSiteIndices[idx] ?? -1
+    if (currentSiteIndex === -1) {
+      const nextIdx = nearestSiteIndex(wggwSites, activePosition)
+      if (nextIdx !== -1) handleSelectSite(wggwSites[nextIdx], idx)
+      return
+    }
+    const target = currentSiteIndex + dir
+    if (target < 0 || target >= wggwSites.length) return
+    handleSelectSite(wggwSites[target], idx)
+  }
 
   // Emit selected sites + current rewrites whenever they change. Use
   // primitive composite keys so the effect deps are cheap to compare and
@@ -361,6 +321,50 @@ export function SpliceSliderContext({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onSelectionChange, sitePositionsKey, rewriteHexamerKey])
 
+  // Window shortcuts while the editor is active ([ ] m 1 2). An effect
+  // event: it always sees the current positions and handlers, and the
+  // listeners below subscribe once.
+  const onWindowKeyDown = useEffectEvent((event: KeyboardEvent) => {
+    if (!shortcutsActive) return
+    const target = event.target as HTMLElement | null
+    if (
+      target &&
+      (target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement ||
+        target instanceof HTMLSelectElement ||
+        target.isContentEditable)
+    ) {
+      return
+    }
+
+    if (event.key === '[') {
+      event.preventDefault()
+      jumpToSibling(-1)
+      return
+    }
+    if (event.key === ']') {
+      event.preventDefault()
+      jumpToSibling(1)
+      return
+    }
+    if (event.key === 'm' || event.key === 'M') {
+      event.preventDefault()
+      setPositionAt(clampedActiveIndex, midpoint)
+      return
+    }
+    if (
+      MULTI_SPLIT_ENABLED &&
+      (event.key === '1' || event.key === '2') &&
+      positions.length > 1
+    ) {
+      const idx = event.key === '1' ? 0 : 1
+      if (idx < positions.length) {
+        event.preventDefault()
+        setActiveSpliceIndex(idx)
+      }
+    }
+  })
+
   useEffect(() => {
     const handlePointerDown = (event: PointerEvent) => {
       const target = event.target as Node | null
@@ -372,46 +376,8 @@ export function SpliceSliderContext({
       setShortcutsActive(!!target && !!rootRef.current?.contains(target))
     }
 
-    const handleWindowKeyDown = (event: KeyboardEvent) => {
-      if (!shortcutsActive) return
-      const target = event.target as HTMLElement | null
-      if (
-        target &&
-        (target instanceof HTMLInputElement ||
-          target instanceof HTMLTextAreaElement ||
-          target instanceof HTMLSelectElement ||
-          target.isContentEditable)
-      ) {
-        return
-      }
-
-      if (event.key === '[') {
-        event.preventDefault()
-        jumpToSibling(-1)
-        return
-      }
-      if (event.key === ']') {
-        event.preventDefault()
-        jumpToSibling(1)
-        return
-      }
-      if (event.key === 'm' || event.key === 'M') {
-        event.preventDefault()
-        setPositionAt(clampedActiveIndex, midpoint)
-        return
-      }
-      if (
-        MULTI_SPLIT_ENABLED &&
-        (event.key === '1' || event.key === '2') &&
-        positions.length > 1
-      ) {
-        const idx = event.key === '1' ? 0 : 1
-        if (idx < positions.length) {
-          event.preventDefault()
-          setActiveSpliceIndex(idx)
-        }
-      }
-    }
+    // The latest handler, without re-subscribing each render.
+    const handleWindowKeyDown = (event: KeyboardEvent) => onWindowKeyDown(event)
 
     window.addEventListener('pointerdown', handlePointerDown)
     window.addEventListener('focusin', handleFocusIn)
@@ -421,14 +387,7 @@ export function SpliceSliderContext({
       window.removeEventListener('focusin', handleFocusIn)
       window.removeEventListener('keydown', handleWindowKeyDown)
     }
-  }, [
-    clampedActiveIndex,
-    jumpToSibling,
-    midpoint,
-    positions.length,
-    setPositionAt,
-    shortcutsActive,
-  ])
+  }, [])
 
   const positionFromPointer = (clientX: number): number => {
     const track = trackRef.current
@@ -987,4 +946,26 @@ export function SpliceSliderContext({
       </div>
     </div>
   )
+}
+
+/** The split points clamped into range; one unless multi-split is on. */
+function normalizePositions(
+  inputPositions: number[],
+  midpoint: number,
+  seqLen: number,
+): number[] {
+  const clamp = (n: number) => Math.max(1, Math.min(seqLen - 1, n))
+  if (MULTI_SPLIT_ENABLED) {
+    const src = inputPositions.length ? inputPositions : [midpoint]
+    return src.map(clamp)
+  }
+  return [clamp(inputPositions[0] ?? midpoint)]
+}
+
+/** `values` padded with `fill()` or trimmed to `length`; the same array when it already fits. */
+function fitToLength<T>(values: T[], length: number, fill: () => T): T[] {
+  if (values.length === length) return values
+  const next = values.slice(0, length)
+  while (next.length < length) next.push(fill())
+  return next
 }

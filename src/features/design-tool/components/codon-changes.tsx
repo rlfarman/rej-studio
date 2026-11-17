@@ -1,4 +1,3 @@
-import { useMemo } from 'react'
 import { ArrowRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
@@ -54,9 +53,9 @@ function analyze(original: string, optimized: string) {
 }
 
 export function CodonChanges({ original, optimized, splitPoint }: Props) {
-  const { changes, total, synonymous, nonSynonymous } = useMemo(
-    () => analyze(original, optimized),
-    [original, optimized],
+  const { changes, total, synonymous, nonSynonymous } = analyze(
+    original,
+    optimized,
   )
 
   if (total === 0) return null
