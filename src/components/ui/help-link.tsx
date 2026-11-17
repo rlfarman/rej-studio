@@ -1,5 +1,4 @@
 'use client'
-import Link from 'next/link'
 import { CircleHelp } from 'lucide-react'
 import {
   Tooltip,
@@ -24,7 +23,7 @@ export function HelpLink({ href, topic, className }: HelpLinkProps) {
     <Tooltip>
       <TooltipTrigger
         render={
-          <Link
+          <a
             href={href}
             target="_blank"
             rel="noopener noreferrer"

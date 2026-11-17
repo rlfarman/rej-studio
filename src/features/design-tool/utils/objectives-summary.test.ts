@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vite-plus/test'
 
 import { designToolCopy } from '../copy'
 import { summarizeObjectives, type ObjectiveValues } from './objectives-summary'

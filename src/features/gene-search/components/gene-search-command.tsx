@@ -6,7 +6,7 @@ import {
   CommandList,
   CommandSeparator,
 } from '@/components/ui/command'
-import Link from 'next/link'
+import { Link } from '@tanstack/react-router'
 import type { GeneSearchResult } from '@/features/gene-search/types/search'
 import type { SimilarGene } from '@/features/gene-search/types/search'
 import { SpeciesIcon } from '@/components/bio/species-icon'
@@ -561,7 +561,8 @@ export function GeneSearchCommand({
                             nativeButton={false}
                             render={
                               <Link
-                                href={`/design-tool?isoform=${gene.matchedIsoformId}`}
+                                to="/design-tool"
+                                search={{ isoform: gene.matchedIsoformId }}
                                 aria-label={copy.customizeAria(
                                   gene.matchedIsoformId,
                                 )}

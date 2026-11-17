@@ -5,6 +5,7 @@
 /* shadcn's state variants (data-open:, data-checked:, …) used by the Rhea
    components. */
 @import 'shadcn/tailwind.css';
+@import './fonts.css';
 /*
   ---break---
 */

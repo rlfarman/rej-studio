@@ -1,8 +1,9 @@
 {
   "ci": {
     "collect": {
-      "startServerCommand": "pnpm start",
-      "startServerReadyPattern": "Ready in",
+      "startServerCommand": "node scripts/serve-compressed.mjs",
+      "startServerReadyPattern": "serve-compressed: ready",
+      "startServerReadyTimeout": 120000,
       "url": ["http://localhost:3000/"],
       "numberOfRuns": 3,
       "settings": {

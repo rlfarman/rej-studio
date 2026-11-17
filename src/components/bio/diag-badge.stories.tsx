@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react'
+import type { Meta, StoryObj } from '@storybook/react-vite'
 import { DiagBadge } from './diag-badge'
 import { TooltipProvider } from '@/components/ui/tooltip'
 

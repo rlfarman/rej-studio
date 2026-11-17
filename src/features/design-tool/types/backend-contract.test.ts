@@ -7,7 +7,7 @@
  * of the contract. If the Python models move, this test fails here too
  * instead of the drift showing up as `undefined` in the results panel.
  */
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vite-plus/test'
 import {
   jobStatusResponseSchema,
   processOptionsSchema,

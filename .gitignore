@@ -8,7 +8,13 @@
 # testing
 /coverage
 
-# next.js
+# Vite / TanStack Start / Cloudflare build output and local state
+/dist/
+/.wrangler/
+/.tanstack/
+/.lighthouseci/
+
+# next.js (transitional: the `next` package stays until slice 3)
 /.next/
 /out/
 
@@ -90,5 +96,7 @@ storybook-static/
 /public/gene-data/*
 !/public/gene-data/sample/
 
-# Copied from node_modules by scripts/copy-mcp-app-bridge.mjs
+# Copied from node_modules by the MCP app-bridge script (removed with the
+# Next app; slice 4 brings it back with the MCP endpoint). Still ignored so a
+# stale copy in an older checkout is never committed.
 public/mcp/

@@ -1,18 +1,19 @@
-'use client'
-
 import { useEffect, type ReactNode } from 'react'
 
 import { StatusPage } from '@/components/status-page'
 import { Button } from '@/components/ui/button'
 import { appCopy } from '@/copy/app'
 import { commonCopy } from '@/copy/common'
+import { createLogger } from '@/lib/logger'
+
+const log = createLogger('error-boundary')
 
 interface ErrorStateProps {
   /** Whatever was thrown; client components can throw non-Error values. */
   error: unknown
-  /** Next's `retry`: re-fetches and re-renders the boundary's segment. */
+  /** Resets the boundary and renders it again. */
   retry: () => void
-  /** Sentry tag identifying which error boundary caught it. */
+  /** Which error boundary caught it, for the log (and Sentry, at cutover). */
   boundary?: string
   title: string
   description: string
@@ -23,8 +24,9 @@ interface ErrorStateProps {
 }
 
 /**
- * Error-boundary UI shared by every error.tsx: reports to Sentry when it's
- * configured, then renders the common status layout with a retry action.
+ * Error-boundary UI shared by every error boundary: logs the error (Sentry
+ * comes back at cutover), then renders the common status layout with a
+ * retry action.
  */
 export function ErrorState({
   error,
@@ -37,24 +39,12 @@ export function ErrorState({
   standalone = false,
 }: ErrorStateProps) {
   useEffect(() => {
-    // Server Component errors arrive as Errors with a digest that matches
-    // the server log entry.
-    const digest =
-      error instanceof Error &&
-      'digest' in error &&
-      typeof error.digest === 'string'
-        ? error.digest
-        : undefined
-    // Dynamic import keeps Sentry out of the bundle when it isn't enabled.
-    import('@sentry/nextjs')
-      .then((Sentry) => {
-        Sentry.captureException(error, {
-          tags: { digest, ...(boundary && { boundary }) },
-        })
-      })
-      .catch(() => {
-        // Sentry not installed or DSN not configured — ignore.
-      })
+    // TODO(cutover): report to Sentry for TanStack Start (@sentry/tanstackstart-react)
+    // here, tagged with `boundary`, once the DSN is configured on Cloudflare.
+    // Until then the error only reaches the browser console.
+    log.error('error boundary caught an error', error, {
+      ...(boundary && { boundary }),
+    })
   }, [error, boundary])
 
   return (

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vite-plus/test'
 
 // Mock the query layer (tested separately in DB integration tests)
 vi.mock('@/features/gene-search/api/gene-queries', () => ({

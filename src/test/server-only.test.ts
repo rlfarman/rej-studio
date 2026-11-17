@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vite-plus/test'
 
 describe("modules that import 'server-only'", () => {
   // vitest.config.ts aliases `server-only` to Next's empty module; without

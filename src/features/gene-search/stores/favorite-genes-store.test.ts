@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test'
 import { makeSavedGene } from '@/test/fixtures'
 import { useFavoriteGenes } from './favorite-genes-store'
 

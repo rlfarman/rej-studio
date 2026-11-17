@@ -1,7 +1,7 @@
 'use client'
 import { useRef, useState, useTransition } from 'react'
 import { CommandDialog } from '@/components/ui/command'
-import { useRouter } from 'next/navigation'
+import { useNavigate } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import { Kbd, ModKey } from '@/components/ui/kbd'
 import { SearchIcon } from 'lucide-react'
@@ -37,7 +37,7 @@ export function GeneSearch({
   jobs = EMPTY_JOBS,
   onSelectJob,
 }: GeneSearchProperties) {
-  const router = useRouter()
+  const navigate = useNavigate()
   const {
     query,
     setQuery,
@@ -67,15 +67,17 @@ export function GeneSearch({
     })
     // Show the in-place "Opening X…" loader immediately as an urgent update.
     setPendingGene(gene)
-    // Bundle the navigation with the cleanup so the dialog close, query reset,
-    // and pending clear all commit together once the destination is ready.
-    // No useEffect needed — the transition itself is our "navigation done"
-    // signal.
-    startTransition(() => {
-      router.push(geneHref(gene.symbol, gene.species, gene.matchedIsoformId))
-      setIsOpen(false)
-      setQuery(gene.symbol)
-      setPendingGene(null)
+    // Close the dialog, reset the query and clear the loader together once
+    // the router has loaded the destination (navigate() resolves then).
+    startTransition(async () => {
+      await navigate({
+        href: geneHref(gene.symbol, gene.species, gene.matchedIsoformId),
+      })
+      startTransition(() => {
+        setIsOpen(false)
+        setQuery(gene.symbol)
+        setPendingGene(null)
+      })
     })
   }
 
@@ -87,7 +89,7 @@ export function GeneSearch({
   // The palette shows a handful of genes; the /genes page shows the rest.
   const handleSeeAll = () => {
     setIsOpen(false)
-    router.push(searchPageHref(query.trim(), species))
+    void navigate({ href: searchPageHref(query.trim(), species) })
   }
 
   // ⌘K toggles the palette; on a page with the inline search (home), it

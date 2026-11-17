@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vite-plus/test'
 
 // Test the in-memory fallback path (no Redis configured)
 vi.mock('@upstash/redis', () => ({

@@ -59,7 +59,7 @@ fi
 if command -v uv >/dev/null 2>&1; then
   ok "uv $(uv --version 2>&1 | awk '{print $2}') (Python $(cat .python-version 2>/dev/null || echo '?') from .python-version)"
 else
-  warn "uv not found — needed for fastapi-dev; install from https://docs.astral.sh/uv/"
+  warn "uv not found — needed for the Python backend and its tests; install from https://docs.astral.sh/uv/"
 fi
 
 # Rust only rebuilds the optimizer (pnpm wasm:build). The .wasm is committed,

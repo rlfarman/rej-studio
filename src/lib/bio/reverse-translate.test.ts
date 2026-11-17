@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vite-plus/test'
 
 import { getRelativePreference } from './codon-usage'
 import { GENETIC_CODE, translate } from './genetic-code'

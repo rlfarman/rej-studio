@@ -140,8 +140,8 @@ jobs:
       - uses: $/.github/actions/setup
       # Chromium only; the suite is a smoke test, not a browser matrix.
       - run: pnpm exec playwright install --with-deps chromium
-      # Starts `next dev` with the gate on and in-memory sample data
-      # (see playwright.config.ts); needs no secrets or database.
+      # Starts the TanStack Start dev server (`vp dev`, the Worker in
+      # workerd; see playwright.config.ts). Needs no secrets.
       - run: pnpm test:e2e
       - name: Upload Playwright report
         if: failure()
@@ -163,21 +163,13 @@ jobs:
         with:
           persist-credentials: false
       - uses: $/.github/actions/setup
+      # TanStack Start + Cloudflare plugin: the client bundle, the Worker and
+      # the prerendered SPA shell. Needs no secrets.
       - run: pnpm build
-        env:
-          NEXT_TELEMETRY_DISABLED: '1'
-          # The build never queries the database (every DB-backed route
-          # renders at request time), so CI gets an unreachable placeholder
-          # instead of production credentials. env.ts only checks the scheme.
-          DATABASE_URL: postgres://ci:ci@127.0.0.1:1/ci
-          # Required by env.ts production validation but not exercised in CI.
-          COMPUTE_BACKEND: modal
-          MODAL_API_URL: https://placeholder.modal.run
-          NEXT_PUBLIC_SITE_URL: http://localhost:3000
 
       # Bundle budgets: per-route first-load JS (gzip) from the build's
-      # route-bundle-stats.json. Each main build caches its stats under its
-      # SHA; a PR compares against its base commit's stats.
+      # client chunk graph (dist/client-chunks.json). Each main build caches
+      # its stats under its SHA; a PR compares against its base commit's.
       - name: Restore main's bundle stats
         if: github.event_name == 'pull_request'
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0

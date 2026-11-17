@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { beforeAll, describe, expect, it, vi } from 'vitest'
+import { beforeAll, describe, expect, it, vi } from 'vite-plus/test'
 import { getTestDb } from '@/test/db'
 import type { GeneCorpus } from './client'
 import { sampleCorpus } from './test-utils'

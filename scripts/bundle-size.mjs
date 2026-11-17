@@ -2,10 +2,13 @@
 /**
  * Per-route first-load JS budgets for the production build.
  *
- * Reads `.next/diagnostics/route-bundle-stats.json` (written by `next build`),
- * gzips every chunk in each route's `firstLoadChunkPaths`, and reports:
- *   - the shared shell: chunks every route loads (framework, layout, providers)
- *   - each route's total first-load JS, shell included
+ * Reads the client chunk graph that `pnpm build` writes to
+ * `dist/client-chunks.json` (see clientChunkGraph in vite.config.ts), gzips
+ * each chunk, and reports:
+ *   - the shared shell: the client entry and everything it imports
+ *     statically (framework, router, root layout, providers)
+ *   - each route's first-load JS: the shell plus the chunks TanStack Router
+ *     split out of that route file, and their static imports
  *
  * Fails (exit 1) when a route exceeds its absolute budget, or, given a
  * baseline from `main`, grows by more than BUNDLE_MAX_GROWTH_KB.
@@ -27,21 +30,22 @@ import path from 'node:path'
 import { parseArgs } from 'node:util'
 import { gzipSync } from 'node:zlib'
 
-const STATS_FILE = '.next/diagnostics/route-bundle-stats.json'
+const CLIENT_DIR = 'dist/client'
+const STATS_FILE = 'dist/client-chunks.json'
+const ROUTES_DIR = 'src/routes/'
 const SHELL = '(shared shell)'
 
-// Absolute gzip budgets in KB, about 10% above the sizes measured when they
-// were set (shell 309, / 435, /genes/[symbol] 473, /design-tool 526). Raise a
-// budget deliberately, in the PR that needs it, rather than by habit.
+// Absolute gzip budgets in KB. Carried over from the Next build (about 10%
+// above what it measured: shell 309, / 435, /genes/[symbol] 473,
+// /design-tool 526). Raise a budget deliberately, in the PR that needs it,
+// rather than by habit.
 const BUDGETS_KB = {
   [SHELL]: 340,
-  '/login': 340,
-  '/_not-found': 340,
   '/': 480,
   '/architecture': 480,
   '/genes': 480,
   '/disease-associations': 480,
-  '/genes/[symbol]': 520,
+  '/genes/$symbol': 520,
   '/design-tool': 580,
 }
 // Routes added later get this until they're listed above.
@@ -61,32 +65,59 @@ if (!fs.existsSync(STATS_FILE)) {
   process.exit(1)
 }
 
-/** @type {{ route: string, firstLoadChunkPaths: string[] }[]} */
-const routeStats = JSON.parse(fs.readFileSync(STATS_FILE, 'utf8'))
+/** @type {{ file: string, isEntry: boolean, module: string | null, imports: string[] }[]} */
+const chunks = JSON.parse(fs.readFileSync(STATS_FILE, 'utf8'))
+const byFile = new Map(chunks.map((c) => [c.file, c]))
+
+/** A chunk plus everything it imports statically, transitively. */
+function closure(files) {
+  const seen = new Set()
+  const visit = (file) => {
+    if (seen.has(file)) return
+    seen.add(file)
+    for (const dep of byFile.get(file)?.imports ?? []) visit(dep)
+  }
+  files.forEach(visit)
+  return seen
+}
+
+/** `src/routes/genes/$symbol.tsx?tsr-split=…` → `/genes/$symbol`. */
+function routePath(module) {
+  const file = module.split('?')[0].slice(ROUTES_DIR.length)
+  const route = file
+    .replace(/\.tsx?$/, '')
+    .replace(/(^|\/)index$/, '')
+    .replace(/\/$/, '')
+  return `/${route}`
+}
 
 const gzipCache = new Map()
-const gzipBytes = (chunk) => {
-  if (!gzipCache.has(chunk)) {
-    gzipCache.set(chunk, gzipSync(fs.readFileSync(chunk)).length)
+const gzipBytes = (file) => {
+  if (!gzipCache.has(file)) {
+    const bytes = fs.readFileSync(path.join(CLIENT_DIR, file))
+    gzipCache.set(file, gzipSync(bytes).length)
   }
-  return gzipCache.get(chunk)
+  return gzipCache.get(file)
 }
-const sumGzip = (chunks) => chunks.reduce((sum, c) => sum + gzipBytes(c), 0)
+const sumGzip = (files) => [...files].reduce((s, f) => s + gzipBytes(f), 0)
 
-const chunkSets = routeStats.map((r) => new Set(r.firstLoadChunkPaths))
-const shellChunks = [...(chunkSets[0] ?? [])].filter((c) =>
-  chunkSets.every((set) => set.has(c)),
-)
+const shellChunks = closure(chunks.filter((c) => c.isEntry).map((c) => c.file))
+
+/** @type {Map<string, string[]>} route → the chunks split out of its file */
+const routeChunks = new Map()
+for (const c of chunks) {
+  if (!c.module?.startsWith(ROUTES_DIR)) continue
+  const route = routePath(c.module)
+  routeChunks.set(route, [...(routeChunks.get(route) ?? []), c.file])
+}
 
 /** @type {Record<string, { gzipBytes: number, chunks: number }>} */
 const sizes = {
-  [SHELL]: { gzipBytes: sumGzip(shellChunks), chunks: shellChunks.length },
+  [SHELL]: { gzipBytes: sumGzip(shellChunks), chunks: shellChunks.size },
 }
-for (const r of routeStats.toSorted((a, b) => a.route.localeCompare(b.route))) {
-  sizes[r.route] = {
-    gzipBytes: sumGzip(r.firstLoadChunkPaths),
-    chunks: r.firstLoadChunkPaths.length,
-  }
+for (const route of [...routeChunks.keys()].toSorted()) {
+  const files = closure([...shellChunks, ...routeChunks.get(route)])
+  sizes[route] = { gzipBytes: sumGzip(files), chunks: files.size }
 }
 
 const current = {
@@ -149,7 +180,7 @@ if (args.markdown) {
       ? `Fails when a route grows more than ${maxGrowthKb} KB or exceeds its budget (\`scripts/bundle-size.mjs\`).`
       : `No cached baseline for the base commit, so only the absolute budgets were checked (\`scripts/bundle-size.mjs\`).`,
     '',
-    '<sub>Each route includes the shared shell. Run `pnpm next analyze` locally to see what is inside a chunk.</sub>',
+    '<sub>Each route includes the shared shell. Run `pnpm build` and see `dist/client-chunks.json` for the chunk graph.</sub>',
   ]
   write(args.markdown, lines.join('\n') + '\n')
 }

@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test'
 import { installFakeLocks } from '@/features/design-tool/test-utils/fake-locks'
 import {
   useJobHistory,
@@ -9,11 +9,11 @@ import { requestOpenJob } from '@/features/design-tool/utils/finish-notification
 import { render, waitFor } from '@testing-library/react'
 import { BrowserRuns, settleInterruptedRuns } from './browser-runs'
 
-const { push, toastWarning } = vi.hoisted(() => ({
-  push: vi.fn(),
+const { navigate, toastWarning } = vi.hoisted(() => ({
+  navigate: vi.fn(),
   toastWarning: vi.fn(),
 }))
-vi.mock('next/navigation', () => ({ useRouter: () => ({ push }) }))
+vi.mock('@tanstack/react-router', () => ({ useNavigate: () => navigate }))
 vi.mock('sonner', () => ({ toast: { warning: toastWarning } }))
 
 let locks: ReturnType<typeof installFakeLocks> | undefined
@@ -83,12 +83,18 @@ describe('BrowserRuns', () => {
       { action: { onClick: () => void } },
     ]
     options.action.onClick()
-    expect(push).toHaveBeenCalledWith('/design-tool?job=browser-closed-tab')
+    expect(navigate).toHaveBeenCalledWith({
+      to: '/design-tool',
+      search: { job: 'browser-closed-tab' },
+    })
   })
 
   it('opens a job when its notification is clicked', () => {
     render(<BrowserRuns />)
     requestOpenJob('browser-done')
-    expect(push).toHaveBeenCalledWith('/design-tool?job=browser-done')
+    expect(navigate).toHaveBeenCalledWith({
+      to: '/design-tool',
+      search: { job: 'browser-done' },
+    })
   })
 })
