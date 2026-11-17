@@ -9,6 +9,8 @@ export const designsCopy = {
     notConfigured:
       'Cloud designs are not configured on this deployment (no passcode set).',
     unauthorized: 'Sign in with the passcode to use cloud designs.',
+    accountRequired:
+      'Cloud runs need an account. Sign in to run designs in the cloud; without one, designs run in this browser.',
     unavailable: 'Cloud designs are not available on this deployment.',
     bodyTooLarge: 'That request is too large.',
     invalid: (reason: string) => `That design cannot be run: ${reason}`,
@@ -19,7 +21,7 @@ export const designsCopy = {
     badId: 'That is not a cloud design id.',
     notFound:
       'No cloud design with that id. It may have been deleted, or passed its retention.',
-    notOwner: 'Only the person who submitted a cloud design can delete it.',
+    notOwner: 'Only the account that submitted a cloud design can delete it.',
     notStarted:
       'That design has not started yet, so who owns it is not known. Try again in a moment.',
     failed: 'The cloud-design request failed.',

@@ -94,7 +94,10 @@ export const cloudDesignSchema = z.object({
   name: z.string().optional(),
   bases: z.number().optional(),
   submittedAt: z.string().optional(),
-  /** Who submitted it: an email, or `mcp:<token name>` for an agent. */
+  /**
+   * Who submitted it: an account (`user:<id>`), `mcp:<token name>` for an
+   * agent, or `session:<id>` for a design from before accounts.
+   */
   owner: z.string().optional(),
   /** Whether the caller is the owner, i.e. may delete it. */
   ownedByCaller: z.boolean().optional(),
@@ -116,6 +119,19 @@ const cloudDesignSubmittedSchema = z.object({
 export type CloudDesignSubmitted = z.infer<typeof cloudDesignSubmittedSchema>
 
 /**
+ * One of an account's cloud designs, as "My cloud designs" lists it: enough
+ * to show and open it. Reading the id gives the rest.
+ */
+const cloudDesignSummarySchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  bases: z.number(),
+  submittedAt: z.string(),
+})
+
+export type CloudDesignSummary = z.infer<typeof cloudDesignSummarySchema>
+
+/**
  * Why a cloud-design call was refused, and the HTTP status it is sent with
  * (which the poller and the history map back to: 404 is "gone", anything
  * else is "try again later").
@@ -123,6 +139,9 @@ export type CloudDesignSubmitted = z.infer<typeof cloudDesignSubmittedSchema>
 export const CLOUD_REFUSAL_STATUS = {
   invalid: 400,
   unauthorized: 401,
+  // Past the passcode, but cloud runs need an account: the page offers to
+  // sign in.
+  account_required: 401,
   forbidden: 403,
   not_found: 404,
   not_started: 409,
