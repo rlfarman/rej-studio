@@ -1,5 +1,5 @@
 'use client'
-import { useRef } from 'react'
+import { useLayoutEffect, useRef } from 'react'
 import { useFormContext, useWatch } from 'react-hook-form'
 import {
   FormField,
@@ -93,6 +93,33 @@ export function CodingSequenceInput() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const backdropRef = useRef<HTMLDivElement>(null)
+
+  // The textarea is uncontrolled: the browser owns its text while typing,
+  // and only writes from elsewhere (paste cleaning, FASTA upload, the
+  // DNA/protein toggle, reverse translation, draft restore, reset) are pushed
+  // into it here.
+  //
+  // Controlled, it dropped keystrokes. Typing re-renders the split-point
+  // editor, whose effects write derived values (scaled split points, the
+  // selected WGGW sites) back into the form. When one of those landed
+  // between a keystroke and its render, React ended the input event by
+  // restoring the field to the value it had last rendered, and the next key
+  // was typed onto the shorter text. Uncontrolled, there is no rendered value
+  // to restore to.
+  //
+  // `typedRef` holds what the field itself has emitted since it last matched
+  // the form. A form value found there is this field's own keystroke catching
+  // up, possibly behind newer ones, and must not be written back over them.
+  const typedRef = useRef(new Set<string>())
+  useLayoutEffect(() => {
+    const el = textareaRef.current
+    if (!el) return
+    const next = activeValue ?? ''
+    if (el.value !== next && !typedRef.current.has(next)) {
+      el.value = next
+    }
+    if (el.value === next) typedRef.current.clear()
+  }, [activeValue])
 
   const syncScroll = () => {
     if (textareaRef.current && backdropRef.current) {
@@ -327,8 +354,13 @@ export function CodingSequenceInput() {
                 }
                 rows={4}
                 aria-required="true"
-                {...field}
-                onChange={field.onChange}
+                name={field.name}
+                disabled={field.disabled}
+                onBlur={field.onBlur}
+                onChange={(event) => {
+                  typedRef.current.add(event.target.value)
+                  field.onChange(event)
+                }}
                 ref={(el) => {
                   field.ref(el)
                   textareaRef.current = el
