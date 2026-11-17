@@ -240,6 +240,15 @@ Done on the `rlfarman` account; the preview is live at
   to browsers from `https://gene-data.rejstudio.com/v1` with long-lived
   immutable caching and CORS for the app's origins. It is public reference
   data, so it sits outside the gate.
+- **Edge cache for the corpus.** R2 custom domains do not cache `.json` at
+  Cloudflare's edge by default (`cf-cache-status: DYNAMIC`), so every cold
+  request went back to R2: 3.4 s for the 1 MB index from the lab's browser.
+  The `rejstudio.com` zone has a Cache Rule, "Cache gene data (R2)":
+  hostname equals `gene-data.rejstudio.com`, eligible for cache, edge TTL
+  from the files' own `Cache-Control` (a year, immutable; each corpus
+  version has its own path). The index then loaded in under 1 s. Responses
+  still carry the right `Access-Control-Allow-Origin` per requesting origin
+  (checked for the workers.dev URL, `rejstudio.com` and localhost).
 - **Buckets bound** in `wrangler.jsonc`: `GENE_DATA` and `DESIGN_RESULTS`
   (`rej-studio-design-results`, 30-day lifecycle rule).
 - **Passcode gate instead of Access (decided 2026-11-17).** Access was set
