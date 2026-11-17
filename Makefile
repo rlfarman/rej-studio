@@ -1,4 +1,4 @@
-.PHONY: dev build seed db-studio db-migrate lint lint-fix format type-check verify doctor api-types help
+.PHONY: dev build lint lint-fix format type-check verify doctor help
 
 # ---------- Development ----------
 
@@ -7,17 +7,6 @@ dev: ## Start the TanStack Start dev server (vp dev, Worker in workerd)
 
 build: ## Production build (TanStack Start + Cloudflare Worker, in dist/)
 	pnpm build
-
-# ---------- Database ----------
-
-seed: ## Rebuild JSONL from CSV, apply migrations, and upload data
-	pnpm db:build && pnpm db:migrate && pnpm db:upload
-
-db-studio: ## Open Drizzle Studio
-	pnpm db:studio
-
-db-migrate: ## Apply committed migrations to $DATABASE_URL
-	pnpm db:migrate
 
 # ---------- Deploy ----------
 # The Python backend deploys from CI (.github/workflows/modal-deploy.yml) on
@@ -43,11 +32,6 @@ verify: ## Lint, type-check and unit tests (the pre-push gate)
 
 doctor: ## Check local environment health
 	pnpm doctor
-
-# ---------- Codegen ----------
-
-api-types: ## Regenerate TS types from FastAPI OpenAPI spec
-	bash scripts/generate-api-types.sh
 
 # ---------- Help ----------
 
