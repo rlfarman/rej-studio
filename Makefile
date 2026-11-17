@@ -2,10 +2,10 @@
 
 # ---------- Development ----------
 
-dev: ## Start Next.js + FastAPI dev servers
+dev: ## Start the TanStack Start dev server (vp dev, Worker in workerd)
 	pnpm dev
 
-build: ## Production build (Vercel target)
+build: ## Production build (TanStack Start + Cloudflare Worker, in dist/)
 	pnpm build
 
 # ---------- Database ----------
@@ -26,7 +26,7 @@ db-migrate: ## Apply committed migrations to $DATABASE_URL
 
 # ---------- Quality ----------
 
-lint: ## Run Oxlint, then ESLint
+lint: ## Run Oxlint (vp lint), with the boundary rules as JS plugins
 	pnpm lint
 
 lint-fix: ## Auto-fix lint issues
