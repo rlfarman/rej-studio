@@ -573,7 +573,14 @@ What each decision came to, and where the build differs from the plan above:
   which re-exports Start's handler beside the `DesignWorkflow` class (a
   Workflow must be a named export of the main module); the Workflow is bound
   as `DESIGN_WORKFLOW`.
-- **API.** `POST /api/designs`, `GET` and `DELETE /api/designs/:id`, behind
+- **API — since replaced (2026-11-17).** The design tool now calls three
+  TanStack Start server functions (`src/features/design-tool/api/
+  cloud-designs.functions.ts`) that return typed results (`{ ok: true,
+  data }` or `{ ok: false, reason, message, retryAfter? }`), the documented
+  pattern for calls made only by the app; the REST routes are gone. Identity
+  is the passcode session (`src/server/designs/identity.ts`), not Access,
+  which was dropped for the passcode gate. The rest of this bullet describes
+  the first version: `POST /api/designs`, `GET` and `DELETE /api/designs/:id`, behind
   Access and verifying the Access JWT again in the Worker (signature against
   the team's JWKS, issuer, audience, expiry; jose, no `nodejs_compat`). No
   Access configuration means 503, never open; `DEV_ACCESS_EMAIL` stands in
