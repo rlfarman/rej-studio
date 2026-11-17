@@ -86,6 +86,8 @@ function routePath(module) {
   const file = module.split('?')[0].slice(ROUTES_DIR.length)
   const route = file
     .replace(/\.tsx?$/, '')
+    // A layout route (`genes/route.tsx`) is named for the URL it wraps.
+    .replace(/(^|\/)route$/, '$1(layout)')
     .replace(/(^|\/)index$/, '')
     .replace(/\/$/, '')
   return `/${route}`

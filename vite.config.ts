@@ -6,43 +6,9 @@ import babel from '@rolldown/plugin-babel'
 import tailwindcss from '@tailwindcss/vite'
 import { tanstackStart } from '@tanstack/react-start/plugin/vite'
 import react, { reactCompilerPreset } from '@vitejs/plugin-react'
-import { defineConfig, loadEnv, type Plugin } from 'vite-plus'
+import { defineConfig, type Plugin } from 'vite-plus'
 
 import { lintConfig } from './lint/config'
-
-/**
- * Public env vars the client code still reads as `process.env.NEXT_PUBLIC_*`
- * (feature flags, the gene-data URL). Vite only exposes `import.meta.env`, so
- * these are inlined at build time, the way Next did, until the readers move
- * to `import.meta.env.VITE_*`. Unset ones become `undefined` rather than a
- * ReferenceError on `process` in the browser.
- *
- * TODO(slice-2): switch the readers to VITE_-prefixed vars and drop this.
- */
-const NEXT_PUBLIC_VARS = [
-  'NEXT_PUBLIC_ENABLE_BROWSER_OPTIMIZER',
-  'NEXT_PUBLIC_ENABLE_MULTI_SPLIT',
-  'NEXT_PUBLIC_GENE_DATA_URL',
-  'NEXT_PUBLIC_SITE_URL',
-] as const
-
-/** Inlines NEXT_PUBLIC_VARS for the current mode's env (see above). */
-function nextPublicEnv(): Plugin {
-  return {
-    name: 'rej:next-public-env',
-    config(_config, { mode }) {
-      const env = loadEnv(mode, process.cwd(), 'NEXT_PUBLIC_')
-      return {
-        define: Object.fromEntries(
-          NEXT_PUBLIC_VARS.map((name) => [
-            `process.env.${name}`,
-            env[name] === undefined ? 'undefined' : JSON.stringify(env[name]),
-          ]),
-        ),
-      }
-    },
-  }
-}
 
 /**
  * Makes every page the Worker renders the SPA shell, in production as in
@@ -122,7 +88,6 @@ export default defineConfig({
     // First, per Cloudflare's TanStack Start guide: the Worker is Start's
     // `ssr` environment and runs in workerd in dev, preview and production.
     cloudflare({ viteEnvironment: { name: 'ssr' } }),
-    nextPublicEnv(),
     spaShellOnWorker(),
     clientChunkGraph(),
     tailwindcss(),

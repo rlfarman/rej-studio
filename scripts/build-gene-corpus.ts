@@ -10,7 +10,7 @@
  * `--force` is given: a published version is immutable, so rebuilding one in
  * place would let caches serve a mix of old and new files.
  *
- * Point NEXT_PUBLIC_GENE_DATA_URL at wherever `<out>/<version>` is served.
+ * Point VITE_GENE_DATA_URL at wherever `<out>/<version>` is served.
  */
 import { createReadStream, existsSync } from 'node:fs'
 import { mkdir, rm, stat, writeFile } from 'node:fs/promises'

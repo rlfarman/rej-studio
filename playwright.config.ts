@@ -50,10 +50,5 @@ export default defineConfig({
     url: `${baseURL}/favicon.svg`,
     reuseExistingServer: false,
     timeout: 180_000,
-    env: {
-      // browser-optimizer.spec.ts needs the in-browser optimizer on.
-      // TODO(slice-2): VITE_-prefixed once the flag reader moves.
-      NEXT_PUBLIC_ENABLE_BROWSER_OPTIMIZER: 'true',
-    },
   },
 })
