@@ -1,6 +1,10 @@
 import MiniSearch from 'minisearch'
 
-import type { GeneSearchPage, SimilarGene } from '../types/search'
+import type {
+  GeneSearchPage,
+  GeneSearchResult,
+  SimilarGene,
+} from '../types/search'
 import { compareText, toResult, type IndexedGene } from './search-index'
 
 /*
@@ -167,6 +171,25 @@ function compareRanked(a: Ranked, b: Ranked): number {
     compareText(a.gene.species, b.gene.species) ||
     compareText(a.gene.id, b.gene.id)
   )
+}
+
+const FIELD_NAMES = ['symbol', 'alias', 'name'] as const
+
+/** Which field a ranked gene matched on, and whether only by a typo. */
+function matchOf(ranked: Ranked): NonNullable<GeneSearchResult['match']> {
+  if (ranked.distance > 0) {
+    return { field: FIELD_NAMES[ranked.field], typo: true }
+  }
+  switch (ranked.tier) {
+    case Tier.ExactSymbol:
+    case Tier.SymbolPrefix:
+      return { field: 'symbol', typo: false }
+    case Tier.ExactAlias:
+    case Tier.AliasPrefix:
+      return { field: 'alias', typo: false }
+    default:
+      return { field: 'name', typo: false }
+  }
 }
 
 /** The better of two rankings of the same gene. */
@@ -352,7 +375,9 @@ export class GeneTextSearch {
       compareRanked,
     )
     return {
-      results: ranked.slice(0, limit).map(({ gene }) => toResult(gene)),
+      results: ranked
+        .slice(0, limit)
+        .map((r) => ({ ...toResult(r.gene), match: matchOf(r) })),
       truncated: ranked.length > limit,
     }
   }

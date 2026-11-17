@@ -148,3 +148,38 @@ describe('editDistance', () => {
     expect(editDistance('', 'abc')).toBe(3)
   })
 })
+
+describe('what each result matched on', () => {
+  async function firstMatch(query: string) {
+    const page = await corpus.searchGenes(query, 'human', 5)
+    return { symbol: page.results[0]?.symbol, match: page.results[0]?.match }
+  }
+
+  it('says a symbol match is a symbol match', async () => {
+    expect(await firstMatch('tp53')).toEqual({
+      symbol: 'TP53',
+      match: { field: 'symbol', typo: false },
+    })
+  })
+
+  it('says an alternate-symbol match is an alias match', async () => {
+    expect((await firstMatch('lfs1')).match).toEqual({
+      field: 'alias',
+      typo: false,
+    })
+  })
+
+  it('says a name-word match is a name match', async () => {
+    expect((await firstMatch('tumor')).match).toEqual({
+      field: 'name',
+      typo: false,
+    })
+  })
+
+  it('says a typo match is only a close spelling', async () => {
+    expect(await firstMatch('tp35')).toEqual({
+      symbol: 'TP53',
+      match: { field: 'symbol', typo: true },
+    })
+  })
+})

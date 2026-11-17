@@ -25,6 +25,11 @@ export interface GeneSearchResult {
   species: string
   /** Set when the query was a transcript id: the transcript it matched. */
   matchedIsoformId?: string
+  /**
+   * Which field the text search matched, and whether only as a close
+   * spelling (a typo). Set by text search; absent for id lookups.
+   */
+  match?: { field: 'symbol' | 'alias' | 'name'; typo: boolean }
 }
 
 export interface GeneSearchPage {
