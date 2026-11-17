@@ -4,7 +4,11 @@
       "startServerCommand": "node scripts/serve-compressed.mjs",
       "startServerReadyPattern": "serve-compressed: ready",
       "startServerReadyTimeout": 120000,
-      "url": ["http://localhost:3000/"],
+      "url": [
+        "http://localhost:3000/",
+        "http://localhost:3000/design-tool",
+        "http://localhost:3000/genes/TP53"
+      ],
       "numberOfRuns": 3,
       "settings": {
         "preset": "desktop",

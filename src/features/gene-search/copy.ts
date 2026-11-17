@@ -114,8 +114,10 @@ export const geneSearchCopy = {
     downloadFasta: 'Download FASTA',
     viewEnsembl: 'View on Ensembl',
     downloadAllFasta: 'Download FASTA',
+    // Starts with the visible label, so voice control ("click Download
+    // FASTA") finds it (WCAG 2.5.3, label in name).
     downloadAllFastaAria: (n: number) =>
-      `Download all ${n} coding sequences as one FASTA file`,
+      `Download FASTA of all ${n} coding sequences`,
   },
   summary: {
     isoforms: 'Isoforms',
