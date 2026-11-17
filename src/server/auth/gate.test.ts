@@ -38,6 +38,8 @@ function login(
     headers: {
       'content-type': 'application/x-www-form-urlencoded',
       origin,
+      // Cloudflare's client address, which the attempt budget is counted by.
+      'cf-connecting-ip': '203.0.113.7',
     },
     body,
   })
@@ -207,6 +209,21 @@ describe('signing in', () => {
     expect(
       new URL(response.headers.get('location')!).searchParams.get('error'),
     ).toBe('limit')
+  })
+
+  it('has no budget to count without a client address (local runs)', async () => {
+    const env = {
+      ...ON,
+      LOGIN_LIMITER: { limit: async () => ({ success: false }) },
+    } as ServerEnv
+    const request = login('splice')
+    const local = new Request(request, {
+      headers: new Headers(
+        [...request.headers].filter(([name]) => name !== 'cf-connecting-ip'),
+      ),
+    })
+    const response = await handleLogin(local, env)
+    expect(response.headers.get('set-cookie')).toMatch(/^rej_session=/)
   })
 
   it('accepts only POST', async () => {

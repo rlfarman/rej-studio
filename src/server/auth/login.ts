@@ -61,8 +61,11 @@ async function withinLoginBudget(
   request: Request,
   env: ServerEnv,
 ): Promise<boolean> {
-  if (!env.LOGIN_LIMITER) return true
-  const address = request.headers.get('cf-connecting-ip') ?? 'unknown'
+  // Cloudflare sets the client's address on every request it serves. Without
+  // one (local development and tests) there is no address to count, and one
+  // shared bucket for everyone would only lock out the next test run.
+  const address = request.headers.get('cf-connecting-ip')
+  if (!env.LOGIN_LIMITER || !address) return true
   const { success } = await env.LOGIN_LIMITER.limit({ key: `login:${address}` })
   return success
 }
