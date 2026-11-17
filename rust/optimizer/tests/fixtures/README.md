@@ -41,5 +41,20 @@ were committed in #284:
 | `real_genes.json`        | `3c21e60e03751ab3`  | For each of those: the objectives report, the split pipeline and a full seeded design (seed 1234), base for base          | `real_genes.rs`, `wasm-smoke.mjs` |
 | `tables.json`            | `1caa6a8026a43480`  | Biopython's Standard genetic code, DNAChisel's back-translation order, and python_codon_tables' human and mouse usage     | `table_parity.rs`       |
 
-`sha256sum rust/optimizer/tests/fixtures/*.json` should still print those
-digests; a different one means a fixture was edited.
+`sha256sum` over the files above should still print those digests; a different
+one means a fixture was edited. (The directory holds one more file, which is
+generated — see below.)
+
+## Not a recording: the WGGW reference
+
+| File                   | SHA-256 (first 16) | What it holds                                                                                                | Read by                                   |
+| ---------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------ | ----------------------------------------- |
+| `wggw_reference.json`  | `953a670ff6ca2c43` | This crate's own WGGW answers — candidates, their distance order, the recode and the chosen split — for every isoform in `public/gene-data/sample` and every sequence above | `sequence-utils.wggw-parity.test.ts` |
+
+`wggw_reference.json` is **generated, not frozen**: it is what the crate says
+today, written by `cargo run --release --example wggw-reference`, and it exists
+so the TypeScript WGGW ranking the gene pages use can be compared against this
+crate without loading the WebAssembly. Regenerate it whenever
+`optimizer/src/rej.rs` changes and commit the result — Rust CI reruns the
+example and fails if the committed file differs. Its digest will change with
+it, so the line above is a record of the current file, not a seal on it.

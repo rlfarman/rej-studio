@@ -9,9 +9,14 @@
 
 import fs from 'node:fs'
 
-export async function loadOptimizer(wasmPath, onProgress) {
-  // The module calls back into env.report_progress as it works; a host that
-  // does not supply it cannot instantiate the module at all.
+/**
+ * Instantiate the module and wrap both of its entry points.
+ *
+ * `design` and `reverseTranslate` each take a request object and return the
+ * parsed JSON response; they share one framing convention (see the wasm_abi
+ * modules in the crate), so one wrapper covers both.
+ */
+export async function loadModule(wasmPath, onProgress) {
   let memoryRef = null
   const imports = {
     env: {
@@ -30,30 +35,51 @@ export async function loadOptimizer(wasmPath, onProgress) {
     fs.readFileSync(wasmPath),
     imports,
   )
-  const {
-    alloc,
-    dealloc,
-    process: processRequest,
-    free_response,
-    memory,
-  } = instance.exports
-  memoryRef = memory
+  const exports = instance.exports
+  memoryRef = exports.memory
 
-  return function design(request) {
-    const payload = new TextEncoder().encode(JSON.stringify(request))
-    const requestPtr = alloc(payload.length)
-    new Uint8Array(memory.buffer, requestPtr, payload.length).set(payload)
-
-    const responsePtr = processRequest(requestPtr, payload.length)
-    // Read the 4-byte little-endian length, then that many bytes. The view is
-    // created after the call because growing the heap detaches old buffers.
-    const length = new DataView(memory.buffer).getUint32(responsePtr, true)
-    const bytes = new Uint8Array(memory.buffer, responsePtr + 4, length).slice()
-
-    free_response(responsePtr)
-    dealloc(requestPtr, payload.length)
+  /** Read and free a length-prefixed response. */
+  function readResponse(responsePtr) {
+    // The view is created after the call: growing the heap detaches old ones.
+    const length = new DataView(exports.memory.buffer).getUint32(
+      responsePtr,
+      true,
+    )
+    const bytes = new Uint8Array(
+      exports.memory.buffer,
+      responsePtr + 4,
+      length,
+    ).slice()
+    exports.free_response(responsePtr)
     return JSON.parse(new TextDecoder().decode(bytes))
   }
+
+  /** Call a JSON-in/JSON-out export. */
+  function call(name, request) {
+    const payload = new TextEncoder().encode(JSON.stringify(request))
+    const requestPtr = exports.alloc(payload.length)
+    new Uint8Array(exports.memory.buffer, requestPtr, payload.length).set(
+      payload,
+    )
+    try {
+      return readResponse(exports[name](requestPtr, payload.length))
+    } finally {
+      exports.dealloc(requestPtr, payload.length)
+    }
+  }
+
+  return {
+    design: (request) => call('process', request),
+    reverseTranslate: (request) => call('reverse_translate', request),
+    /** What the module exposes, so a caller can check nothing crept in. */
+    exportNames: Object.keys(exports).sort(),
+  }
+}
+
+/** Just the design entry point, for callers that want nothing else. */
+export async function loadOptimizer(wasmPath, onProgress) {
+  const { design } = await loadModule(wasmPath, onProgress)
+  return design
 }
 
 const OPTIONS = {

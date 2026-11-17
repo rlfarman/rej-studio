@@ -148,6 +148,17 @@ export const validationSchema = z
           ctx.addIssue({ ...issue, path: ['proteinSequence'] })
         }
       }
+      // The optimizer works on DNA, and in protein mode `codingSequence` is
+      // filled asynchronously by the crate's reverse translation. Blocking
+      // the submission until it lands beats sending an empty sequence and
+      // reading the backend's complaint about it.
+      else if (data.codingSequence.length === 0) {
+        ctx.addIssue({
+          path: ['proteinSequence'],
+          code: z.ZodIssueCode.custom,
+          message: designToolCopy.validation.protein.awaitingDna,
+        })
+      }
       // Species is required for protein mode (needed for reverse translation)
       if (data.species === 'none') {
         ctx.addIssue({

@@ -135,10 +135,12 @@ describe('validationSchema', () => {
 })
 
 describe('validationSchema — protein input', () => {
+  // The DNA the optimizer reverse-translates the protein to, which the form
+  // holds by the time it can be submitted.
   const protein = (overrides: Record<string, unknown> = {}) =>
     parse({
       sequenceType: 'protein',
-      codingSequence: '',
+      codingSequence: 'ATGAAGGTGTGA',
       proteinSequence: 'MKV*',
       ...overrides,
     })
@@ -182,9 +184,17 @@ describe('validationSchema — protein input', () => {
     ).toContain('proteinSequence')
   })
 
+  it('waits for the DNA the protein reverse-translates to', () => {
+    // The crate owns reverse translation, so the DNA arrives asynchronously;
+    // until it does there is nothing to design from.
+    expect(issuePaths(protein({ codingSequence: '' }))).toContain(
+      'proteinSequence',
+    )
+  })
+
   it('skips the DNA splice-position checks in protein mode', () => {
-    // codingSequence is filled in after reverse translation, so a splice
-    // position beyond the (empty) coding sequence is not an error yet.
+    // The split points are recomputed from the reverse-translated DNA, so a
+    // stale position is not reported against the protein field.
     expect(protein({ spliceJunctionPositions: [500] }).success).toBe(true)
   })
 })

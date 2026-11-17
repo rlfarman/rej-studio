@@ -15,7 +15,7 @@ machine.
 
 Python can run in a browser through Pyodide, but that means downloading a
 Python runtime plus NumPy and Biopython — about 7 MB even after trimming, and
-roughly twice as slow as native Python. This port is **117 KB** compressed and
+roughly twice as slow as native Python. This port is **120 KB** compressed and
 **5–7× faster than Python**, so a design that took 21 seconds on the server
 takes under 4 seconds in the tab.
 
@@ -42,7 +42,7 @@ get rejected by its masked-rejection sampling — so a seeded run made the same
 random choices Python made. That turned "is the port correct?" into a question
 with a definite answer: **for the same seed, the designs must be identical**.
 
-87 tests run in about 3 seconds:
+101 tests run in about 4 seconds:
 
 | Test group              | What it establishes                                                                                                     |
 | ----------------------- | ----------------------------------------------------------------------------------------------------------------------- |
@@ -80,7 +80,7 @@ Download size, the reason for the rewrite:
 | Approach                             | Compressed                         |
 | ------------------------------------ | ---------------------------------- |
 | Pyodide + NumPy + Biopython, trimmed | ~7 MB                              |
-| This crate as WebAssembly            | **117 KB** (Brotli), 146 KB (gzip) |
+| This crate as WebAssembly            | **120 KB** (Brotli), 150 KB (gzip) |
 
 ## Layout
 
@@ -95,7 +95,9 @@ optimizer/src/
   mutation_space.rs  which sequences the solver may reach
   problem.rs         constraint solver and objective optimizer
   rej.rs             WGGW motifs and the 5'/3' split
+  reverse_translate.rs  protein -> DNA with the species-preferred codons
   contract.rs        request/result types (the retired python/contracts.py's JSON)
+  exports.rs         the other JSON entry points (one exported, two generators)
   lib.rs             public API and the browser ABI
 ```
 
@@ -120,23 +122,62 @@ Benchmark:
 cargo run --release --example bench -- cases.json
 ```
 
-There is nothing to regenerate: the fixtures and `src/tables.rs` are frozen
-(see [How it is verified](#how-it-is-verified)).
+The DNAChisel fixtures and `src/tables.rs` are frozen — there is nothing to
+regenerate there (see [How it is verified](#how-it-is-verified)). The WGGW
+reference the TypeScript parity test reads is not a recording but this crate's
+own answers, so it is rewritten after any change to `optimizer/src/rej.rs`:
+
+```bash
+cargo run --release --example wggw-reference
+```
 
 ## The browser interface
 
 Deliberately not wasm-bindgen: the whole interface is one JSON string in and
 one JSON string out, so generated glue would cost more bytes than it saves
-effort. The module exports four functions and imports nothing.
+effort. The module imports only `env.report_progress`.
 
 ```js
-const { alloc, dealloc, process, free_response, memory } = instance.exports
+const { alloc, dealloc, free_response, memory, process, reverse_translate } =
+  instance.exports
 ```
 
 1. `alloc(len)` for the request; write UTF-8 bytes there.
 2. `process(ptr, len)` returns a pointer to a 4-byte little-endian length
    followed by that many UTF-8 bytes.
 3. `free_response(ptr)` and `dealloc(ptr, len)` when finished.
+
+`reverse_translate` takes and returns JSON the same way, and frees with
+`free_response` too.
+
+| Export              | Request                  | Answer                                                      |
+| ------------------- | ------------------------ | ----------------------------------------------------------- |
+| `process`           | `{ CDS, name, options }` | the design (`ProcessResult`)                                |
+| `reverse_translate` | `{ protein, species }`   | `{ CDS }` — species-preferred codons, a stop codon appended |
+
+`reverse_translate` exists because the frontend has no codon table: protein
+input is translated here, with the very codons [`MaximizeCAI`] scores against.
+A tie goes to the earlier codon in DNAChisel's backtranslation order, which is
+why mouse arginine is AGA. The seed is unaffected — `derive_seed` hashes the
+coding sequence it is handed, and this function is pure, so the same protein
+and species reproduce the design.
+
+These two are the whole browser interface, and deliberately so: every export
+is bytes every visitor downloads. Two more entry points exist in
+`optimizer/src/exports.rs` — `codon_tables_json` and `wggw_report_json` — but
+nothing in a page calls them, so they are not exported from the module.
+Instead each feeds a `cargo run --example` that writes a committed file, which
+cost 6.4 KB of Brotli as wasm exports and nothing as files:
+
+| Generated file                                                 | Example          | Read by                              |
+| -------------------------------------------------------------- | ---------------- | ------------------------------------ |
+| `src/features/design-tool/utils/codon-preference.generated.ts` | `codon-tables`   | the design tool's codon charts       |
+| `optimizer/tests/fixtures/wggw_reference.json`                 | `wggw-reference` | `sequence-utils.wggw-parity.test.ts` |
+
+`pnpm wasm:build` writes the first; the second is written by
+`cargo run --release --example wggw-reference`. Rust CI runs both and fails if
+either committed file differs, so neither can fall behind the crate — and a
+chart cannot show frequencies the optimizer did not score with.
 
 `scripts/wasm-harness.mjs` wraps this in about 20 lines and is what the worker
 would use. Errors come back as `{"error": "..."}`, never as a panic.
@@ -158,7 +199,7 @@ Cancelling terminates the worker, since a run inside WebAssembly cannot be
 interrupted from outside; the next design starts a fresh one. A browser that
 lacks Workers or WebAssembly gets a failed run that says why.
 
-The worker starts when the design form mounts, so the ~146 KB arrives while
+The worker starts when the design form mounts, so the ~150 KB arrives while
 the user is still entering a sequence.
 
 Measured in Chrome through the real UI: a 5,592 bp gene designs in **1.9 s**

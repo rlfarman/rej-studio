@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react'
 import { toCodons } from '@/lib/bio/genetic-code'
-import { getRelativePreference } from '@/lib/bio/codon-usage'
+import { getRelativePreference } from '../utils/codon-preference'
 import { type Species } from '@/lib/bio/species'
 import { ChartDataTable } from '@/components/chart-data-table'
 import { designToolCopy } from '../copy'

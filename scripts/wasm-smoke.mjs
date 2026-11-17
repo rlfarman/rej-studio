@@ -10,7 +10,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { loadOptimizer } from './wasm-harness.mjs'
+import { loadModule } from './wasm-harness.mjs'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 const fixtures = path.join(here, '..', 'rust', 'optimizer', 'tests', 'fixtures')
@@ -30,8 +30,9 @@ if (!wasmPath) {
 // monotonicity only means anything within a single design.
 let progress = []
 const allProgress = []
-const design = await loadOptimizer(wasmPath, (fraction, stage) =>
-  progress.push({ fraction, stage }),
+const { design, reverseTranslate, exportNames } = await loadModule(
+  wasmPath,
+  (fraction, stage) => progress.push({ fraction, stage }),
 )
 /** Run one design and return the ticks it produced. */
 function designWithProgress(request) {
@@ -121,6 +122,49 @@ check(
     /^Optimizing sequence \(\d+\/\d+\)$/.test(tick.stage),
   ) && !everyTick.some((tick) => tick.stage.includes('[')),
   everyTick.find((tick) => tick.stage.includes('['))?.stage ?? '',
+)
+
+// Every export is download weight for every visitor, so the set is pinned:
+// the crate has entry points the build-time generators use, and they must
+// stay out of the module.
+check(
+  'the module exports only what the browser calls',
+  exportNames.join(',') ===
+    'alloc,dealloc,free_response,memory,process,reverse_translate',
+  exportNames.join(','),
+)
+
+// --- Reverse translation ---------------------------------------------------
+//
+// The crate owns the codon tables, so this export is the only way the browser
+// can turn a protein into DNA; the design path depends on what it returns.
+
+const translated = reverseTranslate({ protein: 'MKR*', species: 'mouse' })
+check(
+  'reverse translation returns DNA',
+  translated.CDS === 'ATGAAGAGATGA',
+  JSON.stringify(translated),
+)
+check(
+  'reverse translation refuses an unknown species',
+  typeof reverseTranslate({ protein: 'MK*', species: 'rat' }).error ===
+    'string',
+)
+check(
+  'reverse translation refuses a non-protein',
+  typeof reverseTranslate({ protein: 'MZ*', species: 'human' }).error ===
+    'string',
+)
+// The design must be runnable from what reverse translation produced.
+const fromProtein = design({
+  CDS: translated.CDS,
+  name: 'from-protein',
+  options: { codon_optimize: 'mouse', enforce_gc: true, seed: 7 },
+})
+check(
+  'a reverse-translated sequence designs',
+  !fromProtein.error && fromProtein.optimized_sequence.length > 0,
+  fromProtein.error ?? '',
 )
 
 const failed = checks.filter((entry) => !entry.ok)
