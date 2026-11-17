@@ -9,15 +9,10 @@
 // gene data is read through the assets binding, and /api/mcp is spoken to
 // over the protocol with a bearer token.
 //
-// Cloud designs run here end to end too, through the design tool's server
-// functions spoken to as the browser speaks to them (Start's serialization,
-// from the seroval Start itself depends on): submitting starts the real
-// Workflow in workerd, the script polls it to completion, checks that a
-// resubmission is deduplicated, that the result is the browser's design (the
-// same .wasm run through Node with the browser's ABI glue), that the HTTP
-// statuses and no-store survive, that a cross-site call and an oversized body
-// are refused, and deletes it; and that submit_design hands a sequence over
-// 12 kb to the same Workflow.
+// The cloud-design Workflow runs here too: submit_design hands a sequence
+// over 12 kb to it, and the script polls it to completion. The design tool's
+// own cloud designs (server functions) are covered end to end by
+// e2e/cloud-design.spec.ts, in the browser, on dev and on this build.
 // The passcode gate is on, as deployed: the script checks that it turns away
 // signed-out requests, signs in through /api/login, and sends that session
 // cookie with everything after.
@@ -28,28 +23,12 @@
 
 import { spawn } from 'node:child_process'
 import { mkdtempSync, readdirSync, rmSync } from 'node:fs'
-import { createRequire } from 'node:module'
 import { createServer } from 'node:net'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..')
-
-// Start's wire format is seroval's JSON. Resolved through Start's own
-// dependencies, so it is the version the app speaks, with no dependency of
-// its own to keep in step.
-const { fromCrossJSON, toJSONAsync } = await import(
-  createRequire(
-    createRequire(
-      createRequire(path.join(root, 'package.json')).resolve(
-        '@tanstack/react-start/package.json',
-      ),
-    ).resolve('@tanstack/start-client-core/package.json'),
-  ).resolve('seroval')
-)
-const { SERVER_FN_BASE, serverFnId } =
-  await import('../src/server/server-fns.ts')
 const worker = path.join(root, 'dist/server/wrangler.json')
 
 /** A token long enough for the endpoint to accept (src/server/mcp/tokens.ts). */
@@ -177,29 +156,6 @@ function stop(child) {
 const textOf = (result) =>
   (result.content ?? []).map((block) => block.text ?? '').join('\n')
 
-/** The design form's values for a coding sequence, as the browser sends them. */
-function formValues(cds, name) {
-  return {
-    selectedWggwSites: [null],
-    sequenceType: 'dna',
-    codingSequence: cds,
-    proteinSequence: '',
-    name,
-    species: 'human',
-    codonOptimizeWeight: 1,
-    removeCrypticSpliceSites: true,
-    removeCrypticSpliceSitesWeight: 1,
-    minimizeCpgs: true,
-    minimizeCpgsWeight: 1,
-    reduceKmerComplexity: true,
-    reduceKmerComplexityWeight: 1,
-    enforceGcContent: true,
-    '5PrimeStimulatoryIntron': false,
-    '3PrimeStimulatoryIntron': false,
-    spliceJunctionPositions: [Math.floor(cds.length / 2)],
-  }
-}
-
 /** Polls until `read` returns something `done` accepts, or gives up. */
 async function pollUntil(read, done, ms = 180_000) {
   const deadline = Date.now() + ms
@@ -212,23 +168,6 @@ async function pollUntil(read, done, ms = 180_000) {
   throw new Error(`timed out polling: ${JSON.stringify(last).slice(0, 300)}`)
 }
 
-/**
- * The design the browser makes for the same request: the committed .wasm,
- * instantiated by Node through the app's own ABI glue (wasm-harness.mjs) and
- * given the request the form builds (form-handler.ts, through Node's type
- * stripping).
- */
-async function browserDesign(values, seed) {
-  const { loadModule } = await import('./wasm-harness.mjs')
-  const { buildJobParams } =
-    await import('../src/features/design-tool/utils/form-handler.ts')
-  const { design } = await loadModule(
-    path.join(root, 'public/optimizer/rej-optimizer.wasm'),
-  )
-  const request = buildJobParams(values)
-  return design({ ...request, options: { ...request.options, seed } })
-}
-
 async function passcodeGate(url) {
   const page = await request(`${url}/genes/TP53`, { redirect: 'manual' })
   check(
@@ -239,10 +178,12 @@ async function passcodeGate(url) {
   )
   const api = await request(`${url}/api/version`)
   check('a signed-out API call is refused with 401', api.status === 401)
-  const fn = await serverFn(url, 'readCloudDesignFn', { id: 'a'.repeat(64) })
+  // A server-function read is a GET; it must not be taken for a page load.
+  const fn = await request(`${url}/_serverFn/any`, { redirect: 'manual' })
+  const fnBody = await fn.json().catch(() => null)
   check(
-    'a signed-out server-function call is refused with 401 JSON, not a redirect',
-    fn.status === 401 && typeof fn.body?.error === 'string',
+    'a signed-out server-function call gets a 401 refusal, not a redirect',
+    fn.status === 401 && fnBody?.reason === 'unauthorized',
     `HTTP ${fn.status}`,
   )
   const login = await request(`${url}/login`)
@@ -327,153 +268,6 @@ async function passcodeGate(url) {
       (signedIn.headers.get('content-type') ?? '').includes('text/html'),
     `HTTP ${signedIn.status}`,
   )
-}
-
-/**
- * Calls a cloud-design server function as Start's client does: the input
- * serialized, `x-tsr-serverfn`, and the page's origin (Start refuses a
- * server-function call it cannot prove same-origin). Answers the status, the
- * headers and the body: the value for a result, `{ error }` for a refusal.
- */
-async function serverFn(url, name, data, { method, origin = url, body } = {}) {
-  const verb = method ?? (name === 'readCloudDesignFn' ? 'GET' : 'POST')
-  const payload = JSON.stringify(await toJSONAsync({ data }))
-  let endpoint = `${url}${SERVER_FN_BASE}/${serverFnId('cloud-designs.functions.ts', name)}`
-  if (verb === 'GET') endpoint += `?${new URLSearchParams({ payload })}`
-  const response = await request(endpoint, {
-    method: verb,
-    headers: {
-      'x-tsr-serverfn': 'true',
-      accept: 'application/json',
-      origin,
-      ...(verb === 'POST' ? { 'content-type': 'application/json' } : {}),
-    },
-    body: verb === 'POST' ? (body ?? payload) : undefined,
-  })
-  const text = await response.text()
-  let answer = null
-  try {
-    const json = JSON.parse(text)
-    // A serialized answer is the call's `{ result }` envelope.
-    answer = response.headers.has('x-tss-serialized')
-      ? fromCrossJSON(json, { refs: new Map(), plugins: [] }).result
-      : json
-  } catch {
-    answer = text
-  }
-  return { status: response.status, headers: response.headers, body: answer }
-}
-
-async function cloudDesigns(url, cds) {
-  const values = formValues(cds, 'TP53 cloud smoke')
-  const submit = () =>
-    serverFn(url, 'submitCloudDesignFn', { values, seed: 1234 })
-  const read = (id) => serverFn(url, 'readCloudDesignFn', { id })
-
-  const started = Date.now()
-  const created = await submit()
-  const submitted = created.body
-  check(
-    'submitting starts a cloud design (202, no-store)',
-    created.status === 202 &&
-      created.headers.get('cache-control') === 'no-store' &&
-      /^[0-9a-f]{64}$/.test(submitted?.id) &&
-      submitted.existing === false,
-    `HTTP ${created.status} ${JSON.stringify(submitted)}`,
-  )
-  const id = submitted?.id
-  if (!id) return
-
-  const finished = await pollUntil(
-    async () => (await read(id)).body,
-    (design) => design?.status === 'completed' || design?.status === 'failed',
-  )
-  const seconds = (Date.now() - started) / 1000
-  console.log(
-    `[smoke] TP53 cloud design: submit to completed in ${seconds.toFixed(2)} s`,
-  )
-  check(
-    'the cloud design completes with a result, owned by the caller',
-    finished.status === 'completed' &&
-      finished.result?.optimized_sequence?.length === cds.length &&
-      finished.owner?.startsWith('session:') &&
-      finished.ownedByCaller === true &&
-      finished.values?.codingSequence === cds,
-    JSON.stringify({ ...finished, result: undefined, values: undefined }),
-  )
-  const reread = await read(id)
-  check(
-    'a read is never cached',
-    reread.status === 200 && reread.headers.get('cache-control') === 'no-store',
-    `HTTP ${reread.status} ${reread.headers.get('cache-control')}`,
-  )
-
-  const again = await submit()
-  const resubmitted = again.body
-  check(
-    'an identical submission returns the same design without a new run',
-    again.status === 200 &&
-      resubmitted?.id === id &&
-      resubmitted.existing === true &&
-      resubmitted.status === 'completed',
-    `HTTP ${again.status} ${JSON.stringify(resubmitted)}`,
-  )
-
-  const browser = await browserDesign(values, 1234)
-  const same = ['optimized_sequence', 'seq5', 'seq3', 'split_point', 'seed']
-  check(
-    'the cloud design is the design the browser makes (same .wasm, same seed)',
-    same.every(
-      (key) =>
-        JSON.stringify(browser[key]) === JSON.stringify(finished.result?.[key]),
-    ),
-    same
-      .filter(
-        (key) =>
-          JSON.stringify(browser[key]) !==
-          JSON.stringify(finished.result?.[key]),
-      )
-      .join(', '),
-  )
-
-  const tooLong = await serverFn(url, 'submitCloudDesignFn', {
-    values: formValues(`ATG${'AAA'.repeat(15_000)}TAA`, 'too long'),
-  })
-  check(
-    'the cloud cap refuses a sequence over 45 kb (413, with the reason)',
-    tooLong.status === 413 && /45,000/.test(tooLong.body?.error ?? ''),
-    `HTTP ${tooLong.status} ${JSON.stringify(tooLong.body)}`,
-  )
-  const oversized = await serverFn(url, 'submitCloudDesignFn', null, {
-    body: 'x'.repeat(300_000),
-  })
-  check(
-    'a body over the cap is refused before it is read (413)',
-    oversized.status === 413,
-    `HTTP ${oversized.status}`,
-  )
-  const crossSite = await serverFn(
-    url,
-    'submitCloudDesignFn',
-    { values },
-    { origin: 'https://elsewhere.example' },
-  )
-  check(
-    'a cross-site server-function call is refused (403)',
-    crossSite.status === 403,
-    `HTTP ${crossSite.status}`,
-  )
-  const badId = await read('browser-1')
-  check('something that is not an id is not found (404)', badId.status === 404)
-
-  const deleted = await serverFn(url, 'deleteCloudDesignFn', { id })
-  check(
-    'deleting removes the design',
-    deleted.status === 200 && deleted.body === null,
-    `HTTP ${deleted.status} ${JSON.stringify(deleted.body)}`,
-  )
-  const gone = await read(id)
-  check('a deleted design is not found (404)', gone.status === 404)
 }
 
 /**
@@ -771,7 +565,6 @@ async function main() {
       textOf(stale),
     )
 
-    await cloudDesigns(url, CDS)
     await mcpHandOff(url)
 
     // --- the design view ---------------------------------------------------

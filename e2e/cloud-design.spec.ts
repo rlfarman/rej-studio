@@ -1,17 +1,21 @@
 import { expect, test, type Response } from '@playwright/test'
 
 import { designToolCopy } from '../src/features/design-tool/copy'
-import { SERVER_FN_BASE } from '../src/server/server-fns'
 import { signIn } from './sign-in'
 
 // A cloud design, end to end: the toggle, the submit server function, the
-// Workflow running in workerd under `vp dev`, and the result found again
-// after the page that submitted it has closed.
+// Workflow running in workerd (under `vp dev`, or the build under
+// E2E_SERVER=preview), and the result found again after the page that
+// submitted it has closed. The server-side 45 kb cap and the cloud/browser
+// request parity cannot be reached from the page (the form refuses first,
+// and has no seed); src/server/designs/handler.test.ts covers them.
 
-/** A call to one of the cloud-design server functions. */
+/** Start's default server-function base (src/server/auth/gate.ts). */
+const SERVER_FN_BASE = '/_serverFn/'
+
 function isServerFn(response: Response, method: 'GET' | 'POST'): boolean {
   return (
-    new URL(response.url()).pathname.startsWith(`${SERVER_FN_BASE}/`) &&
+    new URL(response.url()).pathname.startsWith(SERVER_FN_BASE) &&
     response.request().method() === method
   )
 }
@@ -37,7 +41,7 @@ test('runs a design in the cloud, and finds it after the page closes', async ({
   await expect(page.getByText(copy.toggleHint)).toBeVisible()
   await toggle.click()
 
-  // The submission carries the sequence; nothing else posted here does.
+  // The submission is the one call that carries the sequence.
   const submitted = page.waitForResponse(
     (response) =>
       isServerFn(response, 'POST') &&
@@ -109,4 +113,18 @@ test('a cloud design link opens on another device, and its owner can delete it',
   await late.goto(`/design-tool?job=${jobId}`)
   expect((await read).status()).toBe(404)
   await fresh.close()
+})
+
+test('a server function refuses a cross-site call', async ({ page }) => {
+  // Start's default same-origin check, which runs before the function is
+  // even looked up; signed in, so the passcode gate lets it through.
+  const response = await page.request.post(`${SERVER_FN_BASE}any`, {
+    headers: {
+      origin: 'https://elsewhere.example',
+      'sec-fetch-site': 'cross-site',
+      'content-type': 'application/json',
+    },
+    data: '{}',
+  })
+  expect(response.status()).toBe(403)
 })

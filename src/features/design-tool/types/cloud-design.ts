@@ -115,5 +115,37 @@ const cloudDesignSubmittedSchema = z.object({
 
 export type CloudDesignSubmitted = z.infer<typeof cloudDesignSubmittedSchema>
 
-/** Every refusal from the cloud-design server functions has this shape. */
-export const cloudDesignRefusalSchema = z.object({ error: z.string() })
+/**
+ * Why a cloud-design call was refused, and the HTTP status it is sent with
+ * (which the poller and the history map back to: 404 is "gone", anything
+ * else is "try again later").
+ */
+export const CLOUD_REFUSAL_STATUS = {
+  invalid: 400,
+  unauthorized: 401,
+  forbidden: 403,
+  not_found: 404,
+  not_started: 409,
+  too_large: 413,
+  rate_limited: 429,
+  failed: 500,
+  unavailable: 503,
+  busy: 503,
+} as const
+
+export type CloudRefusalReason = keyof typeof CLOUD_REFUSAL_STATUS
+
+/**
+ * What every cloud-design server function returns: its value, or a refusal
+ * with a message written for the person reading it. `retryAfter` (seconds)
+ * says when trying again could help. The Worker's passcode gate answers a
+ * signed-out call in this shape too (src/server/auth/gate.ts).
+ */
+export type CloudAnswer<T> =
+  | { ok: true; data: T }
+  | {
+      ok: false
+      reason: CloudRefusalReason
+      message: string
+      retryAfter?: number
+    }
