@@ -16,6 +16,7 @@ import { RecentGenes } from '@/features/gene-search/components/recent-genes-pane
 import { RecentJobs } from '@/features/design-tool/components/recent-jobs-panel'
 import { JobWatcher } from '@/features/design-tool/components/job-watcher'
 import { BrowserRuns } from '@/features/design-tool/components/browser-runs'
+import { SalkLogo } from './salk-logo'
 import { SidebarMenu } from './sidebar-menu'
 import {
   useJobHistory,
@@ -172,20 +173,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    <img
-                      src="/branding/SalkLogo-WCB-K.png"
-                      alt={appCopy.sidebar.salkLogoAlt}
-                      width={16}
-                      height={16}
-                      className="block size-4 object-contain dark:hidden"
-                    />
-                    <img
-                      src="/branding/SalkLogo-WCB-W.png"
-                      alt={appCopy.sidebar.salkLogoAlt}
-                      width={16}
-                      height={16}
-                      className="hidden size-4 object-contain dark:block"
-                    />
+                    <SalkLogo alt={appCopy.sidebar.salkLogoAlt} />
                     <span>{appCopy.sidebar.lab}</span>
                   </a>
                 }

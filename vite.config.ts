@@ -111,6 +111,13 @@ export default defineConfig({
   server: { port: 3000, strictPort: true },
   preview: { port: 3000, strictPort: true },
   resolve: { tsconfigPaths: true },
+  environments: {
+    // Public source maps for the client bundle, as the Next build shipped:
+    // readable stack traces in the browser and in Sentry (at cutover), and
+    // Lighthouse's valid-source-maps audit. The Worker's maps are uploaded
+    // separately by wrangler (`upload_source_maps`).
+    client: { build: { sourcemap: true } },
+  },
   plugins: [
     // First, per Cloudflare's TanStack Start guide: the Worker is Start's
     // `ssr` environment and runs in workerd in dev, preview and production.

@@ -380,6 +380,9 @@ importers:
       shadcn:
         specifier: ^4.23.0
         version: 4.23.0(supports-color@10.2.2)
+      sharp:
+        specifier: 0.35.5
+        version: 0.35.5(@types/node@26.6.6)
       storybook:
         specifier: ^10.6.7
         version: 10.6.7(@types/react@19.3.0)(prettier@3.10.1)(react@19.3.1)(vite-plus@1.6.0(@opentelemetry/api@1.10.0)(@types/node@26.6.6)(@vitest/coverage-v8@5.1.0)(@vitest/ui@5.1.0)(esbuild@0.28.2)(happy-dom@21.0.4)(jiti@2.7.0)(playwright@1.65.1)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1))
