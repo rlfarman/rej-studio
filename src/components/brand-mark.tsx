@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import { Link } from '@tanstack/react-router'
 import { Dna } from 'lucide-react'
 
 import { commonCopy } from '@/copy/common'
@@ -18,7 +18,7 @@ export function BrandMark({
 }) {
   return (
     <Link
-      href="/"
+      to="/"
       className={cn(
         'focus-visible:ring-ring/50 inline-flex items-center gap-2 rounded-xl outline-none focus-visible:ring-[3px]',
         className,

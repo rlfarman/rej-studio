@@ -1,6 +1,14 @@
 import type { SpeciesFilter } from '@/lib/bio/species'
 
-// Window.dataLayer is declared by @next/third-parties/google (Object[]).
+// The GTM dataLayer. GTM itself is gone from the Start app (Cloudflare Web
+// Analytics replaces it at cutover), so pushes land in an array nothing
+// reads. TODO(slice-3): delete trackEvent and its callers
+// with the rest of GTM.
+declare global {
+  interface Window {
+    dataLayer?: object[]
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Analytics events — discriminated union on `event`

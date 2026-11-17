@@ -9,7 +9,6 @@ import {
   useJobHistory,
   type JobHistoryEntry,
 } from '@/features/design-tool/hooks/use-job-history'
-import { cancelJob as cancelJobAction } from '@/features/design-tool/api/jobs'
 import { ExpandableSidebarList } from '@/components/expandable-sidebar-list'
 import { Loader2, CircleAlert, X } from 'lucide-react'
 import { designToolCopy } from '../copy'
@@ -31,9 +30,17 @@ function formatTimeAgo(dateString: string): string {
 
 interface RecentJobsProps {
   onSelectJob?: (entry: JobHistoryEntry) => void
+  /**
+   * Stops a running design on its server backend (best effort). Without
+   * it, cancelling only updates history.
+   *
+   * TODO(slice-3): drop with the server job path. The Start app has no job
+   * backend, so it doesn't pass this.
+   */
+  onCancelJob?: (id: string) => void
 }
 
-export function RecentJobs({ onSelectJob }: RecentJobsProps) {
+export function RecentJobs({ onSelectJob, onCancelJob }: RecentJobsProps) {
   // Selector-scoped reads so this component only re-renders when the
   // relevant slice changes, not on every unrelated store mutation.
   const entries = useJobHistory((s) => s.entries)
@@ -47,7 +54,7 @@ export function RecentJobs({ onSelectJob }: RecentJobsProps) {
   const handleClear = () => {
     for (const id of useJobHistory.getState().getRunningIds()) {
       if (isSeedId(id)) continue
-      void cancelJobAction(id).catch(() => {})
+      onCancelJob?.(id)
     }
     clearHistory()
   }
@@ -66,7 +73,7 @@ export function RecentJobs({ onSelectJob }: RecentJobsProps) {
           retriable: true,
         },
       })
-      void cancelJobAction(entry.id).catch(() => {})
+      onCancelJob?.(entry.id)
     } else {
       removeEntry(entry.id)
     }

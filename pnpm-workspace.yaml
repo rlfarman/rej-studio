@@ -2,9 +2,11 @@
 # package.json is ignored.
 
 # Dependency install scripts are blocked unless listed here (pnpm 10+).
-# esbuild: validates its platform binary.
+# esbuild: validates its platform binary. workerd: downloads the Cloudflare
+# Workers runtime binary that wrangler and the Cloudflare Vite plugin run.
 allowBuilds:
   esbuild: true
+  workerd: true
 
 # Refuse a package version with weaker publish trust evidence (trusted
 # publisher > provenance > none) than an earlier release of the same package,
@@ -13,26 +15,26 @@ allowBuilds:
 # versions with trustPolicyExclude (name@version selectors) only after
 # checking why the evidence dropped.
 trustPolicy: no-downgrade
-trustPolicyExclude:
-  # 3.x maintenance release, published by the same maintainer the day after
-  # 4.3.3 (which had provenance) without provenance. eslint-config-next still
-  # asks for ^3.
-  - 'eslint-import-resolver-typescript@3.10.1'
 
 # Versions shared by package.json and the overrides below, so a transitive
-# copy (e.g. typescript-eslint's typescript, or @types/react pulled in by a
-# library) always matches the direct dependency.
+# copy (e.g. @types/react pulled in by a library) always matches the
+# direct dependency.
 catalog:
   typescript: ^6.0.2
   '@types/react': ^19.2.14
   '@types/react-dom': ^19.2.3
 
 # Security pins for transitive dependencies (see the Dependabot alerts that
-# prompted them) plus the typescript-eslint/@types alignment.
+# prompted them) plus the @types alignment.
 overrides:
+  # Vite+ (vp): every package that imports `vite` or `vitest` must get the
+  # copies vp runs, or identity checks across two Vite instances break
+  # (TanStack Start 404s) and Vitest's mocks/expect split. Keep the core
+  # version equal to vite-plus and vitest equal to `vp toolchain vitest`.
+  'vite@*': 'npm:@voidzero-dev/vite-plus-core@1.6.0'
+  'vitest@*': '5.1.0'
   '@types/react': 'catalog:'
   '@types/react-dom': 'catalog:'
-  'typescript-eslint>typescript': 'catalog:'
   'brace-expansion@^1.0.0': '^1.1.20'
   'brace-expansion@^2.0.0': '^2.1.6'
   'brace-expansion@^5.0.0': '^5.0.11'

@@ -5,8 +5,7 @@ import {
   SidebarMenuItem,
 } from '@/components/ui/sidebar'
 import { useFavoriteGenes } from '@/features/gene-search/stores/favorite-genes-store'
-import Link from 'next/link'
-import { geneHref } from '@/lib/bio/species'
+import { Link } from '@tanstack/react-router'
 import { ExpandableSidebarList } from '@/components/expandable-sidebar-list'
 import { SpeciesIcon } from '@/components/bio/species-icon'
 import { X } from 'lucide-react'
@@ -28,7 +27,13 @@ export function FavoriteGenes() {
           <SidebarMenuButton
             size="sm"
             className="h-auto items-start py-1.5 [&>svg]:size-3"
-            render={<Link href={geneHref(gene.symbol, gene.species)} />}
+            render={
+              <Link
+                to="/genes/$symbol"
+                params={{ symbol: gene.symbol }}
+                search={{ species: gene.species }}
+              />
+            }
           >
             {gene.species && (
               <SpeciesIcon
