@@ -14,8 +14,7 @@ import {
 import type { SpeciesFilter } from '@/lib/bio/species'
 import { useSpeciesContext } from '@/stores/species-store'
 import { geneSearchCopy } from '../copy'
-import { searchCorpus } from '../corpus/client'
-import { getBrowserCorpus } from '../corpus/gene-data-url'
+import { searchGenes } from '../api/search-worker-client'
 
 interface UseGeneSearchProps {
   defaultQuery?: string
@@ -25,20 +24,16 @@ const EMPTY_RESULTS: GeneSearchResult[] = []
 const EMPTY_SUGGESTIONS: SimilarGene[] = []
 
 /**
- * Run one palette search, right here against the corpus index (downloaded
- * once and shared with the rest of the app), so there is no request per
- * keystroke. A failure to fetch the index rejects, which the palette
- * reports as a network error.
+ * Run one palette search against the corpus index, in the search worker
+ * (downloaded once and shared with the rest of the app), so there is no
+ * request per keystroke and no main-thread work. A failure to fetch the
+ * index rejects, which the palette reports as a network error.
  */
 function searchPalette(
   query: string,
   species: SpeciesFilter,
 ): Promise<SearchGenesResult> {
-  return searchCorpus(getBrowserCorpus(), {
-    q: query,
-    species,
-    limit: SEARCH_LIMITS.palette,
-  })
+  return searchGenes({ q: query, species, limit: SEARCH_LIMITS.palette })
 }
 
 export function useGeneSearch({ defaultQuery }: UseGeneSearchProps = {}) {

@@ -2,7 +2,7 @@ import { queryOptions } from '@tanstack/react-query'
 import type { SpeciesFilter } from '@/lib/bio/species'
 import { SEARCH_LIMITS, type GeneSearchResult } from '../types/search'
 import type { IsoformListItem } from '../types/domain-types'
-import { searchCorpus } from './client'
+import { searchGenes, similarGenes } from '../api/search-worker-client'
 import { getBrowserCorpus } from './gene-data-url'
 import { parseIsoformIdentity, type IsoformIdentityMatrix } from './identity'
 
@@ -88,7 +88,7 @@ export function similarGenesQuery(symbol: string) {
       const cleaned = symbol.trim().toLowerCase().slice(0, 20)
       if (!cleaned) return []
       try {
-        return await getBrowserCorpus().similarGenes(cleaned)
+        return await similarGenes(cleaned)
       } catch {
         return []
       }
@@ -102,11 +102,7 @@ export function geneSearchPageQuery(query: string, species: SpeciesFilter) {
   return queryOptions({
     queryKey: ['corpus', 'search-page', query, species],
     queryFn: () =>
-      searchCorpus(getBrowserCorpus(), {
-        q: query,
-        species,
-        limit: SEARCH_LIMITS.page,
-      }),
+      searchGenes({ q: query, species, limit: SEARCH_LIMITS.page }),
     staleTime: Infinity,
   })
 }

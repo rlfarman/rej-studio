@@ -29,7 +29,8 @@ export function usesSampleCorpus(): boolean {
 }
 
 /** Reads corpus files over HTTP; a 404 is "no such file". */
-function httpReader(baseUrl: string): CorpusReader {
+/** Reads corpus files over HTTP; also used by the search worker. */
+export function httpReader(baseUrl: string): CorpusReader {
   return async (path) => {
     const response = await fetch(`${baseUrl}/${path}`)
     if (response.status === 404) return null

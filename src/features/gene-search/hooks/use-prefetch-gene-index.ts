@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 
-import { getBrowserCorpus } from '../corpus/gene-data-url'
+import { prefetchGeneIndex } from '../api/search-worker-client'
 
 /** Runs `task` when the browser is idle, or soon if it has no idle callback. */
 function whenIdle(task: () => void): () => void {
@@ -17,31 +17,22 @@ function whenIdle(task: () => void): () => void {
  * there before the first search rather than fetched by it.
  *
  * The full index is ~1 MB compressed and took seconds on a cold fetch; a
- * search typed before it arrived waited for all of it. Once it is in, the
- * full-text postings are built in a second idle slot: that is ~200 ms of
- * main-thread work the first full-text search would otherwise do while the
- * person types.
+ * search typed before it arrived waited for all of it. The search worker
+ * downloads, parses and indexes it (../workers/search.worker.ts), so none of
+ * that work lands on the main thread.
  *
  * Failures are left for the search itself to report: a prefetch that fails
  * is forgotten (GeneCorpus drops a failed load), and the next search tries
  * again.
  */
 export function usePrefetchGeneIndex() {
-  useEffect(() => {
-    let cancelWarm: (() => void) | undefined
-    const cancelLoad = whenIdle(() => {
-      getBrowserCorpus()
-        .loadIndex()
-        .then((index) => {
-          cancelWarm = whenIdle(() => index.warm())
-        })
-        .catch(() => {
+  useEffect(
+    () =>
+      whenIdle(() => {
+        prefetchGeneIndex().catch(() => {
           // The search reports it, when there is one.
         })
-    })
-    return () => {
-      cancelLoad()
-      cancelWarm?.()
-    }
-  }, [])
+      }),
+    [],
+  )
 }
