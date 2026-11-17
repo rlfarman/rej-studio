@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { useDebouncedCallback } from 'use-debounce'
 import {
   keepPreviousData,
@@ -13,7 +13,6 @@ import {
 } from '@/features/gene-search/types/search'
 import type { SpeciesFilter } from '@/lib/bio/species'
 import { useSpeciesContext } from '@/stores/species-store'
-import { trackEvent } from '@/lib/analytics'
 import { geneSearchCopy } from '../copy'
 import { searchCorpus } from '../corpus/client'
 import { getBrowserCorpus } from '../corpus/gene-data-url'
@@ -77,20 +76,6 @@ export function useGeneSearch({ defaultQuery }: UseGeneSearchProps = {}) {
     // inline loader in the input to avoid flash-of-loading on fast queries.
     placeholderData: keepPreviousData,
   })
-
-  // Track completed searches (fires once per unique query+species+results).
-  const lastTrackedQuery = useRef('')
-  useEffect(() => {
-    if (!data || !trimmed) return
-    if (trimmed === lastTrackedQuery.current) return
-    lastTrackedQuery.current = trimmed
-    trackEvent({
-      event: 'gene_search',
-      query: trimmed,
-      species,
-      result_count: data.results.length,
-    })
-  }, [data, trimmed, species])
 
   // A failed search (the index didn't load) versus genuinely no results.
   const error = isError ? geneSearchCopy.searchErrors.network : null

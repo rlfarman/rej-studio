@@ -4,7 +4,6 @@ import { Download } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { downloadTextFile } from '@/lib/download-file'
-import { trackEvent } from '@/lib/analytics'
 import {
   assessDesignSuitability,
   getSuitabilityConfig,
@@ -56,7 +55,6 @@ export function IsoformSummary({ geneSymbol, isoforms }: IsoformSummaryProps) {
       isoformsFastaFilename(geneSymbol),
       buildIsoformsFasta(geneSymbol, isoforms),
     )
-    trackEvent({ event: 'sequence_download', isoform_id: `${geneSymbol}:all` })
   }
 
   return (

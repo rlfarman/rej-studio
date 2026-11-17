@@ -23,7 +23,6 @@ import {
   notifyRunSettled,
   requestOpenJob,
 } from '@/features/design-tool/utils/finish-notification'
-import { trackEvent } from '@/lib/analytics'
 import { designToolCopy } from '@/features/design-tool/copy'
 
 const copy = designToolCopy.jobErrors
@@ -180,7 +179,6 @@ export function useJob({
           result: outcome.data,
           formValues: values,
         })
-        trackEvent({ event: 'job_submit', job_id: id })
         notifyRunSettled({
           id,
           title: runCopy.completedTitle,
@@ -197,11 +195,6 @@ export function useJob({
         formValues: values,
       })
       if (!cancelled) {
-        trackEvent({
-          event: 'job_failed',
-          job_id: id,
-          error_code: outcome.error.code,
-        })
         notifyRunSettled({
           id,
           title: runCopy.failedTitle,

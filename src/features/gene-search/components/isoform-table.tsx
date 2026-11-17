@@ -40,7 +40,6 @@ import { Badge } from '@/components/ui/badge'
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
 import { formatFasta } from '@/lib/bio/fasta'
 import { downloadTextFile } from '@/lib/download-file'
-import { trackEvent } from '@/lib/analytics'
 import {
   assessDesignSuitability,
   getSuitabilityConfig,
@@ -394,12 +393,6 @@ function IsoformRow({
                           href={preOptimizedZipUrl(isoform.id)}
                           download={`${isoform.id}_v1.0.zip`}
                           aria-label={copy.downloadAria(isoform.id)}
-                          onClick={() =>
-                            trackEvent({
-                              event: 'precomputed_download',
-                              isoform_id: isoform.id,
-                            })
-                          }
                         />
                       }
                     />
@@ -451,12 +444,6 @@ function IsoformRow({
                     <a
                       href={preOptimizedZipUrl(isoform.id)}
                       download={`${isoform.id}_v1.0.zip`}
-                      onClick={() =>
-                        trackEvent({
-                          event: 'precomputed_download',
-                          isoform_id: isoform.id,
-                        })
-                      }
                     >
                       <PackageOpen className="size-4" />
                       {copy.downloadLong}
@@ -495,10 +482,6 @@ function IsoformRow({
                       `${isoform.id}.fasta`,
                       formatFasta(isoform.id, isoform.codingSequence),
                     )
-                    trackEvent({
-                      event: 'sequence_download',
-                      isoform_id: isoform.id,
-                    })
                   }}
                 >
                   <Download className="size-4" />
@@ -595,12 +578,6 @@ function ExpandedDetails({
                 href={preOptimizedZipUrl(isoform.id)}
                 download={`${isoform.id}_v1.0.zip`}
                 aria-label={copy.downloadAria(isoform.id)}
-                onClick={() =>
-                  trackEvent({
-                    event: 'precomputed_download',
-                    isoform_id: isoform.id,
-                  })
-                }
               >
                 <PackageOpen className="size-4" />
                 {copy.downloadLong}

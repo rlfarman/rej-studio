@@ -1,7 +1,7 @@
 /**
  * Shared test setup — auto-loaded by vitest via setupFiles.
  *
- * Mocks analytics and the logger so tests stay quiet and side-effect free.
+ * Silences the logger and cleans up rendered components between tests.
  */
 import { afterEach, vi } from 'vite-plus/test'
 import { cleanup } from '@testing-library/react'
@@ -16,15 +16,6 @@ import 'fake-indexeddb/auto'
 afterEach(() => {
   cleanup()
 })
-
-// --- Analytics ---
-// trackEvent pushes to window.dataLayer; mock it to prevent side effects.
-vi.mock('@/lib/analytics', () => ({
-  trackEvent: vi.fn(),
-}))
-vi.mock('@/lib/analytics/events', () => ({
-  trackEvent: vi.fn(),
-}))
 
 // --- Logger ---
 // Silence structured logs in tests.
