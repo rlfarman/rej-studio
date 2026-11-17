@@ -76,6 +76,13 @@ test('a gene page lists its isoforms, with charts and phenotypes', async ({
   page,
 }) => {
   const serverCalls = watchForServerCalls(page)
+  const associationFiles: string[] = []
+  page.on('request', (request) => {
+    const { pathname } = new URL(request.url())
+    // Data only: under `vp dev` the feature's modules match too.
+    if (request.resourceType() === 'fetch' && pathname.includes('associations'))
+      associationFiles.push(pathname)
+  })
   await page.goto('/genes/BRCA1?species=human')
   await expect(
     page.getByRole('heading', { level: 1, name: 'BRCA1' }),
@@ -107,6 +114,10 @@ test('a gene page lists its isoforms, with charts and phenotypes', async ({
       name: diseaseAssociationsCopy.geneDetail.heading,
     }),
   ).toBeVisible()
+  // From BRCA1's own small file, not the explorer's whole table.
+  expect(associationFiles).toEqual([
+    expect.stringMatching(/^\/assets\/disease-associations\/\w+\/br\.json$/),
+  ])
 
   // A chart row opens that isoform in the table, without a page load.
   const firstRowLink = page.locator('a[href*="#isoform-row-"]').first()

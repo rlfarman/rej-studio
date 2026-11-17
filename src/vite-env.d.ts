@@ -10,6 +10,12 @@ interface ImportMetaEnv {
   /** "true" shows the design tool's second split point (triple-AAV). */
   readonly VITE_ENABLE_MULTI_SPLIT?: string
 
+  /**
+   * Where the build put the disease-associations shards, and which exist
+   * (`associationShards` in vite.config.ts). Undefined under Vitest.
+   */
+  readonly REJ_ASSOCIATION_SHARDS: import('./features/disease-associations/shards').AssociationShardManifest
+
   // Defined for the Worker only, at build time (`workerBuildInfo` in
   // vite.config.ts), for /api/version. Undefined in the client bundle.
   /** GIT_COMMIT_SHA as given to the build; may be blank. */
