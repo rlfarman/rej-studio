@@ -167,3 +167,38 @@ describe('the methods paragraph', () => {
     expect(text).not.toContain('Invalid Date')
   })
 })
+
+describe('the methods paragraph for a run in the browser', () => {
+  const rust = record({
+    versions: {
+      runtime: 'rust',
+      optimizer: '0.1.0',
+      wasm_sha256: 'cd'.repeat(32),
+      commit: '05a8be17e9de9563ffe9a2',
+    },
+  })
+
+  it('names the Rust optimizer, not a DNAChisel or Python version it did not use', () => {
+    const text = buildMethodsParagraph(rust)
+
+    expect(text).toContain(
+      'using the REJ Studio optimizer 0.1.0, a Rust port of DNAChisel.',
+    )
+    expect(text).not.toMatch(/DNAChisel \d/)
+    expect(text).not.toContain('Python')
+  })
+
+  it('pins the run to the WebAssembly build and the commit', () => {
+    expect(buildMethodsParagraph(rust)).toContain(
+      `Run provenance: WebAssembly build ${'cd'.repeat(6)}; commit 05a8be1.`,
+    )
+  })
+
+  it('leaves out the provenance sentence when nothing pins the build', () => {
+    const text = buildMethodsParagraph(
+      record({ versions: { runtime: 'rust', optimizer: '0.1.0' } }),
+    )
+
+    expect(text).not.toContain('Run provenance')
+  })
+})

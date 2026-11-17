@@ -21,6 +21,15 @@ const RECORD: RunRecord = {
   },
 }
 
+const RUST_RECORD: RunRecord = {
+  ...RECORD,
+  versions: {
+    runtime: 'rust',
+    optimizer: '0.1.0',
+    wasm_sha256: 'cd'.repeat(32),
+  },
+}
+
 const card = (record: RunRecord = RECORD) =>
   render(<RunRecordCard record={record} name="TP53" />)
 
@@ -102,6 +111,28 @@ describe('the run record on screen', () => {
       screen.getByRole('button', { name: 'Copy the methods paragraph' }),
     ).toBeTruthy()
     expect(screen.getByText(/was optimized with/)).toBeTruthy()
+  })
+
+  it('names the runtime, and shows a Python run as one', () => {
+    card()
+
+    const facts = within(factsTable())
+    expect(facts.getByText('Runtime')).toBeTruthy()
+    expect(facts.getByText(/Python \(DNAChisel\)/)).toBeTruthy()
+    expect(facts.queryByText('WebAssembly build')).toBeNull()
+  })
+
+  it('shows a Rust run by what pins it, with nothing invented for Python', () => {
+    card(RUST_RECORD)
+
+    const facts = within(factsTable())
+    expect(facts.getByText(/Rust port of DNAChisel/)).toBeTruthy()
+    expect(facts.getByText('0.1.0')).toBeTruthy()
+    expect(facts.getByText('cd'.repeat(32))).toBeTruthy()
+    expect(facts.queryByText('DNAChisel')).toBeNull()
+    expect(facts.queryByText('Python')).toBeNull()
+    expect(facts.queryByText('Algorithm')).toBeNull()
+    expect(screen.getByText(/a Rust port of DNAChisel\./)).toBeTruthy()
   })
 
   it('says so plainly when a result predates run records', () => {

@@ -121,11 +121,28 @@ const runRecordInputSchema = z.object({
   length: z.number(),
 })
 
-/** What produced the result: the code and the libraries, pinned. */
+/**
+ * What produced the result: the code and the libraries, pinned.
+ *
+ * The two runtimes are pinned by different things, so most fields belong to
+ * one of them and are absent from the other's records rather than filled in:
+ *   - Python (`python/run_record.py`): `algorithm_sha256`, `dnachisel`,
+ *     `python`. These records predate `runtime` and omit it.
+ *   - Rust (`rust/optimizer/src/contract.rs`, `RunRecordVersions`):
+ *     `runtime: 'rust'`, `optimizer` (the crate version) and `wasm_sha256`
+ *     (the module that ran, supplied by the worker).
+ */
 const runRecordVersionsSchema = z.object({
-  algorithm_sha256: z.string(),
-  dnachisel: z.string(),
-  python: z.string(),
+  /** Absent means Python. */
+  runtime: z.enum(['python', 'rust']).optional(),
+  /** Python: a short digest of `python/algorithm.py`. */
+  algorithm_sha256: z.string().optional(),
+  dnachisel: z.string().optional(),
+  python: z.string().optional(),
+  /** Rust: the `rej-optimizer` crate version. */
+  optimizer: z.string().optional(),
+  /** Rust: SHA-256 of the WebAssembly module that ran the design. */
+  wasm_sha256: z.string().optional(),
   /**
    * Present when the deployment knows its own commit. Absent from Modal,
    * which returns the record as built; null from FastAPI, which fills in
@@ -137,9 +154,10 @@ const runRecordVersionsSchema = z.object({
 /**
  * What a run was, in enough detail to repeat or cite it.
  *
- * Built by the Python backend (`python/run_record.py`); every field is a fact
- * about the run, so anything shown to the user is derived from these and
- * nothing else. A run is repeatable from this record: submitting the same
+ * Built by the Python backend (`python/run_record.py`) or by the Rust port
+ * that runs in the browser (`rust/optimizer/src/run_record.rs`); every field
+ * is a fact about the run, so anything shown to the user is derived from these
+ * and nothing else. A run is repeatable from this record: submitting the same
  * sequence and options with the recorded seed reproduces the design.
  */
 export const runRecordSchema = z.object({
@@ -193,6 +211,13 @@ export const processResultSchema = z.object({
 })
 
 export type BackendProcessResult = z.infer<typeof processResultSchema>
+
+/** Which runtime produced a run record. Python records predate the field. */
+export function runRecordRuntime(
+  record: z.infer<typeof runRecordSchema>,
+): 'python' | 'rust' {
+  return record.versions.runtime ?? 'python'
+}
 
 // --- Response: job lifecycle ----------------------------------------------
 

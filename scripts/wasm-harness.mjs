@@ -10,11 +10,13 @@
 import fs from 'node:fs'
 
 export async function loadOptimizer(wasmPath, onProgress) {
-  // The module calls back into env.report_progress as it works; a host that
-  // does not supply it cannot instantiate the module at all.
+  // The module imports env.report_progress and env.now_ms; a host that does
+  // not supply both cannot instantiate the module at all.
   let memoryRef = null
   const imports = {
     env: {
+      // The clock the run record and timing read; wasm has none of its own.
+      now_ms: () => Date.now(),
       report_progress(fraction, stagePointer, stageLength) {
         if (!onProgress || !memoryRef) return
         const bytes = new Uint8Array(

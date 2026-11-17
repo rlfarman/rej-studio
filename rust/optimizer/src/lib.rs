@@ -16,6 +16,7 @@ mod pattern;
 mod problem;
 pub mod rej;
 mod rng;
+mod run_record;
 mod spec;
 mod tables;
 
@@ -24,7 +25,7 @@ pub mod contract;
 use sha2::{Digest, Sha256};
 
 use crate::contract::{
-    ObjectiveEntry, ObjectiveLocation, ObjectivesReport, ProcessOptions, ProcessResult,
+    BuildInfo, ObjectiveEntry, ObjectiveLocation, ObjectivesReport, ProcessOptions, ProcessResult,
     WggwSiteInfo,
 };
 use crate::location::Location;
@@ -75,7 +76,7 @@ const SPLICE_PATTERNS: &[&str] = &[
 const GC_MIN: f64 = 0.35;
 const GC_MAX: f64 = 0.60;
 /// Default k for the k-mer uniqueness objective.
-const DEFAULT_KMER_K: usize = 10;
+pub(crate) const DEFAULT_KMER_K: usize = 10;
 
 /// Progress caption for the optimization phase, matching python/algorithm.py
 /// so the UI reads the same whichever backend ran the design.
@@ -209,15 +210,28 @@ fn build_report(problem: &Problem) -> ObjectivesReport {
 /// Design a coding sequence: optimize it, then split it for RNA end-joining.
 ///
 /// `on_progress` receives a fraction in 0..1 and a stage label, matching the
-/// Python callback so the UI's progress bar behaves the same.
+/// Python callback so the UI's progress bar behaves the same. The run record
+/// carries no build facts; see [`process_with_build`].
 pub fn process(
     cds: &str,
     name: &str,
     options: &ProcessOptions,
+    on_progress: impl FnMut(f64, &str),
+) -> Result<ProcessResult, OptimizeError> {
+    process_with_build(cds, name, options, &BuildInfo::default(), on_progress)
+}
+
+/// [`process`], recording facts about the build that only the host knows
+/// (the module's digest, the deployment's commit) in the run record.
+pub fn process_with_build(
+    cds: &str,
+    name: &str,
+    options: &ProcessOptions,
+    build: &BuildInfo,
     mut on_progress: impl FnMut(f64, &str),
 ) -> Result<ProcessResult, OptimizeError> {
-    let start = now_seconds();
-    let cds = cds.trim().to_uppercase().replace('U', "T");
+    let started_at_ms = now_ms();
+    let cds = contract::as_dna(cds.trim());
 
     if cds.is_empty() {
         return Err(OptimizeError::InvalidInput(
@@ -238,29 +252,26 @@ pub fn process(
         ));
     }
 
+    // Derived from the options as sent, which is what Python hashes; the
+    // design itself runs on the options as applied.
     let seed = options.seed.unwrap_or_else(|| derive_seed(&cds, options));
+    let applied = options.applied();
     let mut rng = NumpyRng::seed(seed);
     on_progress(0.05, "Checking sequence");
 
     // A caller-chosen WGGW site is applied up front and then frozen, so the
     // optimizer cannot undo the user's choice.
     let requested_split = options.split_point.unwrap_or(cds.len() / 2);
-    let (working, selected_site, locked) = match &options.selected_wggw_site {
+    let (working, selected_site, locked) = match &applied.selected_wggw_site {
         Some(selected) => {
             let input = SelectedWggwSite {
                 position: selected.position,
                 motif_start: selected.motif_start,
                 hexamer_start: selected.hexamer_start,
-                motif: selected.motif.to_uppercase().replace('U', "T"),
-                new_hexamer: selected.new_hexamer.to_uppercase().replace('U', "T"),
-                original_codons: (
-                    selected.original_codons.0.to_uppercase().replace('U', "T"),
-                    selected.original_codons.1.to_uppercase().replace('U', "T"),
-                ),
-                new_codons: (
-                    selected.new_codons.0.to_uppercase().replace('U', "T"),
-                    selected.new_codons.1.to_uppercase().replace('U', "T"),
-                ),
+                motif: selected.motif.clone(),
+                new_hexamer: selected.new_hexamer.clone(),
+                original_codons: selected.original_codons.clone(),
+                new_codons: selected.new_codons.clone(),
             };
             let (recoded, site, locked) = rej::apply_selected_site(&cds, &input, requested_split)
                 .map_err(OptimizeError::InvalidInput)?;
@@ -270,7 +281,7 @@ pub fn process(
     };
 
     on_progress(0.10, "Preparing constraints");
-    let mut problem = build_problem(&working, options, locked)?;
+    let mut problem = build_problem(&working, &applied, locked)?;
 
     on_progress(0.15, "Resolving constraints");
     problem
@@ -300,10 +311,10 @@ pub fn process(
         &optimized,
         &SplitOptions {
             split_point: requested_split,
-            wggw_threshold: options.wggw_threshold,
-            ensure_wggw: options.ensure_wggw,
-            stim_5: options.stim_5,
-            stim_3: options.stim_3,
+            wggw_threshold: applied.wggw_threshold,
+            ensure_wggw: applied.ensure_wggw,
+            stim_5: applied.stim_5,
+            stim_3: applied.stim_3,
             selected_site,
         },
     );
@@ -315,13 +326,13 @@ pub fn process(
 
     // Re-score the design as it will be delivered, since the split step can
     // recode codons after the optimizer finished.
-    let final_problem = build_problem(&split.final_sequence, options, locked)?;
+    let final_problem = build_problem(&split.final_sequence, &applied, locked)?;
     let objectives_after = final_problem.objectives_text_summary();
     let report_after = build_report(&final_problem);
+    let elapsed_seconds = ((now_ms() - started_at_ms) / 1000.0).max(0.0);
 
     Ok(ProcessResult {
         name: name.to_string(),
-        original_sequence: cds,
         optimized_sequence: split.final_sequence,
         seq5: split.seq5,
         seq3: split.seq3,
@@ -349,8 +360,17 @@ pub fn process(
                 })
                 .collect()
         }),
-        processing_time_seconds: ((now_seconds() - start) * 100.0).round() / 100.0,
+        processing_time_seconds: (elapsed_seconds * 100.0).round() / 100.0,
         seed: Some(seed),
+        run_record: run_record::build_run_record(
+            &cds,
+            &applied,
+            seed,
+            started_at_ms,
+            elapsed_seconds,
+            build,
+        ),
+        original_sequence: cds,
     })
 }
 
@@ -423,30 +443,45 @@ pub fn split_for_rej(
     )
 }
 
-/// Wall-clock seconds. The browser has no system clock API through `std`, so
-/// timing is reported as zero there and measured by the caller instead.
-fn now_seconds() -> f64 {
+/// Wall-clock milliseconds since the Unix epoch.
+///
+/// `std` has no clock on wasm32-unknown-unknown, so there the host supplies
+/// one through the `env.now_ms` import (`Date.now()` in a browser).
+fn now_ms() -> f64 {
     #[cfg(not(target_arch = "wasm32"))]
     {
         use std::time::{SystemTime, UNIX_EPOCH};
         SystemTime::now()
             .duration_since(UNIX_EPOCH)
-            .map(|elapsed| elapsed.as_secs_f64())
+            .map(|elapsed| elapsed.as_secs_f64() * 1000.0)
             .unwrap_or(0.0)
     }
     #[cfg(target_arch = "wasm32")]
     {
-        0.0
+        host_clock::now_ms()
     }
 }
 
-/// The request shape the browser sends, mirroring the FastAPI endpoint.
+#[cfg(target_arch = "wasm32")]
+mod host_clock {
+    #[link(wasm_import_module = "env")]
+    unsafe extern "C" {
+        /// Host callback: milliseconds since the Unix epoch. Takes and
+        /// returns plain values, so calling it cannot violate memory safety.
+        pub safe fn now_ms() -> f64;
+    }
+}
+
+/// The request shape the browser sends, mirroring the FastAPI endpoint, plus
+/// the build facts the host passes in for the run record.
 #[derive(serde::Deserialize)]
 struct JsonRequest {
     #[serde(rename = "CDS")]
     cds: String,
     name: String,
     options: ProcessOptions,
+    #[serde(default)]
+    build: BuildInfo,
 }
 
 /// Design a sequence from a JSON request, returning a JSON response.
@@ -457,7 +492,13 @@ pub fn process_json(request: &str, on_progress: impl FnMut(f64, &str)) -> String
     let parsed: Result<JsonRequest, _> = serde_json::from_str(request);
     let response = match parsed {
         Err(error) => serde_json::json!({ "error": format!("invalid request: {error}") }),
-        Ok(request) => match process(&request.cds, &request.name, &request.options, on_progress) {
+        Ok(request) => match process_with_build(
+            &request.cds,
+            &request.name,
+            &request.options,
+            &request.build,
+            on_progress,
+        ) {
             Ok(result) => serde_json::to_value(result)
                 .unwrap_or_else(|error| serde_json::json!({ "error": error.to_string() })),
             Err(error) => serde_json::json!({ "error": error.to_string() }),
@@ -480,15 +521,16 @@ pub fn process_json(request: &str, on_progress: impl FnMut(f64, &str)) -> String
 //   3. `free_response(ptr)` once the response has been copied out, and
 //      `dealloc(ptr, len)` for the request buffer.
 //
-// The host must also supply one import, `env.report_progress`, which the
-// optimizer calls as it works. A design can take seconds to minutes, so
-// without it the progress bar would sit still for the whole run.
+// The host must also supply two imports: `env.report_progress`, which the
+// optimizer calls as it works (a design can take seconds to minutes, so
+// without it the progress bar would sit still for the whole run), and
+// `env.now_ms`, the clock the run record and timing read.
 #[cfg(target_arch = "wasm32")]
 mod wasm_abi {
     use super::process_json;
 
     // Declared against the "env" module, which is what a plain
-    // `{ env: { report_progress } }` imports object supplies.
+    // `{ env: { report_progress, now_ms } }` imports object supplies.
     #[link(wasm_import_module = "env")]
     unsafe extern "C" {
         /// Host callback: `(fraction in 0..1, pointer to a UTF-8 stage label,
@@ -696,6 +738,84 @@ mod tests {
             !stages.iter().any(|stage| stage.contains('[')),
             "a raw objective label leaked into the progress stages: {stages:?}"
         );
+    }
+
+    #[test]
+    fn every_design_carries_a_run_record() {
+        let record = process(CDS, "test", &options(), |_, _| {})
+            .unwrap()
+            .run_record;
+        assert_eq!(record.record_version, run_record::RUN_RECORD_VERSION);
+        assert_eq!(record.seed, 20_261_116);
+        assert_eq!(record.input.length, CDS.len());
+        assert_eq!(record.input.sha256, run_record::sequence_digest(CDS));
+        assert_eq!(record.versions.runtime, "rust");
+        assert_eq!(record.versions.optimizer, env!("CARGO_PKG_VERSION"));
+        assert!(record.started_at.ends_with('Z'), "{}", record.started_at);
+        assert!(record.duration_seconds >= 0.0);
+    }
+
+    #[test]
+    fn the_record_identifies_the_input_however_it_was_written() {
+        let rna = format!("  {}\n", CDS.to_lowercase().replace('t', "u"));
+        let from_rna = process(&rna, "test", &options(), |_, _| {}).unwrap();
+        let from_dna = process(CDS, "test", &options(), |_, _| {}).unwrap();
+        assert_eq!(from_rna.run_record.input, from_dna.run_record.input);
+    }
+
+    #[test]
+    fn the_record_lists_the_options_as_applied() {
+        let mut sent = options();
+        sent.reduce_kmer_complexity_k = None;
+        let record = process(CDS, "test", &sent, |_, _| {}).unwrap().run_record;
+        let options = &record.options;
+        // The default k the optimizer used, not the absence the caller sent.
+        assert_eq!(options["reduce_kmer_complexity_k"], DEFAULT_KMER_K);
+        assert_eq!(options["codon_optimize"], "human");
+        assert_eq!(options["minimize_CpGs"], true);
+        assert_eq!(options["split_point"], 45);
+        // The seed is a field of its own.
+        assert!(!options.contains_key("seed"));
+        let keys: Vec<_> = options.keys().collect();
+        assert!(keys.is_sorted(), "options not sorted: {keys:?}");
+    }
+
+    #[test]
+    fn a_derived_seed_is_the_one_recorded() {
+        let mut without_seed = options();
+        without_seed.seed = None;
+        let result = process(CDS, "test", &without_seed, |_, _| {}).unwrap();
+        assert_eq!(result.run_record.seed, derive_seed(CDS, &without_seed));
+        assert_eq!(result.seed, Some(result.run_record.seed));
+    }
+
+    #[test]
+    fn the_host_supplies_the_build_facts() {
+        let request = serde_json::json!({
+            "CDS": CDS,
+            "name": "test",
+            "options": { "seed": 1 },
+            "build": { "wasm_sha256": "abc123", "commit": "deadbeef" },
+        });
+        let response: serde_json::Value =
+            serde_json::from_str(&process_json(&request.to_string(), |_, _| {})).unwrap();
+        let versions = &response["run_record"]["versions"];
+        assert_eq!(versions["runtime"], "rust");
+        assert_eq!(versions["wasm_sha256"], "abc123");
+        assert_eq!(versions["commit"], "deadbeef");
+        assert!(versions.get("dnachisel").is_none());
+        assert!(versions.get("python").is_none());
+    }
+
+    #[test]
+    fn a_request_without_build_facts_still_gets_a_record() {
+        let request = serde_json::json!({ "CDS": CDS, "name": "test", "options": {} });
+        let response: serde_json::Value =
+            serde_json::from_str(&process_json(&request.to_string(), |_, _| {})).unwrap();
+        let versions = &response["run_record"]["versions"];
+        assert_eq!(versions["runtime"], "rust");
+        assert!(versions.get("wasm_sha256").is_none());
+        assert!(versions.get("commit").is_none());
     }
 
     #[test]
