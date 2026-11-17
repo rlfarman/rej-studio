@@ -120,7 +120,7 @@ export const validationSchema = z
   .superRefine((data, ctx) => {
     // The optimizer accepts exactly one split point and answers 422 for
     // more, so block the submission here instead of letting the backend
-    // reject it. The multi-split UI (NEXT_PUBLIC_ENABLE_MULTI_SPLIT) can
+    // reject it. The multi-split UI (VITE_ENABLE_MULTI_SPLIT) can
     // still add a second position — this is what tells the user why it
     // won't run.
     if (data.spliceJunctionPositions.length > 1) {

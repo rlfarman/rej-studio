@@ -8,6 +8,11 @@ function formatProcessingTime(seconds: number): string {
 }
 
 export const designToolCopy = {
+  metadata: {
+    title: 'Design Tool',
+    description:
+      'Optimize coding sequences for RNA End-Joining. Enter a custom CDS or start from a pre-loaded isoform.',
+  },
   validation: {
     dna: {
       required: 'Coding sequence is required.',

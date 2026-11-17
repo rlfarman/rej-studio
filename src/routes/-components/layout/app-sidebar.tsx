@@ -14,7 +14,6 @@ import {
 import { FavoriteGenes } from '@/features/gene-search/components/favorites-panel'
 import { RecentGenes } from '@/features/gene-search/components/recent-genes-panel'
 import { RecentJobs } from '@/features/design-tool/components/recent-jobs-panel'
-import { JobWatcher } from '@/features/design-tool/components/job-watcher'
 import { BrowserRuns } from '@/features/design-tool/components/browser-runs'
 import { SalkLogo } from './salk-logo'
 import { SidebarMenu } from './sidebar-menu'
@@ -121,8 +120,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     <>
       <CloseMobileSidebarOnNavigate />
       {/* Outside <Sidebar>: on phones the sidebar is a sheet whose content
-          unmounts while closed, which stopped running jobs from polling. */}
-      <JobWatcher />
+          unmounts while closed. */}
       <BrowserRuns />
       <Sidebar collapsible="icon" {...props}>
         <SidebarHeader>

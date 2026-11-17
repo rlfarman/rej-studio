@@ -1,11 +1,8 @@
-// useJob with the in-browser optimizer turned on.
-//
-// The server path is covered in use-job.test.ts; this covers the branch that
-// runs the design here instead: progress has to reach the history store, the
-// finished design has to land on the same entry, cancelling has to stop the
-// worker, and the backend must not be called at all.
+// useJob: designs run in the browser. Progress has to reach the history
+// store, the finished design has to land on the same entry, cancelling has
+// to stop the worker, and nothing may go over the network.
 
-import { describe, expect, it, vi, beforeEach } from 'vite-plus/test'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test'
 import { renderHook, waitFor, act } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createElement, type ReactNode } from 'react'
@@ -13,23 +10,12 @@ import { createElement, type ReactNode } from 'react'
 import type { JobActionResult } from '@/features/design-tool/types/job-result'
 import type { BackendProcessResult } from '@/features/design-tool/types/backend-contract'
 
-vi.mock('@/features/design-tool/api/jobs', () => ({
-  submitJob: vi.fn(),
-  cancelJob: vi.fn(),
-}))
-
 vi.mock('@/features/design-tool/utils/form-handler', () => ({
   buildJobParams: vi.fn((values: { codingSequence: string; name: string }) => ({
     CDS: values.codingSequence,
     name: values.name,
     options: {},
   })),
-}))
-
-// The flag is read at module load, so it is stubbed rather than set via env.
-vi.mock('@/features/design-tool/utils/feature-flags', () => ({
-  BROWSER_OPTIMIZER_ENABLED: true,
-  MULTI_SPLIT_ENABLED: false,
 }))
 
 vi.mock('@/features/design-tool/api/browser-optimizer', () => ({
@@ -45,10 +31,6 @@ vi.mock('@/features/design-tool/utils/finish-notification', () => ({
 
 import { notifyRunSettled } from '@/features/design-tool/utils/finish-notification'
 import {
-  submitJob as submitJobAction,
-  cancelJob as cancelJobAction,
-} from '@/features/design-tool/api/jobs'
-import {
   browserOptimizerSupported,
   designInBrowser,
   warmOptimizerWorker,
@@ -60,8 +42,7 @@ import {
 } from '@/features/design-tool/hooks/use-job-history'
 import { useJob } from './use-job'
 
-const mockSubmit = vi.mocked(submitJobAction)
-const mockCancel = vi.mocked(cancelJobAction)
+const mockFetch = vi.fn()
 const mockDesign = vi.mocked(designInBrowser)
 const mockSupported = vi.mocked(browserOptimizerSupported)
 const mockWarm = vi.mocked(warmOptimizerWorker)
@@ -129,12 +110,25 @@ beforeEach(async () => {
   vi.clearAllMocks()
   await whenJobHistoryHydrated()
   mockSupported.mockReturnValue(true)
+  vi.stubGlobal('fetch', mockFetch)
   useJobHistory.setState({ entries: [], progressById: {} })
   localStorage.clear()
 })
 
-describe('useJob with the in-browser optimizer', () => {
-  it('designs in the browser and never calls the backend', async () => {
+afterEach(() => {
+  vi.unstubAllGlobals()
+})
+
+describe('useJob', () => {
+  it('starts idle', () => {
+    const { result } = renderHook(() => useJob(), { wrapper: createWrapper() })
+    expect(result.current.status).toBe('idle')
+    expect(result.current.jobId).toBeNull()
+    expect(result.current.result).toBeNull()
+    expect(result.current.isLoading).toBe(false)
+  })
+
+  it('designs in the browser without a network request', async () => {
     mockDesign.mockResolvedValue(succeeds())
     const { result } = renderHook(() => useJob(), { wrapper: createWrapper() })
 
@@ -144,7 +138,7 @@ describe('useJob with the in-browser optimizer', () => {
 
     await waitFor(() => expect(result.current.status).toBe('completed'))
     expect(result.current.result?.optimized_sequence).toBe('ATGAAGTGA')
-    expect(mockSubmit).not.toHaveBeenCalled()
+    expect(mockFetch).not.toHaveBeenCalled()
     expect(mockDesign).toHaveBeenCalledTimes(1)
   })
 
@@ -211,7 +205,7 @@ describe('useJob with the in-browser optimizer', () => {
     expect(useJobHistory.getState().entries).toHaveLength(1)
   })
 
-  it('cancels by aborting the run rather than calling the backend', async () => {
+  it('cancels by aborting the run', async () => {
     let abortSignal: AbortSignal | undefined
     mockDesign.mockImplementation((_params, callbacks) => {
       abortSignal = callbacks?.signal
@@ -237,7 +231,7 @@ describe('useJob with the in-browser optimizer', () => {
 
     await waitFor(() => expect(result.current.status).toBe('cancelled'))
     expect(abortSignal?.aborted).toBe(true)
-    expect(mockCancel).not.toHaveBeenCalled()
+    expect(mockFetch).not.toHaveBeenCalled()
   })
 
   it('starts loading the optimizer as soon as the form appears', () => {
@@ -310,17 +304,49 @@ describe('useJob with the in-browser optimizer', () => {
     expect(unloadPrevented()).toBe(false)
   })
 
-  it('falls back to the backend when the browser cannot run it', async () => {
+  it('still runs where the browser lacks support, and reports why', async () => {
+    // designInBrowser answers an unsupported browser with a failure saying
+    // so (browser-optimizer.test.ts); there is no server to fall back to.
     mockSupported.mockReturnValue(false)
-    mockSubmit.mockResolvedValue({ ok: true, data: { jobId: 'server-1' } })
-
+    mockDesign.mockResolvedValue({
+      ok: false,
+      error: { code: 'backend', message: 'Unsupported', retriable: false },
+    })
     const { result } = renderHook(() => useJob(), { wrapper: createWrapper() })
+    expect(result.current.runsInBrowser).toBe(false)
+
     await act(async () => {
       await result.current.submitJob(FORM_VALUES)
     })
+    await waitFor(() => expect(result.current.status).toBe('failed'))
+    expect(result.current.error?.message).toBe('Unsupported')
+    expect(mockFetch).not.toHaveBeenCalled()
+  })
 
-    await waitFor(() => expect(result.current.jobId).toBe('server-1'))
-    expect(mockSubmit).toHaveBeenCalledTimes(1)
-    expect(mockDesign).not.toHaveBeenCalled()
+  it('reads a ?job= this browser has no record of as unavailable', () => {
+    const { result } = renderHook(
+      () => useJob({ initialJobId: 'from-another-device' }),
+      { wrapper: createWrapper() },
+    )
+    expect(result.current.status).toBe('failed')
+    expect(result.current.error?.code).toBe('not_found')
+    // Nothing is written for it, and nothing polls it.
+    expect(useJobHistory.getState().getEntry('from-another-device')).toBeNull()
+    expect(mockFetch).not.toHaveBeenCalled()
+  })
+
+  it('shows a ?job= from history as it was saved', () => {
+    useJobHistory.getState().upsertEntry({
+      id: 'browser-existing',
+      status: 'completed',
+    })
+    const { result } = renderHook(
+      () => useJob({ initialJobId: 'browser-existing' }),
+      { wrapper: createWrapper() },
+    )
+    expect(result.current.status).toBe('completed')
+    expect(useJobHistory.getState().getEntry('browser-existing')!.status).toBe(
+      'completed',
+    )
   })
 })
