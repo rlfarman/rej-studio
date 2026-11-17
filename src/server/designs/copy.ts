@@ -28,6 +28,7 @@ export const designsCopy = {
     notStarted:
       'That design has not started yet, so who owns it is not known. Try again in a moment.',
     failed: 'The cloud-design request failed.',
+    busy: 'Cloud designs are briefly unavailable. Try again in a moment.',
   },
 
   /** Why a cloud design failed, as its reader sees it. */

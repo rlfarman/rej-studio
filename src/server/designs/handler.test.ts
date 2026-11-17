@@ -16,6 +16,7 @@ import {
   handleDeleteDesign,
   handleGetDesign,
 } from './handler'
+import { STATUS_RETRY_DELAYS_MS } from './service'
 import { resultKey, type CloudDesignOutput } from './run'
 import {
   CDS,
@@ -322,6 +323,50 @@ describe('GET /api/designs/:id', () => {
       DESIGN_WORKFLOW: workflow.binding(),
     })
     expect(response.status).toBe(503)
+  })
+
+  describe('when the Workflow binding stumbles on status()', () => {
+    // The deployed binding answers status() with a bare "internal error" for
+    // about a second after create(); the service retries through it.
+    function failStatus(id: string, times: number) {
+      const instance = workflow.instances.get(id)!
+      const real = instance.status
+      let failures = 0
+      instance.status = async () => {
+        if (failures++ < times) throw new Error('internal error')
+        return real()
+      }
+    }
+
+    it('retries and answers once the binding recovers', async () => {
+      vi.useFakeTimers()
+      try {
+        const { json: submitted } = await submit()
+        failStatus(submitted.id as string, STATUS_RETRY_DELAYS_MS.length)
+        const pending = read(submitted.id as string)
+        await vi.runAllTimersAsync()
+        const { response, json } = await pending
+        expect(response.status).toBe(200)
+        expect(json).toEqual({ id: submitted.id, status: 'queued' })
+      } finally {
+        vi.useRealTimers()
+      }
+    })
+
+    it('asks the client to retry, not fail, when it does not recover', async () => {
+      vi.useFakeTimers()
+      try {
+        const { json: submitted } = await submit()
+        failStatus(submitted.id as string, Infinity)
+        const pending = read(submitted.id as string)
+        await vi.runAllTimersAsync()
+        const { response } = await pending
+        expect(response.status).toBe(503)
+        expect(response.headers.get('retry-after')).toBe('2')
+      } finally {
+        vi.useRealTimers()
+      }
+    })
   })
 })
 

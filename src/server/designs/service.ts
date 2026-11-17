@@ -46,6 +46,26 @@ const log = createLogger('designs')
 /** How long a subscription is given to deliver an instance's start event. */
 const PARAMS_TIMEOUT_MS = 1500
 
+/**
+ * Pauses before each retry of `instance.status()`. For about a second after
+ * `create()`, the deployed binding can answer `status()` with a bare
+ * "internal error" (seen on the preview: a reload right after submitting
+ * polled straight into it). It is a read, so retrying is safe; ~1.75 s covers
+ * the window seen so far.
+ */
+export const STATUS_RETRY_DELAYS_MS = [250, 500, 1000]
+
+/**
+ * The Workflow binding would not report an instance's status even after
+ * retrying. Transient by nature, so callers answer "try again", not "failed".
+ */
+export class CloudDesignUnavailableError extends Error {
+  constructor(id: string, options?: ErrorOptions) {
+    super(`could not read the status of cloud design ${id}`, options)
+    this.name = 'CloudDesignUnavailableError'
+  }
+}
+
 type DesignWorkflow = Workflow<CloudDesignParams>
 
 // ── Submitting ───────────────────────────────────────────────────────────
@@ -153,7 +173,7 @@ async function resubmit(
   instance: WorkflowInstance,
   spend: () => Promise<boolean>,
 ): Promise<SubmitOutcome> {
-  const { status, error } = await instance.status()
+  const { status, error } = await instanceStatus(instance)
   const state = cloudStatus(status)
   const failure =
     state === 'failed'
@@ -194,7 +214,7 @@ export async function readCloudDesign(
   const instance = await findInstance(workflow, id)
   if (!instance) return null
 
-  const snapshot = await instance.status()
+  const snapshot = await instanceStatus(instance)
   const status = cloudStatus(snapshot.status)
   const described = (
     meta: Omit<CloudDesignParams, 'request'> | null,
@@ -277,7 +297,7 @@ export async function deleteCloudDesign(
   const instance = await findInstance(workflow, id)
   if (!instance) return 'not_found'
 
-  const snapshot = await instance.status()
+  const snapshot = await instanceStatus(instance)
   const output = snapshot.output as CloudDesignOutput | undefined
   const owner = output?.owner ?? (await startedParams(instance))?.owner
   // A queued instance has not started, so its params are not readable yet;
@@ -305,6 +325,28 @@ async function findInstance(
   } catch (error) {
     if (isNotFound(error)) return null
     throw error
+  }
+}
+
+/** `instance.status()`, retried through the binding's start-up hiccup. */
+async function instanceStatus(
+  instance: WorkflowInstance,
+): Promise<InstanceStatus> {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await instance.status()
+    } catch (error) {
+      const delay = STATUS_RETRY_DELAYS_MS[attempt]
+      if (delay === undefined) {
+        throw new CloudDesignUnavailableError(instance.id, { cause: error })
+      }
+      log.warn('cloud design status failed; retrying', {
+        id: instance.id,
+        attempt: attempt + 1,
+        error: errorText(error),
+      })
+      await new Promise((resolve) => setTimeout(resolve, delay))
+    }
   }
 }
 

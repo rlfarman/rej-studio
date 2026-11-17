@@ -12,6 +12,7 @@ import { identify, type Identity } from './access'
 import { designsCopy } from './copy'
 import { withinDesignBudget } from './rate-limit'
 import {
+  CloudDesignUnavailableError,
   deleteCloudDesign,
   readCloudDesign,
   submitCloudDesign,
@@ -52,6 +53,28 @@ function refuse(
   headers: Record<string, string> = {},
 ) {
   return json({ error: message }, status, headers)
+}
+
+/** Seconds a client is asked to wait after a transient Workflow failure. */
+const BUSY_RETRY_AFTER = '2'
+
+/**
+ * A failure while handling a design: 503 with `retry-after` when the Workflow
+ * binding is only briefly unavailable (the client polls again), 500 otherwise.
+ */
+function refuseFailure(
+  error: unknown,
+  what: string,
+  context: Record<string, unknown>,
+) {
+  if (error instanceof CloudDesignUnavailableError) {
+    log.warn(`${what}: Workflow status unavailable`, context)
+    return refuse(503, designsCopy.http.busy, {
+      'retry-after': BUSY_RETRY_AFTER,
+    })
+  }
+  log.error(what, error, context)
+  return refuse(500, designsCopy.http.failed)
 }
 
 function refuseIdentity(identity: Extract<Identity, { ok: false }>) {
@@ -123,8 +146,9 @@ export async function handleCreateDesign(
       location: `/api/designs/${outcome.id}`,
     })
   } catch (error) {
-    log.error('cloud design submit failed', error, { owner: identity.email })
-    return refuse(500, designsCopy.http.failed)
+    return refuseFailure(error, 'cloud design submit failed', {
+      owner: identity.email,
+    })
   }
 }
 
@@ -144,8 +168,7 @@ export async function handleGetDesign(
     if (!design) return refuse(404, designsCopy.http.notFound)
     return json(design)
   } catch (error) {
-    log.error('cloud design read failed', error, { id })
-    return refuse(500, designsCopy.http.failed)
+    return refuseFailure(error, 'cloud design read failed', { id })
   }
 }
 
@@ -175,7 +198,6 @@ export async function handleDeleteDesign(
         return refuse(409, designsCopy.http.notStarted, { 'retry-after': '5' })
     }
   } catch (error) {
-    log.error('cloud design delete failed', error, { id })
-    return refuse(500, designsCopy.http.failed)
+    return refuseFailure(error, 'cloud design delete failed', { id })
   }
 }
