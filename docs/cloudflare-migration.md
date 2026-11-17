@@ -253,13 +253,24 @@ Done on the `rlfarman` account; the preview is live at
   Trust team remains, unused and free.
 
 - **Secrets** `BASIC_AUTH_PASSWORD`, `SESSION_SECRET`, `MCP_TOKENS` (one
-  token, `richie`) and `HEALTH_AUTH_TOKEN` are set. The owner keeps them in `~/.config/rej-studio/worker-secrets.json`,
-  which is never committed. Deploy with that file so the secrets travel with
-  the version:
+  token, `richie`) and `HEALTH_AUTH_TOKEN` are set. The owner keeps them in
+  `~/.config/rej-studio/worker-secrets.json`, which is never committed.
+  Secrets persist across deploys, so a deploy is just the build:
 
   ```bash
-  VITE_GENE_DATA_URL=https://gene-data.rejstudio.com/v1 pnpm cf:deploy -- --secrets-file ~/.config/rej-studio/worker-secrets.json
+  VITE_GENE_DATA_URL=https://gene-data.rejstudio.com/v1 pnpm cf:deploy
   ```
+
+  When a secret changes, push the file (this makes a new version of the
+  Worker with the code already deployed):
+
+  ```bash
+  npx wrangler secret bulk ~/.config/rej-studio/worker-secrets.json --name rej-studio
+  ```
+
+  `pnpm cf:deploy -- --secrets-file …` does not work: the flag lands after
+  pnpm's `--` at the end of a chained script, and `wrangler deploy` ignores
+  it.
 
 Verified signed in on the preview: the full corpus, an in-browser design, and
 a cloud design through reload, history and delete. Still to do: Web Analytics, Sentry for Start, the DNS move, the

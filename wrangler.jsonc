@@ -102,7 +102,7 @@
   // Secrets (never in this file): BASIC_AUTH_PASSWORD and SESSION_SECRET
   // (the passcode gate), MCP_TOKENS and HEALTH_AUTH_TOKEN. Locally they go in
   // .dev.vars (see .dev.vars.example); deployed, `wrangler secret put` or
-  // `wrangler deploy --secrets-file`.
+  // `wrangler secret bulk` (docs/cloudflare-migration.md, "Cutover status").
   "observability": {
     "enabled": true,
   },
