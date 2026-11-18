@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { createRequire } from 'node:module'
 import { readFileSync, writeFileSync } from 'node:fs'
@@ -198,6 +199,18 @@ function associationShards(): Plugin {
   }
 }
 
+/** The checked-out commit, or '' outside a git checkout. */
+function gitHead(): string {
+  try {
+    return execFileSync('git', ['rev-parse', 'HEAD'], {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    }).trim()
+  } catch {
+    return ''
+  }
+}
+
 /**
  * What the Worker reports at /api/version. The Worker has no git and no
  * package.json at runtime, so the build inlines them; they are defined for
@@ -213,10 +226,12 @@ function workerBuildInfo(): Plugin {
       ) as { version: string }
       return {
         define: {
-          // Blank is treated as unset by the route, so passing an empty
-          // GIT_COMMIT_SHA reports "unknown" rather than ''.
+          // CI passes GIT_COMMIT_SHA; a build run by hand asks git, so a
+          // deploy from a laptop still says which commit it is. Blank is
+          // treated as unset by the route, so a build outside a checkout
+          // reports "unknown" rather than ''.
           'import.meta.env.REJ_GIT_COMMIT_SHA': JSON.stringify(
-            process.env.GIT_COMMIT_SHA ?? '',
+            process.env.GIT_COMMIT_SHA?.trim() || gitHead(),
           ),
           'import.meta.env.REJ_APP_VERSION': JSON.stringify(version.version),
           'import.meta.env.REJ_BUILD_TIMESTAMP': JSON.stringify(
