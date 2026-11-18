@@ -41,7 +41,14 @@ for (const path of [
     const errors: string[] = []
     page.on('pageerror', (error) => errors.push(error.message))
     page.on('console', (message) => {
-      if (message.type() === 'error') errors.push(message.text())
+      // The sidebar mounts here and asks /api/account who is signed in; with
+      // no session the gate answers 401, which `fetchAccount` reads as
+      // "locked" and renders. The browser logs every 401 whatever the page
+      // does with it, so that one line is the expected answer, not a fault.
+      // Everything else — a hydration mismatch above all — still fails.
+      const expected401 = message.text().includes('401 (Unauthorized)')
+      if (message.type() === 'error' && !expected401)
+        errors.push(message.text())
     })
 
     await page.goto(path)
