@@ -1,4 +1,3 @@
-'use client'
 import { useFormContext, useWatch } from 'react-hook-form'
 import { FormValues } from '../types/form-schema'
 import { designToolCopy } from '../copy'

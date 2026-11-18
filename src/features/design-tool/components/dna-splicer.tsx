@@ -1,81 +1,48 @@
-'use client'
-
-import * as React from 'react'
 import { useFormContext, useWatch } from 'react-hook-form'
-import { FormValues, type SelectedWggwSite } from '../types/form-schema'
+import type { FormValues, RewritePick } from '../types/form-schema'
 import { SpliceSliderContext } from './splice-slider-context'
 
-// Stable fallback so an unset field doesn't hand the effect below a new
-// array (and so a changed dependency) on every render.
-const NO_POSITIONS: number[] = []
-
+// Typing rescales the split points in the sequence field's change handler
+// (coding-sequence-input.tsx, rescaleSplitPoints), not here.
 export function DNASplicer() {
-  const { control, setValue } = useFormContext<FormValues>()
-  const [watchedSequence, watchedPositions, species] = useWatch({
-    control,
-    name: ['codingSequence', 'spliceJunctionPositions', 'species'],
-  })
+  const { control, getValues, setValue } = useFormContext<FormValues>()
+  const [watchedSequence, watchedPositions, species, sitePicks, rewritePicks] =
+    useWatch({
+      control,
+      name: [
+        'codingSequence',
+        'spliceJunctionPositions',
+        'species',
+        'wggwSitePicks',
+        'wggwRewritePicks',
+      ],
+    })
   const codingSequence = watchedSequence ?? ''
   const seqLength = codingSequence.length || 1
+  const positions = watchedPositions ?? []
 
-  const positions = watchedPositions ?? NO_POSITIONS
+  // A dep of the editor's position write-back effect; the React Compiler
+  // keeps its identity stable while seqLength is unchanged.
+  const setPositions = (next: number[]) => {
+    const clamped = next.map((p) => Math.max(1, Math.min(p, seqLength - 1)))
+    setValue('spliceJunctionPositions', clamped)
+  }
 
-  const prevSeqLengthRef = React.useRef(seqLength)
-  const prevPositionsRef = React.useRef<number[]>(
-    positions.length > 0 ? positions : [Math.floor(seqLength / 2)],
-  )
+  // The picks are only written from the editor's event handlers. The
+  // updaters read the form's latest value, not the rendered one, so a
+  // handler's successive updates build on each other.
+  const updateSitePicks = (
+    update: (prev: (number | null)[]) => (number | null)[],
+  ) => {
+    setValue('wggwSitePicks', update(getValues('wggwSitePicks') ?? []))
+  }
+  const updateRewritePicks = (
+    update: (prev: RewritePick[]) => RewritePick[],
+  ) => {
+    setValue('wggwRewritePicks', update(getValues('wggwRewritePicks') ?? []))
+  }
 
-  // When sequence length changes, maintain the relative position
-  // (percentage) per splice — but only between two real sequences.
-  // Transitions from the empty/stub state would otherwise scale by
-  // a garbage ratio; in that case just sync refs.
-  React.useEffect(() => {
-    if (seqLength === prevSeqLengthRef.current) return
-    const prevLen = prevSeqLengthRef.current
-    if (prevLen > 1 && seqLength > 1) {
-      const next = prevPositionsRef.current.map((p) =>
-        Math.max(
-          1,
-          Math.min(Math.round((p / prevLen) * seqLength), seqLength - 1),
-        ),
-      )
-      prevPositionsRef.current = next
-      setValue('spliceJunctionPositions', next)
-      setValue(
-        'selectedWggwSites',
-        next.map(() => null),
-      )
-    } else {
-      prevPositionsRef.current = positions.length
-        ? positions
-        : [Math.floor(seqLength / 2)]
-      setValue(
-        'selectedWggwSites',
-        prevPositionsRef.current.map(() => null),
-      )
-    }
-    prevSeqLengthRef.current = seqLength
-  }, [positions, seqLength, setValue])
-
-  const setPositions = React.useCallback(
-    (next: number[]) => {
-      const clamped = next.map((p) => Math.max(1, Math.min(p, seqLength - 1)))
-      prevPositionsRef.current = clamped
-      setValue('spliceJunctionPositions', clamped)
-    },
-    [seqLength, setValue],
-  )
-
-  const setSelectedSites = React.useCallback(
-    (sites: (SelectedWggwSite | null)[]) => {
-      setValue('selectedWggwSites', sites)
-    },
-    [setValue],
-  )
-
-  const hasSequence = codingSequence.length > 0
-
-  if (!hasSequence) {
+  if (codingSequence.length === 0) {
     return (
       <p className="rounded-xl border border-dashed px-3 py-2 text-xs text-muted-foreground">
         Add a coding sequence above to configure the split point.
@@ -89,7 +56,10 @@ export function DNASplicer() {
       positions={positions.length ? positions : [Math.floor(seqLength / 2)]}
       species={species ?? 'none'}
       onPositionsChange={setPositions}
-      onSelectionChange={setSelectedSites}
+      sitePicks={sitePicks ?? []}
+      rewritePicks={rewritePicks ?? []}
+      onSitePicksChange={updateSitePicks}
+      onRewritePicksChange={updateRewritePicks}
     />
   )
 }

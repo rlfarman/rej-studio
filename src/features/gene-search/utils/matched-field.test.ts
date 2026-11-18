@@ -28,4 +28,10 @@ describe('matchedField', () => {
   it('treats anything else as an alias or related term', () => {
     expect(matchedField(tp53, 'LFS1')).toEqual({ kind: 'alias' })
   })
+
+  it('uses what search reports, typo included, over guessing', () => {
+    expect(
+      matchedField({ ...tp53, match: { field: 'symbol', typo: true } }, 'tp35'),
+    ).toEqual({ kind: 'symbol', typo: true })
+  })
 })

@@ -96,6 +96,20 @@ export const validationSchema = z
         })
         .nullable(),
     ),
+    // What the person picked in the split-point editor, per split point: a
+    // WGGW site's position (null = the default nearest the caret), and a
+    // rewrite option index tagged with the site it was picked for. The editor
+    // writes these in its event handlers; `selectedWggwSites` is resolved from
+    // them on submit (utils/wggw-selection.ts), never written back on render.
+    wggwSitePicks: z.array(z.number().int().min(1).nullable()).optional(),
+    wggwRewritePicks: z
+      .array(
+        z.object({
+          position: z.number().int().min(1).nullable(),
+          index: z.number().int().min(0),
+        }),
+      )
+      .optional(),
     sequenceType: z.enum(['dna', 'protein']),
     codingSequence: z.string(),
     proteinSequence: z.string(),
@@ -202,3 +216,4 @@ export type FormValues = z.infer<typeof validationSchema>
 export type SelectedWggwSite = NonNullable<
   FormValues['selectedWggwSites'][number]
 >
+export type RewritePick = NonNullable<FormValues['wggwRewritePicks']>[number]

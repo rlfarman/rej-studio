@@ -1,8 +1,9 @@
 // useJob, for designs run in the cloud: the submission files a history entry
 // under the cloud id, the poller is told, a `?job=` this browser has never
 // seen is read from the cloud, and "Delete from cloud" keeps the local copy.
-// The /api/designs client is mocked; its own wire format is covered by the
-// Worker's handler tests.
+// The cloud-design client is mocked; the server functions behind it are
+// covered by the Worker's handler tests and, in the browser, by
+// e2e/cloud-design.spec.ts.
 
 import { act, renderHook, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
@@ -16,6 +17,7 @@ vi.mock('@/features/design-tool/api/cloud-designs', () => ({
   submitCloudDesign: vi.fn(),
   fetchCloudDesign: vi.fn(),
   deleteCloudDesign: vi.fn(),
+  myCloudDesignsQuery: { queryKey: ['account', 'cloud-designs'] },
 }))
 vi.mock('@/features/design-tool/api/browser-optimizer', () => ({
   browserOptimizerSupported: vi.fn(() => true),
@@ -28,7 +30,7 @@ vi.mock('@/features/design-tool/utils/cloud-runs', async (importOriginal) => ({
   >()),
   cloudRuns: { start: vi.fn(), wake: vi.fn(), stop: vi.fn() },
 }))
-vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
+vi.mock('@/lib/toast', () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
 
 import {
   deleteCloudDesign,
@@ -41,6 +43,7 @@ import {
   whenJobHistoryHydrated,
 } from '@/features/design-tool/hooks/use-job-history'
 import { cloudRuns } from '@/features/design-tool/utils/cloud-runs'
+import { useSignInDialog } from '@/stores/sign-in-dialog-store'
 import { useJob } from './use-job'
 
 const ID = 'd'.repeat(64)
@@ -81,14 +84,26 @@ const RESULT = {
   processing_time_seconds: 0,
 } as ProcessResult
 
+let client: QueryClient
+
 function wrapper({ children }: { children: ReactNode }) {
-  const client = new QueryClient({
-    defaultOptions: { mutations: { retry: false }, queries: { retry: false } },
-  })
   return createElement(QueryClientProvider, { client }, children)
 }
 
+/** Whether "My cloud designs" was told to read the list again. */
+function listRefreshed(): boolean {
+  return (
+    client.getQueryState(['account', 'cloud-designs'])?.isInvalidated ?? false
+  )
+}
+
 beforeEach(async () => {
+  client = new QueryClient({
+    defaultOptions: { mutations: { retry: false }, queries: { retry: false } },
+  })
+  // A list already read, so a refresh shows as its invalidation.
+  client.setQueryData(['account', 'cloud-designs'], [])
+  useSignInDialog.setState({ open: false })
   vi.clearAllMocks()
   await whenJobHistoryHydrated()
   useJobHistory.setState({ entries: [], progressById: {} })
@@ -118,6 +133,7 @@ describe('submitting to the cloud', () => {
     expect(result.current.status).toBe('running')
     expect(result.current.cloud).toMatchObject({ id: ID, deleted: false })
     expect(result.current.cloud?.estimateSeconds).toBeGreaterThan(0)
+    expect(listRefreshed()).toBe(true)
   })
 
   it('keeps a completed copy when the same design is resubmitted', async () => {
@@ -159,6 +175,42 @@ describe('submitting to the cloud', () => {
       'Too many cloud designs in the last minute.',
     )
     expect(useJobHistory.getState().entries).toHaveLength(0)
+  })
+
+  it('offers to sign in when the cloud wants an account', async () => {
+    vi.mocked(submitCloudDesign).mockResolvedValue({
+      ok: false,
+      status: 401,
+      reason: 'account_required',
+      message: 'Cloud runs need an account.',
+    })
+    const { result } = renderHook(() => useJob(), { wrapper })
+
+    await act(async () => {
+      await result.current.submitJob(VALUES, { cloud: true }).catch(() => {})
+    })
+
+    await waitFor(() => expect(result.current.status).toBe('failed'))
+    expect(result.current.error?.message).toBe('Cloud runs need an account.')
+    expect(useSignInDialog.getState().open).toBe(true)
+    // What was read as the old account is dropped.
+    expect(client.getQueryData(['account', 'cloud-designs'])).toBeUndefined()
+    expect(useJobHistory.getState().entries).toHaveLength(0)
+  })
+
+  it('does not offer to sign in for other refusals', async () => {
+    vi.mocked(submitCloudDesign).mockResolvedValue({
+      ok: false,
+      status: 429,
+      reason: 'rate_limited',
+      message: 'Too many.',
+    })
+    const { result } = renderHook(() => useJob(), { wrapper })
+    await act(async () => {
+      await result.current.submitJob(VALUES, { cloud: true }).catch(() => {})
+    })
+    await waitFor(() => expect(result.current.status).toBe('failed'))
+    expect(useSignInDialog.getState().open).toBe(false)
   })
 
   it('refuses a sequence over the cloud cap without sending it', async () => {
@@ -242,6 +294,7 @@ describe('deleting from the cloud', () => {
     })
 
     expect(deleteCloudDesign).toHaveBeenCalledWith(ID)
+    expect(listRefreshed()).toBe(true)
     expect(useJobHistory.getState().getEntry(ID)).toMatchObject({
       status: 'completed',
       cloudDeleted: true,

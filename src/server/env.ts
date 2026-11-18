@@ -29,16 +29,32 @@ export interface ServerEnv extends Partial<Env> {
    */
   DESIGN_RESULTS?: R2Bucket
   /**
-   * The Cloudflare Access team (`team.cloudflareaccess.com`) and this
-   * application's AUD tag. Both or neither: with neither, /api/designs answers
-   * 503; set at cutover (./designs/access.ts).
+   * The passcode gate (./auth/). A secret each; set both, or neither for
+   * local development, where only loopback requests get through. One
+   * without the other refuses everything.
    */
-  ACCESS_TEAM_DOMAIN?: string
-  ACCESS_AUD?: string
+  BASIC_AUTH_PASSWORD?: string
+  /** 32+ characters; signs the session cookie, keyed with the passcode. */
+  SESSION_SECRET?: string
   /**
-   * Local development only: the email to treat a loopback request as, in
-   * place of an Access token. Never set on a deployed Worker
-   * (./designs/access.ts ignores it off localhost anyway).
+   * Where the Worker reports errors and traces (./sentry.ts). A plain `vars`
+   * entry in wrangler.jsonc rather than a secret — a DSN is public. Unset
+   * (local development, the worker smoke test), Sentry is off.
    */
-  DEV_ACCESS_EMAIL?: string
+  SENTRY_DSN?: string
+  /**
+   * Accounts (./accounts/): signs and encrypts Better Auth's cookies and
+   * tokens. A secret, 32+ characters. Without it accounts are off, except in
+   * local development with no passcode, which uses a fixed local secret.
+   */
+  BETTER_AUTH_SECRET?: string
+  /** "Sign in with Google": both, or the button is not offered. Secrets. */
+  GOOGLE_CLIENT_ID?: string
+  GOOGLE_CLIENT_SECRET?: string
+  /**
+   * `true` keeps the last sign-in code sent to each address in memory, for
+   * the end-to-end tests to read back (./accounts/dev-mailbox.ts). Set only
+   * by Playwright; the read is refused for anything but a loopback request.
+   */
+  AUTH_DEV_MAILBOX?: string
 }

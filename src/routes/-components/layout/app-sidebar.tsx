@@ -16,6 +16,9 @@ import { RecentGenes } from '@/features/gene-search/components/recent-genes-pane
 import { RecentJobs } from '@/features/design-tool/components/recent-jobs-panel'
 import { BrowserRuns } from '@/features/design-tool/components/browser-runs'
 import { CloudRuns } from '@/features/design-tool/components/cloud-runs'
+import { MyCloudDesigns } from '@/features/design-tool/components/my-cloud-designs'
+import { AccountMenu } from '@/components/account/account-menu'
+import { SignInDialog } from '@/components/account/sign-in-dialog'
 import { SalkLogo } from './salk-logo'
 import { SidebarMenu } from './sidebar-menu'
 import {
@@ -124,6 +127,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           unmounts while closed. */}
       <BrowserRuns />
       <CloudRuns />
+      <SignInDialog />
       <Sidebar collapsible="icon" {...props}>
         <SidebarHeader>
           <SidebarMenuPrimitive>
@@ -155,6 +159,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <FavoriteGenes />
             <RecentGenes />
             {jobCount > 0 && <RecentJobs onSelectJob={handleSelectJob} />}
+            <MyCloudDesigns
+              onSelect={(id) =>
+                void navigate({ to: '/design-tool', search: { job: id } })
+              }
+            />
             {hydrated && !hasHistory && (
               <p className="px-4 py-3 text-xs leading-relaxed text-muted-foreground">
                 {appCopy.sidebar.historyHint}
@@ -180,6 +189,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               />
             </SidebarMenuItem>
           </SidebarMenuPrimitive>
+          <AccountMenu />
           <SidebarMenu />
         </SidebarFooter>
         <SidebarRail />

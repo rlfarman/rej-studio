@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test'
-import { useSpeciesStore } from './species-store'
+import { act, renderHook } from '@testing-library/react'
+
+import { useSpeciesContext, useSpeciesStore } from './species-store'
 
 describe('useSpeciesStore', () => {
   beforeEach(() => {
@@ -68,5 +70,22 @@ describe('useSpeciesStore migration', () => {
     )
     await useSpeciesStore.persist.rehydrate()
     expect(useSpeciesStore.getState().species).toBe('mouse')
+  })
+
+  it('starts a visitor with a v0 value at both', async () => {
+    // v0 saved every visited gene page's species, not only choices.
+    localStorage.setItem(
+      'species',
+      JSON.stringify({ state: { species: 'mouse' }, version: 0 }),
+    )
+    await useSpeciesStore.persist.rehydrate()
+    expect(useSpeciesStore.getState().species).toBe('both')
+  })
+
+  it('useSpeciesContext reads and changes the choice', () => {
+    const { result } = renderHook(() => useSpeciesContext())
+    expect(result.current.species).toBe('both')
+    act(() => result.current.handleSpeciesChange('human'))
+    expect(result.current.species).toBe('human')
   })
 })

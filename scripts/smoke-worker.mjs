@@ -9,19 +9,22 @@
 // gene data is read through the assets binding, and /api/mcp is spoken to
 // over the protocol with a bearer token.
 //
-// Cloud designs run here end to end too: POST /api/designs starts the real
-// Workflow in workerd, the script polls it to completion, checks that a
-// resubmission is deduplicated, that the result is the browser's design (the
-// same .wasm run through Node with the browser's ABI glue), and deletes it;
-// and that submit_design hands a sequence over 12 kb to the same Workflow.
-// The identity is DEV_ACCESS_EMAIL, honoured only on this loopback host.
+// The cloud-design Workflow runs here too: submit_design hands a sequence
+// over 12 kb to it, and the script polls it to completion. The design tool's
+// own cloud designs (server functions) are covered end to end by
+// e2e/cloud-design.spec.ts, in the browser, on dev and on this build.
+// The passcode gate is on, as deployed: the script checks that it turns away
+// signed-out requests, signs in through /api/login, and sends that session
+// cookie with everything after. Accounts are on too, on a local D1 with the
+// committed migrations applied: an emailed code (the send_email binding,
+// simulated by wrangler) signs in, read back from the test mailbox.
 //
 // It lives here rather than in Vitest because @cloudflare/vitest-pool-workers
 // supports Vitest 4 and this repo runs Vite+'s Vitest 5; the pool's proxy
 // worker fails to start. See AGENTS.md ("Testing").
 
-import { spawn } from 'node:child_process'
-import { mkdtempSync, rmSync } from 'node:fs'
+import { spawn, spawnSync } from 'node:child_process'
+import { mkdtempSync, readdirSync, rmSync } from 'node:fs'
 import { createServer } from 'node:net'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
@@ -34,14 +37,21 @@ const worker = path.join(root, 'dist/server/wrangler.json')
 const TOKEN = `smoke-agent:${'s'.repeat(32)}`
 const SECRET = 's'.repeat(32)
 const HEALTH_TOKEN = 'h'.repeat(40)
-const DEV_EMAIL = 'smoke@example.com'
+const PASSCODE = 'smoke-passcode'
+const SESSION_SECRET = 'x'.repeat(40)
+const ACCOUNTS_SECRET = 'a'.repeat(40)
+
+/** The session cookie from signing in; sent with every request once set. */
+let session = ''
 
 /**
  * fetch with a deadline. A request that workerd accepts but never answers
  * would otherwise hang the script, and with it the CI job, indefinitely.
  */
 function request(url, init = {}, ms = 60_000) {
-  return fetch(url, { ...init, signal: AbortSignal.timeout(ms) })
+  const headers = new Headers(init.headers)
+  if (session && !headers.has('cookie')) headers.set('cookie', session)
+  return fetch(url, { ...init, headers, signal: AbortSignal.timeout(ms) })
 }
 
 const checks = []
@@ -68,7 +78,8 @@ async function waitForReady(url, child) {
       throw new Error(`wrangler dev exited with ${child.exitCode}`)
     }
     try {
-      const response = await request(`${url}/api/version`, {}, 2_000)
+      // Public, so it answers before anyone has signed in.
+      const response = await request(`${url}/api/health`, {}, 2_000)
       if (response.ok) return
     } catch {
       // Not listening yet.
@@ -148,29 +159,6 @@ function stop(child) {
 const textOf = (result) =>
   (result.content ?? []).map((block) => block.text ?? '').join('\n')
 
-/** The design form's values for a coding sequence, as the browser sends them. */
-function formValues(cds, name) {
-  return {
-    selectedWggwSites: [null],
-    sequenceType: 'dna',
-    codingSequence: cds,
-    proteinSequence: '',
-    name,
-    species: 'human',
-    codonOptimizeWeight: 1,
-    removeCrypticSpliceSites: true,
-    removeCrypticSpliceSitesWeight: 1,
-    minimizeCpgs: true,
-    minimizeCpgsWeight: 1,
-    reduceKmerComplexity: true,
-    reduceKmerComplexityWeight: 1,
-    enforceGcContent: true,
-    '5PrimeStimulatoryIntron': false,
-    '3PrimeStimulatoryIntron': false,
-    spliceJunctionPositions: [Math.floor(cds.length / 2)],
-  }
-}
-
 /** Polls until `read` returns something `done` accepts, or gives up. */
 async function pollUntil(read, done, ms = 180_000) {
   const deadline = Date.now() + ms
@@ -183,105 +171,106 @@ async function pollUntil(read, done, ms = 180_000) {
   throw new Error(`timed out polling: ${JSON.stringify(last).slice(0, 300)}`)
 }
 
-/**
- * The design the browser makes for the same request: the committed .wasm,
- * instantiated by Node through the app's own ABI glue (wasm-harness.mjs) and
- * given the request the form builds (form-handler.ts, through Node's type
- * stripping).
- */
-async function browserDesign(values, seed) {
-  const { loadModule } = await import('./wasm-harness.mjs')
-  const { buildJobParams } =
-    await import('../src/features/design-tool/utils/form-handler.ts')
-  const { design } = await loadModule(
-    path.join(root, 'public/optimizer/rej-optimizer.wasm'),
+async function passcodeGate(url) {
+  const page = await request(`${url}/genes/TP53`, { redirect: 'manual' })
+  check(
+    'a signed-out page load is sent to the login page',
+    page.status === 302 &&
+      page.headers.get('location') === `${url}/login?return_to=%2Fgenes%2FTP53`,
+    `HTTP ${page.status} ${page.headers.get('location')}`,
   )
-  const request = buildJobParams(values)
-  return design({ ...request, options: { ...request.options, seed } })
-}
+  const api = await request(`${url}/api/version`)
+  check('a signed-out API call is refused with 401', api.status === 401)
+  // A server-function read is a GET; it must not be taken for a page load.
+  const fn = await request(`${url}/_serverFn/any`, { redirect: 'manual' })
+  const fnBody = await fn.json().catch(() => null)
+  check(
+    'a signed-out server-function call gets a 401 refusal, not a redirect',
+    fn.status === 401 && fnBody?.reason === 'unauthorized',
+    `HTTP ${fn.status}`,
+  )
+  const login = await request(`${url}/login`)
+  check(
+    'the login page is served to anyone',
+    login.status === 200 &&
+      (login.headers.get('content-type') ?? '').includes('text/html'),
+  )
+  const asset = await request(`${url}/optimizer/THIRD-PARTY-NOTICES.md`)
+  check('static files load without a session', asset.status === 200)
+  const wasm = await request(`${url}/optimizer/rej-optimizer.wasm?v=smoke`)
+  check(
+    'the optimizer .wasm is cached as immutable (its URL is versioned)',
+    wasm.status === 200 &&
+      (wasm.headers.get('cache-control') ?? '').includes('immutable'),
+    wasm.headers.get('cache-control') ?? '',
+  )
+  // BRCA1's disease associations: the one shard the build emitted under a
+  // content-named directory (associationShards in vite.config.ts).
+  const [shardDir] = readdirSync(
+    path.join(root, 'dist/client/assets/disease-associations'),
+  )
+  const shard = await request(
+    `${url}/assets/disease-associations/${shardDir}/br.json`,
+  )
+  const shardBody = shard.ok ? await shard.json() : null
+  check(
+    'a disease-associations shard loads without a session, cached as immutable',
+    shard.status === 200 &&
+      (shard.headers.get('cache-control') ?? '').includes('immutable') &&
+      shardBody?.rows?.some((row) => row.symbol === 'BRCA1'),
+    `HTTP ${shard.status} ${shard.headers.get('cache-control') ?? ''}`,
+  )
 
-async function cloudDesigns(url, cds) {
-  const designs = `${url}/api/designs`
-  const values = formValues(cds, 'TP53 cloud smoke')
-  const body = JSON.stringify({ values, seed: 1234 })
-  const post = () =>
-    request(designs, {
+  const signIn = (password) =>
+    request(`${url}/api/login`, {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body,
+      redirect: 'manual',
+      headers: {
+        'content-type': 'application/x-www-form-urlencoded',
+        origin: url,
+      },
+      body: new URLSearchParams({ password, return_to: '/design-tool' }),
     })
-
-  const started = Date.now()
-  const created = await post()
-  const submitted = await created.json()
+  const wrong = await signIn('not-the-passcode')
   check(
-    'POST /api/designs starts a cloud design',
-    created.status === 202 &&
-      /^[0-9a-f]{64}$/.test(submitted.id) &&
-      submitted.existing === false,
-    `HTTP ${created.status} ${JSON.stringify(submitted)}`,
+    'a wrong passcode goes back to the form, with no cookie',
+    wrong.status === 303 &&
+      wrong.headers.get('location')?.includes('error=passcode') &&
+      !wrong.headers.get('set-cookie'),
+    `HTTP ${wrong.status} ${wrong.headers.get('location')}`,
   )
-  const id = submitted.id
-
-  const finished = await pollUntil(
-    async () => (await request(`${designs}/${id}`)).json(),
-    (design) => design.status === 'completed' || design.status === 'failed',
+  const right = await signIn(PASSCODE)
+  session = (right.headers.get('set-cookie') ?? '').split(';')[0]
+  check(
+    'the passcode signs in and returns to the page asked for',
+    right.status === 303 &&
+      right.headers.get('location') === `${url}/design-tool` &&
+      session.startsWith('rej_session='),
+    `HTTP ${right.status} ${right.headers.get('location')}`,
   )
-  const seconds = (Date.now() - started) / 1000
-  console.log(
-    `[smoke] TP53 cloud design: POST to completed in ${seconds.toFixed(2)} s`,
+  const heading = async (path) => {
+    const html = await (await request(`${url}${path}`)).text()
+    return /<h1[^>]*>([^<]*)/.exec(html)?.[1] ?? ''
+  }
+  check(
+    'a prerendered page arrives with its content',
+    (await heading('/design-tool')) === 'Design a sequence',
   )
   check(
-    'the cloud design completes with a result, owned by the caller',
-    finished.status === 'completed' &&
-      finished.result?.optimized_sequence?.length === cds.length &&
-      finished.owner === DEV_EMAIL &&
-      finished.ownedByCaller === true &&
-      finished.values?.codingSequence === cds,
-    JSON.stringify({ ...finished, result: undefined, values: undefined }),
+    'the same page with a query string gets the shell',
+    (await heading('/design-tool?isoform=ENST00000269305')) === '',
   )
-
-  const again = await post()
-  const resubmitted = await again.json()
   check(
-    'an identical POST returns the same design without a new run',
-    again.status === 200 &&
-      resubmitted.id === id &&
-      resubmitted.existing === true &&
-      resubmitted.status === 'completed',
-    `HTTP ${again.status} ${JSON.stringify(resubmitted)}`,
+    'a route that is not prerendered gets the shell',
+    (await heading('/genes/TP53')) === '',
   )
-
-  const browser = await browserDesign(values, 1234)
-  const same = ['optimized_sequence', 'seq5', 'seq3', 'split_point', 'seed']
+  const signedIn = await request(`${url}/genes/TP53`, { redirect: 'manual' })
   check(
-    'the cloud design is the design the browser makes (same .wasm, same seed)',
-    same.every(
-      (key) =>
-        JSON.stringify(browser[key]) === JSON.stringify(finished.result?.[key]),
-    ),
-    same
-      .filter(
-        (key) =>
-          JSON.stringify(browser[key]) !==
-          JSON.stringify(finished.result?.[key]),
-      )
-      .join(', '),
+    'a signed-in page load gets the app',
+    signedIn.status === 200 &&
+      (signedIn.headers.get('content-type') ?? '').includes('text/html'),
+    `HTTP ${signedIn.status}`,
   )
-
-  const tooLong = await request(designs, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({
-      values: formValues(`ATG${'AAA'.repeat(15_000)}TAA`, 'too long'),
-    }),
-  })
-  check('the cloud cap refuses a sequence over 45 kb', tooLong.status === 413)
-
-  const deleted = await request(`${designs}/${id}`, { method: 'DELETE' })
-  check('DELETE removes the design', deleted.status === 204)
-  const gone = await request(`${designs}/${id}`)
-  check('a deleted design is not found', gone.status === 404)
 }
 
 /**
@@ -306,14 +295,53 @@ function syntheticCds(codons) {
   return `${cds}TAA`
 }
 
+/**
+ * The design the browser's optimizer makes for a request: the committed
+ * .wasm, instantiated by Node through the app's own ABI glue
+ * (wasm-harness.mjs).
+ */
+async function designInNode(request) {
+  const { loadModule } = await import('./wasm-harness.mjs')
+  const { design } = await loadModule(
+    path.join(root, 'public/optimizer/rej-optimizer.wasm'),
+  )
+  return design(request)
+}
+
+const HAND_OFF_SEED = 4321
+
+/**
+ * The optimizer request the MCP endpoint builds for a DNA `submit_design`
+ * input: the endpoint's own input mapping and the form's request builder,
+ * loaded through tsx (which resolves the `@/` paths).
+ */
+async function mcpRequestFor(input) {
+  const { tsImport } = await import('tsx/esm/api')
+  const { toFormValues } = await tsImport(
+    '../src/server/mcp/design-input.ts',
+    import.meta.url,
+  )
+  const { buildJobParams } = await tsImport(
+    '../src/features/design-tool/utils/form-handler.ts',
+    import.meta.url,
+  )
+  const values = await toFormValues(input, () => {
+    throw new Error('DNA input only: nothing to reverse-translate')
+  })
+  const request = buildJobParams(values)
+  return { ...request, options: { ...request.options, seed: input.seed } }
+}
+
 async function mcpHandOff(url) {
   // Just over the 12 kb inline limit: the shortest design that is handed off.
   const sequence = syntheticCds(4_050)
-  const handed = await callTool(url, 'submit_design', {
+  const input = {
     name: 'long smoke',
     sequence,
     species: 'human',
-  })
+    seed: HAND_OFF_SEED,
+  }
+  const handed = await callTool(url, 'submit_design', input)
   const jobId = handed.structuredContent?.job_id
   check(
     'submit_design hands a sequence over 12 kb to the cloud and returns a job id',
@@ -323,7 +351,7 @@ async function mcpHandOff(url) {
       handed.structuredContent?.estimated_seconds > 0,
     textOf(handed),
   )
-  if (!jobId) return
+  if (!jobId) return null
 
   const started = Date.now()
   const done = await pollUntil(
@@ -343,6 +371,166 @@ async function mcpHandOff(url) {
         sequence.length,
     textOf(done),
   )
+
+  // Compared with the browser's design after the HTTP checks: running a
+  // 12 kb design in Node blocks its event loop for seconds, long enough for
+  // the server to drop the next request's keep-alive connection.
+  return { input, cloud: done.structuredContent?.result }
+}
+
+/**
+ * The Workflow ran the same optimizer the browser runs: the committed .wasm
+ * in Node, given the request the endpoint built, makes the same design.
+ */
+async function compareWithBrowser({ input, cloud }) {
+  const local = await designInNode(await mcpRequestFor(input))
+  const same = ['optimized_sequence', 'seq5', 'seq3', 'split_point', 'seed']
+  const differing = same.filter(
+    (key) => JSON.stringify(local[key]) !== JSON.stringify(cloud?.[key]),
+  )
+  check(
+    'the cloud design is the design the browser makes (same .wasm, same seed)',
+    cloud?.seed === HAND_OFF_SEED && differing.length === 0,
+    `seed ${cloud?.seed}; differing: ${differing.join(', ')}`,
+  )
+}
+
+/** The `name=value` pairs a response sets, as a Cookie header. */
+function cookiesOf(response) {
+  return response.headers
+    .getSetCookie()
+    .map((cookie) => cookie.split(';')[0])
+    .join('; ')
+}
+
+/**
+ * Accounts on the real runtime: Better Auth on D1 (the local database, with
+ * migrations/ applied), the code sent through the send_email binding
+ * (wrangler simulates it locally and logs the message), the session it
+ * gives, and both ways out.
+ */
+async function accounts(url, log) {
+  const json = { 'content-type': 'application/json', origin: url }
+  const signedOut = await request(`${url}/api/account`, {
+    headers: { cookie: '' },
+  })
+  check(
+    'account state needs the passcode like every other API call',
+    signedOut.status === 401,
+    `HTTP ${signedOut.status}`,
+  )
+  const before = await (await request(`${url}/api/account`)).json()
+  check(
+    'accounts are on, with nobody signed in yet',
+    before.available === true && before.user === null,
+    JSON.stringify(before),
+  )
+
+  const email = `smoke-${Date.now()}@example.com`
+  const sent = await request(
+    `${url}/api/auth/email-otp/send-verification-otp`,
+    {
+      method: 'POST',
+      headers: json,
+      body: JSON.stringify({ email, type: 'sign-in' }),
+    },
+  )
+  check(
+    'a sign-in code is requested',
+    sent.status === 200,
+    `HTTP ${sent.status}`,
+  )
+  const code = await pollUntil(
+    async () => {
+      const response = await request(
+        `${url}/api/dev/sign-in-code?email=${encodeURIComponent(email)}`,
+      )
+      return response.ok ? (await response.json()).code : null
+    },
+    (value) => typeof value === 'string',
+    10_000,
+  )
+  // The binding's own log line can land after the mailbox read above, so
+  // wait for it rather than reading the log once.
+  const sentLine = await pollUntil(
+    () => log.join(''),
+    (text) =>
+      text.includes(`To: ${email}`) && text.includes('sign-in@rejstudio.com'),
+    10_000,
+  ).catch(() => '')
+  check(
+    'the code goes out through the send_email binding, from rejstudio.com',
+    sentLine.includes(`To: ${email}`),
+  )
+  const crossSite = await request(`${url}/api/auth/sign-in/email-otp`, {
+    method: 'POST',
+    headers: { ...json, origin: 'https://elsewhere.example' },
+    body: JSON.stringify({ email, otp: code }),
+  })
+  check(
+    'a cross-site sign-in is refused',
+    crossSite.status === 403,
+    `HTTP ${crossSite.status}`,
+  )
+  const wrong = await request(`${url}/api/auth/sign-in/email-otp`, {
+    method: 'POST',
+    headers: json,
+    body: JSON.stringify({
+      email,
+      otp: code === '000000' ? '111111' : '000000',
+    }),
+  })
+  check(
+    'a wrong code signs nobody in',
+    !wrong.ok && wrong.headers.getSetCookie().length === 0,
+    `HTTP ${wrong.status}`,
+  )
+  const signedIn = await request(`${url}/api/auth/sign-in/email-otp`, {
+    method: 'POST',
+    headers: json,
+    body: JSON.stringify({ email, otp: code }),
+  })
+  const account = cookiesOf(signedIn)
+  check(
+    'the emailed code signs in and sets the account cookie',
+    signedIn.ok && account.includes('rej-account.session_token='),
+    `HTTP ${signedIn.status}`,
+  )
+  const withAccount = { cookie: `${session}; ${account}` }
+  const after = await (
+    await request(`${url}/api/account`, { headers: withAccount })
+  ).json()
+  check(
+    'the account is signed in, from the D1 session',
+    after.user?.email === email,
+    JSON.stringify(after),
+  )
+  const out = await request(`${url}/api/auth/sign-out`, {
+    method: 'POST',
+    headers: { ...json, ...withAccount },
+    body: '{}',
+  })
+  const gone = await (
+    await request(`${url}/api/account`, { headers: withAccount })
+  ).json()
+  check(
+    'signing out ends the account session',
+    out.ok && gone.user === null,
+    JSON.stringify(gone),
+  )
+  // Leaving the lab (the passcode's sign-out) clears the account cookie too.
+  // The passcode cookie is stateless, so the script's own stays usable.
+  const logout = await request(`${url}/api/logout`, {
+    method: 'POST',
+    redirect: 'manual',
+    headers: { origin: url },
+  })
+  check(
+    'the passcode sign-out clears the account cookie too',
+    logout.headers
+      .getSetCookie()
+      .some((cookie) => cookie.startsWith('rej-account.session_token=;')),
+  )
 }
 
 async function main() {
@@ -353,6 +541,30 @@ async function main() {
   // design left from the last run would turn "submitted" into "already
   // done".
   const state = mkdtempSync(path.join(tmpdir(), 'rej-smoke-'))
+
+  // The accounts database's schema, into the same local state.
+  const migrate = spawnSync(
+    path.join(root, 'node_modules/.bin/wrangler'),
+    [
+      'd1',
+      'migrations',
+      'apply',
+      'AUTH_DB',
+      '--local',
+      '--config',
+      worker,
+      '--persist-to',
+      state,
+    ],
+    {
+      cwd: root,
+      encoding: 'utf8',
+      env: { ...process.env, CI: '1', WRANGLER_SEND_METRICS: 'false' },
+    },
+  )
+  if (migrate.status !== 0) {
+    throw new Error(`D1 migrations failed:\n${migrate.stdout}${migrate.stderr}`)
+  }
 
   // The wrangler binary itself, not `npx wrangler`, and in its own process
   // group: wrangler starts workerd as a child, and killing only the parent
@@ -375,7 +587,18 @@ async function main() {
       '--var',
       `HEALTH_AUTH_TOKEN:${HEALTH_TOKEN}`,
       '--var',
-      `DEV_ACCESS_EMAIL:${DEV_EMAIL}`,
+      `BASIC_AUTH_PASSWORD:${PASSCODE}`,
+      '--var',
+      `SESSION_SECRET:${SESSION_SECRET}`,
+      // Sentry off: wrangler.jsonc carries the production DSN as a plain
+      // var, and a smoke run must not report into the real project.
+      '--var',
+      'SENTRY_DSN:',
+      '--var',
+      `BETTER_AUTH_SECRET:${ACCOUNTS_SECRET}`,
+      // The test mailbox, so the script can read the emailed code back.
+      '--var',
+      'AUTH_DEV_MAILBOX:true',
     ],
     {
       cwd: root,
@@ -390,6 +613,12 @@ async function main() {
 
   try {
     await waitForReady(url, child)
+
+    // --- the passcode gate --------------------------------------------------
+    await passcodeGate(url)
+
+    // --- accounts ------------------------------------------------------------
+    await accounts(url, log)
 
     // --- version -----------------------------------------------------------
     const version = await (await request(`${url}/api/version`)).json()
@@ -574,8 +803,7 @@ async function main() {
       textOf(stale),
     )
 
-    await cloudDesigns(url, CDS)
-    await mcpHandOff(url)
+    const handedOff = await mcpHandOff(url)
 
     // --- the design view ---------------------------------------------------
     const view = await rpc(url, 'resources/read', {
@@ -593,6 +821,9 @@ async function main() {
       bridge.ok && (await bridge.text()).length > 1000,
       `HTTP ${bridge.status}`,
     )
+
+    // Last: CPU-bound in Node (see mcpHandOff).
+    if (handedOff) await compareWithBrowser(handedOff)
   } catch (error) {
     // A hang or crash says more with wrangler's own output beside it.
     console.error('wrangler dev output:\n' + log.join(''))

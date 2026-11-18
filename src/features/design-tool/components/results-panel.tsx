@@ -1,5 +1,3 @@
-'use client'
-
 import { memo, useState } from 'react'
 import {
   Download,
@@ -51,8 +49,7 @@ import {
 } from '@/components/ui/tooltip'
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
 import type { ProcessResult } from '@/features/design-tool/types/process-result'
-import { toast } from 'sonner'
-import { downloadResultsZip } from '@/features/design-tool/utils/build-zip'
+import { toast } from '@/lib/toast'
 import { SequenceVisualizations } from './sequence-visualizations'
 import { CodonChanges } from './codon-changes'
 import { JunctionContext } from './junction-context'
@@ -485,8 +482,11 @@ function aavSummary(seq5: number, seq3: number) {
 }
 
 function ResultsPanelImpl({ result, optionsUsed, species }: ResultsPanelProps) {
-  const handleDownloadZip = () => {
+  // The ZIP library loads on the first download, not with the results.
+  const handleDownloadZip = async () => {
     try {
+      const { downloadResultsZip } =
+        await import('@/features/design-tool/utils/build-zip')
       downloadResultsZip(result, optionsUsed)
     } catch (error) {
       toast.error(

@@ -1,5 +1,5 @@
 /**
- * What `/api/designs` and the cloud-design Workflow say: HTTP refusals, and
+ * What the cloud-design server functions and Workflow say: HTTP refusals, and
  * the failure messages a design carries back to whoever reads it (the design
  * tool shows them as they are, and an agent reads them through get_design).
  */
@@ -7,14 +7,11 @@
 export const designsCopy = {
   http: {
     notConfigured:
-      'Cloud designs are not configured on this deployment (no Cloudflare Access settings).',
-    unauthorized: 'Sign in through Cloudflare Access to use cloud designs.',
-    noEmail:
-      'This Access token has no email, so it cannot own a design. Sign in as a person, not a service token.',
-    accessUnavailable:
-      'Could not check your sign-in with Cloudflare Access just now. Try again in a moment.',
+      'Cloud designs are not configured on this deployment (no passcode set).',
+    unauthorized: 'Sign in with the passcode to use cloud designs.',
+    accountRequired:
+      'Cloud runs need an account. Sign in to run designs in the cloud; without one, designs run in this browser.',
     unavailable: 'Cloud designs are not available on this deployment.',
-    badJson: 'The request body must be JSON.',
     bodyTooLarge: 'That request is too large.',
     invalid: (reason: string) => `That design cannot be run: ${reason}`,
     tooLong: (bases: number, limit: number) =>
@@ -24,10 +21,11 @@ export const designsCopy = {
     badId: 'That is not a cloud design id.',
     notFound:
       'No cloud design with that id. It may have been deleted, or passed its retention.',
-    notOwner: 'Only the person who submitted a cloud design can delete it.',
+    notOwner: 'Only the account that submitted a cloud design can delete it.',
     notStarted:
       'That design has not started yet, so who owns it is not known. Try again in a moment.',
     failed: 'The cloud-design request failed.',
+    busy: 'Cloud designs are briefly unavailable. Try again in a moment.',
   },
 
   /** Why a cloud design failed, as its reader sees it. */

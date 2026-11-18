@@ -56,11 +56,11 @@ function matchedLabel(match: MatchedField) {
     case 'geneId':
       return copy.matched.geneId
     case 'symbol':
-      return copy.matched.symbol
+      return match.typo ? copy.matched.closeSymbol : copy.matched.symbol
     case 'name':
-      return copy.matched.name
+      return match.typo ? copy.matched.closeName : copy.matched.name
     case 'alias':
-      return copy.matched.alias
+      return match.typo ? copy.matched.closeAlias : copy.matched.alias
   }
 }
 

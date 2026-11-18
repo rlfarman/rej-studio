@@ -1,19 +1,28 @@
-'use client'
-
 import * as React from 'react'
 import { Menu as MenuPrimitive } from '@base-ui/react/menu'
 import { cn } from 'cn'
 import { ChevronRightIcon, CheckIcon } from 'lucide-react'
 
-function DropdownMenu({ ...props }: MenuPrimitive.Root.Props) {
+function DropdownMenu<Payload>({
+  ...props
+}: MenuPrimitive.Root.Props<Payload>) {
   return <MenuPrimitive.Root data-slot="dropdown-menu" {...props} />
 }
+
+/**
+ * One menu for many triggers: pass the handle to a single `DropdownMenu` and
+ * to each `DropdownMenuTrigger`, and the menu renders the open trigger's
+ * `payload`. Long lists use it so every row doesn't mount its own menu.
+ */
+const createDropdownMenuHandle = MenuPrimitive.createHandle
 
 function DropdownMenuPortal({ ...props }: MenuPrimitive.Portal.Props) {
   return <MenuPrimitive.Portal data-slot="dropdown-menu-portal" {...props} />
 }
 
-function DropdownMenuTrigger({ ...props }: MenuPrimitive.Trigger.Props) {
+function DropdownMenuTrigger<Payload>({
+  ...props
+}: MenuPrimitive.Trigger.Props<Payload>) {
   return <MenuPrimitive.Trigger data-slot="dropdown-menu-trigger" {...props} />
 }
 
@@ -270,4 +279,5 @@ export {
   DropdownMenuSub,
   DropdownMenuSubTrigger,
   DropdownMenuSubContent,
+  createDropdownMenuHandle,
 }

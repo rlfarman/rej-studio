@@ -1,6 +1,5 @@
-'use client'
 import * as React from 'react'
-import { useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Undo2, X } from 'lucide-react'
@@ -18,7 +17,9 @@ import { Skeleton } from '@/components/ui/skeleton'
 import type { DesignToolSpecies } from '@/features/design-tool/types/species-options'
 import { validationSchema, FormValues } from '../types/form-schema'
 import { formatOptionsForReport } from '../utils/form-handler'
+import { withSelectedWggwSites } from '../utils/wggw-selection'
 import { useJob } from '@/features/design-tool/hooks/use-job'
+import { useAccount } from '@/lib/account/account'
 import { useFormDraft } from '@/features/design-tool/hooks/use-form-draft'
 import { CustomizationOptions } from './customization-options'
 import { DesignObjectives } from './optimization-options'
@@ -26,15 +27,23 @@ import { SubmitButton } from './submit-button'
 import { FinishNotificationOptIn } from './finish-notification-opt-in'
 import { FieldHelp } from './field-help'
 import { RunSummary } from './run-summary'
-import { ResultsPanel } from './results-panel'
 import {
   CloudRunningPlaceholder,
   JobHeader,
   RunningPlaceholder,
 } from './job-header'
 import { CloudRunToggle } from './cloud-run-toggle'
-import { toast } from 'sonner'
+import { toast } from '@/lib/toast'
 import { designToolCopy } from '../copy'
+
+// The results UI (the panel, objectives, replay, maps, run record) is about a
+// third of the design tool's code and is only needed once a run finishes.
+// It loads when a run starts, so it is usually there by the time the result
+// is, and the form itself arrives without it.
+const loadResultsPanel = () => import('./results-panel')
+const ResultsPanel = lazy(() =>
+  loadResultsPanel().then((module) => ({ default: module.ResultsPanel })),
+)
 
 const copy = designToolCopy.form
 const draftCopy = designToolCopy.draft
@@ -65,8 +74,11 @@ export function GeneSplitterForm({
 }: GeneSplitterFormProperties) {
   const [isEditing, setIsEditing] = useState(false)
   // Off by default: a cloud run sends the sequence off this machine, so it
-  // is only ever the person's explicit choice, made each time.
-  const [runInCloud, setRunInCloud] = useState(false)
+  // is only ever the person's explicit choice, made each time. It also needs
+  // an account: signed out, nothing runs in the cloud whatever was ticked.
+  const [cloudChosen, setCloudChosen] = useState(false)
+  const account = useAccount()
+  const runInCloud = cloudChosen && account.status === 'signed-in'
   // Guards the one-shot form restore. Set true after we hydrate from a
   // resumed URL job, or eagerly on submit so the new job's own persisted
   // formValues don't ricochet back and overwrite the live form.
@@ -161,7 +173,9 @@ export function GeneSplitterForm({
     // the hydration effect above and overwrite the live form.
     didResetRef.current = true
     setIsEditing(false)
-    await job.submitJob(values, { cloud: runInCloud })
+    // The split-point editor keeps only the person's WGGW picks in the form;
+    // the sites they resolve to are worked out here, once, for the request.
+    await job.submitJob(withSelectedWggwSites(values), { cloud: runInCloud })
     // The inputs are safe in the job entry now, so the draft can go.
     draft.clear()
   }
@@ -182,6 +196,10 @@ export function GeneSplitterForm({
   // missing: show a placeholder rather than flashing an empty form.
   const showForm = (job.status === 'idle' && !job.isRestoring) || isEditing
   const isRunning = job.status === 'submitting' || job.status === 'running'
+  // A run (or a restored job) is under way: fetch the results UI now.
+  useEffect(() => {
+    if (job.status !== 'idle') void loadResultsPanel()
+  }, [job.status])
   // 'submitting' is the brief window while the POST is in flight; treat it
   // as running for header/placeholder purposes so the UI doesn't blank out.
   const headerStatus: 'running' | 'completed' | 'failed' | 'cancelled' | null =
@@ -328,7 +346,7 @@ export function GeneSplitterForm({
               <div className="flex flex-wrap items-center gap-3">
                 <CloudRunToggle
                   checked={runInCloud}
-                  onCheckedChange={setRunInCloud}
+                  onCheckedChange={setCloudChosen}
                   disabled={job.isLoading}
                 />
                 {/* Only browser runs can finish unseen in a background tab. */}
@@ -346,13 +364,17 @@ export function GeneSplitterForm({
         )}
 
         {result && (
-          <div>
+          <Suspense
+            fallback={<Skeleton className="h-[36rem] w-full rounded-2xl" />}
+          >
             <ResultsPanel
               result={result}
-              optionsUsed={formatOptionsForReport(methods.getValues())}
+              optionsUsed={formatOptionsForReport(
+                withSelectedWggwSites(methods.getValues()),
+              )}
               species={methods.getValues('species')}
             />
-          </div>
+          </Suspense>
         )}
       </form>
       {/* eslint-enable react-hooks/refs */}

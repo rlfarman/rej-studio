@@ -212,7 +212,7 @@ Cloudflare cutover are done. Everything here is reversible until DNS moves.
    - The corpus uploaded to R2.
    - Access on the hostname, with a bypass policy for the MCP path, which
      uses bearer tokens instead.
-   - Web Analytics, Sentry for Start, and secrets.
+   - Web Analytics and secrets (Sentry is wired; see below).
    - A preview deploy on `workers.dev`, then DNS moves from Vercel.
 
    Vercel stays up until the new deploy has served the lab for a while.
@@ -226,13 +226,86 @@ Cloudflare cutover are done. Everything here is reversible until DNS moves.
 - **Step 1:** the browser optimizer on by default in production, so slice 3
   can delete the server design path.
 
+### Cutover status (2026-11-17)
+
+Done on the `rlfarman` account; the preview is live at
+`https://rej-studio.rejstudio.workers.dev`, behind the passcode gate.
+
+- **Workers Paid** is on, with a $10 Workers spending limit that blocks
+  usage (Billing → Spend limits) and email alerts at $2 and $5. The limit is
+  account-wide, so it also covers the other Worker on the account.
+- **Corpus v1 is published.** It was rebuilt from the `corpus-v1` release
+  snapshot (39,990 genes, 40,695 files, 273 MB, with isoform alignments),
+  uploaded to the R2 bucket `rej-studio-gene-data` under `v1/`, and is served
+  to browsers from `https://gene-data.rejstudio.com/v1` with long-lived
+  immutable caching and CORS for the app's origins. It is public reference
+  data, so it sits outside the gate.
+- **Edge cache for the corpus.** R2 custom domains do not cache `.json` at
+  Cloudflare's edge by default (`cf-cache-status: DYNAMIC`), so every cold
+  request went back to R2: 3.4 s for the 1 MB index from the lab's browser.
+  The `rejstudio.com` zone has a Cache Rule, "Cache gene data (R2)":
+  hostname equals `gene-data.rejstudio.com`, eligible for cache, edge TTL
+  from the files' own `Cache-Control` (a year, immutable; each corpus
+  version has its own path). The index then loaded in under 1 s. Responses
+  still carry the right `Access-Control-Allow-Origin` per requesting origin
+  (checked for the workers.dev URL, `rejstudio.com` and localhost).
+  Smart Tiered Cache is on for the zone too, so a cache miss at one edge
+  location fills from a regional tier before going to R2.
+- **Buckets bound** in `wrangler.jsonc`: `GENE_DATA` and `DESIGN_RESULTS`
+  (`rej-studio-design-results`, 30-day lifecycle rule).
+- **Passcode gate instead of Access (decided 2026-11-17).** Access was set
+  up and verified, then dropped at Richie's request for the old shared
+  passcode: one code is simpler to hand to the lab than per-person sign-in.
+  The gate lives in the Worker (`src/server/auth/`, AGENTS.md "Auth"). What
+  that gives up: per-person identity (cloud designs are owned by a sign-in
+  session, so only the browser that submitted one can delete it), revoking
+  one person (changing the passcode signs everyone out), and per-person
+  rate limits. Both Access applications were deleted; the `rlfarman` Zero
+  Trust team remains, unused and free.
+
+- **Secrets** `BASIC_AUTH_PASSWORD`, `SESSION_SECRET`, `MCP_TOKENS` (one
+  token, `richie`) and `HEALTH_AUTH_TOKEN` are set. The owner keeps them in
+  `~/.config/rej-studio/worker-secrets.json`, which is never committed.
+  Secrets persist across deploys, so a deploy is just the build:
+
+  ```bash
+  VITE_GENE_DATA_URL=https://gene-data.rejstudio.com/v1 pnpm cf:deploy
+  ```
+
+  When a secret changes, push the file (this makes a new version of the
+  Worker with the code already deployed):
+
+  ```bash
+  npx wrangler secret bulk ~/.config/rej-studio/worker-secrets.json --name rej-studio
+  ```
+
+  `pnpm cf:deploy -- --secrets-file …` does not work: the flag lands after
+  pnpm's `--` at the end of a chained script, and `wrangler deploy` ignores
+  it.
+
+Verified signed in on the preview: the full corpus, an in-browser design, and
+a cloud design through reload, history and delete.
+
+- **Sentry is wired** for both halves: `@sentry/react`, loaded lazily from
+  the client entry with a build-time `VITE_SENTRY_DSN`, and
+  `@sentry/cloudflare`'s `withSentry` around the Worker's default export,
+  reading the `SENTRY_DSN` var from `wrangler.jsonc`. See AGENTS.md
+  ("Observability"). A release build still needs `VITE_SENTRY_DSN` passed to
+  it, and `SENTRY_AUTH_TOKEN` (with `SENTRY_ORG` / `SENTRY_PROJECT`) if the
+  client source maps should be uploaded.
+
+Still to do: Web Analytics, the DNS move, the required-checks swap,
+repointing the uptime monitor, and the teardown.
+
 ### Cutover checklist
 
 Things slice 3 left for the cutover, which only the repo and account owner
 can do:
 
 - **Swap the required checks in the same change that points the
-  integration branch at `main`.** The Protect main ruleset requires
+  integration branch at `main`.** Done 2026-11-17: the ruleset now requires
+  the Rust and WebAssembly checks and no longer requires the Python ones, so
+  what follows is kept only as the reason. The Protect main ruleset required
   `Pytest`, `Pyright`, `Ruff (lint + format)`, `uv.lock up to date`,
   `Schema drift + migrations` and `pip-audit`. Their workflows
   (`python-ci.yml`, `db-ci.yml`, `security.yml`'s pip-audit job) no longer
@@ -258,17 +331,9 @@ can do:
   cf:types`. Until it is bound, the MCP endpoint reads gene data over HTTP
   (or the committed sample through the assets binding) and the health check
   stays shallow.
-- **Access: add a bypass policy for `/api/mcp`** on the hostname, since an
-  agent has no browser to sign in with and the endpoint carries its own
-  bearer tokens. Everything else, including `/api/health` and
-  `/api/version`, sits behind Access; a monitor probing health needs either a
-  service token or a bypass of its own.
-- **Cloud designs (slice 4b).** Set `ACCESS_TEAM_DOMAIN` and `ACCESS_AUD`
-  (the Access application's AUD tag) in `wrangler.jsonc` `vars` once the
-  Access application exists; until both are set `/api/designs` answers 503.
-  Keep `/api/designs` behind Access — unlike `/api/mcp` it has no bypass,
-  and the Worker verifies the Access JWT itself as well. Never set
-  `DEV_ACCESS_EMAIL` on the deployed Worker.
+- **The passcode.** Deployed, `BASIC_AUTH_PASSWORD` and `SESSION_SECRET`
+  must both be set (the Worker refuses everything otherwise). `/api/mcp` and
+  `/api/health` are outside the gate; `/api/version` is behind it.
 - **The design-results bucket.** Create an R2 bucket for results over ~900
   KB, give it a 30-day lifecycle rule to match the Workflow's retention, and
   uncomment the `DESIGN_RESULTS` binding in `wrangler.jsonc` (then `pnpm
@@ -281,6 +346,85 @@ can do:
   Vercel deployment, with its Neon database, Modal app and Upstash limiter,
   is the fallback and must keep working; deleting any of them first leaves
   nothing to roll back to.
+
+### DNS move runbook
+
+Where the names point today (2026-11-17):
+
+| Name                               | Now                                               | After                          |
+| ---------------------------------- | ------------------------------------------------- | ------------------------------ |
+| `rejstudio.com`                    | `A 76.76.21.21`, DNS-only (Vercel)                | Worker custom domain, proxied  |
+| `www.rejstudio.com`                | `CNAME cname.vercel-dns.com` (Vercel 308 to apex) | redirect rule to apex          |
+| `gene-data.rejstudio.com`          | proxied to the corpus bucket                      | unchanged                      |
+| `rej-studio.rejstudio.workers.dev` | the new app, gated                                | unchanged, kept as a back door |
+
+The zone is already on Cloudflare (`aaden`/`amy.ns.cloudflare.com`), so this
+is two DNS edits and a deploy, not a nameserver change: no propagation wait,
+and a rollback that takes effect as fast as the records do.
+
+**Before the move**
+
+1. Merge the cutover, gene-page and accounts branches; the required checks
+   (swapped 2026-11-17) pass on `main`.
+2. Deploy with `VITE_GENE_DATA_URL` pointing at the published corpus and
+   `VITE_SENTRY_DSN` set, and exercise the workers.dev host: the Worker smoke
+   script, the Playwright suite, a browser design and a cloud design.
+3. For accounts, which stay off until all four are true: `AUTH_DB` id and
+   `BETTER_AUTH_SECRET` (both done), `AUTH_HOSTS` containing `rejstudio.com`
+   (already), the Cloudflare Email domain onboarded for `AUTH_EMAIL_FROM`,
+   and a Google client whose redirect URI is
+   `https://rejstudio.com/api/auth/callback/google`.
+
+**The move**
+
+4. Delete the two Vercel records (apex `A`, `www` `CNAME`). Cloudflare
+   refuses a Worker custom domain on a hostname that already has a
+   conflicting record, so this comes first and is the moment the old site
+   stops answering on its own name.
+5. Add `routes` to `wrangler.jsonc` with `custom_domain: true` for
+   `rejstudio.com` (and `www.rejstudio.com` if it stays a domain rather than
+   a redirect), then `wrangler deploy`. Cloudflare creates the proxied
+   records and the certificate itself.
+6. Send `www` to the apex with a zone redirect rule (308), which needs no
+   Worker code. Vercel was doing this.
+
+Steps 4 and 5 need the Cloudflare dashboard, or an API token scoped to
+`Zone:DNS:Edit` on this zone — `wrangler` can create the custom domain but
+not remove the record in its way.
+
+**Verify, in order**
+
+- `curl -sI https://rejstudio.com/` answers 302 to `/login` and is no longer
+  served from `76.76.21.21`.
+- The passcode signs in; gene search, a browser design and a cloud design all
+  work on the new name.
+- `/api/health` with `HEALTH_AUTH_TOKEN` returns the deep check; `/api/mcp`
+  initializes with a token.
+- Sentry shows an event from the Worker and from the browser.
+
+**Rollback**
+
+Delete the custom domains, re-add `A 76.76.21.21` and
+`CNAME cname.vercel-dns.com`. This is why Vercel, Neon, Modal and Upstash
+stay up until the lab has used the new site for a while.
+
+**After the move**
+
+- Web Analytics becomes a dashboard step: the zone is proxied, so automatic
+  injection works and the repo needs no beacon snippet (it ships no CSP, so
+  nothing to allow either).
+- The MCP endpoint is now `https://rejstudio.com/api/mcp`; tell whoever has a
+  token, and keep the workers.dev host working until they have moved.
+- Passcode sessions are per host, so everyone signs in once more.
+- `uptime.yml` needs no new URL — the `HEALTH_URL` variable is already
+  `https://rejstudio.com/api/health`, which means it starts probing the
+  Worker the moment the records change, and its `HEALTH_AUTH_TOKEN` secret
+  must equal the Worker's. Its comments now cover both backends. Once the move
+  is done, run the deep check on every probe: on the Worker it is one R2
+  read, not a Neon wake-up.
+- Teardown, last: the Vercel project and its domains, Neon, Modal, Upstash,
+  and the stale repo variables `COMPUTE_BACKEND`, `MODAL_API_URL` and
+  `NEON_PROJECT_ID`.
 
 ## Agent access (MCP)
 
@@ -520,7 +664,14 @@ What each decision came to, and where the build differs from the plan above:
   which re-exports Start's handler beside the `DesignWorkflow` class (a
   Workflow must be a named export of the main module); the Workflow is bound
   as `DESIGN_WORKFLOW`.
-- **API.** `POST /api/designs`, `GET` and `DELETE /api/designs/:id`, behind
+- **API — since replaced (2026-11-17).** The design tool now calls three
+  TanStack Start server functions (`src/features/design-tool/api/
+  cloud-designs.functions.ts`) that return typed results (`{ ok: true,
+  data }` or `{ ok: false, reason, message, retryAfter? }`), the documented
+  pattern for calls made only by the app; the REST routes are gone. Identity
+  is the passcode session (`src/server/designs/identity.ts`), not Access,
+  which was dropped for the passcode gate. The rest of this bullet describes
+  the first version: `POST /api/designs`, `GET` and `DELETE /api/designs/:id`, behind
   Access and verifying the Access JWT again in the Worker (signature against
   the team's JWKS, issuer, audience, expiry; jose, no `nodejs_compat`). No
   Access configuration means 503, never open; `DEV_ACCESS_EMAIL` stands in

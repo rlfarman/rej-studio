@@ -20,9 +20,11 @@ import {
   DropdownMenuTrigger,
   DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu'
-import { exportUserData, importUserData } from '@/routes/-components/user-data'
-import { seedUserData, clearSeedUserData } from '@/routes/-components/seed-data'
-import { toast } from 'sonner'
+// The data tools load when used: import validates a whole backup with zod,
+// which doesn't belong in every page. Seeding is development-only.
+const loadUserData = () => import('@/routes/-components/user-data')
+const loadSeedData = () => import('@/routes/-components/seed-data')
+import { toast } from '@/lib/toast'
 import {
   SidebarMenu as SidebarMenuPrimitive,
   SidebarMenuItem,
@@ -58,6 +60,7 @@ export function SidebarMenu() {
 
     const importCopy = errorsCopy.importUserData
     try {
+      const { importUserData } = await loadUserData()
       const result = await importUserData(file)
       if (!result.ok) {
         toast.error(
@@ -120,7 +123,13 @@ export function SidebarMenu() {
                   <DropdownMenuSeparator />
                 </>
               )}
-              <DropdownMenuItem onClick={() => void exportUserData()}>
+              <DropdownMenuItem
+                onClick={() =>
+                  void loadUserData().then(({ exportUserData }) =>
+                    exportUserData(),
+                  )
+                }
+              >
                 <Download className="h-4 w-4 text-foreground" />
                 {menuCopy.exportData}
               </DropdownMenuItem>
@@ -128,36 +137,51 @@ export function SidebarMenu() {
                 <Upload className="h-4 w-4 text-foreground" />
                 {menuCopy.importData}
               </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => {
-                  const { favorites, recents, jobs } = seedUserData()
-                  toast.success(menuCopy.seedResult(favorites, recents, jobs))
-                }}
-              >
-                <Sprout className="h-4 w-4 text-foreground" />
-                {menuCopy.seedData}
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => {
-                  const { favorites, recents, jobs } = clearSeedUserData()
-                  const total = favorites + recents + jobs
-                  if (total === 0) {
-                    toast.info(menuCopy.noSeedToClear)
-                  } else {
-                    toast.success(
-                      menuCopy.seedCleared(favorites, recents, jobs),
-                    )
-                  }
-                }}
-              >
-                <Eraser className="h-4 w-4 text-foreground" />
-                {menuCopy.clearSeedData}
-              </DropdownMenuItem>
+              {import.meta.env.DEV && <SeedDataItems />}
             </DropdownMenuContent>
           </DropdownMenu>
         </SidebarMenuItem>
       </SidebarMenuPrimitive>
+    </>
+  )
+}
+
+/**
+ * Demo data for developing and demoing the app (sample favorites, recents
+ * and design jobs). Development builds only: the code and its sample
+ * sequences are left out of production entirely.
+ */
+function SeedDataItems() {
+  return (
+    <>
+      <DropdownMenuSeparator />
+      <DropdownMenuItem
+        onClick={() =>
+          void loadSeedData().then(({ seedUserData }) => {
+            const { favorites, recents, jobs } = seedUserData()
+            toast.success(menuCopy.seedResult(favorites, recents, jobs))
+          })
+        }
+      >
+        <Sprout className="h-4 w-4 text-foreground" />
+        {menuCopy.seedData}
+      </DropdownMenuItem>
+      <DropdownMenuItem
+        onClick={() =>
+          void loadSeedData().then(({ clearSeedUserData }) => {
+            const { favorites, recents, jobs } = clearSeedUserData()
+            const total = favorites + recents + jobs
+            if (total === 0) {
+              toast.info(menuCopy.noSeedToClear)
+            } else {
+              toast.success(menuCopy.seedCleared(favorites, recents, jobs))
+            }
+          })
+        }
+      >
+        <Eraser className="h-4 w-4 text-foreground" />
+        {menuCopy.clearSeedData}
+      </DropdownMenuItem>
     </>
   )
 }

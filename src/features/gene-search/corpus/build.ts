@@ -1,11 +1,13 @@
 import {
   CORPUS_FORMAT,
   INDEX_PATH,
+  MANIFEST_PATH,
   geneFilePath,
   transcriptShardOf,
   transcriptShardPath,
   type CorpusGene,
   type CorpusIsoform,
+  type CorpusManifest,
   type GeneFile,
   symbolShardKey,
   symbolShardPath,
@@ -190,6 +192,14 @@ export function buildCorpus(
     transcriptShards: shardCount,
   }
   files.set(INDEX_PATH, JSON.stringify(index))
+  const manifest: CorpusManifest = {
+    format: CORPUS_FORMAT,
+    version,
+    geneCount: index.geneCount,
+    isoformCount: index.isoformCount,
+    transcriptShards: shardCount,
+  }
+  files.set(MANIFEST_PATH, JSON.stringify(manifest))
 
   // Genes with no symbol can't be looked up by one, so no shard holds them.
   const bySymbolKey = new Map<string, CorpusGene[]>()

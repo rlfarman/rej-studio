@@ -1,26 +1,21 @@
-import { z } from 'zod'
-import { speciesFilterSchema } from '@/lib/bio/species'
+import type { SpeciesFilter } from '@/lib/bio/species'
 
 /**
  * Search request/response shapes for the corpus search, used by the /genes
- * page and the command palette. Types and zod only.
+ * page, the command palette and the MCP endpoint. Types and constants only:
+ * the search worker imports this, so keep it free of runtime dependencies
+ * such as zod.
  */
 
 /** How many genes each surface shows. The palette stays compact. */
 export const SEARCH_LIMITS = { palette: 6, page: 50 } as const
 
-const searchRequestSchema = z.object({
-  q: z.string().max(200),
-  species: speciesFilterSchema.default('both'),
-  limit: z.coerce
-    .number()
-    .int()
-    .min(1)
-    .max(SEARCH_LIMITS.page)
-    .default(SEARCH_LIMITS.palette),
-})
-
-export type SearchRequest = z.infer<typeof searchRequestSchema>
+export interface SearchRequest {
+  q: string
+  species: SpeciesFilter
+  /** At most `SEARCH_LIMITS.page`. */
+  limit: number
+}
 
 /** One gene in a search result. */
 export interface GeneSearchResult {
@@ -30,6 +25,11 @@ export interface GeneSearchResult {
   species: string
   /** Set when the query was a transcript id: the transcript it matched. */
   matchedIsoformId?: string
+  /**
+   * Which field the text search matched, and whether only as a close
+   * spelling (a typo). Set by text search; absent for id lookups.
+   */
+  match?: { field: 'symbol' | 'alias' | 'name'; typo: boolean }
 }
 
 export interface GeneSearchPage {

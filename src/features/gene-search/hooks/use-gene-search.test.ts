@@ -270,7 +270,7 @@ describe('useGeneSearch', () => {
       await waitFor(() => expect(result.current.hasSearched).toBe(true))
       expect(
         result.current.searchResults.map((g) => `${g.symbol}/${g.species}`),
-      ).toEqual(['BRCA1/human', 'BRCA2/human', 'BRCA1/mouse', 'BRCA2/mouse'])
+      ).toEqual(['BRCA1/human', 'BRCA1/mouse', 'BRCA2/human', 'BRCA2/mouse'])
       expect(result.current.error).toBeNull()
       expect(mockFetch).not.toHaveBeenCalled()
     })
@@ -278,13 +278,14 @@ describe('useGeneSearch', () => {
     it('applies the species filter and suggests similar symbols', async () => {
       speciesRef.current = 'mouse'
       const { result } = renderHook(
-        () => useGeneSearch({ defaultQuery: 'BRCA3' }),
+        // The sample has EGFR for human only.
+        () => useGeneSearch({ defaultQuery: 'EGFR' }),
         { wrapper: createWrapper() },
       )
       await waitFor(() => expect(result.current.hasSearched).toBe(true))
       expect(result.current.searchResults).toEqual([])
       expect(result.current.suggestions[0]).toEqual({
-        symbol: 'BRCA1',
+        symbol: 'EGFR',
         species: 'human',
       })
     })

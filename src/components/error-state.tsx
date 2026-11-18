@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { appCopy } from '@/copy/app'
 import { commonCopy } from '@/copy/common'
 import { createLogger } from '@/lib/logger'
+import { reportError } from '@/lib/sentry'
 
 const log = createLogger('error-boundary')
 
@@ -13,7 +14,7 @@ interface ErrorStateProps {
   error: unknown
   /** Resets the boundary and renders it again. */
   retry: () => void
-  /** Which error boundary caught it, for the log (and Sentry, at cutover). */
+  /** Which error boundary caught it, for the log and Sentry. */
   boundary?: string
   title: string
   description: string
@@ -24,9 +25,9 @@ interface ErrorStateProps {
 }
 
 /**
- * Error-boundary UI shared by every error boundary: logs the error (Sentry
- * comes back at cutover), then renders the common status layout with a
- * retry action.
+ * Error-boundary UI shared by every error boundary: logs the error and
+ * reports it to Sentry, then renders the common status layout with a retry
+ * action.
  */
 export function ErrorState({
   error,
@@ -39,12 +40,11 @@ export function ErrorState({
   standalone = false,
 }: ErrorStateProps) {
   useEffect(() => {
-    // TODO(cutover): report to Sentry for TanStack Start (@sentry/tanstackstart-react)
-    // here, tagged with `boundary`, once the DSN is configured on Cloudflare.
-    // Until then the error only reaches the browser console.
     log.error('error boundary caught an error', error, {
       ...(boundary && { boundary }),
     })
+    // A no-op without VITE_SENTRY_DSN, so local dev and CI stay silent.
+    reportError(error, boundary ? { boundary } : undefined)
   }, [error, boundary])
 
   return (

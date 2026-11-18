@@ -6,15 +6,7 @@ import {
 import { McpServer } from '@modelcontextprotocol/server'
 import { z } from 'zod'
 
-import {
-  validationSchema,
-  type FormValues,
-} from '@/features/design-tool/types/form-schema'
-import { pickDefaultSplitPoint } from '@/features/design-tool/utils/default-split-point'
-import {
-  listWggwSites,
-  pickDefaultWggwSite,
-} from '@/features/design-tool/utils/default-wggw-site'
+import type { FormValues } from '@/features/design-tool/types/form-schema'
 import {
   CLOUD_DESIGN_MAX_BASES,
   estimateCloudSeconds,
@@ -24,13 +16,13 @@ import { buildJobParams } from '@/features/design-tool/utils/form-handler'
 import { searchCorpus } from '@/features/gene-search/corpus/client'
 import type { GeneCorpus } from '@/features/gene-search/corpus/client'
 import { SEARCH_LIMITS } from '@/features/gene-search/types/search'
-import { isSpecies } from '@/lib/bio/species'
 import { createLogger } from '@/lib/logger'
 
 import { withinDesignBudget } from '../designs/rate-limit'
 import { readCloudDesign, submitCloudDesign } from '../designs/service'
 import type { ServerEnv } from '../env'
 import { mcpCopy } from './copy'
+import { designInput, toFormValues, type DesignInput } from './design-input'
 import { designOnWorker, reverseTranslateOnWorker } from './optimizer'
 import { withinBudget } from './rate-limit'
 import type { McpToken } from './tokens'
@@ -81,35 +73,6 @@ const speciesFilter = z
   .enum(['human', 'mouse', 'both'])
   .describe(mcpCopy.searchGenes.species)
 
-/** The design options an agent can set. Defaults match the form's. */
-const designInput = z.object({
-  name: z.string().min(1).max(250).describe(mcpCopy.submitDesign.input.name),
-  sequence: z.string().min(1).describe(mcpCopy.submitDesign.input.sequence),
-  sequence_type: z
-    .enum(['dna', 'protein'])
-    .optional()
-    .describe(mcpCopy.submitDesign.input.sequenceType),
-  species: z
-    .enum(['none', 'human', 'mouse'])
-    .optional()
-    .describe(mcpCopy.submitDesign.input.species),
-  split_point: z
-    .number()
-    .int()
-    .min(1)
-    .optional()
-    .describe(mcpCopy.submitDesign.input.splitPoint),
-  seed: z.number().int().optional().describe(mcpCopy.submitDesign.input.seed),
-  remove_cryptic_splice_sites: z.boolean().optional(),
-  minimize_cpgs: z.boolean().optional(),
-  reduce_kmer_complexity: z.boolean().optional(),
-  enforce_gc_content: z.boolean().optional(),
-  five_prime_stimulatory_intron: z.boolean().optional(),
-  three_prime_stimulatory_intron: z.boolean().optional(),
-})
-
-type DesignInput = z.infer<typeof designInput>
-
 /** A tool result that is plain text and nothing else. */
 function text(body: string) {
   return { content: [{ type: 'text' as const, text: body }] }
@@ -146,60 +109,6 @@ function explainValidation(error: unknown): string {
       .join('; ')
   }
   return error instanceof Error ? error.message : String(error)
-}
-
-/**
- * Turns an agent's design input into the form values the app validates.
- *
- * Protein input is reverse-translated by the optimizer first, exactly as the
- * form does before a design runs, so both routes hand the optimizer a coding
- * sequence spelled with the codons it scores against.
- */
-async function toFormValues(input: DesignInput): Promise<FormValues> {
-  const species = input.species ?? 'none'
-  const sequenceType = input.sequence_type ?? 'dna'
-  const raw = input.sequence.trim().toUpperCase()
-
-  if (sequenceType === 'protein' && !isSpecies(species)) {
-    throw new Error(
-      'Protein input needs a species ("human" or "mouse"), because it is reverse-translated before optimization.',
-    )
-  }
-
-  let codingSequence = raw
-  if (sequenceType === 'protein' && isSpecies(species)) {
-    const translated = await reverseTranslateOnWorker(raw, species)
-    if (!translated.ok) throw new Error(translated.message)
-    codingSequence = translated.CDS
-  }
-
-  const splitPoint = input.split_point ?? pickDefaultSplitPoint(codingSequence)
-
-  const values = {
-    sequenceType,
-    codingSequence,
-    proteinSequence: sequenceType === 'protein' ? raw : '',
-    name: input.name,
-    species,
-    codonOptimizeWeight: 1,
-    removeCrypticSpliceSites: input.remove_cryptic_splice_sites ?? true,
-    removeCrypticSpliceSitesWeight: 1,
-    minimizeCpgs: input.minimize_cpgs ?? true,
-    minimizeCpgsWeight: 1,
-    reduceKmerComplexity: input.reduce_kmer_complexity ?? true,
-    reduceKmerComplexityWeight: 1,
-    enforceGcContent: input.enforce_gc_content ?? true,
-    '5PrimeStimulatoryIntron': input.five_prime_stimulatory_intron ?? false,
-    '3PrimeStimulatoryIntron': input.three_prime_stimulatory_intron ?? false,
-    spliceJunctionPositions: [splitPoint],
-    selectedWggwSites: [
-      pickDefaultWggwSite(listWggwSites(codingSequence), splitPoint),
-    ],
-  }
-
-  // The form's own schema has the final word, so an agent cannot run a
-  // design the UI would have refused.
-  return validationSchema.parse(values)
 }
 
 export interface McpServerContext {
@@ -301,8 +210,8 @@ export function createRejStudioMcpServer({
       const refused = await overBudget('reads', 'gene lookups')
       if (refused) return refused
 
-      const index = await corpus.loadIndex()
-      const gene = index.geneBySymbol(symbol.trim(), species)
+      // One small symbol shard, not the whole index (format.ts).
+      const gene = await corpus.geneBySymbol(symbol.trim(), species)
       const file = gene ? await corpus.geneFile(gene.id) : null
       if (!gene || !file) {
         return notFound(mcpCopy.getGene.none(symbol, species))
@@ -350,7 +259,7 @@ export function createRejStudioMcpServer({
 
     let values: FormValues
     try {
-      values = await toFormValues(input)
+      values = await toFormValues(input, reverseTranslateOnWorker)
     } catch (error) {
       return {
         ...text(mcpCopy.submitDesign.invalid(explainValidation(error))),

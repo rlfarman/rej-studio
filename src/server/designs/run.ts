@@ -23,7 +23,7 @@ export interface CloudDesignParams {
   values: FormValues
   /** Exactly what the optimizer runs, derived from `values` (and a seed). */
   request: OptimizerRequest
-  /** An Access email, or `mcp:<token name>` for an agent. */
+  /** `session:<id>` for a sign-in, `local` in development, or `mcp:<token name>` for an agent. */
   owner: string
   bases: number
   /** ISO 8601. */

@@ -3,16 +3,22 @@ name: Uptime
 # Self-hosted Upptime-style probe of /api/health from GitHub Actions. Opens an
 # incident issue when a probe fails and closes it once probes pass again.
 #
-# Two probe depths, because any database query wakes Neon's compute:
+# Two probe depths:
 # - every 10 minutes, anonymous: liveness only. The route answers without
-#   touching the database or Modal.
-# - once a day, with the HEALTH_AUTH_TOKEN secret: the full checks, including
-#   a DB ping. Catches outages like Neon's compute quota running out within a
-#   day, for the cost of a single wake-up.
+#   touching anything behind it.
+# - once a day, with the HEALTH_AUTH_TOKEN secret: the deep checks. On the
+#   Cloudflare Worker that is a `head` of the gene corpus in R2; on the old
+#   Vercel deployment it pinged Neon and Modal, waking Neon's compute, which
+#   is why this runs daily rather than every probe.
 #
-# Setup: repo variable HEALTH_URL (e.g. https://rejstudio.com/api/health) and,
-# for the daily deep check, repo secret HEALTH_AUTH_TOKEN matching the
-# deployment's HEALTH_AUTH_TOKEN env var.
+# HEALTH_URL is https://rejstudio.com/api/health, so the probes follow the
+# domain: Vercel until the DNS move, the Worker after it. Once the domain
+# serves the Worker, the deep check costs one R2 read and can run on every
+# probe (docs/cloudflare-migration.md, "DNS move runbook").
+#
+# Setup: repo variable HEALTH_URL and, for the deep check, repo secret
+# HEALTH_AUTH_TOKEN matching the deployment's HEALTH_AUTH_TOKEN (on the
+# Worker, `wrangler secret put HEALTH_AUTH_TOKEN`).
 
 on:
   schedule:
@@ -21,7 +27,7 @@ on:
   workflow_dispatch:
     inputs:
       deep:
-        description: Run the full checks (queries the database)
+        description: Run the deep checks (the corpus in R2, or Neon on Vercel)
         type: boolean
         default: false
 

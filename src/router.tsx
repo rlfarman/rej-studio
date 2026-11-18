@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createRouter } from '@tanstack/react-router'
 
+import { publishRouterToSentry } from '@/lib/sentry'
 import { PageLoading } from '@/routes/-components/layout/page-loading'
 import { RouteError } from '@/routes/-components/route-error'
 import { parseSearch, stringifySearch } from '@/routes/-components/search-codec'
@@ -24,7 +25,7 @@ export function getRouter() {
   // One client for the route loaders and the components: loaders fill it
   // with `ensureQueryData`, components read the same entries back.
   const queryClient = makeQueryClient()
-  return createRouter({
+  const router = createRouter({
     routeTree,
     context: { queryClient },
     // Plain query strings (`?q=53`, `?i=a&i=b`) rather than the default
@@ -51,6 +52,10 @@ export function getRouter() {
     // Pages scroll inside the shell's <main>, not the window.
     scrollToTopSelectors: ['#main-content'],
   })
+  // Lets Sentry's browser tracing name spans after route patterns rather than
+  // URLs; a no-op when Sentry is not configured (src/lib/sentry.ts).
+  publishRouterToSentry(router)
+  return router
 }
 
 declare module '@tanstack/react-router' {

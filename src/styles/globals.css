@@ -52,7 +52,7 @@ body {
    - primary      Brand indigo. The only color for actions (default Button),
                   links and focus rings.
    - accent       A quiet tint of primary for hover and selected states (menu
-                  items, the cmdk selection, toggles, the active nav item).
+                  items, the palette highlight, toggles, the active nav item).
                   Never a second brand color.
    - spark        The signature lime. Reserved for molecular motifs (the DNA
                   loader, the login helix, the status-page strand) and OG art,
@@ -504,6 +504,12 @@ body {
   .login-btn-scan::after {
     animation: none;
   }
+}
+
+/* The login page arrives as the app's shell; its chrome stays hidden until
+   the client renders the form on its own (LOGIN_PRELOAD_SCRIPT, __root.tsx). */
+html[data-login-page] [data-app-chrome] {
+  visibility: hidden;
 }
 
 /* Honor reduced-motion globally: kills scanning/breathing effects that would

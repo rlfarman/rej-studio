@@ -1,5 +1,3 @@
-'use client'
-
 import { Tooltip as TooltipPrimitive } from '@base-ui/react/tooltip'
 import { cn } from 'cn'
 
@@ -16,13 +14,22 @@ function TooltipProvider({
   )
 }
 
-function Tooltip({ ...props }: TooltipPrimitive.Root.Props) {
+function Tooltip<Payload>({ ...props }: TooltipPrimitive.Root.Props<Payload>) {
   return <TooltipPrimitive.Root data-slot="tooltip" {...props} />
 }
 
-function TooltipTrigger({ ...props }: TooltipPrimitive.Trigger.Props) {
+function TooltipTrigger<Payload>({
+  ...props
+}: TooltipPrimitive.Trigger.Props<Payload>) {
   return <TooltipPrimitive.Trigger data-slot="tooltip-trigger" {...props} />
 }
+
+/**
+ * One tooltip for many triggers: pass the handle to a single `Tooltip` and to
+ * each `TooltipTrigger`, and the tooltip renders the open trigger's
+ * `payload`. Long lists use it so every row doesn't mount its own tooltip.
+ */
+const createTooltipHandle = TooltipPrimitive.createHandle
 
 function TooltipContent({
   className,
@@ -62,4 +69,10 @@ function TooltipContent({
   )
 }
 
-export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider }
+export {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+  TooltipProvider,
+  createTooltipHandle,
+}

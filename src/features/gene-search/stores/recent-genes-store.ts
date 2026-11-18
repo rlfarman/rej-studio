@@ -1,5 +1,3 @@
-'use client'
-
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import type { SavedGene } from '@/features/gene-search/types/domain-types'

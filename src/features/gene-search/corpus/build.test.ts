@@ -102,6 +102,13 @@ describe('buildCorpus', () => {
       ENST2: 'ENSG1',
     })
     expect(built.files.has('symbols/a.json')).toBe(true)
+    expect(JSON.parse(built.files.get('manifest.json')!)).toEqual({
+      format: 1,
+      version: 'test',
+      geneCount: 2,
+      isoformCount: 2,
+      transcriptShards: index.transcriptShards,
+    })
   })
 
   it('refuses ids that would not make a safe file name', () => {

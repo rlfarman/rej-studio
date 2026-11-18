@@ -16,6 +16,9 @@ export const geneSearchCopy = {
     kbdHintPrefix: 'Press',
   },
   command: {
+    dialogTitle: 'Search genes',
+    dialogDescription:
+      'Find a gene by symbol, name or Ensembl ID, or reopen a recent gene or design job.',
     inputAria: 'Search genes',
     // Search covers symbols, names, aliases and Ensembl IDs, not diseases;
     // the no-match state points disease searches at the associations page.
@@ -83,6 +86,9 @@ export const geneSearchCopy = {
       name: 'Matched on name',
       alias: 'Matched on an alias or related term',
       geneId: 'Matched on Ensembl gene ID',
+      closeSymbol: 'Close spelling of the symbol',
+      closeName: 'Close spelling of a word in the name',
+      closeAlias: 'Close spelling of an alias',
       transcript: (id: string) => `Matched on transcript ${id}`,
     },
   },
@@ -111,8 +117,10 @@ export const geneSearchCopy = {
     downloadFasta: 'Download FASTA',
     viewEnsembl: 'View on Ensembl',
     downloadAllFasta: 'Download FASTA',
+    // Starts with the visible label, so voice control ("click Download
+    // FASTA") finds it (WCAG 2.5.3, label in name).
     downloadAllFastaAria: (n: number) =>
-      `Download all ${n} coding sequences as one FASTA file`,
+      `Download FASTA of all ${n} coding sequences`,
   },
   summary: {
     isoforms: 'Isoforms',

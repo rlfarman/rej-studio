@@ -3,9 +3,9 @@ import { bearerFrom, secretsMatch } from '../bearer'
 /**
  * Who may use the MCP endpoint.
  *
- * People reach the app through Cloudflare Access, which suits a person with a
- * browser and nothing else. An agent has no browser, so agents get named
- * tokens instead (Access bypasses /api/mcp): each can be withdrawn on its
+ * People reach the app through the passcode gate, which suits a person with
+ * a browser and nothing else. An agent has no browser, so agents get named
+ * tokens instead (the gate lets /api/mcp through): each can be withdrawn on its
  * own, each has its own rate-limit budget, and every tool call is logged
  * under its name.
  *

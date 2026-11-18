@@ -12,6 +12,18 @@ import type { JobHistoryEntry } from './use-job-history'
 
 const KEY = 'rej-studio:job-history'
 
+// The cloud-design server functions only exist once Start's compiler has
+// made them RPC stubs, which Vitest does not run (and their module imports
+// the Worker). A cloud lookup here gets no answer, as offline.
+vi.mock('@/features/design-tool/api/cloud-designs.functions', () => {
+  const unreachable = () => Promise.reject(new TypeError('no server here'))
+  return {
+    submitCloudDesignFn: vi.fn(unreachable),
+    readCloudDesignFn: vi.fn(unreachable),
+    deleteCloudDesignFn: vi.fn(unreachable),
+  }
+})
+
 const idbStore = () =>
   createStore(JOB_HISTORY_IDB.database, JOB_HISTORY_IDB.store)
 const seedIdb = (...entries: JobHistoryEntry[]) =>

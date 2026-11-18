@@ -138,5 +138,20 @@ export const lintConfig: OxlintConfig = {
       { zones: [...crossFeatureZones, ...sharedLayerZones, featureZone] },
     ],
     'rej/no-rhf-watch': 'error',
+    // Toasts go through src/lib/toast.ts, which keeps the toast library out
+    // of every page's first download; importing sonner directly would put
+    // it back.
+    'no-restricted-imports': [
+      'error',
+      {
+        paths: [
+          {
+            name: 'sonner',
+            importNames: ['toast'],
+            message: "Import toast from '@/lib/toast'.",
+          },
+        ],
+      },
+    ],
   },
 }

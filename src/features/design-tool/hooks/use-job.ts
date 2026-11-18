@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { useMutation, useQuery } from '@tanstack/react-query'
-import { toast } from 'sonner'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { toast } from '@/lib/toast'
 import {
   browserOptimizerSupported,
   designInBrowser,
@@ -9,8 +9,11 @@ import {
 import {
   deleteCloudDesign,
   fetchCloudDesign,
+  myCloudDesignsQuery,
   submitCloudDesign,
 } from '@/features/design-tool/api/cloud-designs'
+import { afterAccountChange } from '@/lib/account/account'
+import { openSignIn } from '@/stores/sign-in-dialog-store'
 import {
   CLOUD_DESIGN_MAX_BASES,
   estimateCloudSeconds,
@@ -146,6 +149,7 @@ export function useJob({
   )
   const progress = useJobHistory((s) => (jobId ? s.progressById[jobId] : null))
   const historyHydrated = useJobHistoryHydrated()
+  const queryClient = useQueryClient()
   // The job this hook is showing, for a notification click to tell whether
   // the run is already on screen. Null once the form unmounts.
   const shownJobIdRef = useRef<string | null>(null)
@@ -179,7 +183,15 @@ export function useJob({
       )
     }
     const submitted = await submitCloudDesign(values)
-    if (!submitted.ok) throw new CloudSubmitError(submitted.message)
+    if (!submitted.ok) {
+      if (submitted.reason === 'account_required') {
+        // Signed out somewhere else, or the session ran out: say so, and
+        // offer the way back in.
+        void afterAccountChange(queryClient)
+        openSignIn()
+      }
+      throw new CloudSubmitError(submitted.message)
+    }
     const { id, status } = submitted.data
     const existing = useJobHistory.getState().getEntry(id)
     if (existing?.status !== 'completed' || status !== 'completed') {
@@ -187,6 +199,9 @@ export function useJob({
     }
     setJobIdState(id)
     cloudRuns.wake()
+    void queryClient.invalidateQueries({
+      queryKey: myCloudDesignsQuery.queryKey,
+    })
     onCloudJob?.(id)
   }
 
@@ -388,6 +403,9 @@ export function useJob({
       return id
     },
     onSuccess: (id) => {
+      void queryClient.invalidateQueries({
+        queryKey: myCloudDesignsQuery.queryKey,
+      })
       const current = useJobHistory.getState().getEntry(id)
       if (!current) return
       upsertEntry({

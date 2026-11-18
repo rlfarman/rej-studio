@@ -1,61 +1,122 @@
 import { z } from 'zod'
 
 import {
+  CLOUD_REFUSAL_STATUS,
   cloudDesignSubmitSchema,
   isCloudDesignId,
+  type CloudAnswer,
+  type CloudDesign,
   type CloudDesignSubmitted,
+  type CloudDesignSummary,
+  type CloudRefusalReason,
 } from '@/features/design-tool/types/cloud-design'
 import { createLogger } from '@/lib/logger'
 
+import type { AccountsRuntime } from '../accounts/auth'
 import type { ServerEnv } from '../env'
-import { identify, type Identity } from './access'
+import { identify, type Account } from './identity'
 import { designsCopy } from './copy'
 import { withinDesignBudget } from './rate-limit'
+import { forgetDesign, listDesigns, recordDesign } from './records'
 import {
+  CloudDesignUnavailableError,
   deleteCloudDesign,
   readCloudDesign,
   submitCloudDesign,
 } from './service'
 
 /**
- * `/api/designs`: submit, read and delete cloud designs, for the design tool.
+ * Submit, read and delete cloud designs, for the design tool's server
+ * functions (`features/design-tool/api/cloud-designs.functions.ts`).
  *
- * Behind Cloudflare Access like the rest of the app (unlike `/api/mcp`), and
- * checked here as well, fail-closed (./access.ts). Every answer is JSON and
- * `no-store`: a design is someone's unpublished sequence, so no cache between
- * here and the browser may keep a copy.
+ * Plain functions of the request, the env and the call's input, so they run
+ * under Vitest. Each checks who is asking first, fail-closed (./identity.ts),
+ * then validates the input itself (it arrives as the client sent it), and
+ * answers a `CloudAnswer`: the value, or a refusal the client can switch on.
+ *
+ * Reading needs only the passcode. Submitting, deleting and listing need an
+ * account (`account_required` otherwise, which the page answers by offering
+ * to sign in): cloud runs are an account feature, and the account owns them.
  */
 
 const log = createLogger('designs')
 
-/**
- * A 45 kb sequence is ~45 KB of JSON, and the form sends it at most twice
- * (the DNA, and the protein it came from). Anything much bigger is not a
- * design request.
- */
-const MAX_BODY_BYTES = 256 * 1024
-
-function json(
-  body: unknown,
-  status = 200,
-  headers: Record<string, string> = {},
-) {
-  return Response.json(body, {
-    status,
-    headers: { 'cache-control': 'no-store', ...headers },
-  })
-}
+type Refusal = Extract<CloudAnswer<never>, { ok: false }>
 
 function refuse(
-  status: number,
+  reason: CloudRefusalReason,
   message: string,
-  headers: Record<string, string> = {},
-) {
-  return json({ error: message }, status, headers)
+  retryAfter?: number,
+): Refusal {
+  return { ok: false, reason, message, retryAfter }
 }
 
-function refuseIdentity(identity: Extract<Identity, { ok: false }>) {
-  return refuse(identity.status, identity.message)
+/** The HTTP status for an answer (the server functions send it). */
+export function statusOf(answer: CloudAnswer<unknown>, created = false) {
+  if (!answer.ok) return CLOUD_REFUSAL_STATUS[answer.reason]
+  return created ? 202 : 200
+}
+
+/**
+ * Runs `work` for a caller past the passcode, with their account if they are
+ * signed in to one. A Workflow binding that is only briefly unavailable is
+ * `busy` (the client tries again); any other failure is logged and `failed`.
+ */
+async function asCaller<T>(
+  request: Request,
+  env: ServerEnv,
+  runtime: AccountsRuntime,
+  what: string,
+  work: (account: Account | null) => Promise<CloudAnswer<T>>,
+): Promise<CloudAnswer<T>> {
+  const caller = await identify(request, env, runtime)
+  if (!caller.ok) {
+    return refuse(
+      caller.status === 401 ? 'unauthorized' : 'unavailable',
+      caller.message,
+    )
+  }
+  try {
+    return await work(caller.account)
+  } catch (error) {
+    if (error instanceof CloudDesignUnavailableError) {
+      log.warn(`${what}: Workflow status unavailable`)
+      return refuse('busy', designsCopy.http.busy, 2)
+    }
+    log.error(what, error, { owner: caller.account?.owner })
+    return refuse('failed', designsCopy.http.failed)
+  }
+}
+
+/** `asCaller` for what only an account may do: `account_required` without one. */
+function asAccount<T>(
+  request: Request,
+  env: ServerEnv,
+  runtime: AccountsRuntime,
+  what: string,
+  work: (account: Account) => Promise<CloudAnswer<T>>,
+): Promise<CloudAnswer<T>> {
+  return asCaller(request, env, runtime, what, async (account) =>
+    account
+      ? work(account)
+      : refuse('account_required', designsCopy.http.accountRequired),
+  )
+}
+
+/**
+ * Runs a write to the account's design list. The list is an index beside
+ * the Workflow, so a failed write is logged and the call still answers
+ * with what happened to the design itself.
+ */
+async function updateRecords(
+  what: string,
+  write: () => Promise<void>,
+): Promise<void> {
+  try {
+    await write()
+  } catch (error) {
+    log.error(what, error)
+  }
 }
 
 /** Every Zod complaint, in one line. */
@@ -68,114 +129,122 @@ function explain(error: z.ZodError): string {
     .join('; ')
 }
 
-/** `POST /api/designs` */
-export async function handleCreateDesign(
+/** `{ id }` naming a cloud design, or null. */
+function designId(input: unknown): string | null {
+  const id = (input as { id?: unknown } | null)?.id
+  return typeof id === 'string' && isCloudDesignId(id) ? id : null
+}
+
+/**
+ * Starts a design, or finds the identical one already submitted
+ * (`existing`). The input is checked by the form's own schema, so the
+ * Worker refuses exactly what the form does.
+ */
+export function submitDesign(
   request: Request,
   env: ServerEnv,
-): Promise<Response> {
-  const identity = await identify(request, env)
-  if (!identity.ok) return refuseIdentity(identity)
-
-  const declared = Number(request.headers.get('content-length') ?? '0')
-  if (declared > MAX_BODY_BYTES) {
-    return refuse(413, designsCopy.http.bodyTooLarge)
-  }
-  const text = await request.text()
-  if (text.length > MAX_BODY_BYTES) {
-    return refuse(413, designsCopy.http.bodyTooLarge)
-  }
-
-  let body: unknown
-  try {
-    body = JSON.parse(text)
-  } catch {
-    return refuse(400, designsCopy.http.badJson)
-  }
-  // The form's own schema, so the Worker refuses exactly what the form does.
-  const parsed = cloudDesignSubmitSchema.safeParse(body)
-  if (!parsed.success) {
-    return refuse(400, designsCopy.http.invalid(explain(parsed.error)))
-  }
-
-  try {
+  input: unknown,
+  runtime: AccountsRuntime = {},
+): Promise<CloudAnswer<CloudDesignSubmitted>> {
+  const what = 'cloud design submit failed'
+  return asAccount(request, env, runtime, what, async ({ owner }) => {
+    const parsed = cloudDesignSubmitSchema.safeParse(input)
+    if (!parsed.success) {
+      return refuse('invalid', designsCopy.http.invalid(explain(parsed.error)))
+    }
     const outcome = await submitCloudDesign(env, {
-      values: parsed.data.values,
-      seed: parsed.data.seed,
-      owner: identity.email,
-      spend: () => withinDesignBudget(env, identity.email),
+      ...parsed.data,
+      owner,
+      spend: () => withinDesignBudget(env, owner),
     })
     if (!outcome.ok) {
-      switch (outcome.reason) {
-        case 'too_large':
-          return refuse(413, outcome.message)
-        case 'rate_limited':
-          return refuse(429, outcome.message, { 'retry-after': '60' })
-        case 'unavailable':
-          return refuse(503, outcome.message)
-      }
+      return outcome.reason === 'rate_limited'
+        ? refuse('rate_limited', outcome.message, 60)
+        : refuse(outcome.reason, outcome.message)
     }
-    const answer: CloudDesignSubmitted = {
-      id: outcome.id,
-      status: outcome.status,
-      existing: outcome.existing,
+    const { id, status, existing } = outcome
+    const db = env.AUTH_DB
+    if (db) {
+      await updateRecords('could not record a cloud design', () =>
+        recordDesign(db, owner, {
+          id,
+          name: parsed.data.values.name,
+          bases: parsed.data.values.codingSequence.length,
+          submittedAt: new Date().toISOString(),
+        }),
+      )
     }
-    return json(answer, outcome.existing ? 200 : 202, {
-      location: `/api/designs/${outcome.id}`,
-    })
-  } catch (error) {
-    log.error('cloud design submit failed', error, { owner: identity.email })
-    return refuse(500, designsCopy.http.failed)
-  }
+    return { ok: true, data: { id, status, existing } }
+  })
 }
 
-/** `GET /api/designs/:id` */
-export async function handleGetDesign(
+/**
+ * Reads a design: anyone past the passcode may, account or not (see "Who may
+ * do what" in ./service.ts), so a `?job=` link opens for everyone in the lab.
+ */
+export function readDesign(
   request: Request,
   env: ServerEnv,
-  id: string,
-): Promise<Response> {
-  const identity = await identify(request, env)
-  if (!identity.ok) return refuseIdentity(identity)
-  if (!isCloudDesignId(id)) return refuse(404, designsCopy.http.badId)
-
-  try {
-    // No ownership check: see "Who may do what" in ./service.ts.
-    const design = await readCloudDesign(env, id, identity.email)
-    if (!design) return refuse(404, designsCopy.http.notFound)
-    return json(design)
-  } catch (error) {
-    log.error('cloud design read failed', error, { id })
-    return refuse(500, designsCopy.http.failed)
-  }
+  input: unknown,
+  runtime: AccountsRuntime = {},
+): Promise<CloudAnswer<CloudDesign>> {
+  const what = 'cloud design read failed'
+  return asCaller(request, env, runtime, what, async (account) => {
+    const id = designId(input)
+    if (!id) return refuse('not_found', designsCopy.http.badId)
+    // Without an account the caller owns nothing, so `ownedByCaller` is
+    // false rather than absent.
+    const design = await readCloudDesign(env, id, account?.owner ?? '')
+    return design
+      ? { ok: true, data: design }
+      : refuse('not_found', designsCopy.http.notFound)
+  })
 }
 
-/** `DELETE /api/designs/:id`: the owner only. */
-export async function handleDeleteDesign(
+/**
+ * Deletes a design and its stored result: the account that submitted it
+ * only. Deleted or already gone, it leaves the account's list too.
+ */
+export function deleteDesign(
   request: Request,
   env: ServerEnv,
-  id: string,
-): Promise<Response> {
-  const identity = await identify(request, env)
-  if (!identity.ok) return refuseIdentity(identity)
-  if (!isCloudDesignId(id)) return refuse(404, designsCopy.http.badId)
-
-  try {
-    const outcome = await deleteCloudDesign(env, id, identity.email)
+  input: unknown,
+  runtime: AccountsRuntime = {},
+): Promise<CloudAnswer<null>> {
+  const what = 'cloud design delete failed'
+  return asAccount(request, env, runtime, what, async ({ owner }) => {
+    const id = designId(input)
+    if (!id) return refuse('not_found', designsCopy.http.badId)
+    const outcome = await deleteCloudDesign(env, id, owner)
+    const db = env.AUTH_DB
+    if (db && (outcome === 'deleted' || outcome === 'not_found')) {
+      await updateRecords('could not forget a cloud design', () =>
+        forgetDesign(db, owner, id),
+      )
+    }
     switch (outcome) {
       case 'deleted':
-        return new Response(null, {
-          status: 204,
-          headers: { 'cache-control': 'no-store' },
-        })
+        return { ok: true, data: null }
       case 'not_found':
-        return refuse(404, designsCopy.http.notFound)
+        return refuse('not_found', designsCopy.http.notFound)
       case 'forbidden':
-        return refuse(403, designsCopy.http.notOwner)
+        return refuse('forbidden', designsCopy.http.notOwner)
       case 'not_started':
-        return refuse(409, designsCopy.http.notStarted, { 'retry-after': '5' })
+        return refuse('not_started', designsCopy.http.notStarted, 5)
     }
-  } catch (error) {
-    log.error('cloud design delete failed', error, { id })
-    return refuse(500, designsCopy.http.failed)
-  }
+  })
+}
+
+/** The signed-in account's cloud designs, newest first, for any device. */
+export function listMyDesigns(
+  request: Request,
+  env: ServerEnv,
+  runtime: AccountsRuntime = {},
+): Promise<CloudAnswer<CloudDesignSummary[]>> {
+  const what = 'cloud design list failed'
+  return asAccount(request, env, runtime, what, async ({ owner }) => {
+    const db = env.AUTH_DB
+    if (!db) return refuse('unavailable', designsCopy.http.unavailable)
+    return { ok: true, data: await listDesigns(db, owner) }
+  })
 }

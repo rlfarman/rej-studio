@@ -23,7 +23,8 @@ import type {
 
 /**
  * Cloud designs on the Workflow binding: submit, read and delete, shared by
- * `/api/designs` (./handler.ts) and the MCP endpoint's hand-off.
+ * the design tool's server functions (./handler.ts) and the MCP endpoint's
+ * hand-off.
  *
  * ## Who may do what
  *
@@ -45,6 +46,26 @@ const log = createLogger('designs')
 
 /** How long a subscription is given to deliver an instance's start event. */
 const PARAMS_TIMEOUT_MS = 1500
+
+/**
+ * Pauses before each retry of a Workflow read. For about a second after
+ * `create()`, the deployed binding can answer both `workflow.get()` and
+ * `instance.status()` with a bare "internal error" (seen on the preview: a
+ * reload right after submitting polled straight into it). Both are reads, so
+ * retrying is safe; ~1.75 s covers the window seen so far.
+ */
+export const STATUS_RETRY_DELAYS_MS = [250, 500, 1000]
+
+/**
+ * The Workflow binding would not report an instance's status even after
+ * retrying. Transient by nature, so callers answer "try again", not "failed".
+ */
+export class CloudDesignUnavailableError extends Error {
+  constructor(id: string, options?: ErrorOptions) {
+    super(`could not read the status of cloud design ${id}`, options)
+    this.name = 'CloudDesignUnavailableError'
+  }
+}
 
 type DesignWorkflow = Workflow<CloudDesignParams>
 
@@ -153,7 +174,7 @@ async function resubmit(
   instance: WorkflowInstance,
   spend: () => Promise<boolean>,
 ): Promise<SubmitOutcome> {
-  const { status, error } = await instance.status()
+  const { status, error } = await instanceStatus(instance)
   const state = cloudStatus(status)
   const failure =
     state === 'failed'
@@ -194,7 +215,7 @@ export async function readCloudDesign(
   const instance = await findInstance(workflow, id)
   if (!instance) return null
 
-  const snapshot = await instance.status()
+  const snapshot = await instanceStatus(instance)
   const status = cloudStatus(snapshot.status)
   const described = (
     meta: Omit<CloudDesignParams, 'request'> | null,
@@ -277,7 +298,7 @@ export async function deleteCloudDesign(
   const instance = await findInstance(workflow, id)
   if (!instance) return 'not_found'
 
-  const snapshot = await instance.status()
+  const snapshot = await instanceStatus(instance)
   const output = snapshot.output as CloudDesignOutput | undefined
   const owner = output?.owner ?? (await startedParams(instance))?.owner
   // A queued instance has not started, so its params are not readable yet;
@@ -301,10 +322,40 @@ async function findInstance(
   id: string,
 ): Promise<WorkflowInstance | null> {
   try {
-    return await workflow.get(id)
+    return await retryRead(id, () => workflow.get(id))
   } catch (error) {
     if (isNotFound(error)) return null
     throw error
+  }
+}
+
+/** `instance.status()`, retried through the binding's start-up hiccup. */
+function instanceStatus(instance: WorkflowInstance): Promise<InstanceStatus> {
+  return retryRead(instance.id, () => instance.status())
+}
+
+/**
+ * A Workflow read, retried through the binding's start-up hiccup (see
+ * STATUS_RETRY_DELAYS_MS). "Not found" is an answer, not a hiccup, so it is
+ * passed straight through.
+ */
+async function retryRead<T>(id: string, read: () => Promise<T>): Promise<T> {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await read()
+    } catch (error) {
+      if (isNotFound(error)) throw error
+      const delay = STATUS_RETRY_DELAYS_MS[attempt]
+      if (delay === undefined) {
+        throw new CloudDesignUnavailableError(id, { cause: error })
+      }
+      log.warn('cloud design read failed; retrying', {
+        id,
+        attempt: attempt + 1,
+        error: errorText(error),
+      })
+      await new Promise((resolve) => setTimeout(resolve, delay))
+    }
   }
 }
 

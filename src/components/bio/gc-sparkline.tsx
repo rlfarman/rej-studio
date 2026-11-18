@@ -1,5 +1,3 @@
-'use client'
-
 import { slidingGcContent, computeGcPercent } from '@/lib/bio/sequence-utils'
 import { bioWidgetsCopy } from './copy'
 

@@ -1,4 +1,3 @@
-'use client'
 import { useFormContext, Controller } from 'react-hook-form'
 import type { FieldPathByValue } from 'react-hook-form'
 import { FormItem, FormControl } from '@/components/ui/form'

@@ -1,4 +1,3 @@
-'use client'
 import { Fragment, useState, useSyncExternalStore, type ReactNode } from 'react'
 import { ChevronRight } from 'lucide-react'
 import {

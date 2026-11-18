@@ -145,7 +145,7 @@ function ArchitecturePage() {
               tech="TanStack Query + static index"
               details={[
                 'Index fetched once per load',
-                'Postgres-equivalent ranking',
+                'MiniSearch: prefix + typo matching',
                 'Favorites & recents (localStorage)',
               ]}
             />
@@ -160,7 +160,7 @@ function ArchitecturePage() {
             />
             <ServiceBox
               name="Shared UI"
-              tech="shadcn/ui + Base UI + cmdk"
+              tech="shadcn/ui + Base UI"
               details={[
                 'Dark/light theme',
                 'Command palette (⌘K)',
@@ -198,26 +198,26 @@ function ArchitecturePage() {
           <div className="grid grid-cols-3 gap-3">
             <ServiceBox
               name="Static assets"
-              tech="Prerendered SPA shell"
+              tech="Prerendered pages + SPA shell"
               details={[
-                'Every navigation gets the shell',
+                'Static pages arrive as HTML; the rest get the shell',
                 'Hashed /assets/* cached a year',
                 'Optimizer .wasm, ?v=<sha256>',
               ]}
               variant="muted"
             />
             <ServiceBox
-              name="Access"
-              tech="Cloudflare Access (cutover)"
-              details={['Per-person sign-in', 'Replaces the shared password']}
+              name="Passcode gate"
+              tech="In the Worker, signed cookie"
+              details={['One shared passcode', 'MCP keeps its own tokens']}
               variant="muted"
             />
             <ServiceBox
               name="Worker"
               tech="TanStack Start server entry"
               details={[
-                'Renders the shell for unmatched requests',
-                'Server routes arrive in slice 4',
+                'Gate first, then pages or /api',
+                'MCP endpoint and cloud-design Workflow',
               ]}
               variant="muted"
             />
@@ -327,7 +327,7 @@ function ArchitecturePage() {
                 Console logger — error boundaries
               </Badge>
               <Badge className="border border-chart-5/20 bg-chart-5/10 type-micro text-foreground">
-                Sentry for Start — at cutover
+                Sentry — browser and Worker
               </Badge>
               <Badge className="border border-chart-3/20 bg-chart-3/10 type-micro text-foreground">
                 Cloudflare Web Analytics — at cutover

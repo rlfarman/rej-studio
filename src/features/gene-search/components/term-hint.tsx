@@ -1,12 +1,9 @@
-'use client'
-
-import { useState } from 'react'
 import { Info } from 'lucide-react'
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
 
 interface TermHintProps {
@@ -17,29 +14,25 @@ interface TermHintProps {
 }
 
 /**
- * "What is this?" affordance for domain terms. Radix tooltips open on hover
- * and keyboard focus but ignore taps, so the tooltip is controlled here and
- * also toggles on click. Radix closes it on Escape, blur, and outside taps.
+ * "What is this?" affordance for domain terms: an infotip. Base UI's
+ * guidance is a Popover that also opens on hover, not a Tooltip: tooltips
+ * are disabled on touch devices and hidden from assistive technology, while
+ * a popover opens on hover, focus-and-Enter, click or tap, and closes on
+ * Escape or an outside press.
  */
 export function TermHint({ label, hint, className }: TermHintProps) {
-  const [open, setOpen] = useState(false)
-
   return (
-    <Tooltip open={open} onOpenChange={setOpen}>
-      <TooltipTrigger
+    <Popover>
+      <PopoverTrigger
+        openOnHover
+        delay={150}
         render={
           <button
             type="button"
             aria-label={label}
-            // Radix closes the tooltip on trigger pointerdown/click; prevent
-            // that so a tap can open it. Stop propagation so the click doesn't
-            // also sort a column or expand a table row.
-            onPointerDown={(e) => e.preventDefault()}
-            onClick={(e) => {
-              e.preventDefault()
-              e.stopPropagation()
-              setOpen((o) => !o)
-            }}
+            // Inside sortable headers and expandable rows: opening the hint
+            // must not also sort a column or expand the row.
+            onClick={(e) => e.stopPropagation()}
             className={cn(
               'inline-flex size-6 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none',
               className,
@@ -49,9 +42,12 @@ export function TermHint({ label, hint, className }: TermHintProps) {
           </button>
         }
       />
-      <TooltipContent className="max-w-64 text-left leading-snug text-balance">
+      <PopoverContent
+        side="top"
+        className="w-auto max-w-64 rounded-2xl p-3 text-left leading-snug text-balance"
+      >
         {hint}
-      </TooltipContent>
-    </Tooltip>
+      </PopoverContent>
+    </Popover>
   )
 }

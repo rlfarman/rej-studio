@@ -1,5 +1,4 @@
-'use client'
-import { useRef } from 'react'
+import { useLayoutEffect, useRef } from 'react'
 import { useFormContext, useWatch } from 'react-hook-form'
 import {
   FormField,
@@ -16,9 +15,10 @@ import { SequenceHighlight } from './sequence-highlight'
 import { cn } from '@/lib/utils'
 import { cleanSequence, parseFasta } from '@/lib/bio/fasta'
 import { detectSequenceType } from '@/lib/bio/sequence-utils'
-import { toast } from 'sonner'
+import { toast } from '@/lib/toast'
 import { isSpecies } from '@/lib/bio/species'
 import { pickDefaultSplitPoints } from '../utils/default-split-point'
+import { rescaleSplitPoints, type SplitAnchor } from '../utils/split-points'
 import { useReverseTranslation } from '../hooks/use-reverse-translation'
 import { translate } from '@/lib/bio/genetic-code'
 import { designToolCopy } from '../copy'
@@ -94,6 +94,56 @@ export function CodingSequenceInput() {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const backdropRef = useRef<HTMLDivElement>(null)
 
+  // The textarea is uncontrolled: the browser owns its text while typing,
+  // and only writes from elsewhere (paste cleaning, FASTA upload, the
+  // DNA/protein toggle, reverse translation, draft restore, reset) are pushed
+  // into it here.
+  //
+  // Controlled, it dropped keystrokes. Typing re-renders the split-point
+  // editor, which wrote derived values back into the form from effects: the
+  // selected WGGW sites (now resolved on submit from the picks, see
+  // utils/wggw-selection.ts) and still the clamped split points
+  // (splice-slider-context.tsx, the effect calling onPositionsChange). When
+  // such a write landed between a keystroke and its render, React ended the
+  // input event by
+  // restoring the field to the value it had last rendered, and the next key
+  // was typed onto the shorter text. Uncontrolled, there is no rendered value
+  // to restore to.
+  //
+  // `typedRef` holds what the field itself has emitted since it last matched
+  // the form. A form value found there is this field's own keystroke catching
+  // up, possibly behind newer ones, and must not be written back over them.
+  const typedRef = useRef(new Set<string>())
+  // Where the split points were last rescaled to (see rescaleSplitPoints).
+  const splitAnchorRef = useRef<SplitAnchor | null>(null)
+
+  // Typing moves the split points with the sequence, here in the change
+  // handler rather than in an effect after the render, so a keystroke is one
+  // batched form update. Writes that set a sequence together with its split
+  // points (paste, upload, reverse translation, restores) bypass this.
+  const rescaleSplitPointsForTyping = (nextLength: number) => {
+    const positions = getValues('spliceJunctionPositions') ?? []
+    const anchor = rescaleSplitPoints(
+      positions,
+      getValues('codingSequence')?.length ?? 0,
+      nextLength,
+      splitAnchorRef.current,
+    )
+    splitAnchorRef.current = anchor
+    if (anchor.positions.some((p, i) => p !== positions[i])) {
+      setValue('spliceJunctionPositions', anchor.positions)
+    }
+  }
+  useLayoutEffect(() => {
+    const el = textareaRef.current
+    if (!el) return
+    const next = activeValue ?? ''
+    if (el.value !== next && !typedRef.current.has(next)) {
+      el.value = next
+    }
+    if (el.value === next) typedRef.current.clear()
+  }, [activeValue])
+
   const syncScroll = () => {
     if (textareaRef.current && backdropRef.current) {
       backdropRef.current.scrollTop = textareaRef.current.scrollTop
@@ -147,13 +197,10 @@ export function CodingSequenceInput() {
       setValue('spliceJunctionPositions', points, {
         shouldValidate: true,
       })
-      setValue(
-        'selectedWggwSites',
-        points.map(() => null),
-        {
-          shouldValidate: false,
-        },
-      )
+      // A new sequence starts its WGGW picks over: the old ones name sites
+      // that may not be in it.
+      setValue('wggwSitePicks', [], { shouldValidate: false })
+      setValue('wggwRewritePicks', [], { shouldValidate: false })
       // Clear the protein field so switching back doesn't show stale input
       if (modeSwitched) {
         setValue('proteinSequence', '', { shouldValidate: false })
@@ -327,8 +374,16 @@ export function CodingSequenceInput() {
                 }
                 rows={4}
                 aria-required="true"
-                {...field}
-                onChange={field.onChange}
+                name={field.name}
+                disabled={field.disabled}
+                onBlur={field.onBlur}
+                onChange={(event) => {
+                  typedRef.current.add(event.target.value)
+                  if (!isProtein) {
+                    rescaleSplitPointsForTyping(event.target.value.length)
+                  }
+                  field.onChange(event)
+                }}
                 ref={(el) => {
                   field.ref(el)
                   textareaRef.current = el

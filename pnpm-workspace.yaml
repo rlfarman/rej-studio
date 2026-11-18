@@ -16,6 +16,16 @@ allowBuilds:
 # checking why the evidence dropped.
 trustPolicy: no-downgrade
 
+# Advisories `pnpm audit` may skip. Each needs a reason and an exit condition.
+# - GHSA-fc5q-39xc-vjpf (picomatch ReDoS, high): no patched release exists
+#   yet (<=4.0.7 affected). It reaches production deps only through
+#   @tanstack/react-start's build plugins, which glob our own file patterns at
+#   build time; nothing in the shipped SPA or Worker matches untrusted input
+#   with it. Remove this once picomatch publishes a fix.
+auditConfig:
+  ignoreGhsas:
+    - GHSA-fc5q-39xc-vjpf
+
 # Versions shared by package.json and the overrides below, so a transitive
 # copy (e.g. @types/react pulled in by a library) always matches the
 # direct dependency.
