@@ -72,15 +72,15 @@ import {
   type IsoformSort,
   type IsoformSortKey,
 } from '@/features/gene-search/utils/isoform-sort'
+import {
+  downloadPreOptimizedZip,
+  preOptimizedZipFilename,
+  preOptimizedZipUrl,
+} from '@/features/gene-search/utils/pre-optimized-zip'
 import { geneSearchCopy } from '../copy'
 
 const copy = geneSearchCopy.isoformTable
 const terms = geneSearchCopy.terms
-
-/** Pre-optimized sequence package for an isoform (static, built offline). */
-function preOptimizedZipUrl(isoformId: string) {
-  return `https://rej-seq-1.s3.us-west-004.backblazeb2.com/rej/v1.0/zips/${isoformId}_v1.0.zip`
-}
 
 /**
  * Whether a ready-made package exists for this isoform. Every ZIP in the
@@ -90,6 +90,14 @@ function preOptimizedZipUrl(isoformId: string) {
  */
 function hasPreOptimizedZip(suitability: Suitability) {
   return suitability !== 'triple-aav'
+}
+
+/** A ZIP link's click: fetch it, so a failure is a toast, not a navigation. */
+function zipDownloadClick(isoformId: string) {
+  return (event: React.MouseEvent) => {
+    event.preventDefault()
+    void downloadPreOptimizedZip(isoformId)
+  }
 }
 
 interface IsoformListProps {
@@ -529,7 +537,8 @@ function IsoformRow({
                         render={
                           <a
                             href={preOptimizedZipUrl(isoform.id)}
-                            download={`${isoform.id}_v1.0.zip`}
+                            download={preOptimizedZipFilename(isoform.id)}
+                            onClick={zipDownloadClick(isoform.id)}
                             aria-label={copy.downloadAria(isoform.id)}
                           />
                         }
@@ -631,7 +640,8 @@ function IsoformMenuContent({
           render={
             <a
               href={preOptimizedZipUrl(isoform.id)}
-              download={`${isoform.id}_v1.0.zip`}
+              download={preOptimizedZipFilename(isoform.id)}
+              onClick={zipDownloadClick(isoform.id)}
             >
               <PackageOpen className="size-4" />
               {copy.downloadLong}
@@ -751,7 +761,8 @@ function ExpandedDetails({ isoform }: { isoform: IsoformRowData }) {
               render={
                 <a
                   href={preOptimizedZipUrl(isoform.id)}
-                  download={`${isoform.id}_v1.0.zip`}
+                  download={preOptimizedZipFilename(isoform.id)}
+                  onClick={zipDownloadClick(isoform.id)}
                   aria-label={copy.downloadAria(isoform.id)}
                 >
                   <PackageOpen className="size-4" />

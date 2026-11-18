@@ -369,6 +369,21 @@ export function GeneSearchCommand({
   const isMobile = useIsMobile()
   const inputRef = useRef<HTMLInputElement>(null)
 
+  // Focus the inline search on arrival, but only with a mouse or trackpad
+  // (a fair proxy for a hardware keyboard): on a touch screen it opens the
+  // software keyboard over the page before anyone asked to search. An effect
+  // rather than `autoFocus`, so the prerendered HTML carries no attribute
+  // and hydration renders what the server did. Not when something already
+  // has focus (text typed or a Tab pressed before hydration), and never in
+  // the dialog, which focuses its first field itself and needs somewhere to
+  // hand focus back to when it closes.
+  useEffect(() => {
+    if (!onPage || !window.matchMedia('(pointer: fine)').matches) return
+    if (document.activeElement && document.activeElement !== document.body)
+      return
+    inputRef.current?.focus()
+  }, [onPage])
+
   useSearchShortcut(() => {
     if (!onPage) return
     inputRef.current?.focus()
@@ -630,12 +645,6 @@ export function GeneSearchCommand({
           placeholder={isMobile ? copy.placeholderMobile : copy.placeholder}
           className="border-0 text-base ring-0 outline-0 focus:border-0 focus:ring-0 active:border-0 active:ring-0 sm:text-sm"
           disabled={isNavigating}
-          // Inline only, and not on a phone. The dialog focuses its first
-          // field itself, and an input that grabs focus while the dialog
-          // mounts leaves the dialog nothing to hand focus back to when it
-          // closes. On a phone, focusing on arrival opens the software
-          // keyboard over the page before anyone has asked to search.
-          autoFocus={onPage && !isMobile}
         />
         {isNavigating && pendingGene ? (
           <div

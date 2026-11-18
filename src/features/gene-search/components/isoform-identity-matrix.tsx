@@ -205,16 +205,21 @@ function Matrix({
                   </th>
                   {/* Columns 1..n-1: the last isoform has no pair to its
                       right in a lower triangle, so its column would be
-                      empty. */}
+                      empty. They link like the row labels do: isoform 1
+                      has no row, so its column is the only way to it. */}
                   {ids.slice(0, -1).map((id, j) => (
                     <th
                       key={`col-${id}`}
                       scope="col"
-                      title={id}
                       className="w-6 min-w-6 pb-1 text-center type-micro font-medium text-muted-foreground tabular-nums"
                     >
-                      <span aria-hidden>{j + 1}</span>
-                      <span className="sr-only">{id}</span>
+                      <IsoformJumpLink
+                        id={id}
+                        className="min-h-6 min-w-6 justify-center"
+                      >
+                        {j + 1}
+                        <span className="sr-only"> {id}</span>
+                      </IsoformJumpLink>
                     </th>
                   ))}
                 </tr>
@@ -364,6 +369,37 @@ function Legend() {
   )
 }
 
+/**
+ * A row or column label: opens and highlights the isoform's row in the
+ * table and scrolls to it, keeping the rest of the URL and the page's scroll.
+ */
+function IsoformJumpLink({
+  id,
+  className,
+  children,
+}: {
+  id: string
+  className?: string
+  children: ReactNode
+}) {
+  return (
+    <Link
+      from="/genes/$symbol"
+      to="."
+      search={(prev) => ({ ...prev, isoform: id })}
+      hash={`isoform-row-${id}`}
+      resetScroll={false}
+      className={cn(
+        'inline-flex items-center rounded-sm text-muted-foreground outline-none hover:text-foreground hover:underline focus-visible:ring-[3px] focus-visible:ring-ring/50',
+        className,
+      )}
+      title={geneSearchCopy.identityMatrix.jumpTo(id)}
+    >
+      {children}
+    </Link>
+  )
+}
+
 function Row({
   index,
   id,
@@ -391,16 +427,9 @@ function Row({
         scope="row"
         className="sticky left-0 z-10 bg-background pr-3 text-right font-normal whitespace-nowrap"
       >
-        <Link
-          from="/genes/$symbol"
-          to="."
-          // Opens and highlights the isoform's row and scrolls to it,
-          // keeping the rest of the URL and the page's scroll.
-          search={(prev) => ({ ...prev, isoform: id })}
-          hash={`isoform-row-${id}`}
-          resetScroll={false}
-          className="inline-flex min-h-6 items-center gap-2 rounded-sm font-mono type-nano text-muted-foreground outline-none hover:text-foreground hover:underline focus-visible:ring-[3px] focus-visible:ring-ring/50 sm:min-h-0 sm:items-baseline"
-          title={geneSearchCopy.identityMatrix.jumpTo(id)}
+        <IsoformJumpLink
+          id={id}
+          className="min-h-6 gap-2 font-mono type-nano sm:min-h-0 sm:items-baseline"
         >
           <span className="font-sans font-medium text-foreground tabular-nums">
             {index + 1}
@@ -412,7 +441,7 @@ function Row({
             …{id.slice(-6)}
           </span>
           <span className="sr-only sm:hidden">{id}</span>
-        </Link>
+        </IsoformJumpLink>
       </th>
       {values.map((v, j) => {
         // Strict lower triangle: the mirror would repeat every value, and the

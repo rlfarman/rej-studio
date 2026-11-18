@@ -93,12 +93,18 @@ describe('IsoformIdentityMatrix', () => {
     expect(
       rows.map((row) => within(row).getByRole('link').getAttribute('title')),
     ).toEqual(['ENST3', 'ENST2'].map(copy.jumpTo))
-    expect(
-      within(table)
-        .getAllByRole('columnheader')
-        .slice(1)
-        .map((th) => th.getAttribute('title')),
-    ).toEqual(['ENST1', 'ENST3'])
+    // Column headers link like row labels, so isoform 1, which has no row,
+    // can still be reached from the grid.
+    const columnLinks = within(table)
+      .getAllByRole('columnheader')
+      .slice(1)
+      .map((th) => within(th).getByRole('link', { name: /ENST/ }))
+    expect(columnLinks.map((link) => link.getAttribute('title'))).toEqual(
+      ['ENST1', 'ENST3'].map(copy.jumpTo),
+    )
+    expect(columnLinks[0].getAttribute('href')).toBe(
+      '/genes/TP53?isoform=ENST1#isoform-row-ENST1',
+    )
     for (const row of rows) {
       expect(within(row).queryAllByRole('button').length).toBeGreaterThan(0)
     }

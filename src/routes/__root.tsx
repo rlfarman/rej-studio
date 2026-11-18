@@ -1,11 +1,8 @@
 import {
   HeadContent,
-  Link,
   Outlet,
   Scripts,
   createRootRouteWithContext,
-  useHydrated,
-  useRouter,
   type ErrorComponentProps,
 } from '@tanstack/react-router'
 import type { QueryClient } from '@tanstack/react-query'
@@ -13,17 +10,14 @@ import { ThemeProvider } from 'next-themes'
 import type { ReactNode } from 'react'
 
 import { MaintenanceBanner } from '@/components/maintenance-banner'
-import { StatusPage } from '@/components/status-page'
-import { Button } from '@/components/ui/button'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { LazyToaster } from '@/components/lazy-toaster'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { appCopy } from '@/copy/app'
-import { commonCopy } from '@/copy/common'
 import { AppSidebar } from './-components/layout/app-sidebar'
 import { Header } from './-components/layout/header'
-import { PageLoading } from './-components/layout/page-loading'
 import { RouteAnnouncer } from './-components/layout/route-announcer'
+import { NotFoundPage } from './-components/not-found-page'
 import { RouteError } from './-components/route-error'
 import { useDocumentTitle } from './-components/layout/use-document-title'
 import { useShellPathname } from './-components/layout/use-shell-pathname'
@@ -98,7 +92,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     shellComponent: RootDocument,
     component: AppLayout,
     errorComponent: RootError,
-    notFoundComponent: NotFound,
+    notFoundComponent: RootNotFound,
   },
 )
 
@@ -182,39 +176,12 @@ function RootError(props: ErrorComponentProps) {
 }
 
 /**
- * Unmatched URLs. TanStack Router renders the root's not-found component in
- * the page slot, so the sidebar and header stay around it.
- *
- * The prerendered shell has the router's pending component in that slot, so
- * until the app has hydrated this renders the same thing: hydrating straight
- * into the 404 threw the tree away on every load (React #418), and
- * `e2e/shell.spec.ts` fails on any console error. The root route has no
- * `head()` for this state either, so the title is set here.
+ * A `notFound()` thrown by a loader whose route has no not-found component
+ * of its own. Unmatched URLs never get here: the catch-all route (`$.tsx`)
+ * matches them. This runs after the route has set its title, so it says what
+ * the page is itself.
  */
-function NotFound() {
-  const router = useRouter()
-  const hydrated = useHydrated()
+function RootNotFound() {
   useDocumentTitle(appCopy.metadata.title(appCopy.notFound.pageTitle))
-  if (!hydrated) return <PageLoading />
-  return (
-    <StatusPage
-      eyebrow={appCopy.notFound.eyebrow}
-      title={appCopy.notFound.description}
-      description={appCopy.notFound.detail}
-      actions={
-        <>
-          <Button size="lg" nativeButton={false} render={<Link to="/" />}>
-            {commonCopy.actions.goHome}
-          </Button>
-          <Button
-            size="lg"
-            variant="outline"
-            onClick={() => router.history.back()}
-          >
-            {commonCopy.actions.goBack}
-          </Button>
-        </>
-      }
-    />
-  )
+  return <NotFoundPage />
 }

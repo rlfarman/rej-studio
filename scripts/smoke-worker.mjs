@@ -271,6 +271,15 @@ async function passcodeGate(url) {
       (signedIn.headers.get('content-type') ?? '').includes('text/html'),
     `HTTP ${signedIn.status}`,
   )
+  // Only the refusal: a real package is in an external bucket, and this
+  // script runs without the network. The refusal still proves the route is
+  // wired and that it checks the id before building an upstream URL.
+  const zip = await request(`${url}/api/pre-optimized/not-a-transcript`)
+  check(
+    'the pre-optimized ZIP route refuses an id that is not a transcript',
+    zip.status === 400,
+    `HTTP ${zip.status}`,
+  )
 }
 
 /**

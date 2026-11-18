@@ -156,28 +156,8 @@ test('the theme toggles and persists across a reload', async ({ page }) => {
 })
 
 test('an unknown URL shows the not-found page', async ({ page }) => {
-  // The shell is served with the pending component in the page slot, so the
-  // 404 must wait for hydration; rendering it straight away threw the
-  // hydrated tree away (React #418) on every load.
-  //
-  // One #418 is still expected here, and only here. Two causes were found:
-  //
-  // 1. The sidebar's links arrived from the prerender marked as the current
-  //    page — fixed, see `ShellLink`. That was the one affecting every
-  //    shell-served URL, which is why the per-route loop above now asserts
-  //    no console errors at all.
-  // 2. A second cause specific to an unmatched URL: the router builds a
-  //    different tree for `notFoundComponent` than for a matched route's
-  //    pending component, and the shell was prerendered with the latter.
-  //    Localized by rendering `NotFound` as nothing but `<PageLoading />`,
-  //    byte-identical to the shell's page slot — the error survived, so it
-  //    is the structure around the page slot, not its content. Fixing it
-  //    means changing how an unknown URL is matched (a catch-all route
-  //    rather than the not-found branch), which is its own change.
-  //
-  // So this allows exactly that error and nothing else: a second console
-  // error here, or any error on a real route, still fails.
-  //
+  // Served the shell like any other page; the catch-all route (`$.tsx`)
+  // makes it hydrate through the same pending path, so no hydration errors.
   const errors: string[] = []
   page.on('pageerror', (error) => errors.push(error.message))
   page.on('console', (message) => {
@@ -192,8 +172,7 @@ test('an unknown URL shows the not-found page', async ({ page }) => {
   await expect(page).toHaveTitle(
     appCopy.metadata.title(appCopy.notFound.pageTitle),
   )
-  expect(errors.filter((e) => !/React error #418/.test(e))).toEqual([])
-  expect(errors.filter((e) => /React error #418/.test(e))).toHaveLength(1)
+  expect(errors).toEqual([])
   // In the page slot, with the sidebar still there to navigate away.
   await expect(page.locator('main#main-content h1')).toHaveText(
     appCopy.notFound.description,
@@ -201,4 +180,15 @@ test('an unknown URL shows the not-found page', async ({ page }) => {
   await expect(page.locator('main')).toHaveCount(1)
   await sidebarLink(page, nav.home).click()
   await expect(page).toHaveURL('/')
+
+  // Back to it without a page load: the router matches it in the browser.
+  await page.goBack()
+  await expect(page).toHaveURL('/no-such-page')
+  await expect(
+    page.getByRole('heading', { name: appCopy.notFound.description }),
+  ).toBeVisible()
+  await expect(page).toHaveTitle(
+    appCopy.metadata.title(appCopy.notFound.pageTitle),
+  )
+  expect(errors).toEqual([])
 })

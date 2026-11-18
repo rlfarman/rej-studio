@@ -15,9 +15,13 @@ import type { IsoformListItem } from '../types/domain-types'
 import IsoformTable from './isoform-table'
 
 const downloads: [string, string][] = []
+const blobDownloads: string[] = []
 vi.mock('@/lib/download-file', () => ({
   downloadTextFile: (name: string, text: string) => {
     downloads.push([name, text])
+  },
+  downloadBlob: (name: string) => {
+    blobDownloads.push(name)
   },
 }))
 
@@ -54,7 +58,7 @@ const dual = isoform('ENST00000000001', 5_000)
 const triple = isoform('ENST00000356175', 9_000)
 
 function zipUrl(id: string) {
-  return `https://rej-seq-1.s3.us-west-004.backblazeb2.com/rej/v1.0/zips/${id}_v1.0.zip`
+  return `/api/pre-optimized/${id}`
 }
 
 function renderTable(props: {
@@ -101,7 +105,9 @@ function rowEl(id: string) {
 
 function zipLinks() {
   return [
-    ...document.querySelectorAll<HTMLAnchorElement>('a[href*="/zips/"]'),
+    ...document.querySelectorAll<HTMLAnchorElement>(
+      'a[href^="/api/pre-optimized/"]',
+    ),
   ].map((a) => a.getAttribute('href'))
 }
 
@@ -116,6 +122,7 @@ beforeEach(() => {
 
 afterEach(() => {
   downloads.length = 0
+  blobDownloads.length = 0
   toasts.length = 0
   vi.unstubAllGlobals()
   vi.restoreAllMocks()
@@ -252,6 +259,56 @@ describe('IsoformTable pre-optimized ZIP', () => {
     openMenu(screen.getByLabelText(copy.moreAria(dual.id)))
     expect(await screen.findByText(copy.downloadLong)).toBeTruthy()
     expect(screen.queryByText(copy.downloadUnavailable)).toBeNull()
+  })
+
+  it('downloads the ZIP same-origin, without leaving the page', async () => {
+    const fetchZip = vi.fn<typeof fetch>(async () => new Response('PK'))
+    vi.stubGlobal('fetch', fetchZip)
+    renderTable({ isoforms: [dual] })
+
+    const link = await screen.findByLabelText(copy.downloadAria(dual.id))
+    expect(link.getAttribute('download')).toBe(`${dual.id}_v1.0.zip`)
+    // Not cancelled by the handler would mean the browser follows the link.
+    expect(fireEvent.click(link)).toBe(false)
+    await vi.waitFor(() =>
+      expect(blobDownloads).toEqual([`${dual.id}_v1.0.zip`]),
+    )
+
+    expect(fetchZip).toHaveBeenCalledWith(zipUrl(dual.id))
+    expect(toasts).toEqual([])
+  })
+
+  it.each([
+    ['a missing package', 404, copy.downloadMissing(dual.id)],
+    ['a failed upstream', 502, copy.downloadFailed],
+  ])('says so in a toast on %s', async (_case, status, message) => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn<typeof fetch>(async () => new Response('nope', { status })),
+    )
+    renderTable({ isoforms: [dual] })
+
+    fireEvent.click(await screen.findByLabelText(copy.downloadAria(dual.id)))
+
+    await vi.waitFor(() => expect(toasts).toEqual([`error: ${message}`]))
+    expect(blobDownloads).toEqual([])
+  })
+
+  it('says so in a toast when the request fails', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn<typeof fetch>(async () => {
+        throw new TypeError('offline')
+      }),
+    )
+    renderTable({ isoforms: [dual] })
+
+    fireEvent.click(await screen.findByLabelText(copy.downloadAria(dual.id)))
+
+    await vi.waitFor(() =>
+      expect(toasts).toEqual([`error: ${copy.downloadFailed}`]),
+    )
+    expect(blobDownloads).toEqual([])
   })
 
   it('offers no ZIP download anywhere for a triple-AAV isoform', async () => {

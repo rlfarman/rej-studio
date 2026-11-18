@@ -136,6 +136,10 @@ export const geneSearchCopy = {
       `Download pre-optimized sequences for ${id} (ZIP)`,
     downloadHint:
       'Ready-made designs built with the default objectives, as a ZIP.',
+    downloadMissing: (id: string) =>
+      `No pre-optimized package is available for ${id}. Customize it in the design tool instead.`,
+    downloadFailed:
+      'The pre-optimized package didn’t download. Check your connection and try again.',
     // Every pre-built package in the corpus is a two-fragment (dual-vector)
     // design, so there is nothing to offer an isoform that needs three.
     downloadUnavailable: 'No pre-optimized ZIP for a triple-AAV sequence',

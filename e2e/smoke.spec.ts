@@ -373,12 +373,34 @@ test('the home page search opens a gene from the keyboard', async ({
   const input = page.getByRole('combobox', {
     name: geneSearchCopy.command.inputAria,
   })
-  await input.fill('tp53')
+  // With a mouse, the search is focused on arrival, so typing goes there.
+  await expect(input).toBeFocused()
+  await page.keyboard.type('tp53')
   await expect(page.getByRole('option', { name: /TP53/ }).first()).toBeVisible()
   await input.press('ArrowDown')
   await input.press('ArrowUp')
   await input.press('Enter')
   await expect(page).toHaveURL(/\/genes\/TP53/)
+})
+
+test.describe('on a touch screen', () => {
+  test.use({
+    hasTouch: true,
+    isMobile: true,
+    viewport: { width: 390, height: 844 },
+  })
+
+  test('the home page search waits to be tapped', async ({ page }) => {
+    // Focusing it on arrival would open the software keyboard over the page.
+    await page.goto('/', { waitUntil: 'networkidle' })
+    const input = page.getByRole('combobox', {
+      name: geneSearchCopy.command.inputAria,
+    })
+    await expect(input).toBeVisible()
+    await expect(input).not.toBeFocused()
+    await input.tap()
+    await expect(input).toBeFocused()
+  })
 })
 
 test('a term hint opens on click, closes on Escape, and leaves the table alone', async ({
