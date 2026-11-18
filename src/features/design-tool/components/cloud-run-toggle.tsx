@@ -48,7 +48,13 @@ export function CloudRunToggle({
         <label htmlFor={id} className="text-sm leading-none font-medium">
           {copy.toggleLabel}
         </label>
-        <p id={hintId} className="text-xs text-muted-foreground">
+        {/* Four hints of different lengths share this box, and which one it
+            is arrives after the account is read — on a prerendered page,
+            after hydration. Without a floor the box collapsed from three
+            lines to one and pulled Run designer up 32px under the pointer
+            (Lighthouse scored it 0.19 CLS). The column is `max-w-xs`, so
+            the longest hint wraps to the same three lines at every width. */}
+        <p id={hintId} className="min-h-[3lh] text-xs text-muted-foreground">
           {account.status === 'signed-out' ? (
             <>
               {copy.signInHint}{' '}
