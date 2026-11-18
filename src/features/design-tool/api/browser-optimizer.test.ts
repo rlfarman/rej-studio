@@ -65,7 +65,9 @@ vi.stubGlobal('Worker', FakeWorker)
 
 import {
   browserOptimizerSupported,
+  cancelBrowserRun,
   designInBrowser,
+  registerBrowserRun,
   terminateOptimizerWorker,
   warmOptimizerWorker,
 } from './browser-optimizer'
@@ -288,6 +290,91 @@ describe('designInBrowser', () => {
       expect(outcome.error.retriable).toBe(false)
     }
     vi.stubGlobal('Worker', FakeWorker)
+  })
+})
+
+describe('how long the design took', () => {
+  // The optimizer's own clock reads zero under WebAssembly, so the run is
+  // timed here instead; without that every browser run reported "<1s".
+  it("replaces the optimizer's zero with the measured wall clock", async () => {
+    const readings = [1_000, 17_500]
+    const now = vi
+      .spyOn(performance, 'now')
+      .mockImplementation(() => readings.shift() ?? 17_500)
+
+    const { pending, worker } = await startDesign()
+    worker.emit({
+      type: 'result',
+      runId: worker.runId,
+      result: validResult({ processing_time_seconds: 0 }),
+    })
+    const outcome = await pending
+
+    expect(outcome.ok).toBe(true)
+    if (outcome.ok) expect(outcome.data.processing_time_seconds).toBe(16.5)
+    now.mockRestore()
+  })
+
+  it('reports sub-second runs to the hundredth rather than as zero', async () => {
+    const readings = [0, 340]
+    const now = vi
+      .spyOn(performance, 'now')
+      .mockImplementation(() => readings.shift() ?? 340)
+
+    const { pending, worker } = await startDesign()
+    worker.emit({
+      type: 'result',
+      runId: worker.runId,
+      result: validResult({ processing_time_seconds: 0 }),
+    })
+    const outcome = await pending
+
+    expect(outcome.ok).toBe(true)
+    if (outcome.ok) expect(outcome.data.processing_time_seconds).toBe(0.34)
+    now.mockRestore()
+  })
+})
+
+describe('cancelling a run by id', () => {
+  it('aborts the registered run, so the worker stops', async () => {
+    const controller = new AbortController()
+    const { pending, worker } = await startDesign({ signal: controller.signal })
+    const release = registerBrowserRun('browser-1', controller)
+
+    expect(cancelBrowserRun('browser-1')).toBe(true)
+    const outcome = await pending
+
+    expect(controller.signal.aborted).toBe(true)
+    expect(worker.terminated).toBe(true)
+    expect(outcome.ok).toBe(false)
+    if (!outcome.ok) expect(outcome.error.code).toBe('cancelled')
+    release()
+  })
+
+  it('says so when there is nothing in flight under that id', () => {
+    expect(cancelBrowserRun('browser-nothing')).toBe(false)
+  })
+
+  it('forgets a run once it is released', async () => {
+    const controller = new AbortController()
+    const release = registerBrowserRun('browser-2', controller)
+    release()
+
+    expect(cancelBrowserRun('browser-2')).toBe(false)
+    expect(controller.signal.aborted).toBe(false)
+  })
+
+  it('leaves a later run under the same id alone when an earlier one releases', () => {
+    const first = new AbortController()
+    const releaseFirst = registerBrowserRun('browser-3', first)
+    const second = new AbortController()
+    registerBrowserRun('browser-3', second)
+
+    releaseFirst()
+
+    expect(cancelBrowserRun('browser-3')).toBe(true)
+    expect(second.signal.aborted).toBe(true)
+    expect(first.signal.aborted).toBe(false)
   })
 })
 

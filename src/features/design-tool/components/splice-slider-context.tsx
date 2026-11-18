@@ -5,9 +5,16 @@ import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
 import type { RewritePick } from '../types/form-schema'
 import { MULTI_SPLIT_ENABLED } from '../utils/feature-flags'
-import { resolveWggwPicks, wggwSitesIn } from '../utils/wggw-selection'
+import {
+  cutPositions,
+  picksAfterCaretMove,
+  resolveWggwPicks,
+  wggwSitesIn,
+} from '../utils/wggw-selection'
 import {
   AAV_MAX_BP,
+  KEYBOARD_PAGE_MIN_BP,
+  KEYBOARD_SHIFT_STEP_BP,
   MIN_SEQUENCE_LENGTH,
   RECENTLY_ASSIGNED_DURATION_MS,
   SWAP_TOAST_DURATION_MS,
@@ -163,6 +170,13 @@ export function SpliceSliderContext({
   const selectedSiteIndices = selectedSites.map((site) =>
     site ? wggwSites.findIndex((s) => s.position === site.position) : -1,
   )
+  // Where the design is cut, which is the resolved site rather than the
+  // caret (see cutPositions). Every bp this editor states — the readout,
+  // the fragment sizes, the cut line, aria-valuetext — is measured here, so
+  // the summary and the inspector cannot disagree. The caret keeps its own
+  // position: it is what the person drags and what picks the site.
+  const cuts = cutPositions(selectedSites, positions)
+  const activeCut = cuts[clampedActiveIndex] ?? activePosition
 
   const frameContext = buildSequenceContext(sequence)
 
@@ -177,9 +191,24 @@ export function SpliceSliderContext({
   // stay sorted (Splice 1 always 5′-most); the parallel state arrays
   // (activeSitePositions, rewriteSelections) and activeSpliceIndex are
   // permuted to match so the user keeps controlling the same caret visually.
+  //
+  // Every caret move routes through here, so this is also where a site the
+  // caret has left stops being the design's: moving the caret away drops
+  // that splice's pick (picksAfterCaretMove) and the nearest-site preselect
+  // takes over. Without it the editor submitted the old site while every
+  // number on screen named the new caret. A pick made by choosing a site
+  // survives, because handleSelectSite moves the caret onto it first.
+  const clearStalePick = (idx: number, position: number) => {
+    // Cheap guard off the rendered picks: skip the update entirely during a
+    // drag once there is nothing left to drop.
+    if ((activeSitePositions[idx] ?? null) === null) return
+    setActiveSitePositions((prev) => picksAfterCaretMove(prev, idx, position))
+  }
+
   const setPositionAt = (idx: number, value: number) => {
     const v = Math.max(1, Math.min(seqLen - 1, value))
     if (!MULTI_SPLIT_ENABLED) {
+      clearStalePick(0, v)
       onPositionsChange([v])
       return
     }
@@ -208,6 +237,16 @@ export function SpliceSliderContext({
           duration: SWAP_TOAST_DURATION_MS,
         })
       }
+    }
+    // The moved splice's own slot after any reorder. The picks were
+    // permuted just above and these updaters compose on the latest value,
+    // so this drops the pick of the splice that moved, not its neighbour's.
+    const movedIdx = indexed.findIndex((x) => x.original === idx)
+    const slot = movedIdx === -1 ? idx : movedIdx
+    if (permuted) {
+      setActiveSitePositions((prev) => picksAfterCaretMove(prev, slot, v))
+    } else {
+      clearStalePick(slot, v)
     }
     onPositionsChange(indexed.map((x) => x.p))
   }
@@ -445,6 +484,44 @@ export function SpliceSliderContext({
     )
   }
 
+  // The standard slider keys, on the role="slider" track: arrows step a
+  // base (Shift a codon-ish 10), PageUp/PageDown a twentieth of the
+  // sequence, Home/End the ends. The editor's own [ ] m 1 2 shortcuts are
+  // handled on window and are untouched by this.
+  const handleTrackKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    const step = event.shiftKey ? KEYBOARD_SHIFT_STEP_BP : 1
+    const page = Math.max(KEYBOARD_PAGE_MIN_BP, Math.round(seqLen / 20))
+    let next: number
+    switch (event.key) {
+      case 'ArrowLeft':
+      case 'ArrowDown':
+        next = activePosition - step
+        break
+      case 'ArrowRight':
+      case 'ArrowUp':
+        next = activePosition + step
+        break
+      case 'PageDown':
+        next = activePosition - page
+        break
+      case 'PageUp':
+        next = activePosition + page
+        break
+      case 'Home':
+        next = 1
+        break
+      case 'End':
+        next = seqLen - 1
+        break
+      default:
+        return
+    }
+    event.preventDefault()
+    const clamped = Math.max(1, Math.min(seqLen - 1, next))
+    jumpToPosition(clamped)
+    scrollStripToPosition(clamped)
+  }
+
   // Cache the removed splice's site + rewrite so a subsequent + Splice
   // restores the user's last selection rather than starting fresh.
   const [splice2Cache, setSplice2Cache] = useState<{
@@ -568,7 +645,11 @@ export function SpliceSliderContext({
           <div className="relative h-7">
             {positions.map((pos, idx) => {
               const tone = spliceTone(idx)
-              const pct = splitPositionToPercent(pos, seqLen)
+              // The readout rides on the cut, not the caret: it states the
+              // bp the design is delivered at. When the two differ the
+              // caret shows as its own faint marker on the track below.
+              const cut = cuts[idx] ?? pos
+              const pct = splitPositionToPercent(cut, seqLen)
               const siteIdx = selectedSiteIndices[idx] ?? -1
               const canPrev =
                 siteIdx > 0 || (siteIdx === -1 && wggwSites.length > 0)
@@ -601,7 +682,11 @@ export function SpliceSliderContext({
                     <button
                       type="button"
                       onPointerDown={(e) => startDrag(idx, e, false)}
-                      title={`Split point at bp ${pos.toLocaleString()} — drag to move`}
+                      title={
+                        cut === pos
+                          ? `Split point at bp ${pos.toLocaleString()} — drag to move`
+                          : `Cuts at bp ${cut.toLocaleString()}, the WGGW motif nearest your split point at bp ${pos.toLocaleString()} — drag to move`
+                      }
                       className={cn(
                         'inline-flex min-w-max cursor-grab touch-none items-center rounded-full border bg-background px-2 py-0.5 font-mono text-xs font-semibold whitespace-nowrap tabular-nums shadow-sm transition-all active:cursor-grabbing',
                         isActive
@@ -618,7 +703,7 @@ export function SpliceSliderContext({
                         )}
                         aria-hidden="true"
                       />
-                      {pos.toLocaleString()} bp
+                      {cut.toLocaleString()} bp
                     </button>
                     {isActive && (
                       <button
@@ -648,12 +733,19 @@ export function SpliceSliderContext({
             aria-valuemin={1}
             aria-valuemax={seqLen - 1}
             aria-valuenow={activePosition}
-            aria-valuetext={`bp ${activePosition.toLocaleString()} of ${seqLen.toLocaleString()}`}
+            aria-valuetext={
+              activeCut === activePosition
+                ? `bp ${activePosition.toLocaleString()} of ${seqLen.toLocaleString()}`
+                : `bp ${activePosition.toLocaleString()} of ${seqLen.toLocaleString()} — cuts at bp ${activeCut.toLocaleString()}, the nearest WGGW motif`
+            }
             onPointerDown={handleTrackPointerDown}
+            onKeyDown={handleTrackKeyDown}
             className="relative h-18 cursor-ew-resize touch-none rounded-2xl border bg-background/80 select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <div className="absolute inset-x-0 top-0 z-10 flex h-11 overflow-hidden rounded-t-2xl">
-              {buildSegments(positions, seqLen).map((seg, i, arr) => {
+              {/* Fragments are measured at the cuts, so the sizes are the
+                  ones the design delivers. */}
+              {buildSegments(cuts, seqLen).map((seg, i, arr) => {
                 // Segments are colored by which splice "owns" them: the 5′
                 // segment uses splice 1's tone; with a 2nd splice the 3′
                 // segment uses the last splice's tone, and middle segment(s)
@@ -794,21 +886,36 @@ export function SpliceSliderContext({
               })}
             </div>
             {positions.map((pos, idx) => {
-              const pct = splitPositionToPercent(pos, seqLen)
+              const cut = cuts[idx] ?? pos
               const tone = spliceTone(idx)
               return (
-                <div
-                  key={`cut-${idx}`}
-                  className="pointer-events-none absolute inset-y-0 left-0 z-0 w-0 -translate-x-1/2"
-                  style={{ left: `${pct}%` }}
-                  aria-hidden="true"
-                >
+                <div key={`cut-${idx}`}>
+                  {/* The cut: where the design is split. */}
                   <div
-                    className={cn(
-                      'absolute inset-y-0 left-1/2 z-0 -translate-x-1/2 border-l-2',
-                      tone.border,
-                    )}
-                  />
+                    className="pointer-events-none absolute inset-y-0 left-0 z-0 w-0 -translate-x-1/2"
+                    style={{ left: `${splitPositionToPercent(cut, seqLen)}%` }}
+                    aria-hidden="true"
+                  >
+                    <div
+                      className={cn(
+                        'absolute inset-y-0 left-1/2 z-0 -translate-x-1/2 border-l-2',
+                        tone.border,
+                      )}
+                    />
+                  </div>
+                  {/* The caret, when the motif puts the cut elsewhere: the
+                      position the person chose, which picks the motif. */}
+                  {cut !== pos && (
+                    <div
+                      className="pointer-events-none absolute inset-y-0 left-0 z-0 w-0 -translate-x-1/2"
+                      style={{
+                        left: `${splitPositionToPercent(pos, seqLen)}%`,
+                      }}
+                      aria-hidden="true"
+                    >
+                      <div className="absolute inset-y-0 left-1/2 z-0 -translate-x-1/2 border-l border-dashed border-foreground/35" />
+                    </div>
+                  )}
                 </div>
               )
             })}

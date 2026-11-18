@@ -4,6 +4,7 @@ import { toast } from '@/lib/toast'
 import {
   browserOptimizerSupported,
   designInBrowser,
+  registerBrowserRun,
   warmOptimizerWorker,
 } from '@/features/design-tool/api/browser-optimizer'
 import {
@@ -58,6 +59,15 @@ interface SubmitOptions {
 }
 
 type JobStatus = 'idle' | 'submitting' | EntryStatus
+
+/**
+ * Whether this run has already been recorded as cancelled — by the Recent
+ * jobs list, or by a cloud copy being deleted mid-flight. Its result, which
+ * can still arrive while the worker winds down, is then not written anywhere.
+ */
+function wasCancelled(id: string): boolean {
+  return useJobHistory.getState().getEntry(id)?.status === 'cancelled'
+}
 
 interface UseJobOptions {
   // If set, seeds jobId so derived state reads from this design's history
@@ -225,6 +235,9 @@ export function useJob({
       const id = `${BROWSER_ID_PREFIX}${crypto.randomUUID()}`
       const controller = new AbortController()
       browserRunRef.current = { id, controller }
+      // Published for the whole tab, so the Recent jobs list can abort this
+      // run too: nothing else stops the worker.
+      const unregisterRun = registerBrowserRun(id, controller)
 
       upsertEntry({ id, status: 'running', formValues: values })
       useJobHistory
@@ -245,7 +258,9 @@ export function useJob({
         return { outcome: await run, values, id }
       } catch (err) {
         // A thrown run (a bug, not an expected failure) still settles its
-        // entry, or it would read as running until the next load.
+        // entry, or it would read as running until the next load. A run
+        // already cancelled keeps that, and says nothing.
+        if (wasCancelled(id)) throw err
         upsertEntry({
           id,
           status: 'failed',
@@ -260,6 +275,7 @@ export function useJob({
         throw err
       } finally {
         releaseUnload()
+        unregisterRun()
         browserRunRef.current = null
       }
     },
@@ -273,6 +289,10 @@ export function useJob({
       // A cloud submission settles through the poller, not here.
       if (!settled) return
       const { outcome, values, id } = settled
+      // A run cancelled from elsewhere (the Recent jobs list) keeps its
+      // cancelled entry: its own late result must not turn it back into a
+      // finished design nobody asked for.
+      if (wasCancelled(id)) return
       if (outcome.ok) {
         upsertEntry({
           id,

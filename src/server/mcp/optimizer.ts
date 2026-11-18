@@ -79,10 +79,17 @@ export async function designOnWorker(params: {
       message: 'the optimizer returned a result in an unexpected shape',
     }
   }
+  const seconds = (Date.now() - started) / 1000
   return {
     ok: true,
-    result: result.data,
-    seconds: (Date.now() - started) / 1000,
+    // The optimizer's own clock reads zero under WebAssembly, so the measured
+    // time replaces it on the result itself, not just alongside it: a cloud
+    // design stores the result, and the MCP design view reads this field.
+    result: {
+      ...result.data,
+      processing_time_seconds: Math.round(seconds * 100) / 100,
+    },
+    seconds,
   }
 }
 

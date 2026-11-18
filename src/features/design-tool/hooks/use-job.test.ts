@@ -23,6 +23,10 @@ vi.mock('@/features/design-tool/api/browser-optimizer', () => ({
   designInBrowser: vi.fn(),
   warmOptimizerWorker: vi.fn(),
   terminateOptimizerWorker: vi.fn(),
+  // The real registry is covered in browser-optimizer.test.ts; here it only
+  // has to hand the controller back, as the sidebar's cancel would get it.
+  registerBrowserRun: vi.fn(() => () => {}),
+  cancelBrowserRun: vi.fn(() => false),
 }))
 
 vi.mock('@/features/design-tool/utils/finish-notification', () => ({
@@ -45,6 +49,7 @@ import { notifyRunSettled } from '@/features/design-tool/utils/finish-notificati
 import {
   browserOptimizerSupported,
   designInBrowser,
+  registerBrowserRun,
   warmOptimizerWorker,
 } from '@/features/design-tool/api/browser-optimizer'
 import {
@@ -59,6 +64,7 @@ const mockDesign = vi.mocked(designInBrowser)
 const mockSupported = vi.mocked(browserOptimizerSupported)
 const mockWarm = vi.mocked(warmOptimizerWorker)
 const mockNotify = vi.mocked(notifyRunSettled)
+const mockRegisterRun = vi.mocked(registerBrowserRun)
 
 const unloadPrevented = () => {
   const event = new Event('beforeunload', { cancelable: true })
@@ -122,6 +128,7 @@ beforeEach(async () => {
   vi.clearAllMocks()
   await whenJobHistoryHydrated()
   mockSupported.mockReturnValue(true)
+  mockRegisterRun.mockReturnValue(() => {})
   vi.stubGlobal('fetch', mockFetch)
   useJobHistory.setState({ entries: [], progressById: {} })
   localStorage.clear()
@@ -244,6 +251,59 @@ describe('useJob', () => {
     await waitFor(() => expect(result.current.status).toBe('cancelled'))
     expect(abortSignal?.aborted).toBe(true)
     expect(mockFetch).not.toHaveBeenCalled()
+  })
+
+  it('publishes the run so the sidebar can abort it', async () => {
+    let finish!: (value: JobActionResult<ProcessResult>) => void
+    mockDesign.mockImplementation(
+      () => new Promise((resolve) => (finish = resolve)),
+    )
+    const { result } = renderHook(() => useJob(), { wrapper: createWrapper() })
+    act(() => {
+      void result.current.submitJob(FORM_VALUES)
+    })
+    await waitFor(() => expect(mockDesign).toHaveBeenCalled())
+
+    expect(mockRegisterRun).toHaveBeenCalledWith(
+      result.current.jobId,
+      expect.any(AbortController),
+    )
+    // The very controller the run is listening on.
+    const [, controller] = mockRegisterRun.mock.calls.at(-1)!
+    expect(controller.signal).toBe(mockDesign.mock.calls.at(-1)?.[1]?.signal)
+
+    // Settle it, or its unload warning outlives the test.
+    await act(async () => finish(succeeds()))
+  })
+
+  it('keeps a run cancelled elsewhere cancelled when its result lands late', async () => {
+    let finish!: (value: JobActionResult<ProcessResult>) => void
+    mockDesign.mockImplementation(
+      () => new Promise((resolve) => (finish = resolve)),
+    )
+    const { result } = renderHook(() => useJob(), { wrapper: createWrapper() })
+    act(() => {
+      void result.current.submitJob(FORM_VALUES)
+    })
+    await waitFor(() => expect(mockDesign).toHaveBeenCalled())
+    const id = result.current.jobId!
+
+    // What the Recent jobs list writes when its X is clicked.
+    act(() => {
+      useJobHistory.getState().upsertEntry({
+        id,
+        status: 'cancelled',
+        error: { code: 'cancelled', message: 'Cancelled', retriable: true },
+      })
+    })
+
+    // The worker was already past the point of no return and replies anyway.
+    await act(async () => finish(succeeds()))
+
+    expect(result.current.status).toBe('cancelled')
+    expect(result.current.result).toBeNull()
+    expect(useJobHistory.getState().getEntry(id)?.status).toBe('cancelled')
+    expect(mockNotify).not.toHaveBeenCalled()
   })
 
   it('starts loading the optimizer as soon as the form appears', () => {

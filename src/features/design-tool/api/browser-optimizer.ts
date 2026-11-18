@@ -45,6 +45,47 @@ export interface BrowserDesignCallbacks {
 /** The live worker, or null before first use and after a cancel. */
 let worker: Worker | null = null
 
+/**
+ * The abort controllers of the designs running in this tab, keyed by the id of
+ * the history entry each one is reported under.
+ *
+ * Module-level, like the unload guard in `utils/browser-run-guard.ts`: a run
+ * belongs to the tab rather than to the component that started it, so UI
+ * elsewhere — the Recent jobs list — can stop one. Only an abort stops a run;
+ * writing a cancelled history entry leaves the worker burning CPU and its
+ * result arriving later.
+ */
+const runningDesigns = new Map<string, AbortController>()
+
+/**
+ * Makes an in-flight run cancellable by id until the returned release is
+ * called. The caller owns the controller; this only publishes it.
+ */
+export function registerBrowserRun(
+  id: string,
+  controller: AbortController,
+): () => void {
+  runningDesigns.set(id, controller)
+  return () => {
+    // Only if it is still this run's: a re-used id would otherwise lose its
+    // own controller when an earlier run settles.
+    if (runningDesigns.get(id) === controller) runningDesigns.delete(id)
+  }
+}
+
+/**
+ * Aborts the run reported under `id`, terminating the worker. Returns whether
+ * there was one: a cloud design, or a run from a tab that has since gone, has
+ * nothing to abort here.
+ */
+export function cancelBrowserRun(id: string): boolean {
+  const controller = runningDesigns.get(id)
+  if (!controller) return false
+  runningDesigns.delete(id)
+  controller.abort()
+  return true
+}
+
 function getWorker(): Worker {
   worker ??= new Worker(
     new URL('../workers/optimizer.worker.ts', import.meta.url),
@@ -171,9 +212,22 @@ export function reverseTranslateInBrowser(
 }
 
 /**
+ * Seconds, to the hundredth, as the optimizer reports them elsewhere.
+ */
+function roundSeconds(seconds: number): number {
+  return Math.round(seconds * 100) / 100
+}
+
+/**
  * Design a sequence in this browser.
  *
  * Never rejects: a failure comes back as `ok: false`.
+ *
+ * The duration is measured here rather than taken from the result: the
+ * optimizer's clock reads zero under WebAssembly (`now_seconds` in
+ * `rust/optimizer/src/lib.rs`), so every browser run would otherwise report
+ * "<1s" on screen and `0s` in the exported report. The server-side runner
+ * times its own call the same way (`src/server/mcp/optimizer.ts`).
  */
 export function designInBrowser(
   params: BrowserDesignParams,
@@ -191,6 +245,7 @@ export function designInBrowser(
   return new Promise((resolve) => {
     let settled = false
     const active = getWorker()
+    const startedAt = performance.now()
 
     const finish = (outcome: JobActionResult<ProcessResult>) => {
       if (settled) return
@@ -236,7 +291,15 @@ export function designInBrowser(
         finish(jobError('backend', copy.unexpectedResponse, false))
         return
       }
-      finish({ ok: true, data: parsed.data })
+      finish({
+        ok: true,
+        data: {
+          ...parsed.data,
+          processing_time_seconds: roundSeconds(
+            (performance.now() - startedAt) / 1000,
+          ),
+        },
+      })
     }
 
     const onWorkerError = (event: ErrorEvent) => {

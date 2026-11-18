@@ -25,3 +25,9 @@ export const STRIP_SMOOTH_SCROLL_THRESHOLD_BP = 30
 export const RECENTLY_ASSIGNED_DURATION_MS = 700
 export const SWAP_TOAST_THROTTLE_MS = 1500
 export const SWAP_TOAST_DURATION_MS = 2000
+
+// Keyboard stepping on the split-point slider: an arrow moves one base,
+// with Shift a larger nudge, and PageUp/PageDown a twentieth of the
+// sequence but never less than this.
+export const KEYBOARD_SHIFT_STEP_BP = 10
+export const KEYBOARD_PAGE_MIN_BP = 10

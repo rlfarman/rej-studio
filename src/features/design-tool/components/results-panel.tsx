@@ -689,7 +689,11 @@ function ResultsPanelImpl({ result, optionsUsed, species }: ResultsPanelProps) {
             title={resultsCopy.sections.runRecord}
             icon={FileText}
             summary={
-              result.run_record ? resultsCopy.runRecord.summary : undefined
+              result.run_record
+                ? resultsCopy.runRecord.summary
+                : // Said on the collapsed row, so the section can be skipped
+                  // rather than opened to find out there is nothing in it.
+                  resultsCopy.runRecord.unavailableSummary
             }
             defaultOpen={false}
           >

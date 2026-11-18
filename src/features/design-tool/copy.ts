@@ -287,7 +287,10 @@ export const designToolCopy = {
       noSequence: 'Add a coding sequence to run the designer.',
       ready: (bp: string, objectives: number) =>
         `${bp} bp · ${objectives} objective${objectives === 1 ? '' : 's'}`,
-      splitAt: (bp: string) => `split at ${bp} bp`,
+      // "near", because the design is cut at the WGGW motif nearest this
+      // point, which the split-point editor names exactly. Resolving it here
+      // too would rescan the sequence on every keystroke.
+      splitAt: (bp: string) => `split near ${bp} bp`,
     },
     optimizationHeading: 'Design Objectives',
     optimizationDescription: '',
@@ -454,8 +457,15 @@ export const designToolCopy = {
       description:
         'Everything needed to repeat or cite this run. Submitting the same sequence and options with the seed below gives the same design.',
       summary: 'Repeatable',
+      // No backend in this app writes a run record yet (see runRecordSchema):
+      // only designs saved from the retired server backend carry one. Saying
+      // "run it again" sent people round a loop, so this says what is true and
+      // what the download does hold instead.
+      unavailableSummary: 'Not recorded',
       unavailable:
-        'This result predates run records, so there is nothing to show. Run the design again to get one.',
+        'Designs run in this browser do not record one yet, and this result has none.',
+      unavailableDownload:
+        'The download still holds the design itself: the original and optimized sequences, the split, the options applied, the objective reports before and after, and how long the run took.',
       fields: {
         startedAt: 'Run at',
         duration: 'Duration',
