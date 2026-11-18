@@ -3,7 +3,7 @@ import type { FieldPathByValue } from 'react-hook-form'
 import { FormItem, FormControl } from '@/components/ui/form'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Badge } from '@/components/ui/badge'
-import { FieldHelp } from './field-help'
+import { TermHint } from '@/components/term-hint'
 import { cn } from '@/lib/utils'
 import { FormValues } from '../types/form-schema'
 
@@ -71,7 +71,7 @@ export function ToggleCard({
                         {badge}
                       </Badge>
                     ) : null}
-                    {help ? <FieldHelp topic={label}>{help}</FieldHelp> : null}
+                    {help ? <TermHint topic={label} hint={help} /> : null}
                   </div>
                   {description ? (
                     <p className="text-xs leading-snug text-muted-foreground">

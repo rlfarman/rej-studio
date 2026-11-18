@@ -96,16 +96,45 @@ describe('stepping through what changed', () => {
     expect(screen.getByText('AvoidPattern(CG)')).toBeTruthy()
   })
 
-  it('stops at both ends rather than wrapping', () => {
+  // The arrows used to carry `disabled`, so the one being pressed vanished
+  // from the tab order at the end of the list and focus fell to the
+  // document — mid-walk, with nothing said about why.
+  it('stops at both ends without taking the focus with it', () => {
     replay()
 
-    expect(
-      screen.getByRole('button', { name: 'Previous objective' }),
-    ).toHaveProperty('disabled', true)
+    const previous = screen.getByRole('button', { name: 'Previous objective' })
+    const next = screen.getByRole('button', { name: 'Next objective' })
+
+    expect(previous).toHaveProperty('disabled', false)
+    expect(previous.getAttribute('aria-disabled')).toBe('true')
+
+    previous.focus()
+    fireEvent.click(previous)
+    expect(document.activeElement).toBe(previous)
+    expect(screen.getByText('1 of 2')).toBeTruthy()
+    expect(screen.getByText('This is the first objective.')).toBeTruthy()
+
+    fireEvent.click(next)
+    expect(screen.getByText('2 of 2')).toBeTruthy()
+    expect(next.getAttribute('aria-disabled')).toBe('true')
+
+    next.focus()
+    fireEvent.click(next)
+    expect(document.activeElement).toBe(next)
+    expect(screen.getByText('2 of 2')).toBeTruthy()
+    expect(screen.getByText('This is the last objective.')).toBeTruthy()
+  })
+
+  // The only live region was the "1 of 14" counter: a reader stepping
+  // through heard the number change and nothing else.
+  it('announces which objective it moved to, and how it went', () => {
+    const { container } = replay()
+
+    const live = container.querySelector('[aria-live]')!
+    expect(live.textContent).toBe('1 of 2: AvoidPattern(CG) — Fixed')
+
     fireEvent.click(screen.getByRole('button', { name: 'Next objective' }))
-    expect(
-      screen.getByRole('button', { name: 'Next objective' }),
-    ).toHaveProperty('disabled', true)
+    expect(live.textContent).toBe('2 of 2: UniquifyAllKmers — Still failing')
   })
 
   it('says what each report flagged, as text as well as a picture', () => {

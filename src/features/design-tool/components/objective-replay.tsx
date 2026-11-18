@@ -124,6 +124,10 @@ export function ObjectiveReplay({
 
   const [showAll, setShowAll] = useState(false)
   const [index, setIndex] = useState(0)
+  // Set when a move was asked for at either end, so the reader is told why
+  // nothing happened. The controls stay enabled: disabling the button under
+  // the pointer (or under focus) threw focus back to the document.
+  const [edge, setEdge] = useState<'start' | 'end' | null>(null)
 
   const steps: ObjectiveStep[] = showAll ? allSteps : notable
   // The lists differ in length, so an index from one may not exist in the other.
@@ -161,10 +165,24 @@ export function ObjectiveReplay({
   }
 
   const go = (delta: number) => {
-    setIndex((current) =>
-      Math.min(steps.length - 1, Math.max(0, current + delta)),
-    )
+    const next = position + delta
+    setEdge(next < 0 ? 'start' : next > steps.length - 1 ? 'end' : null)
+    setIndex(Math.min(steps.length - 1, Math.max(0, next)))
   }
+
+  // What changes when the step does. The visible "3 of 14" said only that
+  // something moved; this names the objective and how it went.
+  const announcement =
+    edge === 'start'
+      ? copy.atStart
+      : edge === 'end'
+        ? copy.atEnd
+        : copy.announce(
+            position + 1,
+            steps.length,
+            step.objective,
+            copy.outcomes[step.outcome],
+          )
 
   /**
    * Left and right move between objectives while either control has focus, so
@@ -199,6 +217,9 @@ export function ObjectiveReplay({
       </div>
 
       <div role="group" aria-label={copy.groupLabel} className="rounded-md">
+        <p role="status" aria-live="polite" className="sr-only">
+          {announcement}
+        </p>
         <div className="flex items-center justify-between gap-2">
           <Button
             type="button"
@@ -206,15 +227,13 @@ export function ObjectiveReplay({
             size="sm"
             onClick={() => go(-1)}
             onKeyDown={onArrowKey}
-            disabled={position === 0}
+            aria-disabled={position === 0}
             aria-label={copy.previous}
+            className="aria-disabled:opacity-40"
           >
             <ChevronLeft className="size-4" />
           </Button>
-          <p
-            className="text-xs text-muted-foreground tabular-nums"
-            aria-live="polite"
-          >
+          <p className="text-xs text-muted-foreground tabular-nums">
             {copy.position(position + 1, steps.length)}
           </p>
           <Button
@@ -223,8 +242,9 @@ export function ObjectiveReplay({
             size="sm"
             onClick={() => go(1)}
             onKeyDown={onArrowKey}
-            disabled={position >= steps.length - 1}
+            aria-disabled={position >= steps.length - 1}
             aria-label={copy.next}
+            className="aria-disabled:opacity-40"
           >
             <ChevronRight className="size-4" />
           </Button>

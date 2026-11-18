@@ -108,7 +108,10 @@ function DesignToolPage() {
     <DesignToolLayout>
       <GeneSplitterForm
         key={jobId ?? keptKey ?? `iso-${isoformId}`}
-        defaultName={`Custom ${gene.symbol}`}
+        // The transcript, not just the gene: customizing three isoforms of
+        // one gene otherwise gives three runs with the same name, and
+        // telling those apart is what the isoform table is for.
+        defaultName={`${gene.symbol} ${isoform.id}`}
         defaultSpecies={species}
         defaultCodingSequence={isoform.codingSequence}
         defaultSpliceJunctionPosition={pickDefaultSplitPoint(

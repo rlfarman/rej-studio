@@ -6,16 +6,39 @@ import {
   Outlet,
   RouterProvider,
 } from '@tanstack/react-router'
-import { render, screen, within } from '@testing-library/react'
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  within,
+} from '@testing-library/react'
 import type { ReactNode } from 'react'
-import { describe, expect, it } from 'vite-plus/test'
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test'
 
+import { commonCopy } from '@/copy/common'
+import { resetChartTablePreferencesForTests } from '@/components/chart-data-table'
 import { geneSearchCopy } from '../copy'
 import { parseIsoformIdentity } from '../corpus/identity'
 import type { IsoformListItem } from '../types/domain-types'
 import { IsoformIdentityMatrix } from './isoform-identity-matrix'
 
+const downloads: [string, string][] = []
+vi.mock('@/lib/download-file', () => ({
+  downloadTextFile: (name: string, text: string) => {
+    downloads.push([name, text])
+  },
+}))
+
 const copy = geneSearchCopy.identityMatrix
+const commonChart = commonCopy.chartData
+
+afterEach(() => {
+  downloads.length = 0
+  cleanup()
+  window.sessionStorage.clear()
+  resetChartTablePreferencesForTests()
+})
 
 const isoform = (id: string, length: number): IsoformListItem => ({
   id,
@@ -26,7 +49,9 @@ const isoform = (id: string, length: number): IsoformListItem => ({
   species: 'human',
 })
 
-// Display order is longest first: ENST2, ENST3, ENST1.
+// Stored order is longest protein first (ENST2, ENST3, ENST1); the grid
+// draws them shortest CDS first, matching the length chart: ENST1, ENST3,
+// ENST2.
 const isoforms = [
   isoform('ENST1', 50),
   isoform('ENST2', 300),
@@ -53,7 +78,11 @@ function renderOnGenePage(ui: ReactNode) {
 }
 
 describe('IsoformIdentityMatrix', () => {
-  it('shows the stored identities, longest isoform first', async () => {
+  // The length chart above draws its bars shortest CDS first, and its row
+  // numbers are these row numbers; ordering the grid the other way (by
+  // protein length, as the stored data is) mapped row 1 here onto the last
+  // bar there.
+  it('shows the stored identities in the length chart’s order', async () => {
     renderOnGenePage(
       <IsoformIdentityMatrix isoforms={isoforms} identity={identity} />,
     )
@@ -61,18 +90,82 @@ describe('IsoformIdentityMatrix', () => {
     const rows = within(table).getAllByRole('row').slice(1)
     expect(
       rows.map((row) => within(row).getByRole('link').getAttribute('title')),
-    ).toEqual(['ENST2', 'ENST3', 'ENST1'].map(copy.jumpTo))
+    ).toEqual(['ENST1', 'ENST3', 'ENST2'].map(copy.jumpTo))
+    // The same pairs, read out of the permuted matrix.
     expect(
-      screen.getByTitle(copy.cellLabel('64.2', 'ENST3', 'ENST2')),
+      screen.getByLabelText(copy.cellLabel('64.2', 'ENST2', 'ENST3')),
     ).toBeTruthy()
     expect(
-      screen.getByTitle(copy.cellLabel('12.5', 'ENST1', 'ENST2')),
+      screen.getByLabelText(copy.cellLabel('12.5', 'ENST2', 'ENST1')),
     ).toBeTruthy()
     expect(
-      screen.getByTitle(copy.cellLabel('100.0', 'ENST1', 'ENST3')),
+      screen.getByLabelText(copy.cellLabel('100.0', 'ENST3', 'ENST1')),
     ).toBeTruthy()
     expect(screen.getByText(copy.footnote)).toBeTruthy()
     expect(screen.queryByText(copy.unavailable)).toBeNull()
+  })
+
+  it('reads a value out without a pointer', async () => {
+    renderOnGenePage(
+      <IsoformIdentityMatrix isoforms={isoforms} identity={identity} />,
+    )
+    // Nothing chosen yet: an invitation, not a value.
+    expect(await screen.findByText(copy.cellHint)).toBeTruthy()
+
+    // Tapping a cell — the whole interaction a phone has — says what it is.
+    const cell = screen.getByLabelText(copy.cellLabel('12.5', 'ENST2', 'ENST1'))
+    fireEvent.click(cell)
+    expect(
+      screen.getByText(copy.cellReadout('12.5', 'ENST2', 'ENST1')),
+    ).toBeTruthy()
+    expect(screen.queryByText(copy.cellHint)).toBeNull()
+  })
+
+  it('is one tab stop, walked with the arrow keys', async () => {
+    renderOnGenePage(
+      <IsoformIdentityMatrix isoforms={isoforms} identity={identity} />,
+    )
+    const table = await screen.findByRole('table', { name: copy.caption })
+    const cells = within(table).getAllByRole('button')
+    // Every drawn cell is reachable, but only one is in the tab order.
+    expect(cells.filter((cell) => cell.tabIndex === 0)).toHaveLength(1)
+
+    cells[0].focus()
+    fireEvent.keyDown(cells[0], { key: 'ArrowDown' })
+    // Row 2, column 1: ENST3 against ENST1.
+    expect(
+      screen.getByText(copy.cellReadout('100.0', 'ENST3', 'ENST1')),
+    ).toBeTruthy()
+    expect(document.activeElement?.getAttribute('aria-label')).toBe(
+      copy.cellLabel('100.0', 'ENST3', 'ENST1'),
+    )
+  })
+
+  it('names the CSV after the gene and puts the gene in it', async () => {
+    renderOnGenePage(
+      <IsoformIdentityMatrix isoforms={isoforms} identity={identity} />,
+    )
+    fireEvent.click(
+      await screen.findByRole('button', { name: commonChart.show }),
+    )
+    const tables = screen.getAllByRole('table')
+    const dataTable = tables.find((table) =>
+      table.querySelector('caption')?.textContent?.includes('global alignment'),
+    )!
+    expect(
+      [...dataTable.querySelectorAll('thead th')].map((th) => th.textContent),
+    ).toEqual([...geneSearchCopy.charts.identityMatrix.columns])
+    expect(within(dataTable).getAllByText('TP53').length).toBeGreaterThan(0)
+
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: commonChart.downloadAria(
+          geneSearchCopy.charts.identityMatrix.caption,
+        ),
+      }),
+    )
+    expect(downloads.at(-1)?.[0]).toBe('TP53_isoform-identity.csv')
+    expect(downloads.at(-1)?.[1]).toContain('TP53,ENST3,ENST2')
   })
 
   it('says identities are unavailable rather than estimating them', async () => {

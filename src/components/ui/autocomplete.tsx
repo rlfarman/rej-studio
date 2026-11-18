@@ -54,7 +54,9 @@ function AutocompleteList({
     <AutocompletePrimitive.List
       data-slot="autocomplete-list"
       className={cn(
-        'no-scrollbar max-h-72 scroll-py-1 overflow-x-hidden overflow-y-auto overscroll-contain outline-none',
+        // The scrollbar stays visible: it is the only sign that a clipped
+        // list has more rows below the one cut off at the bottom edge.
+        'max-h-72 scroll-py-1 overflow-x-hidden overflow-y-auto overscroll-contain outline-none',
         className,
       )}
       {...props}

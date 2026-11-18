@@ -1,0 +1,28 @@
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar'
+import { commonCopy } from '@/copy/common'
+
+/**
+ * The header's sidebar button. On phones the sidebar is a sheet with its own
+ * open state, so the label has to read that one — built from the desktop
+ * state it said "Close sidebar" while the sheet was shut. `aria-expanded`
+ * comes from the primitive, which knows the same state.
+ */
+export function SidebarToggle() {
+  const { state, isMobile, openMobile } = useSidebar()
+  const expanded = isMobile ? openMobile : state === 'expanded'
+  const label = expanded ? commonCopy.sidebar.close : commonCopy.sidebar.open
+
+  return (
+    <Tooltip>
+      <TooltipTrigger
+        render={<SidebarTrigger size="lg" aria-label={label} />}
+      ></TooltipTrigger>
+      <TooltipContent>{label}</TooltipContent>
+    </Tooltip>
+  )
+}

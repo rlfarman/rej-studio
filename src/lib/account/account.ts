@@ -1,5 +1,7 @@
 import { queryOptions, useQuery, type QueryClient } from '@tanstack/react-query'
 
+import { useHydrated } from '@/hooks/use-hydrated'
+
 /**
  * Who is signed in to an account, for the page: read from `/api/account`
  * with a plain fetch (src/server/accounts/handler.ts), so drawing the
@@ -80,10 +82,19 @@ export type Account =
   | { status: 'signed-out'; google: boolean }
   | { status: 'signed-in'; user: AccountUser; google: boolean }
 
-/** The visitor's account state. */
+/**
+ * The visitor's account state.
+ *
+ * `loading` until the page has hydrated, not merely until the read lands:
+ * the design tool is prerendered, and the account read can finish before
+ * React hydrates it. Deciding from the data alone then renders "sign in"
+ * over markup prerendered without it — a hydration mismatch that discards
+ * the whole tree, and one that appears only when the timing goes that way.
+ */
 export function useAccount(): Account {
+  const hydrated = useHydrated()
   const { data, isPending, isError } = useQuery(accountQuery)
-  if (isPending) return { status: 'loading' }
+  if (!hydrated || isPending) return { status: 'loading' }
   if (isError || !data.available) return { status: 'unavailable' }
   const google = data.providers.google
   return data.user

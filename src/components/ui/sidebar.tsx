@@ -233,13 +233,30 @@ function Sidebar({
   collapsible = 'offcanvas',
   className,
   children,
+  containerProps,
+  sheetTitle,
+  sheetDescription,
   ...props
 }: React.ComponentProps<'div'> & {
   side?: 'left' | 'right'
   variant?: 'sidebar' | 'floating' | 'inset'
   collapsible?: 'offcanvas' | 'icon' | 'none'
+  /**
+   * Props for the element that holds the sidebar's own content, in every
+   * layout (the mobile sheet and the desktop panel alike). An app that wants
+   * its sidebar to be a landmark passes `role` and `aria-label` here.
+   */
+  containerProps?: React.ComponentProps<'div'>
+  /**
+   * Accessible name and description for the dialog the sidebar becomes on
+   * phones. The app supplies the words; without them the primitive falls
+   * back to a generic name.
+   */
+  sheetTitle?: React.ReactNode
+  sheetDescription?: React.ReactNode
 }) {
   const { isMobile, state, openMobile, setOpenMobile } = useSidebar()
+  const { className: containerClassName, ...container } = containerProps ?? {}
 
   if (collapsible === 'none') {
     return (
@@ -248,8 +265,10 @@ function Sidebar({
         className={cn(
           'flex h-full w-(--sidebar-width) flex-col bg-sidebar text-sidebar-foreground',
           className,
+          containerClassName,
         )}
         {...props}
+        {...container}
       >
         {children}
       </div>
@@ -272,10 +291,17 @@ function Sidebar({
           side={side}
         >
           <SheetHeader className="sr-only">
-            <SheetTitle>Sidebar</SheetTitle>
-            <SheetDescription>Displays the mobile sidebar.</SheetDescription>
+            <SheetTitle>{sheetTitle ?? 'Sidebar'}</SheetTitle>
+            <SheetDescription>
+              {sheetDescription ?? 'Displays the mobile sidebar.'}
+            </SheetDescription>
           </SheetHeader>
-          <div className="flex h-full w-full flex-col">{children}</div>
+          <div
+            className={cn('flex h-full w-full flex-col', containerClassName)}
+            {...container}
+          >
+            {children}
+          </div>
         </SheetContent>
       </Sheet>
     )
@@ -317,7 +343,11 @@ function Sidebar({
       >
         <div
           data-sidebar="sidebar"
-          className="flex h-full w-full flex-col bg-sidebar group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border group-data-[variant=floating]:border-sidebar-border group-data-[variant=floating]:shadow-sm"
+          className={cn(
+            'flex h-full w-full flex-col bg-sidebar group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border group-data-[variant=floating]:border-sidebar-border group-data-[variant=floating]:shadow-sm',
+            containerClassName,
+          )}
+          {...container}
         >
           {children}
         </div>
@@ -331,7 +361,7 @@ function SidebarTrigger({
   onClick,
   ...props
 }: React.ComponentProps<typeof Button>) {
-  const { toggleSidebar } = useSidebar()
+  const { toggleSidebar, isMobile, open, openMobile } = useSidebar()
 
   return (
     <Button
@@ -339,6 +369,10 @@ function SidebarTrigger({
       data-slot="sidebar-trigger"
       variant="ghost"
       size="icon"
+      // The trigger is a disclosure for whichever sidebar this viewport
+      // shows: the sheet on phones, the panel on desktop. Before `props`, so
+      // a caller can still override it.
+      aria-expanded={isMobile ? openMobile : open}
       className={cn('h-7 w-7', className)}
       onClick={(event) => {
         onClick?.(event)

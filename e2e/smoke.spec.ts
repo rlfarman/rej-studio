@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test'
 
 import { appCopy } from '../src/copy/app'
+import { commonCopy } from '../src/copy/common'
 import { diseaseAssociationsCopy } from '../src/features/disease-associations/copy'
 import { formatInheritanceLabel } from '../src/features/disease-associations/types'
 import { geneSearchCopy } from '../src/features/gene-search/copy'
@@ -116,14 +117,18 @@ test('a gene page lists its isoforms, with charts and phenotypes', async ({
   ).toBeVisible()
   // The identity matrix reads the alignment the corpus build stored: the
   // two longest BRCA1 isoforms are 98.8% identical.
+  // Each cell is a button carrying that reading as its accessible name, so
+  // the value is reachable by touch and keyboard, not only on hover.
   await expect(
-    page.getByTitle(
-      geneSearchCopy.identityMatrix.cellLabel(
+    page.getByRole('button', {
+      // Row before column: the matrix is ordered shortest-CDS-first to match
+      // the length chart above it, so the shorter transcript is the row.
+      name: geneSearchCopy.identityMatrix.cellLabel(
         '98.8',
-        'ENST00000357654',
         'ENST00000471181',
+        'ENST00000357654',
       ),
-    ),
+    }),
   ).toBeAttached()
   // BRCA1 is disease-associated, so its OMIM phenotypes show.
   await expect(
@@ -180,7 +185,11 @@ test('the design tool prefills the coding sequence from an isoform', async ({
 }) => {
   await page.goto('/design-tool?isoform=ENST00000269305')
   await expect(page.locator('textarea').first()).toHaveValue(/^ATG[ACGT]+$/i)
-  await expect(page.locator('input[name="name"]')).toHaveValue('Custom TP53')
+  // The transcript is part of the name: three isoforms of one gene would
+  // otherwise all open as the same run.
+  await expect(page.locator('input[name="name"]')).toHaveValue(
+    'TP53 ENST00000269305',
+  )
 })
 
 test('the disease-associations filters narrow and sort the table', async ({
@@ -372,7 +381,7 @@ test('a term hint opens on click, closes on Escape, and leaves the table alone',
   await page.goto('/genes/TP53', { waitUntil: 'networkidle' })
   const { gc } = geneSearchCopy.terms
   const hint = page.getByRole('button', {
-    name: geneSearchCopy.terms.termAria(gc.label),
+    name: commonCopy.termHintAria(gc.label),
   })
   await hint.first().click()
   await expect(page.getByText(gc.hint)).toBeVisible()

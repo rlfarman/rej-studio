@@ -5,6 +5,10 @@
  */
 export const accountCopy = {
   signIn: 'Sign in',
+  // The sidebar entry, which sits a click away from the lab passcode page:
+  // a second bare "Sign in" there read as though the passcode had failed.
+  // Named for what an account adds instead (src/components/account).
+  sidebarSignIn: 'Sign in for cloud designs',
   signOut: 'Sign out',
   signedInAs: (email: string) => `Signed in as ${email}`,
   accountMenuAria: (email: string) => `Account: ${email}`,

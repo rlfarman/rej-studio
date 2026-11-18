@@ -27,6 +27,7 @@ import {
 } from '@/features/design-tool/utils/cloud-runs'
 import {
   BROWSER_ID_PREFIX,
+  isBrowserJobId,
   useJobHistory,
   useJobHistoryHydrated,
   type JobStatus as EntryStatus,
@@ -115,6 +116,12 @@ interface UseJobReturn {
    * empty form nor "not found" until it clears.
    */
   isRestoring: boolean
+  /**
+   * The submission was refused before anything ran (a cloud design the
+   * Worker would not take). Nothing exists to show, so the caller keeps the
+   * form up — the option to change is on it.
+   */
+  failedBeforeStart: boolean
   /** Set when the design shown ran in the cloud. */
   cloud: CloudJobInfo | null
   /** Deletes the shown design's cloud copy (its owner only). */
@@ -398,7 +405,9 @@ export function useJob({
   ) {
     // A `?job=` this browser has no record of and the cloud does not have
     // either: a browser run from another device, a cleared history, or a
-    // cloud design past its retention. Shown as unavailable.
+    // cloud design past its retention. Which of those it is decides what
+    // there is to do about it, so the id says so rather than one message
+    // covering all three.
     status = 'failed'
     error = remoteLookup.isError
       ? // The cloud could not be asked (offline, signed out): say that, not
@@ -408,7 +417,15 @@ export function useJob({
           message: remoteLookup.error.message,
           retriable: false,
         }
-      : { code: 'not_found', message: copy.notFound, retriable: false }
+      : {
+          code: 'not_found',
+          message: isBrowserJobId(jobId)
+            ? copy.notFoundBrowser
+            : isCloudDesignId(jobId)
+              ? copy.notFoundCloud
+              : copy.notFound,
+          retriable: false,
+        }
   }
 
   const submitJob = async (values: FormValues, options: SubmitOptions = {}) => {
@@ -458,6 +475,9 @@ export function useJob({
     progress: progress?.progress,
     stage: progress?.stage,
     isLoading: status === 'submitting' || status === 'running',
+    // Only a refused submission: a run that started and then failed has an
+    // entry, a result view and a "Run again" that can work.
+    failedBeforeStart: submitMutation.error instanceof CloudSubmitError,
     runsInBrowser,
     isRestoring:
       jobId !== null &&

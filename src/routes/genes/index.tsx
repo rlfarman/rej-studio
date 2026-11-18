@@ -29,12 +29,16 @@ export const Route = createFileRoute('/genes/')({
     query: search.q?.trim() ?? '',
     species: search.species ?? 'both',
   }),
-  // Searches before the page shows, so results arrive with it. A failed
-  // search isn't thrown: the results list reports it and offers a retry.
-  loader: ({ context: { queryClient }, deps: { query, species } }) =>
-    query
-      ? queryClient.prefetchQuery(geneSearchPageQuery(query, species))
-      : undefined,
+  // Starts the search but deliberately does not wait for it. Searching runs
+  // against the ~1 MB gene index, so returning the prefetch kept the route
+  // pending for as long as the index took to download — no title, no search
+  // box, no species filter, just a spinner. The results list renders its own
+  // "Searching…" in place instead, and reports a failure with a retry.
+  loader: ({ context: { queryClient }, deps: { query, species } }) => {
+    if (query) {
+      void queryClient.prefetchQuery(geneSearchPageQuery(query, species))
+    }
+  },
   head: () => ({
     meta: [
       { title: appCopy.metadata.title(copy.metadataTitle) },

@@ -4,7 +4,9 @@ export type Suitability = 'single-aav' | 'dual-aav' | 'triple-aav'
  * AAV packaging is a *categorical* axis, not a quality ramp. Single/dual/triple
  * are three valid design paths — the app exists to serve dual and triple cases.
  * Colors come from dedicated categorical tokens (see globals.css) so they read
- * as distinct options rather than good/warn/bad. Badge text uses the `-soft`
+ * as distinct options rather than good/warn/bad: violet, teal and plum, none
+ * of which the app uses for success, warning or danger, so the column cannot
+ * be scanned as a quality scale. Badge text uses the `-soft`
  * tokens in both modes: they're tuned to pass 4.5:1 on the 15% tint.
  */
 const SUITABILITY_CONFIG = {

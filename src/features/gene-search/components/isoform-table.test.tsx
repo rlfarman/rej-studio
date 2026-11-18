@@ -13,8 +13,24 @@ import { geneSearchCopy } from '../copy'
 import type { IsoformListItem } from '../types/domain-types'
 import IsoformTable from './isoform-table'
 
+const downloads: [string, string][] = []
+vi.mock('@/lib/download-file', () => ({
+  downloadTextFile: (name: string, text: string) => {
+    downloads.push([name, text])
+  },
+}))
+
+const toasts: string[] = []
+vi.mock('@/lib/toast', () => ({
+  toast: {
+    success: (message: string) => toasts.push(`success: ${message}`),
+    error: (message: string) => toasts.push(`error: ${message}`),
+  },
+}))
+
 const copy = geneSearchCopy.isoformTable
 const splitCopy = geneSearchCopy.splitPreview
+const terms = geneSearchCopy.terms
 
 // A WGGW-bearing, in-frame-ish filler so the split preview has candidates.
 function cds(length: number) {
@@ -98,8 +114,87 @@ beforeEach(() => {
 })
 
 afterEach(() => {
+  downloads.length = 0
+  toasts.length = 0
   vi.unstubAllGlobals()
   vi.restoreAllMocks()
+})
+
+describe('IsoformTable on a narrow screen', () => {
+  it('keeps AAV fit, and its sort control, at every width', async () => {
+    renderTable({ isoforms: [dual] })
+    await flush()
+
+    const header = screen
+      .getByRole('button', { name: terms.suitability.label })
+      .closest('th')!
+    // `hidden lg:table-cell` took the column — and with it the only way to
+    // see or clear a shared `?sort=suitability` — off every phone.
+    expect(header.className).not.toContain('hidden')
+
+    const cell = document
+      .getElementById(`isoform-row-${dual.id}`)!
+      .querySelectorAll('td')[7]
+    expect(cell.className).not.toContain('hidden')
+    // The tier is named for a screen reader even where the badge is short.
+    expect(cell.textContent).toContain('2×')
+    expect(cell.textContent).toContain('Dual AAV')
+  })
+
+  it('pins the header over the rows it labels', async () => {
+    renderTable({ isoforms: [dual, triple] })
+    await flush()
+
+    const head = document.querySelector('thead')!
+    expect(head.className).toContain('sticky')
+    expect(head.className).toContain('top-0')
+    // The sticky header needs a scroller with a height of its own, or it
+    // has nothing to stick to.
+    const container = head.closest('[data-slot="table-container"]')!
+    expect(container.className).toMatch(/max-h-/)
+    expect(container.className).toContain('overflow-auto')
+  })
+})
+
+describe('IsoformTable copy and download actions', () => {
+  it('says so when a copy succeeds, not only when it fails', async () => {
+    const writeText = vi.fn(async () => {})
+    vi.stubGlobal('navigator', { clipboard: { writeText } })
+    vi.stubGlobal('matchMedia', () => ({
+      matches: true,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+    }))
+
+    renderTable({ isoforms: [dual] })
+    await flush()
+    openMenu(screen.getByLabelText(copy.moreAria(dual.id)))
+
+    // The menu closes on click, so the swapped "Copied!" label was never
+    // seen: only the failure path said anything at all.
+    fireEvent.click(await screen.findByText(copy.copyCds))
+    await flush()
+    expect(writeText).toHaveBeenCalledWith(dual.codingSequence)
+    expect(toasts).toEqual([`success: ${copy.copiedCds(dual.id)}`])
+  })
+
+  it('distinguishes its FASTA download from the gene’s, and keeps the context', async () => {
+    renderTable({ isoforms: [dual] })
+    await flush()
+    openMenu(screen.getByLabelText(copy.moreAria(dual.id)))
+
+    const item = await screen.findByText(copy.downloadFasta)
+    // Two downloads on one page: the summary strip's is every isoform.
+    expect(copy.downloadFasta).not.toBe(copy.downloadAllFasta)
+
+    fireEvent.click(item)
+    const [name, text] = downloads.at(-1)!
+    expect(name).toBe(`NF1_${dual.id}_CDS.fasta`)
+    // A bare `>ENST…` in a folder of twenty says nothing about the gene.
+    expect(text.split('\n')[0]).toBe(
+      `>${dual.id} NF1 CDS=${dual.codingSequenceLength}bp`,
+    )
+  })
 })
 
 describe('IsoformTable pre-optimized ZIP', () => {

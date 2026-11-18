@@ -2,7 +2,7 @@ import { useId, useState } from 'react'
 import { useFormContext, useWatch } from 'react-hook-form'
 import { ChevronDown } from 'lucide-react'
 import { ToggleCard } from './toggle-card'
-import { FieldHelp } from './field-help'
+import { TermHint } from '@/components/term-hint'
 import { designToolCopy } from '../copy'
 import { ObjectiveWeights } from './weight-inputs'
 import { StimulatoryIntronOptions } from './stimulatory-intron-options'
@@ -70,9 +70,10 @@ function CodonOptimizationRow() {
             <span className="text-sm leading-none font-medium">
               {copy.codonOptimize.label}
             </span>
-            <FieldHelp topic={copy.codonOptimize.label}>
-              {copy.help.codonOptimize}
-            </FieldHelp>
+            <TermHint
+              topic={copy.codonOptimize.label}
+              hint={copy.help.codonOptimize}
+            />
           </div>
           <p className="text-xs leading-snug text-muted-foreground">
             {copy.codonOptimize.description}
@@ -220,9 +221,10 @@ export function DesignObjectives() {
               <h3 className="text-sm font-medium">
                 {formCopy.accordion.stimulatoryIntrons}
               </h3>
-              <FieldHelp topic={formCopy.accordion.stimulatoryIntrons}>
-                {copy.help.stimulatoryIntrons}
-              </FieldHelp>
+              <TermHint
+                topic={formCopy.accordion.stimulatoryIntrons}
+                hint={copy.help.stimulatoryIntrons}
+              />
             </div>
             <StimulatoryIntronOptions />
           </div>

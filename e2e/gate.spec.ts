@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test'
 
+import { authCopy } from '../src/features/auth/copy'
+
 import { E2E_PASSWORD } from './constants'
 
 // The passcode gate, signed out (this project has no saved session).
@@ -13,7 +15,7 @@ test('a signed-out visit goes to the login page and back after', async ({
   await expect(page.getByRole('navigation')).toHaveCount(0)
 
   await page.getByLabel(/passcode/i).fill(E2E_PASSWORD)
-  await page.getByRole('button', { name: /sign in/i }).click()
+  await page.getByRole('button', { name: authCopy.login.submit }).click()
   await expect(page).toHaveURL(/\/genes\/TP53$/)
   await expect(page.getByRole('heading', { name: 'TP53' })).toBeVisible()
 })
@@ -21,7 +23,7 @@ test('a signed-out visit goes to the login page and back after', async ({
 test('a wrong passcode is refused, and says so', async ({ page }) => {
   await page.goto('/login')
   await page.getByLabel(/passcode/i).fill('not-the-passcode')
-  await page.getByRole('button', { name: /sign in/i }).click()
+  await page.getByRole('button', { name: authCopy.login.submit }).click()
   await expect(page).toHaveURL(/\/login\?error=passcode/)
   await expect(page.getByRole('alert')).toBeVisible()
 })

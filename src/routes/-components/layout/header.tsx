@@ -1,20 +1,12 @@
 import { useSyncExternalStore } from 'react'
 import { HeaderSearch } from '../header-search'
 import { useShellPathname } from './use-shell-pathname'
-import {
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent,
-} from '@/components/ui/tooltip'
-import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar'
+import { useSidebar } from '@/components/ui/sidebar'
+import { SampleDataBadge } from './sample-data-badge'
+import { SidebarToggle } from './sidebar-toggle'
 import { BrandMark } from '@/components/brand-mark'
-import { Badge } from '@/components/ui/badge'
-import { appCopy } from '@/copy/app'
 import { commonCopy } from '@/copy/common'
-import {
-  SAMPLE_GENE_COUNT,
-  usesSampleCorpus,
-} from '@/features/gene-search/corpus/gene-data-url'
+import { usesSampleCorpus } from '@/features/gene-search/corpus/gene-data-url'
 import { cn } from '@/lib/utils'
 
 const HIDE_AFTER = 80
@@ -163,20 +155,13 @@ function HeaderContent({ scrolled }: { scrolled: boolean }) {
   // Home and /genes each render their own search box, so the header trigger
   // would be a second search on the page.
   const pageHasSearch = isHomePage || pathname === '/genes'
-  const { state, isMobile } = useSidebar()
-  const sidebarLabel =
-    state === 'expanded' ? commonCopy.sidebar.close : commonCopy.sidebar.open
+  const { isMobile } = useSidebar()
   const contextLabel = pathname === null ? null : pageContextLabel(pathname)
 
   return (
     <>
       <div className="flex min-w-0 items-center gap-2">
-        <Tooltip>
-          <TooltipTrigger
-            render={<SidebarTrigger size="lg" aria-label={sidebarLabel} />}
-          ></TooltipTrigger>
-          <TooltipContent>{sidebarLabel}</TooltipContent>
-        </Tooltip>
+        <SidebarToggle />
         {/* On phones the sidebar (and its logo) is hidden behind the
             trigger, so the header carries the brand. */}
         {isMobile && <BrandMark showWordmark={isHomePage} />}
@@ -204,27 +189,5 @@ function HeaderContent({ scrolled }: { scrolled: boolean }) {
         {usesSampleCorpus() && <SampleDataBadge />}
       </div>
     </>
-  )
-}
-
-/** Says plainly that this build serves the sample gene set. */
-function SampleDataBadge() {
-  return (
-    <Tooltip>
-      <TooltipTrigger
-        render={
-          <Badge
-            variant="outline"
-            tabIndex={0}
-            className="truncate border-warning/40 bg-warning/15 text-warning-soft"
-          />
-        }
-      >
-        {appCopy.sampleData.label(SAMPLE_GENE_COUNT)}
-      </TooltipTrigger>
-      <TooltipContent className="max-w-64">
-        {appCopy.sampleData.detail}
-      </TooltipContent>
-    </Tooltip>
   )
 }

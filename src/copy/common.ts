@@ -6,9 +6,20 @@ export const commonCopy = {
     downloadAria: (caption: string) => `Download ${caption} as CSV`,
   },
   brandName: 'REJ Studio',
+  // The accessible name of every "What is this?" infotip (`TermHint`), in
+  // both the gene pages and the design tool.
+  termHintAria: (term: string) => `What is ${term}?`,
   sidebar: {
     open: 'Open sidebar',
     close: 'Close sidebar',
+    // The sidebar is the app's navigation landmark, so it carries a name a
+    // screen reader can jump to ("Main navigation").
+    navLabel: 'Main',
+    // On phones the sidebar is a dialog, which needs its own name and
+    // description; the shadcn primitive only has placeholders.
+    sheetTitle: 'Main navigation',
+    sheetDescription:
+      'Pages, starred genes, recent searches, designs and settings.',
   },
   // Header context label, shown once the page title has scrolled away.
   pageContext: {

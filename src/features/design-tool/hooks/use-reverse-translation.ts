@@ -1,7 +1,14 @@
 import { useEffect, useState } from 'react'
-import { useFormContext, useWatch, type UseFormSetValue } from 'react-hook-form'
+import {
+  useFormContext,
+  useWatch,
+  type UseFormClearErrors,
+  type UseFormGetFieldState,
+  type UseFormSetValue,
+} from 'react-hook-form'
 
 import { reverseTranslateInBrowser } from '@/features/design-tool/api/browser-optimizer'
+import { designToolCopy } from '@/features/design-tool/copy'
 import type { FormValues } from '@/features/design-tool/types/form-schema'
 import { pickDefaultSplitPoints } from '@/features/design-tool/utils/default-split-point'
 import { isSpecies, type Species } from '@/lib/bio/species'
@@ -22,11 +29,15 @@ export interface ReverseTranslationState {
   error: string | null
 }
 
+interface FormWriters {
+  setValue: UseFormSetValue<FormValues>
+  clearErrors: UseFormClearErrors<FormValues>
+  getFieldState: UseFormGetFieldState<FormValues>
+}
+
 /** Put a reverse-translated sequence into the form, with its split points. */
-function applyReverseTranslatedDna(
-  setValue: UseFormSetValue<FormValues>,
-  dna: string,
-) {
+function applyReverseTranslatedDna(form: FormWriters, dna: string) {
+  const { setValue, clearErrors, getFieldState } = form
   const points = pickDefaultSplitPoints(dna)
   setValue('codingSequence', dna, { shouldValidate: false })
   setValue('spliceJunctionPositions', points, { shouldValidate: false })
@@ -34,6 +45,18 @@ function applyReverseTranslatedDna(
   // that may not be in it.
   setValue('wggwSitePicks', [], { shouldValidate: false })
   setValue('wggwRewritePicks', [], { shouldValidate: false })
+
+  // A validation that ran while the DNA was still empty left the protein
+  // field marked invalid, saying the reverse translation was still coming.
+  // It has come, and nothing revalidates the field on this write, so take
+  // that one issue off rather than leave a red field contradicting the line
+  // under it reporting the DNA. Only that issue is cleared — a complaint
+  // about the protein itself (bad letters, an internal stop) must survive,
+  // and the schema reports those instead of this one.
+  const { error } = getFieldState('proteinSequence')
+  if (error?.message === designToolCopy.validation.protein.awaitingDna) {
+    clearErrors('proteinSequence')
+  }
 }
 
 /**
@@ -48,7 +71,8 @@ function applyReverseTranslatedDna(
  * matches what is on screen.
  */
 export function useReverseTranslation(): ReverseTranslationState {
-  const { control, setValue } = useFormContext<FormValues>()
+  const { control, setValue, clearErrors, getFieldState } =
+    useFormContext<FormValues>()
   const [sequenceType, proteinSequence, species] = useWatch({
     control,
     name: ['sequenceType', 'proteinSequence', 'species'],
@@ -85,7 +109,10 @@ export function useReverseTranslation(): ReverseTranslationState {
           setState({ pending: false, error: outcome.message })
           return
         }
-        applyReverseTranslatedDna(setValue, outcome.CDS)
+        applyReverseTranslatedDna(
+          { setValue, clearErrors, getFieldState },
+          outcome.CDS,
+        )
         setState({ pending: false, error: null })
       })
     }, DEBOUNCE_MS)
@@ -94,7 +121,15 @@ export function useReverseTranslation(): ReverseTranslationState {
       clearTimeout(timer)
       controller.abort()
     }
-  }, [sequenceType, protein, species, translatable, setValue])
+  }, [
+    sequenceType,
+    protein,
+    species,
+    translatable,
+    setValue,
+    clearErrors,
+    getFieldState,
+  ])
 
   return state
 }
