@@ -9,11 +9,13 @@
 // Every request reaches this code first (wrangler.jsonc,
 // `assets.run_worker_first`) except static files that carry nothing to gate.
 
+import { withSentry } from '@sentry/cloudflare'
 import handler from '@tanstack/react-start/server-entry'
 
 import { gate, isServerFnCall } from './auth/gate'
 import { capServerFnBody } from './body-cap'
 import { handleLogin, handleLogout } from './auth/login'
+import { sentryOptions } from './sentry'
 
 import { SHELL_PATH, isPrerenderedPage } from './prerendered-pages'
 
@@ -43,7 +45,12 @@ async function servePage(request: Request, env: Env): Promise<Response> {
   return handler.fetch(request)
 }
 
-export default {
+// Wrapped in Sentry: it instruments this `fetch` (errors it throws, and an
+// `http.server` span per request) and initializes the SDK from the request's
+// own environment. `DesignWorkflow` above stays an unwrapped named export,
+// because the runtime looks the class up by name on the main module; the
+// Workflow's own errors reach Workers observability.
+export default withSentry(sentryOptions, {
   async fetch(request, env) {
     const { pathname } = new URL(request.url)
 
@@ -67,4 +74,4 @@ export default {
 
     return servePage(request, env)
   },
-} satisfies ExportedHandler<Env>
+} satisfies ExportedHandler<Env>)

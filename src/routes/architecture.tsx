@@ -327,7 +327,7 @@ function ArchitecturePage() {
                 Console logger — error boundaries
               </Badge>
               <Badge className="border border-chart-5/20 bg-chart-5/10 type-micro text-foreground">
-                Sentry for Start — at cutover
+                Sentry — browser and Worker
               </Badge>
               <Badge className="border border-chart-3/20 bg-chart-3/10 type-micro text-foreground">
                 Cloudflare Web Analytics — at cutover

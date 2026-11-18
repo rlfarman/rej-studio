@@ -9,6 +9,8 @@ interface ImportMetaEnv {
   readonly VITE_GENE_DATA_URL?: string
   /** "true" shows the design tool's second split point (triple-AAV). */
   readonly VITE_ENABLE_MULTI_SPLIT?: string
+  /** Sentry ingest URL for the browser; unset, the SDK is never loaded. */
+  readonly VITE_SENTRY_DSN?: string
 
   /**
    * Where the build put the disease-associations shards, and which exist

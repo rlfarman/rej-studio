@@ -5,6 +5,7 @@ import { join, relative } from 'node:path'
 
 import { cloudflare } from '@cloudflare/vite-plugin'
 import babel from '@rolldown/plugin-babel'
+import { sentryVitePlugin } from '@sentry/vite-plugin'
 import tailwindcss from '@tailwindcss/vite'
 import { tanstackStart } from '@tanstack/react-start/plugin/vite'
 import react, { reactCompilerPreset } from '@vitejs/plugin-react'
@@ -227,6 +228,28 @@ function workerBuildInfo(): Plugin {
   }
 }
 
+/**
+ * Uploads the client bundle's source maps to Sentry, so a minified stack
+ * trace from the browser reads as source.
+ *
+ * Only when SENTRY_AUTH_TOKEN is in the build's environment: without it the
+ * build runs exactly as it did before (the plugin is left out entirely, so
+ * not even the debug-id injection happens). SENTRY_ORG and SENTRY_PROJECT
+ * are read from the environment by the plugin itself.
+ *
+ * The maps stay beside the bundle as well — they are public by design
+ * (`environments.client` above), so there is no `filesToDeleteAfterUpload`.
+ * The Worker's maps are not uploaded here: wrangler uploads them to
+ * Cloudflare, where its own observability reads them.
+ */
+function sentrySourceMaps(): Plugin[] {
+  if (!process.env.SENTRY_AUTH_TOKEN) return []
+  return sentryVitePlugin({
+    telemetry: false,
+    sourcemaps: { assets: ['dist/client/**/*.js', 'dist/client/**/*.js.map'] },
+  }) as Plugin[]
+}
+
 // An object rather than a function: `vp lint` reads the `lint` block below
 // straight from this file.
 export default defineConfig({
@@ -272,6 +295,8 @@ export default defineConfig({
     // React Compiler (automatic memoization), as next.config.ts's
     // `reactCompiler: true` did.
     babel({ presets: [reactCompilerPreset()] }),
+    // Last, as Sentry's docs require.
+    ...sentrySourceMaps(),
   ],
   lint: lintConfig,
 })

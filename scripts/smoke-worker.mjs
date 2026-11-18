@@ -425,6 +425,10 @@ async function main() {
       `BASIC_AUTH_PASSWORD:${PASSCODE}`,
       '--var',
       `SESSION_SECRET:${SESSION_SECRET}`,
+      // Sentry off: wrangler.jsonc carries the production DSN as a plain
+      // var, and a smoke run must not report into the real project.
+      '--var',
+      'SENTRY_DSN:',
     ],
     {
       cwd: root,

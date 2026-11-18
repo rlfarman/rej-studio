@@ -35,3 +35,14 @@ if (url.replace(/\/+$/, '') === '/gene-data/sample') {
 }
 
 console.log(`Deploying with the gene corpus at ${url}`)
+
+// A warning, not a refusal: the app works without Sentry, and a deploy that
+// deliberately leaves it off is legitimate. But VITE_SENTRY_DSN is inlined at
+// build time, so a build without it reports no browser errors at all, and
+// that is too quiet a failure to leave unsaid. (The Worker's own DSN is a var
+// in wrangler.jsonc, so it needs nothing here.)
+if (!env.VITE_SENTRY_DSN?.trim()) {
+  console.warn(
+    'Warning: VITE_SENTRY_DSN is not set — this build reports no browser errors to Sentry.',
+  )
+}

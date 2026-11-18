@@ -36,4 +36,10 @@ export interface ServerEnv extends Partial<Env> {
   BASIC_AUTH_PASSWORD?: string
   /** 32+ characters; signs the session cookie, keyed with the passcode. */
   SESSION_SECRET?: string
+  /**
+   * Where the Worker reports errors and traces (./sentry.ts). A plain `vars`
+   * entry in wrangler.jsonc rather than a secret — a DSN is public. Unset
+   * (local development, the worker smoke test), Sentry is off.
+   */
+  SENTRY_DSN?: string
 }

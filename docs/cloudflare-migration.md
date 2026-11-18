@@ -212,7 +212,7 @@ Cloudflare cutover are done. Everything here is reversible until DNS moves.
    - The corpus uploaded to R2.
    - Access on the hostname, with a bypass policy for the MCP path, which
      uses bearer tokens instead.
-   - Web Analytics, Sentry for Start, and secrets.
+   - Web Analytics and secrets (Sentry is wired; see below).
    - A preview deploy on `workers.dev`, then DNS moves from Vercel.
 
    Vercel stays up until the new deploy has served the lab for a while.
@@ -284,8 +284,18 @@ Done on the `rlfarman` account; the preview is live at
   it.
 
 Verified signed in on the preview: the full corpus, an in-browser design, and
-a cloud design through reload, history and delete. Still to do: Web Analytics, Sentry for Start, the DNS move, the
-required-checks swap, repointing the uptime monitor, and the teardown.
+a cloud design through reload, history and delete.
+
+- **Sentry is wired** for both halves: `@sentry/react`, loaded lazily from
+  the client entry with a build-time `VITE_SENTRY_DSN`, and
+  `@sentry/cloudflare`'s `withSentry` around the Worker's default export,
+  reading the `SENTRY_DSN` var from `wrangler.jsonc`. See AGENTS.md
+  ("Observability"). A release build still needs `VITE_SENTRY_DSN` passed to
+  it, and `SENTRY_AUTH_TOKEN` (with `SENTRY_ORG` / `SENTRY_PROJECT`) if the
+  client source maps should be uploaded.
+
+Still to do: Web Analytics, the DNS move, the required-checks swap,
+repointing the uptime monitor, and the teardown.
 
 ### Cutover checklist
 

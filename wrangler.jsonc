@@ -99,6 +99,15 @@
     { "binding": "GENE_DATA", "bucket_name": "rej-studio-gene-data" },
     { "binding": "DESIGN_RESULTS", "bucket_name": "rej-studio-design-results" },
   ],
+  // Where the Worker reports errors and traces (src/server/sentry.ts). Not a
+  // secret: a Sentry DSN is a public ingest URL, and the same one is inlined
+  // into the client bundle as VITE_SENTRY_DSN. Blank or absent, Sentry is
+  // off: `.dev.vars` sets it empty so local `vp dev` / `vp preview` runs stay
+  // out of the real project, and `pnpm test:worker` passes `--var SENTRY_DSN:`
+  // for the same reason.
+  "vars": {
+    "SENTRY_DSN": "https://63333b549fa95724fbd3d1d8a93e716a@o4511170639167488.ingest.us.sentry.io/4511171059515392",
+  },
   // Secrets (never in this file): BASIC_AUTH_PASSWORD and SESSION_SECRET
   // (the passcode gate), MCP_TOKENS and HEALTH_AUTH_TOKEN. Locally they go in
   // .dev.vars (see .dev.vars.example); deployed, `wrangler secret put` or

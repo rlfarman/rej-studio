@@ -30,3 +30,10 @@ HEALTH_AUTH_TOKEN=
 # Deployed, both are required: without them the Worker refuses everything.
 BASIC_AUTH_PASSWORD=
 SESSION_SECRET=
+
+# Sentry for the Worker (src/server/sentry.ts). wrangler.jsonc carries the
+# production DSN as a plain `vars` entry — a DSN is public, not a secret — and
+# `vp dev`, `vp preview` and `wrangler dev` would otherwise report local runs
+# into the real project. This empty override turns Sentry off locally; set it
+# to the DSN to try the reporting path.
+SENTRY_DSN=
