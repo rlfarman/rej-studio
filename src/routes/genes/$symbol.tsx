@@ -1,4 +1,4 @@
-import { noop, useQuery, useSuspenseQuery } from '@tanstack/react-query'
+import { useQuery, useSuspenseQuery } from '@tanstack/react-query'
 import { createFileRoute, notFound, redirect } from '@tanstack/react-router'
 import { ExternalLink } from 'lucide-react'
 import { z } from 'zod'
@@ -45,15 +45,16 @@ export const Route = createFileRoute('/genes/$symbol')({
     params: { symbol },
     deps: { species },
   }) => {
-    // Disease associations are human-only. This gene's row loads alongside
-    // the gene (unless the URL already says mouse), so a human gene page
-    // doesn't wait for it afterwards; a mouse gene leaves it in the cache.
-    const associations =
-      species === 'mouse'
-        ? null
-        : queryClient.ensureQueryData(associationQuery(symbol))
-    // Phenotypes are extra: the gene page shows without them.
-    associations?.catch(noop)
+    // Disease associations are human-only. This gene's row starts loading
+    // alongside the gene (unless the URL already says mouse) but the page
+    // doesn't wait for it: phenotypes are extra, sit below the isoform
+    // table, and appear when their row lands (GenePage reads the same
+    // query). On a slow phone this shard used to finish after the gene file
+    // and hold back the whole page.
+    if (species !== 'mouse') {
+      // prefetchQuery never rejects; a failure leaves the section out.
+      void queryClient.prefetchQuery(associationQuery(symbol))
+    }
 
     const data = await queryClient.ensureQueryData(
       geneBySymbolQuery(symbol, species),
@@ -70,7 +71,6 @@ export const Route = createFileRoute('/genes/$symbol')({
         replace: true,
       })
     }
-    if (data.gene.species === 'human') await associations?.catch(noop)
     return { name: data.gene.name }
   },
   head: ({ params, loaderData }) => ({
