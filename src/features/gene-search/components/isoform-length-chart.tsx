@@ -1,85 +1,58 @@
-'use client'
-
-import { useMemo } from 'react'
-import Link from 'next/link'
-import { usePathname, useSearchParams } from 'next/navigation'
-import { BarChart3 } from 'lucide-react'
-import { m } from 'motion/react'
+import { Link } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
 import {
   assessDesignSuitability,
   getSuitabilityConfig,
 } from '@/lib/bio/design-suitability'
-import { useSpeciesContext } from '@/stores/species-store'
 import type { IsoformListItem } from '@/features/gene-search/types/domain-types'
+import { lengthChartModel } from '@/features/gene-search/utils/length-chart'
+import { ChartDataTable } from '@/components/chart-data-table'
+import { geneSearchCopy } from '../copy'
+
+const copy = geneSearchCopy.lengthChart
 
 interface Props {
   isoforms: IsoformListItem[]
 }
 
-// AAV packaging thresholds from design-suitability.ts
-const SINGLE_AAV_MAX = 4000
-const DUAL_AAV_MAX = 8000
-
 /**
- * Horizontal bar chart of isoform CDS lengths, color-coded by AAV suitability.
- * Sits under the isoform summary and gives an immediate read on which isoforms
- * fit which packaging strategy.
+ * CDS length per isoform against AAV packaging limits. Only rendered when
+ * the isoforms span capacity tiers (see lengthChartModel); for single-AAV
+ * genes it would just restate the table's CDS column.
  */
 export function IsoformLengthChart({ isoforms }: Props) {
-  const { species } = useSpeciesContext()
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
-
-  const buildHref = (id: string) => {
-    const params = new URLSearchParams(searchParams?.toString() ?? '')
-    params.set('isoform', id)
-    return `${pathname}?${params.toString()}#isoform-row-${id}`
-  }
-
-  const { rows, scaleMax } = useMemo(() => {
-    const filtered = isoforms.filter((i) => {
-      if (!species || species === 'both') return true
-      return i.species.toLowerCase() === species
-    })
-    // Sort by CDS length ascending so the chart reads as a gradient.
-    filtered.sort((a, b) => a.codingSequenceLength - b.codingSequenceLength)
-    const maxLen = filtered.reduce(
-      (m, i) => Math.max(m, i.codingSequenceLength),
-      0,
-    )
-    // Scale axis to just past the longest isoform, with a floor so short
-    // isoforms don't get lost.
-    const scaleMax = Math.max(maxLen * 1.05, DUAL_AAV_MAX + 500)
-    const rows = filtered.map((i) => ({
+  const rows = [...isoforms]
+    // Shortest first so the bars read as a ramp toward the limits.
+    .sort((a, b) => a.codingSequenceLength - b.codingSequenceLength)
+    .map((i) => ({
       id: i.id,
       length: i.codingSequenceLength,
       suitability: assessDesignSuitability(i.codingSequence),
     }))
-    return { rows, scaleMax }
-  }, [isoforms, species])
+  const model = lengthChartModel(rows)
 
-  if (rows.length < 2) return null
+  if (!model.show) return null
 
-  const singlePct = (SINGLE_AAV_MAX / scaleMax) * 100
-  const dualPct = (DUAL_AAV_MAX / scaleMax) * 100
+  const pct = (bp: number) => (bp / model.scaleMax) * 100
 
   return (
-    <div className="mb-4 space-y-3 rounded-md border p-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-sm font-medium">
-          <BarChart3 className="text-muted-foreground size-4" />
-          CDS length by isoform
-        </div>
-        <div className="type-micro flex items-center gap-3">
+    <section className="space-y-3" aria-labelledby="length-chart-title">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h2 id="length-chart-title" className="text-sm font-medium">
+          {copy.title}
+        </h2>
+        <div className="flex flex-wrap items-center gap-3 type-micro">
           {(['single-aav', 'dual-aav', 'triple-aav'] as const).map((s) => {
             const cfg = getSuitabilityConfig(s)
             return (
               <span
                 key={s}
-                className="text-muted-foreground flex items-center gap-1"
+                className="flex items-center gap-1 text-muted-foreground"
               >
-                <span className={cn('size-2 rounded-sm', cfg.fillClass)} />
+                <span
+                  className={cn('size-2 rounded-sm', cfg.fillClass)}
+                  aria-hidden="true"
+                />
                 {cfg.label}
               </span>
             )
@@ -87,81 +60,84 @@ export function IsoformLengthChart({ isoforms }: Props) {
         </div>
       </div>
 
-      <div className="space-y-1">
-        {rows.map((row, i) => {
-          const pct = (row.length / scaleMax) * 100
+      <ul className="space-y-1">
+        {rows.map((row) => {
           const cfg = getSuitabilityConfig(row.suitability)
           return (
-            <Link
-              key={row.id}
-              href={buildHref(row.id)}
-              scroll={false}
-              className="group hover:bg-muted/40 focus-visible:ring-ring type-micro -mx-1 flex items-center gap-2 rounded-sm px-1 py-0.5 transition-colors focus-visible:ring-2 focus-visible:outline-none"
-              title={`${row.id} · ${row.length.toLocaleString()} bp · ${cfg.label}`}
-              aria-label={`${row.id}, ${row.length.toLocaleString()} base pairs, ${cfg.label}`}
-            >
-              <span className="text-muted-foreground group-hover:text-foreground w-28 shrink-0 truncate font-mono">
-                {row.id}
-              </span>
-              <div className="bg-muted/30 relative h-3 flex-1 overflow-hidden rounded-sm">
-                <m.div
-                  className={cn(
-                    'h-full origin-left transition-opacity group-hover:opacity-100',
-                    cfg.fillClass,
-                  )}
-                  style={{ width: `${pct}%` }}
-                  initial={{ scaleX: 0, opacity: 0.6 }}
-                  animate={{ scaleX: 1, opacity: 1 }}
-                  transition={{
-                    duration: 0.6,
-                    delay: Math.min(i * 0.04, 0.4),
-                    ease: [0.16, 1, 0.3, 1],
-                  }}
-                />
-                <div
-                  className="bg-border/80 pointer-events-none absolute inset-y-0 w-px"
-                  style={{ left: `${singlePct}%` }}
-                  aria-hidden="true"
-                />
-                <div
-                  className="bg-border/80 pointer-events-none absolute inset-y-0 w-px"
-                  style={{ left: `${dualPct}%` }}
-                  aria-hidden="true"
-                />
-              </div>
-              <span
-                className="text-muted-foreground w-6 shrink-0 text-center font-mono tabular-nums"
-                aria-hidden="true"
+            <li key={row.id}>
+              <Link
+                from="/genes/$symbol"
+                to="."
+                // Opens and highlights the isoform's row and scrolls to it,
+                // keeping the rest of the URL and the page's scroll.
+                search={(prev) => ({ ...prev, isoform: row.id })}
+                hash={`isoform-row-${row.id}`}
+                resetScroll={false}
+                className="group -mx-1 grid grid-cols-[5.5rem_1fr_3.5rem] items-center gap-2 rounded-lg px-1 py-1 type-micro transition-colors hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none sm:grid-cols-[8rem_1fr_2rem_4rem]"
+                aria-label={`${row.id}, ${row.length.toLocaleString()} base pairs, ${cfg.label}`}
               >
-                {cfg.short}
-              </span>
-              <span className="text-muted-foreground w-16 shrink-0 text-right font-mono tabular-nums">
-                {row.length.toLocaleString()}
-              </span>
-            </Link>
+                {/* On phones only the transcript suffix fits; the full ID is
+                    in the accessible name and the table row it links to. */}
+                <span className="truncate font-mono text-muted-foreground group-hover:text-foreground">
+                  <span className="hidden sm:inline">{row.id}</span>
+                  <span className="sm:hidden">…{row.id.slice(-6)}</span>
+                </span>
+                <div className="relative h-3 overflow-hidden rounded-sm bg-muted/30">
+                  <div
+                    className={cn('h-full', cfg.fillClass)}
+                    style={{ width: `${pct(row.length)}%` }}
+                  />
+                  {model.thresholds.map((limit) => (
+                    <div
+                      key={limit}
+                      className="pointer-events-none absolute inset-y-0 w-px bg-foreground/30"
+                      style={{ left: `${pct(limit)}%` }}
+                      aria-hidden="true"
+                    />
+                  ))}
+                </div>
+                <span
+                  className="hidden text-center font-mono text-muted-foreground tabular-nums sm:inline"
+                  aria-hidden="true"
+                >
+                  {cfg.short}
+                </span>
+                <span className="text-right font-mono text-muted-foreground tabular-nums">
+                  {row.length.toLocaleString()}
+                </span>
+              </Link>
+            </li>
           )
         })}
-      </div>
+      </ul>
 
-      <div className="text-muted-foreground type-micro flex items-center gap-2 tabular-nums">
-        <span className="w-28 shrink-0" />
-        <div className="relative h-3 flex-1">
+      <div
+        className="grid grid-cols-[5.5rem_1fr_3.5rem] gap-2 type-micro text-muted-foreground tabular-nums sm:grid-cols-[8rem_1fr_2rem_4rem]"
+        aria-hidden="true"
+      >
+        <span />
+        <div className="relative h-3">
           <span className="absolute left-0">0</span>
-          <span
-            className="absolute -translate-x-1/2"
-            style={{ left: `${singlePct}%` }}
-          >
-            {SINGLE_AAV_MAX.toLocaleString()}
-          </span>
-          <span
-            className="absolute -translate-x-1/2"
-            style={{ left: `${dualPct}%` }}
-          >
-            {DUAL_AAV_MAX.toLocaleString()}
-          </span>
+          {model.thresholds.map((limit) => (
+            <span
+              key={limit}
+              className="absolute -translate-x-1/2 whitespace-nowrap"
+              style={{ left: `${pct(limit)}%` }}
+            >
+              {copy.capacityLabel(limit.toLocaleString())}
+            </span>
+          ))}
         </div>
-        <span className="w-16 shrink-0 text-right">bp</span>
+        <span className="hidden sm:inline" />
+        <span className="text-right">{copy.unit}</span>
       </div>
-    </div>
+      <ChartDataTable
+        storageKey="isoforms"
+        caption={geneSearchCopy.charts.isoformLengths.caption}
+        columns={geneSearchCopy.charts.isoformLengths.columns}
+        rows={rows.map((row) => [row.id, row.length, row.suitability])}
+        csvFilename="isoform-lengths.csv"
+      />
+    </section>
   )
 }

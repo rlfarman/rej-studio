@@ -1,12 +1,11 @@
-'use client'
 import {
   SidebarMenuAction,
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar'
 import { useRecentGenes } from '@/features/gene-search/stores/recent-genes-store'
-import Link from 'next/link'
-import { geneHref } from '@/lib/bio/species'
+import { Link } from '@tanstack/react-router'
+import { geneLink } from '../utils/search-href'
 import { ExpandableSidebarList } from '@/components/expandable-sidebar-list'
 import { SpeciesIcon } from '@/components/bio/species-icon'
 import { X } from 'lucide-react'
@@ -24,32 +23,30 @@ export function RecentGenes() {
       items={recentGenes}
       getItemKey={(gene) => gene.id}
       onClear={clearRecentGenes}
-      emptyMessage={copy.empty}
       renderItem={(gene) => (
         <SidebarMenuItem>
           <SidebarMenuButton
-            asChild
             size="sm"
             className="h-auto items-start py-1.5 [&>svg]:size-3"
+            render={
+              <Link
+                {...geneLink(gene.symbol, gene.species)}
+                className="flex items-start gap-2"
+              />
+            }
           >
-            <Link
-              href={geneHref(gene.symbol, gene.species)}
-              prefetch
-              className="flex items-start gap-2"
-            >
-              {gene.species && (
-                <SpeciesIcon
-                  species={gene.species}
-                  className="text-muted-foreground group-hover/menu-button:text-sidebar-accent-foreground mt-0.5 flex-shrink-0"
-                />
-              )}
-              <div className="flex min-w-0 flex-1 flex-col gap-0.5 leading-tight">
-                <span className="font-mono font-medium">{gene.symbol}</span>
-                <span className="text-muted-foreground group-hover/menu-button:text-sidebar-accent-foreground type-nano line-clamp-2 pr-5">
-                  {gene.name}
-                </span>
-              </div>
-            </Link>
+            {gene.species && (
+              <SpeciesIcon
+                species={gene.species}
+                className="mt-0.5 flex-shrink-0 text-muted-foreground group-hover/menu-button:text-sidebar-accent-foreground"
+              />
+            )}
+            <div className="flex min-w-0 flex-1 flex-col gap-0.5 leading-tight">
+              <span className="font-mono font-medium">{gene.symbol}</span>
+              <span className="line-clamp-2 pr-5 type-nano text-muted-foreground group-hover/menu-button:text-sidebar-accent-foreground">
+                {gene.name}
+              </span>
+            </div>
           </SidebarMenuButton>
           <SidebarMenuAction
             showOnHover

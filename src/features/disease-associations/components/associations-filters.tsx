@@ -1,7 +1,6 @@
-'use client'
-
-import { useCallback, useEffect, useState, useTransition } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useState } from 'react'
+import { useNavigate } from '@tanstack/react-router'
+import { useDebouncedCallback } from 'use-debounce'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { X } from 'lucide-react'
@@ -13,60 +12,53 @@ import {
 } from '../types'
 import { diseaseAssociationsCopy } from '../copy'
 
-const SEARCH_PARAM = 'q'
-const INHERIT_PARAM = 'i'
 const DEBOUNCE_MS = 200
 
 type Props = {
   bucketCounts: Record<InheritanceBucket, number>
+  /** The URL's text filter. */
+  query: string
+  /** The URL's inheritance filter. */
+  inheritance: InheritanceBucket[]
 }
 
-export function AssociationsFilters({ bucketCounts }: Props) {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const [, startTransition] = useTransition()
+export function AssociationsFilters({
+  bucketCounts,
+  query: urlQuery,
+  inheritance,
+}: Props) {
+  const navigate = useNavigate({ from: '/disease-associations' })
 
-  const activeBuckets = new Set(searchParams.getAll(INHERIT_PARAM))
-  const initialQuery = searchParams.get(SEARCH_PARAM) ?? ''
-  const [query, setQuery] = useState(initialQuery)
+  const activeBuckets = new Set<string>(inheritance)
+  const [query, setQuery] = useState(urlQuery)
 
-  const pushParams = useCallback(
-    (next: URLSearchParams) => {
-      const qs = next.toString()
-      startTransition(() => {
-        router.replace(qs ? `?${qs}` : '?', { scroll: false })
-      })
-    },
-    [router],
-  )
+  // Filters live in the URL. Replacing the entry keeps typing out of the
+  // back history; the table re-filters on the client, so nothing reloads.
+  const setFilters = (next: { q?: string; i?: InheritanceBucket[] }) => {
+    void navigate({
+      search: (prev) => ({ ...prev, ...next }),
+      replace: true,
+      resetScroll: false,
+    })
+  }
 
   // Debounce query updates so the table doesn't re-render on every keystroke.
-  useEffect(() => {
-    const handle = setTimeout(() => {
-      const next = new URLSearchParams(searchParams)
-      if (query) next.set(SEARCH_PARAM, query)
-      else next.delete(SEARCH_PARAM)
-      if (next.toString() !== searchParams.toString()) pushParams(next)
-    }, DEBOUNCE_MS)
-    return () => clearTimeout(handle)
-  }, [query, searchParams, pushParams])
+  // Driven from the input's change event rather than an effect.
+  const pushQuery = useDebouncedCallback((value: string) => {
+    if (value !== urlQuery) setFilters({ q: value || undefined })
+  }, DEBOUNCE_MS)
 
   const toggleBucket = (bucket: InheritanceBucket) => {
-    const next = new URLSearchParams(searchParams)
-    const current = next.getAll(INHERIT_PARAM)
-    next.delete(INHERIT_PARAM)
-    if (current.includes(bucket)) {
-      for (const b of current) if (b !== bucket) next.append(INHERIT_PARAM, b)
-    } else {
-      for (const b of current) next.append(INHERIT_PARAM, b)
-      next.append(INHERIT_PARAM, bucket)
-    }
-    pushParams(next)
+    const next = activeBuckets.has(bucket)
+      ? inheritance.filter((b) => b !== bucket)
+      : [...inheritance, bucket]
+    setFilters({ i: next.length > 0 ? next : undefined })
   }
 
   const clearAll = () => {
+    pushQuery.cancel()
     setQuery('')
-    pushParams(new URLSearchParams())
+    void navigate({ search: {}, replace: true, resetScroll: false })
   }
 
   const hasFilters = query.length > 0 || activeBuckets.size > 0
@@ -78,10 +70,13 @@ export function AssociationsFilters({ bucketCounts }: Props) {
           type="search"
           inputMode="search"
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => {
+            setQuery(e.target.value)
+            pushQuery(e.target.value)
+          }}
           placeholder={diseaseAssociationsCopy.filters.searchPlaceholder}
           aria-label={diseaseAssociationsCopy.filters.searchAria}
-          className="bg-card max-w-lg shadow-xs"
+          className="max-w-lg bg-card shadow-xs"
         />
         {hasFilters && (
           <Button
@@ -98,7 +93,7 @@ export function AssociationsFilters({ bucketCounts }: Props) {
       </div>
 
       <div className="flex flex-wrap items-center gap-1.5">
-        <span className="text-muted-foreground mr-1 text-xs font-semibold tracking-wider uppercase">
+        <span className="mr-1 text-xs font-semibold tracking-wider text-muted-foreground uppercase">
           {diseaseAssociationsCopy.filters.inheritanceLabel}
         </span>
         {FILTER_INHERITANCE_BUCKETS.map((bucket) => {
@@ -114,14 +109,14 @@ export function AssociationsFilters({ bucketCounts }: Props) {
               className={cn(
                 'rounded-full border px-2.5 py-1 text-xs transition-colors',
                 active
-                  ? 'bg-primary text-primary-foreground border-primary'
+                  ? 'border-primary bg-primary text-primary-foreground'
                   : 'bg-card text-foreground hover:bg-muted',
               )}
             >
               {formatInheritanceLabel(bucket)}
               <span
                 className={cn(
-                  'type-micro ml-1.5 font-mono',
+                  'ml-1.5 font-mono type-micro',
                   active ? 'opacity-80' : 'text-muted-foreground',
                 )}
               >

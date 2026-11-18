@@ -1,5 +1,3 @@
-'use client'
-
 import { cn } from '@/lib/utils'
 
 interface Props {
@@ -45,7 +43,7 @@ export function JunctionContext({
     return (
       <span
         key={relPos}
-        className={cn(inMotif && 'bg-primary/20 text-primary font-semibold')}
+        className={cn(inMotif && 'bg-primary/20 font-semibold text-primary')}
       >
         {char}
       </span>
@@ -54,9 +52,9 @@ export function JunctionContext({
 
   return (
     <div className="space-y-2">
-      <div className="bg-muted/30 overflow-x-auto rounded-md border p-3">
+      <div className="overflow-x-auto rounded-2xl border bg-muted/30 p-3">
         <div className="flex items-center justify-center gap-0 font-mono text-sm">
-          <span className="text-muted-foreground type-micro mr-2 tabular-nums">
+          <span className="mr-2 type-micro text-muted-foreground tabular-nums">
             {leftStart.toLocaleString()}
           </span>
           <div className="flex">
@@ -66,25 +64,25 @@ export function JunctionContext({
             className="relative mx-0.5 self-stretch"
             title={`Split after base ${splitPoint.toLocaleString()}`}
           >
-            <div className="bg-primary h-full w-0.5" />
-            <div className="bg-primary absolute top-1/2 left-1/2 size-1.5 -translate-x-1/2 -translate-y-1/2 rotate-45" />
+            <div className="h-full w-0.5 bg-primary" />
+            <div className="absolute top-1/2 left-1/2 size-1.5 -translate-x-1/2 -translate-y-1/2 rotate-45 bg-primary" />
           </div>
           <div className="flex">
             {right.split('').map((c, i) => renderChar(c, left.length + i))}
           </div>
-          <span className="text-muted-foreground type-micro ml-2 tabular-nums">
+          <span className="ml-2 type-micro text-muted-foreground tabular-nums">
             {rightEnd.toLocaleString()}
           </span>
         </div>
-        <div className="text-muted-foreground type-micro mt-2 flex justify-center gap-8">
+        <div className="mt-2 flex justify-center gap-8 type-micro text-muted-foreground">
           <span>← 5′ sequence ends</span>
           <span>3′ sequence starts →</span>
         </div>
       </div>
       {wggwMotif && motifStartRel !== null && (
-        <div className="text-muted-foreground type-micro">
+        <div className="type-micro text-muted-foreground">
           WGGW motif{' '}
-          <span className="bg-primary/20 text-primary rounded px-1 font-mono font-semibold">
+          <span className="rounded-sm bg-primary/20 px-1 font-mono font-semibold text-primary">
             {wggwMotif}
           </span>{' '}
           spans the junction.

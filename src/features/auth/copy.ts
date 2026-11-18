@@ -1,11 +1,15 @@
 export const authCopy = {
   login: {
+    pageTitle: 'Sign in',
+    overline: 'Pfaff Lab',
     title: 'Sign in',
     description:
-      'This is a private preview of REJ Studio. Enter the access password to continue.',
-    passwordLabel: 'Password',
+      'REJ Studio is private to the lab. Enter the passcode to continue.',
+    passcodeLabel: 'Passcode',
     submit: 'Sign in',
     submitting: 'Signing in…',
-    error: 'Incorrect password. Please try again.',
+    wrongPasscode: 'That passcode is not right. Try again.',
+    tooManyAttempts: 'Too many tries. Wait a minute, then try again.',
   },
+  signOut: 'Sign out',
 } as const

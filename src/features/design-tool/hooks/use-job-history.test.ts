@@ -1,5 +1,17 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { isSeedId, useJobHistory } from './use-job-history'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test'
+import { createStore, get } from 'idb-keyval'
+import { JOB_HISTORY_IDB } from '@/features/design-tool/utils/job-history-storage'
+import {
+  isSeedId,
+  useJobHistory,
+  whenJobHistoryHydrated,
+} from './use-job-history'
+
+const readPersisted = () =>
+  get(
+    'rej-studio:job-history',
+    createStore(JOB_HISTORY_IDB.database, JOB_HISTORY_IDB.store),
+  )
 
 describe('isSeedId', () => {
   it('returns true for seed- prefix', () => {
@@ -11,12 +23,14 @@ describe('isSeedId', () => {
 })
 
 describe('useJobHistory', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
+    await whenJobHistoryHydrated()
     localStorage.clear()
     useJobHistory.setState({ entries: [] })
   })
 
   afterEach(() => {
+    vi.restoreAllMocks()
     localStorage.clear()
   })
 
@@ -46,19 +60,59 @@ describe('useJobHistory', () => {
     )
   })
 
-  it('clears progress/stage on terminal status', () => {
-    useJobHistory.getState().upsertEntry({
-      id: 'job-1',
-      status: 'running',
+  it('keeps progress out of the persisted entries', async () => {
+    useJobHistory.getState().upsertEntry({ id: 'job-1', status: 'running' })
+    useJobHistory
+      .getState()
+      .setProgress('job-1', { progress: 0.5, stage: 'optimizing' })
+
+    expect(useJobHistory.getState().getProgress('job-1')).toEqual({
       progress: 0.5,
       stage: 'optimizing',
     })
-    expect(useJobHistory.getState().getEntry('job-1')!.progress).toBe(0.5)
+    // The entry itself is persisted; a progress tick must not be.
+    await vi.waitFor(async () => {
+      expect(JSON.stringify(await readPersisted())).toContain('job-1')
+    })
+    expect(JSON.stringify(await readPersisted())).not.toContain('optimizing')
+  })
+
+  it('persists entries to IndexedDB, not localStorage', async () => {
+    useJobHistory.getState().upsertEntry({ id: 'job-idb', status: 'running' })
+    await vi.waitFor(async () => {
+      expect(JSON.stringify(await readPersisted())).toContain('job-idb')
+    })
+    expect(localStorage.getItem('rej-studio:job-history')).toBeNull()
+  })
+
+  it('drops progress once the job reaches a terminal status', () => {
+    useJobHistory.getState().upsertEntry({ id: 'job-1', status: 'running' })
+    useJobHistory
+      .getState()
+      .setProgress('job-1', { progress: 0.5, stage: 'optimizing' })
 
     useJobHistory.getState().upsertEntry({ id: 'job-1', status: 'completed' })
-    expect(useJobHistory.getState().getEntry('job-1')!.progress).toBeUndefined()
-    expect(useJobHistory.getState().getEntry('job-1')!.stage).toBeUndefined()
+    expect(useJobHistory.getState().getProgress('job-1')).toBeUndefined()
   })
+
+  it.each(['QuotaExceededError', 'UnknownError', 'InvalidStateError'])(
+    'survives a storage write that throws %s',
+    async (name) => {
+      const put = vi
+        .spyOn(IDBObjectStore.prototype, 'put')
+        .mockImplementation(() => {
+          throw new DOMException('nope', name)
+        })
+      expect(() =>
+        useJobHistory
+          .getState()
+          .upsertEntry({ id: 'job-q', status: 'running' }),
+      ).not.toThrow()
+      // Every slimmed retry (or the one attempt) has been made and failed.
+      await vi.waitFor(() => expect(put).toHaveBeenCalled())
+      expect(useJobHistory.getState().getEntry('job-q')).not.toBeNull()
+    },
+  )
 
   it('derives name from formValues', () => {
     useJobHistory.getState().upsertEntry({

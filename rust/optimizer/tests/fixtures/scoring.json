@@ -1,0 +1,1854 @@
+[
+ {
+  "name": "human_all_objectives",
+  "options": {
+   "codon_optimize": "human",
+   "codon_optimize_weight": 1.0,
+   "enforce_gc": true,
+   "ensure_wggw": true,
+   "minimize_CpGs": true,
+   "minimize_CpGs_weight": 1.0,
+   "reduce_kmer_complexity": true,
+   "reduce_kmer_complexity_weight": 1.0,
+   "remove_cryptic_ss": true,
+   "remove_cryptic_ss_weight": 1.0,
+   "selected_wggw_site": null,
+   "split_point": null,
+   "stim_3": false,
+   "stim_5": false,
+   "wggw_threshold": 0
+  },
+  "report": {
+   "entries": [
+    {
+     "locations": [
+      {
+       "end": 8,
+       "start": 4,
+       "strand": 1
+      },
+      {
+       "end": 70,
+       "start": 66,
+       "strand": 1
+      }
+     ],
+     "message": "Failed. Pattern found at positions [4-8(+), 66-70(+)]",
+     "objective": "AvoidPattern[0-81(+)](pattern:GT[AG]A)",
+     "passes": false,
+     "score": -2.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:AAGTA)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [
+      {
+       "end": 23,
+       "start": 19,
+       "strand": 1
+      },
+      {
+       "end": 56,
+       "start": 52,
+       "strand": 1
+      }
+     ],
+     "message": "Failed. Pattern found at positions [19-23(+), 52-56(+)]",
+     "objective": "AvoidPattern[0-81(+)](pattern:[CTA]AG[GA])",
+     "passes": false,
+     "score": -2.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:CAG[GC])",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[CT]{2}[ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[AG][CT][ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[CT][AG][ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[CT]{3}[ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[AG][CT]{2}[ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[CT][AG][CT][ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[CT]{2}[AG][ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[CT]{4}[ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[AG][CT]{3}[ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[CT][AG][CT]{2}[ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[CT]{2}[AG][CT][ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[CT]{3}[AG][ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[CT]{5}[ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[AG][CT]{4}[ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[CT][AG][CT]{3}[ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[CT]{2}[AG][CT]{2}[ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[CT]{3}[AG][CT][ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[CT]{4}[AG][ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[CT]{6}[ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[AG][CT]{5}[ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[CT][AG][CT]{4}[ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[CT]{2}[AG][CT]{3}[ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[CT]{3}[AG][CT]{2}[ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[CT]{4}[AG][CT][ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[CT]{5}[AG][ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [
+      {
+       "end": 6,
+       "start": 3,
+       "strand": 0
+      },
+      {
+       "end": 18,
+       "start": 15,
+       "strand": 0
+      },
+      {
+       "end": 21,
+       "start": 18,
+       "strand": 0
+      },
+      {
+       "end": 27,
+       "start": 24,
+       "strand": 0
+      },
+      {
+       "end": 33,
+       "start": 30,
+       "strand": 0
+      },
+      {
+       "end": 36,
+       "start": 33,
+       "strand": 0
+      },
+      {
+       "end": 42,
+       "start": 39,
+       "strand": 0
+      },
+      {
+       "end": 45,
+       "start": 42,
+       "strand": 0
+      },
+      {
+       "end": 54,
+       "start": 51,
+       "strand": 0
+      },
+      {
+       "end": 60,
+       "start": 57,
+       "strand": 0
+      },
+      {
+       "end": 66,
+       "start": 63,
+       "strand": 0
+      },
+      {
+       "end": 78,
+       "start": 75,
+       "strand": 0
+      }
+     ],
+     "message": "Codon opt. on window 0-81(+) scored -5.90E+00",
+     "objective": "MaximizeCAI[0-81(+)](h_sapiens)",
+     "passes": false,
+     "score": -5.904294995055428
+    },
+    {
+     "locations": [
+      {
+       "end": 5,
+       "start": 3,
+       "strand": 1
+      },
+      {
+       "end": 19,
+       "start": 17,
+       "strand": 1
+      },
+      {
+       "end": 25,
+       "start": 23,
+       "strand": 1
+      },
+      {
+       "end": 35,
+       "start": 33,
+       "strand": 1
+      },
+      {
+       "end": 45,
+       "start": 43,
+       "strand": 1
+      },
+      {
+       "end": 58,
+       "start": 56,
+       "strand": 1
+      },
+      {
+       "end": 67,
+       "start": 65,
+       "strand": 1
+      },
+      {
+       "end": 76,
+       "start": 74,
+       "strand": 1
+      }
+     ],
+     "message": "Failed. Pattern found at positions [3-5(+), 17-19(+), 23-25(+), 33-35(+), 43-45(+), 56-58(+), 65-67(+), 74-76(+)]",
+     "objective": "AvoidPattern[0-81(+)](pattern:CG)",
+     "passes": false,
+     "score": -8.0
+    },
+    {
+     "locations": [],
+     "message": "Passed: no nonunique 10-mer found.",
+     "objective": "UniquifyAllKmers[0-81(+)](k:10)",
+     "passes": true,
+     "score": 0.0
+    }
+   ],
+   "total_score": -17.90429499505543
+  },
+  "sequence": "ATGCGTAAGCTGGACTCCGAAGACGATCTGGAACGTCTGAAAGCGACCCTGGAAGGCGTTGACTCCGTGATCACCGATTGA",
+  "text_summary": "===> TOTAL OBJECTIVES SCORE:    -17.90\n        -2 \u250d AvoidPattern[0-81(+)](pattern:GT[AG]A) \n           \u2502 Failed. Pattern found at positions [4-8(+), 66-70(+)]\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:AAGTA) \n           \u2502 Passed. Pattern not found !\n        -2 \u250d AvoidPattern[0-81(+)](pattern:[CTA]AG[GA]) \n           \u2502 Failed. Pattern found at positions [19-23(+), 52-56(+)]\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:CAG[GC]) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[CT]{2}[ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[AG][CT][ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[CT][AG][ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[CT]{3}[ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[AG][CT]{2}[ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[CT][AG][CT][ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[CT]{2}[AG][ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[CT]{4}[ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[AG][CT]{3}[ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[CT][AG][CT]{2}[ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[CT]{2}[AG][CT][ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[CT]{3}[AG][ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[CT]{5}[ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[AG][CT]{4}[ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[CT][AG][CT]{3}[ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[CT]{2}[AG][CT]{2}[ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[CT]{3}[AG][CT][ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[CT]{4}[AG][ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[CT]{6}[ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[AG][CT]{5}[ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[CT][AG][CT]{4}[ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[CT]{2}[AG][CT]{3}[ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[CT]{3}[AG][CT]{2}[ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[CT]{4}[AG][CT][ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[CT]{5}[AG][ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n     -5.90 \u250d MaximizeCAI[0-81(+)](h_sapiens) \n           \u2502 Codon opt. on window 0-81(+) scored -5.90E+00\n        -8 \u250d AvoidPattern[0-81(+)](pattern:CG) \n           \u2502 Failed. Pattern found at positions [3-5(+), 17-19(+), 23-25(+),\n           \u2502 33-35(+), 43-45(+), 56-58(+), 65-67(+), 74-76(+)]\n\u2714        0 \u250d UniquifyAllKmers[0-81(+)](k:10) \n           \u2502 Passed: no nonunique 10-mer found.\n\n"
+ },
+ {
+  "name": "mouse_all_objectives",
+  "options": {
+   "codon_optimize": "mouse",
+   "codon_optimize_weight": 1.0,
+   "enforce_gc": true,
+   "ensure_wggw": true,
+   "minimize_CpGs": true,
+   "minimize_CpGs_weight": 1.0,
+   "reduce_kmer_complexity": true,
+   "reduce_kmer_complexity_weight": 1.0,
+   "remove_cryptic_ss": true,
+   "remove_cryptic_ss_weight": 1.0,
+   "selected_wggw_site": null,
+   "split_point": null,
+   "stim_3": false,
+   "stim_5": false,
+   "wggw_threshold": 0
+  },
+  "report": {
+   "entries": [
+    {
+     "locations": [
+      {
+       "end": 8,
+       "start": 4,
+       "strand": 1
+      },
+      {
+       "end": 70,
+       "start": 66,
+       "strand": 1
+      }
+     ],
+     "message": "Failed. Pattern found at positions [4-8(+), 66-70(+)]",
+     "objective": "AvoidPattern[0-81(+)](pattern:GT[AG]A)",
+     "passes": false,
+     "score": -2.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:AAGTA)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [
+      {
+       "end": 23,
+       "start": 19,
+       "strand": 1
+      },
+      {
+       "end": 56,
+       "start": 52,
+       "strand": 1
+      }
+     ],
+     "message": "Failed. Pattern found at positions [19-23(+), 52-56(+)]",
+     "objective": "AvoidPattern[0-81(+)](pattern:[CTA]AG[GA])",
+     "passes": false,
+     "score": -2.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:CAG[GC])",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[CT]{2}[ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[AG][CT][ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[CT][AG][ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[CT]{3}[ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[AG][CT]{2}[ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[CT][AG][CT][ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[CT]{2}[AG][ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[CT]{4}[ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[AG][CT]{3}[ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[CT][AG][CT]{2}[ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[CT]{2}[AG][CT][ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[CT]{3}[AG][ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[CT]{5}[ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[AG][CT]{4}[ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[CT][AG][CT]{3}[ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[CT]{2}[AG][CT]{2}[ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[CT]{3}[AG][CT][ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[CT]{4}[AG][ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[CT]{6}[ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[AG][CT]{5}[ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[CT][AG][CT]{4}[ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[CT]{2}[AG][CT]{3}[ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[CT]{3}[AG][CT]{2}[ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[CT]{4}[AG][CT][ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[CT]{5}[AG][ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [
+      {
+       "end": 6,
+       "start": 3,
+       "strand": 0
+      },
+      {
+       "end": 18,
+       "start": 15,
+       "strand": 0
+      },
+      {
+       "end": 21,
+       "start": 18,
+       "strand": 0
+      },
+      {
+       "end": 27,
+       "start": 24,
+       "strand": 0
+      },
+      {
+       "end": 33,
+       "start": 30,
+       "strand": 0
+      },
+      {
+       "end": 36,
+       "start": 33,
+       "strand": 0
+      },
+      {
+       "end": 42,
+       "start": 39,
+       "strand": 0
+      },
+      {
+       "end": 45,
+       "start": 42,
+       "strand": 0
+      },
+      {
+       "end": 54,
+       "start": 51,
+       "strand": 0
+      },
+      {
+       "end": 60,
+       "start": 57,
+       "strand": 0
+      },
+      {
+       "end": 66,
+       "start": 63,
+       "strand": 0
+      },
+      {
+       "end": 78,
+       "start": 75,
+       "strand": 0
+      }
+     ],
+     "message": "Codon opt. on window 0-81(+) scored -6.57E+00",
+     "objective": "MaximizeCAI[0-81(+)](m_musculus)",
+     "passes": false,
+     "score": -6.573563952731468
+    },
+    {
+     "locations": [
+      {
+       "end": 5,
+       "start": 3,
+       "strand": 1
+      },
+      {
+       "end": 19,
+       "start": 17,
+       "strand": 1
+      },
+      {
+       "end": 25,
+       "start": 23,
+       "strand": 1
+      },
+      {
+       "end": 35,
+       "start": 33,
+       "strand": 1
+      },
+      {
+       "end": 45,
+       "start": 43,
+       "strand": 1
+      },
+      {
+       "end": 58,
+       "start": 56,
+       "strand": 1
+      },
+      {
+       "end": 67,
+       "start": 65,
+       "strand": 1
+      },
+      {
+       "end": 76,
+       "start": 74,
+       "strand": 1
+      }
+     ],
+     "message": "Failed. Pattern found at positions [3-5(+), 17-19(+), 23-25(+), 33-35(+), 43-45(+), 56-58(+), 65-67(+), 74-76(+)]",
+     "objective": "AvoidPattern[0-81(+)](pattern:CG)",
+     "passes": false,
+     "score": -8.0
+    },
+    {
+     "locations": [],
+     "message": "Passed: no nonunique 10-mer found.",
+     "objective": "UniquifyAllKmers[0-81(+)](k:10)",
+     "passes": true,
+     "score": 0.0
+    }
+   ],
+   "total_score": -18.57356395273147
+  },
+  "sequence": "ATGCGTAAGCTGGACTCCGAAGACGATCTGGAACGTCTGAAAGCGACCCTGGAAGGCGTTGACTCCGTGATCACCGATTGA",
+  "text_summary": "===> TOTAL OBJECTIVES SCORE:    -18.57\n        -2 \u250d AvoidPattern[0-81(+)](pattern:GT[AG]A) \n           \u2502 Failed. Pattern found at positions [4-8(+), 66-70(+)]\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:AAGTA) \n           \u2502 Passed. Pattern not found !\n        -2 \u250d AvoidPattern[0-81(+)](pattern:[CTA]AG[GA]) \n           \u2502 Failed. Pattern found at positions [19-23(+), 52-56(+)]\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:CAG[GC]) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[CT]{2}[ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[AG][CT][ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[CT][AG][ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[CT]{3}[ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[AG][CT]{2}[ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[CT][AG][CT][ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[CT]{2}[AG][ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[CT]{4}[ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[AG][CT]{3}[ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[CT][AG][CT]{2}[ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[CT]{2}[AG][CT][ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[CT]{3}[AG][ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[CT]{5}[ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[AG][CT]{4}[ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[CT][AG][CT]{3}[ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[CT]{2}[AG][CT]{2}[ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[CT]{3}[AG][CT][ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[CT]{4}[AG][ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[CT]{6}[ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[AG][CT]{5}[ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[CT][AG][CT]{4}[ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[CT]{2}[AG][CT]{3}[ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[CT]{3}[AG][CT]{2}[ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[CT]{4}[AG][CT][ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[CT]{5}[AG][ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n     -6.57 \u250d MaximizeCAI[0-81(+)](m_musculus) \n           \u2502 Codon opt. on window 0-81(+) scored -6.57E+00\n        -8 \u250d AvoidPattern[0-81(+)](pattern:CG) \n           \u2502 Failed. Pattern found at positions [3-5(+), 17-19(+), 23-25(+),\n           \u2502 33-35(+), 43-45(+), 56-58(+), 65-67(+), 74-76(+)]\n\u2714        0 \u250d UniquifyAllKmers[0-81(+)](k:10) \n           \u2502 Passed: no nonunique 10-mer found.\n\n"
+ },
+ {
+  "name": "repetitive_kmers",
+  "options": {
+   "codon_optimize": "human",
+   "codon_optimize_weight": 1.0,
+   "enforce_gc": true,
+   "ensure_wggw": true,
+   "minimize_CpGs": true,
+   "minimize_CpGs_weight": 1.0,
+   "reduce_kmer_complexity": true,
+   "reduce_kmer_complexity_k": 8,
+   "reduce_kmer_complexity_weight": 1.0,
+   "remove_cryptic_ss": true,
+   "remove_cryptic_ss_weight": 1.0,
+   "selected_wggw_site": null,
+   "split_point": null,
+   "stim_3": false,
+   "stim_5": false,
+   "wggw_threshold": 0
+  },
+  "report": {
+   "entries": [
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-78(+)](pattern:GT[AG]A)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-78(+)](pattern:AAGTA)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-78(+)](pattern:[CTA]AG[GA])",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-78(+)](pattern:CAG[GC])",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-78(+)](pattern:[CT]{2}[ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-78(+)](pattern:[AG][CT][ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-78(+)](pattern:[CT][AG][ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-78(+)](pattern:[CT]{3}[ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-78(+)](pattern:[AG][CT]{2}[ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-78(+)](pattern:[CT][AG][CT][ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-78(+)](pattern:[CT]{2}[AG][ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-78(+)](pattern:[CT]{4}[ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-78(+)](pattern:[AG][CT]{3}[ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-78(+)](pattern:[CT][AG][CT]{2}[ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-78(+)](pattern:[CT]{2}[AG][CT][ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-78(+)](pattern:[CT]{3}[AG][ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-78(+)](pattern:[CT]{5}[ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-78(+)](pattern:[AG][CT]{4}[ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-78(+)](pattern:[CT][AG][CT]{3}[ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-78(+)](pattern:[CT]{2}[AG][CT]{2}[ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-78(+)](pattern:[CT]{3}[AG][CT][ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-78(+)](pattern:[CT]{4}[AG][ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-78(+)](pattern:[CT]{6}[ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-78(+)](pattern:[AG][CT]{5}[ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-78(+)](pattern:[CT][AG][CT]{4}[ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-78(+)](pattern:[CT]{2}[AG][CT]{3}[ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-78(+)](pattern:[CT]{3}[AG][CT]{2}[ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-78(+)](pattern:[CT]{4}[AG][CT][ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-78(+)](pattern:[CT]{5}[AG][ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [
+      {
+       "end": 6,
+       "start": 3,
+       "strand": 0
+      },
+      {
+       "end": 9,
+       "start": 6,
+       "strand": 0
+      },
+      {
+       "end": 12,
+       "start": 9,
+       "strand": 0
+      },
+      {
+       "end": 15,
+       "start": 12,
+       "strand": 0
+      },
+      {
+       "end": 18,
+       "start": 15,
+       "strand": 0
+      },
+      {
+       "end": 21,
+       "start": 18,
+       "strand": 0
+      },
+      {
+       "end": 24,
+       "start": 21,
+       "strand": 0
+      },
+      {
+       "end": 27,
+       "start": 24,
+       "strand": 0
+      },
+      {
+       "end": 30,
+       "start": 27,
+       "strand": 0
+      },
+      {
+       "end": 33,
+       "start": 30,
+       "strand": 0
+      },
+      {
+       "end": 36,
+       "start": 33,
+       "strand": 0
+      },
+      {
+       "end": 39,
+       "start": 36,
+       "strand": 0
+      },
+      {
+       "end": 42,
+       "start": 39,
+       "strand": 0
+      },
+      {
+       "end": 45,
+       "start": 42,
+       "strand": 0
+      },
+      {
+       "end": 48,
+       "start": 45,
+       "strand": 0
+      },
+      {
+       "end": 51,
+       "start": 48,
+       "strand": 0
+      },
+      {
+       "end": 54,
+       "start": 51,
+       "strand": 0
+      },
+      {
+       "end": 57,
+       "start": 54,
+       "strand": 0
+      },
+      {
+       "end": 60,
+       "start": 57,
+       "strand": 0
+      },
+      {
+       "end": 63,
+       "start": 60,
+       "strand": 0
+      },
+      {
+       "end": 66,
+       "start": 63,
+       "strand": 0
+      },
+      {
+       "end": 69,
+       "start": 66,
+       "strand": 0
+      },
+      {
+       "end": 72,
+       "start": 69,
+       "strand": 0
+      },
+      {
+       "end": 75,
+       "start": 72,
+       "strand": 0
+      },
+      {
+       "end": 78,
+       "start": 75,
+       "strand": 0
+      }
+     ],
+     "message": "Codon opt. on window 0-78(+) scored -1.07E+01",
+     "objective": "MaximizeCAI[0-78(+)](h_sapiens)",
+     "passes": false,
+     "score": -10.679594333048968
+    },
+    {
+     "locations": [
+      {
+       "end": 5,
+       "start": 3,
+       "strand": 1
+      },
+      {
+       "end": 7,
+       "start": 5,
+       "strand": 1
+      },
+      {
+       "end": 12,
+       "start": 10,
+       "strand": 1
+      },
+      {
+       "end": 17,
+       "start": 15,
+       "strand": 1
+      },
+      {
+       "end": 19,
+       "start": 17,
+       "strand": 1
+      },
+      {
+       "end": 24,
+       "start": 22,
+       "strand": 1
+      },
+      {
+       "end": 29,
+       "start": 27,
+       "strand": 1
+      },
+      {
+       "end": 31,
+       "start": 29,
+       "strand": 1
+      },
+      {
+       "end": 36,
+       "start": 34,
+       "strand": 1
+      },
+      {
+       "end": 41,
+       "start": 39,
+       "strand": 1
+      },
+      {
+       "end": 43,
+       "start": 41,
+       "strand": 1
+      },
+      {
+       "end": 48,
+       "start": 46,
+       "strand": 1
+      },
+      {
+       "end": 53,
+       "start": 51,
+       "strand": 1
+      },
+      {
+       "end": 55,
+       "start": 53,
+       "strand": 1
+      },
+      {
+       "end": 60,
+       "start": 58,
+       "strand": 1
+      },
+      {
+       "end": 65,
+       "start": 63,
+       "strand": 1
+      },
+      {
+       "end": 67,
+       "start": 65,
+       "strand": 1
+      },
+      {
+       "end": 72,
+       "start": 70,
+       "strand": 1
+      }
+     ],
+     "message": "Failed. Pattern found at positions [3-5(+), 5-7(+), 10-12(+), 15-17(+), 17-19(+), 22-24(+), 27-29(+), 29-31(+), 34-36(+), 39-41(+), 41-43(+), 46-48(+), 51-53(+), 53-55(+), 58-60(+), 63-65(+), 65-67(+), 70-72(+)]",
+     "objective": "AvoidPattern[0-78(+)](pattern:CG)",
+     "passes": false,
+     "score": -18.0
+    },
+    {
+     "locations": [
+      {
+       "end": 11,
+       "start": 3,
+       "strand": 0
+      },
+      {
+       "end": 12,
+       "start": 4,
+       "strand": 0
+      },
+      {
+       "end": 13,
+       "start": 5,
+       "strand": 0
+      },
+      {
+       "end": 14,
+       "start": 6,
+       "strand": 0
+      },
+      {
+       "end": 15,
+       "start": 7,
+       "strand": 0
+      },
+      {
+       "end": 16,
+       "start": 8,
+       "strand": 0
+      },
+      {
+       "end": 17,
+       "start": 9,
+       "strand": 0
+      },
+      {
+       "end": 18,
+       "start": 10,
+       "strand": 0
+      },
+      {
+       "end": 19,
+       "start": 11,
+       "strand": 0
+      },
+      {
+       "end": 20,
+       "start": 12,
+       "strand": 0
+      },
+      {
+       "end": 21,
+       "start": 13,
+       "strand": 0
+      },
+      {
+       "end": 22,
+       "start": 14,
+       "strand": 0
+      },
+      {
+       "end": 23,
+       "start": 15,
+       "strand": 0
+      },
+      {
+       "end": 24,
+       "start": 16,
+       "strand": 0
+      },
+      {
+       "end": 25,
+       "start": 17,
+       "strand": 0
+      },
+      {
+       "end": 26,
+       "start": 18,
+       "strand": 0
+      },
+      {
+       "end": 27,
+       "start": 19,
+       "strand": 0
+      },
+      {
+       "end": 28,
+       "start": 20,
+       "strand": 0
+      },
+      {
+       "end": 29,
+       "start": 21,
+       "strand": 0
+      },
+      {
+       "end": 30,
+       "start": 22,
+       "strand": 0
+      },
+      {
+       "end": 31,
+       "start": 23,
+       "strand": 0
+      },
+      {
+       "end": 32,
+       "start": 24,
+       "strand": 0
+      },
+      {
+       "end": 33,
+       "start": 25,
+       "strand": 0
+      },
+      {
+       "end": 34,
+       "start": 26,
+       "strand": 0
+      },
+      {
+       "end": 35,
+       "start": 27,
+       "strand": 0
+      },
+      {
+       "end": 36,
+       "start": 28,
+       "strand": 0
+      },
+      {
+       "end": 37,
+       "start": 29,
+       "strand": 0
+      },
+      {
+       "end": 38,
+       "start": 30,
+       "strand": 0
+      },
+      {
+       "end": 39,
+       "start": 31,
+       "strand": 0
+      },
+      {
+       "end": 40,
+       "start": 32,
+       "strand": 0
+      },
+      {
+       "end": 41,
+       "start": 33,
+       "strand": 0
+      },
+      {
+       "end": 42,
+       "start": 34,
+       "strand": 0
+      },
+      {
+       "end": 43,
+       "start": 35,
+       "strand": 0
+      },
+      {
+       "end": 44,
+       "start": 36,
+       "strand": 0
+      },
+      {
+       "end": 45,
+       "start": 37,
+       "strand": 0
+      },
+      {
+       "end": 46,
+       "start": 38,
+       "strand": 0
+      },
+      {
+       "end": 47,
+       "start": 39,
+       "strand": 0
+      },
+      {
+       "end": 48,
+       "start": 40,
+       "strand": 0
+      },
+      {
+       "end": 49,
+       "start": 41,
+       "strand": 0
+      },
+      {
+       "end": 50,
+       "start": 42,
+       "strand": 0
+      },
+      {
+       "end": 51,
+       "start": 43,
+       "strand": 0
+      },
+      {
+       "end": 52,
+       "start": 44,
+       "strand": 0
+      },
+      {
+       "end": 53,
+       "start": 45,
+       "strand": 0
+      },
+      {
+       "end": 54,
+       "start": 46,
+       "strand": 0
+      },
+      {
+       "end": 55,
+       "start": 47,
+       "strand": 0
+      },
+      {
+       "end": 56,
+       "start": 48,
+       "strand": 0
+      },
+      {
+       "end": 57,
+       "start": 49,
+       "strand": 0
+      },
+      {
+       "end": 58,
+       "start": 50,
+       "strand": 0
+      },
+      {
+       "end": 59,
+       "start": 51,
+       "strand": 0
+      },
+      {
+       "end": 60,
+       "start": 52,
+       "strand": 0
+      },
+      {
+       "end": 61,
+       "start": 53,
+       "strand": 0
+      },
+      {
+       "end": 62,
+       "start": 54,
+       "strand": 0
+      },
+      {
+       "end": 63,
+       "start": 55,
+       "strand": 0
+      },
+      {
+       "end": 64,
+       "start": 56,
+       "strand": 0
+      },
+      {
+       "end": 65,
+       "start": 57,
+       "strand": 0
+      },
+      {
+       "end": 66,
+       "start": 58,
+       "strand": 0
+      },
+      {
+       "end": 67,
+       "start": 59,
+       "strand": 0
+      },
+      {
+       "end": 68,
+       "start": 60,
+       "strand": 0
+      },
+      {
+       "end": 69,
+       "start": 61,
+       "strand": 0
+      },
+      {
+       "end": 70,
+       "start": 62,
+       "strand": 0
+      },
+      {
+       "end": 71,
+       "start": 63,
+       "strand": 0
+      },
+      {
+       "end": 72,
+       "start": 64,
+       "strand": 0
+      },
+      {
+       "end": 73,
+       "start": 65,
+       "strand": 0
+      },
+      {
+       "end": 74,
+       "start": 66,
+       "strand": 0
+      },
+      {
+       "end": 75,
+       "start": 67,
+       "strand": 0
+      }
+     ],
+     "message": "Failed, the following positions are the first occurences of non-unique segments [3-11, 4-12, 5-13, 6-14, 7-15, 8-16, 9-17, 10-18, 11-19, 12-20, 13-21, 14-22, 15-23, 16-24, 17-25, 18-26, 19-27, 20-28, 21-29, 22-30, 23-31, 24-32, 25-33, 26-34, 27-35, 28-36, 29-37, 30-38, 31-39, 32-40, 33-41, 34-42, 35-43, 36-44, 37-45, 38-46, 39-47, 40-48, 41-49, 42-50, 43-51, 44-52, 45-53, 46-54, 47-55, 48-56, 49-57, 50-58, 51-59, 52-60, 53-61, 54-62, 55-63, 56-64, 57-65, 58-66, 59-67, 60-68, 61-69, 62-70, 63-71, 64-72, 65-73, 66-74, 67-75]",
+     "objective": "UniquifyAllKmers[0-78(+)](k:8)",
+     "passes": false,
+     "score": -65.0
+    }
+   ],
+   "total_score": -93.67959433304897
+  },
+  "sequence": "ATGCGCGATCCGGAACGCGATCCGGAACGCGATCCGGAACGCGATCCGGAACGCGATCCGGAACGCGATCCGGAATAA",
+  "text_summary": "===> TOTAL OBJECTIVES SCORE:    -93.68\n\u2714        0 \u250d AvoidPattern[0-78(+)](pattern:GT[AG]A) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-78(+)](pattern:AAGTA) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-78(+)](pattern:[CTA]AG[GA]) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-78(+)](pattern:CAG[GC]) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-78(+)](pattern:[CT]{2}[ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-78(+)](pattern:[AG][CT][ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-78(+)](pattern:[CT][AG][ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-78(+)](pattern:[CT]{3}[ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-78(+)](pattern:[AG][CT]{2}[ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-78(+)](pattern:[CT][AG][CT][ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-78(+)](pattern:[CT]{2}[AG][ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-78(+)](pattern:[CT]{4}[ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-78(+)](pattern:[AG][CT]{3}[ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-78(+)](pattern:[CT][AG][CT]{2}[ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-78(+)](pattern:[CT]{2}[AG][CT][ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-78(+)](pattern:[CT]{3}[AG][ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-78(+)](pattern:[CT]{5}[ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-78(+)](pattern:[AG][CT]{4}[ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-78(+)](pattern:[CT][AG][CT]{3}[ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-78(+)](pattern:[CT]{2}[AG][CT]{2}[ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-78(+)](pattern:[CT]{3}[AG][CT][ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-78(+)](pattern:[CT]{4}[AG][ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-78(+)](pattern:[CT]{6}[ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-78(+)](pattern:[AG][CT]{5}[ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-78(+)](pattern:[CT][AG][CT]{4}[ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-78(+)](pattern:[CT]{2}[AG][CT]{3}[ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-78(+)](pattern:[CT]{3}[AG][CT]{2}[ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-78(+)](pattern:[CT]{4}[AG][CT][ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-78(+)](pattern:[CT]{5}[AG][ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n    -10.68 \u250d MaximizeCAI[0-78(+)](h_sapiens) \n           \u2502 Codon opt. on window 0-78(+) scored -1.07E+01\n       -18 \u250d AvoidPattern[0-78(+)](pattern:CG) \n           \u2502 Failed. Pattern found at positions [3-5(+), 5-7(+), 10-12(+),\n           \u2502 15-17(+), 17-19(+), 22-24(+), 27-29(+), 29-31(+), 34-36(+),\n           \u2502 39-41(+), 41-43(+), 46-48(+), 51-53(+), 53-55(+), 58-60(+),\n           \u2502 63-65(+), 65-67(+), 70-72(+)]\n       -65 \u250d UniquifyAllKmers[0-78(+)](k:8) \n           \u2502 Failed, the following positions are the first occurences of non-\n           \u2502 unique segments [3-11, 4-12, 5-13, 6-14, 7-15, 8-16, 9-17, 10-18,\n           \u2502 11-19, 12-20, 13-21, 14-22, 15-23, 16-24, 17-25, 18-26, 19-27,\n           \u2502 20-28, 21-29, 22-30, 23-31, 24-32, 25-33, 26-34, 27-35, 2 ... 2-40,\n           \u2502 33-41, 34-42, 35-43, 36-44, 37-45, 38-46, 39-47, 40-48, 41-49,\n           \u2502 42-50, 43-51, 44-52, 45-53, 46-54, 47-55, 48-56, 49-57, 50-58,\n           \u2502 51-59, 52-60, 53-61, 54-62, 55-63, 56-64, 57-65, 58-66, 59-67,\n           \u2502 60-68, 61-69, 62-70, 63-71, 64-72, 65-73, 66-74, 67-75]\n\n"
+ },
+ {
+  "name": "no_codon_optimization",
+  "options": {
+   "codon_optimize": null,
+   "codon_optimize_weight": 1.0,
+   "enforce_gc": true,
+   "ensure_wggw": true,
+   "minimize_CpGs": true,
+   "minimize_CpGs_weight": 1.0,
+   "reduce_kmer_complexity": true,
+   "reduce_kmer_complexity_weight": 1.0,
+   "remove_cryptic_ss": true,
+   "remove_cryptic_ss_weight": 1.0,
+   "selected_wggw_site": null,
+   "split_point": null,
+   "stim_3": false,
+   "stim_5": false,
+   "wggw_threshold": 0
+  },
+  "report": {
+   "entries": [
+    {
+     "locations": [
+      {
+       "end": 8,
+       "start": 4,
+       "strand": 1
+      },
+      {
+       "end": 70,
+       "start": 66,
+       "strand": 1
+      }
+     ],
+     "message": "Failed. Pattern found at positions [4-8(+), 66-70(+)]",
+     "objective": "AvoidPattern[0-81(+)](pattern:GT[AG]A)",
+     "passes": false,
+     "score": -2.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:AAGTA)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [
+      {
+       "end": 23,
+       "start": 19,
+       "strand": 1
+      },
+      {
+       "end": 56,
+       "start": 52,
+       "strand": 1
+      }
+     ],
+     "message": "Failed. Pattern found at positions [19-23(+), 52-56(+)]",
+     "objective": "AvoidPattern[0-81(+)](pattern:[CTA]AG[GA])",
+     "passes": false,
+     "score": -2.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:CAG[GC])",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[CT]{2}[ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[AG][CT][ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[CT][AG][ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[CT]{3}[ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[AG][CT]{2}[ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[CT][AG][CT][ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[CT]{2}[AG][ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[CT]{4}[ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[AG][CT]{3}[ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[CT][AG][CT]{2}[ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[CT]{2}[AG][CT][ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[CT]{3}[AG][ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[CT]{5}[ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[AG][CT]{4}[ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[CT][AG][CT]{3}[ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[CT]{2}[AG][CT]{2}[ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[CT]{3}[AG][CT][ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[CT]{4}[AG][ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[CT]{6}[ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[AG][CT]{5}[ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[CT][AG][CT]{4}[ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[CT]{2}[AG][CT]{3}[ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[CT]{3}[AG][CT]{2}[ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[CT]{4}[AG][CT][ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [],
+     "message": "Passed. Pattern not found !",
+     "objective": "AvoidPattern[0-81(+)](pattern:[CT]{5}[AG][ACGT][CT]AG[GA]T)",
+     "passes": true,
+     "score": 0.0
+    },
+    {
+     "locations": [
+      {
+       "end": 5,
+       "start": 3,
+       "strand": 1
+      },
+      {
+       "end": 19,
+       "start": 17,
+       "strand": 1
+      },
+      {
+       "end": 25,
+       "start": 23,
+       "strand": 1
+      },
+      {
+       "end": 35,
+       "start": 33,
+       "strand": 1
+      },
+      {
+       "end": 45,
+       "start": 43,
+       "strand": 1
+      },
+      {
+       "end": 58,
+       "start": 56,
+       "strand": 1
+      },
+      {
+       "end": 67,
+       "start": 65,
+       "strand": 1
+      },
+      {
+       "end": 76,
+       "start": 74,
+       "strand": 1
+      }
+     ],
+     "message": "Failed. Pattern found at positions [3-5(+), 17-19(+), 23-25(+), 33-35(+), 43-45(+), 56-58(+), 65-67(+), 74-76(+)]",
+     "objective": "AvoidPattern[0-81(+)](pattern:CG)",
+     "passes": false,
+     "score": -8.0
+    },
+    {
+     "locations": [],
+     "message": "Passed: no nonunique 10-mer found.",
+     "objective": "UniquifyAllKmers[0-81(+)](k:10)",
+     "passes": true,
+     "score": 0.0
+    }
+   ],
+   "total_score": -12.0
+  },
+  "sequence": "ATGCGTAAGCTGGACTCCGAAGACGATCTGGAACGTCTGAAAGCGACCCTGGAAGGCGTTGACTCCGTGATCACCGATTGA",
+  "text_summary": "===> TOTAL OBJECTIVES SCORE:       -12\n        -2 \u250d AvoidPattern[0-81(+)](pattern:GT[AG]A) \n           \u2502 Failed. Pattern found at positions [4-8(+), 66-70(+)]\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:AAGTA) \n           \u2502 Passed. Pattern not found !\n        -2 \u250d AvoidPattern[0-81(+)](pattern:[CTA]AG[GA]) \n           \u2502 Failed. Pattern found at positions [19-23(+), 52-56(+)]\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:CAG[GC]) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[CT]{2}[ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[AG][CT][ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[CT][AG][ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[CT]{3}[ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[AG][CT]{2}[ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[CT][AG][CT][ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[CT]{2}[AG][ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[CT]{4}[ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[AG][CT]{3}[ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[CT][AG][CT]{2}[ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[CT]{2}[AG][CT][ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[CT]{3}[AG][ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[CT]{5}[ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[AG][CT]{4}[ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[CT][AG][CT]{3}[ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[CT]{2}[AG][CT]{2}[ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[CT]{3}[AG][CT][ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[CT]{4}[AG][ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[CT]{6}[ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[AG][CT]{5}[ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[CT][AG][CT]{4}[ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[CT]{2}[AG][CT]{3}[ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[CT]{3}[AG][CT]{2}[ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[CT]{4}[AG][CT][ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n\u2714        0 \u250d AvoidPattern[0-81(+)](pattern:[CT]{5}[AG][ACGT][CT]AG[GA]T) \n           \u2502 Passed. Pattern not found !\n        -8 \u250d AvoidPattern[0-81(+)](pattern:CG) \n           \u2502 Failed. Pattern found at positions [3-5(+), 17-19(+), 23-25(+),\n           \u2502 33-35(+), 43-45(+), 56-58(+), 65-67(+), 74-76(+)]\n\u2714        0 \u250d UniquifyAllKmers[0-81(+)](k:10) \n           \u2502 Passed: no nonunique 10-mer found.\n\n"
+ }
+]

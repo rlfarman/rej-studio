@@ -1,6 +1,4 @@
-'use client'
-
-import { useRef, useState, useCallback, type ReactNode } from 'react'
+import { useRef, useState, type ReactNode } from 'react'
 import {
   Tooltip,
   TooltipTrigger,
@@ -21,19 +19,25 @@ export function TruncatedText({
   const ref = useRef<HTMLSpanElement>(null)
   const [isTruncated, setIsTruncated] = useState(false)
 
-  const handleMouseEnter = useCallback(() => {
+  const handleMouseEnter = () => {
     const el = ref.current
     if (el) {
       setIsTruncated(el.scrollWidth > el.clientWidth)
     }
-  }, [])
+  }
 
   return (
     <Tooltip open={isTruncated ? undefined : false}>
-      <TooltipTrigger asChild>
-        <span ref={ref} className={className} onMouseEnter={handleMouseEnter}>
-          {children}
-        </span>
+      <TooltipTrigger
+        render={
+          <span
+            ref={ref}
+            className={className}
+            onMouseEnter={handleMouseEnter}
+          />
+        }
+      >
+        {children}
       </TooltipTrigger>
       <TooltipContent>{tooltip}</TooltipContent>
     </Tooltip>

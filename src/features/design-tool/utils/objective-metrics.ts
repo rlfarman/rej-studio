@@ -9,7 +9,7 @@
 
 import type { ObjectivesReport } from '@/features/design-tool/types/process-result'
 
-// Cryptic splice donor patterns used by api/algorithm.py. Anything else in the
+// Cryptic splice donor patterns the optimizer avoids (rust/optimizer/src). Anything else in the
 // AvoidPattern block (except CG, which is the CpG objective) is treated as a
 // splice acceptor pattern.
 const DONOR_PATTERNS = new Set(['GT[AG]A', 'AAGTA', '[CTA]AG[GA]', 'CAG[GC]'])

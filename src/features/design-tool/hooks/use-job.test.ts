@@ -1,27 +1,70 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest'
+// useJob: designs run in the browser. Progress has to reach the history
+// store, the finished design has to land on the same entry, cancelling has
+// to stop the worker, and nothing may go over the network.
+
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test'
 import { renderHook, waitFor, act } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createElement, type ReactNode } from 'react'
 
-// Mock job actions
-vi.mock('@/features/design-tool/api/jobs', () => ({
-  submitJob: vi.fn(),
-  cancelJob: vi.fn(),
-}))
+import type { JobActionResult } from '@/features/design-tool/types/job-result'
+import type { ProcessResult } from '@/features/design-tool/types/process-result'
 
 vi.mock('@/features/design-tool/utils/form-handler', () => ({
-  buildJobParams: vi.fn((v: any) => ({
-    CDS: v.codingSequence,
-    name: v.name,
+  buildJobParams: vi.fn((values: { codingSequence: string; name: string }) => ({
+    CDS: values.codingSequence,
+    name: values.name,
     options: {},
   })),
 }))
 
-import { submitJob as submitJobAction } from '@/features/design-tool/api/jobs'
-import { useJobHistory } from '@/features/design-tool/hooks/use-job-history'
+vi.mock('@/features/design-tool/api/browser-optimizer', () => ({
+  browserOptimizerSupported: vi.fn(() => true),
+  designInBrowser: vi.fn(),
+  warmOptimizerWorker: vi.fn(),
+  terminateOptimizerWorker: vi.fn(),
+}))
+
+vi.mock('@/features/design-tool/utils/finish-notification', () => ({
+  notifyRunSettled: vi.fn(),
+}))
+
+// The cloud-design server functions only exist once Start's compiler has
+// made them RPC stubs, which Vitest does not run (and their module imports
+// the Worker). Nothing here may reach them.
+vi.mock('@/features/design-tool/api/cloud-designs.functions', () => {
+  const unreachable = () => Promise.reject(new TypeError('no server here'))
+  return {
+    submitCloudDesignFn: vi.fn(unreachable),
+    readCloudDesignFn: vi.fn(unreachable),
+    deleteCloudDesignFn: vi.fn(unreachable),
+  }
+})
+
+import { notifyRunSettled } from '@/features/design-tool/utils/finish-notification'
+import {
+  browserOptimizerSupported,
+  designInBrowser,
+  warmOptimizerWorker,
+} from '@/features/design-tool/api/browser-optimizer'
+import {
+  isBrowserJobId,
+  useJobHistory,
+  whenJobHistoryHydrated,
+} from '@/features/design-tool/hooks/use-job-history'
 import { useJob } from './use-job'
 
-const mockSubmit = vi.mocked(submitJobAction)
+const mockFetch = vi.fn()
+const mockDesign = vi.mocked(designInBrowser)
+const mockSupported = vi.mocked(browserOptimizerSupported)
+const mockWarm = vi.mocked(warmOptimizerWorker)
+const mockNotify = vi.mocked(notifyRunSettled)
+
+const unloadPrevented = () => {
+  const event = new Event('beforeunload', { cancelable: true })
+  window.dispatchEvent(event)
+  return event.defaultPrevented
+}
 
 function createWrapper() {
   const client = new QueryClient({
@@ -53,14 +96,43 @@ const FORM_VALUES = {
   selectedWggwSites: [],
 }
 
-beforeEach(() => {
+const RESULT = {
+  name: 'Test',
+  original_sequence: 'ATGAAATGA',
+  optimized_sequence: 'ATGAAGTGA',
+  seq5: '[REJ5]ATGA',
+  seq3: 'AGTGA[REJ3]',
+  split_point: 4,
+  used_wggw_as_split: false,
+  objectives_before: 'before',
+  objectives_after: 'after',
+  objectives_report_before: { entries: [], total_score: null },
+  objectives_report_after: { entries: [], total_score: null },
+  wggw_info: null,
+  processing_time_seconds: 0.2,
+  seed: 1234,
+} as unknown as ProcessResult
+
+const succeeds = (): JobActionResult<ProcessResult> => ({
+  ok: true,
+  data: RESULT,
+})
+
+beforeEach(async () => {
   vi.clearAllMocks()
-  useJobHistory.setState({ entries: [] })
+  await whenJobHistoryHydrated()
+  mockSupported.mockReturnValue(true)
+  vi.stubGlobal('fetch', mockFetch)
+  useJobHistory.setState({ entries: [], progressById: {} })
   localStorage.clear()
 })
 
+afterEach(() => {
+  vi.unstubAllGlobals()
+})
+
 describe('useJob', () => {
-  it('starts in idle state', () => {
+  it('starts idle', () => {
     const { result } = renderHook(() => useJob(), { wrapper: createWrapper() })
     expect(result.current.status).toBe('idle')
     expect(result.current.jobId).toBeNull()
@@ -68,75 +140,225 @@ describe('useJob', () => {
     expect(result.current.isLoading).toBe(false)
   })
 
-  it('transitions to completed on local backend (inline result)', async () => {
-    const fakeResult = { name: 'Test', original_sequence: 'ATGAAATGA' }
-    mockSubmit.mockResolvedValue({
-      jobId: 'local-123',
-      result: fakeResult as any,
-    })
-
+  it('designs in the browser without a network request', async () => {
+    mockDesign.mockResolvedValue(succeeds())
     const { result } = renderHook(() => useJob(), { wrapper: createWrapper() })
 
     await act(async () => {
       await result.current.submitJob(FORM_VALUES)
     })
 
-    await waitFor(() => {
-      expect(result.current.jobId).toBe('local-123')
-      expect(result.current.status).toBe('completed')
-    })
+    await waitFor(() => expect(result.current.status).toBe('completed'))
+    expect(result.current.result?.optimized_sequence).toBe('ATGAAGTGA')
+    expect(mockFetch).not.toHaveBeenCalled()
+    expect(mockDesign).toHaveBeenCalledTimes(1)
   })
 
-  it('transitions to running on modal backend (no inline result)', async () => {
-    mockSubmit.mockResolvedValue({ jobId: 'modal-456' })
-
+  it('files the run under a browser id, which is never polled', async () => {
+    mockDesign.mockResolvedValue(succeeds())
     const { result } = renderHook(() => useJob(), { wrapper: createWrapper() })
 
     await act(async () => {
       await result.current.submitJob(FORM_VALUES)
     })
 
-    await waitFor(() => {
-      expect(result.current.jobId).toBe('modal-456')
-      expect(result.current.status).toBe('running')
-    })
+    await waitFor(() => expect(result.current.jobId).toBeTruthy())
+    expect(isBrowserJobId(result.current.jobId ?? '')).toBe(true)
+    // A browser design exists only on this device, so it is not shareable.
+    expect(window.location.search).not.toContain('job=')
   })
 
-  it('seeds initial progress on modal submit so the bar appears immediately', async () => {
-    mockSubmit.mockResolvedValue({ jobId: 'modal-seed-1' })
+  it('feeds progress into the history store as the design runs', async () => {
+    let report: ((fraction: number, stage: string) => void) | undefined
+    let settle!: (value: JobActionResult<ProcessResult>) => void
+    mockDesign.mockImplementation((_params, callbacks) => {
+      report = callbacks?.onProgress
+      // Stays in flight until the end of the test.
+      return new Promise((resolve) => (settle = resolve))
+    })
+
+    const { result } = renderHook(() => useJob(), { wrapper: createWrapper() })
+    act(() => {
+      void result.current.submitJob(FORM_VALUES)
+    })
+
+    await waitFor(() => expect(report).toBeDefined())
+    act(() => report?.(0.45, 'Optimizing sequence'))
+
+    await waitFor(() => {
+      expect(result.current.progress).toBe(0.45)
+      expect(result.current.stage).toBe('Optimizing sequence')
+    })
+    expect(result.current.status).toBe('running')
+
+    // Settle it, so the run's tab-close guard doesn't leak into later tests.
+    await act(async () => settle(succeeds()))
+    await waitFor(() => expect(result.current.status).toBe('completed'))
+  })
+
+  it('records a failed design against the same entry', async () => {
+    mockDesign.mockResolvedValue({
+      ok: false,
+      error: {
+        code: 'invalid_input',
+        message: 'Coding sequence length is not a multiple of 3',
+        retriable: false,
+      },
+    })
 
     const { result } = renderHook(() => useJob(), { wrapper: createWrapper() })
     await act(async () => {
       await result.current.submitJob(FORM_VALUES)
     })
 
-    await waitFor(() => {
-      const entry = useJobHistory.getState().getEntry('modal-seed-1')
-      expect(entry?.status).toBe('running')
-      expect(entry?.progress).toBeGreaterThan(0)
-      expect(entry?.progress).toBeLessThan(0.1)
-      expect(entry?.stage).toBeTruthy()
-    })
+    await waitFor(() => expect(result.current.status).toBe('failed'))
+    expect(result.current.error?.message).toContain('multiple of 3')
+    // One entry, not a running one plus a separate failure.
+    expect(useJobHistory.getState().entries).toHaveLength(1)
   })
 
-  it('seeds history entry for initialJobId when missing', () => {
-    renderHook(() => useJob({ initialJobId: 'seed-job-999' }), {
-      wrapper: createWrapper(),
+  it('cancels by aborting the run', async () => {
+    let abortSignal: AbortSignal | undefined
+    mockDesign.mockImplementation((_params, callbacks) => {
+      abortSignal = callbacks?.signal
+      return new Promise((resolve) => {
+        callbacks?.signal?.addEventListener('abort', () =>
+          resolve({
+            ok: false,
+            error: { code: 'cancelled', message: 'Cancelled', retriable: true },
+          }),
+        )
+      })
     })
-    const entry = useJobHistory.getState().getEntry('seed-job-999')
-    expect(entry).not.toBeNull()
-    expect(entry!.status).toBe('running')
+
+    const { result } = renderHook(() => useJob(), { wrapper: createWrapper() })
+    act(() => {
+      void result.current.submitJob(FORM_VALUES)
+    })
+    await waitFor(() => expect(abortSignal).toBeDefined())
+
+    await act(async () => {
+      await result.current.cancelJob()
+    })
+
+    await waitFor(() => expect(result.current.status).toBe('cancelled'))
+    expect(abortSignal?.aborted).toBe(true)
+    expect(mockFetch).not.toHaveBeenCalled()
   })
 
-  it('does not overwrite existing history entry for initialJobId', () => {
+  it('starts loading the optimizer as soon as the form appears', () => {
+    renderHook(() => useJob(), { wrapper: createWrapper() })
+    expect(mockWarm).toHaveBeenCalled()
+  })
+
+  it('warns before the tab closes only while a run is in flight', async () => {
+    let finish!: (value: JobActionResult<ProcessResult>) => void
+    mockDesign.mockImplementation(
+      () => new Promise((resolve) => (finish = resolve)),
+    )
+    const { result } = renderHook(() => useJob(), { wrapper: createWrapper() })
+    expect(unloadPrevented()).toBe(false)
+
+    act(() => {
+      void result.current.submitJob(FORM_VALUES)
+    })
+    await waitFor(() => expect(mockDesign).toHaveBeenCalled())
+    expect(unloadPrevented()).toBe(true)
+
+    await act(async () => finish(succeeds()))
+    await waitFor(() => expect(result.current.status).toBe('completed'))
+    expect(unloadPrevented()).toBe(false)
+  })
+
+  it('offers a finish notification on completion and failure, not on cancel', async () => {
+    mockDesign.mockResolvedValueOnce(succeeds())
+    const { result } = renderHook(() => useJob(), { wrapper: createWrapper() })
+    await act(async () => {
+      await result.current.submitJob(FORM_VALUES)
+    })
+    expect(mockNotify).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        id: result.current.jobId,
+        title: 'Design ready',
+      }),
+    )
+
+    mockDesign.mockResolvedValueOnce({
+      ok: false,
+      error: { code: 'invalid_input', message: 'Bad', retriable: false },
+    })
+    await act(async () => {
+      await result.current.submitJob(FORM_VALUES)
+    })
+    expect(mockNotify).toHaveBeenLastCalledWith(
+      expect.objectContaining({ title: 'Design failed', body: 'Test: Bad' }),
+    )
+
+    mockNotify.mockClear()
+    mockDesign.mockResolvedValueOnce({
+      ok: false,
+      error: { code: 'cancelled', message: 'Cancelled', retriable: true },
+    })
+    await act(async () => {
+      await result.current.submitJob(FORM_VALUES)
+    })
+    expect(mockNotify).not.toHaveBeenCalled()
+  })
+
+  it('settles the entry and lifts the warning when the run throws', async () => {
+    mockDesign.mockRejectedValueOnce(new Error('worker crashed'))
+    const { result } = renderHook(() => useJob(), { wrapper: createWrapper() })
+    await act(async () => {
+      await result.current.submitJob(FORM_VALUES).catch(() => {})
+    })
+    const [entry] = useJobHistory.getState().entries
+    expect(entry.status).toBe('failed')
+    expect(unloadPrevented()).toBe(false)
+  })
+
+  it('still runs where the browser lacks support, and reports why', async () => {
+    // designInBrowser answers an unsupported browser with a failure saying
+    // so (browser-optimizer.test.ts); there is no server to fall back to.
+    mockSupported.mockReturnValue(false)
+    mockDesign.mockResolvedValue({
+      ok: false,
+      error: { code: 'backend', message: 'Unsupported', retriable: false },
+    })
+    const { result } = renderHook(() => useJob(), { wrapper: createWrapper() })
+    expect(result.current.runsInBrowser).toBe(false)
+
+    await act(async () => {
+      await result.current.submitJob(FORM_VALUES)
+    })
+    await waitFor(() => expect(result.current.status).toBe('failed'))
+    expect(result.current.error?.message).toBe('Unsupported')
+    expect(mockFetch).not.toHaveBeenCalled()
+  })
+
+  it('reads a ?job= this browser has no record of as unavailable', () => {
+    const { result } = renderHook(
+      () => useJob({ initialJobId: 'from-another-device' }),
+      { wrapper: createWrapper() },
+    )
+    expect(result.current.status).toBe('failed')
+    expect(result.current.error?.code).toBe('not_found')
+    // Nothing is written for it, and nothing polls it.
+    expect(useJobHistory.getState().getEntry('from-another-device')).toBeNull()
+    expect(mockFetch).not.toHaveBeenCalled()
+  })
+
+  it('shows a ?job= from history as it was saved', () => {
     useJobHistory.getState().upsertEntry({
-      id: 'existing-job',
+      id: 'browser-existing',
       status: 'completed',
     })
-    renderHook(() => useJob({ initialJobId: 'existing-job' }), {
-      wrapper: createWrapper(),
-    })
-    const entry = useJobHistory.getState().getEntry('existing-job')
-    expect(entry!.status).toBe('completed') // not overwritten to 'running'
+    const { result } = renderHook(
+      () => useJob({ initialJobId: 'browser-existing' }),
+      { wrapper: createWrapper() },
+    )
+    expect(result.current.status).toBe('completed')
+    expect(useJobHistory.getState().getEntry('browser-existing')!.status).toBe(
+      'completed',
+    )
   })
 })

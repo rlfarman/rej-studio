@@ -1,23 +1,14 @@
 import { z } from 'zod'
 
-export const speciesSchema = z.enum(['human', 'mouse'])
+const speciesSchema = z.enum(['human', 'mouse'])
 export const speciesFilterSchema = z.enum(['human', 'mouse', 'both'])
 
 export type Species = z.infer<typeof speciesSchema>
 export type SpeciesFilter = z.infer<typeof speciesFilterSchema>
 
-const SPECIES_OPTIONS: Species[] = ['human', 'mouse']
-const SPECIES_FILTER_OPTIONS: SpeciesFilter[] = ['human', 'mouse', 'both']
-
 export const SPECIES_DISPLAY_NAME: Record<Species, string> = {
   human: 'Human',
   mouse: 'Mouse',
-}
-
-const SPECIES_FILTER_DISPLAY_NAME: Record<SpeciesFilter, string> = {
-  human: 'Humans',
-  mouse: 'Mice',
-  both: 'Humans & Mice',
 }
 
 export function isSpecies(value: string): value is Species {
@@ -28,16 +19,7 @@ export function isSpeciesFilter(value: string): value is SpeciesFilter {
   return value === 'human' || value === 'mouse' || value === 'both'
 }
 
-export function geneHref(symbol: string, species?: string, isoformId?: string) {
-  const params = new URLSearchParams()
-  if (species) params.set('species', species)
-  if (isoformId) params.set('isoform', isoformId)
-  const qs = params.toString()
-  return qs ? `/genes/${symbol}?${qs}` : `/genes/${symbol}`
-}
-
-export function parseSpeciesParam(
-  value: string | undefined,
-): SpeciesFilter | undefined {
-  return value && isSpeciesFilter(value) ? value : undefined
+/** A species filter from a URL, or undefined for anything else. */
+export function parseSpeciesParam(value: unknown): SpeciesFilter | undefined {
+  return typeof value === 'string' && isSpeciesFilter(value) ? value : undefined
 }

@@ -1,53 +1,40 @@
-.PHONY: dev build seed deploy-modal lint format type-check verify doctor
+.PHONY: dev build gene-seed associations lint lint-fix format type-check verify doctor help
 
 # ---------- Development ----------
 
-dev: ## Start Next.js + FastAPI dev servers
+dev: ## Start the TanStack Start dev server (vp dev, Worker in workerd)
 	pnpm dev
 
-build: ## Production build (Vercel target)
+build: ## Production build (TanStack Start + Cloudflare Worker, in dist/)
 	pnpm build
 
-# ---------- Database ----------
+# ---------- Gene data ----------
 
-seed: ## Rebuild JSONL from CSV, push schema, and upload data
-	pnpm db:build && pnpm db:push && pnpm db:upload
+gene-seed: ## Rebuild data/genes.jsonl + data/isoforms.jsonl from data/transcript_metadata.csv
+	pnpm data:genes
 
-db-studio: ## Open Drizzle Studio
-	pnpm db:studio
-
-db-push: ## Push schema changes to $DATABASE_URL
-	pnpm db:push
-
-# ---------- Deploy ----------
-
-deploy-modal: ## Deploy Python backend to Modal
-	cd modal && modal deploy app.py
+associations: ## Rebuild the disease-associations JSON from data/disease_associated_genes.csv
+	pnpm data:associations
 
 # ---------- Quality ----------
 
-lint: ## Run ESLint
+lint: ## Run Oxlint (vp lint), with the boundary rules as JS plugins
 	pnpm lint
 
-lint-fix: ## Auto-fix ESLint issues
+lint-fix: ## Auto-fix lint issues
 	pnpm lint:fix
 
-format: ## Run Prettier
+format: ## Run Oxfmt
 	pnpm format
 
 type-check: ## Run TypeScript type checker
 	pnpm type-check
 
-verify: ## Run full CI gate locally (lint, format, types, knip, build)
+verify: ## Lint, format check, knip, type-check and unit tests (the pre-push gate)
 	pnpm verify
 
 doctor: ## Check local environment health
-	bash scripts/doctor.sh
-
-# ---------- Codegen ----------
-
-api-types: ## Regenerate TS types from FastAPI OpenAPI spec
-	bash scripts/generate-api-types.sh
+	pnpm doctor
 
 # ---------- Help ----------
 

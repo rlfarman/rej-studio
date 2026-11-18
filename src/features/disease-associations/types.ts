@@ -21,7 +21,7 @@ export type AssociationRow = {
   /**
    * Largest `coding_sequence_length` across this gene's human isoforms, or
    * null if no isoform is present in the seed. Baked into associations.json at
-   * build time by `scripts/enrich-disease-associations.ts`.
+   * build time by `scripts/build-disease-associations.ts`.
    */
   largestCds: number | null
 }

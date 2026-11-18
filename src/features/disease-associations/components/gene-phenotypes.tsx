@@ -11,7 +11,9 @@ type Props = {
 const STATUS_BADGE_CLASS: Record<PhenotypeStatus, string> = {
   confirmed: '',
   provisional: 'bg-muted text-muted-foreground border-border',
-  susceptibility: 'bg-chart-4/10 text-chart-4 border-chart-4/20',
+  // Status tint with its text-safe `-soft` shade. Chart colors are fills
+  // only; as text they fell to ~1.6:1.
+  susceptibility: 'bg-warning/15 text-warning-soft border-warning/30',
   nondisease: 'bg-muted text-muted-foreground border-border',
 }
 
@@ -24,14 +26,14 @@ export function GenePhenotypes({ row, omimMim }: Props) {
       <header className="flex items-baseline justify-between gap-3">
         <div>
           <h2 className="text-lg font-semibold tracking-tight">{heading}</h2>
-          <p className="text-muted-foreground text-xs">{subtitle}</p>
+          <p className="text-xs text-muted-foreground">{subtitle}</p>
         </div>
         {omimMim != null && (
           <a
             href={`https://omim.org/entry/${omimMim}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-muted-foreground hover:text-foreground type-nano inline-flex items-center gap-1 font-mono"
+            className="inline-flex items-center gap-1 font-mono type-nano text-muted-foreground hover:text-foreground"
           >
             OMIM {omimMim}
             <ExternalLink className="size-3" aria-hidden />
@@ -40,7 +42,7 @@ export function GenePhenotypes({ row, omimMim }: Props) {
         )}
       </header>
 
-      <ul className="flex flex-col divide-y rounded-md border">
+      <ul className="flex flex-col divide-y rounded-2xl border">
         {row.phenotypes.map((p, i) => (
           <li
             key={`${p.mim ?? 'nomim'}-${i}`}
@@ -51,13 +53,13 @@ export function GenePhenotypes({ row, omimMim }: Props) {
               {p.status !== 'confirmed' && (
                 <Badge
                   variant="outline"
-                  className={`type-micro shrink-0 font-normal ${STATUS_BADGE_CLASS[p.status]}`}
+                  className={`shrink-0 type-micro font-normal ${STATUS_BADGE_CLASS[p.status]}`}
                 >
                   {statusLabel[p.status]}
                 </Badge>
               )}
             </div>
-            <div className="text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
               {p.inheritance && <span>{p.inheritance}</span>}
               {p.mim != null && (
                 <>
@@ -66,7 +68,7 @@ export function GenePhenotypes({ row, omimMim }: Props) {
                     href={`https://omim.org/entry/${p.mim}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="hover:text-foreground inline-flex items-center gap-1"
+                    className="inline-flex items-center gap-1 hover:text-foreground"
                     aria-label={mimLinkAria(p.mim)}
                   >
                     <span>OMIM</span>

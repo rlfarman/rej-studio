@@ -10,14 +10,16 @@ export function HighlightMatch({
   if (!query.trim()) return <>{text}</>
 
   const escaped = query.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-  const regex = new RegExp(`(${escaped})`, 'gi')
-  const parts = text.split(regex)
+  // Splitting on a capturing group alternates [text, match, text, …], so odd
+  // indexes are the matches. (Calling .test() on a global regex instead
+  // carries lastIndex between calls and misses adjacent matches.)
+  const parts = text.split(new RegExp(`(${escaped})`, 'gi'))
 
   return (
     <>
       {parts.map((part, i) =>
-        regex.test(part) ? (
-          <mark key={i} className="bg-primary/20 rounded-sm text-inherit">
+        i % 2 === 1 ? (
+          <mark key={i} className="rounded-sm bg-primary/20 text-inherit">
             {part}
           </mark>
         ) : (

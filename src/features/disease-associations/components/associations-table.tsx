@@ -1,6 +1,7 @@
-import Link from 'next/link'
+import { Link } from '@tanstack/react-router'
 import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { Card, CardContent } from '@/components/ui/card'
 import {
   Table,
   TableBody,
@@ -13,44 +14,47 @@ import { cn } from '@/lib/utils'
 import { formatInheritanceLabel, type AssociationRow } from '../types'
 import { diseaseAssociationsCopy } from '../copy'
 import { rowBuckets, type SortDir, type SortKey } from '../api/associations'
+import { Skeleton } from '@/components/ui/skeleton'
 
 type Props = {
   rows: AssociationRow[]
   sortKey: SortKey
   sortDir: SortDir
-  /**
-   * Current search params serialized as a plain object, so the sortable
-   * header links can preserve query + inheritance filters when toggling sort.
-   */
-  searchParams: Record<string, string | string[] | undefined>
 }
 
 const cdsFormatter = new Intl.NumberFormat('en-US')
 const { largestCdsUnit, largestCdsUnknown, phenotypeUnknown } =
   diseaseAssociationsCopy.table
 
-export function AssociationsTable({
-  rows,
-  sortKey,
-  sortDir,
-  searchParams,
-}: Props) {
+export function AssociationsTable({ rows, sortKey, sortDir }: Props) {
   if (rows.length === 0) {
     return (
-      <div className="bg-card text-muted-foreground rounded-lg border p-6 text-center text-sm shadow-sm">
-        {diseaseAssociationsCopy.table.empty}
-      </div>
+      <Card>
+        <CardContent className="text-center text-muted-foreground">
+          {diseaseAssociationsCopy.table.empty}
+        </CardContent>
+      </Card>
     )
   }
 
-  const headerProps = { sortKey, sortDir, searchParams }
+  const headerProps = { sortKey, sortDir }
 
+  // TableCell defaults to nowrap, which let a 120-character gene name push
+  // the numeric columns off-screen. Text columns wrap (names clamp to two
+  // lines); the CDS column stays on one line.
   return (
-    <div className="bg-card overflow-hidden rounded-lg border shadow-sm">
+    <Card className="gap-0 py-0">
       <Table aria-label={diseaseAssociationsCopy.table.ariaLabel}>
         <TableHeader>
           <TableRow className="bg-muted/50 hover:bg-muted/50">
-            <TableHead className="w-[96px] px-4">
+            <TableHead
+              className="w-[96px] px-4"
+              aria-sort={ariaSortFor(
+                'symbol',
+                headerProps.sortKey,
+                headerProps.sortDir,
+              )}
+            >
               <SortHeader
                 label={diseaseAssociationsCopy.table.columns.symbol}
                 column="symbol"
@@ -58,16 +62,23 @@ export function AssociationsTable({
                 {...headerProps}
               />
             </TableHead>
-            <TableHead className="min-w-[240px] px-4">
+            <TableHead className="min-w-48 px-4">
               {diseaseAssociationsCopy.table.columns.name}
             </TableHead>
-            <TableHead className="w-[220px] px-4">
+            <TableHead className="min-w-44 px-4">
               {diseaseAssociationsCopy.table.columns.phenotype}
             </TableHead>
-            <TableHead className="w-[220px] px-4">
+            <TableHead className="w-40 px-4">
               {diseaseAssociationsCopy.table.columns.inheritance}
             </TableHead>
-            <TableHead className="w-[132px] px-4 text-right whitespace-nowrap">
+            <TableHead
+              className="w-[132px] px-4 text-right whitespace-nowrap"
+              aria-sort={ariaSortFor(
+                'cds',
+                headerProps.sortKey,
+                headerProps.sortDir,
+              )}
+            >
               <SortHeader
                 label={diseaseAssociationsCopy.table.columns.largestCds}
                 column="cds"
@@ -86,8 +97,10 @@ export function AssociationsTable({
               <TableRow key={row.symbol} className="bg-card hover:bg-muted/25">
                 <TableCell className="px-4 py-2.5">
                   <Link
-                    href={`/genes/${encodeURIComponent(row.symbol)}?species=human`}
-                    className="text-primary font-mono font-semibold hover:underline"
+                    to="/genes/$symbol"
+                    params={{ symbol: row.symbol }}
+                    search={{ species: 'human' }}
+                    className="-my-1 inline-flex min-h-6 items-center py-1 font-mono font-semibold text-primary hover:underline"
                     aria-label={diseaseAssociationsCopy.table.viewGeneAria(
                       row.symbol,
                     )}
@@ -95,13 +108,15 @@ export function AssociationsTable({
                     {row.symbol}
                   </Link>
                 </TableCell>
-                <TableCell className="text-muted-foreground px-4 py-2.5 text-sm">
-                  {row.name}
+                <TableCell className="px-4 py-2.5 text-sm whitespace-normal text-muted-foreground">
+                  <span className="line-clamp-2" title={row.name}>
+                    {row.name}
+                  </span>
                 </TableCell>
-                <TableCell className="text-muted-foreground px-4 py-2.5 text-sm">
+                <TableCell className="px-4 py-2.5 text-sm whitespace-normal text-muted-foreground">
                   {phenotype}
                 </TableCell>
-                <TableCell className="px-4 py-2.5">
+                <TableCell className="px-4 py-2.5 whitespace-normal">
                   <div className="flex flex-wrap gap-1">
                     {buckets.map((b) => (
                       <Badge
@@ -114,13 +129,13 @@ export function AssociationsTable({
                     ))}
                   </div>
                 </TableCell>
-                <TableCell className="text-muted-foreground px-4 py-2.5 text-right font-mono text-xs">
+                <TableCell className="px-4 py-2.5 text-right font-mono text-xs text-muted-foreground">
                   {row.largestCds != null ? (
                     <>
                       {cdsFormatter.format(row.largestCds)}
-                      <span className="text-muted-foreground/70 ml-1">
-                        {largestCdsUnit}
-                      </span>
+                      {/* The cell is already muted; dimming the unit further
+                          dropped it below 4.5:1. */}
+                      <span className="ml-1">{largestCdsUnit}</span>
                     </>
                   ) : (
                     largestCdsUnknown
@@ -131,6 +146,31 @@ export function AssociationsTable({
           })}
         </TableBody>
       </Table>
+    </Card>
+  )
+}
+
+const SKELETON_ROWS = 8
+
+/** Placeholder for the summary line and the first rows while params resolve. */
+export function AssociationsTableSkeleton() {
+  return (
+    <div aria-hidden className="flex flex-col gap-6">
+      <Skeleton className="h-3 w-24" />
+      <Card className="gap-0 py-0">
+        <div className="h-10 border-b bg-muted/50" />
+        {Array.from({ length: SKELETON_ROWS }, (_, i) => (
+          <div
+            key={i}
+            className="flex h-12 items-center gap-6 border-b px-4 last:border-0"
+          >
+            <Skeleton className="h-4 w-14" />
+            <Skeleton className="h-4 flex-1" />
+            <Skeleton className="hidden h-4 w-40 sm:block" />
+            <Skeleton className="h-4 w-16" />
+          </div>
+        ))}
+      </Card>
     </div>
   )
 }
@@ -145,6 +185,16 @@ function firstPhenotypeLabel(row: AssociationRow): string {
     : name
 }
 
+/** Value for the column header's aria-sort (it must sit on the header cell). */
+function ariaSortFor(
+  column: SortKey,
+  sortKey: SortKey,
+  sortDir: SortDir,
+): 'ascending' | 'descending' | 'none' {
+  if (sortKey !== column) return 'none'
+  return sortDir === 'asc' ? 'ascending' : 'descending'
+}
+
 type SortHeaderProps = {
   label: string
   column: SortKey
@@ -153,7 +203,6 @@ type SortHeaderProps = {
   align?: 'left' | 'right'
   sortKey: SortKey
   sortDir: SortDir
-  searchParams: Record<string, string | string[] | undefined>
 }
 
 function SortHeader({
@@ -163,7 +212,6 @@ function SortHeader({
   align = 'left',
   sortKey,
   sortDir,
-  searchParams,
 }: SortHeaderProps) {
   const active = sortKey === column
   const nextDir: SortDir = active
@@ -172,36 +220,19 @@ function SortHeader({
       : 'asc'
     : defaultDir
 
-  const params = new URLSearchParams()
-  for (const [key, value] of Object.entries(searchParams)) {
-    if (key === 'sort' || key === 'dir') continue
-    if (value == null) continue
-    if (Array.isArray(value)) {
-      for (const v of value) params.append(key, v)
-    } else {
-      params.set(key, value)
-    }
-  }
-  params.set('sort', column)
-  params.set('dir', nextDir)
-  const href = `?${params.toString()}`
-
-  const ariaSort = active
-    ? sortDir === 'asc'
-      ? 'ascending'
-      : 'descending'
-    : 'none'
-
   const Icon = active ? (sortDir === 'asc' ? ArrowUp : ArrowDown) : ArrowUpDown
 
   return (
     <Link
-      href={href}
-      scroll={false}
+      // Keeps the filters and the page; replaces the history entry, since a
+      // re-sort isn't a step to go back through.
+      from="/disease-associations"
+      to="."
+      search={(prev) => ({ ...prev, sort: column, dir: nextDir })}
+      resetScroll={false}
       replace
-      aria-sort={ariaSort}
       className={cn(
-        'hover:text-foreground inline-flex items-center gap-1 transition-colors',
+        '-my-2 inline-flex min-h-9 items-center gap-1 py-2 transition-colors hover:text-foreground',
         align === 'right' && 'flex-row-reverse',
         active ? 'text-foreground' : 'text-muted-foreground',
       )}

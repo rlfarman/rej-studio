@@ -1,0 +1,39 @@
+# Secrets for the Worker's server routes, in local development.
+#
+# Copy to `.dev.vars` (gitignored) and fill in. `vp dev`, `vp preview` and
+# `wrangler dev` load that file and bind each entry as a Worker secret;
+# deployed, the same names are set with `wrangler secret put`.
+#
+# Nothing here is needed to run the app locally: the pages, the gene data and
+# the in-browser optimizer need no secrets. Without MCP_TOKENS, /api/mcp
+# answers 503 (agent access is off); without HEALTH_AUTH_TOKEN, /api/health
+# answers liveness only.
+
+# Named bearer tokens for the MCP endpoint at /api/mcp, which lets a
+# scientist's own AI assistant search genes and run designs. Format:
+# name:secret, comma separated. Each name appears in the logs and gets its own
+# rate-limit budget, so one agent cannot spend another's and a design can be
+# traced to its caller. Secrets must be at least 24 characters; generate with:
+#   openssl rand -hex 24
+MCP_TOKENS=lab-agent:replace-me-with-at-least-24-characters
+
+# Unlocks /api/health's deep check (a `head` of the corpus index in R2) for a
+# caller presenting `Authorization: Bearer <token>`. Anonymous probes always
+# get liveness only.
+HEALTH_AUTH_TOKEN=
+
+# The passcode gate (src/server/auth/). Leave both empty to work without it:
+# the Worker then lets only localhost through, and every cloud design belongs
+# to one owner, `local`. Set both to sign in locally as the deployed app
+# does. SESSION_SECRET must be at least 32 characters; generate with:
+#   openssl rand -hex 32
+# Deployed, both are required: without them the Worker refuses everything.
+BASIC_AUTH_PASSWORD=
+SESSION_SECRET=
+
+# Sentry for the Worker (src/server/sentry.ts). wrangler.jsonc carries the
+# production DSN as a plain `vars` entry — a DSN is public, not a secret — and
+# `vp dev`, `vp preview` and `wrangler dev` would otherwise report local runs
+# into the real project. This empty override turns Sentry off locally; set it
+# to the DSN to try the reporting path.
+SENTRY_DSN=

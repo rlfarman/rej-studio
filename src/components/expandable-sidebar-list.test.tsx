@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test'
 import { cleanup, fireEvent, render, within } from '@testing-library/react'
 import { ExpandableSidebarList } from './expandable-sidebar-list'
 
@@ -51,5 +51,27 @@ describe('ExpandableSidebarList open state', () => {
     fireEvent.click(toggle(view))
     expect(toggle(view).getAttribute('aria-expanded')).toBe('false')
     expect(localStorage.length).toBe(0)
+  })
+})
+
+describe('ExpandableSidebarList when empty', () => {
+  const renderEmpty = (emptyMessage?: string) =>
+    render(
+      <ExpandableSidebarList<string>
+        label="Recent"
+        items={[]}
+        getItemKey={(item) => item}
+        renderItem={(item) => <li>{item}</li>}
+        emptyMessage={emptyMessage}
+      />,
+    )
+
+  it('renders nothing without an empty message', () => {
+    expect(renderEmpty().container.innerHTML).toBe('')
+  })
+
+  it('shows the empty message when one is given', () => {
+    const view = renderEmpty('Nothing yet')
+    expect(within(view.container).getByText('Nothing yet')).toBeTruthy()
   })
 })

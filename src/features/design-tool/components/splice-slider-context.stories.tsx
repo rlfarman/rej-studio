@@ -1,5 +1,6 @@
-import type { Meta, StoryObj } from '@storybook/react'
+import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
+import type { RewritePick } from '../types/form-schema'
 import { SpliceSliderContext } from './splice-slider-context'
 import { pickDefaultSplitPoints } from '../utils/default-split-point'
 
@@ -14,6 +15,8 @@ function Playground({
   initialPositions: number[]
 }) {
   const [positions, setPositions] = useState(initialPositions)
+  const [sitePicks, setSitePicks] = useState<(number | null)[]>([])
+  const [rewritePicks, setRewritePicks] = useState<RewritePick[]>([])
   return (
     <div className="mx-auto w-full max-w-5xl p-4">
       <SpliceSliderContext
@@ -21,7 +24,10 @@ function Playground({
         positions={positions}
         species="human"
         onPositionsChange={setPositions}
-        onSelectionChange={() => {}}
+        sitePicks={sitePicks}
+        rewritePicks={rewritePicks}
+        onSitePicksChange={setSitePicks}
+        onRewritePicksChange={setRewritePicks}
       />
     </div>
   )

@@ -1,5 +1,3 @@
-'use client'
-
 import {
   useJobHistory,
   type JobHistoryEntry,
@@ -11,7 +9,7 @@ import type {
 } from '@/features/design-tool/types/process-result'
 import type { FormValues } from '@/features/design-tool/types/form-schema'
 
-// Real coding sequences copied verbatim from drizzle/transcript_metadata.csv.
+// Real coding sequences copied verbatim from the source transcript_metadata.csv.
 // Keyed by Ensembl transcript ID so the seed job for "TP53 optimization" is
 // actually TP53 (ENST00000269305), not a synthetic GCT-repeat. Lengths are
 // real, reading frames are real, users can copy the originals into the
@@ -346,8 +344,6 @@ function buildJobSeed(): JobHistoryEntry[] {
       status: 'running',
       result: null,
       error: null,
-      progress: 0.62,
-      stage: 'Packaging optimized sequences',
       formValues: baseFormValues({
         name: 'ACTB packaging test',
         codingSequence: REAL_CDS.ENST00000425660,
@@ -424,6 +420,12 @@ export function seedDesignToolData(): { jobs: number } {
     return {
       entries: [...jobSeed, ...state.entries.filter((e) => !seedIds.has(e.id))],
     }
+  })
+  // Progress lives in the non-persisted slice, so the demo's in-flight job
+  // gets its bar set here rather than on the entry.
+  useJobHistory.getState().setProgress('seed-job-running-1', {
+    progress: 0.62,
+    stage: 'Packaging optimized sequences',
   })
   return { jobs: jobSeed.length }
 }

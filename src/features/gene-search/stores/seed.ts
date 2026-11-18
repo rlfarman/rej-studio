@@ -1,33 +1,31 @@
-'use client'
-
 import { useFavoriteGenes } from '@/features/gene-search/stores/favorite-genes-store'
 import { useRecentGenes } from '@/features/gene-search/stores/recent-genes-store'
 import type { SavedGene } from '@/features/gene-search/types/domain-types'
 
-// Gene metadata below mirrors what Neon returns for these exact gene_ids
-// (pulled from drizzle/transcript_metadata.csv — sym1 primary symbol and
-// title-cased gene_name). Matching the DB verbatim matters: favorites and
-// recents link to /genes/{symbol} and the page query uses `eq(symbol)`, so
-// a casing drift (e.g. 'Trp53' vs 'TRP53') produces a silent empty page.
+// Gene metadata below mirrors the gene corpus for these exact gene_ids
+// (from the source transcript_metadata.csv — sym1 primary symbol and
+// title-cased gene_name). Matching the corpus verbatim matters: favorites
+// and recents link to /genes/{symbol}, so a casing drift (e.g. 'Trp53' vs
+// 'TRP53') lands on a redirect or a not-found page.
 const FAVORITE_SEED: SavedGene[] = [
   {
     id: 'ENSG00000141510',
     symbol: 'TP53',
-    name: 'Tumor Protein P53',
+    name: 'Tumor protein p53',
     species: 'human',
     isSeed: true,
   },
   {
     id: 'ENSG00000012048',
     symbol: 'BRCA1',
-    name: 'Brca1 Dna Repair Associated',
+    name: 'BRCA1 DNA repair associated',
     species: 'human',
     isSeed: true,
   },
   {
     id: 'ENSMUSG00000059552',
     symbol: 'TRP53',
-    name: 'Transformation Related Protein 53',
+    name: 'Transformation related protein 53',
     species: 'mouse',
     isSeed: true,
   },
@@ -37,35 +35,35 @@ const RECENT_SEED: SavedGene[] = [
   {
     id: 'ENSG00000146648',
     symbol: 'EGFR',
-    name: 'Epidermal Growth Factor Receptor',
+    name: 'Epidermal growth factor receptor',
     species: 'human',
     isSeed: true,
   },
   {
     id: 'ENSG00000136997',
     symbol: 'MYC',
-    name: 'Myc Proto-oncogene, Bhlh Transcription Factor',
+    name: 'MYC proto-oncogene, bHLH transcription factor',
     species: 'human',
     isSeed: true,
   },
   {
     id: 'ENSG00000075624',
     symbol: 'ACTB',
-    name: 'Actin Beta',
+    name: 'Actin beta',
     species: 'human',
     isSeed: true,
   },
   {
     id: 'ENSMUSG00000029580',
     symbol: 'ACTB',
-    name: 'Actin, Beta',
+    name: 'Actin, beta',
     species: 'mouse',
     isSeed: true,
   },
   {
     id: 'ENSMUSG00000022346',
     symbol: 'MYC',
-    name: 'Myelocytomatosis Oncogene',
+    name: 'Myelocytomatosis oncogene',
     species: 'mouse',
     isSeed: true,
   },

@@ -1,5 +1,4 @@
-'use client'
-import { useFormContext } from 'react-hook-form'
+import { useFormContext, useWatch } from 'react-hook-form'
 import {
   FormField,
   FormItem,
@@ -8,108 +7,119 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import { cn } from '@/lib/utils'
 import { FormValues } from '../types/form-schema'
 import { designToolCopy } from '../copy'
 
 const copy = designToolCopy.weights
+const objectiveCopy = designToolCopy.optimizationOptions
 
-interface WeightFieldProperties {
-  name: keyof FormValues
-  disabled: boolean
-  inline?: boolean
-}
+type WeightName =
+  | 'codonOptimizeWeight'
+  | 'removeCrypticSpliceSitesWeight'
+  | 'minimizeCpgsWeight'
+  | 'reduceKmerComplexityWeight'
 
 function WeightField({
   name,
-  disabled,
-  inline = false,
-}: WeightFieldProperties) {
+  label,
+  enabled,
+}: {
+  name: WeightName
+  label: string
+  enabled: boolean
+}) {
   const { control } = useFormContext<FormValues>()
 
   return (
     <FormField
       name={name}
       control={control}
-      render={({ field }) => {
-        const numericValue = typeof field.value === 'number' ? field.value : 1
-
-        return (
-          <FormItem>
-            <div
-              className={
-                inline ? 'flex items-center justify-end gap-2' : 'space-y-2'
-              }
+      render={({ field }) => (
+        <FormItem className="gap-1 py-2">
+          <div className="flex items-center justify-between gap-3">
+            <FormLabel
+              className={cn(
+                'text-sm font-normal',
+                !enabled && 'text-muted-foreground',
+              )}
             >
-              <FormLabel className="text-muted-foreground text-xs font-medium">
-                {copy.label}
-              </FormLabel>
-              <FormControl>
-                <Input
-                  type="number"
-                  aria-label={copy.inputAria}
-                  value={numericValue}
-                  onChange={(e) => {
-                    const next = e.target.value
-                    field.onChange(next === '' ? 0 : Number(next))
-                  }}
-                  min={0}
-                  max={100}
-                  step={0.1}
-                  disabled={disabled}
-                  className="w-14 [appearance:textfield] text-center tabular-nums [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                />
-              </FormControl>
-            </div>
-            <FormMessage />
-          </FormItem>
-        )
-      }}
+              {label}
+              {enabled ? null : (
+                <span className="text-xs text-muted-foreground">
+                  {copy.off}
+                </span>
+              )}
+            </FormLabel>
+            <FormControl>
+              <Input
+                type="number"
+                value={typeof field.value === 'number' ? field.value : 1}
+                onChange={(e) => {
+                  const next = e.target.value
+                  field.onChange(next === '' ? 0 : Number(next))
+                }}
+                min={0}
+                max={100}
+                step={0.1}
+                disabled={!enabled}
+                className="w-16 [appearance:textfield] text-center tabular-nums [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+              />
+            </FormControl>
+          </div>
+          <FormMessage />
+        </FormItem>
+      )}
     />
   )
 }
 
-export function CodonOptimizeWeight({
-  inline = false,
-}: {
-  inline?: boolean
-} = {}) {
-  const { watch } = useFormContext<FormValues>()
-  const disabled = watch('species') === 'none'
+/**
+ * Relative weights for the weighted objectives, listed under the "Advanced"
+ * toggle that reveals them. They used to sit inline at the end of each
+ * objective row, so opening the toggle (at the bottom of the section) made
+ * inputs appear above it.
+ */
+export function ObjectiveWeights({ id }: { id: string }) {
+  const { control } = useFormContext<FormValues>()
+  const [species, removeCrypticSpliceSites, minimizeCpgs, reduceKmer] =
+    useWatch({
+      control,
+      name: [
+        'species',
+        'removeCrypticSpliceSites',
+        'minimizeCpgs',
+        'reduceKmerComplexity',
+      ],
+    })
 
   return (
-    <WeightField
-      name="codonOptimizeWeight"
-      disabled={disabled}
-      inline={inline}
-    />
-  )
-}
-
-export function RemoveCrypticSpliceSitesWeight() {
-  const { watch } = useFormContext<FormValues>()
-  const disabled = !watch('removeCrypticSpliceSites')
-
-  return (
-    <WeightField
-      name="removeCrypticSpliceSitesWeight"
-      disabled={disabled}
-      inline
-    />
-  )
-}
-
-export function MinimizeCpGsWeight() {
-  const { watch } = useFormContext<FormValues>()
-  const disabled = !watch('minimizeCpgs')
-
-  return <WeightField name="minimizeCpgsWeight" disabled={disabled} inline />
-}
-
-export function ReduceKmerComplexityWeight() {
-  const { watch } = useFormContext<FormValues>()
-  const disabled = !watch('reduceKmerComplexity')
-
-  return (
-    <WeightField name="reduceKmerComplexityWeight" disabled={disabled} inline />
+    <div id={id} className="mt-2 max-w-md">
+      <p className="text-xs leading-relaxed text-muted-foreground">
+        {copy.hint}
+      </p>
+      <div className="mt-1 flex flex-col divide-y divide-border/60">
+        <WeightField
+          name="codonOptimizeWeight"
+          label={objectiveCopy.codonOptimize.label}
+          enabled={species !== 'none'}
+        />
+        <WeightField
+          name="removeCrypticSpliceSitesWeight"
+          label={objectiveCopy.removeCrypticSpliceSites.label}
+          enabled={removeCrypticSpliceSites}
+        />
+        <WeightField
+          name="minimizeCpgsWeight"
+          label={objectiveCopy.minimizeCpGs.label}
+          enabled={minimizeCpgs}
+        />
+        <WeightField
+          name="reduceKmerComplexityWeight"
+          label={objectiveCopy.reduceKmer.label}
+          enabled={reduceKmer}
+        />
+      </div>
+    </div>
   )
 }

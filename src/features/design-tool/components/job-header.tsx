@@ -1,5 +1,3 @@
-'use client'
-
 import * as React from 'react'
 import { useState } from 'react'
 import {
@@ -7,11 +5,12 @@ import {
   Check,
   CircleAlert,
   CircleSlash,
+  Cloud,
   Pencil,
   Play,
   RotateCw,
+  Trash2,
 } from 'lucide-react'
-import { AnimatePresence, m } from 'motion/react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { DnaLoader } from '@/components/bio/dna-loader'
@@ -20,6 +19,41 @@ import type { DesignToolSpecies } from '@/features/design-tool/types/species-opt
 import { designToolCopy } from '../copy'
 
 const copy = designToolCopy.jobHeader
+const cloudCopy = designToolCopy.cloud
+
+/**
+ * What a cloud design shows while it runs: an estimate from its length, not
+ * a progress bar. A Workflow step cannot report progress, and a bar that
+ * moved on a timer would claim to know something it does not.
+ */
+export function CloudRunningPlaceholder({
+  bases,
+  estimateSeconds,
+}: {
+  bases: number
+  estimateSeconds: number
+}) {
+  return (
+    <Card>
+      <CardContent
+        role="status"
+        aria-live="polite"
+        aria-label={cloudCopy.running.title}
+        className="flex flex-col items-center justify-center gap-4 py-12"
+      >
+        <span className="flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+          <Cloud className="size-6" />
+        </span>
+        <div className="max-w-sm space-y-1 text-center">
+          <p className="text-sm font-medium">{cloudCopy.running.title}</p>
+          <p className="text-xs text-muted-foreground">
+            {cloudCopy.running.body(estimateSeconds, bases)}
+          </p>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
 
 interface RunningPlaceholderProps {
   stage?: string
@@ -30,12 +64,12 @@ export function RunningPlaceholder({
   stage,
   progress,
 }: RunningPlaceholderProps) {
-  // Backend emits progress as a 0-1 fraction.
+  // The optimizer reports progress as a 0-1 fraction.
   const pct =
     typeof progress === 'number' && progress >= 0 && progress <= 1
       ? Math.round(progress * 100)
       : null
-  // Ease toward the target so the bar never feels frozen between polls, and
+  // Ease toward the target so the bar never feels frozen between ticks, and
   // always advances visibly when a new checkpoint lands.
   const displayedPct = useSmoothedProgress(pct)
   return (
@@ -49,41 +83,30 @@ export function RunningPlaceholder({
         <DnaLoader className="h-10 w-[120px]" />
         <div className="space-y-1 text-center">
           <p className="text-sm font-medium">{copy.running.title}</p>
-          <div className="text-muted-foreground relative h-4 text-xs">
-            <AnimatePresence mode="wait" initial={false}>
-              <m.p
-                key={stage ?? 'default'}
-                initial={{ opacity: 0, y: 4 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -4 }}
-                transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-                className="absolute inset-x-0"
-              >
-                {stage ?? copy.running.defaultStage}
-              </m.p>
-            </AnimatePresence>
-          </div>
+          <p className="h-4 text-xs text-muted-foreground">
+            {stage ?? copy.running.defaultStage}
+          </p>
         </div>
         <div className="w-full max-w-xs">
-          <div className="bg-muted relative h-1.5 w-full overflow-hidden rounded-full">
+          <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-muted">
             {displayedPct !== null ? (
               <div
-                className="bg-primary absolute inset-y-0 left-0 w-full origin-left transition-transform duration-700 ease-out"
+                className="absolute inset-y-0 left-0 w-full origin-left bg-primary transition-transform duration-700 ease-out"
                 style={{ transform: `scaleX(${displayedPct / 100})` }}
               />
             ) : (
               <div
                 aria-hidden
-                className="bg-primary/70 absolute inset-y-0 left-0 w-1/3 animate-[indeterminate_1.4s_ease-in-out_infinite] rounded-full"
+                className="absolute inset-y-0 left-0 w-1/3 animate-[indeterminate_1.4s_ease-in-out_infinite] rounded-full bg-primary/70"
               />
             )}
             <span
               aria-hidden
-              className="via-foreground/25 pointer-events-none absolute inset-0 -translate-x-full animate-[shimmer_1.6s_ease-in-out_infinite] bg-gradient-to-r from-transparent to-transparent"
+              className="pointer-events-none absolute inset-0 -translate-x-full animate-[shimmer_1.6s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-foreground/25 to-transparent"
             />
           </div>
           {displayedPct !== null && (
-            <p className="text-muted-foreground type-micro mt-1.5 text-center tabular-nums">
+            <p className="mt-1.5 text-center type-micro text-muted-foreground tabular-nums">
               {displayedPct}%
             </p>
           )}
@@ -94,9 +117,9 @@ export function RunningPlaceholder({
 }
 
 /**
- * Eases displayed percentage toward the target. Between polls (every ~2s) the
- * real progress value doesn't move, so we creep forward on an asymptotic curve
- * that caps a few points below the target. When a new poll lands, the
+ * Eases displayed percentage toward the target. Between progress ticks the
+ * real value doesn't move, so we creep forward on an asymptotic curve that
+ * caps a few points below the target. When a new tick lands, the
  * displayed value snaps to the new floor and resumes creeping.
  */
 function useSmoothedProgress(target: number | null): number | null {
@@ -104,7 +127,7 @@ function useSmoothedProgress(target: number | null): number | null {
   const [prevTarget, setPrevTarget] = React.useState(target)
   const targetRef = React.useRef(target)
 
-  // When a new poll lands, snap during render (React's "adjust state when a
+  // When a new tick lands, snap during render (React's "adjust state when a
   // prop changes" pattern): clear on null, jump up when the target moves past
   // the displayed value. The effect below only runs the creep animation.
   if (target !== prevTarget) {
@@ -155,7 +178,8 @@ type JobHeaderStatus = 'running' | 'completed' | 'failed' | 'cancelled'
 
 interface JobHeaderProps {
   name: string
-  sequenceLength: number
+  /** null when there's no local record of this job — the chip is hidden. */
+  sequenceLength: number | null
   species: DesignToolSpecies
   status: JobHeaderStatus
   processingTimeSeconds?: number | null
@@ -164,6 +188,13 @@ interface JobHeaderProps {
   onEdit: () => void
   onRerun: () => void
   onCancel?: () => void
+  /** Set for a design that ran in the cloud. */
+  cloud?: {
+    estimateSeconds: number
+    deleted: boolean
+    onDelete: () => void
+    deleting: boolean
+  } | null
 }
 
 const SPECIES_LABEL: Record<DesignToolSpecies, string> = copy.speciesLabel
@@ -210,7 +241,7 @@ function StatusDot({ status }: { status: JobHeaderStatus }) {
       {celebrateKey > 0 && (
         <span
           aria-hidden
-          className="bg-success/40 pointer-events-none absolute inset-0 [animation:completion-bloom_600ms_cubic-bezier(0.16,1,0.3,1)_1] rounded-full motion-reduce:hidden"
+          className="pointer-events-none absolute inset-0 [animation:completion-bloom_600ms_cubic-bezier(0.16,1,0.3,1)_1] rounded-full bg-success/40 motion-reduce:hidden"
         />
       )}
       <Icon className={cn('size-4', status === 'running' && 'animate-spin')} />
@@ -222,8 +253,16 @@ function statusMessage({
   status,
   processingTimeSeconds,
   errorMessage,
-}: Pick<JobHeaderProps, 'status' | 'processingTimeSeconds' | 'errorMessage'>) {
-  if (status === 'running') return copy.statusRunning
+  cloud,
+}: Pick<
+  JobHeaderProps,
+  'status' | 'processingTimeSeconds' | 'errorMessage' | 'cloud'
+>) {
+  if (status === 'running') {
+    return cloud
+      ? cloudCopy.statusRunning(cloud.estimateSeconds)
+      : copy.statusRunning
+  }
   if (status === 'completed')
     return processingTimeSeconds != null
       ? copy.statusCompletedIn(processingTimeSeconds)
@@ -243,8 +282,14 @@ export function JobHeader({
   onEdit,
   onRerun,
   onCancel,
+  cloud,
 }: JobHeaderProps) {
-  const message = statusMessage({ status, processingTimeSeconds, errorMessage })
+  const message = statusMessage({
+    status,
+    processingTimeSeconds,
+    errorMessage,
+    cloud,
+  })
   const speciesLabel = SPECIES_LABEL[species]
   const canRerun = status !== 'running' && (status !== 'failed' || retriable)
 
@@ -259,11 +304,13 @@ export function JobHeader({
                 <div className="truncate text-sm font-semibold">
                   {name || copy.untitled}
                 </div>
-                <span className="text-muted-foreground text-xs tabular-nums">
-                  · {sequenceLength.toLocaleString()} bp
-                </span>
+                {sequenceLength != null && (
+                  <span className="text-xs text-muted-foreground tabular-nums">
+                    · {sequenceLength.toLocaleString()} bp
+                  </span>
+                )}
                 {speciesLabel && (
-                  <span className="text-muted-foreground text-xs">
+                  <span className="text-xs text-muted-foreground">
                     · {speciesLabel}
                   </span>
                 )}
@@ -278,9 +325,26 @@ export function JobHeader({
               >
                 {message}
               </p>
+              {cloud?.deleted && (
+                <p className="text-xs text-muted-foreground">
+                  {cloudCopy.deletedNote}
+                </p>
+              )}
             </div>
           </div>
-          <div className="flex shrink-0 items-center gap-1.5">
+          <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
+            {cloud && !cloud.deleted && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={cloud.onDelete}
+                disabled={cloud.deleting}
+              >
+                <Trash2 className="size-3.5" />
+                {cloud.deleting ? cloudCopy.deleting : cloudCopy.deleteAction}
+              </Button>
+            )}
             {status === 'running' && onCancel && (
               <Button
                 type="button"

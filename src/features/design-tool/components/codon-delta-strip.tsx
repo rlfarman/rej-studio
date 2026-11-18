@@ -1,9 +1,8 @@
-'use client'
-
-import { useMemo } from 'react'
 import { toCodons } from '@/lib/bio/genetic-code'
-import { getRelativePreference } from '@/lib/bio/codon-usage'
+import { getRelativePreference } from '../utils/codon-preference'
 import { type Species } from '@/lib/bio/species'
+import { ChartDataTable } from '@/components/chart-data-table'
+import { designToolCopy } from '../copy'
 
 interface Props {
   original: string
@@ -18,51 +17,22 @@ interface CellDelta {
   before: number | null
   after: number | null
   delta: number | null
+  /** The codons themselves, so the table can name what changed. */
+  from: string
+  to: string
 }
 
 /**
  * Per-codon preference delta (after − before) for a species. Green =
- * became more preferred, red = became less preferred, muted = unchanged.
+ * became more preferred (blue), less preferred (orange), muted = unchanged.
  * Makes the optimizer's work visible codon-by-codon.
  */
 export function CodonDeltaStrip({ original, optimized, species }: Props) {
-  const { cells, improved, regressed, meanBefore, meanAfter } = useMemo(() => {
-    const beforeCodons = toCodons(original)
-    const afterCodons = toCodons(optimized)
-    const n = Math.min(beforeCodons.length, afterCodons.length)
-    const limit = Math.min(n, MAX_CELLS)
-    const cells: CellDelta[] = []
-    let improvedCount = 0
-    let regressedCount = 0
-    let sumBefore = 0
-    let sumAfter = 0
-    let scored = 0
-
-    for (let i = 0; i < limit; i++) {
-      const b = beforeCodons[i].toUpperCase().replace(/U/g, 'T')
-      const a = afterCodons[i].toUpperCase().replace(/U/g, 'T')
-      const pb = getRelativePreference(b, species)
-      const pa = getRelativePreference(a, species)
-      let delta: number | null = null
-      if (pb !== null && pa !== null) {
-        delta = pa - pb
-        sumBefore += pb
-        sumAfter += pa
-        scored++
-        if (delta > 0.05) improvedCount++
-        else if (delta < -0.05) regressedCount++
-      }
-      cells.push({ idx: i, before: pb, after: pa, delta })
-    }
-
-    return {
-      cells,
-      improved: improvedCount,
-      regressed: regressedCount,
-      meanBefore: scored > 0 ? sumBefore / scored : 0,
-      meanAfter: scored > 0 ? sumAfter / scored : 0,
-    }
-  }, [original, optimized, species])
+  const { cells, improved, regressed, meanBefore, meanAfter } = codonDeltas(
+    original,
+    optimized,
+    species,
+  )
 
   if (cells.length === 0) return null
 
@@ -71,15 +41,15 @@ export function CodonDeltaStrip({ original, optimized, species }: Props) {
   return (
     <div className="space-y-1.5">
       <div className="flex items-center justify-end">
-        <span className="text-muted-foreground type-micro tabular-nums">
+        <span className="type-micro text-muted-foreground tabular-nums">
           mean {(meanBefore * 100).toFixed(0)}% → {(meanAfter * 100).toFixed(0)}
           %
           <span
             className={
               meanShift > 0
-                ? 'text-success-soft ml-1'
+                ? 'ml-1 text-success-soft'
                 : meanShift < 0
-                  ? 'text-danger-soft ml-1'
+                  ? 'ml-1 text-danger-soft'
                   : 'ml-1'
             }
           >
@@ -102,12 +72,14 @@ export function CodonDeltaStrip({ original, optimized, species }: Props) {
           if (d === null) {
             color = 'transparent'
           } else if (d > 0.05) {
-            // Improvement: emerald, intensity scaled by magnitude.
-            color = `rgba(16, 185, 129, ${0.3 + Math.min(Math.abs(d), 1) * 0.7})`
+            // Improvement: blue, intensity scaled by magnitude. Blue/orange
+            // (not green/red) so the scale survives red-green color blindness.
+            color = `color-mix(in oklch, var(--chart-1) ${Math.round((0.3 + Math.min(Math.abs(d), 1) * 0.7) * 100)}%, transparent)`
           } else if (d < -0.05) {
-            color = `rgba(239, 68, 68, ${0.3 + Math.min(Math.abs(d), 1) * 0.7})`
+            color = `color-mix(in oklch, var(--chart-2) ${Math.round((0.3 + Math.min(Math.abs(d), 1) * 0.7) * 100)}%, transparent)`
           } else {
-            color = 'rgba(148, 163, 184, 0.25)' // slate-400/25 = unchanged
+            color =
+              'color-mix(in oklch, var(--muted-foreground) 25%, transparent)'
           }
           return (
             <div
@@ -123,11 +95,71 @@ export function CodonDeltaStrip({ original, optimized, species }: Props) {
           )
         })}
       </div>
-      <div className="text-muted-foreground type-micro flex items-center gap-1">
+      <div className="flex items-center gap-1 type-micro text-muted-foreground">
         <span>regressed</span>
-        <span className="h-2 flex-1 rounded-sm bg-gradient-to-r from-red-500/70 via-slate-400/25 to-emerald-500/70" />
+        <span className="h-2 flex-1 rounded-sm bg-gradient-to-r from-chart-2/70 via-muted-foreground/25 to-chart-1/70" />
         <span>improved</span>
       </div>
+      {/* Only the codons that changed: an unchanged codon is not a data point
+          the reader is looking for, and there can be hundreds of them. */}
+      <ChartDataTable
+        storageKey="codon-delta"
+        caption={designToolCopy.results.charts.codonDelta.caption}
+        columns={designToolCopy.results.charts.codonDelta.columns}
+        rows={cells
+          .filter((cell) => cell.from !== cell.to)
+          .map((cell) => [
+            cell.idx + 1,
+            cell.from,
+            cell.before === null
+              ? '\u2014'
+              : Number((cell.before * 100).toFixed(1)),
+            cell.to,
+            cell.after === null
+              ? '\u2014'
+              : Number((cell.after * 100).toFixed(1)),
+          ])}
+        csvFilename="codon-usage-delta.csv"
+      />
     </div>
   )
+}
+
+/** Per-codon preference change for the species, with totals. */
+function codonDeltas(original: string, optimized: string, species: Species) {
+  const beforeCodons = toCodons(original)
+  const afterCodons = toCodons(optimized)
+  const n = Math.min(beforeCodons.length, afterCodons.length)
+  const limit = Math.min(n, MAX_CELLS)
+  const cells: CellDelta[] = []
+  let improvedCount = 0
+  let regressedCount = 0
+  let sumBefore = 0
+  let sumAfter = 0
+  let scored = 0
+
+  for (let i = 0; i < limit; i++) {
+    const b = beforeCodons[i].toUpperCase().replace(/U/g, 'T')
+    const a = afterCodons[i].toUpperCase().replace(/U/g, 'T')
+    const pb = getRelativePreference(b, species)
+    const pa = getRelativePreference(a, species)
+    let delta: number | null = null
+    if (pb !== null && pa !== null) {
+      delta = pa - pb
+      sumBefore += pb
+      sumAfter += pa
+      scored++
+      if (delta > 0.05) improvedCount++
+      else if (delta < -0.05) regressedCount++
+    }
+    cells.push({ idx: i, before: pb, after: pa, delta, from: b, to: a })
+  }
+
+  return {
+    cells,
+    improved: improvedCount,
+    regressed: regressedCount,
+    meanBefore: scored > 0 ? sumBefore / scored : 0,
+    meanAfter: scored > 0 ? sumAfter / scored : 0,
+  }
 }

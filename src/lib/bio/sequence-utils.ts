@@ -23,7 +23,7 @@ export function detectSequenceType(text: string): 'dna' | 'protein' {
 
 export function computeGcPercent(seq: string): number {
   if (seq.length === 0) return 0
-  const gc = [...seq].filter((c) => c === 'G' || c === 'C').length
+  const gc = seq.split('').filter((c) => c === 'G' || c === 'C').length
   return (gc / seq.length) * 100
 }
 
@@ -58,7 +58,7 @@ export interface WggwRecodingOption {
   baseChanges: number
 }
 
-export interface InducibleWggwCandidate {
+interface InducibleWggwCandidate {
   /** 1-based cut position at the motif midpoint (between bases 2 and 3). */
   position: number
   /** 1-based position of the first motif base in the CDS. */
@@ -122,37 +122,54 @@ const SYNONYMOUS_CODONS = Object.entries(GENETIC_CODE).reduce<
   return acc
 }, {})
 
-const WGGW_RECODING_LOOKUP = Object.entries(GENETIC_CODE).reduce<
-  Record<string, WggwRecodingOption[]>
->((lookup, [codon1, aa1]) => {
-  for (const [codon2, aa2] of Object.entries(GENETIC_CODE)) {
-    const originalHexamer = `${codon1}${codon2}`
-    const options: WggwRecodingOption[] = []
+/**
+ * Every codon pair's synonymous recodings that create a WGGW motif, keyed by
+ * the original hexamer: 4,096 pairs, built on first use rather than when the
+ * module loads, since every page that shows a GC% imports this module and
+ * only a split preview needs the table.
+ */
+let wggwRecodingLookup: Record<string, WggwRecodingOption[]> | null = null
 
-    for (const newCodon1 of SYNONYMOUS_CODONS[aa1] ?? []) {
-      for (const newCodon2 of SYNONYMOUS_CODONS[aa2] ?? []) {
-        const newHexamer = `${newCodon1}${newCodon2}`
-        for (const match of findWggwWindows(newHexamer)) {
-          options.push({
-            ...match,
-            newHexamer,
-            newCodons: [newCodon1, newCodon2],
-            baseChanges: countBaseChanges(originalHexamer, newHexamer),
-          })
+function getWggwRecodingLookup(): Record<string, WggwRecodingOption[]> {
+  wggwRecodingLookup ??= buildWggwRecodingLookup()
+  return wggwRecodingLookup
+}
+
+const buildWggwRecodingLookup = () =>
+  Object.entries(GENETIC_CODE).reduce<Record<string, WggwRecodingOption[]>>(
+    (lookup, [codon1, aa1]) => {
+      for (const [codon2, aa2] of Object.entries(GENETIC_CODE)) {
+        const originalHexamer = `${codon1}${codon2}`
+        const options: WggwRecodingOption[] = []
+
+        for (const newCodon1 of SYNONYMOUS_CODONS[aa1] ?? []) {
+          for (const newCodon2 of SYNONYMOUS_CODONS[aa2] ?? []) {
+            const newHexamer = `${newCodon1}${newCodon2}`
+            for (const match of findWggwWindows(newHexamer)) {
+              options.push({
+                ...match,
+                newHexamer,
+                newCodons: [newCodon1, newCodon2],
+                baseChanges: countBaseChanges(originalHexamer, newHexamer),
+              })
+            }
+          }
         }
+
+        options.sort((a, b) => {
+          if (a.baseChanges !== b.baseChanges)
+            return a.baseChanges - b.baseChanges
+          if (a.motifOffset !== b.motifOffset)
+            return a.motifOffset - b.motifOffset
+          return a.newHexamer.localeCompare(b.newHexamer)
+        })
+
+        lookup[originalHexamer] = options
       }
-    }
-
-    options.sort((a, b) => {
-      if (a.baseChanges !== b.baseChanges) return a.baseChanges - b.baseChanges
-      if (a.motifOffset !== b.motifOffset) return a.motifOffset - b.motifOffset
-      return a.newHexamer.localeCompare(b.newHexamer)
-    })
-
-    lookup[originalHexamer] = options
-  }
-  return lookup
-}, {})
+      return lookup
+    },
+    {},
+  )
 
 function enumerateInducibleWggwCandidates(
   sequence: string,
@@ -162,12 +179,13 @@ function enumerateInducibleWggwCandidates(
   if (codons.length < 2) return []
 
   const candidates: InducibleWggwCandidate[] = []
+  const lookup = getWggwRecodingLookup()
 
   for (let codonIndex = 0; codonIndex < codons.length - 1; codonIndex++) {
     const codon1 = codons[codonIndex]
     const codon2 = codons[codonIndex + 1]
     const originalHexamer = `${codon1}${codon2}`
-    const options = WGGW_RECODING_LOOKUP[originalHexamer]
+    const options = lookup[originalHexamer]
     if (!options || options.length === 0) continue
 
     const grouped = new Map<string, WggwRecodingOption[]>()
@@ -306,23 +324,6 @@ export function findInvalidChars(seq: string): string[] {
 // Splice-junction helpers
 // ---------------------------------------------------------------------------
 
-/** Local GC % in a window centered on `position` (1-based cut). */
-function localGcAt(seq: string, position: number, window = 40): number {
-  const len = seq.length
-  if (len === 0) return 0
-  const half = Math.floor(window / 2)
-  const start = Math.max(0, position - half)
-  const end = Math.min(len, position + half)
-  let gc = 0
-  const upper = seq.toUpperCase()
-  for (let i = start; i < end; i++) {
-    const c = upper[i]
-    if (c === 'G' || c === 'C') gc++
-  }
-  const w = end - start
-  return w > 0 ? (gc / w) * 100 : 0
-}
-
 interface WggwCandidate {
   /** 1-based cut position at the motif midpoint (between bases 2 and 3). */
   position: number
@@ -377,14 +378,12 @@ export function rankInducibleWggwByBalance(
   if (len < 4) return []
   const center = len / 2
   return enumerateInducibleWggwCandidates(sequence)
-    .map(
-      (candidate): RankedInducibleWggwCandidate => ({
-        ...candidate,
-        distanceFromCenter: Math.abs(candidate.position - center),
-        fivePrimeLength: candidate.position,
-        threePrimeLength: len - candidate.position,
-      }),
-    )
+    .map((candidate): RankedInducibleWggwCandidate => ({
+      ...candidate,
+      distanceFromCenter: Math.abs(candidate.position - center),
+      fivePrimeLength: candidate.position,
+      threePrimeLength: len - candidate.position,
+    }))
     .sort((a, b) => {
       if (a.distanceFromCenter !== b.distanceFromCenter) {
         return a.distanceFromCenter - b.distanceFromCenter
@@ -438,7 +437,7 @@ export function segmentSequence(seq: string): SequenceSegment[] {
   const len = seq.length
 
   // 1. Default everything to normal
-  const types: HighlightType[] = new Array(len).fill('normal')
+  const types = Array.from({ length: len }, (): HighlightType => 'normal')
 
   // 2. Mark remainder (trailing chars when not multiple of 3)
   const rem = len % 3

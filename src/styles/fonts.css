@@ -1,0 +1,21 @@
+/*
+  Self-hosted fonts (Fontsource), replacing next/font/google. The same three
+  variable families next/font loaded, every weight, normal style. Each
+  @font-face carries a unicode-range, so a browser only downloads the
+  subsets a page uses (Latin, in practice).
+
+  The CSS variable names are the ones next/font defined; globals.css maps
+  them onto Tailwind's font-sans/mono/display.
+*/
+@import '@fontsource-variable/source-sans-3';
+@import '@fontsource-variable/source-code-pro';
+@import '@fontsource-variable/source-serif-4';
+
+:root {
+  --font-source-sans:
+    'Source Sans 3 Variable', ui-sans-serif, system-ui, -apple-system,
+    'Segoe UI', sans-serif;
+  --font-source-mono:
+    'Source Code Pro Variable', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-source-serif: 'Source Serif 4 Variable';
+}

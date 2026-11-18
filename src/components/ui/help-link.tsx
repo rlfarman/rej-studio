@@ -1,5 +1,3 @@
-'use client'
-import Link from 'next/link'
 import { CircleHelp } from 'lucide-react'
 import {
   Tooltip,
@@ -22,20 +20,22 @@ interface HelpLinkProps {
 export function HelpLink({ href, topic, className }: HelpLinkProps) {
   return (
     <Tooltip>
-      <TooltipTrigger asChild>
-        <Link
-          href={href}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label={`Open docs for ${topic} (opens in new tab)`}
-          onClick={(e) => e.stopPropagation()}
-          className={cn(
-            'text-muted-foreground hover:text-foreground hover:bg-muted focus-visible:ring-ring inline-flex shrink-0 items-center justify-center rounded-md p-1.5 transition-colors focus-visible:ring-2 focus-visible:outline-hidden',
-            className,
-          )}
-        >
-          <CircleHelp className="size-4" aria-hidden />
-        </Link>
+      <TooltipTrigger
+        render={
+          <a
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`Open docs for ${topic} (opens in new tab)`}
+            onClick={(e) => e.stopPropagation()}
+            className={cn(
+              'inline-flex shrink-0 items-center justify-center rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-hidden',
+              className,
+            )}
+          />
+        }
+      >
+        <CircleHelp className="size-4" aria-hidden />
       </TooltipTrigger>
       <TooltipContent side="top" sideOffset={4}>
         Docs: {topic} ↗

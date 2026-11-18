@@ -4,12 +4,28 @@ updates:
     directory: '/'
     schedule:
       interval: 'weekly'
+    # Only propose versions a week old: pnpm refuses anything under a day
+    # (minimumReleaseAge), and the wait lets a compromised release get caught
+    # and yanked first. Security updates skip the cooldown.
+    cooldown:
+      default-days: 7
     open-pull-requests-limit: 10
+    # A dependency matching several groups lands in the first one.
     groups:
-      radix-ui:
+      base-ui:
         patterns:
-          - '@radix-ui/*'
-          - 'radix-ui'
+          - '@base-ui/*'
+      sentry:
+        patterns:
+          - '@sentry/*'
+      storybook:
+        patterns:
+          - 'storybook'
+          - '@storybook/*'
+      vitest:
+        patterns:
+          - 'vitest'
+          - '@vitest/*'
       types:
         patterns:
           - '@types/*'
@@ -18,29 +34,18 @@ updates:
           - 'eslint'
           - 'eslint-*'
           - '@eslint/*'
-      drizzle:
-        patterns:
-          - 'drizzle-orm'
-          - 'drizzle-kit'
       react:
         patterns:
           - 'react'
           - 'react-dom'
           - 'react-hook-form'
           - '@hookform/*'
-      next:
-        patterns:
-          - 'next'
-          - 'next-*'
-          - '@next/*'
-          - 'eslint-config-next'
       tailwind:
         patterns:
           - 'tailwindcss'
           - 'tailwindcss-*'
           - '@tailwindcss/*'
           - 'tailwind-merge'
-          - 'prettier-plugin-tailwindcss'
       tanstack:
         patterns:
           - '@tanstack/*'
@@ -49,33 +54,24 @@ updates:
         exclude-patterns:
           - 'eslint*'
           - '@eslint/*'
-          - 'drizzle-*'
-          - '@next/*'
           - 'tailwindcss*'
           - '@tailwindcss/*'
-          - 'prettier-plugin-*'
           - '@tanstack/*'
-
-  - package-ecosystem: 'pip'
-    # The requirements live in python/ (runtime + dev locks, compiled with
-    # pip-compile from the .in files) and modal/ (deploy client). There is no
-    # requirements file at the root, so `directory: '/'` found nothing.
-    directories:
-      - '/python'
-      - '/modal'
-    schedule:
-      interval: 'weekly'
-    open-pull-requests-limit: 5
-    groups:
-      # Released in lockstep; updating them separately breaks resolution.
-      opentelemetry:
-        patterns:
-          - 'opentelemetry-*'
+          - 'storybook'
+          - '@storybook/*'
+          - 'vitest'
+          - '@vitest/*'
 
   - package-ecosystem: 'github-actions'
-    directory: '/'
+    # '/' covers .github/workflows; the local composite action pins its own
+    # actions, so it's listed too.
+    directories:
+      - '/'
+      - '/.github/actions/*'
     schedule:
       interval: 'weekly'
+    cooldown:
+      default-days: 7
     open-pull-requests-limit: 5
     groups:
       actions:

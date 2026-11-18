@@ -1,5 +1,4 @@
-'use client'
-import { useFormContext } from 'react-hook-form'
+import { useFormContext, useWatch } from 'react-hook-form'
 import {
   FormField,
   FormItem,
@@ -14,8 +13,8 @@ import { designToolCopy } from '../copy'
 const MAX_NAME_LENGTH = 250
 
 export function NameInput() {
-  const { control, watch } = useFormContext<FormValues>()
-  const value = watch('name')
+  const { control } = useFormContext<FormValues>()
+  const value = useWatch({ control, name: 'name' })
   const length = value?.length ?? 0
 
   return (
@@ -30,7 +29,7 @@ export function NameInput() {
             </FormLabel>
             <span
               className={cn(
-                'text-muted-foreground shrink-0 text-xs tabular-nums',
+                'shrink-0 text-xs text-muted-foreground tabular-nums',
                 length > MAX_NAME_LENGTH && 'text-destructive-foreground',
               )}
             >

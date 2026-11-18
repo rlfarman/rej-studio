@@ -2,31 +2,30 @@ import type { KnipConfig } from 'knip'
 
 const config: KnipConfig = {
   entry: [
-    'src/app/**/{page,layout,template,loading,error,not-found,route,default}.{ts,tsx}',
-    'src/app/{sitemap,robots,manifest,icon,apple-icon}.{ts,tsx}',
-    'src/sentry.client.config.ts',
-    'src/sentry.server.config.ts',
-    'src/sentry.edge.config.ts',
-    'next.config.{ts,js,mjs}',
-    'scripts/**/*.{ts,tsx}',
+    // TanStack Start's router (src/router.tsx) and vite.config.ts are found
+    // by knip's Vite plugin. File routes are entries; `-components/` are not.
+    'src/routes/**/!(-)*.tsx',
+    'scripts/**/*.{ts,tsx,mjs}',
     'src/test/**',
   ],
-  project: ['src/**/*.{ts,tsx}', 'scripts/**/*.{ts,tsx}'],
+  project: [
+    'src/**/*.{ts,tsx}',
+    'scripts/**/*.{ts,tsx,mjs}',
+    'lint/**/*.{ts,mjs}',
+  ],
   ignore: ['src/components/ui/**'],
   storybook: {
-    config: ['.storybook/main.ts', '.storybook/preview.ts'],
-    entry: ['src/**/*.stories.{ts,tsx}'],
+    config: ['.storybook/main.ts'],
+    entry: ['.storybook/preview.tsx', 'src/**/*.stories.{ts,tsx}'],
   },
   ignoreDependencies: [
-    // Tailwind / PostCSS pipeline — imported by PostCSS, not by app code
+    // Tailwind pipeline: imported from globals.css and fonts.css (knip
+    // doesn't follow CSS imports).
     'tailwindcss',
-    'tailwindcss-animate',
-    // Used by scripts/generate-api-types.sh via npx
-    'openapi-typescript',
-    // Browser automation for agents (playwright-cli skill); never imported
-    'playwright',
+    'tw-animate-css',
+    'shadcn',
+    '@fontsource-variable/.*',
   ],
-  ignoreBinaries: ['pip', 'python3'],
 }
 
 export default config

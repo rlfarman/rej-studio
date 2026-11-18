@@ -1,4 +1,3 @@
-'use client'
 import { Fragment, useState, useSyncExternalStore, type ReactNode } from 'react'
 import { ChevronRight } from 'lucide-react'
 import {
@@ -51,7 +50,11 @@ interface ExpandableSidebarListProps<T> {
   items: readonly T[]
   getItemKey: (item: T) => string
   renderItem: (item: T) => ReactNode
-  emptyMessage: string
+  /**
+   * Shown when the list is empty. Omit it to hide the whole section instead,
+   * so empty history sections don't stack up as a column of "nothing here".
+   */
+  emptyMessage?: string
   onClear?: () => void
   collapsedCount?: number
   expandedMax?: number
@@ -100,31 +103,36 @@ export function ExpandableSidebarList<T>({
   const showClear = hasItems && onClear !== undefined
   const sectionId = `sidebar-section-${label.toLowerCase().replace(/\s+/g, '-')}`
 
+  if (!hasItems && emptyMessage === undefined) return null
+
   return (
     <SidebarGroup>
-      <div className="bg-sidebar sticky top-0 z-10 flex items-center justify-between gap-1">
-        <SidebarGroupLabel asChild className="min-w-0 flex-1 shrink">
-          <button
-            type="button"
-            onClick={toggleOpen}
-            aria-expanded={open}
-            aria-controls={sectionId}
-            className="flex w-full min-w-0 items-center gap-1.5 text-left"
-          >
-            <ChevronRight
-              className={cn(
-                'size-3 flex-shrink-0 transition-transform duration-150',
-                open && 'rotate-90',
+      <div className="sticky top-0 z-10 flex items-center justify-between gap-1 bg-sidebar">
+        <SidebarGroupLabel
+          className="min-w-0 flex-1 shrink"
+          render={
+            <button
+              type="button"
+              onClick={toggleOpen}
+              aria-expanded={open}
+              aria-controls={sectionId}
+              className="flex w-full min-w-0 items-center gap-1.5 text-left"
+            >
+              <ChevronRight
+                className={cn(
+                  'size-3 flex-shrink-0 transition-transform duration-150',
+                  open && 'rotate-90',
+                )}
+              />
+              <span className="truncate">{label}</span>
+              {hasItems && (
+                <span className="ml-auto font-mono type-micro text-muted-foreground tabular-nums">
+                  {items.length}
+                </span>
               )}
-            />
-            <span className="truncate">{label}</span>
-            {hasItems && (
-              <span className="text-muted-foreground type-micro ml-auto font-mono tabular-nums">
-                {items.length}
-              </span>
-            )}
-          </button>
-        </SidebarGroupLabel>
+            </button>
+          }
+        />
         {showClear && open && (
           <Button
             variant="ghost"
@@ -150,14 +158,14 @@ export function ExpandableSidebarList<T>({
                   variant="ghost"
                   size="sm"
                   onClick={() => setExpanded(!expanded)}
-                  className="text-muted-foreground w-full text-xs"
+                  className="w-full text-xs text-muted-foreground"
                 >
                   {expanded ? 'Show less' : `+ Show ${hiddenCount} more`}
                 </Button>
               )}
             </>
           ) : (
-            <div className="text-muted-foreground p-4 text-xs">
+            <div className="p-4 text-xs text-muted-foreground">
               {emptyMessage}
             </div>
           )}

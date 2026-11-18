@@ -1,42 +1,23 @@
-export interface WggwSiteInfo {
-  position: number
-  motif: string
-  distance_from_split: number
-  original_codons: [string, string]
-  new_codons: [string, string]
-}
+/**
+ * UI-facing types for an optimization result.
+ *
+ * Inferred from the zod schemas in `optimizer-contract.ts` so the types the
+ * components consume can't drift from what is actually parsed.
+ */
 
-export interface ObjectiveLocation {
-  start: number
-  end: number
-  strand: number | null
-}
+import type {
+  objectiveEvaluationEntrySchema,
+  objectivesReportSchema,
+  processResultSchema,
+  runRecordSchema,
+  wggwSiteInfoSchema,
+} from '@/features/design-tool/types/optimizer-contract'
+import type { z } from 'zod'
 
-export interface ObjectiveEvaluationEntry {
-  objective: string
-  passes: boolean
-  score: number
-  message: string
-  locations: ObjectiveLocation[]
-}
-
-export interface ObjectivesReport {
-  entries: ObjectiveEvaluationEntry[]
-  total_score: number | null
-}
-
-export interface ProcessResult {
-  name: string
-  original_sequence: string
-  optimized_sequence: string
-  seq5: string
-  seq3: string
-  split_point: number
-  used_wggw_as_split: boolean
-  objectives_before: string
-  objectives_after: string
-  objectives_report_before: ObjectivesReport
-  objectives_report_after: ObjectivesReport
-  wggw_info: Record<string, WggwSiteInfo> | null
-  processing_time_seconds: number
-}
+export type WggwSiteInfo = z.infer<typeof wggwSiteInfoSchema>
+export type ObjectiveEvaluationEntry = z.infer<
+  typeof objectiveEvaluationEntrySchema
+>
+export type ObjectivesReport = z.infer<typeof objectivesReportSchema>
+export type RunRecord = z.infer<typeof runRecordSchema>
+export type ProcessResult = z.infer<typeof processResultSchema>

@@ -1,7 +1,21 @@
 export const commonCopy = {
+  chartData: {
+    show: 'View as table',
+    hide: 'Hide table',
+    download: 'CSV',
+    downloadAria: (caption: string) => `Download ${caption} as CSV`,
+  },
+  brandName: 'REJ Studio',
   sidebar: {
     open: 'Open sidebar',
     close: 'Close sidebar',
+  },
+  // Header context label, shown once the page title has scrolled away.
+  pageContext: {
+    genes: 'Gene search',
+    designTool: 'Design tool',
+    diseaseAssociations: 'Disease-associated genes',
+    architecture: 'Architecture',
   },
   actions: {
     tryAgain: 'Try again',
@@ -22,8 +36,6 @@ export const commonCopy = {
     importUserData: 'Import user data',
     exportData: 'Export data',
     importData: 'Import data',
-    restartTours: 'Restart tours',
-    toursReset: 'Tours will reappear on your next visit.',
     seedData: 'Seed data',
     clearSeedData: 'Clear seed data',
     seedResult: (favorites: number, recents: number, jobs: number) =>

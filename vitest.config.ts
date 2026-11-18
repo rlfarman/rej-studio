@@ -1,9 +1,12 @@
-import { defineConfig } from 'vitest/config'
+import { defineConfig } from 'vite-plus'
 import path from 'node:path'
 
+// Separate from vite.config.ts on purpose: Vitest can't load the Cloudflare
+// plugin there (Cloudflare's Start migration guide says the same), and tests
+// need none of the app's plugins.
 export default defineConfig({
   resolve: {
-    alias: { '@': path.resolve(__dirname, 'src') },
+    alias: [{ find: '@', replacement: path.resolve(__dirname, 'src') }],
   },
   test: {
     globals: false,
@@ -15,30 +18,22 @@ export default defineConfig({
     // installing its implementation, failing every storage-backed test.
     // Turning Node's version off lets happy-dom's apply on any Node version.
     execArgv: ['--no-experimental-webstorage'],
-    // PGlite's cold-start (wasm unpack + schema apply) can exceed the
-    // default 10s when the full suite runs in parallel, flaking
-    // queries.integration.test.ts. 30s gives headroom without masking
-    // genuinely slow tests.
-    hookTimeout: 30_000,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'lcov', 'json-summary'],
       include: [
         'src/lib/bio/**',
-        'src/lib/retry.ts',
-        'src/lib/rate-limit.ts',
-        'src/lib/upstash.ts',
         'src/features/**/utils/**',
         'src/features/**/types/**',
         'src/features/**/stores/**',
         'src/features/**/api/**',
         'src/stores/**',
       ],
+      // Server-function modules are Worker wiring that only Start's compiler
+      // can load; their handlers are covered in src/server/.
+      exclude: ['src/**/*.functions.ts'],
       thresholds: {
         'src/lib/bio/**': { lines: 90 },
-        'src/lib/retry.ts': { lines: 90 },
-        'src/lib/rate-limit.ts': { lines: 85 },
-        'src/lib/upstash.ts': { lines: 45 },
         'src/features/**/types/**': { lines: 80 },
         'src/stores/**': { lines: 65 },
       },

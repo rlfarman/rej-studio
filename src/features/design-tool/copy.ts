@@ -7,7 +7,18 @@ function formatProcessingTime(seconds: number): string {
   return `${Math.round(seconds)}s`
 }
 
+/** A cloud design's estimated duration, as a phrase ("about 3 min"). */
+function formatEstimate(seconds: number): string {
+  if (seconds < 60) return 'under a minute'
+  return `about ${Math.round(seconds / 60)} min`
+}
+
 export const designToolCopy = {
+  metadata: {
+    title: 'Design Tool',
+    description:
+      'Optimize coding sequences for RNA End-Joining. Enter a custom CDS or start from a pre-loaded isoform.',
+  },
   validation: {
     dna: {
       required: 'Coding sequence is required.',
@@ -30,6 +41,8 @@ export const designToolCopy = {
         'Sequence must contain only standard amino acid letters (A, C, D, E, F, G, H, I, K, L, M, N, P, Q, R, S, T, V, W, Y) or * for stop.',
       internalStop:
         'Sequence contains internal stop character(s) (*). Only a terminal * is allowed.',
+      awaitingDna:
+        'Waiting for the DNA sequence this protein reverse-translates to.',
     },
     name: {
       required: 'A name is required.',
@@ -39,6 +52,85 @@ export const designToolCopy = {
       'Species selection is required for protein sequences (needed for codon preference during reverse translation).',
     spliceTooLarge: (max: number) =>
       `Split position must be ≤ ${max} (sequence length − 1).`,
+    singleSplitOnly:
+      'The designer runs one split point at a time — remove the extra split before running.',
+  },
+  /** Failures from the job pipeline, phrased for the person who hit them. */
+  jobErrors: {
+    unexpectedResponse:
+      'The optimizer returned something unexpected. This run was not saved.',
+    cancelled: 'Cancelled',
+    notFound: 'No longer available',
+    failed: 'Job failed',
+    unknown: 'Something went wrong — try running again.',
+    browserUnsupported:
+      'This browser can’t run the designer on its own. Try a current version of Chrome, Firefox, Safari or Edge.',
+    browserFailed:
+      'The designer stopped unexpectedly in your browser. Running again usually works.',
+  },
+  /** Designs that run in this browser while the person is elsewhere. */
+  browserRun: {
+    notifyOptIn: 'Notify me when done',
+    notifyOptInHint:
+      'Get a browser notification when a design finishes while this tab is in the background.',
+    completedTitle: 'Design ready',
+    completedBody: (name: string) => `${name} has finished.`,
+    failedTitle: 'Design failed',
+    failedBody: (name: string, reason: string) => `${name}: ${reason}`,
+    interrupted:
+      'Interrupted — the tab closed before this design finished. Run it again for the identical design.',
+    interruptedToast: (count: number) =>
+      count === 1
+        ? 'A design was interrupted when its tab closed.'
+        : `${count} designs were interrupted when their tab closed.`,
+    interruptedToastAction: 'Open',
+  },
+  /** Designs run in the cloud, so the tab can close. */
+  cloud: {
+    toggleLabel: 'Run in the cloud',
+    // The one line that says what the option means. It is the whole of the
+    // privacy trade-off, so it stays next to the checkbox, not in a tooltip.
+    toggleHint:
+      'Your sequence leaves this machine, is kept for up to 30 days, and can be deleted.',
+    // Shown instead, to someone without an account: cloud runs are an
+    // account feature, and this is the way to one.
+    signInHint: 'Cloud runs need an account, so your designs follow you.',
+    signInAction: 'Sign in',
+    unavailableHint: 'Cloud runs are not available on this deployment.',
+    myDesigns: {
+      label: 'My cloud designs',
+      menuAria: 'My cloud designs',
+      subline: (bp: number) =>
+        `in the cloud · ${bp.toLocaleString('en-US')} bp`,
+    },
+    tooLong: (bases: number, limit: number) =>
+      `That sequence is ${bases.toLocaleString('en-US')} bp; cloud designs take up to ${limit.toLocaleString('en-US')}. Turn off “Run in the cloud” to design it in this browser.`,
+    unreachable:
+      'Could not reach the cloud. Check your connection, or reload the page to sign in again.',
+    failedGeneric: 'The cloud could not take that request. Try again.',
+    notFound: 'No longer in the cloud: it was deleted or passed its 30 days.',
+    running: {
+      title: 'Running in the cloud',
+      body: (estimate: number, bp: number) =>
+        `Usually ${formatEstimate(estimate)} for ${bp.toLocaleString('en-US')} bp. You can close this tab; the result will be here when you come back.`,
+    },
+    statusRunning: (estimate: number) =>
+      `Running in the cloud · ${formatEstimate(estimate)}`,
+    recentSubline: (estimate: number) =>
+      `in the cloud · ${formatEstimate(estimate)}`,
+    deleteAction: 'Delete from cloud',
+    deleting: 'Deleting…',
+    deleted:
+      'Deleted from the cloud. The copy in this browser’s history stays.',
+    deletedNote: 'Deleted from the cloud; kept in this browser.',
+    deleteFailed: (reason: string) =>
+      `Could not delete it from the cloud: ${reason}`,
+  },
+  draft: {
+    restored: 'Restored your unsaved draft.',
+    discard: 'Discard draft',
+    dismiss: 'Dismiss',
+    dismissAria: 'Dismiss the restored-draft notice',
   },
   sequenceInput: {
     labelProtein: 'Enter your sequence',
@@ -76,6 +168,9 @@ export const designToolCopy = {
       'Select a target species before reverse translating.',
     reverseTranslateProteinRequired:
       'Enter a protein sequence before reverse translating.',
+    reverseTranslatePending: 'Reverse translating…',
+    reverseTranslateFailed: (reason: string) =>
+      `Could not reverse translate this protein: ${reason}`,
   },
   nameInput: {
     label: 'Choose a name for your coding sequence',
@@ -96,6 +191,40 @@ export const designToolCopy = {
   optimizationOptions: {
     objectivesHeading: 'Sequence objectives',
     constraintsHeading: 'Constraints',
+    summary: {
+      recommendedLabel: 'Recommended settings',
+      customLabel: 'Custom settings',
+      /** Joined into one sentence, e.g. "Codon usage (human) · CpG · GC". */
+      none: 'No objectives selected',
+      customize: 'Customize',
+      hide: 'Hide options',
+      editAria: 'Customize design objectives',
+      items: {
+        codonHuman: 'codon usage (human)',
+        codonMouse: 'codon usage (mouse)',
+        spliceSites: 'splice sites',
+        cpg: 'CpG',
+        kmer: 'k-mer diversity',
+        gc: 'GC 35–60%',
+        intronsBoth: 'both stimulatory introns',
+        intron5: '5′ stimulatory intron',
+        intron3: '3′ stimulatory intron',
+      },
+    },
+    advanced: {
+      label: 'Advanced: objective weights',
+    },
+    help: {
+      codonOptimize:
+        'Rewrites codons to the ones the target species uses most often, without changing the protein.',
+      spliceSites:
+        'Cryptic splice sites are donor/acceptor motifs the cell may splice at by mistake, cutting the transcript in the wrong place.',
+      cpg: 'CpG is a C followed by a G. Fewer CpGs can lower innate immune (TLR9) recognition of the delivered DNA.',
+      kmer: 'A k-mer is any 10-base window. Making them unique avoids repeats that make DNA synthesis fail or misassemble.',
+      gc: 'Keeps the G+C fraction in a synthesis-friendly band; very high or low GC is hard to make and can translate poorly.',
+      stimulatoryIntrons:
+        'Short cis-acting introns placed either side of the REJ intron. They recruit splicing factors and can raise trans-splicing efficiency.',
+    },
     codonOptimize: {
       label: 'Codon usage optimization',
       description: 'Target species for codon-aware sequence design.',
@@ -121,8 +250,18 @@ export const designToolCopy = {
     },
   },
   weights: {
-    label: 'Weight',
-    inputAria: 'Weight',
+    hint: 'Relative importance of each objective, 0–100. Higher values pull the designer harder toward that objective when they conflict. Defaults to 1 for every objective — equal weighting.',
+    /** Shown next to an objective's name while that objective is turned off. */
+    off: '(off)',
+  },
+  splitPoint: {
+    preselected: (bp: string) =>
+      `Nearest WGGW motif to your split point — the split lands at ${bp} bp. Use ‹ › to pick another.`,
+    noSites:
+      'No WGGW motif found in this sequence. Drag the split point or enter a position; the designer will install a motif near it.',
+    noSitesShort: 'No WGGW motif found',
+    emptyTitle: 'No motif selected',
+    emptyBody: 'Pick a motif on the strip above, or use ‹ › to step through.',
   },
   stimulatoryIntrons: {
     fivePrime: {
@@ -137,11 +276,19 @@ export const designToolCopy = {
     diagramSpliceJunction: 'split point',
   },
   form: {
-    title: 'REJ Studio Design Tool',
+    title: 'Design a sequence',
     description:
-      'Paste a coding sequence, tune the objectives, and generate optimized sequences for RNA end-joining.',
+      'Paste a coding sequence, choose a split point, and generate optimized 5′ and 3′ sequences for RNA end-joining.',
     spliceJunctionLabel: 'Split point',
     spliceJunctionHint: 'Set where the CDS divides into 5′ and 3′ sequences.',
+    spliceJunctionHelp:
+      'The CDS is delivered as two halves that rejoin in the cell. The split lands inside a WGGW motif (W = A or T), which the end-joining machinery needs at the junction.',
+    runSummary: {
+      noSequence: 'Add a coding sequence to run the designer.',
+      ready: (bp: string, objectives: number) =>
+        `${bp} bp · ${objectives} objective${objectives === 1 ? '' : 's'}`,
+      splitAt: (bp: string) => `split at ${bp} bp`,
+    },
     optimizationHeading: 'Design Objectives',
     optimizationDescription: '',
     accordion: {
@@ -229,6 +376,8 @@ export const designToolCopy = {
       aavPackaging: 'AAV packaging',
       wggwDetails: 'WGGW motif details',
       objectivesReport: 'Objectives report',
+      runRecord: 'Run record',
+      replay: 'What changed',
     },
     summaries: {
       codonsChanged: (changed: string, total: string) =>
@@ -237,6 +386,141 @@ export const designToolCopy = {
         `${passed} of ${total} passed`,
       junction: (splitPoint: string) => `±18 bp at ${splitPoint}`,
       wggwSites: (count: number) => `${count} site${count === 1 ? '' : 's'}`,
+      // A collapsed row has to account for every outcome worth opening it
+      // for. Counting only the good news left a run that traded one objective
+      // for another looking exactly like a run where nothing happened.
+      changed: (counts: {
+        fixed: number
+        broken: number
+        unresolved: number
+        added: number
+      }) =>
+        [
+          counts.fixed > 0 ? `${counts.fixed} fixed` : null,
+          counts.broken > 0 ? `${counts.broken} broken` : null,
+          counts.unresolved > 0 ? `${counts.unresolved} still failing` : null,
+          counts.added > 0 ? `${counts.added} new` : null,
+        ]
+          .filter(Boolean)
+          .join(' \u00b7 '),
+    },
+    replay: {
+      noReport:
+        'This result has no objectives report, so there is nothing to step through.',
+      noFinalReport:
+        'This run recorded the objectives before optimization but not after, so there is nothing to compare. Run the design again; if it happens every time, the final evaluation is failing.',
+      noInitialReport:
+        'This run recorded the objectives after optimization but not before, so there is nothing to compare.',
+      nothingChanged:
+        'Every objective held: none was fixed, broken or left failing.',
+      showAll: 'Step through all of them anyway',
+      showAllWithCount: (count: number) =>
+        `Include the ${count} that held throughout`,
+      groupLabel: 'Objectives, one at a time. Use the arrow keys to move.',
+      position: (current: number, total: number) => `${current} of ${total}`,
+      previous: 'Previous objective',
+      next: 'Next objective',
+      beforeLabel: 'Before',
+      afterLabel: 'After',
+      passed: 'Passed',
+      failed: 'Failed',
+      absent: 'Not evaluated',
+      outcomes: {
+        fixed: 'Fixed',
+        broken: 'Broken',
+        unresolved: 'Still failing',
+        held: 'Held',
+        added: 'New',
+        dropped: 'Dropped',
+      },
+      track: {
+        count: (count: number) =>
+          `${count} region${count === 1 ? '' : 's'} flagged`,
+        none: (label: string) =>
+          `${label}: nothing flagged along the sequence.`,
+        regions: (label: string, count: number) =>
+          `${label}: ${count} region${count === 1 ? '' : 's'} flagged along the sequence.`,
+      },
+      tableCaption: (objective: string) =>
+        `${objective}, before and after optimization`,
+      headers: {
+        report: 'Report',
+        verdict: 'Verdict',
+        score: 'Score',
+        flagged: 'Regions flagged',
+      },
+    },
+    runRecord: {
+      description:
+        'Everything needed to repeat or cite this run. Submitting the same sequence and options with the seed below gives the same design.',
+      summary: 'Repeatable',
+      unavailable:
+        'This result predates run records, so there is nothing to show. Run the design again to get one.',
+      fields: {
+        startedAt: 'Run at',
+        duration: 'Duration',
+        input: 'Input sequence',
+        inputValue: (length: string, sha256: string) =>
+          `${length} nt \u00b7 SHA-256 ${sha256}`,
+        seed: 'Seed',
+        algorithm: 'Algorithm',
+        commit: 'Commit',
+        dnachisel: 'DNAChisel',
+        python: 'Python',
+        // The dataset the deployment was serving, which is not a claim about
+        // where this sequence came from.
+        corpus: 'Gene corpus loaded',
+        options: 'Options applied',
+      },
+      optionsCount: (count: number) =>
+        `${count} option${count === 1 ? '' : 's'}`,
+      methodsHeading: 'Methods',
+      copyRecord: 'Copy record',
+      copyRecordAria: 'Copy the run record as JSON',
+      copyMethods: 'Copy methods',
+      copyMethodsAria: 'Copy the methods paragraph',
+      downloadRecord: 'Download JSON',
+      downloadRecordAria: 'Download the run record as a JSON file',
+      copiedRecord: 'Run record copied',
+      copiedMethods: 'Methods paragraph copied',
+      tableCaption: 'The facts recorded for this run',
+      optionsTableCaption: 'The options applied to this run',
+      optionName: 'Option',
+      optionValue: 'Value',
+    },
+    charts: {
+      gcContent: {
+        caption: (windowSize: number) =>
+          `GC content along the sequence, sampled in ${windowSize} base windows, before and after optimization`,
+        columns: ['Position (bp)', 'Original GC %', 'Optimized GC %'],
+      },
+      changeDensity: {
+        caption: 'How many bases changed in each bin along the sequence',
+        columns: ['From (bp)', 'To (bp)', 'Bases changed', 'Share of bin (%)'],
+      },
+      codonDelta: {
+        caption:
+          'Codon usage frequency in the chosen species, before and after optimization, for every codon that changed',
+        columns: [
+          'Position',
+          'Original codon',
+          'Original frequency',
+          'Optimized codon',
+          'Optimized frequency',
+        ],
+      },
+      restrictionSites: {
+        caption:
+          'Restriction enzyme sites before and after optimization, with their positions',
+        columns: [
+          'Enzyme',
+          'Sites before',
+          'Sites after',
+          'Added',
+          'Removed',
+          'Positions after (bp)',
+        ],
+      },
     },
     wggwTable: {
       main: 'Main junction',
@@ -253,12 +537,6 @@ export const designToolCopy = {
     },
   },
   aav: {
-    preflight: {
-      single: 'Single AAV',
-      dual: 'Dual vector',
-      dualTight: 'Dual vector (tight)',
-      exceeds: 'Over AAV limit',
-    },
     results: {
       heading: 'AAV packaging estimate',
       fiveVector: '5′ vector',

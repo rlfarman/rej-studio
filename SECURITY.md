@@ -4,10 +4,7 @@
 
 If you discover a security vulnerability in REJ Studio, **please do not file a public issue**. Instead, report it privately so we can address it before disclosure.
 
-**How to report:**
-
-- Use GitHub's [private vulnerability reporting](https://github.com/rlfarman/rej-studio/security/advisories/new) for this repository, **or**
-- Email the maintainers listed in [`.github/CODEOWNERS`](./.github/CODEOWNERS).
+**How to report:** open a private report through GitHub's [private vulnerability reporting](https://github.com/rlfarman/rej-studio/security/advisories/new) (the repository's **Security** tab → **Report a vulnerability**). Only the maintainers can see it, and we can discuss the issue and publish the fix and advisory from the same place.
 
 Please include:
 
@@ -21,12 +18,12 @@ We'll acknowledge your report, investigate, and keep you updated on remediation.
 
 In scope:
 
-- The REJ Studio web app (Next.js frontend + server actions).
-- The Python optimization backend (FastAPI / Modal).
-- Database access patterns and server-side data handling.
+- The REJ Studio web app (a TanStack Start single-page app served by a Cloudflare Worker).
+- The optimizer (Rust, compiled to WebAssembly and run in the browser).
+- The static gene data and how the app loads it.
 
 Out of scope:
 
 - Vulnerabilities in third-party dependencies — please report those upstream. If a dependency issue materially affects REJ Studio, we'll track it via Dependabot.
-- Denial-of-service via expensive optimization jobs (the backend is compute-bounded by design).
+- Denial-of-service via expensive optimization jobs (designs run on the user's own machine).
 - Findings that require a compromised developer machine or stolen credentials.

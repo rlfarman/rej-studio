@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react'
+import type { Meta, StoryObj } from '@storybook/react-vite'
 import { expect, userEvent, within } from 'storybook/test'
 import { Tooltip, TooltipContent, TooltipTrigger } from './tooltip'
 import { Button } from './button'
@@ -15,8 +15,8 @@ type Story = StoryObj<typeof meta>
 export const Default: Story = {
   render: () => (
     <Tooltip>
-      <TooltipTrigger asChild>
-        <Button variant="outline">Hover me</Button>
+      <TooltipTrigger render={<Button variant="outline" />}>
+        Hover me
       </TooltipTrigger>
       <TooltipContent>This is a tooltip</TooltipContent>
     </Tooltip>
@@ -26,8 +26,8 @@ export const Default: Story = {
 export const ShowOnHover: Story = {
   render: () => (
     <Tooltip>
-      <TooltipTrigger asChild>
-        <Button variant="secondary">GC 48.2%</Button>
+      <TooltipTrigger render={<Button variant="secondary" />}>
+        GC 48.2%
       </TooltipTrigger>
       <TooltipContent>
         GC content is in the optimal 35-60% range.

@@ -1,6 +1,0 @@
-# Modal client for deploying (`modal deploy modal/app.py`) and for pyright.
-# Not installed in the Modal image: Modal supplies its own client inside
-# containers, and the image installs python/requirements.txt (see app.py).
-# app.py imports fastapi/pydantic at deploy time, so install both:
-#   pip install -r python/requirements.txt -r modal/requirements.txt
-modal==1.6.4

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vite-plus/test'
 
 import { AAV_PACKAGING_LIMIT } from '@/lib/bio/aav'
 

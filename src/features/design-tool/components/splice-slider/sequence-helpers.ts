@@ -1,4 +1,4 @@
-import { getRelativePreference } from '@/lib/bio/codon-usage'
+import { getRelativePreference } from '@/features/design-tool/utils/codon-preference'
 import { translateCodon } from '@/lib/bio/genetic-code'
 import type { Species } from '@/lib/bio/species'
 import type {
@@ -239,9 +239,9 @@ function formatAminoAcidGuideText(
   splitPosition: number,
 ) {
   const coreText = buildDisplayCoreText(windowStart, windowEnd, splitPosition)
-  const chars: string[] = [...`...${coreText}...`].map((char) =>
-    char === '|' ? '|' : ' ',
-  )
+  const chars: string[] = `...${coreText}...`
+    .split('')
+    .map((char) => (char === '|' ? '|' : ' '))
   const boundaryIndexes = getCodonBoundaryDisplayIndexes(
     windowStart,
     windowEnd,
@@ -272,7 +272,9 @@ export function buildMotifGuide(
   displayText: string,
   boundaryIndexes: number[],
 ) {
-  const chars: string[] = [...displayText].map(() => ' ')
+  // split(''), not spread: indexOf() below counts UTF-16 code units, and the
+  // guide must use the same unit to line up with it.
+  const chars: string[] = displayText.split('').map(() => ' ')
   const splitIndex = displayText.indexOf('|')
   if (splitIndex === -1) {
     return { text: chars.join(''), boundaryIndexes }
@@ -390,12 +392,9 @@ export function roleStylesFor(role: CodonRole): {
     default:
       return {
         container: '',
-        aa: 'text-muted-foreground/70',
+        // Full muted color: /70 measured 3.1–3.3:1 at 10px (WCAG AA is 4.5).
+        aa: 'text-muted-foreground',
         base: 'text-muted-foreground',
       }
   }
-}
-
-export function formatMotifSplit(motif: string) {
-  return `${motif.slice(0, 2)}|${motif.slice(2)}`
 }

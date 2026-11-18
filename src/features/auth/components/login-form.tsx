@@ -1,26 +1,35 @@
-'use client'
-
 import { useState } from 'react'
+
+import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Button } from '@/components/ui/button'
-import { authCopy } from '@/features/auth/copy'
-import { LoginBackground } from '@/features/auth/components/login-background'
 
-type LoginFormProps = {
+import { authCopy } from '../copy'
+import { LoginBackground } from './login-background'
+
+interface LoginFormProps {
   returnTo?: string
-  hasError?: boolean
+  /** Why the last attempt was sent back, if it was. */
+  error?: 'passcode' | 'limit'
 }
 
-export function LoginForm({ returnTo, hasError = false }: LoginFormProps) {
+/**
+ * The passcode form. A plain form post to /api/login, answered with a
+ * redirect (src/server/auth/login.ts), so it works before the page's
+ * JavaScript has loaded.
+ */
+export function LoginForm({ returnTo, error }: LoginFormProps) {
+  const hasError = error !== undefined
   const [submitting, setSubmitting] = useState(false)
 
   return (
-    <main className="relative flex min-h-dvh items-center justify-center overflow-hidden px-6 py-12">
-      {/* Animated DNA helix background */}
+    <main
+      id="main-content"
+      className="relative flex min-h-dvh items-center justify-center overflow-hidden px-6 py-12"
+    >
       <LoginBackground />
 
-      {/* Radial vignette: transparent center → background at edges */}
+      {/* Radial vignette: transparent in the middle, background at the edges. */}
       <div
         className="pointer-events-none absolute inset-0"
         style={{
@@ -29,32 +38,14 @@ export function LoginForm({ returnTo, hasError = false }: LoginFormProps) {
         }}
       />
 
-      {/* Frosted glass card */}
-      <div
-        className="border-border/50 bg-card/75 relative z-10 w-full max-w-sm rounded-2xl border p-8 shadow-2xl shadow-black/8 backdrop-blur-2xl"
-        style={{ ['--stagger' as string]: 0 }}
-      >
-        {/* Overline */}
-        <p
-          className="type-overline text-primary fade-up-stagger mb-6"
-          style={{ ['--stagger' as string]: 0 }}
-        >
-          Private Preview
+      <div className="relative z-10 w-full max-w-sm rounded-[min(var(--radius-4xl),24px)] border border-border/50 bg-card/75 p-8 shadow-2xl shadow-black/8 backdrop-blur-2xl">
+        <p className="mb-6 type-overline text-primary">
+          {authCopy.login.overline}
         </p>
-
-        {/* Title */}
-        <h1
-          className="type-page-title text-foreground fade-up-stagger"
-          style={{ ['--stagger' as string]: 1 }}
-        >
+        <h1 className="type-page-title text-foreground">
           {authCopy.login.title}
         </h1>
-
-        {/* Description */}
-        <p
-          className="text-muted-foreground fade-up-stagger mt-2 text-sm leading-relaxed"
-          style={{ ['--stagger' as string]: 2 }}
-        >
+        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
           {authCopy.login.description}
         </p>
 
@@ -68,60 +59,48 @@ export function LoginForm({ returnTo, hasError = false }: LoginFormProps) {
             <input type="hidden" name="return_to" value={returnTo} />
           ) : null}
 
-          <div
-            className="fade-up-stagger flex flex-col gap-2"
-            style={{ ['--stagger' as string]: 3 }}
-          >
-            <Label htmlFor="password">{authCopy.login.passwordLabel}</Label>
-
-            {/* Wrapper provides the drawn-on underline focus indicator */}
-            <div className="login-input-wrapper">
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                required
-                autoFocus
-                aria-invalid={hasError || undefined}
-                aria-describedby={hasError ? 'login-error' : undefined}
-              />
-            </div>
-
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="password">{authCopy.login.passcodeLabel}</Label>
+            <Input
+              id="password"
+              name="password"
+              type="password"
+              autoComplete="current-password"
+              required
+              autoFocus
+              aria-invalid={hasError || undefined}
+              aria-describedby={hasError ? 'login-error' : undefined}
+            />
             {hasError ? (
               <p
                 id="login-error"
                 role="alert"
-                className="text-destructive text-sm"
+                className="text-sm text-destructive"
               >
-                {authCopy.login.error}
+                {error === 'limit'
+                  ? authCopy.login.tooManyAttempts
+                  : authCopy.login.wrongPasscode}
               </p>
             ) : null}
           </div>
 
-          <div
-            className="fade-up-stagger"
-            style={{ ['--stagger' as string]: 4 }}
+          <Button
+            type="submit"
+            className="relative w-full overflow-hidden"
+            disabled={submitting}
           >
-            <Button
-              type="submit"
-              className="relative w-full overflow-hidden"
-              disabled={submitting}
-            >
-              {submitting ? (
-                <>
-                  <span className="opacity-0">{authCopy.login.submit}</span>
-                  <span className="absolute inset-0 flex items-center justify-center">
-                    {authCopy.login.submitting}
-                  </span>
-                  {/* Scan sweep */}
-                  <span className="login-btn-scan pointer-events-none absolute inset-0" />
-                </>
-              ) : (
-                authCopy.login.submit
-              )}
-            </Button>
-          </div>
+            {submitting ? (
+              <>
+                <span className="opacity-0">{authCopy.login.submit}</span>
+                <span className="absolute inset-0 flex items-center justify-center">
+                  {authCopy.login.submitting}
+                </span>
+                <span className="login-btn-scan pointer-events-none absolute inset-0" />
+              </>
+            ) : (
+              authCopy.login.submit
+            )}
+          </Button>
         </form>
       </div>
     </main>

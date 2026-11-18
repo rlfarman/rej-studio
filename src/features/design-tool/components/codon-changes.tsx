@@ -1,6 +1,3 @@
-'use client'
-
-import { useMemo } from 'react'
 import { ArrowRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
@@ -56,9 +53,9 @@ function analyze(original: string, optimized: string) {
 }
 
 export function CodonChanges({ original, optimized, splitPoint }: Props) {
-  const { changes, total, synonymous, nonSynonymous } = useMemo(
-    () => analyze(original, optimized),
-    [original, optimized],
+  const { changes, total, synonymous, nonSynonymous } = analyze(
+    original,
+    optimized,
   )
 
   if (total === 0) return null
@@ -70,7 +67,7 @@ export function CodonChanges({ original, optimized, splitPoint }: Props) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-end gap-2">
-        <div className="type-micro flex items-center gap-2">
+        <div className="flex items-center gap-2 type-micro">
           <span
             className={cn(
               'rounded-full px-2 py-0.5 font-medium tabular-nums',
@@ -82,7 +79,7 @@ export function CodonChanges({ original, optimized, splitPoint }: Props) {
             {synonymous} synonymous
           </span>
           {nonSynonymous > 0 && (
-            <span className="bg-danger/10 text-danger-soft rounded-full px-2 py-0.5 font-medium tabular-nums">
+            <span className="rounded-full bg-danger/10 px-2 py-0.5 font-medium text-danger-soft tabular-nums">
               {nonSynonymous} non-synonymous
             </span>
           )}
@@ -94,11 +91,11 @@ export function CodonChanges({ original, optimized, splitPoint }: Props) {
 
       {/* Translation conservation strip */}
       <div className="space-y-1">
-        <div className="text-muted-foreground type-micro">
+        <div className="type-micro text-muted-foreground">
           Translation conservation
         </div>
         <div
-          className="bg-success/70 relative h-2 overflow-hidden rounded-full border"
+          className="relative h-2 overflow-hidden rounded-full border bg-success/70"
           role="img"
           aria-label={
             allSynonymous
@@ -112,7 +109,7 @@ export function CodonChanges({ original, optimized, splitPoint }: Props) {
                 <div
                   key={c.index}
                   title={`Codon ${c.index + 1}: ${c.aaFrom ?? '?'} → ${c.aaTo ?? '?'}`}
-                  className="bg-danger absolute inset-y-0"
+                  className="absolute inset-y-0 bg-danger"
                   style={{
                     left: `${(c.index / total) * 100}%`,
                     width: `${Math.max(0.2, 100 / total)}%`,
@@ -121,7 +118,7 @@ export function CodonChanges({ original, optimized, splitPoint }: Props) {
               ),
             )}
         </div>
-        <div className="text-muted-foreground type-micro">
+        <div className="type-micro text-muted-foreground">
           {allSynonymous
             ? 'All changes are synonymous — protein sequence is preserved.'
             : `${nonSynonymous} non-synonymous substitution(s) — protein sequence has changed.`}
@@ -130,34 +127,34 @@ export function CodonChanges({ original, optimized, splitPoint }: Props) {
 
       {changes.length > 0 && (
         <details className="group">
-          <summary className="text-muted-foreground cursor-pointer text-xs hover:underline">
+          <summary className="cursor-pointer text-xs text-muted-foreground hover:underline">
             Show codon-by-codon diff ({changes.length})
           </summary>
-          <div className="mt-2 max-h-64 overflow-auto rounded-md border">
+          <div className="mt-2 max-h-64 overflow-auto rounded-2xl border">
             <table className="w-full min-w-[32rem] text-xs">
-              <thead className="bg-muted/50 sticky top-0">
+              <thead className="sticky top-0 bg-muted/50">
                 <tr className="text-left">
                   <th
                     scope="col"
-                    className="text-muted-foreground px-2 py-1.5 font-medium"
+                    className="px-2 py-1.5 font-medium text-muted-foreground"
                   >
                     #
                   </th>
                   <th
                     scope="col"
-                    className="text-muted-foreground px-2 py-1.5 font-medium"
+                    className="px-2 py-1.5 font-medium text-muted-foreground"
                   >
                     bp
                   </th>
                   <th
                     scope="col"
-                    className="text-muted-foreground px-2 py-1.5 font-medium"
+                    className="px-2 py-1.5 font-medium text-muted-foreground"
                   >
                     Change
                   </th>
                   <th
                     scope="col"
-                    className="text-muted-foreground px-2 py-1.5 font-medium"
+                    className="px-2 py-1.5 font-medium text-muted-foreground"
                   >
                     Amino acid
                   </th>
@@ -176,10 +173,10 @@ export function CodonChanges({ original, optimized, splitPoint }: Props) {
                         !c.synonymous && 'bg-danger/5 text-danger-soft',
                       )}
                     >
-                      <td className="text-muted-foreground px-2 py-1 tabular-nums">
+                      <td className="px-2 py-1 text-muted-foreground tabular-nums">
                         {c.index + 1}
                       </td>
-                      <td className="text-muted-foreground px-2 py-1 tabular-nums">
+                      <td className="px-2 py-1 text-muted-foreground tabular-nums">
                         {c.position.toLocaleString()}
                       </td>
                       <td className="px-2 py-1 font-mono">

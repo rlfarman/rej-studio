@@ -1,8 +1,6 @@
-'use client'
-
 import * as React from 'react'
-import * as LabelPrimitive from '@radix-ui/react-label'
-import { Slot } from '@radix-ui/react-slot'
+import { mergeProps } from '@base-ui/react/merge-props'
+import { useRender } from '@base-ui/react/use-render'
 import {
   Controller,
   ControllerProps,
@@ -90,7 +88,7 @@ function FormItem({ className, ...props }: React.ComponentProps<'div'>) {
 function FormLabel({
   className,
   ...props
-}: React.ComponentProps<typeof LabelPrimitive.Root>) {
+}: React.ComponentProps<typeof Label>) {
   const { error, formItemId } = useFormField()
 
   return (
@@ -104,22 +102,29 @@ function FormLabel({
   )
 }
 
-function FormControl({ ...props }: React.ComponentProps<typeof Slot>) {
+/** Wires the field's id and ARIA state onto its single child control. */
+function FormControl({
+  children,
+  ...props
+}: Omit<React.ComponentProps<'div'>, 'children'> & {
+  children: React.ReactElement
+}) {
   const { error, formItemId, formDescriptionId, formMessageId } = useFormField()
 
-  return (
-    <Slot
-      data-slot="form-control"
-      id={formItemId}
-      aria-describedby={
-        !error
+  return useRender({
+    render: children,
+    props: mergeProps<'div'>(
+      {
+        id: formItemId,
+        'aria-describedby': !error
           ? `${formDescriptionId}`
-          : `${formDescriptionId} ${formMessageId}`
-      }
-      aria-invalid={!!error}
-      {...props}
-    />
-  )
+          : `${formDescriptionId} ${formMessageId}`,
+        'aria-invalid': !!error,
+      },
+      props,
+    ),
+    state: { slot: 'form-control' },
+  })
 }
 
 function FormDescription({ className, ...props }: React.ComponentProps<'p'>) {
@@ -129,7 +134,7 @@ function FormDescription({ className, ...props }: React.ComponentProps<'p'>) {
     <p
       data-slot="form-description"
       id={formDescriptionId}
-      className={cn('text-muted-foreground text-sm leading-5', className)}
+      className={cn('text-sm leading-5 text-muted-foreground', className)}
       {...props}
     />
   )
@@ -183,7 +188,7 @@ function FormMessage({ className, ...props }: React.ComponentProps<'p'>) {
     <p
       data-slot="form-message"
       id={formMessageId}
-      className={cn('text-destructive-foreground text-sm leading-5', className)}
+      className={cn('text-sm leading-5 text-destructive-foreground', className)}
       {...props}
     >
       {body}

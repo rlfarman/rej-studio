@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vite-plus/test'
 
 import { validationSchema } from './form-schema'
 
@@ -135,10 +135,12 @@ describe('validationSchema', () => {
 })
 
 describe('validationSchema — protein input', () => {
+  // The DNA the optimizer reverse-translates the protein to, which the form
+  // holds by the time it can be submitted.
   const protein = (overrides: Record<string, unknown> = {}) =>
     parse({
       sequenceType: 'protein',
-      codingSequence: '',
+      codingSequence: 'ATGAAGGTGTGA',
       proteinSequence: 'MKV*',
       ...overrides,
     })
@@ -182,33 +184,53 @@ describe('validationSchema — protein input', () => {
     ).toContain('proteinSequence')
   })
 
+  it('waits for the DNA the protein reverse-translates to', () => {
+    // The crate owns reverse translation, so the DNA arrives asynchronously;
+    // until it does there is nothing to design from.
+    expect(issuePaths(protein({ codingSequence: '' }))).toContain(
+      'proteinSequence',
+    )
+  })
+
   it('skips the DNA splice-position checks in protein mode', () => {
-    // codingSequence is filled in after reverse translation, so a splice
-    // position beyond the (empty) coding sequence is not an error yet.
+    // The split points are recomputed from the reverse-translated DNA, so a
+    // stale position is not reported against the protein field.
     expect(protein({ spliceJunctionPositions: [500] }).success).toBe(true)
   })
 })
 
-describe('validationSchema — splice position order', () => {
-  it('accepts two ascending splice positions', () => {
+describe('validationSchema — splice positions', () => {
+  it('accepts a single split point', () => {
     expect(
       parse({
         codingSequence: 'ATGAAAAAATGA',
-        spliceJunctionPositions: [3, 6],
+        spliceJunctionPositions: [6],
       }).success,
     ).toBe(true)
   })
 
-  it('rejects positions that are not strictly ascending', () => {
+  // The optimizer takes one split_point and answers 422 for more, so a
+  // second position is blocked in the form rather than at the backend.
+  it('rejects a second split point', () => {
+    const result = parse({
+      codingSequence: 'ATGAAAAAATGA',
+      spliceJunctionPositions: [3, 6],
+    })
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      expect(result.error.issues.map((i) => i.path)).toContainEqual([
+        'spliceJunctionPositions',
+        1,
+      ])
+      expect(result.error.issues[0].message).toMatch(/one split point/i)
+    }
+  })
+
+  it('still rejects positions that are not strictly ascending', () => {
     const result = parse({
       codingSequence: 'ATGAAAAAATGA',
       spliceJunctionPositions: [6, 6],
     })
     expect(result.success).toBe(false)
-    if (!result.success) {
-      expect(result.error.issues.map((i) => i.path)).toEqual([
-        ['spliceJunctionPositions', 1],
-      ])
-    }
   })
 })

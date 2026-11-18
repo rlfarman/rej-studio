@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test'
 import { makeSavedGene } from '@/test/fixtures'
 import { useFavoriteGenes } from './favorite-genes-store'
 
@@ -20,7 +20,7 @@ describe('useFavoriteGenes', () => {
     const gene = makeSavedGene({ id: 'g1' })
     useFavoriteGenes.getState().addFavoriteGene(gene)
     expect(useFavoriteGenes.getState().favoriteGenes).toHaveLength(1)
-    expect(useFavoriteGenes.getState().isFavoriteGene('g1')).toBe(true)
+    expect(useFavoriteGenes.getState().favoriteGenes[0].id).toBe('g1')
   })
 
   it('deduplicates on re-add (moves to front)', () => {
@@ -40,7 +40,6 @@ describe('useFavoriteGenes', () => {
     useFavoriteGenes.getState().addFavoriteGene(gene)
     useFavoriteGenes.getState().removeFavoriteGene('g1')
     expect(useFavoriteGenes.getState().favoriteGenes).toHaveLength(0)
-    expect(useFavoriteGenes.getState().isFavoriteGene('g1')).toBe(false)
   })
 
   it('removing non-existent gene is a no-op', () => {

@@ -1,4 +1,3 @@
-'use client'
 import {
   SidebarMenuAction,
   SidebarMenuButton,
@@ -8,13 +7,13 @@ import {
   useJobHistory,
   type JobHistoryEntry,
 } from '@/features/design-tool/hooks/use-job-history'
-import { cancelJob as cancelJobAction } from '@/features/design-tool/api/jobs'
 import { ExpandableSidebarList } from '@/components/expandable-sidebar-list'
-import { Loader2, CircleAlert, X } from 'lucide-react'
-import { AnimatePresence, m } from 'motion/react'
+import { Loader2, CircleAlert, Cloud, X } from 'lucide-react'
+import { estimateCloudSeconds } from '@/features/design-tool/types/cloud-design'
 import { designToolCopy } from '../copy'
 
 const copy = designToolCopy.recentJobs
+const cloudCopy = designToolCopy.cloud
 
 function formatTimeAgo(dateString: string): string {
   const seconds = Math.floor(
@@ -37,13 +36,13 @@ export function RecentJobs({ onSelectJob }: RecentJobsProps) {
   // Selector-scoped reads so this component only re-renders when the
   // relevant slice changes, not on every unrelated store mutation.
   const entries = useJobHistory((s) => s.entries)
+  const progressById = useJobHistory((s) => s.progressById)
   const clearHistory = useJobHistory((s) => s.clearHistory)
   const removeEntry = useJobHistory((s) => s.removeEntry)
   const upsertEntry = useJobHistory((s) => s.upsertEntry)
 
-  // X on a running entry cancels the backend job (eagerly marking it
-  // cancelled in the store) rather than silently dismissing while the
-  // job keeps running. Terminal entries are just removed locally.
+  // X on a running entry marks it cancelled rather than silently
+  // dismissing it. Terminal entries are just removed.
   const handleRemove = (entry: JobHistoryEntry) => {
     if (entry.status === 'running') {
       upsertEntry({
@@ -55,7 +54,6 @@ export function RecentJobs({ onSelectJob }: RecentJobsProps) {
           retriable: true,
         },
       })
-      void cancelJobAction(entry.id).catch(() => {})
     } else {
       removeEntry(entry.id)
     }
@@ -73,11 +71,15 @@ export function RecentJobs({ onSelectJob }: RecentJobsProps) {
       renderItem={(entry) => {
         const isError =
           entry.status === 'failed' || entry.status === 'cancelled'
-        const subline =
-          entry.status === 'running'
-            ? (entry.stage ??
-              (entry.progress !== undefined
-                ? `${Math.round(entry.progress * 100)}%`
+        const progress = progressById[entry.id]
+        const runningInCloud = entry.status === 'running' && !!entry.cloudId
+        const subline = runningInCloud
+          ? // No live progress from the cloud: an estimate from the length.
+            cloudCopy.recentSubline(estimateCloudSeconds(entry.sequenceLength))
+          : entry.status === 'running'
+            ? (progress?.stage ??
+              (progress?.progress !== undefined
+                ? `${Math.round(progress.progress * 100)}%`
                 : copy.running))
             : isError && entry.error
               ? entry.error.message
@@ -89,41 +91,31 @@ export function RecentJobs({ onSelectJob }: RecentJobsProps) {
               className="h-auto items-start py-1.5 [&>svg]:size-3"
               onClick={() => onSelectJob?.(entry)}
             >
-              {entry.status === 'running' && (
+              {runningInCloud && <Cloud className="mt-0.5 flex-shrink-0" />}
+              {entry.status === 'running' && !runningInCloud && (
                 <Loader2 className="mt-0.5 flex-shrink-0 animate-spin" />
               )}
               {isError && (
-                <CircleAlert className="text-destructive mt-0.5 flex-shrink-0" />
+                <CircleAlert className="mt-0.5 flex-shrink-0 text-destructive" />
               )}
               <div className="flex min-w-0 flex-1 flex-col gap-0.5 leading-tight">
                 <span className="line-clamp-2 pr-5 font-medium">
                   {entry.name}
                 </span>
-                <div className="relative min-h-[14px] pr-5">
-                  <AnimatePresence mode="wait" initial={false}>
-                    <m.span
-                      key={subline}
-                      initial={{ opacity: 0, y: 3 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -3 }}
-                      transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                      className="text-muted-foreground group-hover/menu-button:text-sidebar-accent-foreground type-nano line-clamp-2 block"
-                    >
-                      {subline}
-                    </m.span>
-                  </AnimatePresence>
-                </div>
-                {entry.status === 'running' && entry.progress !== undefined && (
-                  <div className="bg-sidebar-border mt-1 h-0.5 w-full overflow-hidden rounded-full">
-                    <m.div
-                      className="bg-primary h-full origin-left"
-                      initial={false}
-                      animate={{ scaleX: Math.max(0.02, entry.progress) }}
-                      transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-                      style={{ width: '100%' }}
-                    />
-                  </div>
-                )}
+                <span className="line-clamp-2 block min-h-[14px] pr-5 type-nano text-muted-foreground group-hover/menu-button:text-sidebar-accent-foreground">
+                  {subline}
+                </span>
+                {entry.status === 'running' &&
+                  progress?.progress !== undefined && (
+                    <div className="mt-1 h-0.5 w-full overflow-hidden rounded-full bg-sidebar-border">
+                      <div
+                        className="h-full w-full origin-left bg-primary transition-transform duration-700 ease-out"
+                        style={{
+                          transform: `scaleX(${Math.max(0.02, progress.progress)})`,
+                        }}
+                      />
+                    </div>
+                  )}
               </div>
             </SidebarMenuButton>
             <SidebarMenuAction

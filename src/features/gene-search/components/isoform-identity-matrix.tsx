@@ -1,47 +1,43 @@
-'use client'
-
-import { useMemo } from 'react'
-import Link from 'next/link'
-import { usePathname, useSearchParams } from 'next/navigation'
+import { Link } from '@tanstack/react-router'
 import { Grid3x3 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { useSpeciesContext } from '@/stores/species-store'
 import type { IsoformListItem } from '@/features/gene-search/types/domain-types'
+import { ChartDataTable } from '@/components/chart-data-table'
+import { geneSearchCopy } from '@/features/gene-search/copy'
+import {
+  selectIdentityIsoforms,
+  type IsoformIdentityMatrix as Identities,
+} from '@/features/gene-search/corpus/identity'
 
 interface Props {
   isoforms: IsoformListItem[]
+  /**
+   * Stored alignment identities for `selectIdentityIsoforms(isoforms)`, or
+   * null when the gene data has none (`parseIsoformIdentity`).
+   */
+  identity: Identities | null
 }
 
-const MAX_ISOFORMS = 16
 const MIN_ISOFORMS = 2
 
 /**
- * Compute % protein-sequence identity between two isoforms using end-anchored
- * prefix/suffix overlap. Most isoforms differ by exon inclusion, so they share
- * large contiguous blocks at the start and end — this catches those cases
- * cheaply without a full alignment.
+ * Identity bins, lowest to highest. Ordinal, so they map onto the single-hue
+ * `seq-*` ramp (colorblind-safe: they differ in lightness, not hue). The top
+ * bin is the actionable one: pairs that similar share most coding content.
  */
-function proteinIdentity(a: string, b: string): number {
-  if (a === b) return 100
-  const shorter = a.length <= b.length ? a : b
-  const longer = a.length <= b.length ? b : a
-  if (shorter.length === 0) return 0
+const BINS = [
+  { min: 0, label: '<50%', className: 'bg-seq-1' },
+  { min: 50, label: '50–75%', className: 'bg-seq-2' },
+  { min: 75, label: '75–90%', className: 'bg-seq-3' },
+  { min: 90, label: '90–95%', className: 'bg-seq-4' },
+  { min: 95, label: '≥95%', className: 'bg-seq-5' },
+] as const
 
-  // Shared prefix.
-  let prefix = 0
-  while (prefix < shorter.length && shorter[prefix] === longer[prefix]) prefix++
-
-  // Shared suffix.
-  let suffix = 0
-  while (
-    suffix < shorter.length - prefix &&
-    shorter[shorter.length - 1 - suffix] === longer[longer.length - 1 - suffix]
-  ) {
-    suffix++
+function binFor(pct: number) {
+  for (let i = BINS.length - 1; i >= 0; i--) {
+    if (pct >= BINS[i].min) return BINS[i]
   }
-
-  const matches = prefix + suffix
-  return (matches / longer.length) * 100
+  return BINS[0]
 }
 
 /**
@@ -49,150 +45,201 @@ function proteinIdentity(a: string, b: string): number {
  * sequences. Surfaces near-duplicate isoforms so users don't waste time
  * optimizing functionally redundant transcripts separately.
  *
- * Identity is computed as prefix+suffix match / longer protein length.
- * This is a fast proxy, not a full alignment — good enough to cluster
- * isoforms by similarity but not for exact percent identity claims.
+ * Identities are read, not computed: the corpus build aligns each pair
+ * globally in Rust and stores the result in the gene file (see
+ * `StoredIsoformIdentity`). Alignment is too slow to run here, and the
+ * prefix/suffix shortcut this used to compute was off by more than 20
+ * points for about a fifth of the cells. Without stored values the section
+ * says so instead of guessing.
+ *
+ * Rendered as a real table: numbered columns match the numbered row
+ * headers (no rotated or truncated labels), row headers stay pinned while
+ * the grid scrolls horizontally on narrow screens, and every visible cell
+ * carries its value for screen readers and as a hover title.
  */
-export function IsoformIdentityMatrix({ isoforms }: Props) {
-  const { species } = useSpeciesContext()
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
-
-  const buildHref = (id: string) => {
-    const params = new URLSearchParams(searchParams?.toString() ?? '')
-    params.set('isoform', id)
-    return `${pathname}?${params.toString()}#isoform-row-${id}`
-  }
-
-  const { rows, ids } = useMemo(() => {
-    const filtered = isoforms.filter((i) => {
-      if (!species || species === 'both') return true
-      return i.species.toLowerCase() === species
-    })
-    // Sort by protein length descending so the longest (usually canonical)
-    // isoform is in the top-left corner.
-    const sorted = [...filtered].sort(
-      (a, b) => b.proteinSequenceLength - a.proteinSequenceLength,
-    )
-    const trimmed = sorted.slice(0, MAX_ISOFORMS)
-    const ids = trimmed.map((i) => i.id)
-    const rows = trimmed.map((a) =>
-      trimmed.map((b) => proteinIdentity(a.proteinSequence, b.proteinSequence)),
-    )
-    return { rows, ids }
-  }, [isoforms, species])
-
-  if (ids.length < MIN_ISOFORMS) return null
+export function IsoformIdentityMatrix({ isoforms, identity }: Props) {
+  const shown = selectIdentityIsoforms(isoforms)
+  if (shown.length < MIN_ISOFORMS) return null
 
   return (
-    <div className="mb-4 space-y-3 rounded-md border p-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-sm font-medium">
-          <Grid3x3 className="text-muted-foreground size-4" />
-          Pairwise identity
-        </div>
-        <div className="text-muted-foreground type-micro flex items-center gap-2">
-          <span>0%</span>
-          <span className="h-2 w-20 rounded-sm bg-gradient-to-r from-slate-200 via-amber-400 to-emerald-600 dark:from-slate-800" />
-          <span>100%</span>
-        </div>
-      </div>
-
-      <div className="overflow-x-auto pt-8">
-        <div
-          className="inline-grid gap-[1px] text-[9px]"
-          style={{
-            gridTemplateColumns: `minmax(7rem, max-content) repeat(${ids.length}, minmax(1.25rem, 1fr))`,
-          }}
+    <section
+      aria-labelledby="identity-matrix-title"
+      className="mb-4 space-y-4 rounded-2xl border p-4"
+    >
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2
+          id="identity-matrix-title"
+          className="flex items-center gap-2 font-sans text-sm font-medium"
         >
-          {/* header row: blank corner + column labels (last 4 chars; full ID on hover) */}
-          <div />
-          {ids.map((id) => (
-            <div
-              key={`col-${id}`}
-              className="text-muted-foreground relative font-mono"
-              title={id}
-            >
-              <span className="absolute bottom-0 left-1/2 origin-bottom-left -translate-x-1/2 rotate-[-60deg] whitespace-nowrap">
-                …{id.slice(-4)}
-              </span>
-            </div>
-          ))}
-
-          {rows.map((row, i) => (
-            <Row
-              key={ids[i]}
-              id={ids[i]}
-              values={row}
-              i={i}
-              href={buildHref(ids[i])}
-            />
-          ))}
-        </div>
+          <Grid3x3 className="size-4 text-muted-foreground" />
+          {geneSearchCopy.identityMatrix.title}
+        </h2>
+        {identity && <Legend />}
       </div>
-
-      <p className="text-muted-foreground type-micro leading-relaxed">
-        Identity estimated from shared prefix + suffix of protein sequences.
-        Pairs ≥95% share most coding content — consider optimizing one per
-        cluster.
-      </p>
-    </div>
+      {identity ? (
+        <Matrix
+          identity={identity}
+          total={isoforms.length}
+          shown={shown.length}
+        />
+      ) : (
+        <p className="max-w-prose text-sm text-muted-foreground">
+          {geneSearchCopy.identityMatrix.unavailable}
+        </p>
+      )}
+    </section>
   )
 }
 
-function Row({
-  id,
-  values,
-  i,
-  href,
+function Matrix({
+  identity: { ids, percent: rows },
+  shown,
+  total,
 }: {
-  id: string
-  values: number[]
-  i: number
-  href: string
+  identity: Identities
+  shown: number
+  total: number
 }) {
   return (
     <>
-      <Link
-        href={href}
-        scroll={false}
-        className="text-muted-foreground hover:text-foreground focus-visible:text-foreground pr-2 text-right font-mono whitespace-nowrap hover:underline focus-visible:outline-none"
-        title={`Jump to ${id}`}
-      >
-        {id}
-      </Link>
-      {values.map((v, j) => {
-        // Upper triangle only — mirror suppressed to reduce visual noise.
-        const hidden = j > i
-        return (
-          <div
-            key={j}
-            className={cn(
-              'aspect-square min-h-4 min-w-4',
-              hidden && 'opacity-0',
-            )}
-            style={{
-              backgroundColor: hidden ? 'transparent' : identityColor(v),
-            }}
-            title={hidden ? undefined : `${v.toFixed(1)}% identity`}
-          />
-        )
-      })}
+      <div className="-mx-4 overflow-x-auto px-4">
+        <table className="border-separate border-spacing-[2px] text-left">
+          <caption className="sr-only">
+            {geneSearchCopy.identityMatrix.caption}
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col" className="sticky left-0 z-10 bg-card">
+                <span className="sr-only">
+                  {geneSearchCopy.identityMatrix.rowHeader}
+                </span>
+              </th>
+              {ids.map((id, j) => (
+                <th
+                  key={`col-${id}`}
+                  scope="col"
+                  title={id}
+                  className="w-5 min-w-5 pb-1 text-center type-micro font-medium text-muted-foreground tabular-nums"
+                >
+                  <span aria-hidden>{j + 1}</span>
+                  <span className="sr-only">{id}</span>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row, i) => (
+              <Row key={ids[i]} index={i} id={ids[i]} ids={ids} values={row} />
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <p className="max-w-prose type-nano text-muted-foreground">
+        {geneSearchCopy.identityMatrix.footnote}
+        {shown < total && (
+          <> {geneSearchCopy.identityMatrix.truncated(shown, total)}</>
+        )}
+      </p>
+      <ChartDataTable
+        storageKey="isoforms"
+        caption={geneSearchCopy.charts.identityMatrix.caption}
+        columns={geneSearchCopy.charts.identityMatrix.columns}
+        rows={ids.flatMap((id, i) =>
+          // Each pair once: the matrix is symmetric, and a diagonal of 100%
+          // tells the reader nothing.
+          ids
+            .slice(i + 1)
+            .map((other, j) => [
+              id,
+              other,
+              Number((rows[i]?.[i + 1 + j] ?? 0).toFixed(1)),
+            ]),
+        )}
+        csvFilename="isoform-identity.csv"
+      />
     </>
   )
 }
 
-function identityColor(pct: number): string {
-  // 0–50% → slate, 50–85% → amber, 85–100% → emerald. Alpha ramps with
-  // magnitude so the diagonal (100%) is most saturated.
-  if (pct >= 85) {
-    const a = 0.4 + ((pct - 85) / 15) * 0.55
-    return `rgba(16, 185, 129, ${a})` // emerald
-  }
-  if (pct >= 50) {
-    const a = 0.25 + ((pct - 50) / 35) * 0.5
-    return `rgba(234, 179, 8, ${a})` // amber
-  }
-  const a = 0.15 + (pct / 50) * 0.3
-  return `rgba(148, 163, 184, ${a})` // slate
+function Legend() {
+  return (
+    <ul
+      aria-label={geneSearchCopy.identityMatrix.legendAria}
+      className="flex flex-wrap items-center gap-x-3 gap-y-1 type-nano text-muted-foreground"
+    >
+      {BINS.map((bin) => (
+        <li key={bin.label} className="flex items-center gap-1.5">
+          <span
+            aria-hidden
+            className={cn('size-3 rounded-[3px]', bin.className)}
+          />
+          {bin.label}
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+function Row({
+  index,
+  id,
+  ids,
+  values,
+}: {
+  index: number
+  id: string
+  ids: string[]
+  values: number[]
+}) {
+  return (
+    <tr>
+      <th
+        scope="row"
+        className="sticky left-0 z-10 bg-card pr-3 text-right font-normal whitespace-nowrap"
+      >
+        <Link
+          from="/genes/$symbol"
+          to="."
+          // Opens and highlights the isoform's row and scrolls to it,
+          // keeping the rest of the URL and the page's scroll.
+          search={(prev) => ({ ...prev, isoform: id })}
+          hash={`isoform-row-${id}`}
+          resetScroll={false}
+          className="inline-flex min-h-6 items-center gap-2 rounded-sm font-mono type-nano text-muted-foreground outline-none hover:text-foreground hover:underline focus-visible:ring-[3px] focus-visible:ring-ring/50 sm:min-h-0 sm:items-baseline"
+          title={geneSearchCopy.identityMatrix.jumpTo(id)}
+        >
+          <span className="font-sans font-medium text-foreground tabular-nums">
+            {index + 1}
+          </span>
+          {/* Phones get the distinguishing tail so the grid keeps its width;
+              the full ID stays in the title and for screen readers. */}
+          <span className="hidden sm:inline">{id}</span>
+          <span className="sm:hidden" aria-hidden>
+            …{id.slice(-6)}
+          </span>
+          <span className="sr-only sm:hidden">{id}</span>
+        </Link>
+      </th>
+      {values.map((v, j) => {
+        // Lower triangle + diagonal only; the mirror would repeat every value.
+        if (j > index) return <td key={j} aria-hidden className="size-5" />
+        const bin = binFor(v)
+        const label = geneSearchCopy.identityMatrix.cellLabel(
+          v.toFixed(1),
+          id,
+          ids[j],
+        )
+        return (
+          <td
+            key={j}
+            title={label}
+            className={cn('size-5 min-w-5 rounded-[3px]', bin.className)}
+          >
+            <span className="sr-only">{`${v.toFixed(0)}%`}</span>
+          </td>
+        )
+      })}
+    </tr>
+  )
 }
