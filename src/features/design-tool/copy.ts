@@ -114,7 +114,7 @@ export const designToolCopy = {
     myDesigns: {
       label: 'My cloud designs',
       menuAria: 'My cloud designs',
-      // When it ran, as Recent jobs dates its entries: from another device
+      // When it ran, as Recent designs dates its entries: from another device
       // the list was a name and a length, with nothing to say which design
       // was which or how old any of them were.
       subline: (bp: number, age: string) =>
@@ -450,16 +450,16 @@ export const designToolCopy = {
     },
   },
   recentJobs: {
-    label: 'Recent jobs',
-    empty: 'No recent jobs. Run an optimization to see it here.',
-    menuAria: 'Recent jobs',
+    label: 'Recent designs',
+    empty: 'No recent designs. Run a design to see it here.',
+    menuAria: 'Recent designs',
     justNow: 'just now',
     minutesAgo: (m: number) => `${m}m ago`,
     hoursAgo: (h: number) => `${h}h ago`,
     daysAgo: (d: number) => `${d}d ago`,
     running: 'running',
     cancelAria: (name: string) => `Cancel ${name}`,
-    removeAria: (name: string) => `Remove ${name} from recent jobs`,
+    removeAria: (name: string) => `Remove ${name} from recent designs`,
     cancelledMessage: 'Cancelled',
   },
   results: {
@@ -740,5 +740,58 @@ export const designToolCopy = {
       tight: 'Tight',
       overLimit: 'Over limit',
     },
+  },
+  /** The split-point editor (slider, inspector, sequence strip). */
+  spliceEditor: {
+    heading: 'Split point design',
+    spliceLabel: (index: number) => `Splice ${index}`,
+    removeSplice: (label: string) => `Remove ${label}`,
+    prevSite: 'Previous WGGW site',
+    nextSite: 'Next WGGW site',
+    prevSiteShortcut: 'Previous WGGW site ([)',
+    nextSiteShortcut: 'Next WGGW site (])',
+    junctionAria: 'Splice junction position',
+    addSplice: 'Add Splice Point',
+    addSpliceTitle: 'Add a second splice point (for triple-AAV cassettes)',
+    reordered: 'Splices reordered to keep Splice 1 5′-most',
+    middleFragment: 'middle',
+    overLimit: (names: string, count: number, maxBp: string, multi: boolean) =>
+      `The ${names} fragment${count === 1 ? '' : 's'} ${
+        count === 1 ? 'exceeds' : 'exceed'
+      } the ~${maxBp} bp AAV packaging limit, so this design will not fit a single AAV. You can still run it — move the split point to balance the fragments${
+        multi ? ' or add a second split point' : ''
+      }.`,
+    contextHeading: 'Sequence context',
+    contextAria: 'Sequence context around WGGW split site',
+    originalRow: 'Original sequence',
+    designedRow: 'Designed sequence',
+  },
+  /** The optimizer's before/after report under a result. */
+  optimizerReport: {
+    before: 'Before',
+    after: 'After',
+    copied: 'Copied',
+    copyRaw: 'Copy raw',
+    copyMarkdown: 'Copy as MD',
+    noObjectives: 'No objectives measured',
+    showReport: 'Show full optimizer report',
+    showOutput: 'Show full optimizer output',
+    filterPlaceholder: 'Filter objectives…',
+    clearFilter: 'Clear filter',
+    newlyPassing: 'Newly passing (was failing before)',
+    newlyFailing: 'Newly failing (was passing before)',
+    scoreChange: (delta: string) => `Score change vs. before: ${delta}`,
+    kmerPassed: 'No repetitive 10-mers remaining',
+    kmerScore: (score: string) => `Kmer complexity: ${score}`,
+    kmerHint:
+      'If the current sequence is too difficult to synthesize, rerun the optimization with higher weight on reducing kmer complexity.',
+    fixed: (n: number) => `${n} objective${n === 1 ? '' : 's'} fixed`,
+    regressed: (n: number) => `${n} objective${n === 1 ? '' : 's'} regressed`,
+  },
+  codonDeltaStrip: {
+    aria: 'Codon preference delta strip',
+    cell: (codon: number) => `Codon ${codon}`,
+    cellChange: (codon: number, before: string, after: string, delta: string) =>
+      `Codon ${codon}: ${before}% → ${after}% (${delta}%)`,
   },
 } as const

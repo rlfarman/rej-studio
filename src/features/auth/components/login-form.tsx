@@ -86,6 +86,7 @@ export function LoginForm({ returnTo, error }: LoginFormProps) {
 
           <Button
             type="submit"
+            size="lg"
             className="relative w-full overflow-hidden"
             disabled={submitting}
           >

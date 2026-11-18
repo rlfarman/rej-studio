@@ -162,9 +162,10 @@ function DesignToolPage() {
 function DesignToolSkeleton() {
   return (
     <DesignToolLayout>
-      <div aria-hidden className="mx-auto w-full max-w-5xl px-4 py-8 md:py-10">
-        <Skeleton className="h-[28rem] rounded-[min(var(--radius-4xl),24px)]" />
-      </div>
+      <Skeleton
+        aria-hidden
+        className="h-[28rem] rounded-[min(var(--radius-4xl),24px)]"
+      />
     </DesignToolLayout>
   )
 }

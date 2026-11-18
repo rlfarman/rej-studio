@@ -83,7 +83,7 @@ function SpeciesToggle({ onChanged }: { onChanged?: () => void }) {
           aria-pressed={species === value}
           // 44px tall where a finger is the pointer; the pill itself keeps
           // its text size, so only the row grows.
-          className={`flex min-h-11 items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors md:min-h-7 ${
+          className={`flex min-h-11 items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none md:min-h-7 ${
             species === value
               ? 'bg-accent text-accent-foreground'
               : 'text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground'

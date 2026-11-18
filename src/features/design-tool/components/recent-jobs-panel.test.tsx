@@ -1,4 +1,4 @@
-// The X on a running entry in Recent jobs. Writing a cancelled history entry
+// The X on a running entry in Recent designs. Writing a cancelled history entry
 // is not cancelling: only aborting the run stops the worker, and without that
 // the result arrives seconds later and replaces what the person just stopped.
 
@@ -48,7 +48,7 @@ function startRun(id = RUNNING_ID, name = 'BRCA2 run') {
   return { controller, release }
 }
 
-describe('cancelling a run from Recent jobs', () => {
+describe('cancelling a run from Recent designs', () => {
   it('aborts the run, not just its history entry', () => {
     const { controller, release } = startRun()
     showPanel()
@@ -85,7 +85,7 @@ describe('cancelling a run from Recent jobs', () => {
 
     fireEvent.click(
       screen.getByRole('button', {
-        name: 'Remove Done run from recent jobs',
+        name: 'Remove Done run from recent designs',
       }),
     )
 

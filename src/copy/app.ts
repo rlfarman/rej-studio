@@ -21,7 +21,7 @@ export const appCopy = {
     connectionEyebrow: 'Connection problem',
     title: 'Something went wrong',
     description: 'Something went wrong on this page. Try again, or reload it.',
-    reassurance: 'Your saved designs and starred genes are safe.',
+    reassurance: 'Your saved designs and favorite genes are safe.',
     search: {
       title: 'Search unavailable',
       description:
@@ -75,14 +75,13 @@ export const appCopy = {
     ogTitle: 'RNA End-Joining sequence design',
     ogDescription:
       'Search genes, browse isoforms, and design optimized RNA End-Joining sequences.',
-    eyebrow: 'RNA end-joining sequence design',
+    eyebrow: 'RNA End-Joining sequence design',
     searchPrompt: 'What gene are you optimizing?',
     ownSequence: 'Have your own sequence?',
     designLink: 'Open the design tool',
   },
   sidebar: {
-    historyHint:
-      'Starred genes, recent searches, and design jobs will show up here.',
+    historyHint: 'Favorite genes, recent genes and designs will show up here.',
     nav: {
       home: 'Home',
       designTool: 'Design Tool',
@@ -96,7 +95,6 @@ export const appCopy = {
   },
   loading: {
     page: 'Loading page',
-    gene: 'Loading gene…',
     geneAria: 'Loading gene',
   },
 } as const

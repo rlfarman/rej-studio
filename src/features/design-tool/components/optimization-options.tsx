@@ -96,7 +96,7 @@ function CodonOptimizationRow() {
               onClick={() => setValue('species', value)}
               className={cn(
                 'flex items-center gap-1.5 rounded-full border px-2 py-1 text-[11px] font-medium transition-colors',
-                'outline-none focus-visible:ring-3 focus-visible:ring-ring/30',
+                'focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none',
                 isActive
                   ? 'border-primary bg-primary/10 text-primary'
                   : 'bg-background text-muted-foreground hover:bg-muted/60 hover:text-foreground',

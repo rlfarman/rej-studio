@@ -51,7 +51,7 @@ let worker: Worker | null = null
  *
  * Module-level, like the unload guard in `utils/browser-run-guard.ts`: a run
  * belongs to the tab rather than to the component that started it, so UI
- * elsewhere — the Recent jobs list — can stop one. Only an abort stops a run;
+ * elsewhere — the Recent designs list — can stop one. Only an abort stops a run;
  * writing a cancelled history entry leaves the worker burning CPU and its
  * result arriving later.
  */

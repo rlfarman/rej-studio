@@ -88,9 +88,20 @@ describe('IsoformIdentityMatrix', () => {
     )
     const table = await screen.findByRole('table', { name: copy.caption })
     const rows = within(table).getAllByRole('row').slice(1)
+    // A lower triangle: rows are isoforms 2..n and columns 1..n-1, so no
+    // row and no column is drawn empty.
     expect(
       rows.map((row) => within(row).getByRole('link').getAttribute('title')),
-    ).toEqual(['ENST1', 'ENST3', 'ENST2'].map(copy.jumpTo))
+    ).toEqual(['ENST3', 'ENST2'].map(copy.jumpTo))
+    expect(
+      within(table)
+        .getAllByRole('columnheader')
+        .slice(1)
+        .map((th) => th.getAttribute('title')),
+    ).toEqual(['ENST1', 'ENST3'])
+    for (const row of rows) {
+      expect(within(row).queryAllByRole('button').length).toBeGreaterThan(0)
+    }
     // The same pairs, read out of the permuted matrix.
     expect(
       screen.getByLabelText(copy.cellLabel('64.2', 'ENST2', 'ENST3')),
@@ -130,8 +141,7 @@ describe('IsoformIdentityMatrix', () => {
     // Every drawn cell is reachable, but only one is in the tab order.
     expect(cells.filter((cell) => cell.tabIndex === 0)).toHaveLength(1)
 
-    // The first drawn cell is row 2, column 1: the diagonal isn't drawn, so
-    // row 1 holds none.
+    // The first cell is isoform 2 against isoform 1, the grid's first row.
     expect(cells[0].getAttribute('aria-label')).toBe(
       copy.cellLabel('100.0', 'ENST3', 'ENST1'),
     )

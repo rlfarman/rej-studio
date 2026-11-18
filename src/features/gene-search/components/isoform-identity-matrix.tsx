@@ -138,8 +138,9 @@ function Matrix({
   // way in, which left every phone and every keyboard with color alone.
   // Null until something is chosen: the first cell is still the grid's tab
   // stop, but the readout invites rather than asserting a value nobody picked.
-  // The first drawn cell is [1, 0]: the diagonal is not drawn, so row 1 holds
-  // no cells.
+  // The first drawn cell is [1, 0]: only the strict lower triangle is drawn,
+  // so the grid's rows are isoforms 2..n and its columns isoforms 1..n-1.
+  // Indices stay display indices throughout, so row i is isoform i + 1.
   const [selected, setSelected] = useState<[number, number] | null>(null)
   const active = selected ?? [1, 0]
 
@@ -202,7 +203,10 @@ function Matrix({
                       {geneSearchCopy.identityMatrix.rowHeader}
                     </span>
                   </th>
-                  {ids.map((id, j) => (
+                  {/* Columns 1..n-1: the last isoform has no pair to its
+                      right in a lower triangle, so its column would be
+                      empty. */}
+                  {ids.slice(0, -1).map((id, j) => (
                     <th
                       key={`col-${id}`}
                       scope="col"
@@ -216,13 +220,14 @@ function Matrix({
                 </tr>
               </thead>
               <tbody>
-                {ids.map((id, i) => (
+                {/* Rows 2..n: the first isoform's row would hold no cells. */}
+                {ids.slice(1).map((id, k) => (
                   <Row
                     key={id}
-                    index={i}
+                    index={k + 1}
                     id={id}
                     ids={ids}
-                    values={ids.map((_, j) => valueAt(i, j))}
+                    values={ids.slice(0, -1).map((_, j) => valueAt(k + 1, j))}
                     active={active}
                     buttonId={buttonId}
                     onSelect={setSelected}

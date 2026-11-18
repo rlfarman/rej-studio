@@ -203,10 +203,14 @@ function NotFound() {
       description={appCopy.notFound.detail}
       actions={
         <>
-          <Button nativeButton={false} render={<Link to="/" />}>
+          <Button size="lg" nativeButton={false} render={<Link to="/" />}>
             {commonCopy.actions.goHome}
           </Button>
-          <Button variant="outline" onClick={() => router.history.back()}>
+          <Button
+            size="lg"
+            variant="outline"
+            onClick={() => router.history.back()}
+          >
             {commonCopy.actions.goBack}
           </Button>
         </>

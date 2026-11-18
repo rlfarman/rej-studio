@@ -22,7 +22,7 @@ export const geneSearchCopy = {
   command: {
     dialogTitle: 'Search genes',
     dialogDescription:
-      'Find a gene by symbol, name or Ensembl ID, or reopen a recent gene or design job.',
+      'Find a gene by symbol, name or Ensembl ID, or reopen a recent gene or design.',
     inputAria: 'Search genes',
     // Search covers symbols, names, aliases and Ensembl IDs, not diseases;
     // the no-match state points disease searches at the associations page.
@@ -39,7 +39,7 @@ export const geneSearchCopy = {
     exampleAria: (symbol: string) => `Search for ${symbol}`,
     favorites: 'Favorites',
     recentGenes: 'Recent genes',
-    recentJobs: 'Recent jobs',
+    recentJobs: 'Recent designs',
     genes: 'Genes',
     seeAll: (query: string) => `See all results for “${query}”`,
     customize: 'Customize',

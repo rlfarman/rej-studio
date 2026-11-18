@@ -311,7 +311,7 @@ export default function IsoformTable({
               sortKey="suitability"
               {...sortProps}
             />
-            <TableHead className="w-px">
+            <TableHead className="w-px max-sm:sticky max-sm:right-0">
               <span className="sr-only">{copy.actionsHeader}</span>
             </TableHead>
           </TableRow>
@@ -490,7 +490,15 @@ function IsoformRow({
             <span className="hidden sm:inline">{suitConfig.label}</span>
           </Badge>
         </TableCell>
-        <TableCell className="py-1" onClick={(e) => e.stopPropagation()}>
+        {/* On a phone the row is wider than the screen, and the row's menu
+            is its only actions control, so the column stays pinned to the
+            right edge (as the identity matrix pins its row labels to the
+            left). Opaque, so cells scrolling under it don't show through;
+            the expanded tint is mixed in rather than layered. */}
+        <TableCell
+          className="py-1 max-sm:sticky max-sm:right-0 max-sm:bg-background max-sm:group-has-aria-expanded/row:bg-[color-mix(in_oklch,var(--muted)_50%,var(--background))]"
+          onClick={(e) => e.stopPropagation()}
+        >
           <div className="flex items-center justify-end gap-1">
             {/* Quick actions appear on row hover or keyboard focus (and stay
                 on the expanded or linked row) instead of repeating two labels
@@ -561,7 +569,9 @@ function IsoformRow({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="size-9"
+                  // 36px drawn, 44px to tap: the pseudo-element fills the
+                  // cell's padding without making the row taller.
+                  className="relative size-9 before:absolute before:-inset-1"
                   aria-label={copy.moreAria(isoform.id)}
                 />
               }

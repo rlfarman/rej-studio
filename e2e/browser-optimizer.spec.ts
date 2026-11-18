@@ -81,8 +81,8 @@ test('a design made in the browser stays on this device', async ({ page }) => {
   // only 404 for whoever opened it.
   expect(new URL(page.url()).searchParams.get('job')).toBeNull()
 
-  // It is still recorded locally, so Recent jobs and "Run again" work.
-  await expect(page.getByText(/recent jobs/i).first()).toBeVisible()
+  // It is still recorded locally, so Recent designs and "Run again" work.
+  await expect(page.getByText(/recent designs/i).first()).toBeVisible()
 })
 
 // Design history lives in IndexedDB (localStorage tops out around 5 MB, and

@@ -288,7 +288,7 @@ describe('useJob', () => {
     await waitFor(() => expect(mockDesign).toHaveBeenCalled())
     const id = result.current.jobId!
 
-    // What the Recent jobs list writes when its X is clicked.
+    // What the Recent designs list writes when its X is clicked.
     act(() => {
       useJobHistory.getState().upsertEntry({
         id,

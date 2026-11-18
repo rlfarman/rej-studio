@@ -42,7 +42,9 @@ export function StatusPage({
     <section
       className={cn(
         'flex w-full max-w-xl flex-col gap-5',
-        !standalone && 'px-6 pt-16 pb-12 md:px-10 md:pt-24',
+        // Centred in the page slot, so a 404 sits in the same place whether
+        // it renders in the shell or inside a section's own column.
+        !standalone && 'mx-auto px-6 pt-16 pb-12 md:px-10 md:pt-24',
       )}
     >
       <StrandMotif tone={tone} />

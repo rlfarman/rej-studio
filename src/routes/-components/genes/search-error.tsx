@@ -49,7 +49,12 @@ export function SearchError({ error }: ErrorComponentProps) {
       title={copy.title}
       description={copy.description}
       secondaryAction={
-        <Button variant="outline" nativeButton={false} render={<Link to="/" />}>
+        <Button
+          size="lg"
+          variant="outline"
+          nativeButton={false}
+          render={<Link to="/" />}
+        >
           {commonCopy.actions.goHome}
         </Button>
       }

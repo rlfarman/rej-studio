@@ -27,11 +27,12 @@ export function GeneNotFound({ symbol }: { symbol: string }) {
       description={usesSampleCorpus() ? copy.detailSample : copy.detail}
       actions={
         <>
-          <Button nativeButton={false} render={<Link to="/genes" />}>
+          <Button size="lg" nativeButton={false} render={<Link to="/genes" />}>
             <SearchIcon />
             {copy.searchGenes}
           </Button>
           <Button
+            size="lg"
             variant="outline"
             nativeButton={false}
             render={<Link to="/design-tool" />}

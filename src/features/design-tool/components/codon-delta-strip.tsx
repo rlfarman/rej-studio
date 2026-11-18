@@ -64,7 +64,7 @@ export function CodonDeltaStrip({ original, optimized, species }: Props) {
       <div
         className="flex h-3 w-full overflow-hidden rounded-sm border"
         role="img"
-        aria-label="Codon preference delta strip"
+        aria-label={designToolCopy.codonDeltaStrip.aria}
       >
         {cells.map((cell) => {
           const d = cell.delta
@@ -88,8 +88,13 @@ export function CodonDeltaStrip({ original, optimized, species }: Props) {
               style={{ backgroundColor: color }}
               title={
                 cell.before !== null && cell.after !== null
-                  ? `Codon ${cell.idx + 1}: ${(cell.before * 100).toFixed(0)}% → ${(cell.after * 100).toFixed(0)}% (${d !== null && d >= 0 ? '+' : ''}${d !== null ? (d * 100).toFixed(0) : '?'}%)`
-                  : `Codon ${cell.idx + 1}`
+                  ? designToolCopy.codonDeltaStrip.cellChange(
+                      cell.idx + 1,
+                      (cell.before * 100).toFixed(0),
+                      (cell.after * 100).toFixed(0),
+                      `${d !== null && d >= 0 ? '+' : ''}${d !== null ? (d * 100).toFixed(0) : '?'}`,
+                    )
+                  : designToolCopy.codonDeltaStrip.cell(cell.idx + 1)
               }
             />
           )

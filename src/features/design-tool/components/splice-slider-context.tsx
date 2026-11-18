@@ -41,6 +41,8 @@ import {
   parseSequenceQuery,
 } from './splice-slider/toolbar'
 
+const editorCopy = designToolCopy.spliceEditor
+
 interface Props {
   sequence: string
   positions: number[]
@@ -191,17 +193,16 @@ export function SpliceSliderContext({
   // track) and in the slider's value text, not only tinted in the bar.
   const overLimitNames = segments
     .filter((seg) => seg.end - seg.start > AAV_MAX_BP)
-    .map((seg) => seg.label || 'middle')
+    .map((seg) => seg.label || editorCopy.middleFragment)
   const overLimitNotice =
     overLimitNames.length === 0
       ? null
-      : `The ${joinNames(overLimitNames)} fragment${
-          overLimitNames.length === 1 ? '' : 's'
-        } ${
-          overLimitNames.length === 1 ? 'exceeds' : 'exceed'
-        } the ~${AAV_MAX_BP.toLocaleString()} bp AAV packaging limit, so this design will not fit a single AAV. You can still run it — move the split point to balance the fragments${
-          MULTI_SPLIT_ENABLED ? ' or add a second split point' : ''
-        }.`
+      : editorCopy.overLimit(
+          joinNames(overLimitNames),
+          overLimitNames.length,
+          AAV_MAX_BP.toLocaleString(),
+          MULTI_SPLIT_ENABLED,
+        )
 
   const frameContext = buildSequenceContext(sequence)
 
@@ -258,7 +259,7 @@ export function SpliceSliderContext({
         window.setTimeout(() => {
           swapToastCoolingRef.current = false
         }, SWAP_TOAST_THROTTLE_MS)
-        toast('Splices reordered to keep Splice 1 5′-most', {
+        toast(editorCopy.reordered, {
           duration: SWAP_TOAST_DURATION_MS,
         })
       }
@@ -719,8 +720,8 @@ export function SpliceSliderContext({
                           jumpToSibling(-1)
                         }}
                         disabled={!canPrev}
-                        title="Previous WGGW site"
-                        aria-label="Previous WGGW site"
+                        title={editorCopy.prevSite}
+                        aria-label={editorCopy.prevSite}
                         className="inline-flex size-4 items-center justify-center rounded-full text-foreground/55 transition-colors hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
                       >
                         <ChevronLeft className="size-3" strokeWidth={2.5} />
@@ -760,8 +761,8 @@ export function SpliceSliderContext({
                           jumpToSibling(1)
                         }}
                         disabled={!canNext}
-                        title="Next WGGW site"
-                        aria-label="Next WGGW site"
+                        title={editorCopy.nextSite}
+                        aria-label={editorCopy.nextSite}
                         className="inline-flex size-4 items-center justify-center rounded-full text-foreground/55 transition-colors hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
                       >
                         <ChevronRight className="size-3" strokeWidth={2.5} />
@@ -776,7 +777,7 @@ export function SpliceSliderContext({
             ref={trackRef}
             role="slider"
             tabIndex={0}
-            aria-label="Splice junction position"
+            aria-label={editorCopy.junctionAria}
             aria-valuemin={1}
             aria-valuemax={seqLen - 1}
             aria-valuenow={activePosition}
@@ -1036,11 +1037,11 @@ export function SpliceSliderContext({
                 variant="outline"
                 size="sm"
                 onClick={addSplice}
-                title="Add a second splice point (for triple-AAV cassettes)"
+                title={editorCopy.addSpliceTitle}
                 className="text-muted-foreground hover:text-foreground"
               >
                 <Plus />
-                Add Splice Point
+                {editorCopy.addSplice}
               </Button>
             ) : (
               <span />

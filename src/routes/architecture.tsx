@@ -119,7 +119,7 @@ function ArchitecturePage() {
       role="region"
       tabIndex={0}
       aria-labelledby="architecture-title"
-      className="mx-auto max-w-5xl space-y-6 rounded-2xl p-6 outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      className="mx-auto max-w-5xl space-y-6 rounded-2xl px-4 py-8 outline-none focus-visible:ring-2 focus-visible:ring-ring sm:px-6 md:py-12"
     >
       <div>
         <PageTitle id="architecture-title">REJ Studio — Architecture</PageTitle>

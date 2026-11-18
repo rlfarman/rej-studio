@@ -63,7 +63,9 @@ export function ErrorState({
       detail={detail}
       actions={
         <>
-          <Button onClick={() => retry()}>{commonCopy.actions.tryAgain}</Button>
+          <Button size="lg" onClick={() => retry()}>
+            {commonCopy.actions.tryAgain}
+          </Button>
           {secondaryAction}
         </>
       }

@@ -20,7 +20,7 @@ interface MyCloudDesignsProps {
  * "My cloud designs", for a signed-in account: its cloud designs from every
  * device, less the ones this browser's own history already lists. Opening
  * one reads it from the cloud into this browser's history (the design
- * tool's `?job=`), after which it shows under Recent jobs instead, so the
+ * tool's `?job=`), after which it shows under Recent designs instead, so the
  * two lists never show a design twice.
  */
 export function MyCloudDesigns({ onSelect }: MyCloudDesignsProps) {

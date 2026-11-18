@@ -19,6 +19,7 @@ import type { spliceTone } from './tones'
 import type { WggwSiteCandidate } from './types'
 
 const rewriteCopy = designToolCopy.splitPoint.rewrites
+const editorCopy = designToolCopy.spliceEditor
 
 export function Inspector({
   sequence,
@@ -67,7 +68,9 @@ export function Inspector({
 }) {
   const isMulti = spliceCount > 1
   const spliceLabel =
-    isMulti && spliceIndex !== undefined ? `Splice ${spliceIndex + 1}` : null
+    isMulti && spliceIndex !== undefined
+      ? editorCopy.spliceLabel(spliceIndex + 1)
+      : null
 
   // Pin every card to the populated-state min-height so the empty and
   // selected states occupy the same footprint. Prevents the layout jump
@@ -105,7 +108,7 @@ export function Inspector({
     </button>
   ) : (
     <h3 className="text-sm font-semibold tracking-tight text-foreground">
-      Split point design
+      {editorCopy.heading}
     </h3>
   )
 
@@ -116,9 +119,11 @@ export function Inspector({
         variant="ghost"
         size="icon"
         onClick={onRemoveSplice}
-        title={`Remove ${spliceLabel}`}
-        aria-label={`Remove ${spliceLabel}`}
-        className="size-5 text-muted-foreground hover:text-foreground"
+        title={editorCopy.removeSplice(spliceLabel ?? '')}
+        aria-label={editorCopy.removeSplice(spliceLabel ?? '')}
+        // A 20px glyph button: the pseudo-element stretches its hit area
+        // to 40px without moving the card's header.
+        className="relative size-5 text-muted-foreground before:absolute before:-inset-2.5 hover:text-foreground"
       >
         <X className="size-3" />
       </Button>
@@ -239,7 +244,7 @@ export function Inspector({
                     score === null ? null : score.toFixed(2),
                   )}
                   className={cn(
-                    'inline-flex shrink-0 items-center gap-2 rounded-full border px-2.5 py-1.5 font-mono text-[12px] transition-colors',
+                    'inline-flex shrink-0 items-center gap-2 rounded-full border px-2.5 py-1.5 font-mono text-[12px] transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none',
                     active
                       ? 'border-primary bg-primary/10 text-primary'
                       : 'text-muted-foreground hover:border-primary/30 hover:bg-background/60',
@@ -284,7 +289,7 @@ export function Inspector({
 
         <div className="space-y-1.5">
           <div className="text-[10px] font-semibold tracking-[0.08em] text-muted-foreground uppercase">
-            Sequence context
+            {editorCopy.contextHeading}
           </div>
           <SequenceContextTable
             rows={[
@@ -298,13 +303,13 @@ export function Inspector({
                 ),
               },
               {
-                label: 'Original sequence',
+                label: editorCopy.originalRow,
                 text: originalSplitContext.displayText,
                 boundaryIndexes: originalSplitContext.boundaryIndexes,
                 editedIndexes: originalSplitContext.displayEditedIndexes,
               },
               {
-                label: 'Designed sequence',
+                label: editorCopy.designedRow,
                 text: designedSplitContext.displayText,
                 boundaryIndexes: designedSplitContext.boundaryIndexes,
                 editedIndexes: designedSplitContext.displayEditedIndexes,
@@ -346,8 +351,8 @@ function SiteNav({
         size="icon"
         onClick={onPrev}
         disabled={!canPrev}
-        title="Previous WGGW site ([)"
-        aria-label="Previous WGGW site"
+        title={editorCopy.prevSiteShortcut}
+        aria-label={editorCopy.prevSite}
         className="size-5 hover:text-foreground [&_svg:not([class*='size-'])]:size-3.5"
       >
         <ChevronLeft />
@@ -359,8 +364,8 @@ function SiteNav({
         size="icon"
         onClick={onNext}
         disabled={!canNext}
-        title="Next WGGW site (])"
-        aria-label="Next WGGW site"
+        title={editorCopy.nextSiteShortcut}
+        aria-label={editorCopy.nextSite}
         className="size-5 hover:text-foreground [&_svg:not([class*='size-'])]:size-3.5"
       >
         <ChevronRight />

@@ -105,7 +105,8 @@ describe('the identity matrix scrolls inside its own card', () => {
     const grid = await screen.findByRole('table', { name: copy.caption })
 
     const rowHeaders = [...grid.querySelectorAll('tbody th')]
-    expect(rowHeaders).toHaveLength(isoforms.length)
+    // A lower triangle: every isoform but the first has a row.
+    expect(rowHeaders).toHaveLength(isoforms.length - 1)
     for (const header of rowHeaders) {
       expect(header.className).toContain('sticky')
       expect(header.className).toContain('left-0')

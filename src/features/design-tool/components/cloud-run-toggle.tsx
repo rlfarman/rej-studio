@@ -56,7 +56,9 @@ export function CloudRunToggle({
                 type="button"
                 variant="link"
                 size="xs"
-                className="h-auto px-0 text-xs"
+                // An 18px-tall text link that can wrap onto its own line:
+                // the pseudo-element gives it a 38px tap target in place.
+                className="relative h-auto px-0 text-xs before:absolute before:-inset-2.5"
                 onClick={openSignIn}
               >
                 {copy.signInAction}

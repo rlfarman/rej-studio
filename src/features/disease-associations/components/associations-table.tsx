@@ -238,7 +238,7 @@ function SortHeader({
       )}
     >
       {label}
-      <Icon className="size-3" aria-hidden />
+      <Icon className="size-3.5" aria-hidden />
     </Link>
   )
 }

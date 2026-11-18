@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef, useState } from 'react'
 import type { WggwRecodingOption } from '@/lib/bio/sequence-utils'
+import { designToolCopy } from '../../copy'
 import { CodonCard } from './codon-card'
 import { STRIP_SMOOTH_SCROLL_THRESHOLD_BP } from './constants'
 import type { SequenceContext, WggwSiteCandidate } from './types'
@@ -147,7 +148,7 @@ export function LocalSequenceView({
     <div
       ref={stripRef}
       role="group"
-      aria-label="Sequence context around WGGW split site"
+      aria-label={designToolCopy.spliceEditor.contextAria}
       aria-describedby="wggw-strip-keys"
       className="[scrollbar-width:none] overflow-x-auto rounded-2xl border bg-muted/40 px-5 py-1 font-mono type-nano leading-none [-ms-overflow-style:none] sm:py-2 [&::-webkit-scrollbar]:hidden"
       onPointerLeave={() => setHoveredSitePosition(null)}

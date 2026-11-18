@@ -107,7 +107,7 @@ export function AssociationsFilters({
               onClick={() => toggleBucket(bucket)}
               aria-pressed={active}
               className={cn(
-                'rounded-full border px-2.5 py-1 text-xs transition-colors',
+                'rounded-full border px-2.5 py-1 text-xs transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none',
                 active
                   ? 'border-primary bg-primary text-primary-foreground'
                   : 'bg-card text-foreground hover:bg-muted',

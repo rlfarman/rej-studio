@@ -20,6 +20,7 @@ export function DesignToolError({ error }: ErrorComponentProps) {
       description={appCopy.errorBoundary.designTool.description}
       secondaryAction={
         <Button
+          size="lg"
           variant="outline"
           nativeButton={false}
           render={<Link to="/genes" />}
