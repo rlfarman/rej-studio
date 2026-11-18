@@ -1,8 +1,8 @@
 import { useFormContext, useWatch } from 'react-hook-form'
+import { AAV_CDS_CAPACITY_BP } from '@/lib/bio/aav'
 import { FormValues } from '../types/form-schema'
 import { designToolCopy } from '../copy'
 import { summarizeObjectives } from '../utils/objectives-summary'
-import { AAV_MAX_BP } from './splice-slider/constants'
 
 const copy = designToolCopy.form.runSummary
 const units = designToolCopy.units
@@ -81,7 +81,8 @@ export function RunSummary() {
   const longestFragment = isProtein
     ? null
     : longestFragmentBp(dna.length, positions)
-  const overAavLimit = longestFragment !== null && longestFragment > AAV_MAX_BP
+  const overAavLimit =
+    longestFragment !== null && longestFragment > AAV_CDS_CAPACITY_BP
 
   return (
     <p className="min-w-0 text-sm text-muted-foreground">
@@ -96,7 +97,7 @@ export function RunSummary() {
           <span className="text-warning-soft">
             {copy.overAavLimit(
               longestFragment.toLocaleString(),
-              AAV_MAX_BP.toLocaleString(),
+              AAV_CDS_CAPACITY_BP.toLocaleString(),
             )}
           </span>
         </>

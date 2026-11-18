@@ -238,3 +238,40 @@ describe('split-point editor rewrite chips', () => {
     expect(first.getAttribute('title')).toBeNull()
   })
 })
+
+/**
+ * The way back to a known-good site once the caret has been dragged off one.
+ * The editor cuts at the nearest site either way, so this control changes no
+ * design; it ends the disagreement between the caret and the cut, which is
+ * what made an off-site caret feel unrecoverable.
+ */
+describe('split-point editor "Nearest site"', () => {
+  const snapButton = () =>
+    screen.queryByRole('button', { name: /nearest WGGW site, at/i })
+
+  it('is offered only while the caret is off a site', () => {
+    render(<Harness initialPosition={20} />)
+    // bp 20 is not a site; the nearest one is bp 10.
+    expect(snapButton()?.getAttribute('aria-label')).toContain('at 10 bp')
+
+    goTo(10)
+    expect(snapButton()).toBeNull()
+  })
+
+  it('moves the caret onto the site the design already cuts at', () => {
+    render(<Harness initialPosition={20} />)
+    fireEvent.click(snapButton()!)
+
+    expect(state()).toEqual({ positions: [10], sitePicks: [10] })
+    // Having arrived, it stops offering itself.
+    expect(snapButton()).toBeNull()
+  })
+
+  it('stays away when the sequence has no site to return to', () => {
+    // No WGGW motif anywhere, so there is nothing to snap to.
+    const flat = 'AAACCC'.repeat(20)
+    expect(wggwSitesIn(flat)).toEqual([])
+    render(<Harness sequence={flat} initialPosition={40} />)
+    expect(snapButton()).toBeNull()
+  })
+})

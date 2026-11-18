@@ -1,3 +1,5 @@
+import type { CloudDesignStatus } from './types/cloud-design'
+
 /** Human-friendly seconds formatter. Keep one decimal for short runs where
  *  precision is informative; round to int for longer ones where ".34s" is
  *  just noise. Handles sub-second runs with "<1s" to avoid "0s". */
@@ -114,11 +116,34 @@ export const designToolCopy = {
     myDesigns: {
       label: 'My cloud designs',
       menuAria: 'My cloud designs',
-      // When it ran, as Recent designs dates its entries: from another device
-      // the list was a name and a length, with nothing to say which design
-      // was which or how old any of them were.
-      subline: (bp: number, age: string) =>
-        `in the cloud · ${bp.toLocaleString('en-US')} bp · ${age}`,
+      // Where it got to, how long it is and when it ran, as Recent designs
+      // dates its entries: from another device the list was a name and a
+      // length, with nothing to say which design was which, how old any of
+      // them were, or whether any of them had finished.
+      //
+      // `keptDays` is the retention the status makes true, and only then:
+      // a queued or running design has no outcome to count from, and a row
+      // from before the status column (`status` null) says only that the
+      // design is in the cloud, which is all it knows.
+      state: {
+        queued: 'queued',
+        running: 'running',
+        completed: 'done',
+        failed: 'failed',
+        unknown: 'in the cloud',
+      } satisfies Record<CloudDesignStatus | 'unknown', string>,
+      subline: (
+        state: string,
+        bp: number,
+        age: string,
+        keptDays: number | null,
+      ) =>
+        [
+          state,
+          `${bp.toLocaleString('en-US')} bp`,
+          age,
+          ...(keptDays === null ? [] : [`kept ${keptDays} days`]),
+        ].join(' · '),
     },
     tooLong: (bases: number, limit: number) =>
       `That sequence is ${bases.toLocaleString('en-US')} bp; cloud designs take up to ${limit.toLocaleString('en-US')}. Turn off “Run in the cloud” to design it in this browser.`,
@@ -333,6 +358,13 @@ export const designToolCopy = {
       nextMatch: 'Next match (Enter)',
       midpoint: 'Midpoint',
       midpointTitle: 'Snap caret to midpoint (m)',
+      // The way back once the caret has been dragged off a motif. It is the
+      // site the design already cuts at, so pressing it changes no design —
+      // it ends the disagreement between the caret and the cut. Shown only
+      // while the two differ, so it is never a control that does nothing.
+      snapToSite: 'Nearest site',
+      snapToSiteAria: (bp: string) =>
+        `Move the split point onto the nearest WGGW site, at ${bp} bp`,
       // Why a query found nothing, rather than "0/0". A typed sequence is
       // taken as typed: non-ACGT letters make it invalid instead of being
       // silently dropped, which used to search a query nobody entered.

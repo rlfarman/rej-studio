@@ -131,6 +131,16 @@ export function LoginForm({ returnTo, error }: LoginFormProps) {
             )}
           </Button>
         </form>
+
+        {/* All this page can say without JavaScript: the ?error= message
+            above renders only after hydration. Written as markup rather than
+            as children because browsers parse a <noscript> body as text when
+            scripting is on, which React hydrates as text too. */}
+        <noscript
+          dangerouslySetInnerHTML={{
+            __html: `<p class="mt-4 text-sm leading-relaxed text-muted-foreground">${authCopy.login.noScript}</p>`,
+          }}
+        />
       </div>
     </main>
   )

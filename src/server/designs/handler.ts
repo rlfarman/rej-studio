@@ -17,7 +17,12 @@ import type { ServerEnv } from '../env'
 import { identify, type Account } from './identity'
 import { designsCopy } from './copy'
 import { withinDesignBudget } from './rate-limit'
-import { forgetDesign, listDesigns, recordDesign } from './records'
+import {
+  forgetDesign,
+  listDesigns,
+  markDesignStatus,
+  recordDesign,
+} from './records'
 import {
   CloudDesignUnavailableError,
   deleteCloudDesign,
@@ -171,6 +176,9 @@ export function submitDesign(
           name: parsed.data.values.name,
           bases: parsed.data.values.codingSequence.length,
           submittedAt: new Date().toISOString(),
+          // What submitting just learned: 'queued' for a new run, or
+          // wherever an identical one already submitted has got to.
+          status,
         }),
       )
     }
@@ -195,9 +203,18 @@ export function readDesign(
     // Without an account the caller owns nothing, so `ownedByCaller` is
     // false rather than absent.
     const design = await readCloudDesign(env, id, account?.owner ?? '')
-    return design
-      ? { ok: true, data: design }
-      : refuse('not_found', designsCopy.http.notFound)
+    if (!design) return refuse('not_found', designsCopy.http.notFound)
+    // The read knows the design's state, and it is the only thing that does
+    // for a run the step could not report on (killed by the CPU limit) or
+    // one listed from before the status column. Correcting the index here
+    // costs one write and only when it has something new to say.
+    const db = env.AUTH_DB
+    if (db) {
+      await updateRecords('could not note a cloud design’s status', () =>
+        markDesignStatus(db, id, design.status),
+      )
+    }
+    return { ok: true, data: design }
   })
 }
 

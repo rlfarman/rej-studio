@@ -71,7 +71,7 @@ export const cloudDesignSubmitSchema = z.object({
 })
 
 /** Where a cloud design is. A Workflow's finer states fold into these four. */
-const cloudDesignStatusSchema = z.enum([
+export const cloudDesignStatusSchema = z.enum([
   'queued',
   'running',
   'completed',
@@ -127,6 +127,13 @@ const cloudDesignSummarySchema = z.object({
   name: z.string(),
   bases: z.number(),
   submittedAt: z.string(),
+  /**
+   * Where it got to, as the account's index recorded it
+   * (migrations/0003_cloud_design_status.sql). Nullish for a row written
+   * before that column existed: the state is genuinely unknown, and the
+   * list says so rather than guessing.
+   */
+  status: cloudDesignStatusSchema.nullish(),
 })
 
 export type CloudDesignSummary = z.infer<typeof cloudDesignSummarySchema>

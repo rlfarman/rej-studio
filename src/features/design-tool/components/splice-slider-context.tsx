@@ -1,5 +1,6 @@
 import { useEffect, useEffectEvent, useRef, useState } from 'react'
 import { cn } from '@/lib/utils'
+import { AAV_CDS_CAPACITY_BP } from '@/lib/bio/aav'
 import { ChevronLeft, ChevronRight, Plus, TriangleAlert } from 'lucide-react'
 import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
@@ -13,7 +14,6 @@ import {
   wggwSitesIn,
 } from '../utils/wggw-selection'
 import {
-  AAV_MAX_BP,
   KEYBOARD_PAGE_MIN_BP,
   KEYBOARD_SHIFT_STEP_BP,
   MIN_SEQUENCE_LENGTH,
@@ -184,6 +184,8 @@ export function SpliceSliderContext({
   // position: it is what the person drags and what picks the site.
   const cuts = cutPositions(selectedSites, positions)
   const activeCut = cuts[clampedActiveIndex] ?? activePosition
+  // The active splice's resolved site, or null where the sequence has none.
+  const activeSite = selectedSites[clampedActiveIndex] ?? null
 
   // Fragments are measured at the cuts, so the sizes — and the packaging
   // verdict drawn from them — are the ones the design delivers.
@@ -192,7 +194,7 @@ export function SpliceSliderContext({
   // so an over-limit fragment gets named in text (see the notice below the
   // track) and in the slider's value text, not only tinted in the bar.
   const overLimitNames = segments
-    .filter((seg) => seg.end - seg.start > AAV_MAX_BP)
+    .filter((seg) => seg.end - seg.start > AAV_CDS_CAPACITY_BP)
     .map((seg) => seg.label || editorCopy.middleFragment)
   const overLimitNotice =
     overLimitNames.length === 0
@@ -200,7 +202,7 @@ export function SpliceSliderContext({
       : editorCopy.overLimit(
           joinNames(overLimitNames),
           overLimitNames.length,
-          AAV_MAX_BP.toLocaleString(),
+          AAV_CDS_CAPACITY_BP.toLocaleString(),
           MULTI_SPLIT_ENABLED,
         )
 
@@ -688,6 +690,18 @@ export function SpliceSliderContext({
         onSearchNext={() => jumpToSearchMatch(searchMatchIndex + 1)}
         onSearchPrev={() => jumpToSearchMatch(searchMatchIndex - 1)}
         onMidpoint={() => setPositionAt(clampedActiveIndex, midpoint)}
+        // The site the design already cuts at (`activeSite`), offered only
+        // while the caret sits somewhere else. No second notion of
+        // "nearest": this is the one `resolveWggwPicks` resolved, and
+        // pressing it takes the same path a tick click does.
+        snapToSiteBp={
+          activeSite && activeSite.position !== activePosition
+            ? activeSite.position
+            : null
+        }
+        onSnapToSite={() => {
+          if (activeSite) handleSelectSite(activeSite, clampedActiveIndex)
+        }}
       />
 
       <div className="space-y-2">
@@ -794,7 +808,7 @@ export function SpliceSliderContext({
                 ? ''
                 : ` — ${overLimitNames.length} fragment${
                     overLimitNames.length === 1 ? '' : 's'
-                  } over the ~${AAV_MAX_BP.toLocaleString()} bp AAV packaging limit`)
+                  } over the ~${AAV_CDS_CAPACITY_BP.toLocaleString()} bp AAV packaging limit`)
             }
             onPointerDown={handleTrackPointerDown}
             onKeyDown={handleTrackKeyDown}
@@ -815,7 +829,7 @@ export function SpliceSliderContext({
                     : { fillSeg: 'bg-muted/50', text: 'text-muted-foreground' }
                 const widthPct = ((seg.end - seg.start) / seqLen) * 100
                 const fragmentBp = seg.end - seg.start
-                const overAAV = fragmentBp > AAV_MAX_BP
+                const overAAV = fragmentBp > AAV_CDS_CAPACITY_BP
                 return (
                   <div
                     key={`seg-${i}`}

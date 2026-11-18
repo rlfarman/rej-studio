@@ -1,3 +1,5 @@
+import { AAV_CDS_TIER_LIMITS, AAV_PACKAGING_LIMIT } from '@/lib/bio/aav'
+
 // The one gene-search placeholder, and its short form for narrow boxes (a
 // phone, the header's search button). Every search box names itself with
 // these, so the same search reads the same wherever it is opened.
@@ -194,7 +196,10 @@ export const geneSearchCopy = {
     },
     suitability: {
       label: 'AAV fit',
-      hint: 'How many AAV vectors the CDS needs: Single under 4,000 bp, Dual under 8,000 bp, Triple above. Dual and triple designs are reassembled by RNA end-joining.',
+      // The thresholds come from the packaging arithmetic (see
+      // `@/lib/bio/aav`), so the hint can never quote a limit the table
+      // doesn't apply.
+      hint: `How many AAV vectors the CDS needs: Single up to ${AAV_CDS_TIER_LIMITS.single.toLocaleString()} bp, Dual up to ${AAV_CDS_TIER_LIMITS.dual.toLocaleString()} bp, Triple above. Dual and triple designs are reassembled by RNA end-joining.`,
     },
   },
   splitPreview: {
@@ -223,7 +228,7 @@ export const geneSearchCopy = {
       fromCenter: string,
     ) =>
       `${motif} at bp ${position} · 5′ ${five} bp / 3′ ${three} bp · ${fromCenter} bp from center`,
-    overLimitHint: 'One fragment + AAV overhead exceeds ~4,700 bp',
+    overLimitHint: `One fragment + AAV overhead exceeds ~${AAV_PACKAGING_LIMIT.toLocaleString()} bp`,
   },
   lengthChart: {
     title: 'CDS length vs. AAV capacity',

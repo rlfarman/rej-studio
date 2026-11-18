@@ -2,6 +2,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { useState } from 'react'
 import { afterEach, describe, expect, it } from 'vite-plus/test'
 
+import { AAV_CDS_CAPACITY_BP } from '@/lib/bio/aav'
 import type { RewritePick } from '../types/form-schema'
 import { wggwSitesIn } from '../utils/wggw-selection'
 import { SpliceSliderContext } from './splice-slider-context'
@@ -15,8 +16,8 @@ import { SpliceSliderContext } from './splice-slider-context'
 
 // 110 bases with WGGW sites at bp 10, 55 and 76.
 const SHORT = 'ATGAAACCCGGGTTTACGTGCA'.repeat(5)
-// ~8.8 kb, so a mid-sequence split leaves both fragments over the ~4,000 bp
-// AAV packaging limit.
+// ~8.8 kb, so a mid-sequence split leaves both fragments over what one AAV
+// vector can carry.
 const LONG = 'ATGAAACCCGGGTTTACGTGCA'.repeat(400)
 
 function Harness({
@@ -166,11 +167,13 @@ describe('AAV packaging limit', () => {
     const notice = screen.getByRole('status').textContent ?? ''
     expect(notice.toLowerCase()).toContain('too large to package into one aav')
     expect(notice).toContain('5\u2032 and 3\u2032 fragments')
-    expect(notice).toContain('4,000 bp AAV packaging limit')
+    expect(notice).toContain(
+      `${AAV_CDS_CAPACITY_BP.toLocaleString()} bp AAV packaging limit`,
+    )
     // Splitting further is legitimate, so Run is not blocked — but the
     // slider says so wherever focus is.
     expect(screen.getByRole('slider').getAttribute('aria-valuetext')).toContain(
-      '2 fragments over the ~4,000 bp',
+      `2 fragments over the ~${AAV_CDS_CAPACITY_BP.toLocaleString()} bp`,
     )
     expect(screen.getAllByText(/over limit/).length).toBeGreaterThan(0)
   })

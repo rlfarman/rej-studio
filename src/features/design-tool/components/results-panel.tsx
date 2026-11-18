@@ -46,6 +46,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { AAV_OVERHEAD_BP, AAV_PACKAGING_LIMIT } from '@/lib/bio/aav'
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
 import { CopyButton } from '@/components/copy-button'
 import type { ProcessResult } from '@/features/design-tool/types/process-result'
@@ -447,8 +448,6 @@ function WggwTable({
 }
 
 /** One-line summary of AAV fit for the expandable header. */
-const AAV_OVERHEAD_BP = 1540
-const AAV_PACKAGING_LIMIT = 4700
 function aavSummary(seq5: number, seq3: number) {
   const label = (total: number) => {
     if (total <= AAV_PACKAGING_LIMIT) return 'fits'

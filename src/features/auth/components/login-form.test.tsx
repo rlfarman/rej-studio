@@ -40,4 +40,15 @@ describe('LoginForm', () => {
     expect(username?.hidden).toBe(true)
     expect(username?.form?.getAttribute('action')).toBe('/api/login')
   })
+
+  // The ?error= message renders only after hydration, so without JavaScript
+  // this note is the only thing the page can say about a refused attempt.
+  it('says what a refusal looks like without JavaScript', () => {
+    const { container } = render(<LoginForm />)
+    const note = container.querySelector('noscript')
+    expect(note?.textContent).toContain(authCopy.login.noScript)
+    // It is served for every /login URL, so it must claim nothing about this
+    // one: not that the passcode was refused, nor where the visitor was going.
+    expect(authCopy.login.noScript).not.toContain(authCopy.login.wrongPasscode)
+  })
 })

@@ -1,8 +1,3 @@
-// AAV packaging threshold: each fragment must fit in a single AAV (~<4 kb
-// is the safe upper bound for the typical AAV cassette). When a fragment
-// exceeds this, the chosen split won't actually package — flag it.
-export const AAV_MAX_BP = 4000
-
 // Minimum sequence length before the slider renders. Shorter than this
 // can't have a meaningful splice junction (cut + buffer on both sides).
 export const MIN_SEQUENCE_LENGTH = 12

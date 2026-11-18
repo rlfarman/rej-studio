@@ -10,6 +10,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test'
 
 import { commonCopy } from '@/copy/common'
+import { AAV_CDS_TIER_LIMITS } from '@/lib/bio/aav'
 import { geneSearchCopy } from '../copy'
 import type { IsoformListItem } from '../types/domain-types'
 import IsoformTable from './isoform-table'
@@ -53,9 +54,10 @@ function isoform(id: string, cdsLength: number): IsoformListItem {
   }
 }
 
-// assessDesignSuitability: < 4,000 single, < 8,000 dual, else triple.
-const dual = isoform('ENST00000000001', 5_000)
-const triple = isoform('ENST00000356175', 9_000)
+// Lengths come from the tier limits (see assessDesignSuitability) rather than
+// fixed numbers, so these rows keep their tiers if the overhead changes.
+const dual = isoform('ENST00000000001', AAV_CDS_TIER_LIMITS.single + 1)
+const triple = isoform('ENST00000356175', AAV_CDS_TIER_LIMITS.dual + 1)
 
 function zipUrl(id: string) {
   return `/api/pre-optimized/${id}`

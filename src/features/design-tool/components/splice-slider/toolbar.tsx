@@ -1,4 +1,4 @@
-import { AlignCenter, ChevronLeft, ChevronRight } from 'lucide-react'
+import { AlignCenter, ChevronLeft, ChevronRight, Magnet } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { designToolCopy } from '../../copy'
@@ -61,6 +61,8 @@ export function Toolbar({
   onSearchPrev,
   onSearchNext,
   onMidpoint,
+  snapToSiteBp,
+  onSnapToSite,
 }: {
   queryValue: string
   queryMode: QueryMode
@@ -74,6 +76,12 @@ export function Toolbar({
   onSearchPrev: () => void
   onSearchNext: () => void
   onMidpoint: () => void
+  /**
+   * Where the nearest WGGW site is, when the caret is not already on it;
+   * null hides the control rather than showing one that would do nothing.
+   */
+  snapToSiteBp: number | null
+  onSnapToSite: () => void
 }) {
   const isSequence = queryMode === 'sequence'
   const isBp = queryMode === 'bp'
@@ -154,6 +162,20 @@ export function Toolbar({
             )}
           </div>
         </div>
+        {snapToSiteBp !== null && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={onSnapToSite}
+            title={copy.snapToSiteAria(snapToSiteBp.toLocaleString())}
+            aria-label={copy.snapToSiteAria(snapToSiteBp.toLocaleString())}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <Magnet />
+            {copy.snapToSite}
+          </Button>
+        )}
         <Button
           type="button"
           variant="outline"

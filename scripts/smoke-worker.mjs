@@ -195,6 +195,20 @@ async function passcodeGate(url) {
     login.status === 200 &&
       (login.headers.get('content-type') ?? '').includes('text/html'),
   )
+  // /api/login sends a refused attempt back to /login?error=passcode. That
+  // URL has to arrive as the login page, not the shell: the shell is empty
+  // until JavaScript runs, so without it a refusal showed nothing at all.
+  const refused = await request(`${url}/login?error=passcode`)
+  const refusedHtml = refused.ok ? await refused.text() : ''
+  check(
+    'the login page, not the shell, is served for /login with a query string',
+    refused.status === 200 &&
+      // From src/features/auth/copy.ts; this script cannot import it.
+      refusedHtml.includes('Enter the lab passcode') &&
+      refusedHtml.includes('<noscript>') &&
+      refusedHtml.includes('JavaScript is off'),
+    `HTTP ${refused.status}`,
+  )
   const asset = await request(`${url}/optimizer/THIRD-PARTY-NOTICES.md`)
   check('static files load without a session', asset.status === 200)
   const wasm = await request(`${url}/optimizer/rej-optimizer.wasm?v=smoke`)

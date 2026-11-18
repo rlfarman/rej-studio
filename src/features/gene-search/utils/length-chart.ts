@@ -1,7 +1,5 @@
+import { AAV_CDS_TIER_LIMITS } from '@/lib/bio/aav'
 import type { Suitability } from '@/lib/bio/design-suitability'
-
-/** CDS length limits used by assessDesignSuitability. */
-export const AAV_CAPACITY_BP = { single: 4000, dual: 8000 } as const
 
 interface LengthChartModel {
   /**
@@ -24,12 +22,13 @@ export function lengthChartModel(
     rows.length >= 2 && rows.some((r) => r.suitability !== 'single-aav')
   // A little headroom so the longest bar doesn't touch the edge, and room
   // to show the next capacity limit just past the longest isoform.
-  const nextLimit = [AAV_CAPACITY_BP.single, AAV_CAPACITY_BP.dual].find(
+  const nextLimit = [AAV_CDS_TIER_LIMITS.single, AAV_CDS_TIER_LIMITS.dual].find(
     (limit) => limit > maxLen,
   )
   const scaleMax = Math.max(maxLen * 1.08, nextLimit ? nextLimit * 1.04 : 0)
-  const thresholds = [AAV_CAPACITY_BP.single, AAV_CAPACITY_BP.dual].filter(
-    (limit) => limit < scaleMax,
-  )
+  const thresholds = [
+    AAV_CDS_TIER_LIMITS.single,
+    AAV_CDS_TIER_LIMITS.dual,
+  ].filter((limit) => limit < scaleMax)
   return { show, scaleMax, thresholds }
 }

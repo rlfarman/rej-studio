@@ -1,4 +1,8 @@
-import type { CloudDesignSummary } from '@/features/design-tool/types/cloud-design'
+import {
+  cloudDesignStatusSchema,
+  type CloudDesignStatus,
+  type CloudDesignSummary,
+} from '@/features/design-tool/types/cloud-design'
 
 /**
  * Each account's cloud designs, in the `cloud_design` table of `AUTH_DB`
@@ -9,6 +13,12 @@ import type { CloudDesignSummary } from '@/features/design-tool/types/cloud-desi
  *
  * Written when a signed-in person submits (an identical resubmission moves
  * it to the top), removed when they delete it or it turns out to be gone.
+ * Its `status` is kept up to date wherever the design's state is already
+ * known — the step as it starts and settles (./run.ts), and a read that
+ * reports something else (./handler.ts) — so the list needs no Workflow read
+ * of its own. A row from before the column has none, which the list shows as
+ * an unknown state.
+ *
  * An entry can outlive its design (retention ran out); the reader treats a
  * design that is not found as gone, and the next delete clears the entry.
  */
@@ -23,14 +33,42 @@ export async function recordDesign(
 ): Promise<void> {
   await db
     .prepare(
-      `insert into cloud_design (owner, id, name, bases, submitted_at)
-       values (?1, ?2, ?3, ?4, ?5)
+      `insert into cloud_design (owner, id, name, bases, submitted_at, status)
+       values (?1, ?2, ?3, ?4, ?5, ?6)
        on conflict (owner, id) do update set
          name = excluded.name,
          bases = excluded.bases,
-         submitted_at = excluded.submitted_at`,
+         submitted_at = excluded.submitted_at,
+         status = excluded.status`,
     )
-    .bind(owner, design.id, design.name, design.bases, design.submittedAt)
+    .bind(
+      owner,
+      design.id,
+      design.name,
+      design.bases,
+      design.submittedAt,
+      design.status ?? null,
+    )
+    .run()
+}
+
+/**
+ * Records where a design got to, for every account listing it: the id is a
+ * hash of the request, so two accounts can share one run, and the state
+ * belongs to the design rather than to either row. A no-op when nothing
+ * lists it, or when the row already says this.
+ */
+export async function markDesignStatus(
+  db: D1Database,
+  id: string,
+  status: CloudDesignStatus,
+): Promise<void> {
+  await db
+    .prepare(
+      `update cloud_design set status = ?2
+       where id = ?1 and (status is null or status <> ?2)`,
+    )
+    .bind(id, status)
     .run()
 }
 
@@ -50,6 +88,7 @@ interface Row {
   name: string
   bases: number
   submitted_at: string
+  status: string | null
 }
 
 /** The owner's designs, newest first. */
@@ -59,7 +98,7 @@ export async function listDesigns(
 ): Promise<CloudDesignSummary[]> {
   const { results } = await db
     .prepare(
-      `select id, name, bases, submitted_at from cloud_design
+      `select id, name, bases, submitted_at, status from cloud_design
        where owner = ?1 order by submitted_at desc limit ?2`,
     )
     .bind(owner, LIST_LIMIT)
@@ -69,5 +108,8 @@ export async function listDesigns(
     name: row.name,
     bases: row.bases,
     submittedAt: row.submitted_at,
+    // Anything the column holds that is not one of the four states reads as
+    // unknown, which is how a row from before the column reads too.
+    status: cloudDesignStatusSchema.safeParse(row.status).data ?? null,
   }))
 }
