@@ -6,6 +6,7 @@ import { SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar'
 import { useAccount } from '@/lib/account/account'
 import { myCloudDesignsQuery } from '../api/cloud-designs'
 import { useJobHistory } from '../hooks/use-job-history'
+import { formatTimeAgo } from '../utils/time-ago'
 import type { CloudDesignSummary } from '../types/cloud-design'
 import { designToolCopy } from '../copy'
 
@@ -51,7 +52,7 @@ export function MyCloudDesigns({ onSelect }: MyCloudDesignsProps) {
             <div className="flex min-w-0 flex-1 flex-col gap-0.5 leading-tight">
               <span className="line-clamp-2 font-medium">{design.name}</span>
               <span className="block type-nano text-muted-foreground group-hover/menu-button:text-sidebar-accent-foreground">
-                {copy.subline(design.bases)}
+                {copy.subline(design.bases, formatTimeAgo(design.submittedAt))}
               </span>
             </div>
           </SidebarMenuButton>

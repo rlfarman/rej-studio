@@ -130,15 +130,48 @@ describe('IsoformIdentityMatrix', () => {
     // Every drawn cell is reachable, but only one is in the tab order.
     expect(cells.filter((cell) => cell.tabIndex === 0)).toHaveLength(1)
 
-    cells[0].focus()
-    fireEvent.keyDown(cells[0], { key: 'ArrowDown' })
-    // Row 2, column 1: ENST3 against ENST1.
-    expect(
-      screen.getByText(copy.cellReadout('100.0', 'ENST3', 'ENST1')),
-    ).toBeTruthy()
-    expect(document.activeElement?.getAttribute('aria-label')).toBe(
+    // The first drawn cell is row 2, column 1: the diagonal isn't drawn, so
+    // row 1 holds none.
+    expect(cells[0].getAttribute('aria-label')).toBe(
       copy.cellLabel('100.0', 'ENST3', 'ENST1'),
     )
+
+    cells[0].focus()
+    fireEvent.keyDown(cells[0], { key: 'ArrowDown' })
+    // Row 3, column 1: ENST2 against ENST1.
+    expect(
+      screen.getByText(copy.cellReadout('12.5', 'ENST2', 'ENST1')),
+    ).toBeTruthy()
+    expect(document.activeElement?.getAttribute('aria-label')).toBe(
+      copy.cellLabel('12.5', 'ENST2', 'ENST1'),
+    )
+
+    // And it cannot be walked onto the diagonal: End stops one short of the
+    // row's own column.
+    fireEvent.keyDown(document.activeElement!, { key: 'End' })
+    expect(document.activeElement?.getAttribute('aria-label')).toBe(
+      copy.cellLabel('64.2', 'ENST2', 'ENST3'),
+    )
+  })
+
+  // A 100% cell against itself, in the ramp's top color — the one that means
+  // "near-duplicate, worth acting on" — drew a dark staircase through the
+  // chart and read out a meaningless 100% in every row.
+  it('draws no diagonal, matching the data table', async () => {
+    renderOnGenePage(
+      <IsoformIdentityMatrix isoforms={isoforms} identity={identity} />,
+    )
+    const table = await screen.findByRole('table', { name: copy.caption })
+    const cells = within(table).getAllByRole('button')
+
+    // Three isoforms: three pairs, of which the lower triangle draws three
+    // minus the diagonal.
+    expect(cells).toHaveLength(3)
+    for (const id of ['ENST1', 'ENST2', 'ENST3']) {
+      expect(
+        screen.queryByLabelText(copy.cellLabel('100.0', id, id)),
+      ).toBeNull()
+    }
   })
 
   it('names the CSV after the gene and puts the gene in it', async () => {
@@ -166,6 +199,53 @@ describe('IsoformIdentityMatrix', () => {
     )
     expect(downloads.at(-1)?.[0]).toBe('TP53_isoform-identity.csv')
     expect(downloads.at(-1)?.[1]).toContain('TP53,ENST3,ENST2')
+  })
+
+  // A grid of three cells, two of them an isoform against itself, under a
+  // five-bin scale, with its one number behind a hover.
+  it('states the one pair in words for a two-isoform gene', async () => {
+    const pair = [isoform('ENST1', 50), isoform('ENST2', 300)]
+    const pairIdentity = parseIsoformIdentity(
+      { isoforms: ['ENST2', 'ENST1'], permille: [877] },
+      pair,
+    )
+    renderOnGenePage(
+      <IsoformIdentityMatrix isoforms={pair} identity={pairIdentity} />,
+    )
+
+    expect(
+      await screen.findByText(copy.pairSummary('ENST1', 'ENST2', '87.7')),
+    ).toBeTruthy()
+    // No grid, and no scale for a scale with one point on it.
+    expect(screen.queryByRole('table', { name: copy.caption })).toBeNull()
+    expect(screen.queryByRole('list', { name: copy.legendAria })).toBeNull()
+    // The numbers and the method still are there.
+    expect(screen.getByText(copy.footnote)).toBeTruthy()
+    expect(screen.getByRole('button', { name: commonChart.show })).toBeTruthy()
+  })
+
+  // The footnote asks the reader to optimize one isoform per ≥95% cluster;
+  // in gene order those pairs were scattered through 120 unsortable rows.
+  it('lists the most identical pairs first', async () => {
+    renderOnGenePage(
+      <IsoformIdentityMatrix isoforms={isoforms} identity={identity} />,
+    )
+    fireEvent.click(
+      await screen.findByRole('button', { name: commonChart.show }),
+    )
+    const dataTable = screen
+      .getAllByRole('table')
+      .find((table) =>
+        table
+          .querySelector('caption')
+          ?.textContent?.includes('global alignment'),
+      )!
+
+    expect(
+      [...dataTable.querySelectorAll('tbody tr')].map(
+        (row) => row.querySelectorAll('td')[3]?.textContent,
+      ),
+    ).toEqual(['100', '64.2', '12.5'])
   })
 
   it('says identities are unavailable rather than estimating them', async () => {

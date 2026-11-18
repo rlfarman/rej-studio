@@ -9,6 +9,7 @@ import {
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test'
 
+import { commonCopy } from '@/copy/common'
 import { geneSearchCopy } from '../copy'
 import type { IsoformListItem } from '../types/domain-types'
 import IsoformTable from './isoform-table'
@@ -153,6 +154,46 @@ describe('IsoformTable on a narrow screen', () => {
     const container = head.closest('[data-slot="table-container"]')!
     expect(container.className).toMatch(/max-h-/)
     expect(container.className).toContain('overflow-auto')
+  })
+})
+
+describe('IsoformTable naming', () => {
+  // The gene page has two tables; the identity matrix carried a caption and
+  // this one was anonymous in a screen reader's table list.
+  it('names itself after the gene', async () => {
+    renderTable({ isoforms: [dual] })
+    await flush()
+
+    expect(
+      screen.getByRole('table', { name: copy.caption('NF1') }),
+    ).toBeTruthy()
+  })
+
+  it('names the isoform its row menu acts on', async () => {
+    renderTable({ isoforms: [dual, triple] })
+    await flush()
+    openMenu(screen.getByLabelText(copy.moreAria(dual.id)))
+
+    const menu = await screen.findByRole('menu')
+    // Six items, none of which said which transcript they belonged to — and
+    // on a phone the menu covers its own row and leaves the one above it
+    // showing.
+    expect(menu.textContent).toContain(dual.id)
+    expect(menu.textContent).not.toContain(triple.id)
+  })
+
+  it('explains the columns a phone drops, where it drops them', async () => {
+    renderTable({ isoforms: [dual] })
+    await flush()
+    fireEvent.click(screen.getByLabelText(copy.expandRowAria(dual.id)))
+
+    // CpG and WGGW only appear on a phone in the expanded row, so without
+    // their infotips there they had no explanation on a phone at all.
+    for (const term of [terms.gc, terms.cpg, terms.wggw]) {
+      expect(
+        screen.getAllByLabelText(commonCopy.termHintAria(term.label)).length,
+      ).toBeGreaterThan(1)
+    }
   })
 })
 

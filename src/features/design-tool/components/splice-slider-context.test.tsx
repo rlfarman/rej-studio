@@ -14,8 +14,19 @@ import { SpliceSliderContext } from './splice-slider-context'
 // 110 bases with WGGW sites at bp 10, 55 and 76.
 const SEQUENCE = 'ATGAAACCCGGGTTTACGTGCA'.repeat(5)
 const SITES = [10, 55, 76]
+// The same sequence past 1,000 bases, where a position is written with a
+// thousands separator.
+const LONG = 'ATGAAACCCGGGTTTACGTGCA'.repeat(50)
 
-function Harness({ initialPosition = 55 }: { initialPosition?: number }) {
+function Harness({
+  initialPosition = 55,
+  species = 'none',
+  sequence = SEQUENCE,
+}: {
+  initialPosition?: number
+  species?: 'none' | 'human' | 'mouse'
+  sequence?: string
+}) {
   const [positions, setPositions] = useState<number[]>([initialPosition])
   const [sitePicks, setSitePicks] = useState<(number | null)[]>([])
   const [rewritePicks, setRewritePicks] = useState<RewritePick[]>([])
@@ -25,9 +36,9 @@ function Harness({ initialPosition = 55 }: { initialPosition?: number }) {
         {JSON.stringify({ positions, sitePicks })}
       </output>
       <SpliceSliderContext
-        sequence={SEQUENCE}
+        sequence={sequence}
         positions={positions}
-        species="none"
+        species={species}
         onPositionsChange={setPositions}
         sitePicks={sitePicks}
         rewritePicks={rewritePicks}
@@ -48,12 +59,16 @@ function slider() {
   return screen.getByRole('slider', { name: /splice junction position/i })
 }
 
-/** Type a bp into "Go to" and press Enter. */
-function goTo(bp: number) {
-  const input = screen.getByRole('textbox', {
+function goToField(): HTMLElement {
+  return screen.getByRole('textbox', {
     name: /jump to bp or search sequence/i,
   })
-  fireEvent.change(input, { target: { value: String(bp) } })
+}
+
+/** Type into "Go to" and press Enter. */
+function goTo(query: number | string) {
+  const input = goToField()
+  fireEvent.change(input, { target: { value: String(query) } })
   fireEvent.keyDown(input, { key: 'Enter' })
 }
 
@@ -140,5 +155,86 @@ describe('split-point editor keyboard', () => {
     render(<Harness />)
     fireEvent.keyDown(slider(), { key: 'Tab' })
     expect(state().positions).toEqual([55])
+  })
+})
+
+describe('split-point editor "Go to"', () => {
+  it('jumps to a bp written the way this UI writes one', () => {
+    // 1,100 bases, so a position in this UI is rendered "1,083 bp".
+    render(<Harness sequence={LONG} initialPosition={550} />)
+    goTo('1,083 bp')
+    expect(state().positions).toEqual([1083])
+    goTo('1,000')
+    expect(state().positions).toEqual([1000])
+    goTo('900 bp')
+    expect(state().positions).toEqual([900])
+  })
+
+  it('says a query is not a position or a sequence', () => {
+    render(<Harness />)
+    goTo('xyz')
+    expect(screen.getByText(/not a position or a dna sequence/i)).toBeTruthy()
+    // It did not quietly search part of it, and it did not move the caret.
+    expect(screen.queryByText('0/0')).toBeNull()
+    expect(state().positions).toEqual([55])
+  })
+
+  it('refuses a sequence with a non-base rather than searching part of it', () => {
+    render(<Harness />)
+    goTo('GGGNNN')
+    expect(screen.getByText(/not a position or a dna sequence/i)).toBeTruthy()
+  })
+
+  it('says when a valid sequence has no match', () => {
+    render(<Harness />)
+    goTo('GGGGGGGG')
+    expect(screen.getByText(/no match for GGGGGGGG/i)).toBeTruthy()
+  })
+
+  it('says the range when the bp is outside the sequence', () => {
+    render(<Harness />)
+    fireEvent.change(goToField(), { target: { value: '99999' } })
+    expect(screen.getByText(/enter a position between 1 and 109/i)).toBeTruthy()
+  })
+
+  it('counts matches when the query is a sequence', () => {
+    render(<Harness />)
+    fireEvent.change(goToField(), { target: { value: 'ATGAAA' } })
+    expect(screen.getByText('1/5')).toBeTruthy()
+  })
+})
+
+describe('split-point editor rewrite chips', () => {
+  function chips(): HTMLElement[] {
+    return screen.getAllByRole('button', { name: /^Rewrite \d+ of \d+/ })
+  }
+
+  it('numbers the counter in the order the chips are shown in', () => {
+    render(<Harness species="human" />)
+    const all = chips()
+    expect(all).toHaveLength(4)
+    // The chips are ranked by codon preference, so the default pick (the
+    // site's own first option) is not the first chip. The counter has to
+    // name where the selected chip is, not where its option is stored.
+    const selected = all.findIndex(
+      (chip) => chip.getAttribute('aria-pressed') === 'true',
+    )
+    expect(selected).toBeGreaterThan(0)
+    expect(screen.getByText(`${selected + 1} of 4`)).toBeTruthy()
+
+    all.forEach((chip, index) => {
+      fireEvent.click(chip)
+      expect(chip.getAttribute('aria-pressed')).toBe('true')
+      expect(screen.getByText(`${index + 1} of 4`)).toBeTruthy()
+    })
+  })
+
+  it('shows the cost of each option and marks the recommendation', () => {
+    render(<Harness species="human" />)
+    const [first] = chips()
+    expect(first.textContent).toContain('Best')
+    // The base-change count is on the chip, not only in a hover title.
+    expect(first.textContent).toMatch(/\d+ bp/)
+    expect(first.getAttribute('title')).toBeNull()
   })
 })

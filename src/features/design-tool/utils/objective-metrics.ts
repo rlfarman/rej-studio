@@ -19,7 +19,7 @@ const DONOR_PATTERNS = new Set(['GT[AG]A', 'AAGTA', '[CTA]AG[GA]', 'CAG[GC]'])
 
 const AVOID_PATTERN_RE = /^AvoidPattern.*?\(pattern:([^)]+)\)/
 
-interface KeyMetrics {
+export interface KeyMetrics {
   spliceDonors: number
   spliceAcceptors: number
   /**

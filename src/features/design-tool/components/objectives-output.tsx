@@ -15,7 +15,7 @@ import type {
   ObjectivesReport,
 } from '@/features/design-tool/types/process-result'
 import { deriveKeyMetrics } from '@/features/design-tool/utils/objective-metrics'
-import { escapeMarkdownTableCell } from '@/features/design-tool/utils/markdown-table'
+import { buildObjectivesMarkdown } from '@/features/design-tool/utils/design-report'
 import { designToolCopy } from '../copy'
 
 const metricsCopy = designToolCopy.results.metrics
@@ -516,53 +516,6 @@ function buildSummaryItems(
   return items
 }
 
-// ---------- markdown export ----------
-
-function buildMarkdownReport(
-  before: ObjectivesReport,
-  after: ObjectivesReport,
-): string {
-  const lines: string[] = []
-  lines.push('## Optimization objectives')
-  lines.push('')
-  const fmtTotal = (n: number | null) => (n === null ? '—' : n.toFixed(2))
-  lines.push(
-    `**Total score:** ${fmtTotal(before.total_score)} → ${fmtTotal(after.total_score)}`,
-  )
-  lines.push('')
-
-  const beforeMap = new Map(before.entries.map((e) => [e.objective, e]))
-  const afterMap = new Map(after.entries.map((e) => [e.objective, e]))
-  const keys = new Set<string>([...beforeMap.keys(), ...afterMap.keys()])
-
-  lines.push('| Status | Objective | Before | After | Δ | Note |')
-  lines.push('| --- | --- | ---: | ---: | ---: | --- |')
-  for (const key of keys) {
-    const b = beforeMap.get(key)
-    const a = afterMap.get(key)
-    const afterEntry = a ?? b
-    let status = '—'
-    if (a && b) {
-      if (a.passes && !b.passes) status = '↑ fixed'
-      else if (!a.passes && b.passes) status = '↓ regressed'
-      else if (a.passes) status = '✓ passing'
-      else status = '✗ failing'
-    } else if (a) {
-      status = a.passes ? '✓ passing' : '✗ failing'
-    } else if (b) {
-      status = b.passes ? '✓ passing' : '✗ failing'
-    }
-    const bs = b ? b.score.toFixed(2) : '—'
-    const as = a ? a.score.toFixed(2) : '—'
-    const delta = a && b ? (a.score - b.score).toFixed(2) : '—'
-    const msg = afterEntry?.message ?? ''
-    lines.push(
-      `| ${status} | \`${escapeMarkdownTableCell(key)}\` | ${bs} | ${as} | ${delta} | ${escapeMarkdownTableCell(msg)} |`,
-    )
-  }
-  return lines.join('\n')
-}
-
 // ---------- raw text fallback ----------
 
 // DNAChisel's objectives_text_summary() uses box-drawing characters as a
@@ -710,7 +663,7 @@ export function ObjectivesSummary({
   const afterRef = useRef<HTMLDivElement | null>(null)
   const syncingRef = useRef(false)
 
-  const markdownReport = buildMarkdownReport(reportBefore, reportAfter)
+  const markdownReport = buildObjectivesMarkdown(reportBefore, reportAfter)
 
   const syncScroll =
     (source: 'before' | 'after'): React.UIEventHandler<HTMLDivElement> =>

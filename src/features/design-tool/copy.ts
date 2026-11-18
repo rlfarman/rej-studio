@@ -114,8 +114,11 @@ export const designToolCopy = {
     myDesigns: {
       label: 'My cloud designs',
       menuAria: 'My cloud designs',
-      subline: (bp: number) =>
-        `in the cloud · ${bp.toLocaleString('en-US')} bp`,
+      // When it ran, as Recent jobs dates its entries: from another device
+      // the list was a name and a length, with nothing to say which design
+      // was which or how old any of them were.
+      subline: (bp: number, age: string) =>
+        `in the cloud · ${bp.toLocaleString('en-US')} bp · ${age}`,
     },
     tooLong: (bases: number, limit: number) =>
       `That sequence is ${bases.toLocaleString('en-US')} bp; cloud designs take up to ${limit.toLocaleString('en-US')}. Turn off “Run in the cloud” to design it in this browser.`,
@@ -285,6 +288,63 @@ export const designToolCopy = {
     noSitesShort: 'No WGGW motif found',
     emptyTitle: 'No motif selected',
     emptyBody: 'Pick a motif on the strip above, or use ‹ › to step through.',
+    /** The hovered candidate tick, under the track. */
+    tickReadout: (motif: string, bp: string, baseChanges: number) =>
+      `${motif} at ${bp} bp · ${baseChanges} base${baseChanges === 1 ? '' : 's'} to change`,
+    /**
+     * A candidate site's button in the sequence strip — the keyboard's and a
+     * screen reader's way through the same sites the ticks draw, so it names
+     * what the tick readout names.
+     */
+    siteButtonAria: (motif: string, bp: number, baseChanges: number) =>
+      `Select WGGW ${motif} site at bp ${bp} — ${baseChanges} base${baseChanges === 1 ? '' : 's'} to change`,
+    rewrites: {
+      heading: 'Synonymous rewrites',
+      hintTopic: 'Synonymous rewrites',
+      // Which order the chips are in, and that any of them is a valid
+      // design: the order is advice, not a verdict.
+      hint: (species: 'human' | 'mouse' | null) =>
+        `Ways to write the motif in without changing the protein. ${
+          species === null
+            ? 'With no codon usage selected they are ordered by how few bases they change.'
+            : `They are ordered best first for ${species} codon usage.`
+        } Any of them designs; the order is a recommendation. "N bp" is how many bases that option changes.`,
+      /** Where the selected chip sits in the order the chips are shown in. */
+      position: (rank: number, total: number) => `${rank} of ${total}`,
+      /** On the first chip, so the ranking is visible and not just implied. */
+      best: 'Best',
+      baseChanges: (count: number) => `${count} bp`,
+      optionAria: (
+        rank: number,
+        total: number,
+        baseChanges: number,
+        score: string | null,
+      ) =>
+        [
+          `Rewrite ${rank} of ${total}`,
+          `${baseChanges} base${baseChanges === 1 ? '' : 's'} changed`,
+          score === null ? null : `codon preference ${score}`,
+        ]
+          .filter(Boolean)
+          .join(' · '),
+    },
+    goTo: {
+      label: 'Go to',
+      placeholder: 'bp number or ACGT…',
+      aria: 'Jump to bp or search sequence',
+      prevMatch: 'Previous match (Shift+Enter)',
+      nextMatch: 'Next match (Enter)',
+      midpoint: 'Midpoint',
+      midpointTitle: 'Snap caret to midpoint (m)',
+      // Why a query found nothing, rather than "0/0". A typed sequence is
+      // taken as typed: non-ACGT letters make it invalid instead of being
+      // silently dropped, which used to search a query nobody entered.
+      notSequence:
+        'Not a position or a DNA sequence — use digits, or A C G T U.',
+      noMatch: (query: string) => `No match for ${query} in this sequence.`,
+      outOfRange: (max: string) =>
+        `This sequence is ${max} bp — enter a position between 1 and ${max}.`,
+    },
   },
   stimulatoryIntrons: {
     fivePrime: {
@@ -364,7 +424,13 @@ export const designToolCopy = {
     statusCompletedIn: (seconds: number) =>
       `Completed in ${formatProcessingTime(seconds)}`,
     statusFailedDefault: 'Something went wrong — try running again.',
-    statusCancelled: 'Cancelled',
+    // A cancelled run leaves the page with nothing on it, so the one line
+    // there has to say what became of the work. Same wording as a run its
+    // tab did not live to finish (browserRun.interrupted), because the
+    // outcome is the same: nothing partial is kept, and the design is
+    // deterministic, so running it again gives exactly the same result.
+    statusCancelled:
+      'Cancelled — the partial work was discarded. Run it again for the identical design.',
     buttonCancel: 'Cancel',
     buttonEdit: 'Edit',
     buttonRunAgain: 'Run again',
@@ -407,6 +473,44 @@ export const designToolCopy = {
     optionsUnavailable:
       'Not recorded — this design’s inputs are no longer stored in this browser.',
     downloadZip: 'Download Results',
+    // The report the ZIP carries, also offered here: it is the one artifact
+    // that pastes straight into a notebook, and it used to sit three
+    // interactions deep inside the objectives section.
+    copyReport: 'Copy report',
+    copyReportAria: 'Copy the design report as Markdown',
+    copiedReport: 'Copied',
+    /** The exported Markdown report (utils/design-report.ts). */
+    report: {
+      fieldColumn: 'Field',
+      valueColumn: 'Value',
+      metricColumn: 'Metric',
+      beforeColumn: 'Before',
+      afterColumn: 'After',
+      metricsHeading: 'Metrics',
+      optionsHeading: 'Options as applied',
+      wggwHeading: 'WGGW motif sites',
+      objectivesHeading: 'Optimization objectives',
+      methodsHeading: 'Methods',
+      totalScore: 'Total score:',
+      yes: 'Yes',
+      no: 'No',
+      // Codon usage was left alone, which is not the same as a species whose
+      // table happened to change nothing.
+      speciesNone: 'Not optimized for a species',
+      fields: {
+        // When the file was made. A run's own start time is only in a run
+        // record, which designs run in this browser do not carry yet.
+        exportedAt: 'Exported',
+        inputLength: 'Input sequence',
+        splitPoint: 'Split after base',
+        fivePrime: '5′ sequence',
+        threePrime: '3′ sequence',
+        wggwSplit: 'Split at a WGGW motif',
+        species: 'Codon usage',
+        runTime: 'Run time',
+        seed: 'Seed',
+      },
+    },
     intronTooltip: {
       fivePrime:
         '5′ REJ module insertion site — insert the 5′ REJ module here during construct assembly.',

@@ -1,4 +1,4 @@
-import { useId, useState } from 'react'
+import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import { Link, useParams } from '@tanstack/react-router'
 import { Grid3x3 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -74,7 +74,9 @@ function displayOrder(shown: readonly IsoformListItem[]): number[] {
  * Rendered as a real table: numbered columns match the numbered row
  * headers (no rotated or truncated labels), row headers stay pinned while
  * the grid scrolls horizontally on narrow screens, and every visible cell
- * carries its value for screen readers and as a hover title.
+ * carries its value for screen readers and as a hover title. A gene with
+ * exactly two isoforms gets the sentence instead: one number is not a
+ * heatmap.
  */
 export function IsoformIdentityMatrix({ isoforms, identity }: Props) {
   const shown = selectIdentityIsoforms(isoforms)
@@ -85,7 +87,8 @@ export function IsoformIdentityMatrix({ isoforms, identity }: Props) {
       aria-labelledby="identity-matrix-title"
       // min-w-0: the card must never be sized by the grid inside it, however
       // it is laid out, or the grid widens the page instead of scrolling.
-      className="mb-4 min-w-0 space-y-4 rounded-2xl border p-4"
+      // No margin of its own: the page column spaces the two chart panels.
+      className="min-w-0 space-y-4 rounded-2xl border p-4"
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2
@@ -95,7 +98,9 @@ export function IsoformIdentityMatrix({ isoforms, identity }: Props) {
           <Grid3x3 className="size-4 text-muted-foreground" />
           {geneSearchCopy.identityMatrix.title}
         </h2>
-        {identity && <Legend />}
+        {/* No scale beside a single pair: two isoforms are one number, and
+            that case reads as a sentence rather than a grid (see Matrix). */}
+        {identity && shown.length > MIN_ISOFORMS && <Legend />}
       </div>
       {identity ? (
         <Matrix
@@ -133,17 +138,20 @@ function Matrix({
   // way in, which left every phone and every keyboard with color alone.
   // Null until something is chosen: the first cell is still the grid's tab
   // stop, but the readout invites rather than asserting a value nobody picked.
+  // The first drawn cell is [1, 0]: the diagonal is not drawn, so row 1 holds
+  // no cells.
   const [selected, setSelected] = useState<[number, number] | null>(null)
-  const active = selected ?? [0, 0]
+  const active = selected ?? [1, 0]
 
   const ids = order.map((k) => storedIds[k])
   const valueAt = (i: number, j: number) => stored[order[i]][order[j]]
   const buttonId = (i: number, j: number) => `${cellId}-${i}-${j}`
 
   const move = (i: number, j: number) => {
-    const row = Math.min(Math.max(i, 0), ids.length - 1)
-    // Only the lower triangle is drawn, so a column never passes its row.
-    const col = Math.min(Math.max(j, 0), row)
+    const row = Math.min(Math.max(i, 1), ids.length - 1)
+    // Only the strict lower triangle is drawn, so a column stops one short
+    // of its row.
+    const col = Math.min(Math.max(j, 0), row - 1)
     setSelected([row, col])
     document.getElementById(buttonId(row, col))?.focus()
   }
@@ -156,7 +164,7 @@ function Matrix({
       ArrowDown: () => move(i + 1, j),
       ArrowUp: () => move(i - 1, j),
       Home: () => move(i, 0),
-      End: () => move(i, i),
+      End: () => move(i, i - 1),
     }
     const step = steps[event.key]
     if (!step) return
@@ -169,72 +177,78 @@ function Matrix({
 
   return (
     <>
-      {/* The one scroller the grid gets, inside the card's padding. It must
-          not bleed past the card with a negative margin (the grid then
-          overflows the card, and the page scrolls sideways with it), and it
-          must not sit inside another horizontal scroller: `sticky` row
-          headers pin to the nearest scroll container, so a second one above
-          this takes the scroll and the labels scroll away with the grid. */}
-      {/* `contain-paint` is load-bearing, not decoration: without it the
-          grid's sticky row labels extend the *page's* scrollable area, so a
-          swipe anywhere panned the whole gene page 73px sideways even though
-          this box already clipped and scrolled correctly. Measured: page pan
-          73px -> 0. `overscroll-x-contain` then stops a swipe that reaches
-          the grid's end from chaining to the page. */}
-      <div className="min-w-0 overflow-x-auto overscroll-x-contain contain-paint">
-        <table className="border-separate border-spacing-[2px] text-left">
-          <caption className="sr-only">
-            {geneSearchCopy.identityMatrix.caption}
-          </caption>
-          <thead>
-            <tr>
-              <th scope="col" className="sticky left-0 z-10 bg-background">
-                <span className="sr-only">
-                  {geneSearchCopy.identityMatrix.rowHeader}
-                </span>
-              </th>
-              {ids.map((id, j) => (
-                <th
-                  key={`col-${id}`}
-                  scope="col"
-                  title={id}
-                  className="w-6 min-w-6 pb-1 text-center type-micro font-medium text-muted-foreground tabular-nums"
-                >
-                  <span aria-hidden>{j + 1}</span>
-                  <span className="sr-only">{id}</span>
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {ids.map((id, i) => (
-              <Row
-                key={id}
-                index={i}
-                id={id}
-                ids={ids}
-                values={ids.map((_, j) => valueAt(i, j))}
-                active={active}
-                buttonId={buttonId}
-                onSelect={setSelected}
-                onCellKeyDown={onKeyDown}
-              />
-            ))}
-          </tbody>
-        </table>
-      </div>
+      {ids.length === MIN_ISOFORMS ? (
+        // One pair is one number. A grid of three cells — two of them the
+        // isoform against itself — under a five-bin scale asked the reader to
+        // hover a single square for the only thing the section knows.
+        <p className="max-w-prose text-sm tabular-nums">
+          {geneSearchCopy.identityMatrix.pairSummary(
+            ids[0],
+            ids[1],
+            valueAt(1, 0).toFixed(1),
+          )}
+        </p>
+      ) : (
+        <>
+          <GridScroller>
+            <table className="border-separate border-spacing-[2px] text-left">
+              <caption className="sr-only">
+                {geneSearchCopy.identityMatrix.caption}
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col" className="sticky left-0 z-10 bg-background">
+                    <span className="sr-only">
+                      {geneSearchCopy.identityMatrix.rowHeader}
+                    </span>
+                  </th>
+                  {ids.map((id, j) => (
+                    <th
+                      key={`col-${id}`}
+                      scope="col"
+                      title={id}
+                      className="w-6 min-w-6 pb-1 text-center type-micro font-medium text-muted-foreground tabular-nums"
+                    >
+                      <span aria-hidden>{j + 1}</span>
+                      <span className="sr-only">{id}</span>
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {ids.map((id, i) => (
+                  <Row
+                    key={id}
+                    index={i}
+                    id={id}
+                    ids={ids}
+                    values={ids.map((_, j) => valueAt(i, j))}
+                    active={active}
+                    buttonId={buttonId}
+                    onSelect={setSelected}
+                    onCellKeyDown={onKeyDown}
+                  />
+                ))}
+              </tbody>
+            </table>
+          </GridScroller>
 
-      {/* The selected cell in words. Hidden from screen readers, which hear
-          the cell's own label as focus lands on it. */}
-      <p aria-hidden className="type-nano text-muted-foreground tabular-nums">
-        {activeValue === null
-          ? geneSearchCopy.identityMatrix.cellHint
-          : geneSearchCopy.identityMatrix.cellReadout(
-              activeValue.toFixed(1),
-              ids[ai],
-              ids[aj],
-            )}
-      </p>
+          {/* The selected cell in words. Hidden from screen readers, which
+              hear the cell's own label as focus lands on it. */}
+          <p
+            aria-hidden
+            className="type-nano text-muted-foreground tabular-nums"
+          >
+            {activeValue === null
+              ? geneSearchCopy.identityMatrix.cellHint
+              : geneSearchCopy.identityMatrix.cellReadout(
+                  activeValue.toFixed(1),
+                  ids[ai],
+                  ids[aj],
+                )}
+          </p>
+        </>
+      )}
 
       <p className="max-w-prose type-nano text-muted-foreground">
         {geneSearchCopy.identityMatrix.footnote}
@@ -243,26 +257,86 @@ function Matrix({
         )}
       </p>
       <ChartDataTable
-        storageKey="isoforms"
+        // Its own key: the length chart above is a different chart with
+        // different columns, and a shared key meant one click opened both.
+        storageKey="isoform-identity"
         caption={geneSearchCopy.charts.identityMatrix.caption}
         columns={geneSearchCopy.charts.identityMatrix.columns}
-        rows={ids.flatMap((id, i) =>
+        rows={ids
           // Each pair once: the matrix is symmetric, and a diagonal of 100%
           // tells the reader nothing.
-          ids
-            .slice(i + 1)
-            .map((other, j) => [
-              geneSymbol,
+          .flatMap((id, i) =>
+            ids.slice(i + 1).map((other, j) => ({
               id,
               other,
-              Number(valueAt(i, i + 1 + j).toFixed(1)),
-            ]),
-        )}
+              value: Number(valueAt(i, i + 1 + j).toFixed(1)),
+            })),
+          )
+          // Most identical first. The footnote asks the reader to optimize one
+          // isoform per ≥95% cluster, and in gene order those pairs were
+          // scattered through 120 rows with no way to sort or filter them.
+          .sort((a, b) => b.value - a.value)
+          .map(({ id, other, value }) => [geneSymbol, id, other, value])}
         csvFilename={geneSearchCopy.charts.identityMatrix.csvFilename(
           geneSymbol,
         )}
       />
     </>
+  )
+}
+
+/**
+ * The one scroller the grid gets, inside the card's padding. It must not
+ * bleed past the card with a negative margin (the grid then overflows the
+ * card, and the page scrolls sideways with it), and it must not sit inside
+ * another horizontal scroller: `sticky` row headers pin to the nearest scroll
+ * container, so a second one above this takes the scroll and the labels
+ * scroll away with the grid.
+ *
+ * `contain-paint` is load-bearing, not decoration: without it the grid's
+ * sticky row labels extend the *page's* scrollable area, so a swipe anywhere
+ * panned the whole gene page 73px sideways even though this box already
+ * clipped and scrolled correctly. Measured: page pan 73px -> 0.
+ * `overscroll-x-contain` then stops a swipe that reaches the grid's end from
+ * chaining to the page.
+ *
+ * The grid is clipped at the card's edge with nothing to say so — on a phone
+ * a 16-column matrix is cut mid-column 12 and reads as a 12-column one. So
+ * the columns dissolve at the right edge while there is more grid behind it,
+ * which is bg-agnostic (it fades the cells themselves) and goes away once the
+ * end is reached. The left edge is left alone: the row labels are pinned
+ * there, and fading them would hide the one thing that stays put.
+ */
+function GridScroller({ children }: { children: ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null)
+  const [more, setMore] = useState(false)
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const update = () => {
+      setMore(el.scrollLeft + el.clientWidth < el.scrollWidth - 4)
+    }
+    update()
+    el.addEventListener('scroll', update, { passive: true })
+    const observer = new ResizeObserver(update)
+    observer.observe(el)
+    return () => {
+      el.removeEventListener('scroll', update)
+      observer.disconnect()
+    }
+  }, [])
+
+  const fade =
+    'linear-gradient(to right, black calc(100% - 2rem), transparent 100%)'
+  return (
+    <div
+      ref={ref}
+      className="min-w-0 overflow-x-auto overscroll-x-contain contain-paint"
+      style={more ? { maskImage: fade, WebkitMaskImage: fade } : undefined}
+    >
+      {children}
+    </div>
   )
 }
 
@@ -336,8 +410,13 @@ function Row({
         </Link>
       </th>
       {values.map((v, j) => {
-        // Lower triangle + diagonal only; the mirror would repeat every value.
-        if (j > index) return <td key={j} aria-hidden className="size-6" />
+        // Strict lower triangle: the mirror would repeat every value, and the
+        // diagonal is an isoform against itself. It drew a dark staircase in
+        // the ramp's top color — the one that means "near-duplicate, worth
+        // acting on" — and read out "100% identity between ENST… and the same
+        // ENST…" to anyone who focused it. The data table leaves it out for
+        // the same reason.
+        if (j >= index) return <td key={j} aria-hidden className="size-6" />
         const bin = binFor(v)
         const label = geneSearchCopy.identityMatrix.cellLabel(
           v.toFixed(1),

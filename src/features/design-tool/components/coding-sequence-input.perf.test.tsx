@@ -63,7 +63,16 @@ function mount(initial: string) {
   return { textarea, backdrop }
 }
 
-/** Median ms of synchronous work per keystroke typed at the end. */
+/**
+ * The cheapest of `keystrokes` keystrokes typed at the end, in ms.
+ *
+ * The fastest sample, not the median: every sample is this machine's work plus
+ * whatever else it was doing, and only the floor of that distribution
+ * estimates the work. The median of nine samples read 24 ms here idle and 76 ms
+ * with three agents and a full suite running beside it — the same code, a
+ * budget that passed alone and failed in `pnpm verify`. The minimum moved from
+ * 21 ms to 18 ms across those same two runs.
+ */
 function typeAtEnd(textarea: HTMLTextAreaElement, keystrokes: number): number {
   const times: number[] = []
   for (let i = 0; i < keystrokes; i++) {
@@ -74,27 +83,43 @@ function typeAtEnd(textarea: HTMLTextAreaElement, keystrokes: number): number {
     })
     times.push(performance.now() - start)
   }
-  times.sort((a, b) => a - b)
-  return times[Math.floor(times.length / 2)]
+  return Math.min(...times)
 }
 
 /**
- * Generous: the measurement was ~19 ms at 14.4 kb after this layer stopped
+ * Generous: the floor measured ~21 ms at 14.4 kb after this layer stopped
  * mounting a tooltip per highlighted run, and ~138 ms before. A loaded CI
- * runner may be several times slower than a laptop and still pass; a
- * regression to a component per run will not.
+ * runner may be a couple of times slower than a laptop and still pass; a
+ * regression to a component per run, or to a full re-scan of the sequence on
+ * every render, will not.
  */
 const BUDGET_MS = 60
+
+/**
+ * Elements the layer draws per highlighted run: a `mark` and the `span` inside
+ * it. The number is what the wall-clock budget above is really about, and it
+ * does not depend on how loaded the machine is — so it is asserted at every
+ * length, because the fault it guards against (a component per run) shows up
+ * as this ratio growing. It is a ceiling rather than an equality: the trailing
+ * incomplete codon is marked without an inner span.
+ */
+const ELEMENTS_PER_MARK = 2
 
 afterEach(cleanup)
 
 describe('CodingSequenceInput typing cost', () => {
   for (const bp of [306, 3600, 7200, 14400]) {
     it(`stays inside the keystroke budget at ${bp} bp`, () => {
-      const { textarea } = mount(outOfFrameSequence(bp))
-      const median = typeAtEnd(textarea, 9)
-      console.log(`[perf] ${bp} bp: ${median.toFixed(1)} ms per keystroke`)
-      expect(median).toBeLessThan(BUDGET_MS)
+      const { textarea, backdrop } = mount(outOfFrameSequence(bp))
+      const floorMs = typeAtEnd(textarea, 9)
+      console.log(`[perf] ${bp} bp: ${floorMs.toFixed(1)} ms per keystroke`)
+
+      const marks = backdrop.querySelectorAll('mark').length
+      expect(marks).toBeGreaterThan(1)
+      expect(backdrop.querySelectorAll('*').length).toBeLessThanOrEqual(
+        marks * ELEMENTS_PER_MARK,
+      )
+      expect(floorMs).toBeLessThan(BUDGET_MS)
     })
   }
 

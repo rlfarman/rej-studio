@@ -11,6 +11,7 @@ vi.mock('../api/cloud-designs', () => ({
 import { renderWithAccount } from '@/components/account/test-utils'
 import { useJobHistory, whenJobHistoryHydrated } from '../hooks/use-job-history'
 import type { CloudDesignSummary } from '../types/cloud-design'
+import { formatTimeAgo } from '../utils/time-ago'
 import { designToolCopy } from '../copy'
 import { MyCloudDesigns } from './my-cloud-designs'
 
@@ -58,7 +59,12 @@ describe('MyCloudDesigns', () => {
     renderList('signed-in', onSelect)
     expect(await screen.findByText(copy.label)).toBeTruthy()
     expect(screen.getByText('From the lab PC')).toBeTruthy()
-    expect(screen.getByText(copy.subline(1200))).toBeTruthy()
+    // Dated: from another device the list said only a name and a length.
+    expect(
+      screen.getByText(
+        copy.subline(1200, formatTimeAgo('2026-11-02T00:00:00Z')),
+      ),
+    ).toBeTruthy()
     expect(screen.queryByText('Already here')).toBeNull()
     fireEvent.click(screen.getByText('From the lab PC'))
     expect(onSelect).toHaveBeenCalledWith(ELSEWHERE)

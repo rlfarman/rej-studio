@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams, useSearch } from '@tanstack/react-router'
 import {
   Table,
   TableBody,
+  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
@@ -17,7 +18,9 @@ import {
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
   createDropdownMenuHandle,
@@ -222,6 +225,12 @@ export default function IsoformTable({
           isoforms is normal (TP53 has 20), and past about ten rows the
           numeric columns were unlabelled. */}
       <Table containerClassName="max-h-[75svh] overflow-auto">
+        {/* Named, like the identity matrix below: the page has two tables, and
+            an unnamed one is a row of anonymous numbers in a screen reader's
+            table list. */}
+        <TableCaption className="sr-only">
+          {copy.caption(geneSymbol)}
+        </TableCaption>
         {/* Opaque and above the rows: a translucent header lets the rows it
             is pinned over read through it. */}
         <TableHeader className="sticky top-0 z-20 bg-background [&_th]:bg-background">
@@ -598,6 +607,15 @@ function IsoformMenuContent({
 }) {
   return (
     <DropdownMenuContent align="end">
+      {/* Which isoform this menu acts on. On a phone the menu opens over its
+          own row and leaves the row above it showing, so six unattributed
+          items read as if they belonged to the wrong transcript. Base UI
+          wants its label inside a group. */}
+      <DropdownMenuGroup>
+        <DropdownMenuLabel className="font-mono">
+          {isoform.id}
+        </DropdownMenuLabel>
+      </DropdownMenuGroup>
       {hasPreOptimizedZip(isoform.suitability) ? (
         <DropdownMenuItem
           render={
@@ -749,6 +767,9 @@ function ExpandedDetails({ isoform }: { isoform: IsoformRowData }) {
         )}
       </div>
 
+      {/* Each dropped column carries the header's own infotip down with it:
+          this list is the only place a phone sees CpG or WGGW, so without
+          them those terms had no explanation on a phone at all. */}
       <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs sm:hidden">
         <div>
           <dt className="text-muted-foreground">Protein</dt>
@@ -757,17 +778,17 @@ function ExpandedDetails({ isoform }: { isoform: IsoformRowData }) {
           </dd>
         </div>
         <div>
-          <dt className="text-muted-foreground">GC</dt>
+          <MetricTerm term={terms.gc} />
           <dd className="font-mono tabular-nums">{gcPercent.toFixed(1)}%</dd>
         </div>
         <div>
-          <dt className="text-muted-foreground">CpG</dt>
+          <MetricTerm term={terms.cpg} />
           <dd className="font-mono tabular-nums">
             {cpgCount.toLocaleString()}
           </dd>
         </div>
         <div>
-          <dt className="text-muted-foreground">WGGW</dt>
+          <MetricTerm term={terms.wggw} />
           <dd className="font-mono tabular-nums">
             {wggwCount.toLocaleString()}
           </dd>
@@ -776,13 +797,13 @@ function ExpandedDetails({ isoform }: { isoform: IsoformRowData }) {
       {/* AAV fit is not repeated here: its column is on every screen size. */}
       <dl className="hidden grid-cols-2 gap-x-4 gap-y-2 text-xs sm:grid md:hidden">
         <div>
-          <dt className="text-muted-foreground">CpG</dt>
+          <MetricTerm term={terms.cpg} />
           <dd className="font-mono tabular-nums">
             {cpgCount.toLocaleString()}
           </dd>
         </div>
         <div>
-          <dt className="text-muted-foreground">WGGW</dt>
+          <MetricTerm term={terms.wggw} />
           <dd className="font-mono tabular-nums">
             {wggwCount.toLocaleString()}
           </dd>
@@ -798,6 +819,19 @@ function ExpandedDetails({ isoform }: { isoform: IsoformRowData }) {
         />
       )}
     </div>
+  )
+}
+
+/**
+ * A dropped column's label in the expanded row, with the same infotip its
+ * header carries. The label is the header's, so the two cannot drift apart.
+ */
+function MetricTerm({ term }: { term: { label: string; hint: string } }) {
+  return (
+    <dt className="flex items-center gap-0.5 text-muted-foreground">
+      {term.label}
+      <TermHint topic={term.label} hint={term.hint} />
+    </dt>
   )
 }
 

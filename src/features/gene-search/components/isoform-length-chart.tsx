@@ -1,4 +1,5 @@
 import { Link, useParams } from '@tanstack/react-router'
+import { BarChart3 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
   assessDesignSuitability,
@@ -39,12 +40,24 @@ export function IsoformLengthChart({ isoforms }: Props) {
   const pct = (bp: number) => (bp / model.scaleMax) * 100
 
   return (
-    <section className="space-y-3" aria-labelledby="length-chart-title">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 id="length-chart-title" className="text-sm font-medium">
+    // A panel, like the identity matrix below it: the two are readings of one
+    // isoform set, and one bordered box beside one bare list read as
+    // different kinds of object. Radius by role (AGENTS.md): a panel in a
+    // page is `rounded-2xl`.
+    <section
+      className="min-w-0 space-y-4 rounded-2xl border p-4"
+      aria-labelledby="length-chart-title"
+    >
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2
+          id="length-chart-title"
+          className="flex items-center gap-2 font-sans text-sm font-medium"
+        >
+          <BarChart3 className="size-4 text-muted-foreground" />
           {copy.title}
         </h2>
-        <div className="flex flex-wrap items-center gap-3 type-micro">
+        {/* The matrix's legend type scale, so the pair reads as one section. */}
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 type-nano">
           {(['single-aav', 'dual-aav', 'triple-aav'] as const).map((s) => {
             const cfg = getSuitabilityConfig(s)
             return (
@@ -90,10 +103,16 @@ export function IsoformLengthChart({ isoforms }: Props) {
                     className={cn('h-full', cfg.fillClass)}
                     style={{ width: `${pct(row.length)}%` }}
                   />
+                  {/* A notch, not a hairline: a `bg-foreground/30` line
+                      disappeared against a saturated fill, which is the only
+                      place it carries information ("does this one clear the
+                      limit?"). A background-colored core with a darker edge
+                      reads on the empty track and on the bar, in both
+                      themes. */}
                   {model.thresholds.map((limit) => (
                     <div
                       key={limit}
-                      className="pointer-events-none absolute inset-y-0 w-px bg-foreground/30"
+                      className="pointer-events-none absolute inset-y-0 w-0.5 bg-background outline-1 outline-foreground/40"
                       style={{ left: `${pct(limit)}%` }}
                       aria-hidden="true"
                     />
@@ -135,7 +154,10 @@ export function IsoformLengthChart({ isoforms }: Props) {
         <span className="text-right">{copy.unit}</span>
       </div>
       <ChartDataTable
-        storageKey="isoforms"
+        // Its own key: the identity matrix below is a different chart with
+        // different columns, and a shared key meant one click opened a second
+        // table 600px down the page that nobody had asked for.
+        storageKey="isoform-lengths"
         caption={geneSearchCopy.charts.isoformLengths.caption}
         columns={geneSearchCopy.charts.isoformLengths.columns}
         // The tier's own label, not its slug: the legend above says

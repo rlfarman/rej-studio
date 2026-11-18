@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { ChevronLeft, ChevronRight, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { TermHint } from '@/components/term-hint'
 import { translateCodon } from '@/lib/bio/genetic-code'
 import type { WggwRecodingOption } from '@/lib/bio/sequence-utils'
 import { cn } from '@/lib/utils'
@@ -12,10 +13,12 @@ import {
   buildMotifGuide,
   buildSplitContext,
   getEditedPositions,
-  scoreRewriteOption,
+  rankedRewriteOptions,
 } from './sequence-helpers'
 import type { spliceTone } from './tones'
 import type { WggwSiteCandidate } from './types'
+
+const rewriteCopy = designToolCopy.splitPoint.rewrites
 
 export function Inspector({
   sequence,
@@ -163,6 +166,13 @@ export function Inspector({
     editedPositions,
   )
 
+  // The chips and the counter beside them read one order, so they cannot
+  // disagree about which option is "2 of 6".
+  const ranked = rankedRewriteOptions(selectedSite.rewriteOptions, species)
+  const selectedRank =
+    ranked.findIndex((entry) => entry.originalIndex === selectedRewriteIndex) +
+    1
+
   return (
     <div className={cardClass} onPointerDown={onActivate}>
       <div className="flex items-center justify-between gap-3">
@@ -198,82 +208,77 @@ export function Inspector({
       <div className="space-y-3">
         <div className="space-y-1.5">
           <div className="flex items-center justify-between text-[10px] font-semibold tracking-[0.08em] text-muted-foreground uppercase">
-            <span>Synonymous rewrites</span>
-            {selectedSite.rewriteOptions.length > 1 && (
+            <span className="inline-flex items-center gap-0.5">
+              {rewriteCopy.heading}
+              {/* No size override: the trigger's 24px icon is what gives
+                  it the 44px tap target, which a smaller one would lose. */}
+              <TermHint
+                topic={rewriteCopy.hintTopic}
+                hint={rewriteCopy.hint(species === 'none' ? null : species)}
+              />
+            </span>
+            {ranked.length > 1 && (
               <span className="text-muted-foreground normal-case">
-                {selectedRewriteIndex + 1} of{' '}
-                {selectedSite.rewriteOptions.length}
+                {rewriteCopy.position(selectedRank, ranked.length)}
               </span>
             )}
           </div>
           <RewriteRow>
-            {selectedSite.rewriteOptions
-              .map((option, originalIndex) => ({
-                option,
-                originalIndex,
-                score: scoreRewriteOption(option, species),
-              }))
-              // Sort best-first by codon-preference score when available;
-              // fall back to base-change count asc otherwise (no host picked).
-              .sort((a, b) => {
-                if (a.score !== null && b.score !== null)
-                  return b.score - a.score
-                if (a.score !== null) return -1
-                if (b.score !== null) return 1
-                return a.option.baseChanges - b.option.baseChanges
-              })
-              .map(({ option, originalIndex, score }) => {
-                const active = originalIndex === selectedRewriteIndex
-                // Order alone tells the recommendation story. Hover title
-                // still surfaces the precise score for users who want it.
-                const titleParts = [
-                  `${option.baseChanges} bp synonymous change${option.baseChanges === 1 ? '' : 's'} required`,
-                  score !== null
-                    ? `codon preference ${score.toFixed(2)} (${species})`
-                    : null,
-                ].filter(Boolean)
-                return (
-                  <button
-                    type="button"
-                    key={`${option.newHexamer}-${originalIndex}`}
-                    onClick={() => onSelectRewrite(originalIndex)}
-                    aria-pressed={active}
-                    aria-label={titleParts.join(' · ')}
-                    title={titleParts.join(' · ')}
-                    className={cn(
-                      'inline-flex shrink-0 items-center gap-2 rounded-full border px-2.5 py-1.5 font-mono text-[12px] transition-colors',
-                      active
-                        ? 'border-primary bg-primary/10 text-primary'
-                        : 'text-muted-foreground hover:border-primary/30 hover:bg-background/60',
-                    )}
-                  >
-                    <span className="flex flex-col items-center gap-0.5 leading-tight">
-                      <span
-                        className="grid font-mono text-[12px] leading-none"
-                        style={{ gridTemplateColumns: 'repeat(7, 1ch)' }}
-                      >
-                        <span className="col-start-2 text-center font-medium text-muted-foreground">
-                          {translateCodon(option.newCodons[0]) ?? '?'}
-                        </span>
-                        <span className="col-start-6 text-center font-medium text-muted-foreground">
-                          {translateCodon(option.newCodons[1]) ?? '?'}
-                        </span>
+            {ranked.map(({ option, originalIndex, score }, rank) => {
+              const active = originalIndex === selectedRewriteIndex
+              return (
+                <button
+                  type="button"
+                  key={`${option.newHexamer}-${originalIndex}`}
+                  onClick={() => onSelectRewrite(originalIndex)}
+                  aria-pressed={active}
+                  aria-label={rewriteCopy.optionAria(
+                    rank + 1,
+                    ranked.length,
+                    option.baseChanges,
+                    score === null ? null : score.toFixed(2),
+                  )}
+                  className={cn(
+                    'inline-flex shrink-0 items-center gap-2 rounded-full border px-2.5 py-1.5 font-mono text-[12px] transition-colors',
+                    active
+                      ? 'border-primary bg-primary/10 text-primary'
+                      : 'text-muted-foreground hover:border-primary/30 hover:bg-background/60',
+                  )}
+                >
+                  <span className="flex flex-col items-center gap-0.5 leading-tight">
+                    <span
+                      className="grid font-mono text-[12px] leading-none"
+                      style={{ gridTemplateColumns: 'repeat(7, 1ch)' }}
+                    >
+                      <span className="col-start-2 text-center font-medium text-muted-foreground">
+                        {translateCodon(option.newCodons[0]) ?? '?'}
                       </span>
-                      <span
-                        className="grid font-mono leading-none font-semibold"
-                        style={{ gridTemplateColumns: 'repeat(7, 1ch)' }}
-                      >
-                        <span className="col-span-3 text-center">
-                          {option.newCodons[0]}
-                        </span>
-                        <span className="col-span-3 col-start-5 text-center">
-                          {option.newCodons[1]}
-                        </span>
+                      <span className="col-start-6 text-center font-medium text-muted-foreground">
+                        {translateCodon(option.newCodons[1]) ?? '?'}
                       </span>
                     </span>
-                  </button>
-                )
-              })}
+                    <span
+                      className="grid font-mono leading-none font-semibold"
+                      style={{ gridTemplateColumns: 'repeat(7, 1ch)' }}
+                    >
+                      <span className="col-span-3 text-center">
+                        {option.newCodons[0]}
+                      </span>
+                      <span className="col-span-3 col-start-5 text-center">
+                        {option.newCodons[1]}
+                      </span>
+                    </span>
+                    {/* The cost of the option, on the chip. It was in the
+                        title, which a touch user never sees. */}
+                    <span className="text-[9px] leading-none font-medium tracking-[0.04em] opacity-80">
+                      {rank === 0
+                        ? `${rewriteCopy.best} · ${rewriteCopy.baseChanges(option.baseChanges)}`
+                        : rewriteCopy.baseChanges(option.baseChanges)}
+                    </span>
+                  </span>
+                </button>
+              )
+            })}
           </RewriteRow>
         </div>
 

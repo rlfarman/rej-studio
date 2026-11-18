@@ -119,6 +119,10 @@ export const geneSearchCopy = {
     },
   },
   isoformTable: {
+    // The page carries two tables; a screen reader's table list named one of
+    // them and left this one anonymous.
+    caption: (geneSymbol: string) =>
+      `Isoforms of ${geneSymbol}: coding and protein length, GC, CpG, WGGW split sites and AAV fit, with per-isoform actions.`,
     actionsHeader: 'Actions',
     expandAll: 'Expand all',
     collapseAll: 'Collapse all',
@@ -250,6 +254,10 @@ export const geneSearchCopy = {
     // Hover was the only way to read a value, which leaves out every phone
     // and every keyboard. The grid is one tab stop; arrows walk the cells.
     cellHint: 'Select a cell — or use the arrow keys — to read its identity.',
+    // Two isoforms are one number. A five-bin heatmap drawn around a single
+    // cell says less than the sentence does.
+    pairSummary: (a: string, b: string, pct: string) =>
+      `${a} and ${b} are ${pct}% identical.`,
     gridAria: 'Pairwise identity grid',
   },
 } as const

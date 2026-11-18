@@ -225,6 +225,70 @@ describe('a cloud submission refused before it started', () => {
   })
 })
 
+describe('editing a run that is still going', () => {
+  // Both the header and the progress card were gated on the form being
+  // hidden, so clicking Edit mid-run left a disabled "Running…" button as
+  // the only sign that anything was happening.
+  it('keeps the running header above the form', async () => {
+    job = makeJob({
+      jobId: 'browser-1',
+      status: 'running',
+      isLoading: true,
+      formValues: RUN_VALUES,
+      cancelJob: vi.fn(),
+    })
+    await renderForm()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Edit' }))
+
+    // The form is up…
+    expect(screen.getByRole('button', { name: /Running…/ })).toBeTruthy()
+    // …and so is the run, with the only control that stops it.
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'TP53 run' }),
+    ).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Cancel' })).toBeTruthy()
+    // Nothing to open: the inputs are already on screen.
+    expect(screen.queryByRole('button', { name: 'Edit' })).toBeNull()
+  })
+})
+
+describe('a submission the cloud refuses', () => {
+  // `submitJob` rejects for a refusal, react-hook-form rethrows whatever the
+  // submit handler throws, and the form's own submit path had no catch — so
+  // the message reached the window as an unhandled rejection, and Sentry as
+  // a page error.
+  it('does not let the rejection escape as a page error', async () => {
+    const rejections: unknown[] = []
+    const onRejection = (reason: unknown) => rejections.push(reason)
+    process.on('unhandledRejection', onRejection)
+    try {
+      job = makeJob({
+        submitJob: vi.fn().mockRejectedValue(new Error('cloud said no')),
+      })
+      const { container } = render(
+        <GeneSplitterForm
+          draftKey="new"
+          defaultCodingSequence={RUN_VALUES.codingSequence}
+          defaultName={RUN_VALUES.name}
+          defaultSpecies="human"
+          defaultSpliceJunctionPosition={591}
+        />,
+      )
+
+      fireEvent.submit(container.querySelector('form')!)
+      // Validation, the mutation and the rejection all settle in microtasks;
+      // an unhandled one is reported on the next turn of the event loop.
+      await new Promise((resolve) => setTimeout(resolve, 0))
+
+      expect(job.submitJob).toHaveBeenCalled()
+      expect(rejections).toEqual([])
+    } finally {
+      process.off('unhandledRejection', onRejection)
+    }
+  })
+})
+
 describe('a job id this device knows nothing about', () => {
   it('offers a new design instead of editing a blank form', async () => {
     job = makeJob({

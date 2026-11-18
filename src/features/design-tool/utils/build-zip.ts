@@ -1,6 +1,16 @@
 import { zipSync, strToU8 } from 'fflate'
 import type { ProcessResult } from '@/features/design-tool/types/process-result'
+import type { DesignToolSpecies } from '@/features/design-tool/types/species-options'
 import { buildMethodsParagraph } from '@/features/design-tool/utils/methods-paragraph'
+import { buildDesignReportMarkdown } from '@/features/design-tool/utils/design-report'
+
+/** What the export needs about the run beyond the result itself. */
+interface ResultsExport {
+  /** The options block, as the run recorded them (see `ResultsPanel`). */
+  optionsUsed: string
+  /** The species the run was submitted with; 'none' left codon usage alone. */
+  species: DesignToolSpecies
+}
 
 /** Build the report text from a ProcessResult. */
 function buildReportText(result: ProcessResult, optionsUsed: string): string {
@@ -59,14 +69,16 @@ function buildSequencesText(result: ProcessResult): string {
 }
 
 /**
- * Build the ZIP client-side from an already-computed ProcessResult: a report
- * file and a sequences file, as the old server-side zip endpoint produced
- * before it was removed, plus the run record, so an exported result can be
- * repeated or cited without the app.
+ * Build the ZIP client-side from an already-computed ProcessResult: the
+ * report as Markdown (the same report the panel's "Copy report" copies, with
+ * the date, the split point and the metrics), the text report and sequences
+ * file the old server-side zip endpoint produced, and the run record when the
+ * run carried one, so an exported result can be repeated or cited without the
+ * app.
  */
 export function buildResultsZipBytes(
   result: ProcessResult,
-  optionsUsed: string,
+  { optionsUsed, species }: ResultsExport,
 ): Uint8Array {
   const safeName = result.name.replace(/[^\w\-. ]/g, '_')
 
@@ -74,6 +86,9 @@ export function buildResultsZipBytes(
   const sequencesText = buildSequencesText(result)
 
   const files: Record<string, Uint8Array> = {
+    [`${safeName}_report.md`]: strToU8(
+      buildDesignReportMarkdown({ result, optionsUsed, species }),
+    ),
     [`${safeName}_report.txt`]: strToU8(reportText),
     [`${safeName}_sequences.txt`]: strToU8(sequencesText),
   }
@@ -86,8 +101,8 @@ export function buildResultsZipBytes(
   return zipSync(files)
 }
 
-function buildResultsZip(result: ProcessResult, optionsUsed: string): Blob {
-  const zipped = buildResultsZipBytes(result, optionsUsed)
+function buildResultsZip(result: ProcessResult, exported: ResultsExport): Blob {
+  const zipped = buildResultsZipBytes(result, exported)
 
   return new Blob([zipped.buffer as ArrayBuffer], { type: 'application/zip' })
 }
@@ -95,9 +110,9 @@ function buildResultsZip(result: ProcessResult, optionsUsed: string): Blob {
 /** Trigger a browser download of the ZIP. */
 export function downloadResultsZip(
   result: ProcessResult,
-  optionsUsed: string,
+  exported: ResultsExport,
 ): void {
-  const blob = buildResultsZip(result, optionsUsed)
+  const blob = buildResultsZip(result, exported)
   const safeName = result.name.replace(/[^\w\-. ]/g, '_')
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')

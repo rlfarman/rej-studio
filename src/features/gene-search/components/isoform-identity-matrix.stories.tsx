@@ -76,6 +76,17 @@ export const StoredIdentities: Story = {
   },
 }
 
+/** Two isoforms are one number, so the section says it rather than draws it. */
+export const SinglePair: Story = {
+  args: {
+    isoforms: isoforms.slice(0, 2),
+    identity: parseIsoformIdentity(
+      { isoforms: TP53_IDS.slice(0, 2), permille: [877] },
+      isoforms.slice(0, 2),
+    ),
+  },
+}
+
 /** A corpus built before identities were stored. */
 export const Unavailable: Story = {
   args: { isoforms, identity: null },

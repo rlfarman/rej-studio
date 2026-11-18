@@ -232,7 +232,11 @@ interface JobHeaderProps {
   processingTimeSeconds?: number | null
   errorMessage?: string | null
   retriable?: boolean
-  onEdit: () => void
+  /**
+   * Opens this run's inputs. Omitted when the form is already on screen (a
+   * run being edited while it finishes), where there is nothing to open.
+   */
+  onEdit?: () => void
   onRerun: () => void
   onCancel?: () => void
   /**
@@ -401,28 +405,36 @@ export function JobHeader({
               </Button>
             )}
             {status === 'running' && onCancel && (
+              // The only way to stop a run, so it is drawn like the other
+              // actions rather than as ghost text, and on a phone its hit
+              // area is stretched to a touch target the way the repo does it
+              // elsewhere — growing the button itself would leave it taller
+              // than the Edit beside it.
               <Button
                 type="button"
-                variant="ghost"
+                variant="outline"
                 size="sm"
                 onClick={onCancel}
+                className="relative before:absolute before:-inset-2.5 sm:before:hidden"
               >
                 {copy.buttonCancel}
               </Button>
             )}
-            <Button
-              type="button"
-              variant={missing ? 'default' : 'outline'}
-              size="sm"
-              onClick={onEdit}
-            >
-              {missing ? (
-                <Plus className="size-3.5" />
-              ) : (
-                <Pencil className="size-3.5" />
-              )}
-              {missing ? copy.buttonNewDesign : copy.buttonEdit}
-            </Button>
+            {onEdit && (
+              <Button
+                type="button"
+                variant={missing ? 'default' : 'outline'}
+                size="sm"
+                onClick={onEdit}
+              >
+                {missing ? (
+                  <Plus className="size-3.5" />
+                ) : (
+                  <Pencil className="size-3.5" />
+                )}
+                {missing ? copy.buttonNewDesign : copy.buttonEdit}
+              </Button>
+            )}
             {canRerun && (
               <Button type="button" size="sm" onClick={onRerun}>
                 {status === 'failed' ? (

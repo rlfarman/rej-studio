@@ -48,6 +48,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
+import { CopyButton } from '@/components/copy-button'
 import type { ProcessResult } from '@/features/design-tool/types/process-result'
 import { toast } from '@/lib/toast'
 import { SequenceVisualizations } from './sequence-visualizations'
@@ -64,11 +65,8 @@ import { formatFasta } from '@/lib/bio/fasta'
 import { downloadTextFile } from '@/lib/download-file'
 import { isSpecies } from '@/lib/bio/species'
 import type { DesignToolSpecies } from '@/features/design-tool/types/species-options'
-import { computeGcPercent, countCpG } from '@/lib/bio/sequence-utils'
-import {
-  computeCai,
-  deriveKeyMetrics,
-} from '@/features/design-tool/utils/objective-metrics'
+import { computeResultMetrics } from '@/features/design-tool/utils/result-metrics'
+import { buildDesignReportMarkdown } from '@/features/design-tool/utils/design-report'
 import {
   buildObjectiveSteps,
   countOutcomes,
@@ -95,18 +93,6 @@ interface ResultsPanelProps {
    * file misdescribe itself.
    */
   runValues: FormValues | null
-}
-
-/** Parse the DNAChisel objectives text into a digestible summary. */
-function parseObjectives(text: string) {
-  const totalMatch = text.match(/TOTAL OBJECTIVES SCORE:\s*([-\d.]+)/)
-  const totalScore = totalMatch ? parseFloat(totalMatch[1]) : null
-
-  const passedCount = (text.match(/✔/g) || []).length
-  const failedLines = text.match(/Failed\./g) || []
-  const failedCount = failedLines.length
-
-  return { totalScore, passedCount, failedCount }
 }
 
 function SplitVisualization({
@@ -146,59 +132,6 @@ function SplitVisualization({
 // because the number went up.
 const GC_TARGET = { min: GC_TARGET_MIN_PERCENT, max: GC_TARGET_MAX_PERCENT }
 
-/** Plain function — the React Compiler handles memoization. */
-function computeStats(result: ProcessResult, species: DesignToolSpecies) {
-  const before = parseObjectives(result.objectives_before)
-  const after = parseObjectives(result.objectives_after)
-  const keyBefore = deriveKeyMetrics(result.objectives_report_before)
-  const keyAfter = deriveKeyMetrics(result.objectives_report_after)
-  // A real codon adaptation index, from the sequence and the species' codon
-  // table. The report's MaximizeCAI entry holds the optimizer's objective
-  // score instead, which is negative and unbounded.
-  const cai = isSpecies(species)
-    ? {
-        before: computeCai(result.original_sequence, species),
-        after: computeCai(result.optimized_sequence, species),
-      }
-    : null
-
-  const orig = result.original_sequence
-  const opt = result.optimized_sequence
-  if (!orig || !opt) {
-    return {
-      before,
-      after,
-      keyBefore,
-      keyAfter,
-      cai,
-      gc: null,
-      cpg: null,
-      identity: null,
-    }
-  }
-
-  const gcBefore = computeGcPercent(orig)
-  const gcAfter = computeGcPercent(opt)
-  const cpgBefore = countCpG(orig)
-  const cpgAfter = countCpG(opt)
-
-  let changed = 0
-  const len = Math.min(orig.length, opt.length)
-  for (let i = 0; i < len; i++) if (orig[i] !== opt[i]) changed++
-  const identity = len > 0 ? 100 - (changed / len) * 100 : 100
-
-  return {
-    before,
-    after,
-    keyBefore,
-    keyAfter,
-    cai,
-    gc: { before: gcBefore, after: gcAfter },
-    cpg: { before: cpgBefore, after: cpgAfter },
-    identity,
-  }
-}
-
 function MetricsStrip({
   result,
   species,
@@ -206,7 +139,7 @@ function MetricsStrip({
   result: ProcessResult
   species: DesignToolSpecies
 }) {
-  const stats = computeStats(result, species)
+  const stats = computeResultMetrics(result, species)
 
   const showDonors =
     stats.keyBefore.spliceDonors > 0 || stats.keyAfter.spliceDonors > 0
@@ -221,8 +154,8 @@ function MetricsStrip({
     <div className="grid grid-cols-1 gap-px overflow-hidden rounded-2xl border bg-border sm:grid-cols-2 lg:grid-cols-4">
       <MetricCell
         label="Score"
-        before={stats.before.totalScore}
-        after={stats.after.totalScore}
+        before={stats.score.before}
+        after={stats.score.after}
       />
       <MetricCell
         label="GC"
@@ -543,7 +476,7 @@ function ResultsPanelImpl({ result, runValues }: ResultsPanelProps) {
     try {
       const { downloadResultsZip } =
         await import('@/features/design-tool/utils/build-zip')
-      downloadResultsZip(result, optionsUsed)
+      downloadResultsZip(result, { optionsUsed, species })
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : errorsCopy.download.failure,
@@ -575,23 +508,19 @@ function ResultsPanelImpl({ result, runValues }: ResultsPanelProps) {
   })()
 
   // Counted off the structured report, which is what the section itself
-  // reports. Parsing the text gave a second total three lines away from the
-  // first ("26 of 30 passed" over "26 of 32 objectives passed"): the text
-  // ticks only the objectives it prints a ✔ for.
-  const objectivesSummary = (() => {
-    const entries = result.objectives_report_after.entries
-    if (entries.length > 0) {
-      return resultsCopy.summaries.objectivesPassed(
-        entries.filter((entry) => entry.passes).length,
-        entries.length,
-      )
-    }
-    // No structured report (an older result): the text is all there is.
-    const after = parseObjectives(result.objectives_after)
-    const total = after.passedCount + after.failedCount
-    if (total === 0) return undefined
-    return resultsCopy.summaries.objectivesPassed(after.passedCount, total)
-  })()
+  // reports. Counting ✔ marks in the optimizer's text gave a second total
+  // three lines away from the first ("26 of 30 passed" over "26 of 32
+  // objectives passed"), because the text ticks only some of the objectives.
+  // A result with no structured report gets no summary rather than a count
+  // arrived at a different way.
+  const objectivesEntries = result.objectives_report_after.entries
+  const objectivesSummary =
+    objectivesEntries.length > 0
+      ? resultsCopy.summaries.objectivesPassed(
+          objectivesEntries.filter((entry) => entry.passes).length,
+          objectivesEntries.length,
+        )
+      : undefined
 
   const changedSummary = (() => {
     const counts = countOutcomes(
@@ -634,15 +563,34 @@ function ResultsPanelImpl({ result, runValues }: ResultsPanelProps) {
               )}
             </CardDescription>
           </div>
-          <Button
-            type="button"
-            size="default"
-            className="gap-1.5 bg-accent text-accent-foreground shadow-sm hover:bg-accent/80"
-            onClick={handleDownloadZip}
-          >
-            <Download className="size-4" />
-            {resultsCopy.downloadZip}
-          </Button>
+          <div className="flex flex-wrap items-center justify-end gap-1.5">
+            {/* The paper-ready artifact, at the top level: it used to be a
+                "Copy as MD" three interactions deep, inside a <details>
+                inside the collapsed objectives row. Built on click, not on
+                render. */}
+            <CopyButton
+              text={() =>
+                buildDesignReportMarkdown({ result, optionsUsed, species })
+              }
+              icon={FileText}
+              variant="outline"
+              size="default"
+              copiedLabel={resultsCopy.copiedReport}
+              aria-label={resultsCopy.copyReportAria}
+              className="gap-1.5"
+            >
+              {resultsCopy.copyReport}
+            </CopyButton>
+            <Button
+              type="button"
+              size="default"
+              className="gap-1.5 bg-accent text-accent-foreground shadow-sm hover:bg-accent/80"
+              onClick={handleDownloadZip}
+            >
+              <Download className="size-4" />
+              {resultsCopy.downloadZip}
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
