@@ -12,6 +12,7 @@ import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
+  createTooltipHandle,
 } from '@/components/ui/tooltip'
 import {
   DropdownMenu,
@@ -19,6 +20,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  createDropdownMenuHandle,
 } from '@/components/ui/dropdown-menu'
 import {
   ExternalLink,
@@ -38,6 +40,7 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
+import { useMediaQuery } from '@/hooks/use-media-query'
 import { formatFasta } from '@/lib/bio/fasta'
 import { downloadTextFile } from '@/lib/download-file'
 import {
@@ -80,6 +83,18 @@ interface IsoformListProps {
 
 const COLUMN_COUNT = 9
 
+/**
+ * Where a row's hover quick actions can show: a pointer that hovers, on a
+ * screen wider than Tailwind's `sm`. Elsewhere the row's menu has the same
+ * actions, and the quick actions aren't mounted at all.
+ */
+const QUICK_ACTIONS_QUERY = '(min-width: 40rem) and (not (pointer: coarse))'
+
+type RowMenuHandle = ReturnType<
+  typeof createDropdownMenuHandle<IsoformListItem>
+>
+type QuickActionTipHandle = ReturnType<typeof createTooltipHandle<string>>
+
 type IsoformRowData = IsoformListItem & {
   gcPercent: number
   cpgCount: number
@@ -106,6 +121,15 @@ export default function IsoformTable({
   const [expandedIds, setExpandedIds] = useState<Set<string>>(() =>
     highlightedIsoformId ? new Set([highlightedIsoformId]) : new Set(),
   )
+  // One "more" menu and one quick-action tooltip for the whole table, rather
+  // than a Base UI root per row (three per isoform): rows render only their
+  // triggers, which pass the row along as the payload. Base UI controls are
+  // most of what the gene page costs to render on a phone.
+  const [rowMenu] = useState(createDropdownMenuHandle<IsoformListItem>)
+  const [quickActionTip] = useState(createTooltipHandle<string>)
+  // The quick actions are two buttons and two tooltip triggers a row, so
+  // they're left out where they can't show, not just hidden with CSS.
+  const showQuickActions = useMediaQuery(QUICK_ACTIONS_QUERY)
 
   // Each metric is computed once per isoform, not once per comparison.
   const rows: IsoformRowData[] = isoforms.map((isoform) => {
@@ -253,15 +277,27 @@ export default function IsoformTable({
               cpgCount={row.cpgCount}
               wggwCount={row.wggwCount}
               suitConfig={getSuitabilityConfig(row.suitability)}
-              cdsId={`cds-${row.id}`}
-              fastaId={`fasta-${row.id}`}
-              isCopied={isCopied}
-              copyText={copyText}
+              rowMenu={rowMenu}
+              quickActionTip={showQuickActions ? quickActionTip : null}
               onToggleExpanded={toggleExpanded}
             />
           ))}
         </TableBody>
       </Table>
+      <DropdownMenu handle={rowMenu}>
+        {({ payload: isoform }) =>
+          isoform && (
+            <IsoformMenuContent
+              isoform={isoform}
+              isCopied={isCopied}
+              copyText={copyText}
+            />
+          )
+        }
+      </DropdownMenu>
+      <Tooltip handle={quickActionTip}>
+        {({ payload: label }) => <TooltipContent>{label}</TooltipContent>}
+      </Tooltip>
     </>
   )
 }
@@ -274,10 +310,8 @@ function IsoformRow({
   cpgCount,
   wggwCount,
   suitConfig,
-  cdsId,
-  fastaId,
-  isCopied,
-  copyText,
+  rowMenu,
+  quickActionTip,
   onToggleExpanded,
 }: {
   isoform: IsoformListItem
@@ -287,10 +321,9 @@ function IsoformRow({
   cpgCount: number
   wggwCount: number
   suitConfig: ReturnType<typeof getSuitabilityConfig>
-  cdsId: string
-  fastaId: string
-  isCopied: (id: string) => boolean
-  copyText: (text: string, id: string) => void
+  rowMenu: RowMenuHandle
+  /** Null where the quick actions can't show (QUICK_ACTIONS_QUERY). */
+  quickActionTip: QuickActionTipHandle | null
   onToggleExpanded: (id: string) => void
 }) {
   const [ringVisible, setRingVisible] = useState(!!isHighlighted)
@@ -371,17 +404,19 @@ function IsoformRow({
                 on the expanded or linked row) instead of repeating two labels
                 on every row. They're icon buttons with tooltips so the column
                 stays narrow; the labeled versions live in the menu and in the
-                expanded row. Coarse pointers can't hover, so they use the
-                menu. */}
-            <div
-              className={cn(
-                'hidden items-center gap-0.5 transition-opacity duration-150 sm:flex pointer-coarse:hidden',
-                'opacity-0 group-focus-within/row:opacity-100 group-hover/row:opacity-100',
-                (isExpanded || ringVisible) && 'opacity-100',
-              )}
-            >
-              <Tooltip>
+                expanded row. Coarse pointers can't hover and phones have no
+                room, so there they use the menu. */}
+            {quickActionTip && (
+              <div
+                className={cn(
+                  'flex items-center gap-0.5 transition-opacity duration-150',
+                  'opacity-0 group-focus-within/row:opacity-100 group-hover/row:opacity-100',
+                  (isExpanded || ringVisible) && 'opacity-100',
+                )}
+              >
                 <TooltipTrigger
+                  handle={quickActionTip}
+                  payload={copy.downloadLong}
                   render={
                     <Button
                       variant="ghost"
@@ -400,10 +435,9 @@ function IsoformRow({
                 >
                   <PackageOpen className="size-4" />
                 </TooltipTrigger>
-                <TooltipContent>{copy.downloadLong}</TooltipContent>
-              </Tooltip>
-              <Tooltip>
                 <TooltipTrigger
+                  handle={quickActionTip}
+                  payload={copy.customizeLong}
                   render={
                     <Button
                       variant="ghost"
@@ -422,86 +456,22 @@ function IsoformRow({
                 >
                   <WandSparkles className="size-4" />
                 </TooltipTrigger>
-                <TooltipContent>{copy.customizeLong}</TooltipContent>
-              </Tooltip>
-            </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                render={
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="size-9"
-                    aria-label={copy.moreAria(isoform.id)}
-                  />
-                }
-              >
-                <MoreHorizontal className="size-4" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem
-                  render={
-                    <a
-                      href={preOptimizedZipUrl(isoform.id)}
-                      download={`${isoform.id}_v1.0.zip`}
-                    >
-                      <PackageOpen className="size-4" />
-                      {copy.downloadLong}
-                    </a>
-                  }
+              </div>
+            )}
+            <DropdownMenuTrigger
+              handle={rowMenu}
+              payload={isoform}
+              render={
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-9"
+                  aria-label={copy.moreAria(isoform.id)}
                 />
-                <DropdownMenuItem
-                  render={
-                    <Link to="/design-tool" search={{ isoform: isoform.id }} />
-                  }
-                >
-                  <WandSparkles className="size-4" />
-                  {copy.customizeLong}
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={() => copyText(isoform.codingSequence, cdsId)}
-                >
-                  <Copy className="size-4" />
-                  {isCopied(cdsId) ? copy.copied : copy.copyCds}
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() =>
-                    copyText(
-                      formatFasta(isoform.id, isoform.codingSequence),
-                      fastaId,
-                    )
-                  }
-                >
-                  <FileText className="size-4" />
-                  {isCopied(fastaId) ? copy.copied : copy.copyFasta}
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => {
-                    downloadTextFile(
-                      `${isoform.id}.fasta`,
-                      formatFasta(isoform.id, isoform.codingSequence),
-                    )
-                  }}
-                >
-                  <Download className="size-4" />
-                  {copy.downloadFasta}
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  render={
-                    <a
-                      href={`https://ensembl.org/id/${isoform.id}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <ExternalLink className="size-4" />
-                      {copy.viewEnsembl}
-                    </a>
-                  }
-                />
-              </DropdownMenuContent>
-            </DropdownMenu>
+              }
+            >
+              <MoreHorizontal className="size-4" />
+            </DropdownMenuTrigger>
           </div>
         </TableCell>
       </TableRow>
@@ -528,6 +498,78 @@ function IsoformRow({
         </TableRow>
       )}
     </>
+  )
+}
+
+/** The row's "more" menu, rendered once for the table by the shared root. */
+function IsoformMenuContent({
+  isoform,
+  isCopied,
+  copyText,
+}: {
+  isoform: IsoformListItem
+  isCopied: (id: string) => boolean
+  copyText: (text: string, id: string) => void
+}) {
+  const cdsId = `cds-${isoform.id}`
+  const fastaId = `fasta-${isoform.id}`
+  return (
+    <DropdownMenuContent align="end">
+      <DropdownMenuItem
+        render={
+          <a
+            href={preOptimizedZipUrl(isoform.id)}
+            download={`${isoform.id}_v1.0.zip`}
+          >
+            <PackageOpen className="size-4" />
+            {copy.downloadLong}
+          </a>
+        }
+      />
+      <DropdownMenuItem
+        render={<Link to="/design-tool" search={{ isoform: isoform.id }} />}
+      >
+        <WandSparkles className="size-4" />
+        {copy.customizeLong}
+      </DropdownMenuItem>
+      <DropdownMenuSeparator />
+      <DropdownMenuItem onClick={() => copyText(isoform.codingSequence, cdsId)}>
+        <Copy className="size-4" />
+        {isCopied(cdsId) ? copy.copied : copy.copyCds}
+      </DropdownMenuItem>
+      <DropdownMenuItem
+        onClick={() =>
+          copyText(formatFasta(isoform.id, isoform.codingSequence), fastaId)
+        }
+      >
+        <FileText className="size-4" />
+        {isCopied(fastaId) ? copy.copied : copy.copyFasta}
+      </DropdownMenuItem>
+      <DropdownMenuItem
+        onClick={() => {
+          downloadTextFile(
+            `${isoform.id}.fasta`,
+            formatFasta(isoform.id, isoform.codingSequence),
+          )
+        }}
+      >
+        <Download className="size-4" />
+        {copy.downloadFasta}
+      </DropdownMenuItem>
+      <DropdownMenuSeparator />
+      <DropdownMenuItem
+        render={
+          <a
+            href={`https://ensembl.org/id/${isoform.id}`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <ExternalLink className="size-4" />
+            {copy.viewEnsembl}
+          </a>
+        }
+      />
+    </DropdownMenuContent>
   )
 }
 
