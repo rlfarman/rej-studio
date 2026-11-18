@@ -150,7 +150,14 @@ function SignInFlow({ onDone }: { onDone: () => void }) {
           <DialogTitle>{copy.codeTitle}</DialogTitle>
           <DialogDescription>{copy.codeSent(step.email)}</DialogDescription>
         </DialogHeader>
-        <form className="grid gap-3" onSubmit={handleCode} noValidate>
+        {/* Keyed per step: both forms sit in the same place, and without
+            it React reuses the email field here, keeping the address. */}
+        <form
+          key="code"
+          className="grid gap-3"
+          onSubmit={handleCode}
+          noValidate
+        >
           <div className="grid gap-1.5">
             <Label htmlFor="sign-in-code">{copy.codeLabel}</Label>
             <Input
@@ -212,7 +219,12 @@ function SignInFlow({ onDone }: { onDone: () => void }) {
         <DialogTitle>{copy.title}</DialogTitle>
         <DialogDescription>{copy.description}</DialogDescription>
       </DialogHeader>
-      <form className="grid gap-3" onSubmit={handleEmail} noValidate>
+      <form
+        key="email"
+        className="grid gap-3"
+        onSubmit={handleEmail}
+        noValidate
+      >
         <div className="grid gap-1.5">
           <Label htmlFor="sign-in-email">{copy.emailLabel}</Label>
           <Input

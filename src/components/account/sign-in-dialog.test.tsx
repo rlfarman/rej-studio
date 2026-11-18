@@ -139,6 +139,23 @@ describe('SignInDialog', () => {
     expect(screen.getByLabelText(copy.emailLabel)).toBeTruthy()
   })
 
+  // Both steps put a form with one input in the same place, so without its own
+  // key React reuses the email field as the code field, typed text and all.
+  it('starts each step with an empty field, in both directions', async () => {
+    client.sendSignInCode.mockResolvedValue({ ok: true })
+    renderWithAccount(<SignInDialog />, 'signed-out')
+    typeEmail('ada@example.com')
+    const code = (await screen.findByLabelText(
+      copy.codeLabel,
+    )) as HTMLInputElement
+    expect(code.value).toBe('')
+
+    fireEvent.change(code, { target: { value: '123' } })
+    fireEvent.click(screen.getByRole('button', { name: copy.useAnotherEmail }))
+    const email = screen.getByLabelText(copy.emailLabel) as HTMLInputElement
+    expect(email.value).toBe('')
+  })
+
   it('offers Google only where it is configured', () => {
     renderWithAccount(<SignInDialog />, 'signed-out')
     expect(screen.queryByRole('button', { name: copy.google })).toBeNull()
