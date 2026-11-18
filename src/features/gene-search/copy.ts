@@ -106,6 +106,11 @@ export const geneSearchCopy = {
       `Download pre-optimized sequences for ${id} (ZIP)`,
     downloadHint:
       'Ready-made designs built with the default objectives, as a ZIP.',
+    // Every pre-built package in the corpus is a two-fragment (dual-vector)
+    // design, so there is nothing to offer an isoform that needs three.
+    downloadUnavailable: 'No pre-optimized ZIP for a triple-AAV sequence',
+    downloadUnavailableReason:
+      'This coding sequence needs three vectors. The ready-made package is a two-vector design, so both fragments would exceed the AAV packaging limit. Build a three-vector design in the design tool instead.',
     customizeLong: 'Customize in the design tool',
     customizeAria: (id: string) => `Customize ${id} in the design tool`,
     customizeHint:
