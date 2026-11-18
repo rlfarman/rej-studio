@@ -42,4 +42,19 @@ export interface ServerEnv extends Partial<Env> {
    * (local development, the worker smoke test), Sentry is off.
    */
   SENTRY_DSN?: string
+  /**
+   * Accounts (./accounts/): signs and encrypts Better Auth's cookies and
+   * tokens. A secret, 32+ characters. Without it accounts are off, except in
+   * local development with no passcode, which uses a fixed local secret.
+   */
+  BETTER_AUTH_SECRET?: string
+  /** "Sign in with Google": both, or the button is not offered. Secrets. */
+  GOOGLE_CLIENT_ID?: string
+  GOOGLE_CLIENT_SECRET?: string
+  /**
+   * `true` keeps the last sign-in code sent to each address in memory, for
+   * the end-to-end tests to read back (./accounts/dev-mailbox.ts). Set only
+   * by Playwright; the read is refused for anything but a loopback request.
+   */
+  AUTH_DEV_MAILBOX?: string
 }

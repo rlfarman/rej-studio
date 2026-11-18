@@ -15,13 +15,15 @@
 // e2e/cloud-design.spec.ts, in the browser, on dev and on this build.
 // The passcode gate is on, as deployed: the script checks that it turns away
 // signed-out requests, signs in through /api/login, and sends that session
-// cookie with everything after.
+// cookie with everything after. Accounts are on too, on a local D1 with the
+// committed migrations applied: an emailed code (the send_email binding,
+// simulated by wrangler) signs in, read back from the test mailbox.
 //
 // It lives here rather than in Vitest because @cloudflare/vitest-pool-workers
 // supports Vitest 4 and this repo runs Vite+'s Vitest 5; the pool's proxy
 // worker fails to start. See AGENTS.md ("Testing").
 
-import { spawn } from 'node:child_process'
+import { spawn, spawnSync } from 'node:child_process'
 import { mkdtempSync, readdirSync, rmSync } from 'node:fs'
 import { createServer } from 'node:net'
 import { tmpdir } from 'node:os'
@@ -37,6 +39,7 @@ const SECRET = 's'.repeat(32)
 const HEALTH_TOKEN = 'h'.repeat(40)
 const PASSCODE = 'smoke-passcode'
 const SESSION_SECRET = 'x'.repeat(40)
+const ACCOUNTS_SECRET = 'a'.repeat(40)
 
 /** The session cookie from signing in; sent with every request once set. */
 let session = ''
@@ -392,6 +395,144 @@ async function compareWithBrowser({ input, cloud }) {
   )
 }
 
+/** The `name=value` pairs a response sets, as a Cookie header. */
+function cookiesOf(response) {
+  return response.headers
+    .getSetCookie()
+    .map((cookie) => cookie.split(';')[0])
+    .join('; ')
+}
+
+/**
+ * Accounts on the real runtime: Better Auth on D1 (the local database, with
+ * migrations/ applied), the code sent through the send_email binding
+ * (wrangler simulates it locally and logs the message), the session it
+ * gives, and both ways out.
+ */
+async function accounts(url, log) {
+  const json = { 'content-type': 'application/json', origin: url }
+  const signedOut = await request(`${url}/api/account`, {
+    headers: { cookie: '' },
+  })
+  check(
+    'account state needs the passcode like every other API call',
+    signedOut.status === 401,
+    `HTTP ${signedOut.status}`,
+  )
+  const before = await (await request(`${url}/api/account`)).json()
+  check(
+    'accounts are on, with nobody signed in yet',
+    before.available === true && before.user === null,
+    JSON.stringify(before),
+  )
+
+  const email = `smoke-${Date.now()}@example.com`
+  const sent = await request(
+    `${url}/api/auth/email-otp/send-verification-otp`,
+    {
+      method: 'POST',
+      headers: json,
+      body: JSON.stringify({ email, type: 'sign-in' }),
+    },
+  )
+  check(
+    'a sign-in code is requested',
+    sent.status === 200,
+    `HTTP ${sent.status}`,
+  )
+  const code = await pollUntil(
+    async () => {
+      const response = await request(
+        `${url}/api/dev/sign-in-code?email=${encodeURIComponent(email)}`,
+      )
+      return response.ok ? (await response.json()).code : null
+    },
+    (value) => typeof value === 'string',
+    10_000,
+  )
+  // The binding's own log line can land after the mailbox read above, so
+  // wait for it rather than reading the log once.
+  const sentLine = await pollUntil(
+    () => log.join(''),
+    (text) =>
+      text.includes(`To: ${email}`) && text.includes('sign-in@rejstudio.com'),
+    10_000,
+  ).catch(() => '')
+  check(
+    'the code goes out through the send_email binding, from rejstudio.com',
+    sentLine.includes(`To: ${email}`),
+  )
+  const crossSite = await request(`${url}/api/auth/sign-in/email-otp`, {
+    method: 'POST',
+    headers: { ...json, origin: 'https://elsewhere.example' },
+    body: JSON.stringify({ email, otp: code }),
+  })
+  check(
+    'a cross-site sign-in is refused',
+    crossSite.status === 403,
+    `HTTP ${crossSite.status}`,
+  )
+  const wrong = await request(`${url}/api/auth/sign-in/email-otp`, {
+    method: 'POST',
+    headers: json,
+    body: JSON.stringify({
+      email,
+      otp: code === '000000' ? '111111' : '000000',
+    }),
+  })
+  check(
+    'a wrong code signs nobody in',
+    !wrong.ok && wrong.headers.getSetCookie().length === 0,
+    `HTTP ${wrong.status}`,
+  )
+  const signedIn = await request(`${url}/api/auth/sign-in/email-otp`, {
+    method: 'POST',
+    headers: json,
+    body: JSON.stringify({ email, otp: code }),
+  })
+  const account = cookiesOf(signedIn)
+  check(
+    'the emailed code signs in and sets the account cookie',
+    signedIn.ok && account.includes('rej-account.session_token='),
+    `HTTP ${signedIn.status}`,
+  )
+  const withAccount = { cookie: `${session}; ${account}` }
+  const after = await (
+    await request(`${url}/api/account`, { headers: withAccount })
+  ).json()
+  check(
+    'the account is signed in, from the D1 session',
+    after.user?.email === email,
+    JSON.stringify(after),
+  )
+  const out = await request(`${url}/api/auth/sign-out`, {
+    method: 'POST',
+    headers: { ...json, ...withAccount },
+    body: '{}',
+  })
+  const gone = await (
+    await request(`${url}/api/account`, { headers: withAccount })
+  ).json()
+  check(
+    'signing out ends the account session',
+    out.ok && gone.user === null,
+    JSON.stringify(gone),
+  )
+  // Leaving the lab (the passcode's sign-out) clears the account cookie too.
+  // The passcode cookie is stateless, so the script's own stays usable.
+  const logout = await request(`${url}/api/logout`, {
+    method: 'POST',
+    redirect: 'manual',
+    headers: { origin: url },
+  })
+  check(
+    'the passcode sign-out clears the account cookie too',
+    logout.headers
+      .getSetCookie()
+      .some((cookie) => cookie.startsWith('rej-account.session_token=;')),
+  )
+}
+
 async function main() {
   const port = await freePort()
   const url = `http://127.0.0.1:${port}`
@@ -400,6 +541,30 @@ async function main() {
   // design left from the last run would turn "submitted" into "already
   // done".
   const state = mkdtempSync(path.join(tmpdir(), 'rej-smoke-'))
+
+  // The accounts database's schema, into the same local state.
+  const migrate = spawnSync(
+    path.join(root, 'node_modules/.bin/wrangler'),
+    [
+      'd1',
+      'migrations',
+      'apply',
+      'AUTH_DB',
+      '--local',
+      '--config',
+      worker,
+      '--persist-to',
+      state,
+    ],
+    {
+      cwd: root,
+      encoding: 'utf8',
+      env: { ...process.env, CI: '1', WRANGLER_SEND_METRICS: 'false' },
+    },
+  )
+  if (migrate.status !== 0) {
+    throw new Error(`D1 migrations failed:\n${migrate.stdout}${migrate.stderr}`)
+  }
 
   // The wrangler binary itself, not `npx wrangler`, and in its own process
   // group: wrangler starts workerd as a child, and killing only the parent
@@ -429,6 +594,11 @@ async function main() {
       // var, and a smoke run must not report into the real project.
       '--var',
       'SENTRY_DSN:',
+      '--var',
+      `BETTER_AUTH_SECRET:${ACCOUNTS_SECRET}`,
+      // The test mailbox, so the script can read the emailed code back.
+      '--var',
+      'AUTH_DEV_MAILBOX:true',
     ],
     {
       cwd: root,
@@ -446,6 +616,9 @@ async function main() {
 
     // --- the passcode gate --------------------------------------------------
     await passcodeGate(url)
+
+    // --- accounts ------------------------------------------------------------
+    await accounts(url, log)
 
     // --- version -----------------------------------------------------------
     const version = await (await request(`${url}/api/version`)).json()

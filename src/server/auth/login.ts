@@ -22,13 +22,33 @@ const log = createLogger('auth')
 /** A passcode and a path; anything much bigger is not a sign-in. */
 const MAX_BODY_BYTES = 8 * 1024
 
-function seeOther(location: URL, cookie?: string): Response {
+function seeOther(location: URL, ...cookies: string[]): Response {
   const headers = new Headers({
     location: location.toString(),
     'cache-control': 'no-store',
   })
-  if (cookie) headers.append('set-cookie', cookie)
+  for (const cookie of cookies) headers.append('set-cookie', cookie)
   return new Response(null, { status: 303, headers })
+}
+
+/**
+ * The account's session cookie (src/server/accounts/auth.ts, cookie prefix
+ * `rej-account`), under both names Better Auth gives it: `__Secure-` on
+ * https. Cleared with the passcode's, so signing out of the lab on a shared
+ * computer signs out of the account too.
+ */
+const ACCOUNT_COOKIES = [
+  'rej-account.session_token',
+  '__Secure-rej-account.session_token',
+]
+
+function clearAccountCookies(url: URL): string[] {
+  const secure = url.protocol === 'https:' ? '; Secure' : ''
+  return ACCOUNT_COOKIES.filter(
+    (name) => secure || !name.startsWith('__Secure-'),
+  ).map(
+    (name) => `${name}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${secure}`,
+  )
 }
 
 function refuse(status: number, message: string): Response {
@@ -130,5 +150,9 @@ export function handleLogout(request: Request): Response {
   }
   const url = new URL(request.url)
   if (!sameOrigin(request, url)) return refuse(403, authCopy.crossOrigin)
-  return seeOther(new URL('/login', url), cookie(url, '', 0))
+  return seeOther(
+    new URL('/login', url),
+    cookie(url, '', 0),
+    ...clearAccountCookies(url),
+  )
 }

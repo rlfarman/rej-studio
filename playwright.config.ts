@@ -1,5 +1,6 @@
 import { defineConfig, devices } from '@playwright/test'
 import {
+  E2E_ACCOUNTS_SECRET,
   E2E_PASSWORD,
   E2E_PORT,
   E2E_SESSION_SECRET,
@@ -18,10 +19,13 @@ const baseURL = `http://localhost:${E2E_PORT}`
  * Port 3000 by default (`strictPort` in vite.config.ts): stop a local `pnpm dev`
  * first, or set E2E_PORT to run on another.
  */
+// The accounts database (AUTH_DB) is a local D1 under .wrangler/state, which
+// vp dev and vp preview share with wrangler: its migrations go in first.
+const migrate = 'pnpm db:migrate:local'
 const server =
   process.env.E2E_SERVER === 'preview'
-    ? `pnpm exec vp preview --port ${E2E_PORT}`
-    : `pnpm exec vp dev --port ${E2E_PORT}`
+    ? `${migrate} && pnpm exec vp preview --port ${E2E_PORT}`
+    : `${migrate} && pnpm exec vp dev --port ${E2E_PORT}`
 
 export default defineConfig({
   testDir: './e2e',
@@ -66,10 +70,15 @@ export default defineConfig({
     // The passcode gate, on as in production. The Cloudflare plugin passes
     // the process environment to the Worker only with this flag and only when
     // there is no .dev.vars, which is the case in CI and a fresh worktree.
+    // Accounts are on too, with the test mailbox: sign-in codes are kept
+    // for e2e/accounts.ts to read back from /api/dev/sign-in-code (only on
+    // localhost; src/server/accounts/dev-mailbox.ts).
     env: {
       CLOUDFLARE_INCLUDE_PROCESS_ENV: 'true',
       BASIC_AUTH_PASSWORD: E2E_PASSWORD,
       SESSION_SECRET: E2E_SESSION_SECRET,
+      BETTER_AUTH_SECRET: E2E_ACCOUNTS_SECRET,
+      AUTH_DEV_MAILBOX: 'true',
     },
     url: `${baseURL}/favicon.svg`,
     reuseExistingServer: false,

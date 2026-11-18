@@ -1,14 +1,20 @@
+import { queryOptions } from '@tanstack/react-query'
+
+import { accountScopedKey } from '@/lib/account/account'
 import {
   CLOUD_REFUSAL_STATUS,
   type CloudAnswer,
   type CloudDesign,
   type CloudDesignSubmitted,
+  type CloudDesignSummary,
+  type CloudRefusalReason,
 } from '@/features/design-tool/types/cloud-design'
 import type { FormValues } from '@/features/design-tool/types/form-schema'
 import { designToolCopy } from '@/features/design-tool/copy'
 
 import {
   deleteCloudDesignFn,
+  listMyCloudDesignsFn,
   readCloudDesignFn,
   submitCloudDesignFn,
 } from './cloud-designs.functions'
@@ -21,15 +27,22 @@ import {
  * Expected failures come back as values, with the server's own message (it
  * is written for the person reading it), so callers never need a try/catch.
  * `status` is the refusal's HTTP status, or 0 when no answer arrived
- * (offline). An expired sign-in is the passcode gate's 401, whose message
- * says to sign in again.
+ * (offline), with `reason` the server's refusal when there was one. An
+ * expired sign-in is the passcode gate's 401, whose message says to sign in
+ * again; `account_required` means the call needs an account the person is
+ * not signed in to.
  */
 
 const copy = designToolCopy.cloud
 
 export type CloudCall<T> =
   | { ok: true; data: T }
-  | { ok: false; status: number; message: string }
+  | {
+      ok: false
+      status: number
+      message: string
+      reason?: CloudRefusalReason
+    }
 
 async function call<T>(
   run: () => Promise<CloudAnswer<T>>,
@@ -47,6 +60,7 @@ async function call<T>(
     ok: false,
     status: CLOUD_REFUSAL_STATUS[answer.reason] ?? 500,
     message: answer.message ?? copy.failedGeneric,
+    reason: answer.reason,
   }
 }
 
@@ -66,3 +80,23 @@ export function fetchCloudDesign(id: string): Promise<CloudCall<CloudDesign>> {
 export function deleteCloudDesign(id: string): Promise<CloudCall<null>> {
   return call(() => deleteCloudDesignFn({ data: { id } }))
 }
+
+/** The signed-in account's cloud designs, newest first. */
+function listMyCloudDesigns(): Promise<CloudCall<CloudDesignSummary[]>> {
+  return call(() => listMyCloudDesignsFn())
+}
+
+/**
+ * "My cloud designs": the signed-in account's designs, from any device.
+ * Keyed under the account (`accountScopedKey`), so signing out drops it.
+ */
+export const myCloudDesignsQuery = queryOptions({
+  queryKey: accountScopedKey('cloud-designs'),
+  queryFn: async () => {
+    const answer = await listMyCloudDesigns()
+    if (answer.ok) return answer.data
+    throw new Error(answer.message)
+  },
+  staleTime: 60_000,
+  retry: 1,
+})

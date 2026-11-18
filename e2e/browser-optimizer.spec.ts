@@ -1,5 +1,7 @@
 import { expect, test, type Page } from '@playwright/test'
 
+import { ACCOUNT_STATE_PATH } from './accounts'
+
 // The in-browser optimizer, end to end through the real UI.
 //
 // The unit tests mock the worker and the Rust suite covers the optimizer
@@ -17,11 +19,13 @@ test('designs a sequence in the browser without calling the backend', async ({
   page,
 }) => {
   // Every request the page makes once it is up: the run itself must add
-  // nothing but the optimizer's own files.
+  // nothing but the optimizer's own files. (The sidebar reads who is signed
+  // in to an account; that is not the design.)
   const backendCalls: string[] = []
   const wasmRequests: string[] = []
   page.on('request', (request) => {
     const url = new URL(request.url())
+    if (url.pathname === ACCOUNT_STATE_PATH) return
     if (url.pathname.startsWith('/api/') || request.method() !== 'GET') {
       backendCalls.push(`${request.method()} ${url.pathname}`)
     }

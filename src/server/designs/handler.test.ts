@@ -19,8 +19,20 @@ import {
 } from '../auth/session'
 import { buildJobParams } from '@/features/design-tool/utils/form-handler'
 
+import {
+  createTestD1,
+  failingD1,
+  fakeEmail,
+  signInWithCode,
+} from '../accounts/test-utils'
 import type { ServerEnv } from '../env'
-import { deleteDesign, readDesign, statusOf, submitDesign } from './handler'
+import {
+  deleteDesign,
+  listMyDesigns,
+  readDesign,
+  statusOf,
+  submitDesign,
+} from './handler'
 import { STATUS_RETRY_DELAYS_MS } from './service'
 import { resultKey, type CloudDesignOutput } from './run'
 import {
@@ -33,39 +45,71 @@ import {
 } from './test-utils'
 
 // The cloud-design server functions' handlers, through the real service,
-// against an in-memory Workflow binding. Each answer is read as the client
-// gets it: its HTTP status (as the server function sends it) and its value. Identity is a real session cookie
-// signed under the passcode, so a test switches who is asking by sending
-// another caller's cookie.
+// against an in-memory Workflow binding and an in-memory D1 with the
+// committed migrations. Each answer is read as the client gets it: its HTTP
+// status (as the server function sends it) and its value. Identity is real:
+// a passcode session cookie signed under the passcode, and an account signed
+// in through Better Auth with an emailed code, so a test switches who is
+// asking by sending another caller's cookies.
 
-const BASE = 'http://localhost:3000/_serverFn/x'
+const SITE = 'http://localhost:3000'
+const BASE = `${SITE}/_serverFn/x`
 const GATE = {
   BASIC_AUTH_PASSWORD: 'splice-test',
   SESSION_SECRET: 'a-test-session-secret-of-at-least-32-chars',
 }
+const ACCOUNTS = {
+  BETTER_AUTH_SECRET: 'a-test-accounts-secret-of-at-least-32-chars',
+  AUTH_EMAIL_FROM: 'sign-in@rejstudio.com',
+}
 
 interface Caller {
+  /** The owner their designs carry; '' for someone without an account. */
   owner: string
   cookie: string
 }
 
-async function signIn(): Promise<Caller> {
+const mailbox = fakeEmail()
+const accounts = createTestD1()
+
+/** Past the passcode, with no account. */
+async function passcodeOnly(): Promise<Caller & { sid: string }> {
   const config = gateConfig(GATE)
   if (config.mode !== 'on') throw new Error('test gate is not on')
   const token = await signSession(config)
   const session = await verifySession(config, token)
   return {
-    owner: `session:${session!.sid}`,
+    owner: '',
+    sid: session!.sid,
     cookie: `${SESSION_COOKIE_NAME}=${token}`,
   }
 }
 
+/** Past the passcode and signed in to the account for `email`. */
+async function withAccount(email: string): Promise<Caller> {
+  const passcode = await passcodeOnly()
+  const { cookie, userId } = await signInWithCode(
+    {
+      ...GATE,
+      ...ACCOUNTS,
+      AUTH_DB: accounts.binding,
+      AUTH_EMAIL: mailbox.binding,
+    },
+    mailbox,
+    email,
+    SITE,
+  )
+  return { owner: `user:${userId}`, cookie: `${passcode.cookie}; ${cookie}` }
+}
+
 let ADA: Caller
 let BOB: Caller
+let PASSCODE_ONLY: Caller & { sid: string }
 
 beforeAll(async () => {
-  ADA = await signIn()
-  BOB = await signIn()
+  ADA = await withAccount('ada@example.com')
+  BOB = await withAccount('bob@example.com')
+  PASSCODE_ONLY = await passcodeOnly()
 })
 
 let workflow: FakeWorkflow
@@ -78,10 +122,13 @@ const callers = new WeakMap<ServerEnv, Caller>()
 beforeEach(() => {
   workflow = new FakeWorkflow()
   limiter = fakeLimiter()
+  accounts.sqlite.exec('delete from cloud_design')
   env = {
     DESIGN_WORKFLOW: workflow.binding(),
     DESIGN_LIMITER: limiter.binding,
+    AUTH_DB: accounts.binding,
     ...GATE,
+    ...ACCOUNTS,
   }
   callers.set(env, ADA)
 })
@@ -147,6 +194,10 @@ function read(id: string, e = env) {
 
 function remove(id: string, e = env) {
   return sent(deleteDesign(callAs(e), e, { id }))
+}
+
+function list(e = env) {
+  return sent(listMyDesigns(callAs(e), e))
 }
 
 /** Finishes an instance the way the Workflow would. */
@@ -310,7 +361,10 @@ describe('POST /api/designs', () => {
   })
 
   it('answers 503 when the Workflow is not bound', async () => {
-    const { status } = await submit(undefined, as(ADA, { ...GATE }))
+    const { status } = await submit(
+      undefined,
+      as(ADA, { ...GATE, ...ACCOUNTS, AUTH_DB: accounts.binding }),
+    )
     expect(status).toBe(503)
   })
 
@@ -338,14 +392,140 @@ describe('POST /api/designs', () => {
     expect(workflow.creates).toBe(0)
   })
 
-  it('treats local development with no passcode as one local owner', async () => {
-    const { status, json } = await submit(undefined, {
+  it('needs an account: past the passcode alone is not enough', async () => {
+    const { status, json } = await submit(undefined, as(PASSCODE_ONLY))
+    expect(status).toBe(401)
+    expect(json).toMatchObject({ ok: false, reason: 'account_required' })
+    expect(workflow.creates).toBe(0)
+  })
+
+  it('refuses for lack of an account before looking at the input', async () => {
+    expect((await submit('nope', as(PASSCODE_ONLY))).json.reason).toBe(
+      'account_required',
+    )
+  })
+
+  it('needs an account in local development with no passcode too', async () => {
+    const local = {
       DESIGN_WORKFLOW: workflow.binding(),
-    })
+      AUTH_DB: accounts.binding,
+    }
+    const signedOut = as(NOBODY, local)
+    expect((await submit(undefined, signedOut)).json.reason).toBe(
+      'account_required',
+    )
+    // Signed in locally (no passcode, the local accounts secret), the
+    // account owns it.
+    const { cookie, userId } = await signInWithCode(
+      {
+        ...local,
+        AUTH_EMAIL: mailbox.binding,
+        AUTH_EMAIL_FROM: 'a@rejstudio.com',
+      },
+      mailbox,
+      'local@example.com',
+      SITE,
+    )
+    const { status, json } = await submit(
+      undefined,
+      as({ owner: `user:${userId}`, cookie }, local),
+    )
     expect(status).toBe(202)
     expect(workflow.instances.get(json.id as string)!.params.owner).toBe(
-      'local',
+      `user:${userId}`,
     )
+  })
+
+  it('treats accounts as off, and refuses, when the database is not bound', async () => {
+    const { json } = await submit(
+      undefined,
+      as(ADA, { ...env, AUTH_DB: undefined }),
+    )
+    expect(json.reason).toBe('account_required')
+  })
+})
+
+describe('My cloud designs', () => {
+  it('lists what the account submitted, newest first', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    try {
+      vi.setSystemTime(new Date('2026-11-01T10:00:00Z'))
+      const { json: first } = await submit({
+        values: formValues({ name: 'First' }),
+      })
+      vi.setSystemTime(new Date('2026-11-02T10:00:00Z'))
+      const { json: second } = await submit({
+        values: formValues({ name: 'Second' }),
+      })
+      const { status, json } = await list()
+      expect(status).toBe(200)
+      expect(json).toEqual([
+        {
+          id: second.id,
+          name: 'Second',
+          bases: CDS.length,
+          submittedAt: '2026-11-02T10:00:00.000Z',
+        },
+        {
+          id: first.id,
+          name: 'First',
+          bases: CDS.length,
+          submittedAt: '2026-11-01T10:00:00.000Z',
+        },
+      ])
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('lists one entry for a resubmitted design, and each account its own', async () => {
+    await submit()
+    await submit()
+    await submit(undefined, as(BOB))
+    expect(await list()).toMatchObject({ status: 200 })
+    expect((await list()).json).toHaveLength(1)
+    // Bob submitted the identical design: the same run, on his list too.
+    const bobs = (await list(as(BOB))).json as unknown as { id: string }[]
+    expect(bobs.map((one) => one.id)).toEqual(
+      ((await list()).json as unknown as { id: string }[]).map((one) => one.id),
+    )
+    expect(workflow.creates).toBe(1)
+  })
+
+  it('keeps one account’s designs off another’s list', async () => {
+    await submit()
+    expect((await list(as(BOB))).json).toEqual([])
+  })
+
+  it('drops a design from the list when it is deleted', async () => {
+    const { json: submitted } = await submit()
+    complete(submitted.id as string)
+    expect((await remove(submitted.id as string)).status).toBe(200)
+    expect((await list()).json).toEqual([])
+  })
+
+  it('drops a design that is already gone from the cloud', async () => {
+    const { json: submitted } = await submit()
+    workflow.instances.get(submitted.id as string)!.deleted = true
+    expect((await remove(submitted.id as string)).status).toBe(404)
+    expect((await list()).json).toEqual([])
+  })
+
+  it('needs an account', async () => {
+    const { status, json } = await list(as(PASSCODE_ONLY))
+    expect(status).toBe(401)
+    expect(json.reason).toBe('account_required')
+  })
+
+  it('still submits when the list cannot be written', async () => {
+    const broken = failingD1(accounts.binding, (sql) =>
+      sql.includes('cloud_design'),
+    )
+    const { status } = await submit(
+      undefined,
+      as(ADA, { ...env, AUTH_DB: broken }),
+    )
+    expect(status).toBe(202)
   })
 })
 
@@ -424,6 +604,26 @@ describe('GET /api/designs/:id', () => {
     const { json: submitted } = await submit()
     const { status } = await read(submitted.id as string, as(NOBODY))
     expect(status).toBe(401)
+  })
+
+  it('opens for someone past the passcode without an account, who owns nothing', async () => {
+    const { json: submitted } = await submit()
+    complete(submitted.id as string)
+    const { status, json } = await read(
+      submitted.id as string,
+      as(PASSCODE_ONLY),
+    )
+    expect(status).toBe(200)
+    expect(json).toMatchObject({ status: 'completed', ownedByCaller: false })
+  })
+
+  it('tells the owning account it owns the design', async () => {
+    const { json: submitted } = await submit()
+    complete(submitted.id as string)
+    expect((await read(submitted.id as string)).json.ownedByCaller).toBe(true)
+    expect(
+      (await read(submitted.id as string, as(BOB))).json.ownedByCaller,
+    ).toBe(false)
   })
 
   describe('when the Workflow binding stumbles on a read', () => {
@@ -531,5 +731,35 @@ describe('DELETE /api/designs/:id', () => {
 
   it('answers 404 for an unknown design', async () => {
     expect((await remove('b'.repeat(64))).status).toBe(404)
+  })
+
+  it('needs an account', async () => {
+    const { json: submitted } = await submit()
+    complete(submitted.id as string)
+    const { status, json } = await remove(
+      submitted.id as string,
+      as(PASSCODE_ONLY),
+    )
+    expect(status).toBe(401)
+    expect(json.reason).toBe('account_required')
+    expect(workflow.instances.get(submitted.id as string)!.deleted).toBe(false)
+  })
+
+  it('reads, but does not let an account delete, a design a passcode session owned before accounts', async () => {
+    // Submitted under the old rule: owned by the browser's passcode session.
+    const { json: submitted } = await submit()
+    const id = submitted.id as string
+    const instance = workflow.instances.get(id)!
+    ;(instance.params as { owner: string }).owner =
+      `session:${PASSCODE_ONLY.sid}`
+    complete(id)
+    expect((await read(id, as(PASSCODE_ONLY))).json).toMatchObject({
+      status: 'completed',
+      owner: `session:${PASSCODE_ONLY.sid}`,
+      ownedByCaller: false,
+    })
+    expect((await remove(id)).status).toBe(403)
+    expect((await remove(id, as(PASSCODE_ONLY))).status).toBe(401)
+    expect(instance.deleted).toBe(false)
   })
 })

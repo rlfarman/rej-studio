@@ -7,8 +7,9 @@
   // (src/routes/api/); pages are static assets.
   "main": "./src/server/worker-entry.ts",
   "compatibility_date": "2026-11-16",
-  // No nodejs_compat: nothing on the Worker needs Node APIs. The MCP SDK
-  // (@modelcontextprotocol/server) and zod run on web standards alone.
+  // Node.js compatibility is on by default from compatibility date 2026-08-04
+  // (no flag needed). Better Auth (src/server/accounts/) relies on it for
+  // AsyncLocalStorage; nothing else on the Worker uses Node APIs.
   //
   // 5 minutes of CPU per invocation, the Paid plan's maximum: what an inline
   // MCP design and a cloud-design Workflow step each get. Workflow steps have
@@ -61,7 +62,7 @@
       "simple": { "limit": 10, "period": 60 },
     },
     {
-      // Cloud designs, per owner (a sign-in session or mcp:<token>). The plan
+      // Cloud designs, per owner (an account, user:<id>, or mcp:<token>). The plan
       // said ~20 an hour; a binding counts over 10 or 60 seconds only, so it
       // is 3 a minute (src/server/designs/rate-limit.ts).
       "name": "DESIGN_LIMITER",
@@ -74,7 +75,51 @@
       "namespace_id": "4104",
       "simple": { "limit": 10, "period": 60 },
     },
+    {
+      // Account sign-in requests (codes sent, codes tried, Google starts),
+      // per client address (src/server/accounts/handler.ts).
+      "name": "ACCOUNT_LIMITER",
+      "namespace_id": "4105",
+      "simple": { "limit": 20, "period": 60 },
+    },
+    {
+      // Sign-in codes mailed to one address: anyone past the passcode can
+      // ask for a code for any address, so this caps what that can send.
+      "name": "ACCOUNT_EMAIL_LIMITER",
+      "namespace_id": "4106",
+      "simple": { "limit": 3, "period": 60 },
+    },
   ],
+  // Accounts (Better Auth's user, session, account and verification tables)
+  // and each account's list of cloud designs. Schema: the SQL files in
+  // migrations/, applied with `wrangler d1 migrations apply AUTH_DB`
+  // (`--local` for vp dev / vp preview, `--remote` for the deployed one).
+  // Local runs keep their copy in .wrangler/state.
+  "d1_databases": [
+    {
+      "binding": "AUTH_DB",
+      "database_name": "rej-studio-accounts",
+      "database_id": "1fac645f-f7e6-4ec2-87c4-89f50e169695",
+      "migrations_dir": "migrations",
+    },
+  ],
+  // Sign-in codes, sent with Cloudflare Email Service from AUTH_EMAIL_FROM
+  // (an address on the onboarded rejstudio.com domain). Locally, wrangler and
+  // the Vite plugin simulate the binding: nothing is sent, the message is
+  // logged (src/server/accounts/email.ts).
+  "send_email": [{ "name": "AUTH_EMAIL" }],
+  "vars": {
+    // Where sign-in codes come from.
+    "AUTH_EMAIL_FROM": "sign-in@rejstudio.com",
+    // The hosts accounts answer on, comma separated. Better Auth builds its
+    // callback URLs (Google's redirect URI) from the request's host, and only
+    // for these; loopback hosts are always allowed for local development.
+    "AUTH_HOSTS": "rejstudio.com,rej-studio.rejstudio.workers.dev",
+    // Where the Worker reports errors and traces (src/server/sentry.ts). A
+    // plain var, not a secret: a DSN is public. .dev.vars overrides it with
+    // an empty value so local runs report nothing.
+    "SENTRY_DSN": "https://63333b549fa95724fbd3d1d8a93e716a@o4511170639167488.ingest.us.sentry.io/4511171059515392",
+  },
   // Cloud designs you can close the tab on: one Workflow, defined in this
   // Worker (src/server/designs/workflow.ts). Retention is set per instance
   // when it is created (30 days after success, 7 after an error); the default
@@ -105,11 +150,9 @@
   // off: `.dev.vars` sets it empty so local `vp dev` / `vp preview` runs stay
   // out of the real project, and `pnpm test:worker` passes `--var SENTRY_DSN:`
   // for the same reason.
-  "vars": {
-    "SENTRY_DSN": "https://63333b549fa95724fbd3d1d8a93e716a@o4511170639167488.ingest.us.sentry.io/4511171059515392",
-  },
   // Secrets (never in this file): BASIC_AUTH_PASSWORD and SESSION_SECRET
-  // (the passcode gate), MCP_TOKENS and HEALTH_AUTH_TOKEN. Locally they go in
+  // (the passcode gate), BETTER_AUTH_SECRET, GOOGLE_CLIENT_ID and
+  // GOOGLE_CLIENT_SECRET (accounts), MCP_TOKENS and HEALTH_AUTH_TOKEN. Locally they go in
   // .dev.vars (see .dev.vars.example); deployed, `wrangler secret put` or
   // `wrangler secret bulk` (docs/cloudflare-migration.md, "Cutover status").
   "observability": {
