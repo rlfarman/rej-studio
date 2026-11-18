@@ -419,8 +419,9 @@ stay up until the lab has used the new site for a while.
 - `uptime.yml` needs no new URL — the `HEALTH_URL` variable is already
   `https://rejstudio.com/api/health`, which means it starts probing the
   Worker the moment the records change, and its `HEALTH_AUTH_TOKEN` secret
-  must equal the Worker's. Only its comments and `checks` jq still mention
-  Neon and Modal.
+  must equal the Worker's. Its comments now cover both backends. Once the move
+  is done, run the deep check on every probe: on the Worker it is one R2
+  read, not a Neon wake-up.
 - Teardown, last: the Vercel project and its domains, Neon, Modal, Upstash,
   and the stale repo variables `COMPUTE_BACKEND`, `MODAL_API_URL` and
   `NEON_PROJECT_ID`.
