@@ -166,7 +166,7 @@ test('an unknown URL shows the not-found page', async ({ page }) => {
 
   await page.goto('/no-such-page')
   await expect(
-    page.getByRole('heading', { name: appCopy.notFound.description }),
+    page.getByRole('heading', { name: appCopy.notFound.title }),
   ).toBeVisible()
   // The tab says so too, rather than reading like a page that loaded.
   await expect(page).toHaveTitle(
@@ -175,7 +175,7 @@ test('an unknown URL shows the not-found page', async ({ page }) => {
   expect(errors).toEqual([])
   // In the page slot, with the sidebar still there to navigate away.
   await expect(page.locator('main#main-content h1')).toHaveText(
-    appCopy.notFound.description,
+    appCopy.notFound.title,
   )
   await expect(page.locator('main')).toHaveCount(1)
   await sidebarLink(page, nav.home).click()
@@ -185,7 +185,7 @@ test('an unknown URL shows the not-found page', async ({ page }) => {
   await page.goBack()
   await expect(page).toHaveURL('/no-such-page')
   await expect(
-    page.getByRole('heading', { name: appCopy.notFound.description }),
+    page.getByRole('heading', { name: appCopy.notFound.title }),
   ).toBeVisible()
   await expect(page).toHaveTitle(
     appCopy.metadata.title(appCopy.notFound.pageTitle),

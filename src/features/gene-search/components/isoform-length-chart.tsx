@@ -66,7 +66,7 @@ export function IsoformLengthChart({ isoforms }: Props) {
                 className="flex items-center gap-1 text-muted-foreground"
               >
                 <span
-                  className={cn('size-2 rounded-sm', cfg.fillClass)}
+                  className={cn('size-2 rounded-full', cfg.fillClass)}
                   aria-hidden="true"
                 />
                 {cfg.label}

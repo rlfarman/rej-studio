@@ -4,6 +4,7 @@ import { SearchIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Kbd, ModKey } from '@/components/ui/kbd'
 import { useSearchShortcut } from '@/hooks/use-search-shortcut'
+import { SEARCH_SHORTCUT_ARIA } from '@/lib/search-shortcut'
 
 import { geneSearchCopy } from '../copy'
 import { usePrefetchGeneIndex } from '../hooks/use-prefetch-gene-index'
@@ -61,18 +62,24 @@ export function GeneSearchTrigger({
         onClick={openPalette}
         onPointerEnter={preload}
         onFocus={preload}
+        // The shortcut is announced as a shortcut, not read out as part of
+        // the button's name; the visible hint below is for sighted users.
+        aria-keyshortcuts={SEARCH_SHORTCUT_ARIA}
         className="group w-full min-w-42 cursor-pointer justify-between text-muted-foreground hover:text-accent-foreground md:min-w-72 xl:min-w-108"
       >
         <div className="flex items-center gap-2">
           <SearchIcon className="h-5 w-5" />
           <span>{geneSearchCopy.trigger.label}</span>
         </div>
-        <p className="hidden text-sm text-muted-foreground group-hover:text-accent-foreground md:block">
+        <span
+          aria-hidden
+          className="hidden text-sm text-muted-foreground group-hover:text-accent-foreground md:block"
+        >
           {geneSearchCopy.trigger.kbdHintPrefix}{' '}
           <Kbd>
             <ModKey /> K
           </Kbd>
-        </p>
+        </span>
       </Button>
       {wanted && (
         <Suspense fallback={null}>

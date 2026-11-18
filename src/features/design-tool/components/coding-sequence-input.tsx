@@ -362,8 +362,12 @@ export function CodingSequenceInput() {
   const activeField = isProtein ? 'proteinSequence' : 'codingSequence'
   const fileAccept = isProtein ? '.fasta,.fa,.faa,.txt' : '.fasta,.fa,.fna,.txt'
 
+  // No bottom padding: a scrolled field shows the next line through it, so
+  // the last visible line looked cut mid-glyph. The field's floor is then a
+  // whole number of lines in its own line height (`lh`) plus the top padding
+  // and the border, so it never clips a line however the font resolves.
   const sharedTextStyles =
-    'px-3 py-2 font-mono text-sm leading-normal break-all whitespace-pre-wrap'
+    'px-3 pt-2 pb-0 font-mono text-sm leading-normal break-all whitespace-pre-wrap'
 
   return (
     <FormField
@@ -432,7 +436,7 @@ export function CodingSequenceInput() {
           {/* The highlight layer sits behind a transparent textarea. FormControl
               wraps the textarea itself so the label, aria-invalid and the
               error description land on the field, not on this wrapper. */}
-          <div className="relative min-h-[6.5rem]">
+          <div className="relative">
             {!isProtein && (
               <div
                 ref={backdropRef}
@@ -477,7 +481,7 @@ export function CodingSequenceInput() {
                 className={cn(
                   sharedTextStyles,
                   // Same look as the Textarea primitive.
-                  'relative flex w-full min-w-0 resize-y rounded-2xl border border-transparent caret-foreground transition-[color,box-shadow] duration-200 outline-none selection:bg-primary/30 placeholder:text-muted-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
+                  'relative flex min-h-[calc(4lh+0.5rem+2px)] w-full min-w-0 resize-y rounded-2xl border border-transparent caret-foreground transition-[color,box-shadow] duration-200 outline-none selection:bg-primary/30 placeholder:text-muted-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
                   'focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30',
                   // `break-all` keeps a pasted sequence aligned with the
                   // highlight layer behind it, but it also chops the

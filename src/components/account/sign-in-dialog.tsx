@@ -32,6 +32,11 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 /** Wrong codes the server allows before the code itself is spent. */
 const ALLOWED_ATTEMPTS = 5
 
+// The primitive's title is body-sized; this is the app's section-title
+// scale (`type-section-title` in globals.css), as plain utilities so they
+// merge over the primitive's own size and weight.
+const TITLE_CLASS = 'text-lg leading-snug font-semibold tracking-tight'
+
 type Step = { name: 'email' } | { name: 'code'; email: string }
 
 /**
@@ -217,7 +222,7 @@ function SignInFlow({ onDone }: { onDone: () => void }) {
     return (
       <>
         <DialogHeader>
-          <DialogTitle>{copy.codeTitle}</DialogTitle>
+          <DialogTitle className={TITLE_CLASS}>{copy.codeTitle}</DialogTitle>
           <DialogDescription>{copy.codeSent(step.email)}</DialogDescription>
         </DialogHeader>
         {/* Keyed per step: both forms sit in the same place, and without
@@ -238,6 +243,7 @@ function SignInFlow({ onDone }: { onDone: () => void }) {
               autoComplete="one-time-code"
               pattern="[0-9]*"
               maxLength={CODE_LENGTH}
+              placeholder={copy.codePlaceholder}
               value={code}
               // Only the digits, so a code pasted as "123 456" is not cut
               // short by the length limit, and letters cannot be typed.
@@ -291,7 +297,7 @@ function SignInFlow({ onDone }: { onDone: () => void }) {
   return (
     <>
       <DialogHeader>
-        <DialogTitle>{copy.title}</DialogTitle>
+        <DialogTitle className={TITLE_CLASS}>{copy.title}</DialogTitle>
         <DialogDescription>{copy.description}</DialogDescription>
       </DialogHeader>
       <form

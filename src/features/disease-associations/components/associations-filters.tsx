@@ -93,7 +93,7 @@ export function AssociationsFilters({
       </div>
 
       <div className="flex flex-wrap items-center gap-1.5">
-        <span className="mr-1 text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+        <span className="mr-1 type-overline">
           {diseaseAssociationsCopy.filters.inheritanceLabel}
         </span>
         {FILTER_INHERITANCE_BUCKETS.map((bucket) => {

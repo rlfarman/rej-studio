@@ -142,6 +142,22 @@ describe('candidate-site strip keyboard navigation', () => {
     expect(valueNow()).toBe('10')
     expect(label(tabStops()[0])).toContain('bp 10')
   })
+
+  it('leaves a modified [ to the browser', () => {
+    render(<Harness />)
+    const stop = tabStops()[0]
+    stop.focus()
+    fireEvent.focusIn(stop)
+    // Cmd+[ is Back on macOS; the editor must not swallow it.
+    const event = new KeyboardEvent('keydown', {
+      key: '[',
+      metaKey: true,
+      cancelable: true,
+    })
+    window.dispatchEvent(event)
+    expect(event.defaultPrevented).toBe(false)
+    expect(valueNow()).toBe('55')
+  })
 })
 
 describe('AAV packaging limit', () => {

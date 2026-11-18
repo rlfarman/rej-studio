@@ -3,6 +3,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { Kbd, ModKey } from '@/components/ui/kbd'
 import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar'
 import { commonCopy } from '@/copy/common'
 
@@ -19,8 +20,21 @@ export function SidebarToggle() {
 
   return (
     <Tooltip>
-      <TooltipTrigger render={<SidebarTrigger aria-label={label} />} />
-      <TooltipContent>{label}</TooltipContent>
+      <TooltipTrigger
+        render={
+          <SidebarTrigger
+            aria-label={label}
+            // The sidebar primitive's ⌘B / Ctrl+B.
+            aria-keyshortcuts="Meta+B Control+B"
+          />
+        }
+      />
+      <TooltipContent>
+        {label}
+        <Kbd aria-hidden>
+          <ModKey /> B
+        </Kbd>
+      </TooltipContent>
     </Tooltip>
   )
 }

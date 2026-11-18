@@ -98,7 +98,11 @@ export interface SortableIsoform {
   suitability: Suitability
 }
 
-/** A sorted copy; ties keep their input order. */
+/**
+ * A sorted copy. Ties keep their input order, except under AAV fit, where
+ * most rows tie: those fall back to CDS length, then id, in the same
+ * direction, so each tier reads as an ordered run rather than corpus order.
+ */
 export function sortIsoforms<T extends SortableIsoform>(
   rows: readonly T[],
   sort: IsoformSort,
@@ -129,6 +133,11 @@ export function sortIsoforms<T extends SortableIsoform>(
       typeof av === 'string' && typeof bv === 'string'
         ? av.localeCompare(bv)
         : (av as number) - (bv as number)
-    return sign * cmp
+    if (cmp !== 0 || sort.key !== 'suitability') return sign * cmp
+    return (
+      sign *
+      (a.codingSequenceLength - b.codingSequenceLength ||
+        a.id.localeCompare(b.id))
+    )
   })
 }

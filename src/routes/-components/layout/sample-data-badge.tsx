@@ -27,7 +27,7 @@ export function SampleDataBadge() {
             variant="outline"
             tabIndex={0}
             aria-label={label}
-            className="min-w-0 shrink rounded-full border-warning/40 bg-warning/15 text-warning-soft"
+            className="min-w-0 shrink border-warning/40 bg-warning/15 text-warning-soft"
           />
         }
       >
@@ -35,7 +35,7 @@ export function SampleDataBadge() {
         <span className="hidden truncate sm:inline">{label}</span>
       </TooltipTrigger>
       <TooltipContent className="max-w-64">
-        {appCopy.sampleData.detail}
+        {appCopy.sampleData.detail(SAMPLE_GENE_COUNT)}
       </TooltipContent>
     </Tooltip>
   )

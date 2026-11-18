@@ -8,10 +8,12 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { FormValues } from '../types/form-schema'
-import { cn } from '@/lib/utils'
 import { designToolCopy } from '../copy'
 
 const MAX_NAME_LENGTH = 250
+// The counter is noise on a short name, so it appears only as the limit nears.
+// The input's maxLength stops typing at the limit, so it never goes over.
+const SHOW_COUNTER_FROM = 200
 
 export function NameInput() {
   const { control } = useFormContext<FormValues>()
@@ -28,14 +30,11 @@ export function NameInput() {
             <FormLabel>
               {designToolCopy.nameInput.label} <span aria-hidden="true">*</span>
             </FormLabel>
-            <span
-              className={cn(
-                'shrink-0 text-xs text-muted-foreground tabular-nums',
-                length > MAX_NAME_LENGTH && 'text-destructive-foreground',
-              )}
-            >
-              {length.toLocaleString()} / {MAX_NAME_LENGTH.toLocaleString()}
-            </span>
+            {length >= SHOW_COUNTER_FROM && (
+              <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
+                {length.toLocaleString()} / {MAX_NAME_LENGTH.toLocaleString()}
+              </span>
+            )}
           </div>
           <FormControl>
             <Input

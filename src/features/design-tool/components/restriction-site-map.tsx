@@ -83,13 +83,13 @@ export function RestrictionSiteMap({ original, optimized }: Props) {
             {net > 0 ? `+${net}` : net}
           </span>
           <span className="flex items-center gap-1">
-            <span className="size-2 rounded-sm bg-success/70" /> added
+            <span className="size-2 rounded-full bg-success/70" /> added
           </span>
           <span className="flex items-center gap-1">
-            <span className="size-2 rounded-sm bg-danger/70" /> removed
+            <span className="size-2 rounded-full bg-danger/70" /> removed
           </span>
           <span className="flex items-center gap-1">
-            <span className="size-2 rounded-sm bg-muted-foreground/50" /> kept
+            <span className="size-2 rounded-full bg-muted-foreground/50" /> kept
           </span>
         </div>
       </div>

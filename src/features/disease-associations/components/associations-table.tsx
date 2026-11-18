@@ -122,7 +122,9 @@ export function AssociationsTable({ rows, sortKey, sortDir }: Props) {
                       <Badge
                         key={b}
                         variant="secondary"
-                        className="type-micro font-normal"
+                        // The badge's own 12px: "Autosomal dominant" is a
+                        // phrase to read, not a label to glance at.
+                        className="font-normal"
                       >
                         {formatInheritanceLabel(b)}
                       </Badge>

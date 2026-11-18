@@ -60,6 +60,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         // Pages set their own title; this is the fallback.
         { title: appCopy.metadata.siteName },
         { name: 'description', content: appCopy.metadata.description },
+
         { property: 'og:type', content: 'website' },
         { property: 'og:site_name', content: appCopy.metadata.siteName },
         { property: 'og:locale', content: 'en_US' },
@@ -104,6 +105,20 @@ function RootDocument({ children }: { children: ReactNode }) {
       <head>
         <script dangerouslySetInnerHTML={{ __html: SIDEBAR_PRELOAD_SCRIPT }} />
         <script dangerouslySetInnerHTML={{ __html: LOGIN_PRELOAD_SCRIPT }} />
+        {/* Phone browsers tint their toolbar with this: the --background
+            tokens in globals.css. It follows the system's scheme, not a
+            theme picked in the app. Written here, not in head(): HeadContent
+            keeps one meta per name, and this needs one per scheme. */}
+        <meta
+          name="theme-color"
+          media="(prefers-color-scheme: light)"
+          content="#f5f7fa"
+        />
+        <meta
+          name="theme-color"
+          media="(prefers-color-scheme: dark)"
+          content="#0d0f15"
+        />
         <HeadContent />
       </head>
       <body>

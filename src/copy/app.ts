@@ -8,10 +8,12 @@ export const appCopy = {
   },
   skipToContent: 'Skip to content',
   // Shown in the header while the build reads the committed sample corpus.
+  // Written for the scientist reading it, not whoever deployed the build:
+  // how to point it at the real data (VITE_GENE_DATA_URL) is in AGENTS.md.
   sampleData: {
     label: (genes: number) => `Sample data — ${genes} genes`,
-    detail:
-      'This build reads the small sample gene set, not the full corpus. Set VITE_GENE_DATA_URL and rebuild to serve the real data.',
+    detail: (genes: number) =>
+      `Only ${genes} genes are available in this preview, so most genes won’t be found. Designing your own sequence works as usual.`,
   },
   errorBoundary: {
     eyebrow: 'Unexpected error',
@@ -46,7 +48,7 @@ export const appCopy = {
     // indistinguishable from a page that loaded.
     pageTitle: 'Page not found',
     eyebrow: '404 · Page not found',
-    description: 'This sequence doesn’t map to anything.',
+    title: 'This sequence doesn’t map to anything.',
     detail:
       'The page you’re looking for may have been spliced out. Head back or return home.',
   },
@@ -58,7 +60,7 @@ export const appCopy = {
     title: (symbol: string) => `No gene matches “${symbol}”`,
     titleUnknown: 'Gene not found in our database',
     detail:
-      'Check the spelling: some genes aren’t indexed yet, and mouse symbols differ from human ones (Trp53 for TP53).',
+      'Check the spelling: some genes aren’t indexed yet, and mouse symbols differ from human ones (TRP53 for TP53).',
     // A sample build carries 24 genes while the disease table lists 599, so
     // most links out of it land here. Telling someone to check their spelling
     // after they followed a link blames them for the build's contents.
@@ -88,6 +90,7 @@ export const appCopy = {
       diseaseAssociations: 'Disease-Associated Genes',
     },
     lab: 'Pfaff Lab | Salk Institute',
+    opensInNewTab: '(opens in a new tab)',
     salkLogoAlt: 'Salk Institute',
   },
   maintenance: {

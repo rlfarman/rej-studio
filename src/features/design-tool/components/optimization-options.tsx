@@ -218,6 +218,7 @@ export function DesignObjectives() {
             <ToggleCard
               name="enforceGcContent"
               label={copy.enforceGc.label}
+              description={copy.enforceGc.description}
               help={copy.help.gc}
             />
           </div>
@@ -225,10 +226,10 @@ export function DesignObjectives() {
           <div className="mt-5 space-y-2">
             <div className="flex flex-wrap items-center gap-1.5">
               <h3 className="text-sm font-medium">
-                {formCopy.accordion.stimulatoryIntrons}
+                {formCopy.stimulatoryIntronsHeading}
               </h3>
               <TermHint
-                topic={formCopy.accordion.stimulatoryIntrons}
+                topic={formCopy.stimulatoryIntronsHeading}
                 hint={copy.help.stimulatoryIntrons}
               />
             </div>

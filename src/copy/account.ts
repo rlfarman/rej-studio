@@ -42,6 +42,8 @@ export const accountCopy = {
     codeSent: (email: string) =>
       `We sent a six-digit code to ${email}. It works for 10 minutes.`,
     codeLabel: 'Sign-in code',
+    // Shows the shape of what goes in the empty, letter-spaced box.
+    codePlaceholder: '000000',
     verify: 'Sign in',
     verifying: 'Signing in…',
     useAnotherEmail: 'Use another email',

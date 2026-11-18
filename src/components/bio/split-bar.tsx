@@ -14,7 +14,7 @@ export function SplitBar({ fivePrimeLength, threePrimeLength }: SplitBarProps) {
   const percentage = total > 0 ? (fivePrimeLength / total) * 100 : 50
 
   return (
-    <div className="flex h-6 w-full overflow-hidden rounded-md border">
+    <div className="flex h-6 w-full overflow-hidden rounded-xl border">
       <div
         className="flex min-w-0 items-center justify-center border-r-2 border-primary bg-primary/15 transition-all"
         style={{ width: `${percentage}%` }}

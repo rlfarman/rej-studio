@@ -44,9 +44,11 @@ export const commonCopy = {
       dark: 'Dark',
       system: 'System',
     },
-    importUserData: 'Import user data',
-    exportData: 'Export data',
-    importData: 'Import data',
+    // Named for what moves: "data" alone could be anything, designs
+    // included or not. Import opens a file picker, hence the ellipsis.
+    importUserData: 'Import favorites and history',
+    exportData: 'Export favorites and history',
+    importData: 'Import favorites and history…',
     seedData: 'Seed data',
     clearSeedData: 'Clear seed data',
     seedResult: (favorites: number, recents: number, jobs: number) =>

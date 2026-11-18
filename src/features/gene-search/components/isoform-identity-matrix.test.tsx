@@ -261,7 +261,7 @@ describe('IsoformIdentityMatrix', () => {
       [...dataTable.querySelectorAll('tbody tr')].map(
         (row) => row.querySelectorAll('td')[3]?.textContent,
       ),
-    ).toEqual(['100', '64.2', '12.5'])
+    ).toEqual(['100.0', '64.2', '12.5'])
   })
 
   it('says identities are unavailable rather than estimating them', async () => {

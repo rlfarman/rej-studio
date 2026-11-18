@@ -1,4 +1,4 @@
-import { Activity, Dna, Home, WandSparkles } from 'lucide-react'
+import { Activity, Dna, ExternalLink, Home, WandSparkles } from 'lucide-react'
 import {
   Sidebar,
   SidebarContent,
@@ -207,7 +207,21 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     rel="noopener noreferrer"
                   >
                     <SalkLogo alt={appCopy.sidebar.salkLogoAlt} />
-                    <span>{appCopy.sidebar.lab}</span>
+                    {/* Truncates itself: the primitive truncates only a
+                        span that comes last, and the icon does here. */}
+                    <span className="truncate">
+                      {appCopy.sidebar.lab}
+                      <span className="sr-only">
+                        {' '}
+                        {appCopy.sidebar.opensInNewTab}
+                      </span>
+                    </span>
+                    {/* The one link that leaves the app. `!`: the menu
+                        button sizes every svg in it to 16px. */}
+                    <ExternalLink
+                      aria-hidden
+                      className="ml-auto size-3! text-muted-foreground"
+                    />
                   </a>
                 }
               />

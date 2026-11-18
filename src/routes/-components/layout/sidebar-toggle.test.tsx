@@ -55,4 +55,17 @@ describe('SidebarToggle', () => {
     fireEvent.click(trigger())
     expect(trigger().getAttribute('aria-label')).toBe(commonCopy.sidebar.close)
   })
+
+  it('leaves Ctrl+B to a field being typed in', () => {
+    mockViewport(1280)
+    const trigger = renderToggle()
+    const field = document.createElement('textarea')
+    document.body.appendChild(field)
+    fireEvent.keyDown(field, { key: 'b', ctrlKey: true })
+    expect(trigger().getAttribute('aria-label')).toBe(commonCopy.sidebar.close)
+    // Anywhere else it still folds the sidebar.
+    fireEvent.keyDown(document.body, { key: 'b', ctrlKey: true })
+    expect(trigger().getAttribute('aria-label')).toBe(commonCopy.sidebar.open)
+    field.remove()
+  })
 })

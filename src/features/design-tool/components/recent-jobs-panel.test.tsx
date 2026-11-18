@@ -14,6 +14,7 @@ import {
 import { registerBrowserRun } from '@/features/design-tool/api/browser-optimizer'
 import type { FormValues } from '@/features/design-tool/types/form-schema'
 
+import { designToolCopy } from '../copy'
 import { RecentJobs } from './recent-jobs-panel'
 
 const RUNNING_ID = `${BROWSER_ID_PREFIX}running-one`
@@ -90,5 +91,26 @@ describe('cancelling a run from Recent designs', () => {
     )
 
     expect(useJobHistory.getState().getEntry('done-one')).toBeNull()
+  })
+})
+
+describe('a run its tab did not live to finish', () => {
+  it('says so in a word, not the job page’s sentence', () => {
+    useJobHistory.getState().upsertEntry({
+      id: `${BROWSER_ID_PREFIX}orphan`,
+      status: 'failed',
+      formValues: named('Orphan run'),
+      error: {
+        code: 'interrupted',
+        message: designToolCopy.browserRun.interrupted,
+        retriable: true,
+      },
+    })
+    showPanel()
+
+    expect(
+      screen.getByText(designToolCopy.recentJobs.interruptedSubline),
+    ).toBeTruthy()
+    expect(screen.queryByText(designToolCopy.browserRun.interrupted)).toBeNull()
   })
 })

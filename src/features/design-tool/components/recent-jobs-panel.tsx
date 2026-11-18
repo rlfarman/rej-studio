@@ -75,7 +75,9 @@ export function RecentJobs({ onSelectJob }: RecentJobsProps) {
                 ? `${Math.round(progress.progress * 100)}%`
                 : copy.running))
             : isError && entry.error
-              ? entry.error.message
+              ? entry.error.code === 'interrupted'
+                ? copy.interruptedSubline
+                : entry.error.message
               : formatTimeAgo(entry.createdAt)
         return (
           <SidebarMenuItem>

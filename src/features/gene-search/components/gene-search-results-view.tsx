@@ -125,7 +125,9 @@ export function GeneSearchResultsView({
                   />
                   <span>{speciesName}</span>
                   <span aria-hidden="true">·</span>
-                  <span className="truncate">{matchedLabel(match)}</span>
+                  {/* Wraps rather than truncates: on a phone the reason is
+                      longer than the line, and half a reason says nothing. */}
+                  <span className="min-w-0">{matchedLabel(match)}</span>
                 </span>
               </Link>
               {gene.matchedIsoformId && (

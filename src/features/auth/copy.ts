@@ -4,7 +4,12 @@ export const authCopy = {
   // same read as though the passcode had failed.
   login: {
     pageTitle: 'Lab passcode',
+    // Under the wordmark, for a first visit that knows nothing else yet.
+    tagline: 'RNA End-Joining sequence design',
     overline: 'Pfaff Lab',
+    // What a password manager files the passcode under. There is no
+    // username, and without one managers save it as "no username".
+    passwordManagerUsername: 'Pfaff Lab',
     title: 'Enter the lab passcode',
     description:
       'REJ Studio is private to the lab. Everyone shares one passcode; personal accounts are separate and optional.',

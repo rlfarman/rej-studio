@@ -29,7 +29,7 @@ export const designToolCopy = {
       required: 'Coding sequence is required.',
       invalidNucleotides:
         'Sequence must contain only valid nucleotides (A, C, G, T, or U).',
-      tooLong: 'Sequence must be 50,000 characters or fewer.',
+      tooLong: 'Sequence must be 50,000 bp or fewer.',
       notMultipleOfThree:
         'Sequence length must be a multiple of 3 (complete codons).',
       missingStartCodon:
@@ -185,8 +185,10 @@ export const designToolCopy = {
     charTypeNonNucleotide: 'non-nucleotide',
     reverseTranslated: (bp: string, species: string) =>
       `→ ${bp} bp DNA generated (${species} codon preferences)`,
+    // Where the species chips actually are: the "Codon usage optimization"
+    // row, under Design Objectives, behind "Customize".
     selectSpeciesHint:
-      'Select a target species in Sequence design options to generate the DNA sequence.',
+      'Pick a target species under Design Objectives (Customize, then Codon usage optimization) to generate the DNA sequence.',
     reverseTranslateButton: 'Reverse translate to continue',
     reverseTranslateSpeciesRequired:
       'Select a target species before reverse translating.',
@@ -200,11 +202,6 @@ export const designToolCopy = {
     label: 'Choose a name for your coding sequence',
     placeholder: 'My Custom Sequence',
   },
-  speciesOptions: {
-    label: 'Optimize codon usage for species',
-    noneDisabledHint:
-      'Reverse-translating protein input requires a codon table — pick Human or Mouse.',
-  },
   submit: {
     // Generic fallback shown on the submit button while the job is in flight
     // but no backend stage has arrived yet (pre-submit / first 500ms).
@@ -213,8 +210,6 @@ export const designToolCopy = {
     idle: 'Run designer',
   },
   optimizationOptions: {
-    objectivesHeading: 'Sequence objectives',
-    constraintsHeading: 'Constraints',
     summary: {
       recommendedLabel: 'Recommended settings',
       customLabel: 'Custom settings',
@@ -273,6 +268,8 @@ export const designToolCopy = {
     },
     enforceGc: {
       label: 'Enforce 35–60% GC content',
+      description:
+        'Holds the G+C fraction in a range that synthesizes and expresses well',
     },
   },
   weights: {
@@ -388,18 +385,7 @@ export const designToolCopy = {
       splitAt: (bp: string) => `split near ${bp} bp`,
     },
     optimizationHeading: 'Design Objectives',
-    optimizationDescription: '',
-    accordion: {
-      codonOptimization: 'Sequence design options',
-      codonOptimizationHint:
-        'Select objectives for the codon-aware sequence designer.',
-      stimulatoryIntrons: 'Stimulatory introns',
-      stimulatoryIntronsHint:
-        'Add cis-introns up or downstream of the REJ intron to boost trans-splicing',
-      parameterWeights: 'Parameter weights',
-      parameterWeightsHint:
-        'Control how much each objective influences the result.',
-    },
+    stimulatoryIntronsHeading: 'Stimulatory introns',
     // The previous run's results stay on screen while its inputs are being
     // edited. Unlabelled, they read as the results of the inputs above.
     previousRun: {
@@ -461,11 +447,12 @@ export const designToolCopy = {
     cancelAria: (name: string) => `Cancel ${name}`,
     removeAria: (name: string) => `Remove ${name} from recent designs`,
     cancelledMessage: 'Cancelled',
+    /** The subline for a run its tab didn't live to finish; the job page
+     *  carries the full sentence (browserRun.interrupted). */
+    interruptedSubline: 'Interrupted',
   },
   results: {
     heading: 'Results',
-    completedIn: (seconds: number) =>
-      `Completed in ${formatProcessingTime(seconds)}`,
     wggwSplitBadge: 'WGGW split',
     // In the exported report, where the options block goes. Said plainly
     // rather than filled in from the form on screen, which may have been
@@ -750,6 +737,13 @@ export const designToolCopy = {
     nextSite: 'Next WGGW site',
     prevSiteShortcut: 'Previous WGGW site ([)',
     nextSiteShortcut: 'Next WGGW site (])',
+    /** The key legend under the editor. */
+    shortcuts: {
+      focus: 'focus',
+      stepSite: 'step site',
+      midpoint: 'midpoint',
+      findJump: 'find / jump',
+    },
     junctionAria: 'Splice junction position',
     addSplice: 'Add Splice Point',
     addSpliceTitle: 'Add a second splice point (for triple-AAV cassettes)',

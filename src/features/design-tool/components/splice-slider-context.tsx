@@ -378,6 +378,8 @@ export function SpliceSliderContext({
   // listeners below subscribe once.
   const onWindowKeyDown = useEffectEvent((event: KeyboardEvent) => {
     if (!shortcutsActive) return
+    // Cmd+[ is the browser's Back on macOS; a chord is never the editor's.
+    if (event.metaKey || event.ctrlKey || event.altKey) return
     const target = event.target as HTMLElement | null
     if (
       target &&
@@ -712,6 +714,9 @@ export function SpliceSliderContext({
                   style={{ left: `${pct}%` }}
                 >
                   <div className="flex items-center gap-1">
+                    {/* The chevrons draw at 16px; a pseudo-element takes
+                        each one's hit area to 24px. It stops at the 4px gap,
+                        so it never steals a drag from the readout. */}
                     {isActive && (
                       <button
                         type="button"
@@ -722,7 +727,7 @@ export function SpliceSliderContext({
                         disabled={!canPrev}
                         title={editorCopy.prevSite}
                         aria-label={editorCopy.prevSite}
-                        className="inline-flex size-4 items-center justify-center rounded-full text-foreground/55 transition-colors hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
+                        className="relative inline-flex size-4 items-center justify-center rounded-full text-foreground/55 transition-colors before:absolute before:-inset-1 hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
                       >
                         <ChevronLeft className="size-3" strokeWidth={2.5} />
                       </button>
@@ -763,7 +768,7 @@ export function SpliceSliderContext({
                         disabled={!canNext}
                         title={editorCopy.nextSite}
                         aria-label={editorCopy.nextSite}
-                        className="inline-flex size-4 items-center justify-center rounded-full text-foreground/55 transition-colors hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
+                        className="relative inline-flex size-4 items-center justify-center rounded-full text-foreground/55 transition-colors before:absolute before:-inset-1 hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
                       >
                         <ChevronRight className="size-3" strokeWidth={2.5} />
                       </button>
@@ -934,8 +939,15 @@ export function SpliceSliderContext({
                     aria-hidden="true"
                     className={cn(
                       'pointer-events-none absolute top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full transition-all',
+                      // The halo, not just size and hue, marks the chosen
+                      // site: a hovered tick grows to the same size, and the
+                      // second splice's tone is the idle ticks' colour.
                       isSelected
-                        ? cn(spliceTone(selectedAt).tickBg, 'h-5 w-1.5')
+                        ? cn(
+                            spliceTone(selectedAt).tickBg,
+                            spliceTone(selectedAt).caretRing,
+                            'z-10 h-5 w-1.5 ring-2 ring-offset-1 ring-offset-background',
+                          )
                         : cn(
                             'bg-marker',
                             'h-4 w-1',
@@ -1046,10 +1058,7 @@ export function SpliceSliderContext({
             ) : (
               <span />
             )}
-            <ShortcutHint
-              active={shortcutsActive}
-              spliceCount={positions.length}
-            />
+            <ShortcutHint spliceCount={positions.length} />
           </div>
         </div>
 

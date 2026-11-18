@@ -1,7 +1,6 @@
 import { memo, useState } from 'react'
 import {
   Download,
-  Clock,
   Scissors,
   ChevronRight,
   ChevronDown,
@@ -553,15 +552,13 @@ function ResultsPanelImpl({ result, runValues }: ResultsPanelProps) {
                 </h2>
               }
             />
-            <CardDescription className="flex items-center gap-1.5">
-              <Clock className="size-3" />
-              {resultsCopy.completedIn(result.processing_time_seconds)}
-              {result.used_wggw_as_split && (
-                <Badge variant="secondary" className="ml-1">
-                  {resultsCopy.wggwSplitBadge}
-                </Badge>
-              )}
-            </CardDescription>
+            {/* The run's duration is the job header's status line, right
+                above; saying it here too repeated it a few lines apart. */}
+            {result.used_wggw_as_split && (
+              <CardDescription className="flex items-center gap-1.5">
+                <Badge variant="secondary">{resultsCopy.wggwSplitBadge}</Badge>
+              </CardDescription>
+            )}
           </div>
           <div className="flex flex-wrap items-center justify-end gap-1.5">
             {/* The paper-ready artifact, at the top level: it used to be a

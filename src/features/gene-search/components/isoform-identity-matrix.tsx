@@ -245,10 +245,7 @@ function Matrix({
 
           {/* The selected cell in words. Hidden from screen readers, which
               hear the cell's own label as focus lands on it. */}
-          <p
-            aria-hidden
-            className="type-nano text-muted-foreground tabular-nums"
-          >
+          <p aria-hidden className="text-xs text-muted-foreground tabular-nums">
             {activeValue === null
               ? geneSearchCopy.identityMatrix.cellHint
               : geneSearchCopy.identityMatrix.cellReadout(
@@ -260,7 +257,8 @@ function Matrix({
         </>
       )}
 
-      <p className="max-w-prose type-nano text-muted-foreground">
+      {/* Sentences, so prose size: the 10–11px steps are for labels. */}
+      <p className="max-w-prose text-xs text-muted-foreground">
         {geneSearchCopy.identityMatrix.footnote}
         {shown < total && (
           <> {geneSearchCopy.identityMatrix.truncated(shown, total)}</>
@@ -279,7 +277,7 @@ function Matrix({
             ids.slice(i + 1).map((other, j) => ({
               id,
               other,
-              value: Number(valueAt(i, i + 1 + j).toFixed(1)),
+              value: valueAt(i, i + 1 + j),
             })),
           )
           // Most identical first. The footnote asks the reader to optimize one
@@ -287,6 +285,14 @@ function Matrix({
           // scattered through 120 rows with no way to sort or filter them.
           .sort((a, b) => b.value - a.value)
           .map(({ id, other, value }) => [geneSymbol, id, other, value])}
+        // One decimal, as the grid's labels and readout print it: 100 and 98.8
+        // side by side read as two different precisions.
+        columnFormat={[
+          undefined,
+          undefined,
+          undefined,
+          (value) => Number(value).toFixed(1),
+        ]}
         csvFilename={geneSearchCopy.charts.identityMatrix.csvFilename(
           geneSymbol,
         )}

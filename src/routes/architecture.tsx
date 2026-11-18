@@ -98,7 +98,7 @@ function ServiceBox({
       <div className="mb-0.5 text-sm font-semibold">{name}</div>
       <div className="font-mono type-nano text-muted-foreground">{tech}</div>
       {details && (
-        <div className="mt-1.5 space-y-0.5 type-micro text-muted-foreground">
+        <div className="mt-1.5 space-y-0.5 text-xs text-muted-foreground">
           {details.map((d) => (
             <div key={d}>• {d}</div>
           ))}
@@ -238,7 +238,7 @@ function ArchitecturePage() {
                 Gene corpus (R2 at cutover)
               </CardTitle>
             </CardHeader>
-            <CardContent className="type-nano">
+            <CardContent className="text-xs">
               <div className="space-y-1">
                 <div className="font-mono text-muted-foreground">
                   VITE_GENE_DATA_URL
@@ -274,7 +274,7 @@ function ArchitecturePage() {
                 Optimizer (Rust → WebAssembly)
               </CardTitle>
             </CardHeader>
-            <CardContent className="type-nano">
+            <CardContent className="text-xs">
               <div className="space-y-1">
                 <div className="font-mono text-muted-foreground">
                   rust/optimizer
@@ -305,12 +305,12 @@ function ArchitecturePage() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1 rounded-xl bg-muted/50 p-3 type-nano">
+            <div className="space-y-1 rounded-xl bg-muted/50 p-3 text-xs">
               <div className="mb-1 text-sm font-semibold">App</div>
               <div>1. pnpm build (Vite+): client bundle, Worker, SPA shell</div>
               <div>2. pnpm cf:deploy → wrangler deploy</div>
             </div>
-            <div className="space-y-1 rounded-xl bg-muted/50 p-3 type-nano">
+            <div className="space-y-1 rounded-xl bg-muted/50 p-3 text-xs">
               <div className="mb-1 text-sm font-semibold">Gene data</div>
               <div>1. Source CSV → pnpm data:genes → JSONL seed</div>
               <div>2. pnpm corpus:build → one corpus version</div>
@@ -345,7 +345,7 @@ function ArchitecturePage() {
         <CardHeader className="pb-3">
           <CardTitle className="text-base">Data Flow</CardTitle>
         </CardHeader>
-        <CardContent className="type-nano">
+        <CardContent className="text-xs">
           <div className="grid grid-cols-2 gap-x-8 gap-y-2">
             <div>
               <div className="mb-1 font-semibold">Gene Search</div>

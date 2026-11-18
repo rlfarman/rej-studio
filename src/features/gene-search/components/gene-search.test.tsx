@@ -287,6 +287,19 @@ describe('GeneSearch palette', () => {
     )
   })
 
+  it('clears the search on Escape in the inline search', async () => {
+    renderPalette()
+    const input = await screen.findByRole<HTMLInputElement>('combobox', {
+      name: copy.inputAria,
+    })
+    fireEvent.change(input, { target: { value: 'tp53' } })
+    expect(input.value).toBe('tp53')
+
+    fireEvent.keyDown(input, { key: 'Escape' })
+
+    await waitFor(() => expect(input.value).toBe(''))
+  })
+
   // --- Finding 9: the design-tool shortcut is its own option ---
 
   it('offers the design tool as an option, not a link inside one', async () => {

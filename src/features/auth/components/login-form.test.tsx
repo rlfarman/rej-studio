@@ -29,4 +29,15 @@ describe('LoginForm', () => {
     // The account's own verb, wherever it is used.
     expect(passcodeWords).not.toContain('Sign in')
   })
+
+  // Password managers otherwise file the passcode under "no username".
+  it('gives password managers a username to file the passcode under', () => {
+    const { container } = render(<LoginForm />)
+    const username = container.querySelector<HTMLInputElement>(
+      'input[autocomplete="username"]',
+    )
+    expect(username?.value).toBe(authCopy.login.passwordManagerUsername)
+    expect(username?.hidden).toBe(true)
+    expect(username?.form?.getAttribute('action')).toBe('/api/login')
+  })
 })

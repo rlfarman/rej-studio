@@ -130,7 +130,9 @@ export function AccountMenu() {
           </DropdownMenuTrigger>
           <DropdownMenuContent side="top" align="start">
             <DropdownMenuGroup>
-              <DropdownMenuLabel className="max-w-64 truncate">
+              {/* Wraps rather than truncates: the trigger above already
+                  cuts the address short, and this is where it is read. */}
+              <DropdownMenuLabel className="max-w-64 wrap-anywhere">
                 {accountCopy.signedInAs(email)}
               </DropdownMenuLabel>
             </DropdownMenuGroup>

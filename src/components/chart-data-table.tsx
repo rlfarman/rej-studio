@@ -24,6 +24,12 @@ export interface ChartDataTableProps {
   caption: string
   columns: readonly string[]
   rows: ChartCell[][]
+  /**
+   * How to print a column's cells, by column index, on screen and in the CSV
+   * alike, so the two cannot disagree. A column without one prints numbers
+   * with the reader's locale on screen and as they are in the CSV.
+   */
+  columnFormat?: readonly (((cell: ChartCell) => string) | undefined)[]
   /** Offer the same rows as a CSV under this name. Omit for no download. */
   csvFilename?: string
   /**
@@ -118,14 +124,29 @@ function useRemembered(key: string): [boolean, (open: boolean) => void] {
   return [open, remember]
 }
 
-function toCsv(columns: readonly string[], rows: ChartCell[][]): string {
-  const escape = (value: ChartCell) => {
-    const text = String(value)
-    return /[",\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text
-  }
-  return [[...columns], ...rows]
-    .map((row) => row.map(escape).join(','))
-    .join('\n')
+type ColumnFormat = ChartDataTableProps['columnFormat']
+
+function toCsv(
+  columns: readonly string[],
+  rows: ChartCell[][],
+  format: ColumnFormat,
+): string {
+  const escape = (text: string) =>
+    /[",\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text
+  return [
+    columns.map(escape).join(','),
+    ...rows.map((row) =>
+      row
+        .map((cell, index) => escape(format?.[index]?.(cell) ?? String(cell)))
+        .join(','),
+    ),
+  ].join('\n')
+}
+
+function cellText(cell: ChartCell, index: number, format: ColumnFormat) {
+  const custom = format?.[index]
+  if (custom) return custom(cell)
+  return typeof cell === 'number' ? cell.toLocaleString() : cell
 }
 
 /**
@@ -145,6 +166,7 @@ export function ChartDataTable({
   caption,
   columns,
   rows,
+  columnFormat,
   csvFilename,
   storageKey,
   className,
@@ -176,7 +198,9 @@ export function ChartDataTable({
             size="sm"
             className="h-7 gap-1.5 px-2 text-xs text-muted-foreground"
             aria-label={copy.downloadAria(caption)}
-            onClick={() => downloadTextFile(csvFilename, toCsv(columns, rows))}
+            onClick={() =>
+              downloadTextFile(csvFilename, toCsv(columns, rows, columnFormat))
+            }
           >
             <Download className="size-3.5" />
             {copy.download}
@@ -212,7 +236,7 @@ export function ChartDataTable({
                       typeof cell === 'number' && 'tabular-nums',
                     )}
                   >
-                    {typeof cell === 'number' ? cell.toLocaleString() : cell}
+                    {cellText(cell, cellIndex, columnFormat)}
                   </TableCell>
                 ))}
               </TableRow>

@@ -1,3 +1,9 @@
+// The one gene-search placeholder, and its short form for narrow boxes (a
+// phone, the header's search button). Every search box names itself with
+// these, so the same search reads the same wherever it is opened.
+const searchPlaceholder = 'Gene symbol, name, or Ensembl ID'
+const searchPlaceholderShort = 'Search genes…'
+
 export const geneSearchCopy = {
   charts: {
     isoformLengths: {
@@ -16,7 +22,7 @@ export const geneSearchCopy = {
     },
   },
   trigger: {
-    label: 'Search for genes',
+    label: searchPlaceholderShort,
     kbdHintPrefix: 'Press',
   },
   command: {
@@ -26,8 +32,8 @@ export const geneSearchCopy = {
     inputAria: 'Search genes',
     // Search covers symbols, names, aliases and Ensembl IDs, not diseases;
     // the no-match state points disease searches at the associations page.
-    placeholder: 'Gene symbol, name, or Ensembl ID',
-    placeholderMobile: 'Search genes…',
+    placeholder: searchPlaceholder,
+    placeholderShort: searchPlaceholderShort,
     opening: (symbol: string) => `Opening ${symbol}…`,
     searching: (query: string) => `Searching for ${query}…`,
     // The gene index is ~1 MB and downloads once per session; a search typed
@@ -230,8 +236,8 @@ export const geneSearchCopy = {
     add: 'Add to favorites',
   },
   recentGenesPanel: {
-    label: 'Recent searches',
-    removeAria: (symbol: string) => `Remove ${symbol} from recent searches`,
+    label: 'Recent genes',
+    removeAria: (symbol: string) => `Remove ${symbol} from recent genes`,
   },
   favoritesPanel: {
     label: 'Favorites',

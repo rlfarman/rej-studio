@@ -642,7 +642,17 @@ export function GeneSearchCommand({
           aria-label={copy.inputAria}
           aria-keyshortcuts={onPage ? SEARCH_SHORTCUT_ARIA : undefined}
           endAddon={onPage ? <SearchShortcutHint /> : undefined}
-          placeholder={isMobile ? copy.placeholderMobile : copy.placeholder}
+          placeholder={isMobile ? copy.placeholderShort : copy.placeholder}
+          // In the dialog Escape closes it. On the page there is nothing to
+          // close, and Base UI never sees an inline list as closable, so
+          // Escape clears the search, as it does in a native search box.
+          onKeyDown={
+            onPage
+              ? (event) => {
+                  if (event.key === 'Escape' && query) setQuery('')
+                }
+              : undefined
+          }
           className="border-0 text-base ring-0 outline-0 focus:border-0 focus:ring-0 active:border-0 active:ring-0 sm:text-sm"
           disabled={isNavigating}
         />

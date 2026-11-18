@@ -78,7 +78,9 @@ export function Inspector({
   // In multi-split mode the inactive cards dim and gain a hover affordance
   // so it's clear which splice is being edited.
   const cardClass = cn(
-    'flex min-h-[280px] min-w-0 flex-col gap-4 rounded-2xl border px-4 pt-4 pb-3 text-xs transition-all',
+    // The floor keeps the card from jumping as a site is picked; on a phone
+    // the editor above is already tall, so the empty state goes without it.
+    'flex min-w-0 flex-col gap-4 rounded-2xl border px-4 pt-4 pb-3 text-xs transition-all md:min-h-[280px]',
     isMulti
       ? isActive
         ? cn('cursor-pointer bg-muted/40 shadow-sm ring-2', tone?.caretRing)
@@ -353,7 +355,7 @@ function SiteNav({
         disabled={!canPrev}
         title={editorCopy.prevSiteShortcut}
         aria-label={editorCopy.prevSite}
-        className="size-5 hover:text-foreground [&_svg:not([class*='size-'])]:size-3.5"
+        className="relative size-5 before:absolute before:-inset-0.5 hover:text-foreground [&_svg:not([class*='size-'])]:size-3.5"
       >
         <ChevronLeft />
       </Button>
@@ -366,7 +368,7 @@ function SiteNav({
         disabled={!canNext}
         title={editorCopy.nextSiteShortcut}
         aria-label={editorCopy.nextSite}
-        className="size-5 hover:text-foreground [&_svg:not([class*='size-'])]:size-3.5"
+        className="relative size-5 before:absolute before:-inset-0.5 hover:text-foreground [&_svg:not([class*='size-'])]:size-3.5"
       >
         <ChevronRight />
       </Button>
