@@ -303,7 +303,9 @@ Things slice 3 left for the cutover, which only the repo and account owner
 can do:
 
 - **Swap the required checks in the same change that points the
-  integration branch at `main`.** The Protect main ruleset requires
+  integration branch at `main`.** Done 2026-11-17: the ruleset now requires
+  the Rust and WebAssembly checks and no longer requires the Python ones, so
+  what follows is kept only as the reason. The Protect main ruleset required
   `Pytest`, `Pyright`, `Ruff (lint + format)`, `uv.lock up to date`,
   `Schema drift + migrations` and `pip-audit`. Their workflows
   (`python-ci.yml`, `db-ci.yml`, `security.yml`'s pip-audit job) no longer
@@ -344,6 +346,84 @@ can do:
   Vercel deployment, with its Neon database, Modal app and Upstash limiter,
   is the fallback and must keep working; deleting any of them first leaves
   nothing to roll back to.
+
+### DNS move runbook
+
+Where the names point today (2026-11-17):
+
+| Name                               | Now                                               | After                          |
+| ---------------------------------- | ------------------------------------------------- | ------------------------------ |
+| `rejstudio.com`                    | `A 76.76.21.21`, DNS-only (Vercel)                | Worker custom domain, proxied  |
+| `www.rejstudio.com`                | `CNAME cname.vercel-dns.com` (Vercel 308 to apex) | redirect rule to apex          |
+| `gene-data.rejstudio.com`          | proxied to the corpus bucket                      | unchanged                      |
+| `rej-studio.rejstudio.workers.dev` | the new app, gated                                | unchanged, kept as a back door |
+
+The zone is already on Cloudflare (`aaden`/`amy.ns.cloudflare.com`), so this
+is two DNS edits and a deploy, not a nameserver change: no propagation wait,
+and a rollback that takes effect as fast as the records do.
+
+**Before the move**
+
+1. Merge the cutover, gene-page and accounts branches; the required checks
+   (swapped 2026-11-17) pass on `main`.
+2. Deploy with `VITE_GENE_DATA_URL` pointing at the published corpus and
+   `VITE_SENTRY_DSN` set, and exercise the workers.dev host: the Worker smoke
+   script, the Playwright suite, a browser design and a cloud design.
+3. For accounts, which stay off until all four are true: `AUTH_DB` id and
+   `BETTER_AUTH_SECRET` (both done), `AUTH_HOSTS` containing `rejstudio.com`
+   (already), the Cloudflare Email domain onboarded for `AUTH_EMAIL_FROM`,
+   and a Google client whose redirect URI is
+   `https://rejstudio.com/api/auth/callback/google`.
+
+**The move**
+
+4. Delete the two Vercel records (apex `A`, `www` `CNAME`). Cloudflare
+   refuses a Worker custom domain on a hostname that already has a
+   conflicting record, so this comes first and is the moment the old site
+   stops answering on its own name.
+5. Add `routes` to `wrangler.jsonc` with `custom_domain: true` for
+   `rejstudio.com` (and `www.rejstudio.com` if it stays a domain rather than
+   a redirect), then `wrangler deploy`. Cloudflare creates the proxied
+   records and the certificate itself.
+6. Send `www` to the apex with a zone redirect rule (308), which needs no
+   Worker code. Vercel was doing this.
+
+Steps 4 and 5 need the Cloudflare dashboard, or an API token scoped to
+`Zone:DNS:Edit` on this zone — `wrangler` can create the custom domain but
+not remove the record in its way.
+
+**Verify, in order**
+
+- `curl -sI https://rejstudio.com/` answers 302 to `/login` and is no longer
+  served from `76.76.21.21`.
+- The passcode signs in; gene search, a browser design and a cloud design all
+  work on the new name.
+- `/api/health` with `HEALTH_AUTH_TOKEN` returns the deep check; `/api/mcp`
+  initializes with a token.
+- Sentry shows an event from the Worker and from the browser.
+
+**Rollback**
+
+Delete the custom domains, re-add `A 76.76.21.21` and
+`CNAME cname.vercel-dns.com`. This is why Vercel, Neon, Modal and Upstash
+stay up until the lab has used the new site for a while.
+
+**After the move**
+
+- Web Analytics becomes a dashboard step: the zone is proxied, so automatic
+  injection works and the repo needs no beacon snippet (it ships no CSP, so
+  nothing to allow either).
+- The MCP endpoint is now `https://rejstudio.com/api/mcp`; tell whoever has a
+  token, and keep the workers.dev host working until they have moved.
+- Passcode sessions are per host, so everyone signs in once more.
+- `uptime.yml` needs no new URL — the `HEALTH_URL` variable is already
+  `https://rejstudio.com/api/health`, which means it starts probing the
+  Worker the moment the records change, and its `HEALTH_AUTH_TOKEN` secret
+  must equal the Worker's. Only its comments and `checks` jq still mention
+  Neon and Modal.
+- Teardown, last: the Vercel project and its domains, Neon, Modal, Upstash,
+  and the stale repo variables `COMPUTE_BACKEND`, `MODAL_API_URL` and
+  `NEON_PROJECT_ID`.
 
 ## Agent access (MCP)
 
