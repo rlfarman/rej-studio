@@ -158,11 +158,11 @@ function GenePage() {
       {isHuman && associationRow && <GenePhenotypes row={associationRow} />}
       <div className="mt-6 flex min-w-0 flex-col gap-10">
         <IsoformLengthChart isoforms={isoforms} />
-        {/* The matrix grows with isoform count; scroll it rather than let
-            it widen the page on small screens. */}
-        <div className="min-w-0 overflow-x-auto">
-          <IsoformIdentityMatrix isoforms={isoforms} identity={identity} />
-        </div>
+        {/* The matrix grows with isoform count and scrolls inside its own
+            card. It gets no wrapper here: a second horizontal scroller
+            around the card took the swipe instead, so a drag anywhere on the
+            section panned it — and with it the page — rather than the grid. */}
+        <IsoformIdentityMatrix isoforms={isoforms} identity={identity} />
       </div>
     </div>
   )
