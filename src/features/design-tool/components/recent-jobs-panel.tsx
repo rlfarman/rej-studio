@@ -8,6 +8,7 @@ import {
   type JobHistoryEntry,
 } from '@/features/design-tool/hooks/use-job-history'
 import { ExpandableSidebarList } from '@/components/expandable-sidebar-list'
+import { cancelBrowserRun } from '@/features/design-tool/api/browser-optimizer'
 import { Loader2, CircleAlert, Cloud, X } from 'lucide-react'
 import { estimateCloudSeconds } from '@/features/design-tool/types/cloud-design'
 import { designToolCopy } from '../copy'
@@ -41,10 +42,14 @@ export function RecentJobs({ onSelectJob }: RecentJobsProps) {
   const removeEntry = useJobHistory((s) => s.removeEntry)
   const upsertEntry = useJobHistory((s) => s.upsertEntry)
 
-  // X on a running entry marks it cancelled rather than silently
-  // dismissing it. Terminal entries are just removed.
+  // X on a running entry cancels it rather than silently dismissing it.
+  // Terminal entries are just removed.
   const handleRemove = (entry: JobHistoryEntry) => {
     if (entry.status === 'running') {
+      // Stop the work first: the history entry alone would leave the worker
+      // running and its result overwriting this in a few seconds. A cloud
+      // design has nothing running here, and this is a no-op for it.
+      cancelBrowserRun(entry.id)
       upsertEntry({
         id: entry.id,
         status: 'cancelled',

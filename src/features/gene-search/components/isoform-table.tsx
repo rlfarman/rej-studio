@@ -76,12 +76,38 @@ function preOptimizedZipUrl(isoformId: string) {
   return `https://rej-seq-1.s3.us-west-004.backblazeb2.com/rej/v1.0/zips/${isoformId}_v1.0.zip`
 }
 
+/**
+ * Whether a ready-made package exists for this isoform. Every ZIP in the
+ * corpus is a two-fragment design, so a CDS that needs three vectors has no
+ * usable one — offering it would hand a scientist a file whose fragments both
+ * over-pack an AAV. Those isoforms go through the design tool instead.
+ */
+function hasPreOptimizedZip(suitability: Suitability) {
+  return suitability !== 'triple-aav'
+}
+
 interface IsoformListProps {
   isoforms: IsoformListItem[]
   highlightedIsoformId?: string
 }
 
 const COLUMN_COUNT = 9
+
+/** How long the arrival highlight ring stays on once the row is in view. */
+const HIGHLIGHT_RING_MS = 2000
+
+/**
+ * Frames to keep re-asserting the arrival scroll over. The router's scroll
+ * restoration lands after this effect runs and puts the scroller back at the
+ * top, so a single `scrollIntoView` is silently undone and the linked row
+ * never appears. Re-asserting for a few frames outlasts the restoration.
+ */
+const SCROLL_SETTLE_FRAMES = 12
+
+function isInViewport(el: Element) {
+  const rect = el.getBoundingClientRect()
+  return rect.bottom > 0 && rect.top < window.innerHeight
+}
 
 /**
  * Where a row's hover quick actions can show: a pointer that hovers, on a
@@ -90,9 +116,7 @@ const COLUMN_COUNT = 9
  */
 const QUICK_ACTIONS_QUERY = '(min-width: 40rem) and (not (pointer: coarse))'
 
-type RowMenuHandle = ReturnType<
-  typeof createDropdownMenuHandle<IsoformListItem>
->
+type RowMenuHandle = ReturnType<typeof createDropdownMenuHandle<IsoformRowData>>
 type QuickActionTipHandle = ReturnType<typeof createTooltipHandle<string>>
 
 type IsoformRowData = IsoformListItem & {
@@ -125,7 +149,7 @@ export default function IsoformTable({
   // than a Base UI root per row (three per isoform): rows render only their
   // triggers, which pass the row along as the payload. Base UI controls are
   // most of what the gene page costs to render on a phone.
-  const [rowMenu] = useState(createDropdownMenuHandle<IsoformListItem>)
+  const [rowMenu] = useState(createDropdownMenuHandle<IsoformRowData>)
   const [quickActionTip] = useState(createTooltipHandle<string>)
   // The quick actions are two buttons and two tooltip triggers a row, so
   // they're left out where they can't show, not just hidden with CSS.
@@ -273,10 +297,6 @@ export default function IsoformTable({
               isoform={row}
               isExpanded={expandedIds.has(row.id)}
               isHighlighted={row.id === highlightedIsoformId}
-              gcPercent={row.gcPercent}
-              cpgCount={row.cpgCount}
-              wggwCount={row.wggwCount}
-              suitConfig={getSuitabilityConfig(row.suitability)}
               rowMenu={rowMenu}
               quickActionTip={showQuickActions ? quickActionTip : null}
               onToggleExpanded={toggleExpanded}
@@ -306,38 +326,78 @@ function IsoformRow({
   isoform,
   isExpanded,
   isHighlighted,
-  gcPercent,
-  cpgCount,
-  wggwCount,
-  suitConfig,
   rowMenu,
   quickActionTip,
   onToggleExpanded,
 }: {
-  isoform: IsoformListItem
+  isoform: IsoformRowData
   isExpanded: boolean
   isHighlighted?: boolean
-  gcPercent: number
-  cpgCount: number
-  wggwCount: number
-  suitConfig: ReturnType<typeof getSuitabilityConfig>
   rowMenu: RowMenuHandle
   /** Null where the quick actions can't show (QUICK_ACTIONS_QUERY). */
   quickActionTip: QuickActionTipHandle | null
   onToggleExpanded: (id: string) => void
 }) {
-  const [ringVisible, setRingVisible] = useState(!!isHighlighted)
+  const { gcPercent, cpgCount, wggwCount } = isoform
+  const suitConfig = getSuitabilityConfig(isoform.suitability)
+  const zipAvailable = hasPreOptimizedZip(isoform.suitability)
+  const [ringVisible, setRingVisible] = useState(false)
 
   useEffect(() => {
     if (!isHighlighted) return
-    // Intentional: triggers the highlight ring animation when isHighlighted changes.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setRingVisible(true)
-    document
-      .getElementById(`isoform-row-${isoform.id}`)
-      ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-    const timer = setTimeout(() => setRingVisible(false), 2000)
-    return () => clearTimeout(timer)
+    const row = document.getElementById(`isoform-row-${isoform.id}`)
+    if (!row) return
+
+    let frame = 0
+    let framesLeft = SCROLL_SETTLE_FRAMES
+    let ringTimer: ReturnType<typeof setTimeout> | undefined
+    let ringStarted = false
+
+    // Re-asserting the scroll would otherwise fight a reader who starts
+    // scrolling in the same breath, so their first move ends it.
+    let abandoned = false
+    const abandon = () => {
+      abandoned = true
+    }
+    const userScrollEvents = ['wheel', 'touchstart', 'keydown'] as const
+    for (const name of userScrollEvents) {
+      window.addEventListener(name, abandon, { passive: true, once: true })
+    }
+
+    // The ring's 2s only starts once the row is actually on screen, so an
+    // arrival that scrolls late isn't announced to an empty viewport.
+    const startRing = () => {
+      ringStarted = true
+      setRingVisible(true)
+      ringTimer = setTimeout(() => setRingVisible(false), HIGHLIGHT_RING_MS)
+    }
+
+    const settle = () => {
+      if (!abandoned) {
+        // 'instant', not 'smooth': the scroll restoration cancels a smooth
+        // scroll outright, where an instant one only needs re-applying.
+        row.scrollIntoView({ behavior: 'instant', block: 'center' })
+      }
+      if (!ringStarted && (abandoned || isInViewport(row))) startRing()
+      framesLeft -= 1
+      if (framesLeft > 0) {
+        frame = requestAnimationFrame(settle)
+        return
+      }
+      // Never confirmed in view (a scroller that can't reach it, say) — show
+      // the ring anyway rather than swallow the only arrival cue.
+      if (!ringStarted) startRing()
+    }
+
+    frame = requestAnimationFrame(settle)
+    return () => {
+      cancelAnimationFrame(frame)
+      clearTimeout(ringTimer)
+      for (const name of userScrollEvents) {
+        window.removeEventListener(name, abandon)
+      }
+      setRingVisible(false)
+    }
   }, [isHighlighted, isoform.id])
 
   return (
@@ -414,27 +474,31 @@ function IsoformRow({
                   (isExpanded || ringVisible) && 'opacity-100',
                 )}
               >
-                <TooltipTrigger
-                  handle={quickActionTip}
-                  payload={copy.downloadLong}
-                  render={
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="size-9"
-                      nativeButton={false}
-                      render={
-                        <a
-                          href={preOptimizedZipUrl(isoform.id)}
-                          download={`${isoform.id}_v1.0.zip`}
-                          aria-label={copy.downloadAria(isoform.id)}
-                        />
-                      }
-                    />
-                  }
-                >
-                  <PackageOpen className="size-4" />
-                </TooltipTrigger>
+                {/* No quick action at all for a triple-AAV isoform: there is
+                    no ZIP to offer it. The menu and the expanded row say why. */}
+                {zipAvailable && (
+                  <TooltipTrigger
+                    handle={quickActionTip}
+                    payload={copy.downloadLong}
+                    render={
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="size-9"
+                        nativeButton={false}
+                        render={
+                          <a
+                            href={preOptimizedZipUrl(isoform.id)}
+                            download={`${isoform.id}_v1.0.zip`}
+                            aria-label={copy.downloadAria(isoform.id)}
+                          />
+                        }
+                      />
+                    }
+                  >
+                    <PackageOpen className="size-4" />
+                  </TooltipTrigger>
+                )}
                 <TooltipTrigger
                   handle={quickActionTip}
                   payload={copy.customizeLong}
@@ -486,13 +550,7 @@ function IsoformRow({
             className="bg-muted/30 px-3 py-4 whitespace-normal sm:px-6"
           >
             <div className="duration-200 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-top-1">
-              <ExpandedDetails
-                isoform={isoform}
-                gcPercent={gcPercent}
-                cpgCount={cpgCount}
-                wggwCount={wggwCount}
-                suitConfig={suitConfig}
-              />
+              <ExpandedDetails isoform={isoform} />
             </div>
           </TableCell>
         </TableRow>
@@ -507,7 +565,7 @@ function IsoformMenuContent({
   isCopied,
   copyText,
 }: {
-  isoform: IsoformListItem
+  isoform: IsoformRowData
   isCopied: (id: string) => boolean
   copyText: (text: string, id: string) => void
 }) {
@@ -515,17 +573,34 @@ function IsoformMenuContent({
   const fastaId = `fasta-${isoform.id}`
   return (
     <DropdownMenuContent align="end">
-      <DropdownMenuItem
-        render={
-          <a
-            href={preOptimizedZipUrl(isoform.id)}
-            download={`${isoform.id}_v1.0.zip`}
-          >
+      {hasPreOptimizedZip(isoform.suitability) ? (
+        <DropdownMenuItem
+          render={
+            <a
+              href={preOptimizedZipUrl(isoform.id)}
+              download={`${isoform.id}_v1.0.zip`}
+            >
+              <PackageOpen className="size-4" />
+              {copy.downloadLong}
+            </a>
+          }
+        />
+      ) : (
+        // Disabled rather than dropped, with the reason: the action is offered
+        // on every other row, so its absence would otherwise read as a bug.
+        <DropdownMenuItem
+          disabled
+          className="max-w-72 flex-col items-start gap-0.5 whitespace-normal"
+        >
+          <span className="flex items-center gap-2">
             <PackageOpen className="size-4" />
-            {copy.downloadLong}
-          </a>
-        }
-      />
+            {copy.downloadUnavailable}
+          </span>
+          <span className="type-micro text-muted-foreground">
+            {copy.downloadUnavailableReason}
+          </span>
+        </DropdownMenuItem>
+      )}
       <DropdownMenuItem
         render={<Link to="/design-tool" search={{ isoform: isoform.id }} />}
       >
@@ -573,20 +648,14 @@ function IsoformMenuContent({
   )
 }
 
-function ExpandedDetails({
-  isoform,
-  gcPercent,
-  cpgCount,
-  wggwCount,
-  suitConfig,
-}: {
-  isoform: IsoformListItem
-  gcPercent: number
-  cpgCount: number
-  wggwCount: number
-  suitConfig: ReturnType<typeof getSuitabilityConfig>
-}) {
-  const needsSplit = isoform.codingSequenceLength > 4700
+function ExpandedDetails({ isoform }: { isoform: IsoformRowData }) {
+  const { gcPercent, cpgCount, wggwCount } = isoform
+  const suitConfig = getSuitabilityConfig(isoform.suitability)
+  const zipAvailable = hasPreOptimizedZip(isoform.suitability)
+  // The preview only ever proposes a *two-way* split, so it belongs to the
+  // dual-AAV tier alone. Showing it for a triple-AAV sequence called a
+  // two-vector split "best (balanced)" right above its own "over limit" lines.
+  const needsSplit = isoform.suitability === 'dual-aav'
 
   return (
     <div className="space-y-4">
@@ -610,24 +679,39 @@ function ExpandedDetails({
           </Button>
           <p className="text-xs text-muted-foreground">{copy.customizeHint}</p>
         </div>
-        <div className="flex flex-col items-start gap-1.5 sm:max-w-xs">
-          <Button
-            size="sm"
-            variant="outline"
-            nativeButton={false}
-            render={
-              <a
-                href={preOptimizedZipUrl(isoform.id)}
-                download={`${isoform.id}_v1.0.zip`}
-                aria-label={copy.downloadAria(isoform.id)}
-              >
-                <PackageOpen className="size-4" />
-                {copy.downloadLong}
-              </a>
-            }
-          />
-          <p className="text-xs text-muted-foreground">{copy.downloadHint}</p>
-        </div>
+        {zipAvailable ? (
+          <div className="flex flex-col items-start gap-1.5 sm:max-w-xs">
+            <Button
+              size="sm"
+              variant="outline"
+              nativeButton={false}
+              render={
+                <a
+                  href={preOptimizedZipUrl(isoform.id)}
+                  download={`${isoform.id}_v1.0.zip`}
+                  aria-label={copy.downloadAria(isoform.id)}
+                >
+                  <PackageOpen className="size-4" />
+                  {copy.downloadLong}
+                </a>
+              }
+            />
+            <p className="text-xs text-muted-foreground">{copy.downloadHint}</p>
+          </div>
+        ) : (
+          <div className="flex items-start gap-2 rounded-2xl border border-dashed px-3 py-2 sm:max-w-xs">
+            <PackageOpen
+              className="mt-0.5 size-4 shrink-0 text-muted-foreground"
+              aria-hidden
+            />
+            <div className="space-y-0.5">
+              <p className="text-xs font-medium">{copy.downloadUnavailable}</p>
+              <p className="text-xs text-muted-foreground">
+                {copy.downloadUnavailableReason}
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
       <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs sm:hidden">

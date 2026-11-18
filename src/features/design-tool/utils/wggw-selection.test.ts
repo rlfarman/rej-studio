@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vite-plus/test'
 
 import type { WggwSiteCandidate } from '@/features/design-tool/components/splice-slider/types'
 import {
+  cutPositions,
+  picksAfterCaretMove,
   resolveWggwPicks,
   selectedWggwSitesFor,
   wggwSitesIn,
@@ -83,5 +85,30 @@ describe('selectedWggwSitesFor', () => {
     )
     expect(selected?.position).toBe(shown[0]?.position)
     expect(selected?.newHexamer).toBe(rewrites[0]?.newHexamer)
+  })
+})
+
+describe('picksAfterCaretMove', () => {
+  it('drops the pick of the split whose caret left it', () => {
+    expect(picksAfterCaretMove([600, 1200], 0, 590)).toEqual([null, 1200])
+  })
+
+  it('keeps a pick the caret still sits on, and the array itself', () => {
+    const picks = [600, 1200]
+    expect(picksAfterCaretMove(picks, 0, 600)).toBe(picks)
+    expect(picksAfterCaretMove([null], 0, 590)).toEqual([null])
+  })
+})
+
+describe('cutPositions', () => {
+  const sites = [siteAt(100), siteAt(600)]
+
+  it('is the resolved site, not the caret', () => {
+    const { sites: resolved } = resolveWggwPicks(sites, [590], 700, [], [])
+    expect(cutPositions(resolved, [590])).toEqual([600])
+  })
+
+  it('falls back to the caret when no site resolves', () => {
+    expect(cutPositions([null], [590])).toEqual([590])
   })
 })

@@ -104,11 +104,22 @@ describe('the run record on screen', () => {
     expect(screen.getByText(/was optimized with/)).toBeTruthy()
   })
 
-  it('says so plainly when a result predates run records', () => {
+  it('says plainly that a browser run records nothing, without sending anyone round again', () => {
     render(<RunRecordCard record={undefined} name="TP53" />)
 
-    expect(screen.getByText(/predates run records/)).toBeTruthy()
+    expect(screen.getByText(/do not record one yet/)).toBeTruthy()
+    // The old copy told people to run the design again for a record, which no
+    // run produces: a loop.
+    expect(screen.queryByText(/[Rr]un the design again/)).toBeNull()
     expect(screen.queryByRole('button')).toBeNull()
+  })
+
+  it('says what the download does contain instead', () => {
+    render(<RunRecordCard record={undefined} name="TP53" />)
+
+    const told = screen.getByText(/The download still holds/)
+    expect(told.textContent).toMatch(/options applied/)
+    expect(told.textContent).toMatch(/objective reports/)
   })
 
   it('shows an unreadable timestamp as it was recorded, rather than a wrong date', () => {

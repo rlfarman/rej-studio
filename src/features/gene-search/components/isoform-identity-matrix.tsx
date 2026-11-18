@@ -64,7 +64,9 @@ export function IsoformIdentityMatrix({ isoforms, identity }: Props) {
   return (
     <section
       aria-labelledby="identity-matrix-title"
-      className="mb-4 space-y-4 rounded-2xl border p-4"
+      // min-w-0: the card must never be sized by the grid inside it, however
+      // it is laid out, or the grid widens the page instead of scrolling.
+      className="mb-4 min-w-0 space-y-4 rounded-2xl border p-4"
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2
@@ -102,14 +104,26 @@ function Matrix({
 }) {
   return (
     <>
-      <div className="-mx-4 overflow-x-auto px-4">
+      {/* The one scroller the grid gets, inside the card's padding. It must
+          not bleed past the card with a negative margin (the grid then
+          overflows the card, and the page scrolls sideways with it), and it
+          must not sit inside another horizontal scroller: `sticky` row
+          headers pin to the nearest scroll container, so a second one above
+          this takes the scroll and the labels scroll away with the grid. */}
+      {/* `contain-paint` is load-bearing, not decoration: without it the
+          grid's sticky row labels extend the *page's* scrollable area, so a
+          swipe anywhere panned the whole gene page 73px sideways even though
+          this box already clipped and scrolled correctly. Measured: page pan
+          73px -> 0. `overscroll-x-contain` then stops a swipe that reaches
+          the grid's end from chaining to the page. */}
+      <div className="min-w-0 overflow-x-auto overscroll-x-contain contain-paint">
         <table className="border-separate border-spacing-[2px] text-left">
           <caption className="sr-only">
             {geneSearchCopy.identityMatrix.caption}
           </caption>
           <thead>
             <tr>
-              <th scope="col" className="sticky left-0 z-10 bg-card">
+              <th scope="col" className="sticky left-0 z-10 bg-background">
                 <span className="sr-only">
                   {geneSearchCopy.identityMatrix.rowHeader}
                 </span>
@@ -196,7 +210,7 @@ function Row({
     <tr>
       <th
         scope="row"
-        className="sticky left-0 z-10 bg-card pr-3 text-right font-normal whitespace-nowrap"
+        className="sticky left-0 z-10 bg-background pr-3 text-right font-normal whitespace-nowrap"
       >
         <Link
           from="/genes/$symbol"

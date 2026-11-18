@@ -4,6 +4,7 @@ import {
   FormItem,
   FormLabel,
   FormControl,
+  FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { FormValues } from '../types/form-schema'
@@ -45,6 +46,9 @@ export function NameInput() {
               {...field}
             />
           </FormControl>
+          {/* The name is required and starts empty, so without this a form
+              submitted without one failed with nothing on screen. */}
+          <FormMessage />
         </FormItem>
       )}
     />

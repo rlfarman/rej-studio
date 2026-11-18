@@ -185,37 +185,40 @@ export function ChartDataTable({
       </div>
 
       {open && (
-        <div className="max-h-80 overflow-auto rounded-md border">
-          <Table>
-            <TableCaption className="sr-only">{caption}</TableCaption>
-            <TableHeader className="sticky top-0 bg-muted/60">
-              <TableRow>
-                {columns.map((column) => (
-                  <TableHead key={column} className="text-xs">
-                    {column}
-                  </TableHead>
+        // The height and the frame go on the table's own scroll container:
+        // it is the element that scrolls, so the sticky header below has
+        // something to stick to. See `containerClassName` on Table.
+        <Table containerClassName="max-h-80 overflow-auto rounded-xl border">
+          <TableCaption className="sr-only">{caption}</TableCaption>
+          {/* Opaque, and above the rows: a translucent header lets the rows
+              it is pinned over read through it. */}
+          <TableHeader className="sticky top-0 z-10 bg-muted [&_th]:bg-muted">
+            <TableRow>
+              {columns.map((column) => (
+                <TableHead key={column} className="text-xs">
+                  {column}
+                </TableHead>
+              ))}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {rows.map((row, index) => (
+              <TableRow key={index}>
+                {row.map((cell, cellIndex) => (
+                  <TableCell
+                    key={cellIndex}
+                    className={cn(
+                      'text-xs',
+                      typeof cell === 'number' && 'tabular-nums',
+                    )}
+                  >
+                    {typeof cell === 'number' ? cell.toLocaleString() : cell}
+                  </TableCell>
                 ))}
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {rows.map((row, index) => (
-                <TableRow key={index}>
-                  {row.map((cell, cellIndex) => (
-                    <TableCell
-                      key={cellIndex}
-                      className={cn(
-                        'text-xs',
-                        typeof cell === 'number' && 'tabular-nums',
-                      )}
-                    >
-                      {typeof cell === 'number' ? cell.toLocaleString() : cell}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+            ))}
+          </TableBody>
+        </Table>
       )}
     </div>
   )

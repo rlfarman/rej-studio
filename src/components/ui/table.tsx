@@ -1,11 +1,27 @@
 import * as React from 'react'
 import { cn } from 'cn'
 
-function Table({ className, ...props }: React.ComponentProps<'table'>) {
+function Table({
+  className,
+  containerClassName,
+  ...props
+}: React.ComponentProps<'table'> & {
+  /**
+   * Styles the scroll container around the table, not the table.
+   *
+   * The container is the element that actually scrolls, so anything that
+   * bounds or frames the scrolling — a `max-h-*`, an `overflow-*`, the
+   * border and radius around it — belongs here. Put it on a wrapper of your
+   * own instead and `overflow-x-auto` below it swallows the scroll: the
+   * wrapper never scrolls, and a `sticky` header inside sticks to it and
+   * drifts away with the rows.
+   */
+  containerClassName?: string
+}) {
   return (
     <div
       data-slot="table-container"
-      className="relative w-full overflow-x-auto"
+      className={cn('relative w-full overflow-x-auto', containerClassName)}
     >
       <table
         data-slot="table"

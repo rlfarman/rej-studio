@@ -94,7 +94,12 @@ export function RunRecordCard({ record, name }: RunRecordCardProps) {
   const { copy: copyText, isCopied } = useCopyToClipboard()
 
   if (!record) {
-    return <p className="text-sm text-muted-foreground">{copy.unavailable}</p>
+    return (
+      <div className="space-y-2 text-sm text-muted-foreground">
+        <p>{copy.unavailable}</p>
+        <p>{copy.unavailableDownload}</p>
+      </div>
+    )
   }
 
   const json = JSON.stringify(record, null, 2)

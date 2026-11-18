@@ -66,6 +66,43 @@ export function resolveWggwPicks(
   return { sites: resolvedSites, rewrites }
 }
 
+/**
+ * The site picks after a split point's caret moves to `position`.
+ *
+ * A pick says "cut at this motif". Once the caret leaves it the pick no
+ * longer describes the design the editor is showing, so it is dropped and
+ * the split falls back to the nearest-site preselect — otherwise the submit
+ * carries a cut at a base none of the numbers on screen mention. The array
+ * comes back unchanged (same reference) when there is nothing to drop.
+ */
+export function picksAfterCaretMove(
+  picks: (number | null)[],
+  index: number,
+  position: number,
+): (number | null)[] {
+  const picked = picks[index] ?? null
+  if (picked === null || picked === position) return picks
+  const next = [...picks]
+  next[index] = null
+  return next
+}
+
+/**
+ * Where each split point actually cuts: its resolved WGGW site, or the
+ * caret when the sequence has no site to use.
+ *
+ * The optimizer splits at the site it is given (`split_sequence` in
+ * `rust/optimizer/src/rej.rs` uses the selected site's position and only
+ * falls back to `split_point`), so these — not the caret positions — are
+ * the bp the design is delivered at.
+ */
+export function cutPositions(
+  sites: (WggwSiteCandidate | null)[],
+  positions: number[],
+): number[] {
+  return positions.map((position, i) => sites[i]?.position ?? position)
+}
+
 /** The `selectedWggwSites` the optimizer request carries, for a submit. */
 export function selectedWggwSitesFor(
   sequence: string,
