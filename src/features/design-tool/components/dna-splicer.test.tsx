@@ -105,3 +105,18 @@ describe('DNASplicer split points', () => {
     expect(split(form)).toEqual([22])
   })
 })
+
+describe('DNASplicer WGGW selection', () => {
+  it('writes nothing back into the form while a sequence is typed', () => {
+    const form = mount()
+    // TGGA is a WGGW motif, so the editor has a default site to show.
+    typeInto(form, `ATG${'GCTGGAAAA'.repeat(5)}TAA`)
+    expect(screen.getAllByText(/TGGA/).length).toBeGreaterThan(0)
+    // The editor shows a default site for the split, but only a pick made in
+    // its handlers reaches the form; the request's sites are resolved on
+    // submit.
+    expect(form().getValues('selectedWggwSites')).toEqual([null])
+    expect(form().getValues('wggwSitePicks')).toBeUndefined()
+    expect(form().getValues('wggwRewritePicks')).toBeUndefined()
+  })
+})

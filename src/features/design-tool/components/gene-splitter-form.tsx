@@ -17,6 +17,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import type { DesignToolSpecies } from '@/features/design-tool/types/species-options'
 import { validationSchema, FormValues } from '../types/form-schema'
 import { formatOptionsForReport } from '../utils/form-handler'
+import { withSelectedWggwSites } from '../utils/wggw-selection'
 import { useJob } from '@/features/design-tool/hooks/use-job'
 import { useFormDraft } from '@/features/design-tool/hooks/use-form-draft'
 import { CustomizationOptions } from './customization-options'
@@ -168,7 +169,9 @@ export function GeneSplitterForm({
     // the hydration effect above and overwrite the live form.
     didResetRef.current = true
     setIsEditing(false)
-    await job.submitJob(values, { cloud: runInCloud })
+    // The split-point editor keeps only the person's WGGW picks in the form;
+    // the sites they resolve to are worked out here, once, for the request.
+    await job.submitJob(withSelectedWggwSites(values), { cloud: runInCloud })
     // The inputs are safe in the job entry now, so the draft can go.
     draft.clear()
   }
@@ -362,7 +365,9 @@ export function GeneSplitterForm({
           >
             <ResultsPanel
               result={result}
-              optionsUsed={formatOptionsForReport(methods.getValues())}
+              optionsUsed={formatOptionsForReport(
+                withSelectedWggwSites(methods.getValues()),
+              )}
               species={methods.getValues('species')}
             />
           </Suspense>

@@ -100,12 +100,12 @@ export function CodingSequenceInput() {
   // into it here.
   //
   // Controlled, it dropped keystrokes. Typing re-renders the split-point
-  // editor, whose effects write derived values back into the form: the
-  // clamped split points and the selected WGGW sites
-  // (splice-slider-context.tsx, the effects calling onPositionsChange and
-  // onSelectionChange). Split points no longer rescale in an effect, but
-  // those two remain. When one of those landed
-  // between a keystroke and its render, React ended the input event by
+  // editor, which wrote derived values back into the form from effects: the
+  // selected WGGW sites (now resolved on submit from the picks, see
+  // utils/wggw-selection.ts) and still the clamped split points
+  // (splice-slider-context.tsx, the effect calling onPositionsChange). When
+  // such a write landed between a keystroke and its render, React ended the
+  // input event by
   // restoring the field to the value it had last rendered, and the next key
   // was typed onto the shorter text. Uncontrolled, there is no rendered value
   // to restore to.
@@ -197,13 +197,10 @@ export function CodingSequenceInput() {
       setValue('spliceJunctionPositions', points, {
         shouldValidate: true,
       })
-      setValue(
-        'selectedWggwSites',
-        points.map(() => null),
-        {
-          shouldValidate: false,
-        },
-      )
+      // A new sequence starts its WGGW picks over: the old ones name sites
+      // that may not be in it.
+      setValue('wggwSitePicks', [], { shouldValidate: false })
+      setValue('wggwRewritePicks', [], { shouldValidate: false })
       // Clear the protein field so switching back doesn't show stale input
       if (modeSwitched) {
         setValue('proteinSequence', '', { shouldValidate: false })

@@ -1,11 +1,11 @@
 import { useEffect, useEffectEvent, useRef, useState } from 'react'
 import { cn } from '@/lib/utils'
-import { rankInducibleWggwByBalance } from '@/lib/bio/sequence-utils'
 import { ChevronLeft, ChevronRight, Plus } from 'lucide-react'
 import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
-import type { SelectedWggwSite } from '../types/form-schema'
+import type { RewritePick } from '../types/form-schema'
 import { MULTI_SPLIT_ENABLED } from '../utils/feature-flags'
+import { resolveWggwPicks, wggwSitesIn } from '../utils/wggw-selection'
 import {
   AAV_MAX_BP,
   MIN_SEQUENCE_LENGTH,
@@ -15,13 +15,11 @@ import {
   TICK_CLICK_THRESHOLD_PX,
 } from './splice-slider/constants'
 import { spliceTone } from './splice-slider/tones'
-import { pickDefaultWggwSite } from '../utils/default-wggw-site'
 import type { WggwSiteCandidate } from './splice-slider/types'
 import {
   buildSegments,
   buildSequenceContext,
   findSequenceMatches,
-  groupWggwSites,
   nearestSiteIndex,
   splitPositionToPercent,
 } from './splice-slider/sequence-helpers'
@@ -37,7 +35,16 @@ interface Props {
   // hides the score (no host picked = the score is meaningless).
   species: 'none' | 'human' | 'mouse'
   onPositionsChange: (positions: number[]) => void
-  onSelectionChange: (sites: (SelectedWggwSite | null)[]) => void
+  // The person's picks, per split point: the WGGW site (null = the default
+  // nearest the caret) and the rewrite option. The parent owns them. The
+  // change callbacks take an updater applied to the latest picks, so several
+  // updates in one handler (pick a site, then reorder splices) compose.
+  sitePicks: (number | null)[]
+  rewritePicks: RewritePick[]
+  onSitePicksChange: (
+    update: (prev: (number | null)[]) => (number | null)[],
+  ) => void
+  onRewritePicksChange: (update: (prev: RewritePick[]) => RewritePick[]) => void
 }
 
 export function SpliceSliderContext({
@@ -45,7 +52,10 @@ export function SpliceSliderContext({
   positions: inputPositions,
   species,
   onPositionsChange,
-  onSelectionChange,
+  sitePicks,
+  rewritePicks,
+  onSitePicksChange,
+  onRewritePicksChange,
 }: Props) {
   const seqLen = sequence.length
   const rootRef = useRef<HTMLDivElement>(null)
@@ -86,10 +96,7 @@ export function SpliceSliderContext({
   const queryMode = detectQueryMode(queryValue)
   const searchValue = queryMode === 'sequence' ? queryValue : ''
 
-  const wggwSites: WggwSiteCandidate[] =
-    seqLen < MIN_SEQUENCE_LENGTH
-      ? []
-      : groupWggwSites(rankInducibleWggwByBalance(sequence))
+  const wggwSites: WggwSiteCandidate[] = wggwSitesIn(sequence)
   const normalizedSequence = sequence.toUpperCase().replace(/U/g, 'T')
   const normalizedSearch = searchValue
     .toUpperCase()
@@ -122,28 +129,31 @@ export function SpliceSliderContext({
   const clampedActiveIndex = Math.min(activeSpliceIndex, spliceCount - 1)
   const activePosition = positions[clampedActiveIndex] ?? midpoint
 
-  // Raw mutable state. Reads go through `activeSitePositions` /
-  // `rewriteSelections` below, which normalize the array length to
-  // `spliceCount` during render — no separate sync effect needed.
-  const [activeSitePositionsRaw, setActiveSitePositions] = useState<
-    (number | null)[]
-  >(() => positions.map(() => null))
-  const activeSitePositions = fitToLength(
-    activeSitePositionsRaw,
-    spliceCount,
-    () => null,
-  )
+  // The picks as stored may be shorter or longer than the split points (a
+  // fresh form has none); reads and updates see them fitted to `spliceCount`
+  // so no update leaves a hole in the arrays.
+  const fitSitePicks = (picks: (number | null)[]) =>
+    fitToLength(picks, spliceCount, () => null)
+  const fitRewritePicks = (picks: RewritePick[]) =>
+    fitToLength(picks, spliceCount, () => ({ position: null, index: 0 }))
+  const activeSitePositions = fitSitePicks(sitePicks)
+  const rewriteSelections = fitRewritePicks(rewritePicks)
+  const setActiveSitePositions = (
+    update: (prev: (number | null)[]) => (number | null)[],
+  ) => onSitePicksChange((prev) => update(fitSitePicks(prev)))
+  const setRewriteSelections = (
+    update: (prev: RewritePick[]) => RewritePick[],
+  ) => onRewritePicksChange((prev) => update(fitRewritePicks(prev)))
 
   // An unset splice shows the WGGW site nearest its caret rather than an
-  // empty inspector. The backend already relocates the split to a motif near
-  // the requested position when no site is sent (`ensure_wggw`), so this
-  // surfaces the motif and its synonymous rewrites for review instead of
-  // hiding the decision. Derived during render — no effect, so there's no
-  // state write to sync.
-  const selectedSites = activeSitePositions.map((pos, i) =>
-    pos !== null
-      ? (wggwSites.find((s) => s.position === pos) ?? null)
-      : pickDefaultWggwSite(wggwSites, positions[i] ?? midpoint),
+  // empty inspector (see resolveWggwPicks). Derived during render and never
+  // written back: the form resolves the same picks itself on submit.
+  const { sites: selectedSites, rewrites: currentRewrites } = resolveWggwPicks(
+    wggwSites,
+    positions,
+    midpoint,
+    activeSitePositions,
+    rewriteSelections,
   )
   // Which splices are showing a derived site rather than one the user chose,
   // so the inspector can say so.
@@ -154,32 +164,13 @@ export function SpliceSliderContext({
     site ? wggwSites.findIndex((s) => s.position === site.position) : -1,
   )
 
-  const [rewriteSelectionsRaw, setRewriteSelections] = useState<
-    { position: number | null; index: number }[]
-  >(() => positions.map(() => ({ position: null, index: 0 })))
-  const rewriteSelections = fitToLength(
-    rewriteSelectionsRaw,
-    spliceCount,
-    () => ({
-      position: null,
-      index: 0,
-    }),
-  )
-
-  const currentRewrites = selectedSites.map((site, i) => {
-    if (!site) return null
-    const sel = rewriteSelections[i]
-    const idx = sel?.position === site.position ? sel.index : 0
-    return (
-      site.rewriteOptions[Math.min(idx, site.rewriteOptions.length - 1)] ?? null
-    )
-  })
-
   const frameContext = buildSequenceContext(sequence)
 
   // Throttle the swap toast so a single drag-cross emits one notification,
-  // not one per pointermove that crosses. Only used in multi-split mode.
-  const lastSwapToastRef = useRef(0)
+  // not one per pointermove that crosses. Only used in multi-split mode. A
+  // cooldown timer rather than a Date.now() timestamp: the React Compiler's
+  // purity check can't tell setPositionAt only runs in event handlers.
+  const swapToastCoolingRef = useRef(false)
 
   // In single-split mode this just clamps and writes the one position. In
   // multi-split mode, dragging a caret past another auto-swaps so positions
@@ -208,9 +199,11 @@ export function SpliceSliderContext({
         const i = indexed.findIndex((x) => x.original === prev)
         return i === -1 ? prev : i
       })
-      const now = Date.now()
-      if (now - lastSwapToastRef.current > SWAP_TOAST_THROTTLE_MS) {
-        lastSwapToastRef.current = now
+      if (!swapToastCoolingRef.current) {
+        swapToastCoolingRef.current = true
+        window.setTimeout(() => {
+          swapToastCoolingRef.current = false
+        }, SWAP_TOAST_THROTTLE_MS)
         toast('Splices reordered to keep Splice 1 5′-most', {
           duration: SWAP_TOAST_DURATION_MS,
         })
@@ -294,32 +287,6 @@ export function SpliceSliderContext({
     if (target < 0 || target >= wggwSites.length) return
     handleSelectSite(wggwSites[target], idx)
   }
-
-  // Emit selected sites + current rewrites whenever they change. Use
-  // primitive composite keys so the effect deps are cheap to compare and
-  // skip when nothing semantic has changed.
-  const sitePositionsKey = selectedSites.map((s) => s?.position ?? '').join('|')
-  const rewriteHexamerKey = currentRewrites
-    .map((r) => r?.newHexamer ?? '')
-    .join('|')
-  useEffect(() => {
-    onSelectionChange(
-      selectedSites.map((site, i) => {
-        const rewrite = currentRewrites[i]
-        if (!site || !rewrite) return null
-        return {
-          position: site.position,
-          motifStart: site.motifStart,
-          motif: site.motif,
-          hexamerStart: site.hexamerStart,
-          originalCodons: site.originalCodons,
-          newCodons: rewrite.newCodons,
-          newHexamer: rewrite.newHexamer,
-        }
-      }),
-    )
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [onSelectionChange, sitePositionsKey, rewriteHexamerKey])
 
   // Window shortcuts while the editor is active ([ ] m 1 2). An effect
   // event: it always sees the current positions and handlers, and the

@@ -30,11 +30,10 @@ function applyReverseTranslatedDna(
   const points = pickDefaultSplitPoints(dna)
   setValue('codingSequence', dna, { shouldValidate: false })
   setValue('spliceJunctionPositions', points, { shouldValidate: false })
-  setValue(
-    'selectedWggwSites',
-    points.map(() => null),
-    { shouldValidate: false },
-  )
+  // A new sequence starts its WGGW picks over: the old ones name sites
+  // that may not be in it.
+  setValue('wggwSitePicks', [], { shouldValidate: false })
+  setValue('wggwRewritePicks', [], { shouldValidate: false })
 }
 
 /**
