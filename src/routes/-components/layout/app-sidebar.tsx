@@ -30,7 +30,8 @@ import {
 } from '@/features/design-tool/hooks/use-job-history'
 import { useFavoriteGenes } from '@/features/gene-search/stores/favorite-genes-store'
 import { useRecentGenes } from '@/features/gene-search/stores/recent-genes-store'
-import { Link, useNavigate } from '@tanstack/react-router'
+import { useNavigate } from '@tanstack/react-router'
+import { ShellLink } from './shell-link'
 import { useShellPathname } from './use-shell-pathname'
 import { useEffect, useSyncExternalStore } from 'react'
 import { appCopy } from '@/copy/app'
@@ -73,7 +74,7 @@ function NavLinks() {
           <SidebarMenuButton
             isActive={pathname !== null && isActive(pathname)}
             tooltip={label}
-            render={<Link to={href} />}
+            render={<ShellLink to={href} />}
           >
             <Icon />
             <span>{label}</span>
@@ -149,7 +150,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               <SidebarMenuButton
                 size="lg"
                 tooltip={commonCopy.brandName}
-                render={<Link to="/" />}
+                render={<ShellLink to="/" />}
               >
                 <div className="flex aspect-square size-8 items-center justify-center rounded-xl bg-spark text-spark-foreground">
                   <Dna className="size-4" />

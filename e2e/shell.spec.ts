@@ -30,26 +30,6 @@ function sidebarLink(page: Page, name: string) {
   return page.locator('[data-slot="sidebar"]').getByRole('link', { name })
 }
 
-/**
- * One hydration error is known, pre-existing and not any page's fault.
- *
- * `dist/client/_shell.html` is prerendered while the router sits at `/`, so
- * the Home link is baked into it carrying `data-status="active"` and
- * `aria-current="page"`. That shell is then served for every URL that is not
- * a prerendered page, where the browser renders the same link inactive — the
- * attributes disagree and React throws the tree away (#418). It is why a hard
- * refresh of a gene page re-renders everything, and why a screen reader is
- * told "Home, current page" on a deep link.
- *
- * Reproduced on 2ecc3c85, before any of the audit work. Fixing it means
- * changing the path the shell is prerendered at, which is its own change.
- * Allowing it by name keeps every *other* console error failing these tests.
- */
-const KNOWN_SHELL_HYDRATION_ERROR = /Minified React error #418/
-
-const unexpected = (errors: string[]) =>
-  errors.filter((error) => !KNOWN_SHELL_HYDRATION_ERROR.test(error))
-
 for (const { path, heading } of ROUTES) {
   test(`${path} renders inside the shell`, async ({ page }) => {
     // Every URL hydrates the same prerendered shell, so anything in it that
@@ -77,7 +57,7 @@ for (const { path, heading } of ROUTES) {
         ? 1
         : 0,
     )
-    expect(unexpected(errors)).toEqual([])
+    expect(errors).toEqual([])
   })
 }
 
@@ -180,6 +160,24 @@ test('an unknown URL shows the not-found page', async ({ page }) => {
   // 404 must wait for hydration; rendering it straight away threw the
   // hydrated tree away (React #418) on every load.
   //
+  // One #418 is still expected here, and only here. Two causes were found:
+  //
+  // 1. The sidebar's links arrived from the prerender marked as the current
+  //    page — fixed, see `ShellLink`. That was the one affecting every
+  //    shell-served URL, which is why the per-route loop above now asserts
+  //    no console errors at all.
+  // 2. A second cause specific to an unmatched URL: the router builds a
+  //    different tree for `notFoundComponent` than for a matched route's
+  //    pending component, and the shell was prerendered with the latter.
+  //    Localized by rendering `NotFound` as nothing but `<PageLoading />`,
+  //    byte-identical to the shell's page slot — the error survived, so it
+  //    is the structure around the page slot, not its content. Fixing it
+  //    means changing how an unknown URL is matched (a catch-all route
+  //    rather than the not-found branch), which is its own change.
+  //
+  // So this allows exactly that error and nothing else: a second console
+  // error here, or any error on a real route, still fails.
+  //
   const errors: string[] = []
   page.on('pageerror', (error) => errors.push(error.message))
   page.on('console', (message) => {
@@ -194,7 +192,8 @@ test('an unknown URL shows the not-found page', async ({ page }) => {
   await expect(page).toHaveTitle(
     appCopy.metadata.title(appCopy.notFound.pageTitle),
   )
-  expect(unexpected(errors)).toEqual([])
+  expect(errors.filter((e) => !/React error #418/.test(e))).toEqual([])
+  expect(errors.filter((e) => /React error #418/.test(e))).toHaveLength(1)
   // In the page slot, with the sidebar still there to navigate away.
   await expect(page.locator('main#main-content h1')).toHaveText(
     appCopy.notFound.description,
