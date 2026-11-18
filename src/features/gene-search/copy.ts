@@ -160,7 +160,6 @@ export const geneSearchCopy = {
       label: 'AAV fit',
       hint: 'How many AAV vectors the CDS needs: Single under 4,000 bp, Dual under 8,000 bp, Triple above. Dual and triple designs are reassembled by RNA end-joining.',
     },
-    termAria: (term: string) => `What is ${term}?`,
   },
   splitPreview: {
     none: 'No WGGW-capable junctions found — this sequence cannot be split by REJ.',

@@ -12,7 +12,7 @@ import {
   buildIsoformsFasta,
   isoformsFastaFilename,
 } from '@/features/gene-search/utils/isoform-fasta'
-import { TermHint } from './term-hint'
+import { TermHint } from '@/components/term-hint'
 import { geneSearchCopy } from '../copy'
 
 const copy = geneSearchCopy.summary
@@ -86,7 +86,7 @@ export function IsoformSummary({ geneSymbol, isoforms }: IsoformSummaryProps) {
           })}
         </span>
         <TermHint
-          label={terms.termAria(terms.suitability.label)}
+          topic={terms.suitability.label}
           hint={terms.suitability.hint}
         />
       </div>

@@ -58,7 +58,7 @@ import {
 } from '@/lib/bio/sequence-utils'
 import { IsoformValidationBadges } from './isoform-validation-badges'
 import { IsoformSplitPreview } from './isoform-split-preview'
-import { TermHint } from './term-hint'
+import { TermHint } from '@/components/term-hint'
 import type { IsoformListItem } from '@/features/gene-search/types/domain-types'
 import {
   ariaSortFor,
@@ -830,7 +830,7 @@ function SortableHead({
           onClick={() => onSort(sortKey)}
         />
         {hint && typeof label === 'string' && (
-          <TermHint label={terms.termAria(label)} hint={hint} />
+          <TermHint topic={label} hint={hint} />
         )}
       </span>
     </TableHead>

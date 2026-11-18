@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test'
 
 import { appCopy } from '../src/copy/app'
+import { commonCopy } from '../src/copy/common'
 import { diseaseAssociationsCopy } from '../src/features/disease-associations/copy'
 import { formatInheritanceLabel } from '../src/features/disease-associations/types'
 import { geneSearchCopy } from '../src/features/gene-search/copy'
@@ -380,7 +381,7 @@ test('a term hint opens on click, closes on Escape, and leaves the table alone',
   await page.goto('/genes/TP53', { waitUntil: 'networkidle' })
   const { gc } = geneSearchCopy.terms
   const hint = page.getByRole('button', {
-    name: geneSearchCopy.terms.termAria(gc.label),
+    name: commonCopy.termHintAria(gc.label),
   })
   await hint.first().click()
   await expect(page.getByText(gc.hint)).toBeVisible()

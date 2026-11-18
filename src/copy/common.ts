@@ -6,6 +6,9 @@ export const commonCopy = {
     downloadAria: (caption: string) => `Download ${caption} as CSV`,
   },
   brandName: 'REJ Studio',
+  // The accessible name of every "What is this?" infotip (`TermHint`), in
+  // both the gene pages and the design tool.
+  termHintAria: (term: string) => `What is ${term}?`,
   sidebar: {
     open: 'Open sidebar',
     close: 'Close sidebar',

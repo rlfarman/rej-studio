@@ -24,7 +24,7 @@ import { CustomizationOptions } from './customization-options'
 import { DesignObjectives } from './optimization-options'
 import { SubmitButton } from './submit-button'
 import { FinishNotificationOptIn } from './finish-notification-opt-in'
-import { FieldHelp } from './field-help'
+import { TermHint } from '@/components/term-hint'
 import { RunSummary } from './run-summary'
 import {
   CloudRunningPlaceholder,
@@ -352,9 +352,10 @@ export function GeneSplitterForm({
                     <p className="text-sm font-medium">
                       {copy.spliceJunctionLabel}
                     </p>
-                    <FieldHelp topic={copy.spliceJunctionLabel}>
-                      {copy.spliceJunctionHelp}
-                    </FieldHelp>
+                    <TermHint
+                      topic={copy.spliceJunctionLabel}
+                      hint={copy.spliceJunctionHelp}
+                    />
                   </div>
                   <p className="text-sm text-muted-foreground">
                     {copy.spliceJunctionHint}
