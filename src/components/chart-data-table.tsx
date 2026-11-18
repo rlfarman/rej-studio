@@ -1,5 +1,3 @@
-'use client'
-
 import { useSyncExternalStore } from 'react'
 import { Download, Table2 } from 'lucide-react'
 
@@ -164,7 +162,7 @@ export function ChartDataTable({
           type="button"
           variant="ghost"
           size="sm"
-          className="text-muted-foreground h-7 gap-1.5 px-2 text-xs"
+          className="h-7 gap-1.5 px-2 text-xs text-muted-foreground"
           aria-expanded={open}
           onClick={() => setOpen(!open)}
         >
@@ -176,7 +174,7 @@ export function ChartDataTable({
             type="button"
             variant="ghost"
             size="sm"
-            className="text-muted-foreground h-7 gap-1.5 px-2 text-xs"
+            className="h-7 gap-1.5 px-2 text-xs text-muted-foreground"
             aria-label={copy.downloadAria(caption)}
             onClick={() => downloadTextFile(csvFilename, toCsv(columns, rows))}
           >
@@ -190,7 +188,7 @@ export function ChartDataTable({
         <div className="max-h-80 overflow-auto rounded-md border">
           <Table>
             <TableCaption className="sr-only">{caption}</TableCaption>
-            <TableHeader className="bg-muted/60 sticky top-0">
+            <TableHeader className="sticky top-0 bg-muted/60">
               <TableRow>
                 {columns.map((column) => (
                   <TableHead key={column} className="text-xs">

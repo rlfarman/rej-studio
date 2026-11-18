@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { useDebouncedCallback } from 'use-debounce'
 import {
   keepPreviousData,
@@ -13,64 +13,27 @@ import {
 } from '@/features/gene-search/types/search'
 import type { SpeciesFilter } from '@/lib/bio/species'
 import { useSpeciesContext } from '@/stores/species-store'
-import { trackEvent } from '@/lib/analytics'
 import { geneSearchCopy } from '../copy'
-import { searchCorpus } from '../corpus/client'
-import { getBrowserCorpus } from '../corpus/gene-data-url'
+import { searchGenes } from '../api/search-worker-client'
 
 interface UseGeneSearchProps {
   defaultQuery?: string
 }
 
-/** A search response, or the message for an expected failure (4xx/5xx). */
-type GeneSearchData = SearchGenesResult & { error: string | null }
-
 const EMPTY_RESULTS: GeneSearchResult[] = []
 const EMPTY_SUGGESTIONS: SimilarGene[] = []
 
 /**
- * Run one palette search. Over the API (Postgres backend), `signal` comes from TanStack Query, which aborts
- * the request when the query key changes, so a stale keystroke's search
- * stops instead of queueing ahead of the current one. Expected failures
- * (rate limit, signed out, backend down) resolve with their message; only
- * network failures throw.
+ * Run one palette search against the corpus index, in the search worker
+ * (downloaded once and shared with the rest of the app), so there is no
+ * request per keystroke and no main-thread work. A failure to fetch the
+ * index rejects, which the palette reports as a network error.
  */
-async function fetchGeneSearch(
+function searchPalette(
   query: string,
   species: SpeciesFilter,
-  signal: AbortSignal,
-): Promise<GeneSearchData> {
-  // With a static corpus the search runs right here, against an index
-  // downloaded once; no request per keystroke, so nothing to rate-limit.
-  // A failure to fetch the index throws, which reads as a network error.
-  const corpus = getBrowserCorpus()
-  if (corpus) {
-    const result = await searchCorpus(corpus, {
-      q: query,
-      species,
-      limit: SEARCH_LIMITS.palette,
-    })
-    return { ...result, error: null }
-  }
-
-  const params = new URLSearchParams({
-    q: query,
-    species,
-    limit: String(SEARCH_LIMITS.palette),
-  })
-  const res = await fetch(`/api/genes/search?${params}`, {
-    signal,
-    headers: { accept: 'application/json' },
-  })
-  const body: unknown = await res.json().catch(() => null)
-
-  if (res.ok && body) return { ...(body as SearchGenesResult), error: null }
-
-  const message =
-    body && typeof (body as { error?: unknown }).error === 'string'
-      ? (body as { error: string }).error
-      : geneSearchCopy.searchErrors.network
-  return { results: [], truncated: false, suggestions: [], error: message }
+): Promise<SearchGenesResult> {
+  return searchGenes({ q: query, species, limit: SEARCH_LIMITS.palette })
 }
 
 export function useGeneSearch({ defaultQuery }: UseGeneSearchProps = {}) {
@@ -99,36 +62,18 @@ export function useGeneSearch({ defaultQuery }: UseGeneSearchProps = {}) {
 
   const { data, isFetching, isError, isPlaceholderData } = useQuery({
     queryKey,
-    queryFn: ({ signal }) => fetchGeneSearch(trimmed, species, signal),
+    queryFn: () => searchPalette(trimmed, species),
     enabled,
-    // A failed search shouldn't be served from cache when the user comes
-    // back to the same query; results are good for 30s.
-    staleTime: (q) => (q.state.data?.error ? 0 : 30_000),
+    // The corpus doesn't change under an open page.
+    staleTime: Infinity,
     // Keep the previous query's results mounted while a new query loads, so
     // the list doesn't blank out between keystrokes. Pairs with a delayed
     // inline loader in the input to avoid flash-of-loading on fast queries.
     placeholderData: keepPreviousData,
   })
 
-  // Track completed searches (fires once per unique query+species+results).
-  const lastTrackedQuery = useRef('')
-  useEffect(() => {
-    if (!data || data.error || !trimmed) return
-    if (trimmed === lastTrackedQuery.current) return
-    lastTrackedQuery.current = trimmed
-    trackEvent({
-      event: 'gene_search',
-      query: trimmed,
-      species,
-      result_count: data.results.length,
-    })
-  }, [data, trimmed, species])
-
-  // Distinguish between: network error (isError), an expected server-side
-  // failure (data.error), and genuine empty results (data.results empty).
-  const error = isError
-    ? geneSearchCopy.searchErrors.network
-    : (data?.error ?? null)
+  // A failed search (the index didn't load) versus genuinely no results.
+  const error = isError ? geneSearchCopy.searchErrors.network : null
 
   // Fire and forget: a failed refetch surfaces through the query's isError,
   // read above, and invalidateQueries does not reject unless asked to

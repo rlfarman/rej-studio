@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import { Link } from '@tanstack/react-router'
 import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
@@ -20,34 +20,24 @@ type Props = {
   rows: AssociationRow[]
   sortKey: SortKey
   sortDir: SortDir
-  /**
-   * Current search params serialized as a plain object, so the sortable
-   * header links can preserve query + inheritance filters when toggling sort.
-   */
-  searchParams: Record<string, string | string[] | undefined>
 }
 
 const cdsFormatter = new Intl.NumberFormat('en-US')
 const { largestCdsUnit, largestCdsUnknown, phenotypeUnknown } =
   diseaseAssociationsCopy.table
 
-export function AssociationsTable({
-  rows,
-  sortKey,
-  sortDir,
-  searchParams,
-}: Props) {
+export function AssociationsTable({ rows, sortKey, sortDir }: Props) {
   if (rows.length === 0) {
     return (
       <Card>
-        <CardContent className="text-muted-foreground text-center">
+        <CardContent className="text-center text-muted-foreground">
           {diseaseAssociationsCopy.table.empty}
         </CardContent>
       </Card>
     )
   }
 
-  const headerProps = { sortKey, sortDir, searchParams }
+  const headerProps = { sortKey, sortDir }
 
   // TableCell defaults to nowrap, which let a 120-character gene name push
   // the numeric columns off-screen. Text columns wrap (names clamp to two
@@ -107,8 +97,10 @@ export function AssociationsTable({
               <TableRow key={row.symbol} className="bg-card hover:bg-muted/25">
                 <TableCell className="px-4 py-2.5">
                   <Link
-                    href={`/genes/${encodeURIComponent(row.symbol)}?species=human`}
-                    className="text-primary -my-1 inline-flex min-h-6 items-center py-1 font-mono font-semibold hover:underline"
+                    to="/genes/$symbol"
+                    params={{ symbol: row.symbol }}
+                    search={{ species: 'human' }}
+                    className="-my-1 inline-flex min-h-6 items-center py-1 font-mono font-semibold text-primary hover:underline"
                     aria-label={diseaseAssociationsCopy.table.viewGeneAria(
                       row.symbol,
                     )}
@@ -116,12 +108,12 @@ export function AssociationsTable({
                     {row.symbol}
                   </Link>
                 </TableCell>
-                <TableCell className="text-muted-foreground px-4 py-2.5 text-sm whitespace-normal">
+                <TableCell className="px-4 py-2.5 text-sm whitespace-normal text-muted-foreground">
                   <span className="line-clamp-2" title={row.name}>
                     {row.name}
                   </span>
                 </TableCell>
-                <TableCell className="text-muted-foreground px-4 py-2.5 text-sm whitespace-normal">
+                <TableCell className="px-4 py-2.5 text-sm whitespace-normal text-muted-foreground">
                   {phenotype}
                 </TableCell>
                 <TableCell className="px-4 py-2.5 whitespace-normal">
@@ -137,7 +129,7 @@ export function AssociationsTable({
                     ))}
                   </div>
                 </TableCell>
-                <TableCell className="text-muted-foreground px-4 py-2.5 text-right font-mono text-xs">
+                <TableCell className="px-4 py-2.5 text-right font-mono text-xs text-muted-foreground">
                   {row.largestCds != null ? (
                     <>
                       {cdsFormatter.format(row.largestCds)}
@@ -166,7 +158,7 @@ export function AssociationsTableSkeleton() {
     <div aria-hidden className="flex flex-col gap-6">
       <Skeleton className="h-3 w-24" />
       <Card className="gap-0 py-0">
-        <div className="bg-muted/50 h-10 border-b" />
+        <div className="h-10 border-b bg-muted/50" />
         {Array.from({ length: SKELETON_ROWS }, (_, i) => (
           <div
             key={i}
@@ -211,7 +203,6 @@ type SortHeaderProps = {
   align?: 'left' | 'right'
   sortKey: SortKey
   sortDir: SortDir
-  searchParams: Record<string, string | string[] | undefined>
 }
 
 function SortHeader({
@@ -221,7 +212,6 @@ function SortHeader({
   align = 'left',
   sortKey,
   sortDir,
-  searchParams,
 }: SortHeaderProps) {
   const active = sortKey === column
   const nextDir: SortDir = active
@@ -230,29 +220,19 @@ function SortHeader({
       : 'asc'
     : defaultDir
 
-  const params = new URLSearchParams()
-  for (const [key, value] of Object.entries(searchParams)) {
-    if (key === 'sort' || key === 'dir') continue
-    if (value == null) continue
-    if (Array.isArray(value)) {
-      for (const v of value) params.append(key, v)
-    } else {
-      params.set(key, value)
-    }
-  }
-  params.set('sort', column)
-  params.set('dir', nextDir)
-  const href = `?${params.toString()}`
-
   const Icon = active ? (sortDir === 'asc' ? ArrowUp : ArrowDown) : ArrowUpDown
 
   return (
     <Link
-      href={href}
-      scroll={false}
+      // Keeps the filters and the page; replaces the history entry, since a
+      // re-sort isn't a step to go back through.
+      from="/disease-associations"
+      to="."
+      search={(prev) => ({ ...prev, sort: column, dir: nextDir })}
+      resetScroll={false}
       replace
       className={cn(
-        'hover:text-foreground -my-2 inline-flex min-h-9 items-center gap-1 py-2 transition-colors',
+        '-my-2 inline-flex min-h-9 items-center gap-1 py-2 transition-colors hover:text-foreground',
         align === 'right' && 'flex-row-reverse',
         active ? 'text-foreground' : 'text-muted-foreground',
       )}

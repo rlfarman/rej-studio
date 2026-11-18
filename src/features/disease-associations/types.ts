@@ -1,7 +1,10 @@
 export type PhenotypeStatus =
-  'confirmed' | 'provisional' | 'susceptibility' | 'nondisease'
+  | 'confirmed'
+  | 'provisional'
+  | 'susceptibility'
+  | 'nondisease'
 
-type Phenotype = {
+export type Phenotype = {
   name: string
   mim: number | null
   mappingKey: 1 | 2 | 3 | 4 | null
@@ -18,7 +21,7 @@ export type AssociationRow = {
   /**
    * Largest `coding_sequence_length` across this gene's human isoforms, or
    * null if no isoform is present in the seed. Baked into associations.json at
-   * build time by `scripts/enrich-disease-associations.ts`.
+   * build time by `scripts/build-disease-associations.ts`.
    */
   largestCds: number | null
 }

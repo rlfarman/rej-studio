@@ -1,5 +1,7 @@
 import { expect, test, type Page } from '@playwright/test'
 
+import { ACCOUNT_STATE_PATH } from './accounts'
+
 // The in-browser optimizer, end to end through the real UI.
 //
 // The unit tests mock the worker and the Rust suite covers the optimizer
@@ -7,8 +9,7 @@ import { expect, test, type Page } from '@playwright/test'
 // WebAssembly loads, a design completes, progress moves, and nothing is sent
 // to the compute backend.
 //
-// This project runs with NEXT_PUBLIC_ENABLE_BROWSER_OPTIMIZER=true (see
-// playwright.config.ts); the other projects cover the default backend path.
+// The browser is the only place designs run, so nothing here needs a flag.
 
 // A real human CDS (TP53, ENST00000269305) — long enough to be a genuine
 // design, short enough to finish quickly.
@@ -17,12 +18,18 @@ const GENE_PAGE = '/design-tool?isoform=ENST00000269305'
 test('designs a sequence in the browser without calling the backend', async ({
   page,
 }) => {
+  // Every request the page makes once it is up: the run itself must add
+  // nothing but the optimizer's own files. (The sidebar reads who is signed
+  // in to an account; that is not the design.)
   const backendCalls: string[] = []
   const wasmRequests: string[] = []
   page.on('request', (request) => {
-    const url = request.url()
-    if (url.includes('/api/jobs')) backendCalls.push(url)
-    if (url.includes('.wasm')) wasmRequests.push(url)
+    const url = new URL(request.url())
+    if (url.pathname === ACCOUNT_STATE_PATH) return
+    if (url.pathname.startsWith('/api/') || request.method() !== 'GET') {
+      backendCalls.push(`${request.method()} ${url.pathname}`)
+    }
+    if (url.pathname.endsWith('.wasm')) wasmRequests.push(url.pathname)
   })
 
   await page.goto(GENE_PAGE)
@@ -95,7 +102,8 @@ async function storedJobNames(page: Page): Promise<string[] | null> {
           get.onerror = () => reject(get.error)
           get.onsuccess = () => {
             const value = get.result as
-              { state: { entries: { name: string }[] } } | undefined
+              | { state: { entries: { name: string }[] } }
+              | undefined
             db.close()
             resolve(value ? value.state.entries.map((e) => e.name) : null)
           }
@@ -186,7 +194,8 @@ function history(page: Page, write?: StoredEntry[]) {
           tx.oncomplete = () => {
             db.close()
             const value = get.result as
-              { state: { entries: StoredEntry[] } } | undefined
+              | { state: { entries: StoredEntry[] } }
+              | undefined
             resolve(value?.state.entries ?? [])
           }
           tx.onerror = () => reject(tx.error)
@@ -252,4 +261,36 @@ test('a run cut off by a closed tab is offered again and redesigns identically',
   expect(rerun!.result?.optimized_sequence).toBe(
     finished!.result?.optimized_sequence,
   )
+})
+
+// Protein input, end to end. The codon tables live in the Rust crate, so the
+// DNA comes back from the optimizer worker — this is the only place that path
+// runs for real.
+test('reverse-translates a protein in the optimizer and designs it', async ({
+  page,
+}) => {
+  await page.goto('/design-tool')
+
+  await page.getByRole('radio', { name: 'Protein' }).click()
+  await page.locator('input[name="name"]').fill('Protein input')
+
+  // Arginine (R) is the residue the old TypeScript table disagreed with the
+  // optimizer about; the crate's tables spell it AGA.
+  const protein = 'MKRLDSEDDLERLKATLEGVDSVITD*'
+  await page.locator('textarea').first().fill(protein)
+
+  await expect(page.getByText(/bp DNA generated/i)).toBeVisible()
+  await page
+    .getByRole('button', { name: /reverse translate to continue/i })
+    .click()
+
+  // Back in DNA mode with the translated sequence, arginine spelled AGA.
+  const sequence = page.locator('textarea').first()
+  await expect(sequence).toHaveValue(/^ATGAAGAGA[ACGT]+$/)
+  expect((await sequence.inputValue()).length).toBe(protein.length * 3)
+
+  await page.getByRole('button', { name: /run designer/i }).click()
+  await expect(page.getByText(/split after base/i).first()).toBeVisible({
+    timeout: 120_000,
+  })
 })

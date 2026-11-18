@@ -1,4 +1,3 @@
-'use client'
 import { useFormContext, Controller } from 'react-hook-form'
 import type { FieldPathByValue } from 'react-hook-form'
 import { FormItem, FormControl } from '@/components/ui/form'
@@ -75,7 +74,7 @@ export function ToggleCard({
                     {help ? <FieldHelp topic={label}>{help}</FieldHelp> : null}
                   </div>
                   {description ? (
-                    <p className="text-muted-foreground text-xs leading-snug">
+                    <p className="text-xs leading-snug text-muted-foreground">
                       {description}
                     </p>
                   ) : null}

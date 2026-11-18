@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test'
 import { createStore, get } from 'idb-keyval'
 import { JOB_HISTORY_IDB } from '@/features/design-tool/utils/job-history-storage'
 import {
@@ -93,12 +93,6 @@ describe('useJobHistory', () => {
 
     useJobHistory.getState().upsertEntry({ id: 'job-1', status: 'completed' })
     expect(useJobHistory.getState().getProgress('job-1')).toBeUndefined()
-  })
-
-  it('lists running ids for best-effort cancellation', () => {
-    useJobHistory.getState().upsertEntry({ id: 'job-1', status: 'running' })
-    useJobHistory.getState().upsertEntry({ id: 'job-2', status: 'completed' })
-    expect(useJobHistory.getState().getRunningIds()).toEqual(['job-1'])
   })
 
   it.each(['QuotaExceededError', 'UnknownError', 'InvalidStateError'])(

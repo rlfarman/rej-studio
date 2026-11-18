@@ -1,6 +1,5 @@
-'use client'
 import { useRef, useState } from 'react'
-import { toast } from 'sonner'
+import { toast } from '@/lib/toast'
 import { errorsCopy } from '@/copy/errors'
 
 interface UseCopyToClipboardOptions {

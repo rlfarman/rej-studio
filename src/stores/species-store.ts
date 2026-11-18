@@ -1,9 +1,6 @@
-'use client'
-
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import type { SpeciesFilter } from '@/lib/bio/species'
-import { trackEvent } from '@/lib/analytics'
 
 /**
  * The species filter the user picked for search (the command palette's
@@ -20,17 +17,9 @@ interface SpeciesState {
 
 export const useSpeciesStore = create<SpeciesState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       species: 'both',
-      handleSpeciesChange: (value) => {
-        const previous = get().species
-        set({ species: value })
-        trackEvent({
-          event: 'species_filter_change',
-          species: value,
-          previous_species: previous,
-        })
-      },
+      handleSpeciesChange: (value) => set({ species: value }),
     }),
     {
       name: 'species',

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vite-plus/test'
 import { matchedField } from './matched-field'
 
 const tp53 = { symbol: 'TP53', name: 'Tumor Protein P53' }
@@ -27,5 +27,11 @@ describe('matchedField', () => {
 
   it('treats anything else as an alias or related term', () => {
     expect(matchedField(tp53, 'LFS1')).toEqual({ kind: 'alias' })
+  })
+
+  it('uses what search reports, typo included, over guessing', () => {
+    expect(
+      matchedField({ ...tp53, match: { field: 'symbol', typo: true } }, 'tp35'),
+    ).toEqual({ kind: 'symbol', typo: true })
   })
 })

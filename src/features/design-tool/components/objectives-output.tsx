@@ -1,6 +1,4 @@
-'use client'
-
-import { useCallback, useDeferredValue, useMemo, useRef, useState } from 'react'
+import { useDeferredValue, useRef, useState } from 'react'
 import {
   ChevronRight,
   FileText,
@@ -74,7 +72,7 @@ function highlightMatches(text: string, query: string) {
     i % 2 === 1 ? (
       <mark
         key={i}
-        className="bg-warning/30 dark:bg-warning/25 dark:text-foreground rounded-sm px-0.5 text-inherit"
+        className="rounded-sm bg-warning/30 px-0.5 text-inherit dark:bg-warning/25 dark:text-foreground"
       >
         {p}
       </mark>
@@ -91,10 +89,7 @@ function EntryRow({
   showDiffMarker,
   isDimmed,
 }: EntryRowProps) {
-  const parsed = useMemo(
-    () => parseObjectiveString(entry.objective),
-    [entry.objective],
-  )
+  const parsed = parseObjectiveString(entry.objective)
   const locationCount = entry.locations?.length ?? 0
 
   return (
@@ -110,7 +105,7 @@ function EntryRow({
       {/* status icon */}
       <span
         className={cn(
-          'type-micro mt-[1px] flex size-4 shrink-0 items-center justify-center rounded-full font-bold',
+          'mt-[1px] flex size-4 shrink-0 items-center justify-center rounded-full type-micro font-bold',
           entry.passes
             ? 'bg-success/15 text-success-soft'
             : 'bg-danger/15 text-danger-soft',
@@ -146,20 +141,20 @@ function EntryRow({
 
       {/* body */}
       <div className="min-w-0 flex-1">
-        <div className="type-nano flex items-baseline gap-1.5 font-mono leading-tight">
+        <div className="flex items-baseline gap-1.5 font-mono type-nano leading-tight">
           <span className="truncate font-semibold" title={parsed.full}>
             {highlightMatches(parsed.name, query)}
           </span>
           {parsed.args && (
             <span
-              className="text-muted-foreground truncate"
+              className="truncate text-muted-foreground"
               title={parsed.full}
             >
               ({highlightMatches(parsed.args, query)})
             </span>
           )}
         </div>
-        <div className="text-muted-foreground type-micro mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 leading-tight">
+        <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 type-micro leading-tight text-muted-foreground">
           {entry.message && (
             <span className="truncate" title={entry.message}>
               {highlightMatches(entry.message, query)}
@@ -177,7 +172,7 @@ function EntryRow({
       <div className="mt-[1px] flex shrink-0 flex-col items-end gap-0.5">
         <span
           className={cn(
-            'type-micro font-mono tabular-nums',
+            'font-mono type-micro tabular-nums',
             entry.score < 0
               ? 'text-danger-soft'
               : entry.score > 0
@@ -239,13 +234,13 @@ function ComparisonPanel({
   const isAfter = label === 'After'
 
   return (
-    <div className="bg-muted/40 flex flex-col overflow-hidden rounded-2xl border">
-      <div className="bg-muted/60 flex items-center justify-between border-b px-2.5 py-1.5">
+    <div className="flex flex-col overflow-hidden rounded-2xl border bg-muted/40">
+      <div className="flex items-center justify-between border-b bg-muted/60 px-2.5 py-1.5">
         <span className="type-overline">{label}</span>
         <CopyButton
           text={rawText}
           copiedLabel="Copied"
-          className="type-micro h-6 gap-1 px-1.5"
+          className="h-6 gap-1 px-1.5 type-micro"
           disabled={!rawText}
         >
           Copy raw
@@ -254,9 +249,9 @@ function ComparisonPanel({
       <div
         ref={scrollRef}
         onScroll={onScroll}
-        className="bg-background/40 relative max-h-80 overflow-auto"
+        className="relative max-h-80 overflow-auto bg-background/40"
       >
-        <div className="divide-border/60 divide-y">
+        <div className="divide-y divide-border/60">
           {(() => {
             type Row = {
               entry: ObjectiveEvaluationEntry
@@ -333,14 +328,14 @@ function ComparisonPanel({
                 renderRow(seg.row)
               ) : (
                 <details key={seg.id} className="group/collapsed">
-                  <summary className="hover:bg-muted/40 text-muted-foreground type-micro flex cursor-pointer items-center gap-1.5 px-2.5 py-1 select-none">
+                  <summary className="flex cursor-pointer items-center gap-1.5 px-2.5 py-1 type-micro text-muted-foreground select-none hover:bg-muted/40">
                     <ChevronRight className="size-3 shrink-0 transition-transform group-open/collapsed:rotate-90" />
                     <span>
                       {seg.rows.length} passing objective
                       {seg.rows.length === 1 ? '' : 's'}
                     </span>
                   </summary>
-                  <div className="divide-border/60 divide-y">
+                  <div className="divide-y divide-border/60">
                     {seg.rows.map(renderRow)}
                   </div>
                 </details>
@@ -348,14 +343,14 @@ function ComparisonPanel({
             )
           })()}
           {entries.length === 0 && (
-            <div className="text-muted-foreground px-3 py-4 text-center text-xs italic">
+            <div className="px-3 py-4 text-center text-xs text-muted-foreground italic">
               No objectives measured
             </div>
           )}
         </div>
-        <div className="bg-background/95 sticky bottom-0 border-t backdrop-blur-sm">
-          <div className="type-nano flex items-center justify-between gap-2 px-2.5 py-1.5 font-mono">
-            <span className="text-foreground font-semibold">
+        <div className="sticky bottom-0 border-t bg-background/95 backdrop-blur-sm">
+          <div className="flex items-center justify-between gap-2 px-2.5 py-1.5 font-mono type-nano">
+            <span className="font-semibold text-foreground">
               TOTAL{' '}
               <span className="tabular-nums">
                 {totalScore !== null ? totalScore.toFixed(2) : '—'}
@@ -364,7 +359,7 @@ function ComparisonPanel({
             {isAfter && scoreDelta !== null && (
               <span
                 className={cn(
-                  'type-micro rounded-full px-1.5 py-0.5 font-semibold tabular-nums',
+                  'rounded-full px-1.5 py-0.5 type-micro font-semibold tabular-nums',
                   scoreDelta > 0.001
                     ? 'bg-success/15 text-success-soft'
                     : scoreDelta < -0.001
@@ -588,7 +583,7 @@ function classifyRawLine(raw: string): {
 function RawReportView({ text }: { text: string }) {
   if (!text.trim()) {
     return (
-      <div className="bg-muted text-muted-foreground rounded-xl p-3 text-xs italic">
+      <div className="rounded-xl bg-muted p-3 text-xs text-muted-foreground italic">
         No objectives measured
       </div>
     )
@@ -596,7 +591,7 @@ function RawReportView({ text }: { text: string }) {
   const lines = text.split('\n')
   const width = String(lines.length).length
   return (
-    <div className="bg-muted type-nano max-h-64 overflow-auto rounded-xl font-mono">
+    <div className="max-h-64 overflow-auto rounded-xl bg-muted font-mono type-nano">
       <div>
         {lines.map((raw, i) => {
           const { depth, cleaned, status } = classifyRawLine(raw)
@@ -608,7 +603,7 @@ function RawReportView({ text }: { text: string }) {
                 aria-hidden="true"
               >
                 <span
-                  className="text-muted-foreground/40 shrink-0 text-right tabular-nums select-none"
+                  className="shrink-0 text-right text-muted-foreground/40 tabular-nums select-none"
                   style={{ width: `${width}ch` }}
                 >
                   {i + 1}
@@ -621,10 +616,10 @@ function RawReportView({ text }: { text: string }) {
             <div
               key={i}
               id={`raw-line-${i + 1}`}
-              className="hover:bg-muted/40 group flex items-start gap-2 px-2"
+              className="group flex items-start gap-2 px-2 hover:bg-muted/40"
             >
               <span
-                className="text-muted-foreground/50 shrink-0 text-right tabular-nums select-none"
+                className="shrink-0 text-right text-muted-foreground/50 tabular-nums select-none"
                 style={{ width: `${width}ch` }}
               >
                 {i + 1}
@@ -632,7 +627,7 @@ function RawReportView({ text }: { text: string }) {
               <div
                 className={cn(
                   'min-w-0 flex-1 break-words',
-                  depth > 0 && 'border-border/60 ml-2 border-l pl-2',
+                  depth > 0 && 'ml-2 border-l border-border/60 pl-2',
                 )}
               >
                 {status === 'pass' && (
@@ -681,24 +676,15 @@ export function ObjectivesSummary({
   textBefore,
   textAfter,
 }: ObjectivesSummaryProps) {
-  const summaryItems = useMemo(
-    () => buildSummaryItems(reportBefore, reportAfter),
-    [reportBefore, reportAfter],
-  )
+  const summaryItems = buildSummaryItems(reportBefore, reportAfter)
 
   const scoreDelta =
     reportBefore.total_score !== null && reportAfter.total_score !== null
       ? reportAfter.total_score - reportBefore.total_score
       : null
 
-  const beforeMap = useMemo(
-    () => new Map(reportBefore.entries.map((e) => [e.objective, e])),
-    [reportBefore.entries],
-  )
-  const afterMap = useMemo(
-    () => new Map(reportAfter.entries.map((e) => [e.objective, e])),
-    [reportAfter.entries],
-  )
+  const beforeMap = new Map(reportBefore.entries.map((e) => [e.objective, e]))
+  const afterMap = new Map(reportAfter.entries.map((e) => [e.objective, e]))
 
   const hasStructured =
     reportBefore.entries.length > 0 || reportAfter.entries.length > 0
@@ -706,44 +692,32 @@ export function ObjectivesSummary({
   const [search, setSearch] = useState('')
   const deferredSearch = useDeferredValue(search)
 
-  const visibleKeys = useMemo<Set<string> | null>(() => {
-    if (!deferredSearch.trim()) return null
-    const q = deferredSearch.toLowerCase()
-    const keys = new Set<string>()
-    const check = (e: ObjectiveEvaluationEntry) =>
-      e.objective.toLowerCase().includes(q) ||
-      e.message.toLowerCase().includes(q)
-    for (const e of reportBefore.entries) if (check(e)) keys.add(e.objective)
-    for (const e of reportAfter.entries) if (check(e)) keys.add(e.objective)
-    return keys
-  }, [deferredSearch, reportBefore.entries, reportAfter.entries])
+  const visibleKeys = matchingObjectives(
+    deferredSearch,
+    reportBefore.entries,
+    reportAfter.entries,
+  )
 
   const beforeRef = useRef<HTMLDivElement | null>(null)
   const afterRef = useRef<HTMLDivElement | null>(null)
   const syncingRef = useRef(false)
 
-  const markdownReport = useMemo(
-    () => buildMarkdownReport(reportBefore, reportAfter),
-    [reportBefore, reportAfter],
-  )
+  const markdownReport = buildMarkdownReport(reportBefore, reportAfter)
 
-  const syncScroll = useCallback(
+  const syncScroll =
     (source: 'before' | 'after'): React.UIEventHandler<HTMLDivElement> =>
-      (e) => {
-        if (syncingRef.current) {
-          syncingRef.current = false
-          return
-        }
-        const src = e.currentTarget
-        const target =
-          source === 'before' ? afterRef.current : beforeRef.current
-        if (!target) return
-        if (target.scrollTop === src.scrollTop) return
-        syncingRef.current = true
-        target.scrollTop = src.scrollTop
-      },
-    [],
-  )
+    (e) => {
+      if (syncingRef.current) {
+        syncingRef.current = false
+        return
+      }
+      const src = e.currentTarget
+      const target = source === 'before' ? afterRef.current : beforeRef.current
+      if (!target) return
+      if (target.scrollTop === src.scrollTop) return
+      syncingRef.current = true
+      target.scrollTop = src.scrollTop
+    }
 
   return (
     <div className="space-y-3">
@@ -764,7 +738,7 @@ export function ObjectivesSummary({
                 {item.label}
               </div>
               {item.hint && (
-                <p className="text-muted-foreground ml-3.5 text-xs italic">
+                <p className="ml-3.5 text-xs text-muted-foreground italic">
                   {item.hint}
                 </p>
               )}
@@ -773,7 +747,7 @@ export function ObjectivesSummary({
         </ul>
       )}
       <details className="group">
-        <summary className="text-muted-foreground cursor-pointer text-xs hover:underline">
+        <summary className="cursor-pointer text-xs text-muted-foreground hover:underline">
           {hasStructured
             ? 'Show full optimizer report'
             : 'Show full optimizer output'}
@@ -783,7 +757,7 @@ export function ObjectivesSummary({
             <>
               <div className="flex flex-wrap items-center gap-2">
                 <div className="relative min-w-0 flex-1">
-                  <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-2 size-3.5 -translate-y-1/2" />
+                  <Search className="pointer-events-none absolute top-1/2 left-2 size-3.5 -translate-y-1/2 text-muted-foreground" />
                   <Input
                     type="text"
                     placeholder="Filter objectives…"
@@ -796,7 +770,7 @@ export function ObjectivesSummary({
                       type="button"
                       aria-label="Clear filter"
                       onClick={() => setSearch('')}
-                      className="text-muted-foreground hover:text-foreground absolute top-1/2 right-1.5 -translate-y-1/2 rounded-full p-0.5"
+                      className="absolute top-1/2 right-1.5 -translate-y-1/2 rounded-full p-0.5 text-muted-foreground hover:text-foreground"
                     >
                       <X className="size-3.5" />
                     </button>
@@ -807,7 +781,7 @@ export function ObjectivesSummary({
                   icon={FileText}
                   variant="outline"
                   copiedLabel="Copied"
-                  className="type-nano h-7 shrink-0 gap-1 px-2"
+                  className="h-7 shrink-0 gap-1 px-2 type-nano"
                 >
                   Copy as MD
                 </CopyButton>
@@ -846,4 +820,20 @@ export function ObjectivesSummary({
       </details>
     </div>
   )
+}
+
+/** The objectives whose name or message matches the search; null shows all. */
+function matchingObjectives(
+  search: string,
+  before: ObjectiveEvaluationEntry[],
+  after: ObjectiveEvaluationEntry[],
+): Set<string> | null {
+  if (!search.trim()) return null
+  const q = search.toLowerCase()
+  const keys = new Set<string>()
+  const check = (e: ObjectiveEvaluationEntry) =>
+    e.objective.toLowerCase().includes(q) || e.message.toLowerCase().includes(q)
+  for (const e of before) if (check(e)) keys.add(e.objective)
+  for (const e of after) if (check(e)) keys.add(e.objective)
+  return keys
 }

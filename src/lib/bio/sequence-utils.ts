@@ -122,37 +122,54 @@ const SYNONYMOUS_CODONS = Object.entries(GENETIC_CODE).reduce<
   return acc
 }, {})
 
-const WGGW_RECODING_LOOKUP = Object.entries(GENETIC_CODE).reduce<
-  Record<string, WggwRecodingOption[]>
->((lookup, [codon1, aa1]) => {
-  for (const [codon2, aa2] of Object.entries(GENETIC_CODE)) {
-    const originalHexamer = `${codon1}${codon2}`
-    const options: WggwRecodingOption[] = []
+/**
+ * Every codon pair's synonymous recodings that create a WGGW motif, keyed by
+ * the original hexamer: 4,096 pairs, built on first use rather than when the
+ * module loads, since every page that shows a GC% imports this module and
+ * only a split preview needs the table.
+ */
+let wggwRecodingLookup: Record<string, WggwRecodingOption[]> | null = null
 
-    for (const newCodon1 of SYNONYMOUS_CODONS[aa1] ?? []) {
-      for (const newCodon2 of SYNONYMOUS_CODONS[aa2] ?? []) {
-        const newHexamer = `${newCodon1}${newCodon2}`
-        for (const match of findWggwWindows(newHexamer)) {
-          options.push({
-            ...match,
-            newHexamer,
-            newCodons: [newCodon1, newCodon2],
-            baseChanges: countBaseChanges(originalHexamer, newHexamer),
-          })
+function getWggwRecodingLookup(): Record<string, WggwRecodingOption[]> {
+  wggwRecodingLookup ??= buildWggwRecodingLookup()
+  return wggwRecodingLookup
+}
+
+const buildWggwRecodingLookup = () =>
+  Object.entries(GENETIC_CODE).reduce<Record<string, WggwRecodingOption[]>>(
+    (lookup, [codon1, aa1]) => {
+      for (const [codon2, aa2] of Object.entries(GENETIC_CODE)) {
+        const originalHexamer = `${codon1}${codon2}`
+        const options: WggwRecodingOption[] = []
+
+        for (const newCodon1 of SYNONYMOUS_CODONS[aa1] ?? []) {
+          for (const newCodon2 of SYNONYMOUS_CODONS[aa2] ?? []) {
+            const newHexamer = `${newCodon1}${newCodon2}`
+            for (const match of findWggwWindows(newHexamer)) {
+              options.push({
+                ...match,
+                newHexamer,
+                newCodons: [newCodon1, newCodon2],
+                baseChanges: countBaseChanges(originalHexamer, newHexamer),
+              })
+            }
+          }
         }
+
+        options.sort((a, b) => {
+          if (a.baseChanges !== b.baseChanges)
+            return a.baseChanges - b.baseChanges
+          if (a.motifOffset !== b.motifOffset)
+            return a.motifOffset - b.motifOffset
+          return a.newHexamer.localeCompare(b.newHexamer)
+        })
+
+        lookup[originalHexamer] = options
       }
-    }
-
-    options.sort((a, b) => {
-      if (a.baseChanges !== b.baseChanges) return a.baseChanges - b.baseChanges
-      if (a.motifOffset !== b.motifOffset) return a.motifOffset - b.motifOffset
-      return a.newHexamer.localeCompare(b.newHexamer)
-    })
-
-    lookup[originalHexamer] = options
-  }
-  return lookup
-}, {})
+      return lookup
+    },
+    {},
+  )
 
 function enumerateInducibleWggwCandidates(
   sequence: string,
@@ -162,12 +179,13 @@ function enumerateInducibleWggwCandidates(
   if (codons.length < 2) return []
 
   const candidates: InducibleWggwCandidate[] = []
+  const lookup = getWggwRecodingLookup()
 
   for (let codonIndex = 0; codonIndex < codons.length - 1; codonIndex++) {
     const codon1 = codons[codonIndex]
     const codon2 = codons[codonIndex + 1]
     const originalHexamer = `${codon1}${codon2}`
-    const options = WGGW_RECODING_LOOKUP[originalHexamer]
+    const options = lookup[originalHexamer]
     if (!options || options.length === 0) continue
 
     const grouped = new Map<string, WggwRecodingOption[]>()

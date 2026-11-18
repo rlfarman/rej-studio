@@ -1,5 +1,3 @@
-'use client'
-
 import { Scissors } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
@@ -63,7 +61,7 @@ export function IsoformSplitPreview({
 
   if (preview === null) {
     return (
-      <div className="text-muted-foreground flex items-center gap-2 text-xs">
+      <div className="flex items-center gap-2 text-xs text-muted-foreground">
         <Scissors className="size-3.5" />
         {copy.none}
       </div>
@@ -103,7 +101,7 @@ export function IsoformSplitPreview({
         threePrimeLength={best.threePrimeLength}
       />
 
-      <div className="text-muted-foreground type-micro flex flex-wrap items-center gap-x-3 gap-y-0.5 tabular-nums">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 type-micro text-muted-foreground tabular-nums">
         <span>
           {copy.fragment('5′', fiveAavTotal.toLocaleString())}{' '}
           <span className={fiveFits ? 'text-success-soft' : 'text-danger-soft'}>
@@ -124,7 +122,7 @@ export function IsoformSplitPreview({
 
       {alternatives.length > 0 && (
         <div
-          className="text-muted-foreground type-micro flex flex-wrap items-center gap-1.5"
+          className="flex flex-wrap items-center gap-1.5 type-micro text-muted-foreground"
           title={copy.alternativesHint}
         >
           <span>{copy.alternatives}</span>
@@ -143,7 +141,7 @@ export function IsoformSplitPreview({
               #{i + 2} {c.motif}@{c.position.toLocaleString()}
               {!c.bothFit && (
                 <span
-                  className="text-danger-soft ml-1"
+                  className="ml-1 text-danger-soft"
                   title={copy.overLimitHint}
                 >
                   ⚠

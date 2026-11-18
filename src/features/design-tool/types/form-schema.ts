@@ -24,10 +24,9 @@ const PROTEIN_RE = /^[ACDEFGHIKLMNPQRSTVWYacdefghiklmnpqrstvwy*]+$/
 
 /**
  * Full CDS validation: character set, length, frame, start/stop codons and
- * no premature stops. Exported so the job server action can apply exactly
- * the same rules as the form instead of a weaker regex.
+ * no premature stops.
  */
-export const dnaSequenceSchema = z
+const dnaSequenceSchema = z
   .string()
   .nonempty(designToolCopy.validation.dna.required)
   .regex(/^[ACGTUacgtu]+$/, designToolCopy.validation.dna.invalidNucleotides)
@@ -97,6 +96,20 @@ export const validationSchema = z
         })
         .nullable(),
     ),
+    // What the person picked in the split-point editor, per split point: a
+    // WGGW site's position (null = the default nearest the caret), and a
+    // rewrite option index tagged with the site it was picked for. The editor
+    // writes these in its event handlers; `selectedWggwSites` is resolved from
+    // them on submit (utils/wggw-selection.ts), never written back on render.
+    wggwSitePicks: z.array(z.number().int().min(1).nullable()).optional(),
+    wggwRewritePicks: z
+      .array(
+        z.object({
+          position: z.number().int().min(1).nullable(),
+          index: z.number().int().min(0),
+        }),
+      )
+      .optional(),
     sequenceType: z.enum(['dna', 'protein']),
     codingSequence: z.string(),
     proteinSequence: z.string(),
@@ -120,7 +133,7 @@ export const validationSchema = z
   .superRefine((data, ctx) => {
     // The optimizer accepts exactly one split point and answers 422 for
     // more, so block the submission here instead of letting the backend
-    // reject it. The multi-split UI (NEXT_PUBLIC_ENABLE_MULTI_SPLIT) can
+    // reject it. The multi-split UI (VITE_ENABLE_MULTI_SPLIT) can
     // still add a second position — this is what tells the user why it
     // won't run.
     if (data.spliceJunctionPositions.length > 1) {
@@ -148,6 +161,17 @@ export const validationSchema = z
         for (const issue of result.error.issues) {
           ctx.addIssue({ ...issue, path: ['proteinSequence'] })
         }
+      }
+      // The optimizer works on DNA, and in protein mode `codingSequence` is
+      // filled asynchronously by the crate's reverse translation. Blocking
+      // the submission until it lands beats sending an empty sequence and
+      // reading the backend's complaint about it.
+      else if (data.codingSequence.length === 0) {
+        ctx.addIssue({
+          path: ['proteinSequence'],
+          code: z.ZodIssueCode.custom,
+          message: designToolCopy.validation.protein.awaitingDna,
+        })
       }
       // Species is required for protein mode (needed for reverse translation)
       if (data.species === 'none') {
@@ -192,3 +216,4 @@ export type FormValues = z.infer<typeof validationSchema>
 export type SelectedWggwSite = NonNullable<
   FormValues['selectedWggwSites'][number]
 >
+export type RewritePick = NonNullable<FormValues['wggwRewritePicks']>[number]

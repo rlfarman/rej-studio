@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test'
 import { act, cleanup, renderHook, waitFor } from '@testing-library/react'
 import { useForm } from 'react-hook-form'
 import type { FormValues } from '@/features/design-tool/types/form-schema'

@@ -1,7 +1,4 @@
-'use client'
-
-import Link from 'next/link'
-import { usePathname, useSearchParams } from 'next/navigation'
+import { Link } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
 import {
   assessDesignSuitability,
@@ -24,15 +21,6 @@ interface Props {
  * genes it would just restate the table's CDS column.
  */
 export function IsoformLengthChart({ isoforms }: Props) {
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
-
-  const buildHref = (id: string) => {
-    const params = new URLSearchParams(searchParams?.toString() ?? '')
-    params.set('isoform', id)
-    return `${pathname}?${params.toString()}#isoform-row-${id}`
-  }
-
   const rows = [...isoforms]
     // Shortest first so the bars read as a ramp toward the limits.
     .sort((a, b) => a.codingSequenceLength - b.codingSequenceLength)
@@ -53,13 +41,13 @@ export function IsoformLengthChart({ isoforms }: Props) {
         <h2 id="length-chart-title" className="text-sm font-medium">
           {copy.title}
         </h2>
-        <div className="type-micro flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3 type-micro">
           {(['single-aav', 'dual-aav', 'triple-aav'] as const).map((s) => {
             const cfg = getSuitabilityConfig(s)
             return (
               <span
                 key={s}
-                className="text-muted-foreground flex items-center gap-1"
+                className="flex items-center gap-1 text-muted-foreground"
               >
                 <span
                   className={cn('size-2 rounded-sm', cfg.fillClass)}
@@ -78,18 +66,23 @@ export function IsoformLengthChart({ isoforms }: Props) {
           return (
             <li key={row.id}>
               <Link
-                href={buildHref(row.id)}
-                scroll={false}
-                className="group hover:bg-muted/40 focus-visible:ring-ring type-micro -mx-1 grid grid-cols-[5.5rem_1fr_3.5rem] items-center gap-2 rounded-lg px-1 py-1 transition-colors focus-visible:ring-2 focus-visible:outline-none sm:grid-cols-[8rem_1fr_2rem_4rem]"
+                from="/genes/$symbol"
+                to="."
+                // Opens and highlights the isoform's row and scrolls to it,
+                // keeping the rest of the URL and the page's scroll.
+                search={(prev) => ({ ...prev, isoform: row.id })}
+                hash={`isoform-row-${row.id}`}
+                resetScroll={false}
+                className="group -mx-1 grid grid-cols-[5.5rem_1fr_3.5rem] items-center gap-2 rounded-lg px-1 py-1 type-micro transition-colors hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none sm:grid-cols-[8rem_1fr_2rem_4rem]"
                 aria-label={`${row.id}, ${row.length.toLocaleString()} base pairs, ${cfg.label}`}
               >
                 {/* On phones only the transcript suffix fits; the full ID is
                     in the accessible name and the table row it links to. */}
-                <span className="text-muted-foreground group-hover:text-foreground truncate font-mono">
+                <span className="truncate font-mono text-muted-foreground group-hover:text-foreground">
                   <span className="hidden sm:inline">{row.id}</span>
                   <span className="sm:hidden">…{row.id.slice(-6)}</span>
                 </span>
-                <div className="bg-muted/30 relative h-3 overflow-hidden rounded-sm">
+                <div className="relative h-3 overflow-hidden rounded-sm bg-muted/30">
                   <div
                     className={cn('h-full', cfg.fillClass)}
                     style={{ width: `${pct(row.length)}%` }}
@@ -97,19 +90,19 @@ export function IsoformLengthChart({ isoforms }: Props) {
                   {model.thresholds.map((limit) => (
                     <div
                       key={limit}
-                      className="bg-foreground/30 pointer-events-none absolute inset-y-0 w-px"
+                      className="pointer-events-none absolute inset-y-0 w-px bg-foreground/30"
                       style={{ left: `${pct(limit)}%` }}
                       aria-hidden="true"
                     />
                   ))}
                 </div>
                 <span
-                  className="text-muted-foreground hidden text-center font-mono tabular-nums sm:inline"
+                  className="hidden text-center font-mono text-muted-foreground tabular-nums sm:inline"
                   aria-hidden="true"
                 >
                   {cfg.short}
                 </span>
-                <span className="text-muted-foreground text-right font-mono tabular-nums">
+                <span className="text-right font-mono text-muted-foreground tabular-nums">
                   {row.length.toLocaleString()}
                 </span>
               </Link>
@@ -119,7 +112,7 @@ export function IsoformLengthChart({ isoforms }: Props) {
       </ul>
 
       <div
-        className="text-muted-foreground type-micro grid grid-cols-[5.5rem_1fr_3.5rem] gap-2 tabular-nums sm:grid-cols-[8rem_1fr_2rem_4rem]"
+        className="grid grid-cols-[5.5rem_1fr_3.5rem] gap-2 type-micro text-muted-foreground tabular-nums sm:grid-cols-[8rem_1fr_2rem_4rem]"
         aria-hidden="true"
       >
         <span />

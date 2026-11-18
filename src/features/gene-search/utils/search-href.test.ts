@@ -1,24 +1,53 @@
-import { describe, expect, it } from 'vitest'
-import { diseaseSearchHref, searchPageHref } from './search-href'
+import { describe, expect, it } from 'vite-plus/test'
+import { diseaseSearchLink, geneLink, searchPageLink } from './search-href'
 
-describe('searchPageHref', () => {
+describe('searchPageLink', () => {
   it('omits the default species', () => {
-    expect(searchPageHref('tp53', 'both')).toBe('/genes?q=tp53')
+    expect(searchPageLink('tp53', 'both')).toEqual({
+      to: '/genes',
+      search: { q: 'tp53' },
+    })
   })
 
   it('keeps a species filter', () => {
-    expect(searchPageHref('tp53', 'mouse')).toBe('/genes?q=tp53&species=mouse')
+    expect(searchPageLink('tp53', 'mouse')).toEqual({
+      to: '/genes',
+      search: { q: 'tp53', species: 'mouse' },
+    })
   })
 
   it('returns the bare page for no query', () => {
-    expect(searchPageHref('', 'both')).toBe('/genes')
+    expect(searchPageLink('', 'both')).toEqual({ to: '/genes', search: {} })
   })
 })
 
-describe('diseaseSearchHref', () => {
-  it('encodes the query', () => {
-    expect(diseaseSearchHref('cystic fibrosis')).toBe(
-      '/disease-associations?q=cystic+fibrosis',
-    )
+describe('geneLink', () => {
+  it('links the symbol alone', () => {
+    expect(geneLink('BRCA1')).toEqual({
+      to: '/genes/$symbol',
+      params: { symbol: 'BRCA1' },
+      search: {},
+    })
+  })
+
+  it('keeps the species and the isoform', () => {
+    expect(geneLink('BRCA1', 'mouse', 'ENST00000001')).toEqual({
+      to: '/genes/$symbol',
+      params: { symbol: 'BRCA1' },
+      search: { species: 'mouse', isoform: 'ENST00000001' },
+    })
+  })
+
+  it('drops a species the page does not filter on', () => {
+    expect(geneLink('BRCA1', 'zebrafish').search).toEqual({})
+  })
+})
+
+describe('diseaseSearchLink', () => {
+  it('prefills the query', () => {
+    expect(diseaseSearchLink('cystic fibrosis')).toEqual({
+      to: '/disease-associations',
+      search: { q: 'cystic fibrosis' },
+    })
   })
 })

@@ -1,6 +1,5 @@
-'use client'
 import { useState, useEffect } from 'react'
-import { usePathname, useSearchParams } from 'next/navigation'
+import { Link, useNavigate, useSearch } from '@tanstack/react-router'
 import {
   Table,
   TableBody,
@@ -13,6 +12,7 @@ import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
+  createTooltipHandle,
 } from '@/components/ui/tooltip'
 import {
   DropdownMenu,
@@ -20,6 +20,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  createDropdownMenuHandle,
 } from '@/components/ui/dropdown-menu'
 import {
   ExternalLink,
@@ -36,13 +37,12 @@ import {
   WandSparkles,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
+import { useMediaQuery } from '@/hooks/use-media-query'
 import { formatFasta } from '@/lib/bio/fasta'
 import { downloadTextFile } from '@/lib/download-file'
-import { trackEvent } from '@/lib/analytics'
 import {
   assessDesignSuitability,
   getSuitabilityConfig,
@@ -60,14 +60,13 @@ import type { IsoformListItem } from '@/features/gene-search/types/domain-types'
 import {
   ariaSortFor,
   nextIsoformSort,
+  isoformSortSearch,
   parseIsoformSort,
   sortIsoforms,
-  withIsoformSort,
   type IsoformSort,
   type IsoformSortKey,
 } from '@/features/gene-search/utils/isoform-sort'
 import { geneSearchCopy } from '../copy'
-import { Skeleton } from '@/components/ui/skeleton'
 
 const copy = geneSearchCopy.isoformTable
 const terms = geneSearchCopy.terms
@@ -83,6 +82,18 @@ interface IsoformListProps {
 }
 
 const COLUMN_COUNT = 9
+
+/**
+ * Where a row's hover quick actions can show: a pointer that hovers, on a
+ * screen wider than Tailwind's `sm`. Elsewhere the row's menu has the same
+ * actions, and the quick actions aren't mounted at all.
+ */
+const QUICK_ACTIONS_QUERY = '(min-width: 40rem) and (not (pointer: coarse))'
+
+type RowMenuHandle = ReturnType<
+  typeof createDropdownMenuHandle<IsoformListItem>
+>
+type QuickActionTipHandle = ReturnType<typeof createTooltipHandle<string>>
 
 type IsoformRowData = IsoformListItem & {
   gcPercent: number
@@ -100,9 +111,9 @@ export default function IsoformTable({
   isoforms,
   highlightedIsoformId,
 }: IsoformListProps) {
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
-  const sort = parseIsoformSort(new URLSearchParams(searchParams.toString()))
+  const search = useSearch({ from: '/genes/$symbol' })
+  const navigate = useNavigate({ from: '/genes/$symbol' })
+  const sort = parseIsoformSort(search)
   const { copy: copyText, isCopied } = useCopyToClipboard({
     showToast: false,
   })
@@ -110,6 +121,15 @@ export default function IsoformTable({
   const [expandedIds, setExpandedIds] = useState<Set<string>>(() =>
     highlightedIsoformId ? new Set([highlightedIsoformId]) : new Set(),
   )
+  // One "more" menu and one quick-action tooltip for the whole table, rather
+  // than a Base UI root per row (three per isoform): rows render only their
+  // triggers, which pass the row along as the payload. Base UI controls are
+  // most of what the gene page costs to render on a phone.
+  const [rowMenu] = useState(createDropdownMenuHandle<IsoformListItem>)
+  const [quickActionTip] = useState(createTooltipHandle<string>)
+  // The quick actions are two buttons and two tooltip triggers a row, so
+  // they're left out where they can't show, not just hidden with CSS.
+  const showQuickActions = useMediaQuery(QUICK_ACTIONS_QUERY)
 
   // Each metric is computed once per isoform, not once per comparison.
   const rows: IsoformRowData[] = isoforms.map((isoform) => {
@@ -124,19 +144,17 @@ export default function IsoformTable({
   })
   const sortedRows = sortIsoforms(rows, sort)
 
-  // replaceState, not router.replace: Next syncs useSearchParams with it and
-  // skips the server round trip, since the table sorts on the client.
+  // Replaces the history entry: re-sorting isn't a step to go back
+  // through. The sort is client-side, so nothing reloads.
   const toggleSort = (key: IsoformSortKey) => {
-    const params = withIsoformSort(
-      new URLSearchParams(searchParams.toString()),
-      nextIsoformSort(sort, key),
-    )
-    const qs = params.toString()
-    window.history.replaceState(
-      null,
-      '',
-      `${pathname}${qs ? `?${qs}` : ''}${window.location.hash}`,
-    )
+    void navigate({
+      search: (prev) => ({
+        ...prev,
+        ...isoformSortSearch(nextIsoformSort(sort, key)),
+      }),
+      replace: true,
+      resetScroll: false,
+    })
   }
 
   const toggleExpanded = (id: string) => {
@@ -157,7 +175,7 @@ export default function IsoformTable({
 
   if (isoforms.length === 0) {
     return (
-      <p className="text-muted-foreground py-8 text-center text-sm">
+      <p className="py-8 text-center text-sm text-muted-foreground">
         {copy.empty}
       </p>
     )
@@ -178,7 +196,7 @@ export default function IsoformTable({
                       type="button"
                       onClick={toggleExpandAll}
                       aria-expanded={allExpanded}
-                      className="hover:text-foreground focus-visible:ring-ring text-muted-foreground flex h-full w-full items-center justify-center transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                      className="flex h-full w-full items-center justify-center text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                       aria-label={
                         allExpanded ? copy.collapseAllAria : copy.expandAllAria
                       }
@@ -259,15 +277,27 @@ export default function IsoformTable({
               cpgCount={row.cpgCount}
               wggwCount={row.wggwCount}
               suitConfig={getSuitabilityConfig(row.suitability)}
-              cdsId={`cds-${row.id}`}
-              fastaId={`fasta-${row.id}`}
-              isCopied={isCopied}
-              copyText={copyText}
+              rowMenu={rowMenu}
+              quickActionTip={showQuickActions ? quickActionTip : null}
               onToggleExpanded={toggleExpanded}
             />
           ))}
         </TableBody>
       </Table>
+      <DropdownMenu handle={rowMenu}>
+        {({ payload: isoform }) =>
+          isoform && (
+            <IsoformMenuContent
+              isoform={isoform}
+              isCopied={isCopied}
+              copyText={copyText}
+            />
+          )
+        }
+      </DropdownMenu>
+      <Tooltip handle={quickActionTip}>
+        {({ payload: label }) => <TooltipContent>{label}</TooltipContent>}
+      </Tooltip>
     </>
   )
 }
@@ -280,10 +310,8 @@ function IsoformRow({
   cpgCount,
   wggwCount,
   suitConfig,
-  cdsId,
-  fastaId,
-  isCopied,
-  copyText,
+  rowMenu,
+  quickActionTip,
   onToggleExpanded,
 }: {
   isoform: IsoformListItem
@@ -293,10 +321,9 @@ function IsoformRow({
   cpgCount: number
   wggwCount: number
   suitConfig: ReturnType<typeof getSuitabilityConfig>
-  cdsId: string
-  fastaId: string
-  isCopied: (id: string) => boolean
-  copyText: (text: string, id: string) => void
+  rowMenu: RowMenuHandle
+  /** Null where the quick actions can't show (QUICK_ACTIONS_QUERY). */
+  quickActionTip: QuickActionTipHandle | null
   onToggleExpanded: (id: string) => void
 }) {
   const [ringVisible, setRingVisible] = useState(!!isHighlighted)
@@ -319,7 +346,7 @@ function IsoformRow({
         id={`isoform-row-${isoform.id}`}
         className={cn(
           'group/row cursor-pointer transition-shadow duration-1000',
-          ringVisible && 'ring-primary ring-2 ring-inset',
+          ringVisible && 'ring-2 ring-primary ring-inset',
         )}
         onClick={() => onToggleExpanded(isoform.id)}
       >
@@ -330,7 +357,7 @@ function IsoformRow({
               e.stopPropagation()
               onToggleExpanded(isoform.id)
             }}
-            className="text-muted-foreground hover:text-foreground focus-visible:ring-ring flex size-11 items-center justify-center rounded-full focus-visible:ring-2 focus-visible:outline-none"
+            className="flex size-11 items-center justify-center rounded-full text-muted-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
             aria-expanded={isExpanded}
             aria-controls={
               isExpanded ? `isoform-row-${isoform.id}-details` : undefined
@@ -351,11 +378,11 @@ function IsoformRow({
         <TableCell className="font-mono">{isoform.id}</TableCell>
         <TableCell className="font-mono whitespace-nowrap tabular-nums">
           {isoform.codingSequenceLength.toLocaleString()}{' '}
-          <span className="text-muted-foreground text-xs">bp</span>
+          <span className="text-xs text-muted-foreground">bp</span>
         </TableCell>
         <TableCell className="hidden font-mono whitespace-nowrap tabular-nums sm:table-cell">
           {isoform.proteinSequenceLength.toLocaleString()}{' '}
-          <span className="text-muted-foreground text-xs">aa</span>
+          <span className="text-xs text-muted-foreground">aa</span>
         </TableCell>
         <TableCell className="hidden font-mono tabular-nums sm:table-cell">
           {gcPercent.toFixed(1)}%
@@ -377,17 +404,19 @@ function IsoformRow({
                 on the expanded or linked row) instead of repeating two labels
                 on every row. They're icon buttons with tooltips so the column
                 stays narrow; the labeled versions live in the menu and in the
-                expanded row. Coarse pointers can't hover, so they use the
-                menu. */}
-            <div
-              className={cn(
-                'hidden items-center gap-0.5 transition-opacity duration-150 sm:flex pointer-coarse:hidden',
-                'opacity-0 group-focus-within/row:opacity-100 group-hover/row:opacity-100',
-                (isExpanded || ringVisible) && 'opacity-100',
-              )}
-            >
-              <Tooltip>
+                expanded row. Coarse pointers can't hover and phones have no
+                room, so there they use the menu. */}
+            {quickActionTip && (
+              <div
+                className={cn(
+                  'flex items-center gap-0.5 transition-opacity duration-150',
+                  'opacity-0 group-focus-within/row:opacity-100 group-hover/row:opacity-100',
+                  (isExpanded || ringVisible) && 'opacity-100',
+                )}
+              >
                 <TooltipTrigger
+                  handle={quickActionTip}
+                  payload={copy.downloadLong}
                   render={
                     <Button
                       variant="ghost"
@@ -399,12 +428,6 @@ function IsoformRow({
                           href={preOptimizedZipUrl(isoform.id)}
                           download={`${isoform.id}_v1.0.zip`}
                           aria-label={copy.downloadAria(isoform.id)}
-                          onClick={() =>
-                            trackEvent({
-                              event: 'precomputed_download',
-                              isoform_id: isoform.id,
-                            })
-                          }
                         />
                       }
                     />
@@ -412,10 +435,9 @@ function IsoformRow({
                 >
                   <PackageOpen className="size-4" />
                 </TooltipTrigger>
-                <TooltipContent>{copy.downloadLong}</TooltipContent>
-              </Tooltip>
-              <Tooltip>
                 <TooltipTrigger
+                  handle={quickActionTip}
+                  payload={copy.customizeLong}
                   render={
                     <Button
                       variant="ghost"
@@ -424,7 +446,8 @@ function IsoformRow({
                       nativeButton={false}
                       render={
                         <Link
-                          href={`/design-tool?isoform=${isoform.id}`}
+                          to="/design-tool"
+                          search={{ isoform: isoform.id }}
                           aria-label={copy.customizeAria(isoform.id)}
                         />
                       }
@@ -433,94 +456,22 @@ function IsoformRow({
                 >
                   <WandSparkles className="size-4" />
                 </TooltipTrigger>
-                <TooltipContent>{copy.customizeLong}</TooltipContent>
-              </Tooltip>
-            </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                render={
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="size-9"
-                    aria-label={copy.moreAria(isoform.id)}
-                  />
-                }
-              >
-                <MoreHorizontal className="size-4" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem
-                  render={
-                    <a
-                      href={preOptimizedZipUrl(isoform.id)}
-                      download={`${isoform.id}_v1.0.zip`}
-                      onClick={() =>
-                        trackEvent({
-                          event: 'precomputed_download',
-                          isoform_id: isoform.id,
-                        })
-                      }
-                    >
-                      <PackageOpen className="size-4" />
-                      {copy.downloadLong}
-                    </a>
-                  }
+              </div>
+            )}
+            <DropdownMenuTrigger
+              handle={rowMenu}
+              payload={isoform}
+              render={
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-9"
+                  aria-label={copy.moreAria(isoform.id)}
                 />
-                <DropdownMenuItem
-                  render={<Link href={`/design-tool?isoform=${isoform.id}`} />}
-                >
-                  <WandSparkles className="size-4" />
-                  {copy.customizeLong}
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={() => copyText(isoform.codingSequence, cdsId)}
-                >
-                  <Copy className="size-4" />
-                  {isCopied(cdsId) ? copy.copied : copy.copyCds}
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() =>
-                    copyText(
-                      formatFasta(isoform.id, isoform.codingSequence),
-                      fastaId,
-                    )
-                  }
-                >
-                  <FileText className="size-4" />
-                  {isCopied(fastaId) ? copy.copied : copy.copyFasta}
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => {
-                    downloadTextFile(
-                      `${isoform.id}.fasta`,
-                      formatFasta(isoform.id, isoform.codingSequence),
-                    )
-                    trackEvent({
-                      event: 'sequence_download',
-                      isoform_id: isoform.id,
-                    })
-                  }}
-                >
-                  <Download className="size-4" />
-                  {copy.downloadFasta}
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  render={
-                    <a
-                      href={`https://ensembl.org/id/${isoform.id}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <ExternalLink className="size-4" />
-                      {copy.viewEnsembl}
-                    </a>
-                  }
-                />
-              </DropdownMenuContent>
-            </DropdownMenu>
+              }
+            >
+              <MoreHorizontal className="size-4" />
+            </DropdownMenuTrigger>
           </div>
         </TableCell>
       </TableRow>
@@ -534,7 +485,7 @@ function IsoformRow({
             colSpan={COLUMN_COUNT}
             className="bg-muted/30 px-3 py-4 whitespace-normal sm:px-6"
           >
-            <div className="motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-top-1 duration-200">
+            <div className="duration-200 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-top-1">
               <ExpandedDetails
                 isoform={isoform}
                 gcPercent={gcPercent}
@@ -547,6 +498,78 @@ function IsoformRow({
         </TableRow>
       )}
     </>
+  )
+}
+
+/** The row's "more" menu, rendered once for the table by the shared root. */
+function IsoformMenuContent({
+  isoform,
+  isCopied,
+  copyText,
+}: {
+  isoform: IsoformListItem
+  isCopied: (id: string) => boolean
+  copyText: (text: string, id: string) => void
+}) {
+  const cdsId = `cds-${isoform.id}`
+  const fastaId = `fasta-${isoform.id}`
+  return (
+    <DropdownMenuContent align="end">
+      <DropdownMenuItem
+        render={
+          <a
+            href={preOptimizedZipUrl(isoform.id)}
+            download={`${isoform.id}_v1.0.zip`}
+          >
+            <PackageOpen className="size-4" />
+            {copy.downloadLong}
+          </a>
+        }
+      />
+      <DropdownMenuItem
+        render={<Link to="/design-tool" search={{ isoform: isoform.id }} />}
+      >
+        <WandSparkles className="size-4" />
+        {copy.customizeLong}
+      </DropdownMenuItem>
+      <DropdownMenuSeparator />
+      <DropdownMenuItem onClick={() => copyText(isoform.codingSequence, cdsId)}>
+        <Copy className="size-4" />
+        {isCopied(cdsId) ? copy.copied : copy.copyCds}
+      </DropdownMenuItem>
+      <DropdownMenuItem
+        onClick={() =>
+          copyText(formatFasta(isoform.id, isoform.codingSequence), fastaId)
+        }
+      >
+        <FileText className="size-4" />
+        {isCopied(fastaId) ? copy.copied : copy.copyFasta}
+      </DropdownMenuItem>
+      <DropdownMenuItem
+        onClick={() => {
+          downloadTextFile(
+            `${isoform.id}.fasta`,
+            formatFasta(isoform.id, isoform.codingSequence),
+          )
+        }}
+      >
+        <Download className="size-4" />
+        {copy.downloadFasta}
+      </DropdownMenuItem>
+      <DropdownMenuSeparator />
+      <DropdownMenuItem
+        render={
+          <a
+            href={`https://ensembl.org/id/${isoform.id}`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <ExternalLink className="size-4" />
+            {copy.viewEnsembl}
+          </a>
+        }
+      />
+    </DropdownMenuContent>
   )
 }
 
@@ -576,7 +599,8 @@ function ExpandedDetails({
             nativeButton={false}
             render={
               <Link
-                href={`/design-tool?isoform=${isoform.id}`}
+                to="/design-tool"
+                search={{ isoform: isoform.id }}
                 aria-label={copy.customizeAria(isoform.id)}
               />
             }
@@ -584,7 +608,7 @@ function ExpandedDetails({
             <WandSparkles className="size-4" />
             {copy.customizeLong}
           </Button>
-          <p className="text-muted-foreground text-xs">{copy.customizeHint}</p>
+          <p className="text-xs text-muted-foreground">{copy.customizeHint}</p>
         </div>
         <div className="flex flex-col items-start gap-1.5 sm:max-w-xs">
           <Button
@@ -596,19 +620,13 @@ function ExpandedDetails({
                 href={preOptimizedZipUrl(isoform.id)}
                 download={`${isoform.id}_v1.0.zip`}
                 aria-label={copy.downloadAria(isoform.id)}
-                onClick={() =>
-                  trackEvent({
-                    event: 'precomputed_download',
-                    isoform_id: isoform.id,
-                  })
-                }
               >
                 <PackageOpen className="size-4" />
                 {copy.downloadLong}
               </a>
             }
           />
-          <p className="text-muted-foreground text-xs">{copy.downloadHint}</p>
+          <p className="text-xs text-muted-foreground">{copy.downloadHint}</p>
         </div>
       </div>
 
@@ -730,7 +748,7 @@ function SortButton({
     // py-2 with -my-2: a 36px tap target in the same 20px of layout.
     <button
       type="button"
-      className="hover:text-foreground focus-visible:ring-ring -my-2 inline-flex min-h-9 items-center gap-1 rounded-sm py-2 transition-colors focus-visible:ring-2 focus-visible:outline-none"
+      className="-my-2 inline-flex min-h-9 items-center gap-1 rounded-sm py-2 transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
       onClick={onClick}
     >
       {label}
@@ -741,51 +759,8 @@ function SortButton({
           <ArrowDown className="size-3.5" aria-hidden />
         )
       ) : (
-        <ArrowUpDown className="text-muted-foreground size-3.5" aria-hidden />
+        <ArrowUpDown className="size-3.5 text-muted-foreground" aria-hidden />
       )}
     </button>
-  )
-}
-
-const SKELETON_ROWS = 5
-
-/**
- * Stands in for the summary line and the table at roughly their real size,
- * so the page doesn't jump when the isoforms arrive.
- */
-export function IsoformTableLoading() {
-  return (
-    <div
-      role="status"
-      aria-label={copy.loadingAria}
-      className="flex flex-col gap-3"
-    >
-      <div className="flex h-8 items-center gap-6" aria-hidden>
-        <Skeleton className="h-4 w-24" />
-        <Skeleton className="h-4 w-36" />
-        <Skeleton className="hidden h-4 w-40 sm:block" />
-      </div>
-      <div aria-hidden>
-        <div className="flex h-10 items-center gap-4 border-b px-2">
-          <Skeleton className="h-3.5 w-7" />
-          <Skeleton className="h-3.5 w-40" />
-          <Skeleton className="h-3.5 w-16" />
-          <Skeleton className="hidden h-3.5 w-16 sm:block" />
-          <Skeleton className="hidden h-3.5 w-12 sm:block" />
-        </div>
-        {Array.from({ length: SKELETON_ROWS }, (_, i) => (
-          <div
-            key={i}
-            className="flex h-11 items-center gap-4 border-b px-2 last:border-0"
-          >
-            <Skeleton className="size-4 rounded-full" />
-            <Skeleton className="h-4 w-36" />
-            <Skeleton className="h-4 w-16" />
-            <Skeleton className="hidden h-4 w-16 sm:block" />
-            <Skeleton className="hidden h-4 w-12 sm:block" />
-          </div>
-        ))}
-      </div>
-    </div>
   )
 }

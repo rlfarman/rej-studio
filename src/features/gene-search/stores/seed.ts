@@ -1,14 +1,12 @@
-'use client'
-
 import { useFavoriteGenes } from '@/features/gene-search/stores/favorite-genes-store'
 import { useRecentGenes } from '@/features/gene-search/stores/recent-genes-store'
 import type { SavedGene } from '@/features/gene-search/types/domain-types'
 
-// Gene metadata below mirrors what Neon returns for these exact gene_ids
-// (pulled from drizzle/transcript_metadata.csv — sym1 primary symbol and
-// title-cased gene_name). Matching the DB verbatim matters: favorites and
-// recents link to /genes/{symbol} and the page query uses `eq(symbol)`, so
-// a casing drift (e.g. 'Trp53' vs 'TRP53') produces a silent empty page.
+// Gene metadata below mirrors the gene corpus for these exact gene_ids
+// (from the source transcript_metadata.csv — sym1 primary symbol and
+// title-cased gene_name). Matching the corpus verbatim matters: favorites
+// and recents link to /genes/{symbol}, so a casing drift (e.g. 'Trp53' vs
+// 'TRP53') lands on a redirect or a not-found page.
 const FAVORITE_SEED: SavedGene[] = [
   {
     id: 'ENSG00000141510',

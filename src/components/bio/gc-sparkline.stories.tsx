@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react'
+import type { Meta, StoryObj } from '@storybook/react-vite'
 import { GcSparkline } from './gc-sparkline'
 
 const repeat = (s: string, n: number) => s.repeat(n)

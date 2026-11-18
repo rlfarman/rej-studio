@@ -1,9 +1,7 @@
-'use client'
 import { Button } from '@/components/ui/button'
 import { Star } from 'lucide-react'
 import { useFavoriteGenes } from '@/features/gene-search/stores/favorite-genes-store'
 import type { SavedGene } from '@/features/gene-search/types/domain-types'
-import { trackEvent } from '@/lib/analytics'
 import { geneSearchCopy } from '../copy'
 
 interface FavoriteButtonProps {
@@ -26,12 +24,6 @@ export function FavoriteGeneButton({ gene }: FavoriteButtonProps) {
     } else {
       addFavoriteGene(gene)
     }
-    trackEvent({
-      event: 'favorite_gene_toggle',
-      gene_id: gene.id,
-      symbol: gene.symbol,
-      action: isFavorite ? 'remove' : 'add',
-    })
   }
 
   // A toggle: the name stays put and aria-pressed carries the state, so a

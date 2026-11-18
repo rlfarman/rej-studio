@@ -1,12 +1,11 @@
-'use client'
 import {
   SidebarMenuAction,
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar'
 import { useRecentGenes } from '@/features/gene-search/stores/recent-genes-store'
-import Link from 'next/link'
-import { geneHref } from '@/lib/bio/species'
+import { Link } from '@tanstack/react-router'
+import { geneLink } from '../utils/search-href'
 import { ExpandableSidebarList } from '@/components/expandable-sidebar-list'
 import { SpeciesIcon } from '@/components/bio/species-icon'
 import { X } from 'lucide-react'
@@ -31,7 +30,7 @@ export function RecentGenes() {
             className="h-auto items-start py-1.5 [&>svg]:size-3"
             render={
               <Link
-                href={geneHref(gene.symbol, gene.species)}
+                {...geneLink(gene.symbol, gene.species)}
                 className="flex items-start gap-2"
               />
             }
@@ -39,12 +38,12 @@ export function RecentGenes() {
             {gene.species && (
               <SpeciesIcon
                 species={gene.species}
-                className="text-muted-foreground group-hover/menu-button:text-sidebar-accent-foreground mt-0.5 flex-shrink-0"
+                className="mt-0.5 flex-shrink-0 text-muted-foreground group-hover/menu-button:text-sidebar-accent-foreground"
               />
             )}
             <div className="flex min-w-0 flex-1 flex-col gap-0.5 leading-tight">
               <span className="font-mono font-medium">{gene.symbol}</span>
-              <span className="text-muted-foreground group-hover/menu-button:text-sidebar-accent-foreground type-nano line-clamp-2 pr-5">
+              <span className="line-clamp-2 pr-5 type-nano text-muted-foreground group-hover/menu-button:text-sidebar-accent-foreground">
                 {gene.name}
               </span>
             </div>

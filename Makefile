@@ -1,53 +1,40 @@
-.PHONY: dev build seed db-studio db-migrate lint lint-fix format type-check verify doctor api-types help
+.PHONY: dev build gene-seed associations lint lint-fix format type-check verify doctor help
 
 # ---------- Development ----------
 
-dev: ## Start Next.js + FastAPI dev servers
+dev: ## Start the TanStack Start dev server (vp dev, Worker in workerd)
 	pnpm dev
 
-build: ## Production build (Vercel target)
+build: ## Production build (TanStack Start + Cloudflare Worker, in dist/)
 	pnpm build
 
-# ---------- Database ----------
+# ---------- Gene data ----------
 
-seed: ## Rebuild JSONL from CSV, apply migrations, and upload data
-	pnpm db:build && pnpm db:migrate && pnpm db:upload
+gene-seed: ## Rebuild data/genes.jsonl + data/isoforms.jsonl from data/transcript_metadata.csv
+	pnpm data:genes
 
-db-studio: ## Open Drizzle Studio
-	pnpm db:studio
-
-db-migrate: ## Apply committed migrations to $DATABASE_URL
-	pnpm db:migrate
-
-# ---------- Deploy ----------
-# The Python backend deploys from CI (.github/workflows/modal-deploy.yml) on
-# merges to main, with the pinned image builder and locked Modal client. To
-# redeploy by hand: gh workflow run modal-deploy.yml
+associations: ## Rebuild the disease-associations JSON from data/disease_associated_genes.csv
+	pnpm data:associations
 
 # ---------- Quality ----------
 
-lint: ## Run Oxlint, then ESLint
+lint: ## Run Oxlint (vp lint), with the boundary rules as JS plugins
 	pnpm lint
 
 lint-fix: ## Auto-fix lint issues
 	pnpm lint:fix
 
-format: ## Run Prettier
+format: ## Run Oxfmt
 	pnpm format
 
 type-check: ## Run TypeScript type checker
 	pnpm type-check
 
-verify: ## Lint, type-check and unit tests (the pre-push gate)
+verify: ## Lint, format check, knip, type-check and unit tests (the pre-push gate)
 	pnpm verify
 
 doctor: ## Check local environment health
 	pnpm doctor
-
-# ---------- Codegen ----------
-
-api-types: ## Regenerate TS types from FastAPI OpenAPI spec
-	bash scripts/generate-api-types.sh
 
 # ---------- Help ----------
 

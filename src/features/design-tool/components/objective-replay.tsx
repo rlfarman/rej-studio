@@ -1,7 +1,5 @@
-'use client'
-
 import type React from 'react'
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
@@ -72,12 +70,12 @@ function RegionTrack({
 
   return (
     <div>
-      <div className="text-muted-foreground mb-1 flex items-baseline justify-between text-xs">
+      <div className="mb-1 flex items-baseline justify-between text-xs text-muted-foreground">
         <span>{label}</span>
         <span>{copy.track.count(regions.length)}</span>
       </div>
       <div
-        className="bg-muted relative h-3 w-full overflow-hidden rounded-sm"
+        className="relative h-3 w-full overflow-hidden rounded-sm bg-muted"
         role="img"
         aria-label={description}
       >
@@ -120,12 +118,9 @@ export function ObjectiveReplay({
   reportAfter,
   sequenceLength,
 }: ObjectiveReplayProps) {
-  const allSteps = useMemo(
-    () => buildObjectiveSteps(reportBefore, reportAfter),
-    [reportBefore, reportAfter],
-  )
-  const notable = useMemo(() => allSteps.filter(isNotable), [allSteps])
-  const counts = useMemo(() => countOutcomes(allSteps), [allSteps])
+  const allSteps = buildObjectiveSteps(reportBefore, reportAfter)
+  const notable = allSteps.filter(isNotable)
+  const counts = countOutcomes(allSteps)
 
   const [showAll, setShowAll] = useState(false)
   const [index, setIndex] = useState(0)
@@ -136,23 +131,23 @@ export function ObjectiveReplay({
   const step = steps[position]
 
   if (allSteps.length === 0) {
-    return <p className="text-muted-foreground text-sm">{copy.noReport}</p>
+    return <p className="text-sm text-muted-foreground">{copy.noReport}</p>
   }
   // The backend evaluates the final sequence separately and swallows a failure
   // there, which leaves a run with a first report and no second one. Every
   // objective then looks "dropped", which must not be read as "all held".
   if (reportAfter.entries.length === 0) {
-    return <p className="text-muted-foreground text-sm">{copy.noFinalReport}</p>
+    return <p className="text-sm text-muted-foreground">{copy.noFinalReport}</p>
   }
   if (reportBefore.entries.length === 0) {
     return (
-      <p className="text-muted-foreground text-sm">{copy.noInitialReport}</p>
+      <p className="text-sm text-muted-foreground">{copy.noInitialReport}</p>
     )
   }
   if (!step) {
     return (
       <div className="space-y-3">
-        <p className="text-muted-foreground text-sm">{copy.nothingChanged}</p>
+        <p className="text-sm text-muted-foreground">{copy.nothingChanged}</p>
         <Button
           type="button"
           variant="outline"
@@ -217,7 +212,7 @@ export function ObjectiveReplay({
             <ChevronLeft className="size-4" />
           </Button>
           <p
-            className="text-muted-foreground text-xs tabular-nums"
+            className="text-xs text-muted-foreground tabular-nums"
             aria-live="polite"
           >
             {copy.position(position + 1, steps.length)}
@@ -247,11 +242,11 @@ export function ObjectiveReplay({
           </div>
 
           {step.after?.message ? (
-            <p className="text-muted-foreground text-sm">
+            <p className="text-sm text-muted-foreground">
               {step.after.message}
             </p>
           ) : step.before?.message ? (
-            <p className="text-muted-foreground text-sm">
+            <p className="text-sm text-muted-foreground">
               {step.before.message}
             </p>
           ) : null}

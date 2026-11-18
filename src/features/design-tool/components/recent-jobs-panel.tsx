@@ -1,20 +1,19 @@
-'use client'
 import {
   SidebarMenuAction,
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar'
 import {
-  isSeedId,
   useJobHistory,
   type JobHistoryEntry,
 } from '@/features/design-tool/hooks/use-job-history'
-import { cancelJob as cancelJobAction } from '@/features/design-tool/api/jobs'
 import { ExpandableSidebarList } from '@/components/expandable-sidebar-list'
-import { Loader2, CircleAlert, X } from 'lucide-react'
+import { Loader2, CircleAlert, Cloud, X } from 'lucide-react'
+import { estimateCloudSeconds } from '@/features/design-tool/types/cloud-design'
 import { designToolCopy } from '../copy'
 
 const copy = designToolCopy.recentJobs
+const cloudCopy = designToolCopy.cloud
 
 function formatTimeAgo(dateString: string): string {
   const seconds = Math.floor(
@@ -42,19 +41,8 @@ export function RecentJobs({ onSelectJob }: RecentJobsProps) {
   const removeEntry = useJobHistory((s) => s.removeEntry)
   const upsertEntry = useJobHistory((s) => s.upsertEntry)
 
-  // Clearing the list must not leave workers running and billing: cancel
-  // every running job (best effort) before dropping the entries.
-  const handleClear = () => {
-    for (const id of useJobHistory.getState().getRunningIds()) {
-      if (isSeedId(id)) continue
-      void cancelJobAction(id).catch(() => {})
-    }
-    clearHistory()
-  }
-
-  // X on a running entry cancels the backend job (eagerly marking it
-  // cancelled in the store) rather than silently dismissing while the
-  // job keeps running. Terminal entries are just removed locally.
+  // X on a running entry marks it cancelled rather than silently
+  // dismissing it. Terminal entries are just removed.
   const handleRemove = (entry: JobHistoryEntry) => {
     if (entry.status === 'running') {
       upsertEntry({
@@ -66,7 +54,6 @@ export function RecentJobs({ onSelectJob }: RecentJobsProps) {
           retriable: true,
         },
       })
-      void cancelJobAction(entry.id).catch(() => {})
     } else {
       removeEntry(entry.id)
     }
@@ -78,15 +65,18 @@ export function RecentJobs({ onSelectJob }: RecentJobsProps) {
       persistKey="sidebar:recent-jobs:open"
       items={entries}
       getItemKey={(entry) => entry.id}
-      onClear={handleClear}
+      onClear={clearHistory}
       emptyMessage={copy.empty}
       menuAriaLabel={copy.menuAria}
       renderItem={(entry) => {
         const isError =
           entry.status === 'failed' || entry.status === 'cancelled'
         const progress = progressById[entry.id]
-        const subline =
-          entry.status === 'running'
+        const runningInCloud = entry.status === 'running' && !!entry.cloudId
+        const subline = runningInCloud
+          ? // No live progress from the cloud: an estimate from the length.
+            cloudCopy.recentSubline(estimateCloudSeconds(entry.sequenceLength))
+          : entry.status === 'running'
             ? (progress?.stage ??
               (progress?.progress !== undefined
                 ? `${Math.round(progress.progress * 100)}%`
@@ -101,24 +91,25 @@ export function RecentJobs({ onSelectJob }: RecentJobsProps) {
               className="h-auto items-start py-1.5 [&>svg]:size-3"
               onClick={() => onSelectJob?.(entry)}
             >
-              {entry.status === 'running' && (
+              {runningInCloud && <Cloud className="mt-0.5 flex-shrink-0" />}
+              {entry.status === 'running' && !runningInCloud && (
                 <Loader2 className="mt-0.5 flex-shrink-0 animate-spin" />
               )}
               {isError && (
-                <CircleAlert className="text-destructive mt-0.5 flex-shrink-0" />
+                <CircleAlert className="mt-0.5 flex-shrink-0 text-destructive" />
               )}
               <div className="flex min-w-0 flex-1 flex-col gap-0.5 leading-tight">
                 <span className="line-clamp-2 pr-5 font-medium">
                   {entry.name}
                 </span>
-                <span className="text-muted-foreground group-hover/menu-button:text-sidebar-accent-foreground type-nano line-clamp-2 block min-h-[14px] pr-5">
+                <span className="line-clamp-2 block min-h-[14px] pr-5 type-nano text-muted-foreground group-hover/menu-button:text-sidebar-accent-foreground">
                   {subline}
                 </span>
                 {entry.status === 'running' &&
                   progress?.progress !== undefined && (
-                    <div className="bg-sidebar-border mt-1 h-0.5 w-full overflow-hidden rounded-full">
+                    <div className="mt-1 h-0.5 w-full overflow-hidden rounded-full bg-sidebar-border">
                       <div
-                        className="bg-primary h-full w-full origin-left transition-transform duration-700 ease-out"
+                        className="h-full w-full origin-left bg-primary transition-transform duration-700 ease-out"
                         style={{
                           transform: `scaleX(${Math.max(0.02, progress.progress)})`,
                         }}

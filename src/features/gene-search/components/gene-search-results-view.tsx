@@ -1,12 +1,14 @@
-import Link from 'next/link'
+import { Link } from '@tanstack/react-router'
 import type { ReactNode } from 'react'
 import { WandSparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { SpeciesIcon } from '@/components/bio/species-icon'
 import type { SearchGenesResult } from '@/features/gene-search/types/search'
-import { searchPageHref } from '@/features/gene-search/utils/search-href'
 import {
-  geneHref,
+  geneLink,
+  searchPageLink,
+} from '@/features/gene-search/utils/search-href'
+import {
   isSpecies,
   SPECIES_DISPLAY_NAME,
   type SpeciesFilter,
@@ -23,9 +25,7 @@ const copy = geneSearchCopy.results
 const pageCopy = geneSearchCopy.searchPage
 
 /*
- * The /genes results list, shared by the server-rendered search (Postgres)
- * and the in-browser one (static corpus). No hooks and no server-only
- * imports, so it renders on either side.
+ * The /genes results list: what a search found, or what to try instead.
  */
 
 export function SearchError({
@@ -39,7 +39,7 @@ export function SearchError({
   return (
     <div
       role="alert"
-      className="text-destructive-foreground bg-destructive/10 flex flex-col items-start gap-2 rounded-2xl p-4 text-sm"
+      className="flex flex-col items-start gap-2 rounded-2xl bg-destructive/10 p-4 text-sm text-destructive-foreground"
     >
       <span>
         {message} {copy.errorSuffix}
@@ -56,11 +56,11 @@ function matchedLabel(match: MatchedField) {
     case 'geneId':
       return copy.matched.geneId
     case 'symbol':
-      return copy.matched.symbol
+      return match.typo ? copy.matched.closeSymbol : copy.matched.symbol
     case 'name':
-      return copy.matched.name
+      return match.typo ? copy.matched.closeName : copy.matched.name
     case 'alias':
-      return copy.matched.alias
+      return match.typo ? copy.matched.closeAlias : copy.matched.alias
   }
 }
 
@@ -87,8 +87,8 @@ export function GeneSearchResultsView({
         allSpeciesAction={
           species === 'both' ? undefined : (
             <Link
-              href={searchPageHref(query, 'both')}
-              className="text-primary focus-visible:ring-ring rounded-sm font-medium underline underline-offset-4 focus-visible:ring-2 focus-visible:outline-none"
+              {...searchPageLink(query, 'both')}
+              className="rounded-sm font-medium text-primary underline underline-offset-4 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
             >
               {copy.searchAllSpecies}
             </Link>
@@ -101,12 +101,12 @@ export function GeneSearchResultsView({
 
   return (
     <section aria-label={pageCopy.resultsTitle(query)}>
-      <p className="text-muted-foreground mb-2 text-sm" aria-live="polite">
+      <p className="mb-2 text-sm text-muted-foreground" aria-live="polite">
         {truncated
           ? pageCopy.truncated(results.length)
           : pageCopy.resultCount(results.length)}
       </p>
-      <ul className="divide-border divide-y border-y">
+      <ul className="divide-y divide-border border-y">
         {results.map((gene) => {
           const match = matchedField(gene, query)
           const speciesName = isSpecies(gene.species)
@@ -115,15 +115,11 @@ export function GeneSearchResultsView({
           return (
             <li
               key={gene.id}
-              className="group/gene-row hover:bg-accent/40 flex items-center gap-2 transition-colors"
+              className="group/gene-row flex items-center gap-2 transition-colors hover:bg-accent/40"
             >
               <Link
-                href={geneHref(
-                  gene.symbol,
-                  gene.species,
-                  gene.matchedIsoformId,
-                )}
-                className="focus-visible:ring-ring grid min-w-0 flex-1 grid-cols-[5rem_1fr] items-baseline gap-x-4 gap-y-1 rounded-xl px-2 py-3 focus-visible:ring-2 focus-visible:outline-none sm:grid-cols-[7rem_1fr]"
+                {...geneLink(gene.symbol, gene.species, gene.matchedIsoformId)}
+                className="grid min-w-0 flex-1 grid-cols-[5rem_1fr] items-baseline gap-x-4 gap-y-1 rounded-xl px-2 py-3 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none sm:grid-cols-[7rem_1fr]"
               >
                 <span className="truncate font-mono text-sm font-semibold">
                   <HighlightMatch text={gene.symbol} query={query} />
@@ -132,7 +128,7 @@ export function GeneSearchResultsView({
                   <HighlightMatch text={gene.name} query={query} />
                 </span>
                 {/* One meta line: which species, and why this gene matched. */}
-                <span className="text-muted-foreground col-start-2 flex min-w-0 items-center gap-1.5 text-xs">
+                <span className="col-start-2 flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
                   <SpeciesIcon
                     species={gene.species}
                     className="!size-3.5 shrink-0"
@@ -150,7 +146,8 @@ export function GeneSearchResultsView({
                   nativeButton={false}
                   render={
                     <Link
-                      href={`/design-tool?isoform=${gene.matchedIsoformId}`}
+                      to="/design-tool"
+                      search={{ isoform: gene.matchedIsoformId }}
                       aria-label={geneSearchCopy.command.customizeAria(
                         gene.matchedIsoformId,
                       )}
@@ -173,7 +170,7 @@ export function GeneSearchResultsView({
 
 export function GeneSearchResultsLoading() {
   return (
-    <p className="text-muted-foreground text-sm" aria-live="polite">
+    <p className="text-sm text-muted-foreground" aria-live="polite">
       {pageCopy.loading}
     </p>
   )

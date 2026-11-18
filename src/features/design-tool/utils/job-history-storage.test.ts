@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test'
 import { IDBFactory } from 'fake-indexeddb'
 import { createStore, get, set } from 'idb-keyval'
 import type { JobHistoryEntry } from '@/features/design-tool/hooks/use-job-history'

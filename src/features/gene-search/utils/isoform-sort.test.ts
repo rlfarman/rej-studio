@@ -1,11 +1,11 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vite-plus/test'
 import {
   ariaSortFor,
   DEFAULT_ISOFORM_SORT,
   nextIsoformSort,
   parseIsoformSort,
   sortIsoforms,
-  withIsoformSort,
+  isoformSortSearch,
   type SortableIsoform,
 } from './isoform-sort'
 
@@ -27,28 +27,27 @@ function row(
 
 describe('parseIsoformSort', () => {
   it('defaults to CDS length ascending', () => {
-    expect(parseIsoformSort(new URLSearchParams())).toEqual(
-      DEFAULT_ISOFORM_SORT,
-    )
+    expect(parseIsoformSort({})).toEqual(DEFAULT_ISOFORM_SORT)
   })
 
   it('reads a valid key and direction', () => {
-    expect(
-      parseIsoformSort(new URLSearchParams('sort=gcPercent&dir=desc')),
-    ).toEqual({ key: 'gcPercent', dir: 'desc' })
+    expect(parseIsoformSort({ sort: 'gcPercent', dir: 'desc' })).toEqual({
+      key: 'gcPercent',
+      dir: 'desc',
+    })
   })
 
   it('treats a missing or unknown dir as ascending', () => {
-    expect(parseIsoformSort(new URLSearchParams('sort=cpg&dir=up'))).toEqual({
+    expect(parseIsoformSort({ sort: 'cpg', dir: 'up' })).toEqual({
       key: 'cpg',
       dir: 'asc',
     })
   })
 
   it('ignores an unknown key', () => {
-    expect(
-      parseIsoformSort(new URLSearchParams('sort=__proto__&dir=desc')),
-    ).toEqual(DEFAULT_ISOFORM_SORT)
+    expect(parseIsoformSort({ sort: '__proto__', dir: 'desc' })).toEqual(
+      DEFAULT_ISOFORM_SORT,
+    )
   })
 })
 
@@ -67,23 +66,19 @@ describe('nextIsoformSort', () => {
   })
 })
 
-describe('withIsoformSort', () => {
-  it('writes sort and dir and keeps other params', () => {
-    const params = withIsoformSort(
-      new URLSearchParams('species=human&isoform=ENST1'),
-      { key: 'cpg', dir: 'desc' },
-    )
-    expect(params.toString()).toBe(
-      'species=human&isoform=ENST1&sort=cpg&dir=desc',
-    )
+describe('isoformSortSearch', () => {
+  it('writes sort and dir', () => {
+    expect(isoformSortSearch({ key: 'cpg', dir: 'desc' })).toEqual({
+      sort: 'cpg',
+      dir: 'desc',
+    })
   })
 
   it('drops the params for the default sort', () => {
-    const params = withIsoformSort(
-      new URLSearchParams('species=human&sort=cpg&dir=desc'),
-      DEFAULT_ISOFORM_SORT,
-    )
-    expect(params.toString()).toBe('species=human')
+    expect(isoformSortSearch(DEFAULT_ISOFORM_SORT)).toEqual({
+      sort: undefined,
+      dir: undefined,
+    })
   })
 })
 

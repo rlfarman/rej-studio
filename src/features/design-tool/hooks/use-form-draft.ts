@@ -1,5 +1,3 @@
-'use client'
-
 import { useEffect, useState } from 'react'
 import type { UseFormReturn } from 'react-hook-form'
 import type { FormValues } from '@/features/design-tool/types/form-schema'

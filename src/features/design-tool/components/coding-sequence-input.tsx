@@ -1,5 +1,4 @@
-'use client'
-import { useRef } from 'react'
+import { useLayoutEffect, useRef } from 'react'
 import { useFormContext, useWatch } from 'react-hook-form'
 import {
   FormField,
@@ -16,10 +15,11 @@ import { SequenceHighlight } from './sequence-highlight'
 import { cn } from '@/lib/utils'
 import { cleanSequence, parseFasta } from '@/lib/bio/fasta'
 import { detectSequenceType } from '@/lib/bio/sequence-utils'
-import { toast } from 'sonner'
-import { isSpecies, type Species } from '@/lib/bio/species'
+import { toast } from '@/lib/toast'
+import { isSpecies } from '@/lib/bio/species'
 import { pickDefaultSplitPoints } from '../utils/default-split-point'
-import { reverseTranslate } from '@/lib/bio/reverse-translate'
+import { rescaleSplitPoints, type SplitAnchor } from '../utils/split-points'
+import { useReverseTranslation } from '../hooks/use-reverse-translation'
 import { translate } from '@/lib/bio/genetic-code'
 import { designToolCopy } from '../copy'
 
@@ -41,7 +41,7 @@ function SequenceTypeToggle({
     <div
       role="radiogroup"
       aria-label={copy.typeToggleAria}
-      className="bg-muted inline-flex gap-0.5 rounded-2xl p-0.5"
+      className="inline-flex gap-0.5 rounded-2xl bg-muted p-0.5"
     >
       {options.map((opt) => {
         const Icon = opt.icon
@@ -85,36 +85,69 @@ export function CodingSequenceInput() {
   const activeValue = isProtein ? proteinValue : dnaValue
   const length = activeValue?.length ?? 0
 
+  // In protein mode the DNA comes from the optimizer worker, which owns the
+  // codon tables. It arrives after a debounce, so the field below reports
+  // "translating" rather than showing the previous protein's DNA.
+  const reverseTranslation = useReverseTranslation()
+
   const fileInputRef = useRef<HTMLInputElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const backdropRef = useRef<HTMLDivElement>(null)
+
+  // The textarea is uncontrolled: the browser owns its text while typing,
+  // and only writes from elsewhere (paste cleaning, FASTA upload, the
+  // DNA/protein toggle, reverse translation, draft restore, reset) are pushed
+  // into it here.
+  //
+  // Controlled, it dropped keystrokes. Typing re-renders the split-point
+  // editor, which wrote derived values back into the form from effects: the
+  // selected WGGW sites (now resolved on submit from the picks, see
+  // utils/wggw-selection.ts) and still the clamped split points
+  // (splice-slider-context.tsx, the effect calling onPositionsChange). When
+  // such a write landed between a keystroke and its render, React ended the
+  // input event by
+  // restoring the field to the value it had last rendered, and the next key
+  // was typed onto the shorter text. Uncontrolled, there is no rendered value
+  // to restore to.
+  //
+  // `typedRef` holds what the field itself has emitted since it last matched
+  // the form. A form value found there is this field's own keystroke catching
+  // up, possibly behind newer ones, and must not be written back over them.
+  const typedRef = useRef(new Set<string>())
+  // Where the split points were last rescaled to (see rescaleSplitPoints).
+  const splitAnchorRef = useRef<SplitAnchor | null>(null)
+
+  // Typing moves the split points with the sequence, here in the change
+  // handler rather than in an effect after the render, so a keystroke is one
+  // batched form update. Writes that set a sequence together with its split
+  // points (paste, upload, reverse translation, restores) bypass this.
+  const rescaleSplitPointsForTyping = (nextLength: number) => {
+    const positions = getValues('spliceJunctionPositions') ?? []
+    const anchor = rescaleSplitPoints(
+      positions,
+      getValues('codingSequence')?.length ?? 0,
+      nextLength,
+      splitAnchorRef.current,
+    )
+    splitAnchorRef.current = anchor
+    if (anchor.positions.some((p, i) => p !== positions[i])) {
+      setValue('spliceJunctionPositions', anchor.positions)
+    }
+  }
+  useLayoutEffect(() => {
+    const el = textareaRef.current
+    if (!el) return
+    const next = activeValue ?? ''
+    if (el.value !== next && !typedRef.current.has(next)) {
+      el.value = next
+    }
+    if (el.value === next) typedRef.current.clear()
+  }, [activeValue])
 
   const syncScroll = () => {
     if (textareaRef.current && backdropRef.current) {
       backdropRef.current.scrollTop = textareaRef.current.scrollTop
       backdropRef.current.scrollLeft = textareaRef.current.scrollLeft
-    }
-  }
-
-  const applyReverseTranslation = (protein: string) => {
-    if (!isSpecies(species)) return
-    try {
-      const dna = reverseTranslate(protein, species as Species)
-      const points = pickDefaultSplitPoints(dna)
-      setValue('codingSequence', dna, { shouldValidate: false })
-      setValue('spliceJunctionPositions', points, {
-        shouldValidate: false,
-      })
-      setValue(
-        'selectedWggwSites',
-        points.map(() => null),
-        {
-          shouldValidate: false,
-        },
-      )
-      setValue('sequenceType', 'dna', { shouldValidate: false })
-    } catch {
-      setValue('codingSequence', '', { shouldValidate: false })
     }
   }
 
@@ -164,13 +197,10 @@ export function CodingSequenceInput() {
       setValue('spliceJunctionPositions', points, {
         shouldValidate: true,
       })
-      setValue(
-        'selectedWggwSites',
-        points.map(() => null),
-        {
-          shouldValidate: false,
-        },
-      )
+      // A new sequence starts its WGGW picks over: the old ones name sites
+      // that may not be in it.
+      setValue('wggwSitePicks', [], { shouldValidate: false })
+      setValue('wggwRewritePicks', [], { shouldValidate: false })
       // Clear the protein field so switching back doesn't show stale input
       if (modeSwitched) {
         setValue('proteinSequence', '', { shouldValidate: false })
@@ -249,6 +279,9 @@ export function CodingSequenceInput() {
     }
   }
 
+  // The DNA is already there (the hook keeps it in step); this button is the
+  // step the user takes once they are happy with it — continue in DNA mode,
+  // where the sequence can be inspected and the split moved.
   const handleReverseTranslate = () => {
     const protein = (proteinValue ?? '').toUpperCase().replace(/\s/g, '')
     if (!protein) {
@@ -259,7 +292,12 @@ export function CodingSequenceInput() {
       toast.error(copy.reverseTranslateSpeciesRequired)
       return
     }
-    applyReverseTranslation(protein)
+    if (reverseTranslation.error) {
+      toast.error(copy.reverseTranslateFailed(reverseTranslation.error))
+      return
+    }
+    if (reverseTranslation.pending || !dnaValue) return
+    setValue('sequenceType', 'dna', { shouldValidate: false })
   }
 
   const activeField = isProtein ? 'proteinSequence' : 'codingSequence'
@@ -319,7 +357,7 @@ export function CodingSequenceInput() {
                   sharedTextStyles,
                   // The field's fill lives here, behind the transparent
                   // textarea, so it doesn't tint the highlighted bases.
-                  'bg-input/50 text-foreground pointer-events-none absolute inset-0 overflow-hidden rounded-2xl border border-transparent',
+                  'pointer-events-none absolute inset-0 overflow-hidden rounded-2xl border border-transparent bg-input/50 text-foreground',
                 )}
               >
                 {activeValue ? (
@@ -336,8 +374,16 @@ export function CodingSequenceInput() {
                 }
                 rows={4}
                 aria-required="true"
-                {...field}
-                onChange={field.onChange}
+                name={field.name}
+                disabled={field.disabled}
+                onBlur={field.onBlur}
+                onChange={(event) => {
+                  typedRef.current.add(event.target.value)
+                  if (!isProtein) {
+                    rescaleSplitPointsForTyping(event.target.value.length)
+                  }
+                  field.onChange(event)
+                }}
                 ref={(el) => {
                   field.ref(el)
                   textareaRef.current = el
@@ -347,9 +393,9 @@ export function CodingSequenceInput() {
                 className={cn(
                   sharedTextStyles,
                   // Same look as the Textarea primitive.
-                  'placeholder:text-muted-foreground selection:bg-primary/30 caret-foreground relative flex w-full min-w-0 resize-y rounded-2xl border border-transparent transition-[color,box-shadow] duration-200 outline-none disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
-                  'focus-visible:border-ring focus-visible:ring-ring/30 focus-visible:ring-3',
-                  'aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 aria-invalid:ring-3',
+                  'relative flex w-full min-w-0 resize-y rounded-2xl border border-transparent caret-foreground transition-[color,box-shadow] duration-200 outline-none selection:bg-primary/30 placeholder:text-muted-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
+                  'focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30',
+                  'aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40',
                   isProtein ? 'bg-input/50' : 'bg-transparent text-transparent',
                 )}
               />
@@ -361,21 +407,38 @@ export function CodingSequenceInput() {
               type="button"
               size="sm"
               className="mt-2"
+              disabled={reverseTranslation.pending}
+              aria-busy={reverseTranslation.pending}
               onClick={handleReverseTranslate}
             >
-              {copy.reverseTranslateButton}
+              {reverseTranslation.pending
+                ? copy.reverseTranslatePending
+                : copy.reverseTranslateButton}
             </Button>
           )}
-          {isProtein && isSpecies(species) && dnaValue && (
-            <p className="text-muted-foreground text-sm">
-              {copy.reverseTranslated(
-                dnaValue.length.toLocaleString(),
-                species,
-              )}
+          {isProtein && isSpecies(species) && reverseTranslation.pending && (
+            <p aria-live="polite" className="text-sm text-muted-foreground">
+              {copy.reverseTranslatePending}
             </p>
           )}
+          {isProtein && reverseTranslation.error !== null && (
+            <p aria-live="polite" className="text-sm text-danger-soft">
+              {copy.reverseTranslateFailed(reverseTranslation.error)}
+            </p>
+          )}
+          {isProtein &&
+            isSpecies(species) &&
+            !reverseTranslation.pending &&
+            dnaValue && (
+              <p aria-live="polite" className="text-sm text-muted-foreground">
+                {copy.reverseTranslated(
+                  dnaValue.length.toLocaleString(),
+                  species,
+                )}
+              </p>
+            )}
           {isProtein && !isSpecies(species) && length > 0 && (
-            <p className="text-warning-soft text-sm">
+            <p className="text-sm text-warning-soft">
               {copy.selectSpeciesHint}
             </p>
           )}

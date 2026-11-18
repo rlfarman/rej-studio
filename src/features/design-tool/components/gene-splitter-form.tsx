@@ -1,6 +1,5 @@
-'use client'
 import * as React from 'react'
-import { useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Undo2, X } from 'lucide-react'
@@ -18,7 +17,9 @@ import { Skeleton } from '@/components/ui/skeleton'
 import type { DesignToolSpecies } from '@/features/design-tool/types/species-options'
 import { validationSchema, FormValues } from '../types/form-schema'
 import { formatOptionsForReport } from '../utils/form-handler'
+import { withSelectedWggwSites } from '../utils/wggw-selection'
 import { useJob } from '@/features/design-tool/hooks/use-job'
+import { useAccount } from '@/lib/account/account'
 import { useFormDraft } from '@/features/design-tool/hooks/use-form-draft'
 import { CustomizationOptions } from './customization-options'
 import { DesignObjectives } from './optimization-options'
@@ -26,10 +27,23 @@ import { SubmitButton } from './submit-button'
 import { FinishNotificationOptIn } from './finish-notification-opt-in'
 import { FieldHelp } from './field-help'
 import { RunSummary } from './run-summary'
-import { ResultsPanel } from './results-panel'
-import { JobHeader, RunningPlaceholder } from './job-header'
-import { toast } from 'sonner'
+import {
+  CloudRunningPlaceholder,
+  JobHeader,
+  RunningPlaceholder,
+} from './job-header'
+import { CloudRunToggle } from './cloud-run-toggle'
+import { toast } from '@/lib/toast'
 import { designToolCopy } from '../copy'
+
+// The results UI (the panel, objectives, replay, maps, run record) is about a
+// third of the design tool's code and is only needed once a run finishes.
+// It loads when a run starts, so it is usually there by the time the result
+// is, and the form itself arrives without it.
+const loadResultsPanel = () => import('./results-panel')
+const ResultsPanel = lazy(() =>
+  loadResultsPanel().then((module) => ({ default: module.ResultsPanel })),
+)
 
 const copy = designToolCopy.form
 const draftCopy = designToolCopy.draft
@@ -42,6 +56,10 @@ interface GeneSplitterFormProperties {
   defaultSpliceJunctionPosition?: number
   /** Scope for the saved draft — the isoform id, or 'new'. */
   draftKey?: string
+  /** A new run replaced the design `defaultJobId` named (see useJob). */
+  onLeaveJob?: (jobId: string) => void
+  /** A design was submitted to the cloud under this id (see useJob). */
+  onCloudJob?: (jobId: string) => void
 }
 
 export function GeneSplitterForm({
@@ -51,8 +69,16 @@ export function GeneSplitterForm({
   defaultJobId,
   defaultSpliceJunctionPosition,
   draftKey = 'new',
+  onLeaveJob,
+  onCloudJob,
 }: GeneSplitterFormProperties) {
   const [isEditing, setIsEditing] = useState(false)
+  // Off by default: a cloud run sends the sequence off this machine, so it
+  // is only ever the person's explicit choice, made each time. It also needs
+  // an account: signed out, nothing runs in the cloud whatever was ticked.
+  const [cloudChosen, setCloudChosen] = useState(false)
+  const account = useAccount()
+  const runInCloud = cloudChosen && account.status === 'signed-in'
   // Guards the one-shot form restore. Set true after we hydrate from a
   // resumed URL job, or eagerly on submit so the new job's own persisted
   // formValues don't ricochet back and overwrite the live form.
@@ -61,7 +87,11 @@ export function GeneSplitterForm({
   // navigating back to a previously-failed job doesn't spam. Keyed by the
   // error itself, not just the job id, so a fresh failure always speaks up.
   const toastedFailuresRef = useRef<Set<string>>(new Set())
-  const job = useJob({ initialJobId: defaultJobId ?? null })
+  const job = useJob({
+    initialJobId: defaultJobId ?? null,
+    onLeaveJob,
+    onCloudJob,
+  })
 
   const methods = useForm<FormValues>({
     resolver: zodResolver(validationSchema),
@@ -95,11 +125,14 @@ export function GeneSplitterForm({
   })
 
   // Draft persistence — only when starting fresh. Resuming a job (?job=…)
-  // restores that job's own inputs instead, below.
+  // restores that job's own inputs instead, below. Decided at mount: a new
+  // run drops ?job= from the URL without remounting, and a draft restored
+  // then would overwrite the inputs of the run in progress.
+  const [resumedJob] = useState(defaultJobId)
   const draft = useFormDraft({
     draftKey,
     methods,
-    enabled: !defaultJobId,
+    enabled: !resumedJob,
   })
 
   // Hydrate the form from a resumed URL job's stored formValues — once they
@@ -121,11 +154,12 @@ export function GeneSplitterForm({
 
   // Results are derived, not mirrored into local state: the entry in history
   // is the single source of truth, and a completed job's result is already
-  // there (set by useJob on a local run, by JobWatcher on a polled one).
+  // there (set by useJob when the run settles).
   const result = job.status === 'completed' ? job.result : null
 
-  // Announce failures. Storage is handled centrally (useJob on submit,
-  // JobWatcher on poll settle), so the form just presents.
+  // Announce failures. Storage is handled centrally (useJob, and
+  // BrowserRuns for a run its tab didn't live to finish), so the form just
+  // presents.
   React.useEffect(() => {
     if (job.status !== 'failed' || !job.error) return
     const signature = `${job.jobId ?? 'unknown'}:${job.error.code}:${job.error.message}`
@@ -139,7 +173,9 @@ export function GeneSplitterForm({
     // the hydration effect above and overwrite the live form.
     didResetRef.current = true
     setIsEditing(false)
-    await job.submitJob(values)
+    // The split-point editor keeps only the person's WGGW picks in the form;
+    // the sites they resolve to are worked out here, once, for the request.
+    await job.submitJob(withSelectedWggwSites(values), { cloud: runInCloud })
     // The inputs are safe in the job entry now, so the draft can go.
     draft.clear()
   }
@@ -160,6 +196,10 @@ export function GeneSplitterForm({
   // missing: show a placeholder rather than flashing an empty form.
   const showForm = (job.status === 'idle' && !job.isRestoring) || isEditing
   const isRunning = job.status === 'submitting' || job.status === 'running'
+  // A run (or a restored job) is under way: fetch the results UI now.
+  useEffect(() => {
+    if (job.status !== 'idle') void loadResultsPanel()
+  }, [job.status])
   // 'submitting' is the brief window while the POST is in flight; treat it
   // as running for header/placeholder purposes so the UI doesn't blank out.
   const headerStatus: 'running' | 'completed' | 'failed' | 'cancelled' | null =
@@ -195,7 +235,17 @@ export function GeneSplitterForm({
             retriable={job.error?.retriable ?? true}
             onEdit={() => setIsEditing(true)}
             onRerun={handleRerun}
-            onCancel={isRunning ? job.cancelJob : undefined}
+            // A cloud run cannot be cancelled from here: it is not this
+            // tab's to stop. Deleting it from the cloud is the way out.
+            onCancel={isRunning && !job.cloud ? job.cancelJob : undefined}
+            cloud={
+              job.cloud && {
+                estimateSeconds: job.cloud.estimateSeconds,
+                deleted: job.cloud.deleted,
+                deleting: job.isDeletingFromCloud,
+                onDelete: () => void job.deleteFromCloud(),
+              }
+            }
           />
         )}
 
@@ -206,16 +256,24 @@ export function GeneSplitterForm({
           />
         )}
 
-        {!showForm && isRunning && !result && (
-          <RunningPlaceholder stage={job.stage} progress={job.progress} />
-        )}
+        {!showForm &&
+          isRunning &&
+          !result &&
+          (job.cloud ? (
+            <CloudRunningPlaceholder
+              bases={methods.getValues('codingSequence').length}
+              estimateSeconds={job.cloud.estimateSeconds}
+            />
+          ) : (
+            <RunningPlaceholder stage={job.stage} progress={job.progress} />
+          ))}
 
         {showForm && (
           <>
             {draft.restored && (
               <div
                 role="status"
-                className="text-muted-foreground flex flex-wrap items-center gap-2 text-xs"
+                className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground"
               >
                 <span>{draftCopy.restored}</span>
                 <Button
@@ -266,7 +324,7 @@ export function GeneSplitterForm({
                       {copy.spliceJunctionHelp}
                     </FieldHelp>
                   </div>
-                  <p className="text-muted-foreground text-sm">
+                  <p className="text-sm text-muted-foreground">
                     {copy.spliceJunctionHint}
                   </p>
                   <DNASplicer />
@@ -283,11 +341,18 @@ export function GeneSplitterForm({
 
             {/* Sticky so the primary action stays in reach on a long form,
                 and within thumb reach on a phone. */}
-            <div className="bg-background/85 border-border supports-[backdrop-filter]:bg-background/70 sticky bottom-0 z-20 -mx-1 flex flex-wrap items-center justify-between gap-3 rounded-t-2xl border-t px-4 py-3 backdrop-blur">
+            <div className="sticky bottom-0 z-20 -mx-1 flex flex-wrap items-center justify-between gap-3 rounded-t-2xl border-t border-border bg-background/85 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/70">
               <RunSummary />
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="flex flex-wrap items-center gap-3">
+                <CloudRunToggle
+                  checked={runInCloud}
+                  onCheckedChange={setCloudChosen}
+                  disabled={job.isLoading}
+                />
                 {/* Only browser runs can finish unseen in a background tab. */}
-                {job.runsInBrowser && <FinishNotificationOptIn />}
+                {job.runsInBrowser && !runInCloud && (
+                  <FinishNotificationOptIn />
+                )}
                 <SubmitButton
                   isJobRunning={job.isLoading}
                   isJobComplete={job.status === 'completed'}
@@ -299,13 +364,17 @@ export function GeneSplitterForm({
         )}
 
         {result && (
-          <div>
+          <Suspense
+            fallback={<Skeleton className="h-[36rem] w-full rounded-2xl" />}
+          >
             <ResultsPanel
               result={result}
-              optionsUsed={formatOptionsForReport(methods.getValues())}
+              optionsUsed={formatOptionsForReport(
+                withSelectedWggwSites(methods.getValues()),
+              )}
               species={methods.getValues('species')}
             />
-          </div>
+          </Suspense>
         )}
       </form>
       {/* eslint-enable react-hooks/refs */}

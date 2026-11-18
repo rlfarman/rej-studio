@@ -2,7 +2,7 @@
 //
 // The Rust test suite covers the library; this covers the browser path: that
 // the module loads with no imports, that the hand-written ABI round-trips
-// strings correctly, that a design matches the fixture Python produced, and
+// strings correctly, that a design matches the frozen DNAChisel fixture, and
 // that a bad request comes back as an error instead of a crash.
 //
 //   node scripts/wasm-smoke.mjs <module.wasm>
@@ -10,7 +10,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { loadOptimizer } from './wasm-harness.mjs'
+import { loadModule } from './wasm-harness.mjs'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 const fixtures = path.join(here, '..', 'rust', 'optimizer', 'tests', 'fixtures')
@@ -30,8 +30,9 @@ if (!wasmPath) {
 // monotonicity only means anything within a single design.
 let progress = []
 const allProgress = []
-const design = await loadOptimizer(wasmPath, (fraction, stage) =>
-  progress.push({ fraction, stage }),
+const { design, reverseTranslate, exportNames } = await loadModule(
+  wasmPath,
+  (fraction, stage) => progress.push({ fraction, stage }),
 )
 /** Run one design and return the ticks it produced. */
 function designWithProgress(request) {
@@ -66,7 +67,7 @@ for (const testCase of cases) {
     `${ticks.length} ticks`,
   )
   check(
-    `${testCase.id}: design matches Python`,
+    `${testCase.id}: design matches DNAChisel`,
     result.optimized_sequence === expected.optimized_sequence,
   )
   check(`${testCase.id}: 5' fragment matches`, result.seq5 === expected.seq5)
@@ -111,8 +112,8 @@ for (let i = 0; i < 50; i += 1) {
 }
 check('50 designs in a row all succeed', repeated)
 
-// Stage captions are shown to the user, so they must read like the Python
-// backend's wording rather than a raw objective label.
+// Stage captions are shown to the user, so they must read as plain words
+// rather than a raw objective label.
 const everyTick = allProgress.flat()
 check('progress is reported', everyTick.length > 0, `${everyTick.length} ticks`)
 check(
@@ -121,6 +122,49 @@ check(
     /^Optimizing sequence \(\d+\/\d+\)$/.test(tick.stage),
   ) && !everyTick.some((tick) => tick.stage.includes('[')),
   everyTick.find((tick) => tick.stage.includes('['))?.stage ?? '',
+)
+
+// Every export is download weight for every visitor, so the set is pinned:
+// the crate has entry points the build-time generators use, and they must
+// stay out of the module.
+check(
+  'the module exports only what the browser calls',
+  exportNames.join(',') ===
+    'alloc,dealloc,free_response,memory,process,reverse_translate',
+  exportNames.join(','),
+)
+
+// --- Reverse translation ---------------------------------------------------
+//
+// The crate owns the codon tables, so this export is the only way the browser
+// can turn a protein into DNA; the design path depends on what it returns.
+
+const translated = reverseTranslate({ protein: 'MKR*', species: 'mouse' })
+check(
+  'reverse translation returns DNA',
+  translated.CDS === 'ATGAAGAGATGA',
+  JSON.stringify(translated),
+)
+check(
+  'reverse translation refuses an unknown species',
+  typeof reverseTranslate({ protein: 'MK*', species: 'rat' }).error ===
+    'string',
+)
+check(
+  'reverse translation refuses a non-protein',
+  typeof reverseTranslate({ protein: 'MZ*', species: 'human' }).error ===
+    'string',
+)
+// The design must be runnable from what reverse translation produced.
+const fromProtein = design({
+  CDS: translated.CDS,
+  name: 'from-protein',
+  options: { codon_optimize: 'mouse', enforce_gc: true, seed: 7 },
+})
+check(
+  'a reverse-translated sequence designs',
+  !fromProtein.error && fromProtein.optimized_sequence.length > 0,
+  fromProtein.error ?? '',
 )
 
 const failed = checks.filter((entry) => !entry.ok)

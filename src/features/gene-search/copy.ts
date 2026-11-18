@@ -7,7 +7,7 @@ export const geneSearchCopy = {
     },
     identityMatrix: {
       caption:
-        'Protein sequence identity between each pair of isoforms, as a percentage',
+        'Protein sequence identity from a global alignment of each pair of isoforms, as a percentage',
       columns: ['Isoform', 'Compared with', 'Identity (%)'],
     },
   },
@@ -16,6 +16,9 @@ export const geneSearchCopy = {
     kbdHintPrefix: 'Press',
   },
   command: {
+    dialogTitle: 'Search genes',
+    dialogDescription:
+      'Find a gene by symbol, name or Ensembl ID, or reopen a recent gene or design job.',
     inputAria: 'Search genes',
     // Search covers symbols, names, aliases and Ensembl IDs, not diseases;
     // the no-match state points disease searches at the associations page.
@@ -40,13 +43,8 @@ export const geneSearchCopy = {
       mouse: 'Mouse',
     },
   },
-  /** Messages for GET /api/genes/search failures, shown in the palette. */
+  /** A search whose index couldn't be loaded, on the page and in the palette. */
   searchErrors: {
-    invalid:
-      'That search couldn’t be read. Queries can be up to 200 characters.',
-    unauthenticated: 'Your session has expired. Sign in again to search.',
-    rateLimited: (seconds: number) =>
-      `Too many searches. Try again in ${seconds}s.`,
     unavailable: 'Search is temporarily unavailable.',
     network: 'Search failed. Please try again.',
   },
@@ -69,9 +67,12 @@ export const geneSearchCopy = {
       `Showing the first ${n} matches. Add more of the name or symbol to narrow them down.`,
     loading: 'Searching…',
   },
+  genePage: {
+    metadataDescription: (name: string) =>
+      `View all isoforms for ${name} and download pre-optimized sequences or customize your own.`,
+  },
   results: {
     errorSuffix: 'Try again in a moment.',
-    rateLimited: 'Too many searches in a short time.',
     noMatches: (query: string) => `No genes match “${query}”.`,
     noMatchesInSpecies: (query: string, species: string) =>
       `No ${species.toLowerCase()} genes match “${query}”.`,
@@ -85,6 +86,9 @@ export const geneSearchCopy = {
       name: 'Matched on name',
       alias: 'Matched on an alias or related term',
       geneId: 'Matched on Ensembl gene ID',
+      closeSymbol: 'Close spelling of the symbol',
+      closeName: 'Close spelling of a word in the name',
+      closeAlias: 'Close spelling of an alias',
       transcript: (id: string) => `Matched on transcript ${id}`,
     },
   },
@@ -97,7 +101,6 @@ export const geneSearchCopy = {
     expandRowAria: (id: string) => `Expand ${id} details`,
     collapseRowAria: (id: string) => `Collapse ${id} details`,
     empty: 'No isoforms are indexed for this gene yet.',
-    loadingAria: 'Loading isoforms',
     downloadLong: 'Download pre-optimized sequences',
     downloadAria: (id: string) =>
       `Download pre-optimized sequences for ${id} (ZIP)`,
@@ -114,8 +117,10 @@ export const geneSearchCopy = {
     downloadFasta: 'Download FASTA',
     viewEnsembl: 'View on Ensembl',
     downloadAllFasta: 'Download FASTA',
+    // Starts with the visible label, so voice control ("click Download
+    // FASTA") finds it (WCAG 2.5.3, label in name).
     downloadAllFastaAria: (n: number) =>
-      `Download all ${n} coding sequences as one FASTA file`,
+      `Download FASTA of all ${n} coding sequences`,
   },
   summary: {
     isoforms: 'Isoforms',
@@ -192,11 +197,15 @@ export const geneSearchCopy = {
     caption:
       'Pairwise protein identity between isoforms. Rows and columns use the same numbering; each cell is the identity between that row and that column.',
     footnote:
-      'Identity estimated from shared prefix + suffix of protein sequences. Pairs ≥95% share most coding content — consider optimizing one per cluster.',
+      'Identity from a global alignment of the two protein sequences (BLOSUM62, gap open 11, extend 1): identical positions as a share of all alignment columns, gaps included. Pairs ≥95% share most coding content — consider optimizing one per cluster.',
+    truncated: (shown: number, total: number) =>
+      `Showing the ${shown} longest of ${total} isoforms.`,
+    unavailable:
+      'Identities are not available for this gene in this version of the gene data.',
     legendAria: 'Identity scale',
     rowHeader: 'Isoform',
     jumpTo: (id: string) => `Jump to ${id}`,
     cellLabel: (pct: string, a: string, b: string) =>
-      `${pct}% identity between ${a} and ${b}`,
+      `${pct}% aligned identity between ${a} and ${b}`,
   },
 } as const

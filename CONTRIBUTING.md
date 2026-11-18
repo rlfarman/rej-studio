@@ -54,7 +54,7 @@ The three lists of types must stay in sync.
 
 ## Pre-commit formatting
 
-A `pre-commit` hook runs `oxlint --fix`, `eslint --fix` and `prettier --write` on staged JS/TS files (and `ruff` through `uv run` on staged Python files) via `lint-staged`. This keeps formatting consistent without running the whole repo through the linter on every commit.
+A `pre-commit` hook runs `vp lint --fix` (Oxlint) and `oxfmt` on staged JS/TS files, and `oxfmt` on staged JSON/Markdown/CSS/YAML, via `lint-staged`. This keeps formatting consistent without running the whole repo through the linter on every commit.
 
 ## Emergency bypass
 
@@ -87,8 +87,9 @@ Configure these as **required status checks** on `main` in the "Protect main" ru
 | `Workflow Security (zizmor)`        | `ci.yml`               | ✅ required   |
 | `Dependency Review`                 | `security.yml`         | ✅ required   |
 | `pnpm audit`                        | `security.yml`         | ✅ required   |
-| `pip-audit`                         | `security.yml`         | ✅ required   |
-| `Schema drift + migrations`         | `db-ci.yml`            | ✅ required   |
+| `Rust tests, format and lint`       | `rust-ci.yml`          | ✅ required\* |
+| `WebAssembly build and smoke test`  | `rust-ci.yml`          | ✅ required\* |
+| `cargo deny`                        | `security.yml`         | ✅ required\* |
 | `E2E (Playwright)`                  | `ci.yml`               | ⚠️ advisory   |
 | `PR Comments`                       | `ci.yml`               | ⚠️ advisory   |
 | `Lockfile drift`                    | `lock-file-policy.yml` | ⚠️ advisory   |
@@ -96,9 +97,10 @@ Configure these as **required status checks** on `main` in the "Protect main" ru
 | `Commitlint`                        | `conventions.yml`      | ⚠️ advisory   |
 | `PR Title (Conventional Commits)`   | `conventions.yml`      | ⚠️ advisory   |
 | `Branch Name (Conventional Branch)` | `conventions.yml`      | ⚠️ advisory   |
-| Python CI jobs                      | `python-ci.yml`        | ⚠️ advisory   |
 
-Only require checks whose workflow runs on every PR. A workflow skipped by an `on.paths` filter never reports, so a required check from it stays pending and blocks the merge. A job skipped by an `if:` condition reports success instead. That's why `ci.yml` and `db-ci.yml` filter paths inside the workflow (`dorny/paths-filter`) and docs-only PRs pass their checks. `python-ci.yml` still filters at the workflow level, so its jobs stay advisory until it does the same.
+\* Added to the ruleset at cutover, in the same change that removes the Python and database checks (`Pytest`, `Pyright`, `Ruff (lint + format)`, `uv.lock up to date`, `Schema drift + migrations`, `pip-audit`) whose workflows are gone. See the cutover checklist in [docs/cloudflare-migration.md](./docs/cloudflare-migration.md).
+
+Only require checks whose workflow runs on every PR. A workflow skipped by an `on.paths` filter never reports, so a required check from it stays pending and blocks the merge. A job skipped by an `if:` condition reports success instead. That's why `ci.yml` and `rust-ci.yml` filter paths inside the workflow (`dorny/paths-filter`) and docs-only PRs pass their checks.
 
 All GitHub Action uses are pinned to commit SHAs (not tags) to prevent tag-reassignment attacks; Dependabot bumps the pins (after a 7-day cooldown), and the zizmor job flags unpinned or mismatched ones. Workflows reference the shared setup action with the self-repository syntax (`uses: $/.github/actions/setup`).
 
@@ -108,4 +110,4 @@ To enable: repo Settings → Rules → Rulesets → Protect main → "Require st
 
 ## Locally reproducing CI
 
-Run `pnpm verify` (lint, type check, unit tests) before pushing; the `pre-push` hook runs it automatically. CI also runs `pnpm format:check`, `pnpm knip`, `pnpm build` (then `node scripts/bundle-size.mjs` for the bundle budgets), `pnpm build-storybook --test` and `pnpm test:e2e`, so run those too when you touch formatting, exports, build config, stories or user flows. For the workflows, `uvx zizmor .github` runs the same audit as CI.
+Run `pnpm verify` (lint, type check, unit tests) before pushing; the `pre-push` hook runs it automatically. CI also runs `pnpm format:check`, `pnpm knip`, `pnpm build` (then `node scripts/bundle-size.mjs` for the bundle budgets), `pnpm build-storybook --test` and `pnpm test:e2e`, so run those too when you touch formatting, exports, build config, stories or user flows. For the workflows, `uvx zizmor .github` (or `pipx run zizmor .github`) runs the same audit as CI. For the optimizer, run `cargo test --release` in `rust/` and `pnpm wasm:smoke`.

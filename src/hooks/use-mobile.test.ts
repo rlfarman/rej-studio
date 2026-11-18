@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test'
 import { act, cleanup, renderHook } from '@testing-library/react'
 import { useIsMobile } from './use-mobile'
 

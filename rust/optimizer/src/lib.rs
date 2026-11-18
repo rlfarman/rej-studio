@@ -9,17 +9,25 @@
 //! The entry point is [`process`], which takes a coding sequence plus options
 //! and returns the same JSON shape the FastAPI backend returns today.
 
+pub mod align;
 mod biotools;
+mod exports;
 mod location;
 mod mutation_space;
 mod pattern;
 mod problem;
 pub mod rej;
+mod reverse_translate;
 mod rng;
 mod spec;
 mod tables;
 
 pub mod contract;
+
+pub use crate::exports::{
+    codon_relative_preferences, codon_tables_json, reverse_translate_json, wggw_report_json,
+};
+pub use crate::reverse_translate::reverse_translate;
 
 use sha2::{Digest, Sha256};
 

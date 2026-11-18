@@ -7,7 +7,18 @@ function formatProcessingTime(seconds: number): string {
   return `${Math.round(seconds)}s`
 }
 
+/** A cloud design's estimated duration, as a phrase ("about 3 min"). */
+function formatEstimate(seconds: number): string {
+  if (seconds < 60) return 'under a minute'
+  return `about ${Math.round(seconds / 60)} min`
+}
+
 export const designToolCopy = {
+  metadata: {
+    title: 'Design Tool',
+    description:
+      'Optimize coding sequences for RNA End-Joining. Enter a custom CDS or start from a pre-loaded isoform.',
+  },
   validation: {
     dna: {
       required: 'Coding sequence is required.',
@@ -30,6 +41,8 @@ export const designToolCopy = {
         'Sequence must contain only standard amino acid letters (A, C, D, E, F, G, H, I, K, L, M, N, P, Q, R, S, T, V, W, Y) or * for stop.',
       internalStop:
         'Sequence contains internal stop character(s) (*). Only a terminal * is allowed.',
+      awaitingDna:
+        'Waiting for the DNA sequence this protein reverse-translates to.',
     },
     name: {
       required: 'A name is required.',
@@ -44,27 +57,6 @@ export const designToolCopy = {
   },
   /** Failures from the job pipeline, phrased for the person who hit them. */
   jobErrors: {
-    unreachable:
-      'Couldn’t reach the optimizer — your inputs are saved, try again.',
-    backendUnavailable:
-      'The optimizer is temporarily unavailable. Try again in a few seconds.',
-    backendRejected: 'The optimizer rejected this run.',
-    busy: 'The optimizer is busy right now. Try again in a few seconds.',
-    rateLimited: (seconds: number) =>
-      `That's a lot of runs — wait ${seconds}s and try again.`,
-    submitTimeout:
-      'The optimizer didn’t answer in time. Your inputs are saved — try again.',
-    statusTimeout: 'Lost contact with the optimizer while checking progress.',
-    pollTimeout: 'Timed out waiting for the result.',
-    invalidInput: 'The designer couldn’t accept these inputs.',
-    invalidJobId: 'That job reference isn’t valid.',
-    splitPointPastEnd: (point: number, length: number) =>
-      `The split point (${point.toLocaleString()}) is past the end of the ${length.toLocaleString()}-base sequence.`,
-    wggwSiteOutsideSequence:
-      'The selected WGGW motif lies outside the coding sequence.',
-    unauthorized:
-      'The optimizer refused this request. The compute backend may be misconfigured.',
-    sessionExpired: 'Your session expired — sign in again to run the designer.',
     unexpectedResponse:
       'The optimizer returned something unexpected. This run was not saved.',
     cancelled: 'Cancelled',
@@ -92,6 +84,47 @@ export const designToolCopy = {
         ? 'A design was interrupted when its tab closed.'
         : `${count} designs were interrupted when their tab closed.`,
     interruptedToastAction: 'Open',
+  },
+  /** Designs run in the cloud, so the tab can close. */
+  cloud: {
+    toggleLabel: 'Run in the cloud',
+    // The one line that says what the option means. It is the whole of the
+    // privacy trade-off, so it stays next to the checkbox, not in a tooltip.
+    toggleHint:
+      'Your sequence leaves this machine, is kept for up to 30 days, and can be deleted.',
+    // Shown instead, to someone without an account: cloud runs are an
+    // account feature, and this is the way to one.
+    signInHint: 'Cloud runs need an account, so your designs follow you.',
+    signInAction: 'Sign in',
+    unavailableHint: 'Cloud runs are not available on this deployment.',
+    myDesigns: {
+      label: 'My cloud designs',
+      menuAria: 'My cloud designs',
+      subline: (bp: number) =>
+        `in the cloud · ${bp.toLocaleString('en-US')} bp`,
+    },
+    tooLong: (bases: number, limit: number) =>
+      `That sequence is ${bases.toLocaleString('en-US')} bp; cloud designs take up to ${limit.toLocaleString('en-US')}. Turn off “Run in the cloud” to design it in this browser.`,
+    unreachable:
+      'Could not reach the cloud. Check your connection, or reload the page to sign in again.',
+    failedGeneric: 'The cloud could not take that request. Try again.',
+    notFound: 'No longer in the cloud: it was deleted or passed its 30 days.',
+    running: {
+      title: 'Running in the cloud',
+      body: (estimate: number, bp: number) =>
+        `Usually ${formatEstimate(estimate)} for ${bp.toLocaleString('en-US')} bp. You can close this tab; the result will be here when you come back.`,
+    },
+    statusRunning: (estimate: number) =>
+      `Running in the cloud · ${formatEstimate(estimate)}`,
+    recentSubline: (estimate: number) =>
+      `in the cloud · ${formatEstimate(estimate)}`,
+    deleteAction: 'Delete from cloud',
+    deleting: 'Deleting…',
+    deleted:
+      'Deleted from the cloud. The copy in this browser’s history stays.',
+    deletedNote: 'Deleted from the cloud; kept in this browser.',
+    deleteFailed: (reason: string) =>
+      `Could not delete it from the cloud: ${reason}`,
   },
   draft: {
     restored: 'Restored your unsaved draft.',
@@ -135,6 +168,9 @@ export const designToolCopy = {
       'Select a target species before reverse translating.',
     reverseTranslateProteinRequired:
       'Enter a protein sequence before reverse translating.',
+    reverseTranslatePending: 'Reverse translating…',
+    reverseTranslateFailed: (reason: string) =>
+      `Could not reverse translate this protein: ${reason}`,
   },
   nameInput: {
     label: 'Choose a name for your coding sequence',

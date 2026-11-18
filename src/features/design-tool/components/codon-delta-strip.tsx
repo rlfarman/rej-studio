@@ -1,8 +1,5 @@
-'use client'
-
-import { useMemo } from 'react'
 import { toCodons } from '@/lib/bio/genetic-code'
-import { getRelativePreference } from '@/lib/bio/codon-usage'
+import { getRelativePreference } from '../utils/codon-preference'
 import { type Species } from '@/lib/bio/species'
 import { ChartDataTable } from '@/components/chart-data-table'
 import { designToolCopy } from '../copy'
@@ -31,43 +28,11 @@ interface CellDelta {
  * Makes the optimizer's work visible codon-by-codon.
  */
 export function CodonDeltaStrip({ original, optimized, species }: Props) {
-  const { cells, improved, regressed, meanBefore, meanAfter } = useMemo(() => {
-    const beforeCodons = toCodons(original)
-    const afterCodons = toCodons(optimized)
-    const n = Math.min(beforeCodons.length, afterCodons.length)
-    const limit = Math.min(n, MAX_CELLS)
-    const cells: CellDelta[] = []
-    let improvedCount = 0
-    let regressedCount = 0
-    let sumBefore = 0
-    let sumAfter = 0
-    let scored = 0
-
-    for (let i = 0; i < limit; i++) {
-      const b = beforeCodons[i].toUpperCase().replace(/U/g, 'T')
-      const a = afterCodons[i].toUpperCase().replace(/U/g, 'T')
-      const pb = getRelativePreference(b, species)
-      const pa = getRelativePreference(a, species)
-      let delta: number | null = null
-      if (pb !== null && pa !== null) {
-        delta = pa - pb
-        sumBefore += pb
-        sumAfter += pa
-        scored++
-        if (delta > 0.05) improvedCount++
-        else if (delta < -0.05) regressedCount++
-      }
-      cells.push({ idx: i, before: pb, after: pa, delta, from: b, to: a })
-    }
-
-    return {
-      cells,
-      improved: improvedCount,
-      regressed: regressedCount,
-      meanBefore: scored > 0 ? sumBefore / scored : 0,
-      meanAfter: scored > 0 ? sumAfter / scored : 0,
-    }
-  }, [original, optimized, species])
+  const { cells, improved, regressed, meanBefore, meanAfter } = codonDeltas(
+    original,
+    optimized,
+    species,
+  )
 
   if (cells.length === 0) return null
 
@@ -76,15 +41,15 @@ export function CodonDeltaStrip({ original, optimized, species }: Props) {
   return (
     <div className="space-y-1.5">
       <div className="flex items-center justify-end">
-        <span className="text-muted-foreground type-micro tabular-nums">
+        <span className="type-micro text-muted-foreground tabular-nums">
           mean {(meanBefore * 100).toFixed(0)}% → {(meanAfter * 100).toFixed(0)}
           %
           <span
             className={
               meanShift > 0
-                ? 'text-success-soft ml-1'
+                ? 'ml-1 text-success-soft'
                 : meanShift < 0
-                  ? 'text-danger-soft ml-1'
+                  ? 'ml-1 text-danger-soft'
                   : 'ml-1'
             }
           >
@@ -130,9 +95,9 @@ export function CodonDeltaStrip({ original, optimized, species }: Props) {
           )
         })}
       </div>
-      <div className="text-muted-foreground type-micro flex items-center gap-1">
+      <div className="flex items-center gap-1 type-micro text-muted-foreground">
         <span>regressed</span>
-        <span className="from-chart-2/70 via-muted-foreground/25 to-chart-1/70 h-2 flex-1 rounded-sm bg-gradient-to-r" />
+        <span className="h-2 flex-1 rounded-sm bg-gradient-to-r from-chart-2/70 via-muted-foreground/25 to-chart-1/70" />
         <span>improved</span>
       </div>
       {/* Only the codons that changed: an unchanged codon is not a data point
@@ -158,4 +123,43 @@ export function CodonDeltaStrip({ original, optimized, species }: Props) {
       />
     </div>
   )
+}
+
+/** Per-codon preference change for the species, with totals. */
+function codonDeltas(original: string, optimized: string, species: Species) {
+  const beforeCodons = toCodons(original)
+  const afterCodons = toCodons(optimized)
+  const n = Math.min(beforeCodons.length, afterCodons.length)
+  const limit = Math.min(n, MAX_CELLS)
+  const cells: CellDelta[] = []
+  let improvedCount = 0
+  let regressedCount = 0
+  let sumBefore = 0
+  let sumAfter = 0
+  let scored = 0
+
+  for (let i = 0; i < limit; i++) {
+    const b = beforeCodons[i].toUpperCase().replace(/U/g, 'T')
+    const a = afterCodons[i].toUpperCase().replace(/U/g, 'T')
+    const pb = getRelativePreference(b, species)
+    const pa = getRelativePreference(a, species)
+    let delta: number | null = null
+    if (pb !== null && pa !== null) {
+      delta = pa - pb
+      sumBefore += pb
+      sumAfter += pa
+      scored++
+      if (delta > 0.05) improvedCount++
+      else if (delta < -0.05) regressedCount++
+    }
+    cells.push({ idx: i, before: pb, after: pa, delta, from: b, to: a })
+  }
+
+  return {
+    cells,
+    improved: improvedCount,
+    regressed: regressedCount,
+    meanBefore: scored > 0 ? sumBefore / scored : 0,
+    meanAfter: scored > 0 ? sumAfter / scored : 0,
+  }
 }

@@ -1,5 +1,3 @@
-'use client'
-
 import { Activity, GitCompareArrows } from 'lucide-react'
 import { type ChartCell, ChartDataTable } from '@/components/chart-data-table'
 import { designToolCopy } from '../copy'
@@ -16,7 +14,7 @@ interface Props {
 }
 
 // Target GC band — the one the optimizer actually enforces
-// (EnforceGCContent(mini=0.35, maxi=0.60) in python/algorithm.py), so the
+// (EnforceGCContent(mini=0.35, maxi=0.60) in rust/optimizer/src/problem.rs), so the
 // chart can't promise a band the solver isn't aiming for.
 const TARGET_GC_MIN = GC_TARGET_MIN_PERCENT
 const TARGET_GC_MAX = GC_TARGET_MAX_PERCENT
@@ -100,25 +98,25 @@ function GcContentTrack({ original, optimized, splitPoint }: Props) {
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 text-sm font-medium">
-          <Activity className="text-muted-foreground size-4" />
+          <Activity className="size-4 text-muted-foreground" />
           GC Content (sliding window)
         </div>
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
-          <span className="text-muted-foreground flex items-center gap-1">
-            <span className="bg-muted-foreground/40 h-0.5 w-4 rounded-full" />
+          <span className="flex items-center gap-1 text-muted-foreground">
+            <span className="h-0.5 w-4 rounded-full bg-muted-foreground/40" />
             Original
           </span>
-          <span className="text-muted-foreground flex items-center gap-1">
-            <span className="bg-primary h-0.5 w-4 rounded-full" />
+          <span className="flex items-center gap-1 text-muted-foreground">
+            <span className="h-0.5 w-4 rounded-full bg-primary" />
             Optimized
           </span>
-          <span className="text-muted-foreground flex items-center gap-1">
-            <span className="bg-success/15 ring-success/30 size-2 rounded-sm ring-1" />
+          <span className="flex items-center gap-1 text-muted-foreground">
+            <span className="size-2 rounded-sm bg-success/15 ring-1 ring-success/30" />
             Target {TARGET_GC_MIN}–{TARGET_GC_MAX}%
           </span>
         </div>
       </div>
-      <div className="bg-muted/30 overflow-hidden rounded-2xl border">
+      <div className="overflow-hidden rounded-2xl border bg-muted/30">
         <svg
           viewBox={`0 0 1000 ${CHART_HEIGHT}`}
           preserveAspectRatio="none"
@@ -161,14 +159,14 @@ function GcContentTrack({ original, optimized, splitPoint }: Props) {
           {/* Before */}
           <path
             d={beforePath}
-            className="stroke-muted-foreground/50 fill-none"
+            className="fill-none stroke-muted-foreground/50"
             strokeWidth={1.25}
             vectorEffect="non-scaling-stroke"
           />
           {/* After */}
           <path
             d={afterPath}
-            className="stroke-primary fill-none"
+            className="fill-none stroke-primary"
             strokeWidth={1.5}
             vectorEffect="non-scaling-stroke"
           />
@@ -181,7 +179,7 @@ function GcContentTrack({ original, optimized, splitPoint }: Props) {
         rows={rows}
         csvFilename="gc-content.csv"
       />
-      <div className="text-muted-foreground type-micro flex justify-between tabular-nums">
+      <div className="flex justify-between type-micro text-muted-foreground tabular-nums">
         <span>0</span>
         <span>{Math.round(maxLen / 2).toLocaleString()}</span>
         <span>{maxLen.toLocaleString()} bp</span>
@@ -215,16 +213,16 @@ function ChangeDensityTrack({ original, optimized, splitPoint }: Props) {
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 text-sm font-medium">
-          <GitCompareArrows className="text-muted-foreground size-4" />
+          <GitCompareArrows className="size-4 text-muted-foreground" />
           Change Density
         </div>
-        <span className="text-muted-foreground type-micro tabular-nums">
+        <span className="type-micro text-muted-foreground tabular-nums">
           {total.toLocaleString()} bases changed across{' '}
           {bins.length.toLocaleString()} bins
         </span>
       </div>
       <div
-        className="bg-muted/30 grid h-16 items-end gap-px rounded-xl border p-1"
+        className="grid h-16 items-end gap-px rounded-xl border bg-muted/30 p-1"
         style={{ gridTemplateColumns: `repeat(${bins.length}, 1fr)` }}
       >
         {bins.map((bin, i) => {
@@ -247,13 +245,13 @@ function ChangeDensityTrack({ original, optimized, splitPoint }: Props) {
                 style={{ height: `${Math.max(bin.changes > 0 ? 4 : 2, h)}%` }}
               />
               {isSplit && (
-                <div className="bg-foreground/40 pointer-events-none absolute inset-y-0 left-1/2 w-px" />
+                <div className="pointer-events-none absolute inset-y-0 left-1/2 w-px bg-foreground/40" />
               )}
             </div>
           )
         })}
       </div>
-      <div className="text-muted-foreground type-micro flex justify-between tabular-nums">
+      <div className="flex justify-between type-micro text-muted-foreground tabular-nums">
         <span>5′ · 0</span>
         {splitPoint !== undefined && (
           <span>split · {splitPoint.toLocaleString()}</span>

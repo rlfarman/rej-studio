@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vite-plus/test'
 import { AAV_CAPACITY_BP, lengthChartModel } from './length-chart'
 
 const single = (length: number) =>

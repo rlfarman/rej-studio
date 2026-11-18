@@ -7,8 +7,9 @@ after porting the optimizer to Rust and running it in the browser.
 scientist's own agent search genes and run designs. See
 [Agent access](#agent-access-mcp). Everything else goes.
 
-**Nothing here has been started.** Step 0 is done and merged behind a flag;
-steps 1 to 4 are proposals. Each one ships on its own and makes the next
+**Where this stands:** steps 0 to 3 are done, and step 4 is mid-flight —
+slices 1 to 3 and 4a (the server routes below) have landed on
+`feat/tanstack-start`; slice 4b (cloud designs) and the cutover remain. Each one ships on its own and makes the next
 smaller, so the plan can be stopped at any point and still leave the app in a
 better state than it started.
 
@@ -189,22 +190,29 @@ Cloudflare cutover are done. Everything here is reversible until DNS moves.
    plugin; the root route with theme, query client, sidebar and header; the
    error and not-found boundaries; Storybook on `react-vite`. Also check that
    Oxlint can carry the feature-boundary rules, or keep a minimal ESLint for
-   them, and that Oxfmt can sort Tailwind classes, or keep Prettier for it.
+   them. (Oxfmt replaced Prettier, including Tailwind class sorting.)
 2. **Pages.** Home, genes, gene page, design tool, disease associations and
    architecture, with loaders reading the static corpus and typed search
    params replacing `useSearchParams`.
-3. **Deletions.** The job API and Modal path, sessions and the proxy, the
-   search API, the database layer (Drizzle, Neon, PGlite, migrations, `db:*`),
-   Upstash and GTM. Python leaves here as well (see the stack review).
-4. **Server routes.** Health and version; the MCP endpoint ported from #280
-   and #281 with inline designs; the cloud-designs API and Workflow (planned
-   below).
+3. **Deletions. Done.** The job API and Modal path, sessions and the
+   proxy, the search API, the database layer (Drizzle, Neon, PGlite,
+   migrations, `db:*`), Upstash and GTM, and all of Python: FastAPI, Modal,
+   `pyproject.toml`/`uv.lock` and Python/DB CI. The DNAChisel parity
+   fixtures are frozen and Rust is the reference; `build-db.py` and
+   `build-disease-associations.py` became TypeScript (`pnpm data:genes`,
+   `pnpm data:associations`) with byte-identical output.
+4. **Server routes.** 4a (done): health and version, and the MCP endpoint
+   ported from #280 and #281 with inline designs — see
+   [Agent access](#agent-access-mcp) and AGENTS.md's "Server routes".
+   4b (done): the cloud-designs API and Workflow — see
+   [Plan: cloud designs](#plan-cloud-designs-decided-opt-in) and "Done in
+   slice 4b" under it.
 5. **Cutover**, which needs the owner's Cloudflare account:
    - Workers Paid, with a spending limit.
    - The corpus uploaded to R2.
    - Access on the hostname, with a bypass policy for the MCP path, which
      uses bearer tokens instead.
-   - Web Analytics, Sentry for Start, and secrets.
+   - Web Analytics and secrets (Sentry is wired; see below).
    - A preview deploy on `workers.dev`, then DNS moves from Vercel.
 
    Vercel stays up until the new deploy has served the lab for a while.
@@ -217,6 +225,206 @@ Cloudflare cutover are done. Everything here is reversible until DNS moves.
   rebasing all of them across a framework change.
 - **Step 1:** the browser optimizer on by default in production, so slice 3
   can delete the server design path.
+
+### Cutover status (2026-11-17)
+
+Done on the `rlfarman` account; the preview is live at
+`https://rej-studio.rejstudio.workers.dev`, behind the passcode gate.
+
+- **Workers Paid** is on, with a $10 Workers spending limit that blocks
+  usage (Billing → Spend limits) and email alerts at $2 and $5. The limit is
+  account-wide, so it also covers the other Worker on the account.
+- **Corpus v1 is published.** It was rebuilt from the `corpus-v1` release
+  snapshot (39,990 genes, 40,695 files, 273 MB, with isoform alignments),
+  uploaded to the R2 bucket `rej-studio-gene-data` under `v1/`, and is served
+  to browsers from `https://gene-data.rejstudio.com/v1` with long-lived
+  immutable caching and CORS for the app's origins. It is public reference
+  data, so it sits outside the gate.
+- **Edge cache for the corpus.** R2 custom domains do not cache `.json` at
+  Cloudflare's edge by default (`cf-cache-status: DYNAMIC`), so every cold
+  request went back to R2: 3.4 s for the 1 MB index from the lab's browser.
+  The `rejstudio.com` zone has a Cache Rule, "Cache gene data (R2)":
+  hostname equals `gene-data.rejstudio.com`, eligible for cache, edge TTL
+  from the files' own `Cache-Control` (a year, immutable; each corpus
+  version has its own path). The index then loaded in under 1 s. Responses
+  still carry the right `Access-Control-Allow-Origin` per requesting origin
+  (checked for the workers.dev URL, `rejstudio.com` and localhost).
+  Smart Tiered Cache is on for the zone too, so a cache miss at one edge
+  location fills from a regional tier before going to R2.
+- **Buckets bound** in `wrangler.jsonc`: `GENE_DATA` and `DESIGN_RESULTS`
+  (`rej-studio-design-results`, 30-day lifecycle rule).
+- **Passcode gate instead of Access (decided 2026-11-17).** Access was set
+  up and verified, then dropped at Richie's request for the old shared
+  passcode: one code is simpler to hand to the lab than per-person sign-in.
+  The gate lives in the Worker (`src/server/auth/`, AGENTS.md "Auth"). What
+  that gives up: per-person identity (cloud designs are owned by a sign-in
+  session, so only the browser that submitted one can delete it), revoking
+  one person (changing the passcode signs everyone out), and per-person
+  rate limits. Both Access applications were deleted; the `rlfarman` Zero
+  Trust team remains, unused and free.
+
+- **Secrets** `BASIC_AUTH_PASSWORD`, `SESSION_SECRET`, `MCP_TOKENS` (one
+  token, `richie`) and `HEALTH_AUTH_TOKEN` are set. The owner keeps them in
+  `~/.config/rej-studio/worker-secrets.json`, which is never committed.
+  Secrets persist across deploys, so a deploy is just the build:
+
+  ```bash
+  VITE_GENE_DATA_URL=https://gene-data.rejstudio.com/v1 pnpm cf:deploy
+  ```
+
+  When a secret changes, push the file (this makes a new version of the
+  Worker with the code already deployed):
+
+  ```bash
+  npx wrangler secret bulk ~/.config/rej-studio/worker-secrets.json --name rej-studio
+  ```
+
+  `pnpm cf:deploy -- --secrets-file …` does not work: the flag lands after
+  pnpm's `--` at the end of a chained script, and `wrangler deploy` ignores
+  it.
+
+Verified signed in on the preview: the full corpus, an in-browser design, and
+a cloud design through reload, history and delete.
+
+- **Sentry is wired** for both halves: `@sentry/react`, loaded lazily from
+  the client entry with a build-time `VITE_SENTRY_DSN`, and
+  `@sentry/cloudflare`'s `withSentry` around the Worker's default export,
+  reading the `SENTRY_DSN` var from `wrangler.jsonc`. See AGENTS.md
+  ("Observability"). A release build still needs `VITE_SENTRY_DSN` passed to
+  it, and `SENTRY_AUTH_TOKEN` (with `SENTRY_ORG` / `SENTRY_PROJECT`) if the
+  client source maps should be uploaded.
+
+Still to do: Web Analytics, the DNS move, the required-checks swap,
+repointing the uptime monitor, and the teardown.
+
+### Cutover checklist
+
+Things slice 3 left for the cutover, which only the repo and account owner
+can do:
+
+- **Swap the required checks in the same change that points the
+  integration branch at `main`.** Done 2026-11-17: the ruleset now requires
+  the Rust and WebAssembly checks and no longer requires the Python ones, so
+  what follows is kept only as the reason. The Protect main ruleset required
+  `Pytest`, `Pyright`, `Ruff (lint + format)`, `uv.lock up to date`,
+  `Schema drift + migrations` and `pip-audit`. Their workflows
+  (`python-ci.yml`, `db-ci.yml`, `security.yml`'s pip-audit job) no longer
+  exist on this branch, so they never report and the PR stays blocked
+  forever. Remove them from the ruleset and add `Rust tests, format and
+  lint`, `WebAssembly build and smoke test` and `cargo deny` at the same
+  time (CONTRIBUTING.md lists the result). Doing either half early either
+  unprotects `main` or blocks its PRs (rust/README.md explains the latter).
+- **Publish the corpus.** Create the R2 bucket, upload a corpus version
+  built with `pnpm corpus:build` (AGENTS.md, "Gene data") and set
+  `VITE_GENE_DATA_URL` to it for the deploy build.
+- **Repoint `uptime.yml`**, which probes the Vercel deployment's
+  `/api/health` (and talks about Neon and Modal), at the Worker. The route is
+  back (slice 4a) and keeps the old response shapes, but its deep check now
+  probes the corpus in R2 rather than Neon and Modal, so the workflow's
+  comments and its `checks` jq need updating with the URL.
+- **Set the Worker's secrets:** `wrangler secret put MCP_TOKENS` (named
+  bearer tokens; without it `/api/mcp` answers 503 and agent access is off)
+  and, for the deep health check, `HEALTH_AUTH_TOKEN`.
+- **Bind the corpus bucket.** `GENE_DATA` is commented out in
+  `wrangler.jsonc` until the bucket exists; uncomment it with the bucket's
+  name in the same change that sets `VITE_GENE_DATA_URL`, then `pnpm
+  cf:types`. Until it is bound, the MCP endpoint reads gene data over HTTP
+  (or the committed sample through the assets binding) and the health check
+  stays shallow.
+- **The passcode.** Deployed, `BASIC_AUTH_PASSWORD` and `SESSION_SECRET`
+  must both be set (the Worker refuses everything otherwise). `/api/mcp` and
+  `/api/health` are outside the gate; `/api/version` is behind it.
+- **The design-results bucket.** Create an R2 bucket for results over ~900
+  KB, give it a 30-day lifecycle rule to match the Workflow's retention, and
+  uncomment the `DESIGN_RESULTS` binding in `wrangler.jsonc` (then `pnpm
+  cf:types`). Without it such a design fails with a message saying so; at
+  45 kb a result is a few hundred KB, so this is a backstop.
+- **Workers Paid before the first deploy.** `limits.cpu_ms: 300000` is a Paid
+  setting; the Workflow `rej-studio-designs` is created by `wrangler deploy`.
+- **Tear down Vercel, Neon, Modal and Upstash only after the Cloudflare
+  deploy has served the lab** for a while. Until then the release branch's
+  Vercel deployment, with its Neon database, Modal app and Upstash limiter,
+  is the fallback and must keep working; deleting any of them first leaves
+  nothing to roll back to.
+
+### DNS move runbook
+
+Where the names point today (2026-11-17):
+
+| Name                               | Now                                               | After                          |
+| ---------------------------------- | ------------------------------------------------- | ------------------------------ |
+| `rejstudio.com`                    | `A 76.76.21.21`, DNS-only (Vercel)                | Worker custom domain, proxied  |
+| `www.rejstudio.com`                | `CNAME cname.vercel-dns.com` (Vercel 308 to apex) | redirect rule to apex          |
+| `gene-data.rejstudio.com`          | proxied to the corpus bucket                      | unchanged                      |
+| `rej-studio.rejstudio.workers.dev` | the new app, gated                                | unchanged, kept as a back door |
+
+The zone is already on Cloudflare (`aaden`/`amy.ns.cloudflare.com`), so this
+is two DNS edits and a deploy, not a nameserver change: no propagation wait,
+and a rollback that takes effect as fast as the records do.
+
+**Before the move**
+
+1. Merge the cutover, gene-page and accounts branches; the required checks
+   (swapped 2026-11-17) pass on `main`.
+2. Deploy with `VITE_GENE_DATA_URL` pointing at the published corpus and
+   `VITE_SENTRY_DSN` set, and exercise the workers.dev host: the Worker smoke
+   script, the Playwright suite, a browser design and a cloud design.
+3. For accounts, which stay off until all four are true: `AUTH_DB` id and
+   `BETTER_AUTH_SECRET` (both done), `AUTH_HOSTS` containing `rejstudio.com`
+   (already), the Cloudflare Email domain onboarded for `AUTH_EMAIL_FROM`,
+   and a Google client whose redirect URI is
+   `https://rejstudio.com/api/auth/callback/google`.
+
+**The move**
+
+4. Delete the two Vercel records (apex `A`, `www` `CNAME`). Cloudflare
+   refuses a Worker custom domain on a hostname that already has a
+   conflicting record, so this comes first and is the moment the old site
+   stops answering on its own name.
+5. Add `routes` to `wrangler.jsonc` with `custom_domain: true` for
+   `rejstudio.com` (and `www.rejstudio.com` if it stays a domain rather than
+   a redirect), then `wrangler deploy`. Cloudflare creates the proxied
+   records and the certificate itself.
+6. Send `www` to the apex with a zone redirect rule (308), which needs no
+   Worker code. Vercel was doing this.
+
+Steps 4 and 5 need the Cloudflare dashboard, or an API token scoped to
+`Zone:DNS:Edit` on this zone — `wrangler` can create the custom domain but
+not remove the record in its way.
+
+**Verify, in order**
+
+- `curl -sI https://rejstudio.com/` answers 302 to `/login` and is no longer
+  served from `76.76.21.21`.
+- The passcode signs in; gene search, a browser design and a cloud design all
+  work on the new name.
+- `/api/health` with `HEALTH_AUTH_TOKEN` returns the deep check; `/api/mcp`
+  initializes with a token.
+- Sentry shows an event from the Worker and from the browser.
+
+**Rollback**
+
+Delete the custom domains, re-add `A 76.76.21.21` and
+`CNAME cname.vercel-dns.com`. This is why Vercel, Neon, Modal and Upstash
+stay up until the lab has used the new site for a while.
+
+**After the move**
+
+- Web Analytics becomes a dashboard step: the zone is proxied, so automatic
+  injection works and the repo needs no beacon snippet (it ships no CSP, so
+  nothing to allow either).
+- The MCP endpoint is now `https://rejstudio.com/api/mcp`; tell whoever has a
+  token, and keep the workers.dev host working until they have moved.
+- Passcode sessions are per host, so everyone signs in once more.
+- `uptime.yml` needs no new URL — the `HEALTH_URL` variable is already
+  `https://rejstudio.com/api/health`, which means it starts probing the
+  Worker the moment the records change, and its `HEALTH_AUTH_TOKEN` secret
+  must equal the Worker's. Its comments now cover both backends. Once the move
+  is done, run the deep check on every probe: on the Worker it is one R2
+  read, not a Neon wake-up.
+- Teardown, last: the Vercel project and its domains, Neon, Modal, Upstash,
+  and the stale repo variables `COMPUTE_BACKEND`, `MODAL_API_URL` and
+  `NEON_PROJECT_ID`.
 
 ## Agent access (MCP)
 
@@ -237,7 +445,7 @@ What the Worker needs, and where each piece comes from afterwards:
 | An HTTP endpoint | `/api/mcp` route handler   | a Worker                                               |
 | Gene lookups     | Neon                       | R2 binding over the static corpus                      |
 | Running a design | Modal                      | the same Rust crate, as WebAssembly                    |
-| Rate limiting    | Upstash                    | Cloudflare's Rate Limiting binding                     |
+| Rate limiting    | Upstash                    | Cloudflare's Rate Limiting binding, keyed per token    |
 | Caller identity  | `MCP_TOKENS` bearer tokens | the same, as a Worker secret, or Access service tokens |
 | The design view  | static HTML                | unchanged                                              |
 
@@ -261,23 +469,31 @@ poll for. `get_design`'s own description already ends "unless submit_design
 already returned the result". Running the optimizer in the Worker simply
 makes the inline branch the only one taken.
 
-What still needs doing when the endpoint is ported:
+Done in slice 4a, and what each decision came to:
 
-- **Lead with it in the tool descriptions.** `submit_design` still says it
-  "returns a job id" and that a design "takes seconds to minutes, so call
-  get_design". Both become wrong.
-- **Move the MCP Apps view onto `submit_design`.** `_meta.ui.resourceUri` is
-  registered only on `get_design` today. If the result arrives from
-  `submit_design`, the view has to travel with it or the design never renders
-  in the chat host.
-- **Decide what becomes of `get_design`.** With no job to collect it has
-  nothing to read. Removing it is honest; keeping it to answer "designs are
-  returned directly now" is kinder to an agent working from a stale schema.
-- **Guard the sequence length.** The limit is not Cloudflare — a Worker gets
-  5 minutes of CPU, and even a 30 kb gene fits. It is the MCP client's own
-  request timeout. Refuse clearly above some length, with a message pointing
-  at the web app, rather than holding a connection open until the client
-  gives up.
+- **The tool descriptions lead with it.** `submit_design` says the design
+  comes back in the same call and that there is no job to poll; nothing
+  mentions a job id.
+- **The MCP Apps view moved onto `submit_design`**, which is what returns a
+  design, and the view is served to every host that asks: the bridge URL is
+  taken from the request's own origin, so no deployment needs to be told its
+  URL.
+- **`get_design` stayed.** It answers that designs are returned directly by
+  `submit_design` — kinder to an agent working from a stale schema than an
+  unknown-tool error — and keeps its name, input and structured shape so
+  slice 4b can give it real work reading a cloud design by id.
+- **The sequence length is guarded at 12,000 bases.** Measured with the
+  committed `.wasm`: 1.2 kb 0.2 s, 6 kb 4.8 s, 12 kb 21 s, 15 kb 32 s, 18 kb
+  48 s. 12 kb keeps a run near 20 seconds — inside a 60-second client timeout
+  with room for a slower isolate — and still covers the largest coding
+  sequence in the gene data (BRCA2, 10,257 bases). Above it the refusal points
+  at the web app, where the same optimizer runs in the user's own tab.
+
+**Slice 4b added the async path back, for long sequences only.** From 12 kb
+to 45 kb `submit_design` hands the design to the cloud-design Workflow and
+returns a `job_id`, and `get_design` reads it — the "old async contract"
+the plan below offered, kept for designs that would otherwise time out.
+Up to 12 kb nothing changed: the design comes back in the call.
 
 **Sequencing matters here.** Inline is right only once the optimizer is fast
 and local. Today the endpoint calls Modal, where a design really does take
@@ -440,6 +656,84 @@ contract, kept for the cases that would otherwise time out.
 **Not in scope.** Checkpointing for titin-scale genes (over 45 kb), and
 Containers. Revisit only if someone needs them.
 
+### Done in slice 4b
+
+What each decision came to, and where the build differs from the plan above:
+
+- **One Worker.** `wrangler.jsonc`'s `main` is `src/server/worker-entry.ts`,
+  which re-exports Start's handler beside the `DesignWorkflow` class (a
+  Workflow must be a named export of the main module); the Workflow is bound
+  as `DESIGN_WORKFLOW`.
+- **API — since replaced (2026-11-17).** The design tool now calls three
+  TanStack Start server functions (`src/features/design-tool/api/
+  cloud-designs.functions.ts`) that return typed results (`{ ok: true,
+  data }` or `{ ok: false, reason, message, retryAfter? }`), the documented
+  pattern for calls made only by the app; the REST routes are gone. Identity
+  is the passcode session (`src/server/designs/identity.ts`), not Access,
+  which was dropped for the passcode gate. The rest of this bullet describes
+  the first version: `POST /api/designs`, `GET` and `DELETE /api/designs/:id`, behind
+  Access and verifying the Access JWT again in the Worker (signature against
+  the team's JWKS, issuer, audience, expiry; jose, no `nodejs_compat`). No
+  Access configuration means 503, never open; `DEV_ACCESS_EMAIL` stands in
+  locally, on loopback hosts only. The request is the form's values, checked
+  by the form's own zod schema, with the 45 kb cap in the browser and the
+  Worker.
+- **The id** is SHA-256 over `rej-studio/cloud-design/v1`, the `.wasm`
+  digest and the canonical optimizer request (sorted keys, `undefined`
+  dropped; pinned in `src/server/designs/id.ts`). The owner is not in it, so
+  two people asking for the same design share one run; reads need no owner
+  check (the id implies the input, and the output is deterministic), deletes
+  are owner-only.
+- **Deviation — step CPU.** Steps have no `cpu_ms` of their own; the Worker's
+  `limits.cpu_ms: 300000` is what each step invocation gets (it also covers
+  the inline MCP design).
+- **Deviation — retries.** The step has no retries at all, rather than
+  "retry only transient failures" inside the instance: a CPU-limit kill
+  cannot be told apart from a transient failure until afterwards, and
+  retrying it costs another 5 minutes of CPU. Transient failures are retried
+  where they can be told apart: the R2 write retries inside the step, and
+  resubmitting a design whose failure was transient (anything that is not
+  the CPU limit or the optimizer's own refusal) restarts the instance.
+- **Retention** is per instance, as planned: 30 days on success, 7 on error
+  (and the same as the Workflow's `default_retention`).
+- **Deviation — rate limit.** The Rate Limiting binding counts over 10 or 60
+  seconds only, so "about 20 an hour" became 3 a minute per owner
+  (`DESIGN_LIMITER`), spent only when a run starts. An hourly counter would
+  need a Durable Object or KV that nothing else needs; the spending limit is
+  the backstop.
+- **Results over ~900 KB** go to the optional `DESIGN_RESULTS` bucket
+  (commented out until cutover); without it such a design fails clearly.
+- **Deviation — reading params.** A Workflow binding has no way to read an
+  instance's params back, so the owner and inputs of a running or failed
+  instance come from its `workflow_started` event (`instance.subscribe`),
+  and a finished one carries them in its output. A queued instance has no
+  start event yet, so deleting one answers 409 until it starts.
+- **MCP.** `submit_design` stays inline up to 12 kb; from 12 kb to 45 kb it
+  hands off to the same Workflow (owner `mcp:<token name>`) and returns
+  `{ job_id, status, estimated_seconds }`, and `get_design` reads it back
+  with the design view. Over 45 kb the refusal tells the agent to split the
+  sequence; nothing tells an agent to open the web app.
+- **UI.** "Run in the cloud" beside Run designer, off by default, with its
+  one line of copy always visible. History entries carry the cloud id; the
+  app shell polls running ones with backoff (2 s doubling to a minute, reset
+  on focus) and keeps the result locally; running entries show an estimate
+  from length (0.145 s × kb², the measured scaling), not a bar. A cloud id
+  goes in the URL, and `?job=` resolves for anyone signed in. The job view
+  has "Delete from cloud"; the Recent jobs row keeps its one action.
+- **Tests.** Vitest covers the id, the JWT verification, the handlers, the
+  step and the failure mapping (the CPU limit cannot be hit locally) against
+  an in-memory Workflow, and the poller's backoff. Deviation: the plan named
+  `@cloudflare/vitest-pool-workers`, which does not run on Vite+'s Vitest 5,
+  so the Workflow runs for real in `pnpm test:worker` (POST → poll →
+  completed → dedupe → parity with the browser's design → DELETE, and the
+  MCP hand-off) and in `e2e/cloud-design.spec.ts`, since the dev server runs
+  Workflows.
+- **Locally**, workerd runs the step on the same thread as every request, so
+  nothing else is answered while it runs (a 12 kb design held a page load,
+  static assets and all, for 22 s). That is why "reload while running" can
+  only be seen deployed; locally the reloaded page arrives with the result.
+  TP53 (1,182 bp) goes from POST to completed in about 0.3 s.
+
 ## Cloudflare features worth taking
 
 | Feature               | Why it matters here                                                                                          |
@@ -452,10 +746,11 @@ Containers. Revisit only if someone needs them.
 | D1                    | If the lab later wants shared history rather than per-device                                                 |
 | Workers Issues        | Groups Worker errors and posts stack traces to a webhook; complements Sentry, which stays for browser errors |
 
-The **Rate Limiting binding** replaces Upstash for the MCP endpoint.
+The **Rate Limiting binding** replaces Upstash for the MCP endpoint and
+limits cloud designs. **Workflows** run cloud designs (slice 4b).
 
-Not worth taking for this app: Durable Objects and Workflows (the inline job
-model leaves no state to hold), Workers AI, Hyperdrive (the database goes
+Not worth taking for this app: Durable Objects (nothing needs coordinated
+state), Workers AI, Hyperdrive (the database goes
 away), Zaraz (GTM goes away).
 
 ## Open questions

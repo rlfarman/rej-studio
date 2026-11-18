@@ -1,5 +1,3 @@
-'use client'
-
 import { useSyncExternalStore } from 'react'
 import { Bell } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -31,7 +29,7 @@ export function FinishNotificationOptIn() {
       type="button"
       variant="ghost"
       size="sm"
-      className="text-muted-foreground gap-1.5"
+      className="gap-1.5 text-muted-foreground"
       title={copy.notifyOptInHint}
       onClick={() => void requestNotificationPermission()}
     >

@@ -1,8 +1,6 @@
-'use client'
-
 import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { toast } from 'sonner'
+import { useNavigate } from '@tanstack/react-router'
+import { toast } from '@/lib/toast'
 import {
   isBrowserJobId,
   useJobHistory,
@@ -62,14 +60,14 @@ let toastShown = false
  */
 export function BrowserRuns() {
   const hydrated = useJobHistoryHydrated()
-  const router = useRouter()
+  const navigate = useNavigate()
 
   useEffect(
     () =>
-      subscribeOpenJob((id) =>
-        router.push(`/design-tool?job=${encodeURIComponent(id)}`),
+      subscribeOpenJob(
+        (id) => void navigate({ to: '/design-tool', search: { job: id } }),
       ),
-    [router],
+    [navigate],
   )
 
   useEffect(() => {
@@ -82,14 +80,15 @@ export function BrowserRuns() {
       toast.warning(copy.interruptedToast(ids.length), {
         action: {
           label: copy.interruptedToastAction,
-          onClick: () => router.push(`/design-tool?job=${ids[0]}`),
+          onClick: () =>
+            void navigate({ to: '/design-tool', search: { job: ids[0] } }),
         },
       })
     })
     return () => {
       active = false
     }
-  }, [hydrated, router])
+  }, [hydrated, navigate])
 
   return null
 }

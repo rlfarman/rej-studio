@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test'
 import { cleanup, render } from '@testing-library/react'
 import { JobHeader, RunningPlaceholder } from './job-header'
 

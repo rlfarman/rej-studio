@@ -1,10 +1,12 @@
-import Link from 'next/link'
+import { Link } from '@tanstack/react-router'
 import type { ReactNode } from 'react'
 import { SpeciesIcon } from '@/components/bio/species-icon'
-import { geneHref } from '@/lib/bio/species'
 import { cn } from '@/lib/utils'
 import type { SimilarGene } from '@/features/gene-search/types/search'
-import { diseaseSearchHref } from '@/features/gene-search/utils/search-href'
+import {
+  diseaseSearchLink,
+  geneLink,
+} from '@/features/gene-search/utils/search-href'
 import { geneSearchCopy } from '../copy'
 
 const copy = geneSearchCopy.results
@@ -27,8 +29,7 @@ interface SearchEmptyStateProps {
 /**
  * What to do when a search finds nothing: widen the species filter, follow a
  * "did you mean" symbol, look the term up as a disease, or bring your own
- * sequence. Shared by the /genes page and the command palette. No hooks, so
- * it renders on the server or inside a client component.
+ * sequence. Shared by the /genes page and the command palette.
  */
 export function SearchEmptyState({
   query,
@@ -53,9 +54,9 @@ export function SearchEmptyState({
             {suggestions.map((gene) => (
               <li key={`${gene.symbol}-${gene.species}`}>
                 <Link
-                  href={geneHref(gene.symbol, gene.species)}
+                  {...geneLink(gene.symbol, gene.species)}
                   onClick={onNavigate}
-                  className="hover:bg-accent hover:text-accent-foreground focus-visible:ring-ring inline-flex min-h-8 items-center gap-1.5 rounded-full border px-3 font-mono text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                  className="inline-flex min-h-8 items-center gap-1.5 rounded-full border px-3 font-mono text-xs font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                 >
                   <SpeciesIcon species={gene.species} className="!size-3.5" />
                   {gene.symbol}
@@ -68,7 +69,7 @@ export function SearchEmptyState({
       <p className="text-muted-foreground">
         {copy.diseasePrompt}{' '}
         <Link
-          href={diseaseSearchHref(query)}
+          {...diseaseSearchLink(query)}
           onClick={onNavigate}
           className={linkClass}
         >
@@ -76,7 +77,7 @@ export function SearchEmptyState({
         </Link>
       </p>
       <p>
-        <Link href="/design-tool" onClick={onNavigate} className={linkClass}>
+        <Link to="/design-tool" onClick={onNavigate} className={linkClass}>
           {copy.enterCustom}
         </Link>
       </p>

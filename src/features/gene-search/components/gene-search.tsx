@@ -1,23 +1,25 @@
-'use client'
-import { useRef, useState, useTransition } from 'react'
-import { CommandDialog } from '@/components/ui/command'
-import { useRouter } from 'next/navigation'
-import { Button } from '@/components/ui/button'
-import { Kbd, ModKey } from '@/components/ui/kbd'
-import { SearchIcon } from 'lucide-react'
+import { useState, useTransition } from 'react'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { useNavigate } from '@tanstack/react-router'
 import { useGeneSearch } from '@/features/gene-search/hooks/use-gene-search'
+import { usePrefetchGeneIndex } from '@/features/gene-search/hooks/use-prefetch-gene-index'
 import { GeneSearchCommand } from './gene-search-command'
 import { useRecentGenes } from '@/features/gene-search/stores/recent-genes-store'
 import { useFavoriteGenes } from '@/features/gene-search/stores/favorite-genes-store'
-import { geneHref } from '@/lib/bio/species'
 import { useSpeciesContext } from '@/stores/species-store'
-import { searchPageHref } from '@/features/gene-search/utils/search-href'
+import {
+  geneLink,
+  searchPageLink,
+} from '@/features/gene-search/utils/search-href'
 import type {
   SavedGene,
   JobSearchItem,
 } from '@/features/gene-search/types/domain-types'
-import { trackEvent } from '@/lib/analytics'
-import { useSearchShortcut } from '@/hooks/use-search-shortcut'
 import { geneSearchCopy } from '../copy'
 
 interface GeneSearchProperties {
@@ -27,6 +29,12 @@ interface GeneSearchProperties {
   // `GeneSearch` doesn't need to cross the feature boundary into `design-tool`.
   jobs?: JobSearchItem[]
   onSelectJob?: (id: string) => void
+  /**
+   * The dialog's open state, owned by GeneSearchTrigger, which renders the
+   * button and loads this component only once the palette is wanted.
+   */
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
 const EMPTY_JOBS: JobSearchItem[] = []
@@ -36,8 +44,13 @@ export function GeneSearch({
   isDialog = false,
   jobs = EMPTY_JOBS,
   onSelectJob,
+  open,
+  onOpenChange,
 }: GeneSearchProperties) {
-  const router = useRouter()
+  // Start the index download before anyone types (also started by the
+  // header's trigger; the worker loads it once).
+  usePrefetchGeneIndex()
+  const navigate = useNavigate()
   const {
     query,
     setQuery,
@@ -51,7 +64,9 @@ export function GeneSearch({
     retry,
   } = useGeneSearch({ defaultQuery })
   const { species } = useSpeciesContext()
-  const [isOpen, setIsOpen] = useState(false)
+  const [isOpenState, setIsOpenState] = useState(false)
+  const isOpen = open ?? isOpenState
+  const setIsOpen = onOpenChange ?? setIsOpenState
   const [pendingGene, setPendingGene] = useState<SavedGene | null>(null)
   const [, startTransition] = useTransition()
   const { recentGenes, addRecentGene } = useRecentGenes()
@@ -59,23 +74,17 @@ export function GeneSearch({
 
   const handleSelect = (gene: SavedGene) => {
     addRecentGene(gene)
-    trackEvent({
-      event: 'gene_select',
-      symbol: gene.symbol,
-      species: gene.species ?? 'unknown',
-      isoform_id: gene.matchedIsoformId,
-    })
     // Show the in-place "Opening X…" loader immediately as an urgent update.
     setPendingGene(gene)
-    // Bundle the navigation with the cleanup so the dialog close, query reset,
-    // and pending clear all commit together once the destination is ready.
-    // No useEffect needed — the transition itself is our "navigation done"
-    // signal.
-    startTransition(() => {
-      router.push(geneHref(gene.symbol, gene.species, gene.matchedIsoformId))
-      setIsOpen(false)
-      setQuery(gene.symbol)
-      setPendingGene(null)
+    // Close the dialog, reset the query and clear the loader together once
+    // the router has loaded the destination (navigate() resolves then).
+    startTransition(async () => {
+      await navigate(geneLink(gene.symbol, gene.species, gene.matchedIsoformId))
+      startTransition(() => {
+        setIsOpen(false)
+        setQuery(gene.symbol)
+        setPendingGene(null)
+      })
     })
   }
 
@@ -87,63 +96,46 @@ export function GeneSearch({
   // The palette shows a handful of genes; the /genes page shows the rest.
   const handleSeeAll = () => {
     setIsOpen(false)
-    router.push(searchPageHref(query.trim(), species))
+    void navigate(searchPageLink(query.trim(), species))
   }
-
-  // ⌘K toggles the palette; on a page with the inline search (home), it
-  // focuses that box instead.
-  const inputRef = useRef<HTMLInputElement>(null)
-  useSearchShortcut(() => {
-    if (isDialog) {
-      setIsOpen((isOpen) => !isOpen)
-    } else {
-      inputRef.current?.focus()
-      inputRef.current?.select()
-    }
-  })
 
   if (isDialog) {
     return (
-      <div>
-        <Button
-          variant="outline"
-          onClick={() => setIsOpen(true)}
-          className="group text-muted-foreground hover:text-accent-foreground w-full min-w-42 cursor-pointer justify-between md:min-w-72 xl:min-w-108"
-        >
-          <div className="flex items-center gap-2">
-            <SearchIcon className="h-5 w-5" />
-            <span>{geneSearchCopy.trigger.label}</span>
-          </div>
-          <p className="text-muted-foreground group-hover:text-accent-foreground hidden text-sm md:block">
-            {geneSearchCopy.trigger.kbdHintPrefix}{' '}
-            <Kbd>
-              <ModKey /> K
-            </Kbd>
-          </p>
-        </Button>
-        <CommandDialog open={isOpen} onOpenChange={setIsOpen}>
-          <GeneSearchCommand
-            query={query}
-            setQuery={setQuery}
-            searchNow={searchNow}
-            hasSearched={hasSearched}
-            searchResults={searchResults}
-            truncated={truncated}
-            suggestions={suggestions}
-            onSeeAll={handleSeeAll}
-            isLoading={isLoading}
-            setIsOpen={setIsOpen}
-            handleSelect={handleSelect}
-            error={error}
-            retry={retry}
-            recentGenes={recentGenes}
-            favoriteGenes={favoriteGenes}
-            jobs={jobs}
-            handleSelectJob={handleSelectJob}
-            pendingGene={pendingGene}
-          />
-        </CommandDialog>
-      </div>
+      <>
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+          <DialogContent
+            className="top-1/3 translate-y-0 overflow-hidden rounded-3xl! p-0"
+            showCloseButton={false}
+          >
+            <DialogTitle className="sr-only">
+              {geneSearchCopy.command.dialogTitle}
+            </DialogTitle>
+            <DialogDescription className="sr-only">
+              {geneSearchCopy.command.dialogDescription}
+            </DialogDescription>
+            <GeneSearchCommand
+              query={query}
+              setQuery={setQuery}
+              searchNow={searchNow}
+              hasSearched={hasSearched}
+              searchResults={searchResults}
+              truncated={truncated}
+              suggestions={suggestions}
+              onSeeAll={handleSeeAll}
+              isLoading={isLoading}
+              setIsOpen={setIsOpen}
+              handleSelect={handleSelect}
+              error={error}
+              retry={retry}
+              recentGenes={recentGenes}
+              favoriteGenes={favoriteGenes}
+              jobs={jobs}
+              handleSelectJob={handleSelectJob}
+              pendingGene={pendingGene}
+            />
+          </DialogContent>
+        </Dialog>
+      </>
     )
   }
 
@@ -152,8 +144,7 @@ export function GeneSearch({
       query={query}
       setQuery={setQuery}
       searchNow={searchNow}
-      inputRef={inputRef}
-      shortcutHint
+      onPage
       hasSearched={hasSearched}
       searchResults={searchResults}
       truncated={truncated}

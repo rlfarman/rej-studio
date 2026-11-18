@@ -1,5 +1,3 @@
-'use client'
-
 import * as React from 'react'
 import { mergeProps } from '@base-ui/react/merge-props'
 import { useRender } from '@base-ui/react/use-render'
@@ -136,7 +134,7 @@ function FormDescription({ className, ...props }: React.ComponentProps<'p'>) {
     <p
       data-slot="form-description"
       id={formDescriptionId}
-      className={cn('text-muted-foreground text-sm leading-5', className)}
+      className={cn('text-sm leading-5 text-muted-foreground', className)}
       {...props}
     />
   )
@@ -190,7 +188,7 @@ function FormMessage({ className, ...props }: React.ComponentProps<'p'>) {
     <p
       data-slot="form-message"
       id={formMessageId}
-      className={cn('text-destructive-foreground text-sm leading-5', className)}
+      className={cn('text-sm leading-5 text-destructive-foreground', className)}
       {...props}
     >
       {body}

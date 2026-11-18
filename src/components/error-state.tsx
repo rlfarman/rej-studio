@@ -1,18 +1,20 @@
-'use client'
-
 import { useEffect, type ReactNode } from 'react'
 
 import { StatusPage } from '@/components/status-page'
 import { Button } from '@/components/ui/button'
 import { appCopy } from '@/copy/app'
 import { commonCopy } from '@/copy/common'
+import { createLogger } from '@/lib/logger'
+import { reportError } from '@/lib/sentry'
+
+const log = createLogger('error-boundary')
 
 interface ErrorStateProps {
   /** Whatever was thrown; client components can throw non-Error values. */
   error: unknown
-  /** Next's `retry`: re-fetches and re-renders the boundary's segment. */
+  /** Resets the boundary and renders it again. */
   retry: () => void
-  /** Sentry tag identifying which error boundary caught it. */
+  /** Which error boundary caught it, for the log and Sentry. */
   boundary?: string
   title: string
   description: string
@@ -23,8 +25,9 @@ interface ErrorStateProps {
 }
 
 /**
- * Error-boundary UI shared by every error.tsx: reports to Sentry when it's
- * configured, then renders the common status layout with a retry action.
+ * Error-boundary UI shared by every error boundary: logs the error and
+ * reports it to Sentry, then renders the common status layout with a retry
+ * action.
  */
 export function ErrorState({
   error,
@@ -37,24 +40,11 @@ export function ErrorState({
   standalone = false,
 }: ErrorStateProps) {
   useEffect(() => {
-    // Server Component errors arrive as Errors with a digest that matches
-    // the server log entry.
-    const digest =
-      error instanceof Error &&
-      'digest' in error &&
-      typeof error.digest === 'string'
-        ? error.digest
-        : undefined
-    // Dynamic import keeps Sentry out of the bundle when it isn't enabled.
-    import('@sentry/nextjs')
-      .then((Sentry) => {
-        Sentry.captureException(error, {
-          tags: { digest, ...(boundary && { boundary }) },
-        })
-      })
-      .catch(() => {
-        // Sentry not installed or DSN not configured — ignore.
-      })
+    log.error('error boundary caught an error', error, {
+      ...(boundary && { boundary }),
+    })
+    // A no-op without VITE_SENTRY_DSN, so local dev and CI stay silent.
+    reportError(error, boundary ? { boundary } : undefined)
   }, [error, boundary])
 
   return (

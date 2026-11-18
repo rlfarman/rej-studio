@@ -1,5 +1,3 @@
-'use client'
-
 import { slidingGcContent, computeGcPercent } from '@/lib/bio/sequence-utils'
 import { bioWidgetsCopy } from './copy'
 
@@ -61,12 +59,12 @@ export function GcSparkline({ sequence }: Props) {
         />
         <path
           d={path}
-          className="stroke-primary fill-none"
+          className="fill-none stroke-primary"
           strokeWidth={1.25}
           vectorEffect="non-scaling-stroke"
         />
       </svg>
-      <span className="text-muted-foreground type-micro shrink-0 tabular-nums">
+      <span className="shrink-0 type-micro text-muted-foreground tabular-nums">
         GC {overallGc.toFixed(1)}%
       </span>
     </div>

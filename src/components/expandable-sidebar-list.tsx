@@ -1,4 +1,3 @@
-'use client'
 import { Fragment, useState, useSyncExternalStore, type ReactNode } from 'react'
 import { ChevronRight } from 'lucide-react'
 import {
@@ -108,7 +107,7 @@ export function ExpandableSidebarList<T>({
 
   return (
     <SidebarGroup>
-      <div className="bg-sidebar sticky top-0 z-10 flex items-center justify-between gap-1">
+      <div className="sticky top-0 z-10 flex items-center justify-between gap-1 bg-sidebar">
         <SidebarGroupLabel
           className="min-w-0 flex-1 shrink"
           render={
@@ -127,7 +126,7 @@ export function ExpandableSidebarList<T>({
               />
               <span className="truncate">{label}</span>
               {hasItems && (
-                <span className="text-muted-foreground type-micro ml-auto font-mono tabular-nums">
+                <span className="ml-auto font-mono type-micro text-muted-foreground tabular-nums">
                   {items.length}
                 </span>
               )}
@@ -159,14 +158,14 @@ export function ExpandableSidebarList<T>({
                   variant="ghost"
                   size="sm"
                   onClick={() => setExpanded(!expanded)}
-                  className="text-muted-foreground w-full text-xs"
+                  className="w-full text-xs text-muted-foreground"
                 >
                   {expanded ? 'Show less' : `+ Show ${hiddenCount} more`}
                 </Button>
               )}
             </>
           ) : (
-            <div className="text-muted-foreground p-4 text-xs">
+            <div className="p-4 text-xs text-muted-foreground">
               {emptyMessage}
             </div>
           )}

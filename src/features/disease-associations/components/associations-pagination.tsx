@@ -7,6 +7,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination'
+import { useLinkProps } from '@tanstack/react-router'
 import { diseaseAssociationsCopy } from '../copy'
 
 type Props = {
@@ -15,25 +16,26 @@ type Props = {
   pageStart: number
   pageEnd: number
   total: number
-  searchParams: Record<string, string | string[] | undefined>
 }
 
-function buildHref(
-  searchParams: Record<string, string | string[] | undefined>,
-  page: number,
-): string {
-  const params = new URLSearchParams()
-  for (const [key, value] of Object.entries(searchParams)) {
-    if (key === 'page' || value == null) continue
-    if (Array.isArray(value)) {
-      for (const v of value) params.append(key, v)
-    } else {
-      params.set(key, value)
-    }
-  }
-  if (page > 1) params.set('page', String(page))
-  const qs = params.toString()
-  return qs ? `?${qs}` : '?'
+/**
+ * Props for a link to `page` of the explorer, keeping its filters and sort.
+ * The first page has no param, so the plain URL stays the canonical one.
+ */
+function usePageLinkProps(page: number) {
+  return useLinkProps({
+    from: '/disease-associations',
+    to: '.',
+    search: (prev) => ({ ...prev, page: page > 1 ? page : undefined }),
+  })
+}
+
+function PageLink({ page, isActive }: { page: number; isActive: boolean }) {
+  return (
+    <PaginationLink {...usePageLinkProps(page)} isActive={isActive}>
+      {page}
+    </PaginationLink>
+  )
 }
 
 /**
@@ -63,16 +65,19 @@ export function AssociationsPagination({
   pageStart,
   pageEnd,
   total,
-  searchParams,
 }: Props) {
   const { pageSummary, paginationAria } = diseaseAssociationsCopy.table
   const pages = buildPageList(currentPage, totalPages)
   const hasPrev = currentPage > 1
   const hasNext = currentPage < totalPages
+  // Hooks run on every render; the links themselves only render with a
+  // page to go to.
+  const prevLink = usePageLinkProps(currentPage - 1)
+  const nextLink = usePageLinkProps(currentPage + 1)
 
   return (
     <div className="flex flex-col items-center gap-2 sm:flex-row sm:justify-between">
-      <div className="text-muted-foreground text-xs" aria-live="polite">
+      <div className="text-xs text-muted-foreground" aria-live="polite">
         {pageSummary(pageStart, pageEnd, total)}
       </div>
       {totalPages > 1 && (
@@ -80,9 +85,7 @@ export function AssociationsPagination({
           <PaginationContent>
             <PaginationItem>
               <PaginationPrevious
-                href={
-                  hasPrev ? buildHref(searchParams, currentPage - 1) : undefined
-                }
+                {...(hasPrev ? prevLink : undefined)}
                 // Without an href this <a> is a generic element, where aria-label
                 // is prohibited; role="link" + aria-disabled is the disabled-link
                 // pattern.
@@ -101,20 +104,13 @@ export function AssociationsPagination({
                 </PaginationItem>
               ) : (
                 <PaginationItem key={p}>
-                  <PaginationLink
-                    href={buildHref(searchParams, p)}
-                    isActive={p === currentPage}
-                  >
-                    {p}
-                  </PaginationLink>
+                  <PageLink page={p} isActive={p === currentPage} />
                 </PaginationItem>
               ),
             )}
             <PaginationItem>
               <PaginationNext
-                href={
-                  hasNext ? buildHref(searchParams, currentPage + 1) : undefined
-                }
+                {...(hasNext ? nextLink : undefined)}
                 // Without an href this <a> is a generic element, where aria-label
                 // is prohibited; role="link" + aria-disabled is the disabled-link
                 // pattern.
