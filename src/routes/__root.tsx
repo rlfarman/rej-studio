@@ -4,6 +4,7 @@ import {
   Outlet,
   Scripts,
   createRootRouteWithContext,
+  useHydrated,
   useRouter,
   type ErrorComponentProps,
 } from '@tanstack/react-router'
@@ -19,7 +20,6 @@ import { LazyToaster } from '@/components/lazy-toaster'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { appCopy } from '@/copy/app'
 import { commonCopy } from '@/copy/common'
-import { useHydrated } from '@/hooks/use-hydrated'
 import { AppSidebar } from './-components/layout/app-sidebar'
 import { Header } from './-components/layout/header'
 import { PageLoading } from './-components/layout/page-loading'

@@ -1,6 +1,5 @@
+import { useHydrated } from '@tanstack/react-router'
 import { queryOptions, useQuery, type QueryClient } from '@tanstack/react-query'
-
-import { useHydrated } from '@/hooks/use-hydrated'
 
 /**
  * Who is signed in to an account, for the page: read from `/api/account`
