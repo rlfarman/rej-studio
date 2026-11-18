@@ -99,10 +99,7 @@
     {
       "binding": "AUTH_DB",
       "database_name": "rej-studio-accounts",
-      // PLACEHOLDER: create the database (`wrangler d1 create
-      // rej-studio-accounts`) and put its id here before deploying. Local
-      // development does not read it.
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      "database_id": "1fac645f-f7e6-4ec2-87c4-89f50e169695",
       "migrations_dir": "migrations",
     },
   ],
