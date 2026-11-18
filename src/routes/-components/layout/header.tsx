@@ -153,8 +153,12 @@ function HeaderContent({ scrolled }: { scrolled: boolean }) {
   const pathname = useShellPathname()
   const isHomePage = pathname === '/'
   // Home and /genes each render their own search box, so the header trigger
-  // would be a second search on the page.
-  const pageHasSearch = isHomePage || pathname === '/genes'
+  // would be a second search on the page. Until the path is known the
+  // trigger stays out: rendered in the prerendered shell it drew a second
+  // search field on home and then vanished on hydration, and on a
+  // prerendered page it is a search box that does nothing until the palette
+  // it opens has loaded anyway.
+  const showSearch = pathname !== null && !isHomePage && pathname !== '/genes'
   const { isMobile } = useSidebar()
   const contextLabel = pathname === null ? null : pageContextLabel(pathname)
 
@@ -181,7 +185,7 @@ function HeaderContent({ scrolled }: { scrolled: boolean }) {
       <div className="flex justify-center">
         {/* Opens empty: pre-filling the current gene made typing "kras" on
             /genes/BRCA1 search for "BRCA1kras". */}
-        {!pageHasSearch && <HeaderSearch />}
+        {showSearch && <HeaderSearch />}
       </div>
       {/* The right column keeps the search centered in the 1fr/auto/1fr
           grid. A build-time constant, so the shell renders it too. */}

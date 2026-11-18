@@ -11,6 +11,8 @@ import {
   hasStartCodon,
   getStopCodonStatus,
   findInvalidChars,
+  countInvalidChars,
+  countNucleotides,
 } from '@/lib/bio/sequence-utils'
 import { toCodons, translateCodon } from '@/lib/bio/genetic-code'
 
@@ -67,31 +69,42 @@ export function DiagBadge({ status, label, tooltip }: DiagBadgeProps) {
   )
 }
 
+// A length is counted over nucleotides, not characters: spaces and stray
+// letters are not bases, so "hello world 123" is 0 bp, not 15.
+const INVALID_CHARS_NOTE = 'Non-nucleotide characters are not counted as bases.'
+
+function lengthTooltip(seq: string, base: string): string {
+  return countInvalidChars(seq) > 0 ? `${base}. ${INVALID_CHARS_NOTE}` : base
+}
+
 export function bpLengthCheck(seq: string): DiagCheck {
-  const bp = seq.length
+  const bp = countNucleotides(seq)
   return {
     status: 'neutral',
     label: `${bp.toLocaleString()} bp`,
-    tooltip: 'Sequence length in base pairs',
+    tooltip: lengthTooltip(seq, 'Sequence length in base pairs'),
   }
 }
 
 export function aaLengthCheck(seq: string): DiagCheck {
-  const aa = Math.floor(seq.length / 3)
+  const aa = Math.floor(countNucleotides(seq) / 3)
   return {
     status: 'neutral',
     label: `${aa.toLocaleString()} aa`,
-    tooltip: 'Translated sequence length in amino acids',
+    tooltip: lengthTooltip(seq, 'Translated sequence length in amino acids'),
   }
 }
 
 export function lengthCheck(seq: string): DiagCheck {
-  const bp = seq.length
+  const bp = countNucleotides(seq)
   const aa = Math.floor(bp / 3)
   return {
     status: 'neutral',
     label: `${bp.toLocaleString()} bp / ${aa.toLocaleString()} aa`,
-    tooltip: 'Sequence length in base pairs and amino acids',
+    tooltip: lengthTooltip(
+      seq,
+      'Sequence length in base pairs and amino acids',
+    ),
   }
 }
 
@@ -137,6 +150,10 @@ export function stopCodonCheck(seq: string): DiagCheck {
 }
 
 export function multipleOf3Check(seq: string): DiagCheck | null {
+  // With stray characters in the sequence there is no reading frame to be in
+  // or out of, and the invalid-character badge already says what is wrong;
+  // reporting both let "ATGxxTAACCCTAA" read as a frame problem.
+  if (countInvalidChars(seq) > 0) return null
   if (seq.length % 3 === 0) return null
   return {
     status: 'error',
@@ -146,13 +163,29 @@ export function multipleOf3Check(seq: string): DiagCheck | null {
   }
 }
 
+/** Whitespace has no glyph, so a tooltip has to name it. */
+const INVISIBLE_CHAR_NAMES: Record<string, string> = {
+  ' ': 'space',
+  '\t': 'tab',
+  '\n': 'newline',
+  '\r': 'carriage return',
+}
+
+function describeInvalidChar(char: string): string {
+  return INVISIBLE_CHAR_NAMES[char] ?? char
+}
+
 export function invalidCharsCheck(seq: string): DiagCheck | null {
-  const chars = findInvalidChars(seq)
-  if (chars.length === 0) return null
+  // Occurrences for the count, distinct kinds for the tooltip: "1 invalid
+  // char" for the two x's in "ATGxxTAA" understates what has to be fixed.
+  const count = countInvalidChars(seq)
+  if (count === 0) return null
+  const kinds = findInvalidChars(seq).map(describeInvalidChar)
+  const shown = kinds.slice(0, 8).join(', ')
   return {
     status: 'error',
-    label: `${chars.length} invalid char${chars.length > 1 ? 's' : ''}`,
-    tooltip: `Found invalid characters: ${chars.join(', ')}`,
+    label: `${count.toLocaleString()} invalid char${count > 1 ? 's' : ''}`,
+    tooltip: `Found invalid characters: ${shown}${kinds.length > 8 ? ', …' : ''}`,
   }
 }
 

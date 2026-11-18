@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vite-plus/test'
 import {
+  aaLengthCheck,
+  bpLengthCheck,
   gcCheck,
   invalidCharsCheck,
   lengthCheck,
@@ -20,6 +22,17 @@ describe('lengthCheck', () => {
     expect(result.status).toBe('neutral')
     expect(result.label).toContain('9')
     expect(result.label).toContain('3')
+  })
+
+  it('counts bases, not characters', () => {
+    expect(lengthCheck('hello world 123').label).toBe('0 bp / 0 aa')
+    expect(bpLengthCheck('ATG AAA TAA').label).toBe('9 bp')
+    expect(aaLengthCheck('ATG AAA TAA').label).toBe('3 aa')
+  })
+
+  it('says so when it has ignored characters', () => {
+    expect(bpLengthCheck('ATGAAATGA').tooltip).not.toContain('not counted')
+    expect(bpLengthCheck('ATGxxTAA').tooltip).toContain('not counted')
   })
 })
 
@@ -73,6 +86,10 @@ describe('multipleOf3Check', () => {
     expect(result).not.toBeNull()
     expect(result!.status).toBe('error')
   })
+
+  it('stays quiet while there are invalid characters to fix first', () => {
+    expect(multipleOf3Check('ATGxxTAACCCTAA')).toBeNull()
+  })
 })
 
 describe('invalidCharsCheck', () => {
@@ -84,6 +101,16 @@ describe('invalidCharsCheck', () => {
     const result = invalidCharsCheck('ATGXYZ')
     expect(result).not.toBeNull()
     expect(result!.status).toBe('error')
+  })
+
+  it('counts occurrences, not distinct characters', () => {
+    expect(invalidCharsCheck('ATGxxTAACCCTAA')!.label).toBe('2 invalid chars')
+  })
+
+  it('names whitespace in the tooltip', () => {
+    const result = invalidCharsCheck('ATG AAA TAA')
+    expect(result!.label).toBe('2 invalid chars')
+    expect(result!.tooltip).toContain('space')
   })
 })
 

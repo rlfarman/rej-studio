@@ -1,5 +1,6 @@
 import { useSyncExternalStore, useState } from 'react'
 import { X, TriangleAlert } from 'lucide-react'
+import { appCopy } from '@/copy/app'
 import { cn } from '@/lib/utils'
 
 type Props = {
@@ -10,13 +11,31 @@ type Props = {
 
 const STORAGE_KEY = 'rej-maintenance-banner-dismissed'
 
+const noopSubscribe = () => () => {}
+
+/**
+ * Whether this exact notice was dismissed before. Storage can be blocked
+ * (private mode, a locked-down lab browser), and this runs during render in
+ * the app shell: an exception here replaces the whole app with the root
+ * error page, which would happen precisely while maintenance is announced.
+ * A blocked read means "not dismissed" — showing the notice again is the
+ * harmless side.
+ */
+function readDismissed(signature: string): boolean {
+  try {
+    return window.localStorage.getItem(STORAGE_KEY) === signature
+  } catch {
+    return false
+  }
+}
+
 function useIsDismissed(signature: string) {
   // Subscribe is a no-op — we only need the snapshot, not real-time updates.
   // Dismissal happens via the button click which triggers a re-render anyway.
   return useSyncExternalStore(
-    () => () => {},
-    () => window.localStorage.getItem(STORAGE_KEY) === signature,
-    () => true, // SSR: assume dismissed to avoid flash
+    noopSubscribe,
+    () => readDismissed(signature),
+    () => true, // Prerender: assume dismissed to avoid a flash.
   )
 }
 
@@ -38,11 +57,15 @@ export function MaintenanceBanner({ message, signature }: Props) {
       <button
         type="button"
         onClick={() => {
-          window.localStorage.setItem(STORAGE_KEY, signature)
+          try {
+            window.localStorage.setItem(STORAGE_KEY, signature)
+          } catch {
+            // Blocked storage: the notice stays dismissed for this page only.
+          }
           setDismissed(true)
         }}
         className="-m-1 rounded-full p-1 transition-colors hover:bg-warning/20 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-        aria-label="Dismiss maintenance notice"
+        aria-label={appCopy.maintenance.dismiss}
       >
         <X className="size-4" />
       </button>

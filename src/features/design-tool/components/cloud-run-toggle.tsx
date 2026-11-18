@@ -2,6 +2,7 @@ import { useId } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
+import { accountCopy } from '@/copy/account'
 import { useAccount } from '@/lib/account/account'
 import { openSignIn } from '@/stores/sign-in-dialog-store'
 import { designToolCopy } from '../copy'
@@ -61,6 +62,10 @@ export function CloudRunToggle({
                 {copy.signInAction}
               </Button>
             </>
+          ) : account.status === 'locked' ? (
+            // The lab passcode ran out, which is not the same as a
+            // deployment without cloud runs.
+            accountCopy.locked.hint
           ) : account.status === 'unavailable' ? (
             copy.unavailableHint
           ) : (

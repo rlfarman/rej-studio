@@ -97,12 +97,19 @@ export function similarGenesQuery(symbol: string) {
   })
 }
 
-/** The /genes page's results (the palette searches through useGeneSearch). */
-export function geneSearchPageQuery(query: string, species: SpeciesFilter) {
+/**
+ * The /genes page's results (the palette searches through useGeneSearch).
+ * `limit` is how many rows the page is showing: "Show more" asks for more of
+ * the same ranking, which is one more pass over the index already in memory.
+ */
+export function geneSearchPageQuery(
+  query: string,
+  species: SpeciesFilter,
+  limit: number = SEARCH_LIMITS.page,
+) {
   return queryOptions({
-    queryKey: ['corpus', 'search-page', query, species],
-    queryFn: () =>
-      searchGenes({ q: query, species, limit: SEARCH_LIMITS.page }),
+    queryKey: ['corpus', 'search-page', query, species, limit],
+    queryFn: () => searchGenes({ q: query, species, limit }),
     staleTime: Infinity,
   })
 }

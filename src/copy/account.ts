@@ -4,7 +4,6 @@
  * design tool (its cloud toggle) both use it.
  */
 export const accountCopy = {
-  signIn: 'Sign in',
   // The sidebar entry, which sits a click away from the lab passcode page:
   // a second bare "Sign in" there read as though the passcode had failed.
   // Named for what an account adds instead (src/components/account).
@@ -12,9 +11,22 @@ export const accountCopy = {
   signOut: 'Sign out',
   signedInAs: (email: string) => `Signed in as ${email}`,
   accountMenuAria: (email: string) => `Account: ${email}`,
-  signedIn: 'Signed in.',
+  // Says what signing in changed: the cloud checkbox goes from disabled to
+  // available without a word of its own.
+  signedIn: (email: string) =>
+    `Signed in as ${email}. Cloud runs are now available.`,
   signedOut: 'Signed out of your account.',
   signOutFailed: 'Could not sign out. Try again.',
+  // The lab passcode session ran out while this tab was open, so nothing
+  // about accounts can be read until the passcode is entered again. Said
+  // plainly, because the alternative is the app claiming the feature does
+  // not exist on this deployment.
+  locked: {
+    sidebar: 'Lab session ended',
+    // Keeps the visible label, and adds what pressing it does.
+    sidebarAria: 'Lab session ended — reload to enter the passcode',
+    hint: 'Your lab session ended. Reload the page to enter the passcode again.',
+  },
   dialog: {
     title: 'Sign in to REJ Studio',
     description:
@@ -38,6 +50,7 @@ export const accountCopy = {
   },
   errors: {
     invalidEmail: 'Enter an email address.',
+    notAnEmail: "That doesn't look like a full email address.",
     invalidCode: 'Enter the six digits from the email.',
     wrongCode:
       'That code is not right, or it has expired. Try again, or send a new one.',

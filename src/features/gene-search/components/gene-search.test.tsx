@@ -7,7 +7,13 @@ import {
   RouterProvider,
 } from '@tanstack/react-router'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen, waitFor, within } from '@testing-library/react'
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vite-plus/test'
 
 // --- Mocks (hoisted) ---
@@ -75,7 +81,7 @@ function renderPalette() {
   const designRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: '/design-tool',
-    component: () => null,
+    component: () => <div data-testid="design-tool" />,
   })
   const geneRoute = createRoute({
     getParentRoute: () => rootRoute,
@@ -238,5 +244,91 @@ describe('GeneSearch palette', () => {
 
     await screen.findByText(copy.favorites)
     expect(groupOrder()).toEqual([copy.favorites, copy.recentGenes])
+  })
+
+  // --- Finding 7: a failed search is announced ---
+
+  it('announces a failed search to a screen reader', async () => {
+    typeBeforeHydration('tp53')
+    mockSearch.mockRejectedValue(new Error('offline'))
+
+    renderPalette()
+
+    const alert = await screen.findByRole('alert')
+    expect(alert.textContent).toContain(geneSearchCopy.searchErrors.network)
+    expect(within(alert).getByRole('button', { name: copy.retry })).toBeTruthy()
+  })
+
+  // --- Finding 8: the species filter ---
+
+  it('names the species toggles as a group', async () => {
+    renderPalette()
+
+    const group = await screen.findByRole('group', { name: copy.speciesLabel })
+    expect(
+      within(group).getByRole('button', { name: copy.speciesOptions.human }),
+    ).toBeTruthy()
+  })
+
+  it('returns focus to the search box after a species change', async () => {
+    renderPalette()
+
+    const group = await screen.findByRole('group', { name: copy.speciesLabel })
+    const human = within(group).getByRole('button', {
+      name: copy.speciesOptions.human,
+    })
+    human.focus()
+    expect(document.activeElement).toBe(human)
+
+    fireEvent.click(human)
+
+    expect(document.activeElement).toBe(
+      screen.getByRole('combobox', { name: copy.inputAria }),
+    )
+  })
+
+  // --- Finding 9: the design-tool shortcut is its own option ---
+
+  it('offers the design tool as an option, not a link inside one', async () => {
+    typeBeforeHydration('ENST00000269305')
+    mockSearch.mockResolvedValue({
+      results: [gene('TP53', 'human', { matchedIsoformId: 'ENST00000269305' })],
+      truncated: false,
+      total: 1,
+    })
+
+    renderPalette()
+
+    const row = await screen.findByRole('option', {
+      name: copy.customizeRow('ENST00000269305'),
+    })
+    // The old markup put a Link inside the gene's option, which the arrow
+    // keys never reached and no option may contain.
+    expect(within(listbox()).queryAllByRole('link')).toHaveLength(0)
+
+    fireEvent.click(row)
+    expect(await screen.findByTestId('design-tool')).toBeTruthy()
+  })
+
+  // --- Finding 12: what the palette is waiting for ---
+
+  it('waits out the typing debounce before it says it is searching, and names the whole query', async () => {
+    typeBeforeHydration('tp53')
+    let settle: (value: unknown) => void = () => {}
+    mockSearch.mockReturnValue(
+      new Promise((resolve) => {
+        settle = resolve
+      }),
+    )
+
+    renderPalette()
+
+    // Nothing yet: a row built from a half-typed query ("Searching for
+    // e…") used to flash on every first keystroke.
+    expect(screen.queryByRole('status')).toBeNull()
+
+    const status = await screen.findByRole('status')
+    expect(status.textContent).toBe(copy.searching('tp53'))
+    settle({ results: [], truncated: false, total: 0 })
   })
 })

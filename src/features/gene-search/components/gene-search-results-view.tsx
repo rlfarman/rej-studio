@@ -53,14 +53,19 @@ interface GeneSearchResultsViewProps {
   query: string
   species: SpeciesFilter
   data: SearchGenesResult
+  /** How many more rows "Show more" would add; 0 hides the control. */
+  moreCount?: number
+  onShowMore?: () => void
 }
 
 export function GeneSearchResultsView({
   query,
   species,
   data,
+  moreCount = 0,
+  onShowMore,
 }: GeneSearchResultsViewProps) {
-  const { results, truncated, suggestions } = data
+  const { results, truncated, total, suggestions } = data
 
   if (results.length === 0) {
     return (
@@ -88,7 +93,7 @@ export function GeneSearchResultsView({
     <section aria-label={pageCopy.resultsTitle(query)}>
       <p className="mb-2 text-sm text-muted-foreground" aria-live="polite">
         {truncated
-          ? pageCopy.truncated(results.length)
+          ? pageCopy.truncated(results.length, total)
           : pageCopy.resultCount(results.length)}
       </p>
       <ul className="divide-y divide-border border-y">
@@ -149,6 +154,16 @@ export function GeneSearchResultsView({
           )
         })}
       </ul>
+      {moreCount > 0 && onShowMore && (
+        <Button
+          variant="outline"
+          className="mt-4 w-full sm:w-auto"
+          aria-label={pageCopy.showMoreAria(moreCount)}
+          onClick={onShowMore}
+        >
+          {pageCopy.showMore}
+        </Button>
+      )}
     </section>
   )
 }

@@ -19,9 +19,7 @@ export function SidebarToggle() {
 
   return (
     <Tooltip>
-      <TooltipTrigger
-        render={<SidebarTrigger size="lg" aria-label={label} />}
-      ></TooltipTrigger>
+      <TooltipTrigger render={<SidebarTrigger aria-label={label} />} />
       <TooltipContent>{label}</TooltipContent>
     </Tooltip>
   )

@@ -146,6 +146,11 @@ export const designToolCopy = {
     dismiss: 'Dismiss',
     dismissAria: 'Dismiss the restored-draft notice',
   },
+  isoformNotFound: {
+    message:
+      "That transcript isn't in this corpus — starting from a blank design.",
+    dismissAria: 'Dismiss',
+  },
   sequenceInput: {
     labelProtein: 'Enter your sequence',
     labelDna: 'Enter your sequence',
@@ -153,6 +158,10 @@ export const designToolCopy = {
     typeDna: 'DNA',
     typeProtein: 'Protein',
     uploadAria: 'Upload FASTA file',
+    // Pasting cleans itself and says what it changed; typing the same
+    // characters only gets a blocking error. This offers the same repair.
+    cleanSequence: 'Clean sequence',
+    cleanAria: 'Clean the sequence of invalid characters',
     uploadLong: 'Upload FASTA',
     uploadShort: 'FASTA',
     placeholderProtein:
@@ -218,6 +227,10 @@ export const designToolCopy = {
         cpg: 'CpG',
         kmer: 'k-mer diversity',
         gc: 'GC 35–60%',
+        // Listed so "Recommended settings" never reads as complete while the
+        // headline objective is off: a blank form has no species, and species
+        // is what switches codon optimization on.
+        codonOff: 'codon usage off',
         intronsBoth: 'both stimulatory introns',
         intron5: '5′ stimulatory intron',
         intron3: '3′ stimulatory intron',
@@ -240,8 +253,6 @@ export const designToolCopy = {
     codonOptimize: {
       label: 'Codon usage optimization',
       description: 'Target species for codon-aware sequence design.',
-      enableSpeciesFirst:
-        'Enable codon usage optimization to select a species.',
     },
     removeCrypticSpliceSites: {
       label: 'Remove cryptic splice sites',
@@ -302,6 +313,10 @@ export const designToolCopy = {
       // once it is here the line reports its length in bp instead.
       ready: (amount: string, unit: string, objectives: number) =>
         `${amount} ${unit} · ${objectives} objective${objectives === 1 ? '' : 's'}`,
+      // Appended to `ready`. The objectives summary lists the introns beside
+      // the objectives, but the optimizer does not score them, so the count
+      // must not absorb them — it names them separately instead.
+      introns: (count: number) => `${count} intron${count === 1 ? '' : 's'}`,
       // The split-point editor warns per fragment; this says the same thing
       // beside the Run button, so the last line read before submitting does
       // not imply the design will package.

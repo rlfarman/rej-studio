@@ -33,6 +33,7 @@ import {
 } from './job-header'
 import { CloudRunToggle } from './cloud-run-toggle'
 import { toast } from '@/lib/toast'
+import { PageTitle } from '@/components/page-title'
 import { designToolCopy } from '../copy'
 
 // The results UI (the panel, objectives, replay, maps, run record) is about a
@@ -334,13 +335,7 @@ export function GeneSplitterForm({
             {/* ── Input + split point ── */}
             <Card>
               <CardHeader>
-                <CardTitle
-                  render={
-                    <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">
-                      {copy.title}
-                    </h1>
-                  }
-                />
+                <CardTitle render={<PageTitle>{copy.title}</PageTitle>} />
                 <CardDescription>{copy.description}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -429,6 +424,13 @@ export function GeneSplitterForm({
             )}
           </Suspense>
         )}
+
+        {/* The action bar is `sticky bottom-0`, so it hovers over the end of
+            the form: on a blank form that is the Design Objectives card, and
+            on a phone the bar is ~140px tall against the container's 48px of
+            bottom padding. A spacer rather than padding on the container,
+            because the bar's height depends on how its contents wrap. */}
+        <div aria-hidden className="h-24 md:h-10" />
       </form>
       {/* eslint-enable react-hooks/refs */}
     </Form>

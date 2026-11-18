@@ -11,6 +11,7 @@ import {
   SidebarMenuButton,
   useSidebar,
 } from '@/components/ui/sidebar'
+import { Skeleton } from '@/components/ui/skeleton'
 import { FavoriteGenes } from '@/features/gene-search/components/favorites-panel'
 import { RecentGenes } from '@/features/gene-search/components/recent-genes-panel'
 import { RecentJobs } from '@/features/design-tool/components/recent-jobs-panel'
@@ -177,6 +178,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 void navigate({ to: '/design-tool', search: { job: id } })
               }
             />
+            {/* Favorites, recents and designs all live in the browser, so
+                this column is empty until they load and then pops in. Two
+                placeholder rows hold its place instead. */}
+            {!hydrated && (
+              <div className="flex flex-col gap-2 px-4 py-3">
+                <Skeleton className="h-3 w-full" />
+                <Skeleton className="h-3 w-2/3" />
+              </div>
+            )}
             {hydrated && !hasHistory && (
               <p className="px-4 py-3 text-xs leading-relaxed text-muted-foreground">
                 {appCopy.sidebar.historyHint}

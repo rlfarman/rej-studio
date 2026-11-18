@@ -26,6 +26,7 @@ describe('LoginForm', () => {
       authCopy.login.pageTitle,
     ]
     expect(passcodeWords).not.toContain(accountCopy.sidebarSignIn)
-    expect(passcodeWords).not.toContain(accountCopy.signIn)
+    // The account's own verb, wherever it is used.
+    expect(passcodeWords).not.toContain('Sign in')
   })
 })

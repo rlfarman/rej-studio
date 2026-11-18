@@ -373,7 +373,10 @@ function SidebarTrigger({
       // shows: the sheet on phones, the panel on desktop. Before `props`, so
       // a caller can still override it.
       aria-expanded={isMobile ? openMobile : open}
-      className={cn('h-7 w-7', className)}
+      // 40px on phones, where this is the only way to reach the navigation
+      // and a 28px target is under the 44px touch guidance; the compact
+      // square from pointer sizes up.
+      className={cn('size-10 rounded-full md:size-7', className)}
       onClick={(event) => {
         onClick?.(event)
         toggleSidebar()
@@ -656,9 +659,11 @@ const sidebarMenuButtonVariants = cva(
         outline:
           'bg-background shadow-[0_0_0_1px_hsl(var(--sidebar-border))] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground hover:shadow-[0_0_0_1px_hsl(var(--sidebar-accent))]',
       },
+      // In the phone sheet every row is a touch target, so they grow to 44px
+      // there; the pointer sizes stay dense.
       size: {
-        default: 'h-8 text-sm',
-        sm: 'h-7 text-xs',
+        default: 'h-8 text-sm [[data-mobile=true]_&]:h-11',
+        sm: 'h-7 text-xs [[data-mobile=true]_&]:h-11',
         lg: 'h-12 px-3 text-sm group-data-[collapsible=icon]:p-0!',
       },
     },

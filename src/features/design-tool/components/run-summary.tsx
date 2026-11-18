@@ -57,7 +57,7 @@ export function RunSummary() {
   const length = reportDnaLength ? dna.length : protein.length
   const unit = reportDnaLength ? units.bp : units.residues
 
-  const { count } = summarizeObjectives({
+  const { count, intronCount } = summarizeObjectives({
     species: values.species ?? 'none',
     removeCrypticSpliceSites: values.removeCrypticSpliceSites ?? false,
     minimizeCpgs: values.minimizeCpgs ?? false,
@@ -86,6 +86,7 @@ export function RunSummary() {
   return (
     <p className="min-w-0 text-sm text-muted-foreground">
       {copy.ready(length.toLocaleString(), unit, count)}
+      {intronCount > 0 && <> · {copy.introns(intronCount)}</>}
       {splitPoint !== null && (
         <> · {copy.splitAt(splitPoint.toLocaleString())}</>
       )}

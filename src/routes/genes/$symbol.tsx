@@ -25,6 +25,7 @@ import {
 import { GeneLoading } from '../-components/genes/gene-loading'
 import { GeneNotFound } from '../-components/genes/gene-not-found'
 import { sectionPending } from '../-components/layout/section-pending'
+import { useDocumentTitle } from '../-components/layout/use-document-title'
 import { SearchError } from '../-components/genes/search-error'
 import { searchOneOf, searchText } from '../-components/search-params'
 
@@ -92,6 +93,9 @@ export const Route = createFileRoute('/genes/$symbol')({
 
 function GeneNotFoundPage() {
   const { symbol } = Route.useParams()
+  // The route's head() has already set "<SYMBOL> | REJ Studio", which reads
+  // in the tab strip as if the gene exists.
+  useDocumentTitle(appCopy.metadata.title(appCopy.geneNotFound.pageTitle))
   return <GeneNotFound symbol={symbol} />
 }
 

@@ -7,13 +7,18 @@ import type { SpeciesFilter } from '@/lib/bio/species'
  * such as zod.
  */
 
-/** How many genes each surface shows. The palette stays compact. */
-export const SEARCH_LIMITS = { palette: 6, page: 50 } as const
+/**
+ * How many genes each surface shows. The palette stays compact; `/genes`
+ * shows `page` and will fetch up to `pageMax` on request ("Show more").
+ * Ranking every match is the same work either way — the limit only decides
+ * how many rows are built — so the ceiling is about the page, not the search.
+ */
+export const SEARCH_LIMITS = { palette: 6, page: 50, pageMax: 500 } as const
 
 export interface SearchRequest {
   q: string
   species: SpeciesFilter
-  /** At most `SEARCH_LIMITS.page`. */
+  /** At most `SEARCH_LIMITS.pageMax`. */
   limit: number
 }
 
@@ -36,6 +41,12 @@ export interface GeneSearchPage {
   results: GeneSearchResult[]
   /** More genes matched than `limit`; the caller should say so. */
   truncated: boolean
+  /**
+   * How many genes matched in all, not just how many were returned. The
+   * search ranks every match before it cuts the list, so this is already
+   * known and costs nothing to report.
+   */
+  total: number
 }
 
 // "Did you mean" only makes sense for something shaped like a symbol, not
@@ -55,6 +66,8 @@ export interface SearchGenesResult {
   results: GeneSearchResult[]
   /** More genes matched than were returned. */
   truncated: boolean
+  /** How many genes matched in all; see `GeneSearchPage.total`. */
+  total: number
   /** "Did you mean" symbols, only filled in when nothing matched. */
   suggestions: SimilarGene[]
 }

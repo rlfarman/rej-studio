@@ -8,13 +8,17 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Button } from '@/components/ui/button'
-import { Upload, Dna, FlaskConical } from 'lucide-react'
+import { Upload, Dna, Eraser, FlaskConical } from 'lucide-react'
 import { FormValues, type SequenceType } from '../types/form-schema'
 import { SequenceDiagnostics } from './sequence-diagnostics'
 import { SequenceHighlight } from './sequence-highlight'
 import { cn } from '@/lib/utils'
 import { cleanSequence, parseFasta } from '@/lib/bio/fasta'
-import { detectSequenceType } from '@/lib/bio/sequence-utils'
+import {
+  designNameFromFastaHeader,
+  detectSequenceType,
+  hasInvalidChars,
+} from '@/lib/bio/sequence-utils'
 import { toast } from '@/lib/toast'
 import { isSpecies } from '@/lib/bio/species'
 import { pickDefaultSplitPoints } from '../utils/default-split-point'
@@ -25,6 +29,15 @@ import { designToolCopy } from '../copy'
 
 const copy = designToolCopy.sequenceInput
 
+const SEQUENCE_TYPE_OPTIONS: {
+  value: SequenceType
+  label: string
+  icon: typeof Dna
+}[] = [
+  { value: 'dna', label: copy.typeDna, icon: Dna },
+  { value: 'protein', label: copy.typeProtein, icon: FlaskConical },
+]
+
 function SequenceTypeToggle({
   value,
   onChange,
@@ -32,10 +45,44 @@ function SequenceTypeToggle({
   value: SequenceType
   onChange: (v: SequenceType) => void
 }) {
-  const options: { value: SequenceType; label: string; icon: typeof Dna }[] = [
-    { value: 'dna', label: copy.typeDna, icon: Dna },
-    { value: 'protein', label: copy.typeProtein, icon: FlaskConical },
-  ]
+  // A radio group is one tab stop and the arrow keys move within it, so only
+  // the checked segment is tabbable and selection follows focus.
+  const buttonRefs = useRef<(HTMLButtonElement | null)[]>([])
+
+  const select = (index: number) => {
+    const option = SEQUENCE_TYPE_OPTIONS[index]
+    if (!option) return
+    onChange(option.value)
+    buttonRefs.current[index]?.focus()
+  }
+
+  const handleKeyDown = (
+    event: React.KeyboardEvent<HTMLButtonElement>,
+    index: number,
+  ) => {
+    const count = SEQUENCE_TYPE_OPTIONS.length
+    let target: number
+    switch (event.key) {
+      case 'ArrowRight':
+      case 'ArrowDown':
+        target = (index + 1) % count
+        break
+      case 'ArrowLeft':
+      case 'ArrowUp':
+        target = (index - 1 + count) % count
+        break
+      case 'Home':
+        target = 0
+        break
+      case 'End':
+        target = count - 1
+        break
+      default:
+        return
+    }
+    event.preventDefault()
+    select(target)
+  }
 
   return (
     <div
@@ -43,7 +90,7 @@ function SequenceTypeToggle({
       aria-label={copy.typeToggleAria}
       className="inline-flex gap-0.5 rounded-2xl bg-muted p-0.5"
     >
-      {options.map((opt) => {
+      {SEQUENCE_TYPE_OPTIONS.map((opt, index) => {
         const Icon = opt.icon
         const isActive = value === opt.value
         return (
@@ -52,9 +99,17 @@ function SequenceTypeToggle({
             type="button"
             role="radio"
             aria-checked={isActive}
+            tabIndex={isActive ? 0 : -1}
+            ref={(el) => {
+              buttonRefs.current[index] = el
+            }}
             onClick={() => onChange(opt.value)}
+            onKeyDown={(event) => handleKeyDown(event, index)}
             className={cn(
               'inline-flex items-center gap-1.5 rounded-xl px-3 py-1 text-sm font-medium transition-colors',
+              // The ring falls on the muted track, where the shared /30 is
+              // hard to see against the filled active segment beside it.
+              'outline-none focus-visible:ring-3 focus-visible:ring-ring/50',
               isActive
                 ? 'bg-primary text-primary-foreground shadow-sm'
                 : 'text-muted-foreground hover:text-foreground',
@@ -250,7 +305,11 @@ export function CodingSequenceInput() {
       if (entries.length > 0 && entries[0].header) {
         const currentName = getValues('name')
         if (!currentName) {
-          setValue('name', entries[0].header.slice(0, 250))
+          // The raw header becomes the design's name in history, in the cloud
+          // list and in the exported report, so a database header is reduced
+          // to the part a person would have typed.
+          const name = designNameFromFastaHeader(entries[0].header)
+          if (name) setValue('name', name)
         }
       }
 
@@ -310,7 +369,7 @@ export function CodingSequenceInput() {
     <FormField
       name={activeField}
       control={control}
-      render={({ field }) => (
+      render={({ field, fieldState }) => (
         <FormItem>
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex flex-wrap items-center gap-2 sm:gap-3">
@@ -323,6 +382,31 @@ export function CodingSequenceInput() {
                 onChange={handleSequenceTypeChange}
               />
             </div>
+            {/* Pasting junk cleans itself and says what it changed; typing
+                the same characters only gets a blocking error with nothing to
+                press. This offers the same repair, through the same code and
+                the same summary toast.
+
+                DNA only: the nucleotide test would offer to strip valid
+                residues from protein input.
+
+                `hasInvalidChars`, not `findInvalidChars`: this runs on every
+                render while someone types, and only the yes/no is needed. */}
+            {!isProtein && hasInvalidChars(activeValue ?? '') && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-9 gap-1.5 px-3 text-xs"
+                onClick={() =>
+                  applyCleanedSequence(activeValue ?? '', copy.cleanSequence)
+                }
+                aria-label={copy.cleanAria}
+              >
+                <Eraser className="size-3.5" />
+                {copy.cleanSequence}
+              </Button>
+            )}
             <Button
               type="button"
               variant="ghost"
@@ -395,6 +479,10 @@ export function CodingSequenceInput() {
                   // Same look as the Textarea primitive.
                   'relative flex w-full min-w-0 resize-y rounded-2xl border border-transparent caret-foreground transition-[color,box-shadow] duration-200 outline-none selection:bg-primary/30 placeholder:text-muted-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
                   'focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30',
+                  // `break-all` keeps a pasted sequence aligned with the
+                  // highlight layer behind it, but it also chops the
+                  // placeholder's prose mid-word on a narrow screen.
+                  'placeholder:break-normal',
                   'aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40',
                   isProtein ? 'bg-input/50' : 'bg-transparent text-transparent',
                 )}
@@ -406,7 +494,9 @@ export function CodingSequenceInput() {
             <Button
               type="button"
               size="sm"
-              className="mt-2"
+              // The FormItem is a grid, so without this a small button
+              // stretches the full card width and reads like a banner.
+              className="mt-2 justify-self-start"
               disabled={reverseTranslation.pending}
               aria-busy={reverseTranslation.pending}
               onClick={handleReverseTranslate}
@@ -421,11 +511,17 @@ export function CodingSequenceInput() {
               {copy.reverseTranslatePending}
             </p>
           )}
-          {isProtein && reverseTranslation.error !== null && (
-            <p aria-live="polite" className="text-sm text-danger-soft">
-              {copy.reverseTranslateFailed(reverseTranslation.error)}
-            </p>
-          )}
+          {/* Only when the field itself is valid: with "MAXKZ*BB" the schema
+              already says which letters are allowed, and the optimizer's
+              "Invalid amino acid character(s)" beside it reads as a tool
+              failure for what is really input the form has refused. */}
+          {isProtein &&
+            !fieldState.error &&
+            reverseTranslation.error !== null && (
+              <p aria-live="polite" className="text-sm text-danger-soft">
+                {copy.reverseTranslateFailed(reverseTranslation.error)}
+              </p>
+            )}
           {isProtein &&
             isSpecies(species) &&
             !reverseTranslation.pending &&

@@ -19,9 +19,13 @@ import { LazyToaster } from '@/components/lazy-toaster'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { appCopy } from '@/copy/app'
 import { commonCopy } from '@/copy/common'
+import { useHydrated } from '@/hooks/use-hydrated'
 import { AppSidebar } from './-components/layout/app-sidebar'
 import { Header } from './-components/layout/header'
+import { PageLoading } from './-components/layout/page-loading'
+import { RouteAnnouncer } from './-components/layout/route-announcer'
 import { RouteError } from './-components/route-error'
+import { useDocumentTitle } from './-components/layout/use-document-title'
 import { useShellPathname } from './-components/layout/use-shell-pathname'
 import globalsCss from '@/styles/globals.css?url'
 import { geneDataUrl } from '@/features/gene-search/corpus/gene-data-url'
@@ -147,6 +151,7 @@ function AppLayout() {
       >
         <AppSidebar />
         <SidebarInset className="relative flex h-svh min-h-0 max-w-full flex-1 flex-col overflow-hidden">
+          <RouteAnnouncer />
           {maintenanceMessage && (
             <MaintenanceBanner
               message={maintenanceMessage}
@@ -156,7 +161,10 @@ function AppLayout() {
           <Header />
           <main
             id="main-content"
-            className="relative flex h-full w-full flex-1 flex-col overflow-auto"
+            // Focusable only programmatically: the skip link and
+            // RouteAnnouncer both move the keyboard here.
+            tabIndex={-1}
+            className="relative flex h-full w-full flex-1 flex-col overflow-auto outline-none"
           >
             <div className="flex-1">
               <Outlet />
@@ -176,9 +184,18 @@ function RootError(props: ErrorComponentProps) {
 /**
  * Unmatched URLs. TanStack Router renders the root's not-found component in
  * the page slot, so the sidebar and header stay around it.
+ *
+ * The prerendered shell has the router's pending component in that slot, so
+ * until the app has hydrated this renders the same thing: hydrating straight
+ * into the 404 threw the tree away on every load (React #418), and
+ * `e2e/shell.spec.ts` fails on any console error. The root route has no
+ * `head()` for this state either, so the title is set here.
  */
 function NotFound() {
   const router = useRouter()
+  const hydrated = useHydrated()
+  useDocumentTitle(appCopy.metadata.title(appCopy.notFound.pageTitle))
+  if (!hydrated) return <PageLoading />
   return (
     <StatusPage
       eyebrow={appCopy.notFound.eyebrow}

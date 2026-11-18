@@ -94,8 +94,10 @@ export function ObjectiveWeights({ id }: { id: string }) {
     })
 
   return (
-    <div id={id} className="mt-2 max-w-md">
-      <p className="text-xs leading-relaxed text-muted-foreground">
+    // Full card width, like the objective rows above: capped, the weight
+    // inputs floated in the middle of the card with nothing under them.
+    <div id={id} className="mt-2">
+      <p className="max-w-md text-xs leading-relaxed text-muted-foreground">
         {copy.hint}
       </p>
       <div className="mt-1 flex flex-col divide-y divide-border/60">
