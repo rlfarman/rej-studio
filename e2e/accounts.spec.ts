@@ -30,7 +30,7 @@ test('signs in with an emailed code, and out again', async ({ page }) => {
   await expect(
     page
       .locator('[data-sidebar="footer"]')
-      .getByRole('button', { name: accountCopy.signIn }),
+      .getByRole('button', { name: accountCopy.sidebarSignIn }),
   ).toBeVisible()
 })
 
@@ -40,7 +40,7 @@ test('refuses a wrong code and keeps the dialog open', async ({ page }) => {
   const dialog = accountCopy.dialog
   await page
     .locator('[data-sidebar="footer"]')
-    .getByRole('button', { name: accountCopy.signIn })
+    .getByRole('button', { name: accountCopy.sidebarSignIn })
     .click()
   await page.getByLabel(dialog.emailLabel).fill(email)
   await page.getByRole('button', { name: dialog.sendCode }).click()

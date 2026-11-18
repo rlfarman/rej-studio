@@ -54,3 +54,33 @@ describe('lookups that should not wait for the whole index', () => {
     expect(reads).toContain('index.json')
   })
 })
+
+describe('Ensembl id searches', () => {
+  it('finds a gene by its uppercase gene ID', async () => {
+    const { corpus } = recordingCorpus()
+    const { results } = await corpus.searchGenes('ENSG00000141510', 'both', 6)
+    expect(results.map((g) => g.symbol)).toEqual(['TP53'])
+  })
+
+  it('finds a gene by a lowercase gene ID', async () => {
+    const { corpus } = recordingCorpus()
+    const { results } = await corpus.searchGenes('ensg00000141510', 'both', 6)
+    expect(results.map((g) => g.symbol)).toEqual(['TP53'])
+  })
+
+  it('finds a transcript by a versioned ID, and reports it unversioned', async () => {
+    const { corpus } = recordingCorpus()
+    const { results } = await corpus.searchGenes('ENST00000269305.9', 'both', 6)
+    expect(results).toMatchObject([
+      { symbol: 'TP53', matchedIsoformId: 'ENST00000269305' },
+    ])
+  })
+
+  it('finds a transcript by a lowercase ID', async () => {
+    const { corpus } = recordingCorpus()
+    const { results } = await corpus.searchGenes('enst00000269305', 'both', 6)
+    expect(results).toMatchObject([
+      { symbol: 'TP53', matchedIsoformId: 'ENST00000269305' },
+    ])
+  })
+})

@@ -12,6 +12,7 @@ export function CodonCard({
   changedBases,
   searchMatchBases,
   hoveredSitePosition,
+  rovingSitePosition,
   isLast,
   onHoverSite,
   onSelectSite,
@@ -27,6 +28,10 @@ export function CodonCard({
   changedBases: Map<number, number>
   searchMatchBases: Set<number>
   hoveredSitePosition: number | null
+  // The one site that owns the strip's single tab stop (roving tabindex).
+  // Every other site button stays at tabIndex -1 so the strip costs one
+  // Tab press rather than one per candidate site.
+  rovingSitePosition: number | null
   isLast: boolean
   onHoverSite: (position: number | null) => void
   onSelectSite: (site: WggwSiteCandidate) => void
@@ -141,7 +146,20 @@ export function CodonCard({
               <button
                 key={pos}
                 type="button"
-                tabIndex={isInteractiveStart ? 0 : -1}
+                data-site-start={
+                  isInteractiveStart ? coverSite.position : undefined
+                }
+                tabIndex={
+                  isInteractiveStart &&
+                  coverSite.position === rovingSitePosition
+                    ? 0
+                    : -1
+                }
+                aria-current={
+                  selectedSiteIndexByPosition.has(coverSite.position)
+                    ? 'true'
+                    : undefined
+                }
                 title={`bp ${pos.toLocaleString()} · WGGW ${coverSite.motif}`}
                 aria-label={`Select WGGW ${coverSite.motif} site at bp ${coverSite.position}`}
                 className={baseClassName}

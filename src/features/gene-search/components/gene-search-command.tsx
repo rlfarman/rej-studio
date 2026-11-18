@@ -32,11 +32,17 @@ import type {
   JobSearchItem,
 } from '@/features/gene-search/types/domain-types'
 import { useSpeciesContext } from '@/stores/species-store'
-import { SPECIES_DISPLAY_NAME, type SpeciesFilter } from '@/lib/bio/species'
+import {
+  isSpecies,
+  SPECIES_DISPLAY_NAME,
+  type SpeciesFilter,
+} from '@/lib/bio/species'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { useSearchShortcut } from '@/hooks/use-search-shortcut'
 import { geneSearchCopy } from '../copy'
 import { geneLink } from '../utils/search-href'
+import { matchedField, matchedLabel } from '../utils/matched-field'
+import { GENE_SEARCH_INPUT_ID } from '../hooks/use-pre-typed-query'
 import { SearchEmptyState } from './search-empty-state'
 import { SearchShortcutHint } from '@/components/search-shortcut'
 import { SEARCH_SHORTCUT_ARIA } from '@/lib/search-shortcut'
@@ -147,7 +153,9 @@ function SearchingRow({
 
 /** One option in the palette's listbox; Enter or a click runs it. */
 type PaletteItem =
-  | { kind: 'favorite' | 'recent' | 'result'; key: string; gene: SavedGene }
+  | { kind: 'favorite' | 'recent'; key: string; gene: SavedGene }
+  // A result keeps the search's `match`, so the row can say why it is here.
+  | { kind: 'result'; key: string; gene: GeneSearchResult }
   | { kind: 'job'; key: string; entry: JobSearchItem }
   | { kind: 'see-all'; key: string }
 
@@ -215,7 +223,28 @@ function jobMatches(entry: JobSearchItem, q: string): boolean {
   return entry.name.toLowerCase().includes(q)
 }
 
-function GeneRowBody({ gene, query }: { gene: SavedGene; query: string }) {
+/**
+ * One gene row. The meta line under the name carries the species as text
+ * (the species icon is decorative, so human and mouse rows for the same
+ * symbol were spoken identically) and, for a search result, why the gene
+ * matched — "her2" and "brac1" otherwise list genes with nothing in common
+ * with what was typed.
+ */
+function GeneRowBody({
+  gene,
+  query,
+  reason,
+}: {
+  gene: SavedGene
+  query: string
+  /** Why this gene matched; absent for saved and recent genes. */
+  reason?: string
+}) {
+  const speciesName =
+    gene.species && isSpecies(gene.species)
+      ? SPECIES_DISPLAY_NAME[gene.species]
+      : gene.species
+  const detail = reason ?? gene.matchedIsoformId
   return (
     <>
       <span className="font-mono font-medium">
@@ -228,9 +257,11 @@ function GeneRowBody({ gene, query }: { gene: SavedGene; query: string }) {
         >
           <HighlightMatch text={gene.name} query={query} />
         </TruncatedText>
-        {gene.matchedIsoformId && (
-          <span className="font-mono text-xs text-muted-foreground">
-            {gene.matchedIsoformId}
+        {(speciesName || detail) && (
+          <span className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
+            {speciesName && <span>{speciesName}</span>}
+            {speciesName && detail && <span aria-hidden="true">·</span>}
+            {detail && <span className="truncate">{detail}</span>}
           </span>
         )}
       </div>
@@ -366,7 +397,7 @@ export function GeneSearchCommand({
 
   // The listbox's contents, in order. Base UI walks these for arrow keys and
   // highlighting, so they're built here once rather than as loose children.
-  const groups: PaletteGroup[] = [
+  const savedGroups: PaletteGroup[] = [
     {
       key: 'favorites',
       label: copy.favorites,
@@ -394,23 +425,29 @@ export function GeneSearchCommand({
         entry,
       })),
     },
-    {
-      key: 'genes',
-      label: copy.genes,
-      items: hasGeneResults
-        ? [
-            ...displayedGeneResults.map((gene) => ({
-              kind: 'result' as const,
-              key: gene.id,
-              gene,
-            })),
-            ...(truncated
-              ? [{ kind: 'see-all' as const, key: 'see-all' }]
-              : []),
-          ]
-        : [],
-    },
-  ].filter((group) => group.items.length > 0)
+  ]
+
+  const genesGroup: PaletteGroup = {
+    key: 'genes',
+    label: copy.genes,
+    items: hasGeneResults
+      ? [
+          ...displayedGeneResults.map((gene) => ({
+            kind: 'result' as const,
+            key: gene.id,
+            gene,
+          })),
+          ...(truncated ? [{ kind: 'see-all' as const, key: 'see-all' }] : []),
+        ]
+      : [],
+  }
+
+  // While typing, what was searched for comes first: favorites, recents and
+  // jobs used to push the actual matches below the fold. With an empty box
+  // there is nothing to rank, so the saved rows lead.
+  const groups: PaletteGroup[] = (
+    hasQuery ? [genesGroup, ...savedGroups] : [...savedGroups, genesGroup]
+  ).filter((group) => group.items.length > 0)
 
   const hasResults = groups.length > 0
 
@@ -468,7 +505,15 @@ export function GeneSearchCommand({
               className="h-3.5 w-3.5 text-muted-foreground"
             />
           )}
-          <GeneRowBody gene={item.gene} query={query} />
+          <GeneRowBody
+            gene={item.gene}
+            query={query}
+            reason={
+              item.kind === 'result'
+                ? matchedLabel(matchedField(item.gene, query))
+                : undefined
+            }
+          />
           {item.kind === 'result' && item.gene.matchedIsoformId && (
             <Button
               variant="ghost"
@@ -527,6 +572,7 @@ export function GeneSearchCommand({
       >
         <AutocompleteInput
           ref={inputRef}
+          id={onPage ? GENE_SEARCH_INPUT_ID : undefined}
           aria-label={copy.inputAria}
           aria-keyshortcuts={onPage ? SEARCH_SHORTCUT_ARIA : undefined}
           endAddon={onPage ? <SearchShortcutHint /> : undefined}
@@ -611,7 +657,10 @@ export function GeneSearchCommand({
             <AutocompleteList
               hidden={content !== 'results'}
               className={cn(
-                'max-h-[300px] transition-opacity duration-200',
+                // Tall enough that a full page of matches is reachable, and
+                // short enough to stay a palette. The scrollbar is visible
+                // (see AutocompleteList) so a clipped list says so.
+                'max-h-[min(60vh,28rem)] transition-opacity duration-200',
                 // Dim the list while a fresh query is loading to telegraph
                 // that newer results are on the way, without yanking the
                 // current content out from under the user.

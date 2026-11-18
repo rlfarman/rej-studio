@@ -291,11 +291,16 @@ export function changeDensity(
   return bins
 }
 
-export function hasStartCodon(seq: string): boolean {
-  return seq.length >= 3 && seq.slice(0, 3).toUpperCase() === 'ATG'
-}
+// RNA is an accepted input everywhere a coding sequence is: the form's schema
+// takes U, the placeholder and the error copy both say so. So the codon checks
+// read both alphabets, or pasted mRNA validates cleanly and is then reported
+// as having neither a start nor a stop codon.
+const START_CODONS = new Set(['ATG', 'AUG'])
+const STOP_CODONS = new Set(['TAA', 'TAG', 'TGA', 'UAA', 'UAG', 'UGA'])
 
-const STOP_CODONS = new Set(['TAA', 'TAG', 'TGA'])
+export function hasStartCodon(seq: string): boolean {
+  return seq.length >= 3 && START_CODONS.has(seq.slice(0, 3).toUpperCase())
+}
 
 export function getStopCodonStatus(seq: string): 'present' | 'absent' | 'none' {
   if (seq.length < 3) return 'none'
@@ -423,8 +428,6 @@ export interface SequenceSegment {
   type: HighlightType
 }
 
-const STOP_CODONS_SET = new Set(['TAA', 'TAG', 'TGA', 'UAA', 'UAG', 'UGA'])
-
 /**
  * Segments a coding sequence into runs of characters sharing the same
  * highlight type. Priority (highest wins): invalid char > internal stop >
@@ -448,7 +451,7 @@ export function segmentSequence(seq: string): SequenceSegment[] {
   // 3. Mark stop codon (last 3 chars, only when length is multiple of 3)
   if (len >= 3 && rem === 0) {
     const last3 = upper.slice(-3)
-    const stopType: HighlightType = STOP_CODONS_SET.has(last3)
+    const stopType: HighlightType = STOP_CODONS.has(last3)
       ? 'stop-codon'
       : 'missing-stop'
     for (let i = len - 3; i < len; i++) types[i] = stopType
@@ -465,7 +468,7 @@ export function segmentSequence(seq: string): SequenceSegment[] {
   // 5. Mark internal stop codons (reading frame, excluding first & last codon)
   const lastCodonStart = len - (rem === 0 ? 3 : rem)
   for (let i = 3; i < lastCodonStart; i += 3) {
-    if (STOP_CODONS_SET.has(upper.slice(i, i + 3))) {
+    if (STOP_CODONS.has(upper.slice(i, i + 3))) {
       for (let j = i; j < i + 3; j++) types[j] = 'internal-stop'
     }
   }

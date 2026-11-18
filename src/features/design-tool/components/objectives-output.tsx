@@ -16,6 +16,9 @@ import type {
 } from '@/features/design-tool/types/process-result'
 import { deriveKeyMetrics } from '@/features/design-tool/utils/objective-metrics'
 import { escapeMarkdownTableCell } from '@/features/design-tool/utils/markdown-table'
+import { designToolCopy } from '../copy'
+
+const metricsCopy = designToolCopy.results.metrics
 
 // ---------- parsing the "objective" string into a nicer display ----------
 
@@ -455,15 +458,20 @@ function buildSummaryItems(
     })
   }
 
-  if (afterMetrics.caiScore !== null) {
-    const b = beforeMetrics.caiScore
-    const a = afterMetrics.caiScore
+  // The optimizer's MaximizeCAI score, which is not a CAI: it is negative
+  // and unbounded, so calling it one made a working run look broken. The
+  // real index needs the sequence, which this report-only view doesn't have;
+  // the results panel computes it (objective-metrics.computeCai).
+  if (afterMetrics.caiObjectiveScore !== null) {
+    const b = beforeMetrics.caiObjectiveScore
+    const a = afterMetrics.caiObjectiveScore
     items.push({
       label:
         b !== null
-          ? `CAI: ${b.toFixed(3)} → ${a.toFixed(3)}`
-          : `CAI: ${a.toFixed(3)}`,
+          ? metricsCopy.caiObjectiveSummary(b.toFixed(2), a.toFixed(2))
+          : metricsCopy.caiObjectiveSummaryOnly(a.toFixed(2)),
       status: b !== null ? deltaStatus(b, a, false) : 'neutral',
+      hint: metricsCopy.caiObjectiveHint,
     })
   }
 

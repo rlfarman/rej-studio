@@ -16,7 +16,7 @@ import {
 import { HighlightMatch } from '@/features/gene-search/utils/highlight-match'
 import {
   matchedField,
-  type MatchedField,
+  matchedLabel,
 } from '@/features/gene-search/utils/matched-field'
 import { SearchEmptyState } from './search-empty-state'
 import { geneSearchCopy } from '../copy'
@@ -47,21 +47,6 @@ export function SearchError({
       {retry}
     </div>
   )
-}
-
-function matchedLabel(match: MatchedField) {
-  switch (match.kind) {
-    case 'transcript':
-      return copy.matched.transcript(match.id)
-    case 'geneId':
-      return copy.matched.geneId
-    case 'symbol':
-      return match.typo ? copy.matched.closeSymbol : copy.matched.symbol
-    case 'name':
-      return match.typo ? copy.matched.closeName : copy.matched.name
-    case 'alias':
-      return match.typo ? copy.matched.closeAlias : copy.matched.alias
-  }
 }
 
 interface GeneSearchResultsViewProps {

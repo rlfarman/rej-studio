@@ -3,12 +3,16 @@ export const geneSearchCopy = {
     isoformLengths: {
       caption:
         'Coding sequence length of each isoform, and whether it suits a single-vector design',
-      columns: ['Isoform', 'Coding sequence length (bp)', 'Suitability'],
+      // The gene rides along in the first column: a downloaded CSV is read
+      // far from the page it came from.
+      columns: ['Gene', 'Isoform', 'Coding sequence length (bp)', 'AAV fit'],
+      csvFilename: (geneSymbol: string) => `${geneSymbol}_isoform-lengths.csv`,
     },
     identityMatrix: {
       caption:
         'Protein sequence identity from a global alignment of each pair of isoforms, as a percentage',
-      columns: ['Isoform', 'Compared with', 'Identity (%)'],
+      columns: ['Gene', 'Isoform', 'Compared with', 'Identity (%)'],
+      csvFilename: (geneSymbol: string) => `${geneSymbol}_isoform-identity.csv`,
     },
   },
   trigger: {
@@ -118,14 +122,21 @@ export const geneSearchCopy = {
     moreAria: (id: string) => `More actions for ${id}`,
     copyCds: 'Copy CDS',
     copyFasta: 'Copy FASTA',
-    copied: 'Copied!',
-    downloadFasta: 'Download FASTA',
+    // The menu closes on click, so the only confirmation a successful copy
+    // can give is a toast; it says what was copied, since two items copy.
+    copiedCds: (id: string) => `Copied the coding sequence of ${id}`,
+    copiedFasta: (id: string) => `Copied the FASTA record for ${id}`,
+    // Two different FASTA downloads sit on this page: this one is the row's
+    // own isoform, the summary strip's is every isoform of the gene.
+    downloadFasta: 'Download this isoform’s FASTA',
+    downloadFastaAria: (id: string) =>
+      `Download this isoform’s FASTA (${id} coding sequence)`,
     viewEnsembl: 'View on Ensembl',
-    downloadAllFasta: 'Download FASTA',
-    // Starts with the visible label, so voice control ("click Download
-    // FASTA") finds it (WCAG 2.5.3, label in name).
+    downloadAllFasta: 'Download all isoforms’ FASTA',
+    // Starts with the visible label, so voice control ("click Download all
+    // isoforms' FASTA") finds it (WCAG 2.5.3, label in name).
     downloadAllFastaAria: (n: number) =>
-      `Download FASTA of all ${n} coding sequences`,
+      `Download all isoforms’ FASTA — ${n} coding sequences`,
   },
   summary: {
     isoforms: 'Isoforms',
@@ -212,5 +223,12 @@ export const geneSearchCopy = {
     jumpTo: (id: string) => `Jump to ${id}`,
     cellLabel: (pct: string, a: string, b: string) =>
       `${pct}% aligned identity between ${a} and ${b}`,
+    /** The selected cell's value, shown as text under the grid. */
+    cellReadout: (pct: string, a: string, b: string) =>
+      `${a} vs ${b}: ${pct}% identity`,
+    // Hover was the only way to read a value, which leaves out every phone
+    // and every keyboard. The grid is one tab stop; arrows walk the cells.
+    cellHint: 'Select a cell — or use the arrow keys — to read its identity.',
+    gridAria: 'Pairwise identity grid',
   },
 } as const

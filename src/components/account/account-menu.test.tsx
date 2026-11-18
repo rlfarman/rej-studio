@@ -33,13 +33,15 @@ describe('AccountMenu', () => {
   it('draws nothing where accounts are not available', () => {
     renderWithAccount(<AccountMenu />, 'unavailable')
     expect(
-      screen.queryByRole('button', { name: accountCopy.signIn }),
+      screen.queryByRole('button', { name: accountCopy.sidebarSignIn }),
     ).toBeNull()
   })
 
   it('offers to sign in when signed out, and opens the dialog', () => {
     renderWithAccount(<AccountMenu />, 'signed-out')
-    fireEvent.click(screen.getByRole('button', { name: accountCopy.signIn }))
+    fireEvent.click(
+      screen.getByRole('button', { name: accountCopy.sidebarSignIn }),
+    )
     expect(useSignInDialog.getState().open).toBe(true)
   })
 
@@ -62,7 +64,7 @@ describe('AccountMenu', () => {
     // Whatever was read as the account goes with it.
     expect(client.getQueryData(['account', 'cloud-designs'])).toBeUndefined()
     expect(
-      await screen.findByRole('button', { name: accountCopy.signIn }),
+      await screen.findByRole('button', { name: accountCopy.sidebarSignIn }),
     ).toBeTruthy()
   })
 

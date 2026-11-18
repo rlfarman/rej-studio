@@ -14,6 +14,11 @@ function formatEstimate(seconds: number): string {
 }
 
 export const designToolCopy = {
+  /** Sequence units, so a length is never reported in the wrong one. */
+  units: {
+    residues: 'residues',
+    bp: 'bp',
+  },
   metadata: {
     title: 'Design Tool',
     description:
@@ -41,8 +46,9 @@ export const designToolCopy = {
         'Sequence must contain only standard amino acid letters (A, C, D, E, F, G, H, I, K, L, M, N, P, Q, R, S, T, V, W, Y) or * for stop.',
       internalStop:
         'Sequence contains internal stop character(s) (*). Only a terminal * is allowed.',
-      awaitingDna:
-        'Waiting for the DNA sequence this protein reverse-translates to.',
+      // Progress, not a fault: the DNA is on its way from the optimizer, and
+      // the field stops saying this as soon as it lands.
+      awaitingDna: 'Reverse translating this protein to DNA — one moment.',
     },
     name: {
       required: 'A name is required.',
@@ -60,7 +66,15 @@ export const designToolCopy = {
     unexpectedResponse:
       'The optimizer returned something unexpected. This run was not saved.',
     cancelled: 'Cancelled',
-    notFound: 'No longer available',
+    // Three ways a `?job=` can resolve to nothing, which need three
+    // different answers. "No longer available" sent people to an Edit
+    // button and a blank form without saying which case they were in.
+    notFound:
+      'This link doesn’t match a design in this browser or in the cloud. Start a new design to run it again.',
+    notFoundBrowser:
+      'This design ran in a browser, and a browser design is kept only on the device that ran it — another device, another browser or a cleared history can’t open it. Ask whoever sent the link for the sequence and options, then start a new design.',
+    notFoundCloud:
+      'This cloud design is gone: it was deleted, or it passed its 30 days. Start a new design to run it again.',
     failed: 'Job failed',
     unknown: 'Something went wrong — try running again.',
     browserUnsupported:
@@ -144,8 +158,6 @@ export const designToolCopy = {
     placeholderProtein:
       'MVLSPADKTN... (paste amino acid sequence or upload FASTA)',
     placeholderDna: 'ATGATTACA... (paste sequence or upload FASTA)',
-    unitResidues: 'residues',
-    unitBp: 'bp',
     noValidAminoAcids: 'No valid amino acid characters found.',
     noValidNucleotides: 'No valid nucleotide characters found.',
     cleanedSummary: (source: string, parts: string) => `${source}: ${parts}.`,
@@ -285,8 +297,16 @@ export const designToolCopy = {
       'The CDS is delivered as two halves that rejoin in the cell. The split lands inside a WGGW motif (W = A or T), which the end-joining machinery needs at the junction.',
     runSummary: {
       noSequence: 'Add a coding sequence to run the designer.',
-      ready: (bp: string, objectives: number) =>
-        `${bp} bp · ${objectives} objective${objectives === 1 ? '' : 's'}`,
+      // `unit` because protein input is counted in residues until the DNA it
+      // reverse-translates to arrives — that DNA is what gets designed, so
+      // once it is here the line reports its length in bp instead.
+      ready: (amount: string, unit: string, objectives: number) =>
+        `${amount} ${unit} · ${objectives} objective${objectives === 1 ? '' : 's'}`,
+      // The split-point editor warns per fragment; this says the same thing
+      // beside the Run button, so the last line read before submitting does
+      // not imply the design will package.
+      overAavLimit: (bp: string, limit: string) =>
+        `largest fragment ${bp} bp, over the ~${limit} bp AAV limit`,
       // "near", because the design is cut at the WGGW motif nearest this
       // point, which the split-point editor names exactly. Resolving it here
       // too would rescan the sequence on every keystroke.
@@ -305,6 +325,19 @@ export const designToolCopy = {
       parameterWeightsHint:
         'Control how much each objective influences the result.',
     },
+    // The previous run's results stay on screen while its inputs are being
+    // edited. Unlabelled, they read as the results of the inputs above.
+    previousRun: {
+      heading: 'Results of the run you’re editing',
+      description:
+        'These came from the inputs as they were when the run started. Run the designer again to replace them.',
+    },
+    /** Announced once, when a run settles and its progress card is gone. */
+    announce: {
+      completed: 'Design complete. The results are below the form.',
+      failed: (reason: string) => `Design failed. ${reason}`,
+      cancelled: 'Design cancelled.',
+    },
     savedInputsIncompatible:
       'Saved inputs from this job were incompatible with the current form — defaults were used instead.',
     fixErrorsBeforeRerun: 'Fix the form errors before re-running.',
@@ -320,9 +353,14 @@ export const designToolCopy = {
     buttonCancel: 'Cancel',
     buttonEdit: 'Edit',
     buttonRunAgain: 'Run again',
+    // Shown instead of "Edit" for a design nothing can be edited from: its
+    // inputs are not on this device, so the button opens an empty form and
+    // has to say so.
+    buttonNewDesign: 'Start a new design',
     running: {
       title: 'Designing your sequence…',
       defaultStage: 'This usually takes a few seconds.',
+      progressAria: 'Design progress',
     },
     speciesLabel: {
       none: '',
@@ -348,6 +386,11 @@ export const designToolCopy = {
     completedIn: (seconds: number) =>
       `Completed in ${formatProcessingTime(seconds)}`,
     wggwSplitBadge: 'WGGW split',
+    // In the exported report, where the options block goes. Said plainly
+    // rather than filled in from the form on screen, which may have been
+    // edited since the run.
+    optionsUnavailable:
+      'Not recorded — this design’s inputs are no longer stored in this browser.',
     downloadZip: 'Download Results',
     intronTooltip: {
       fivePrime:
@@ -356,6 +399,19 @@ export const designToolCopy = {
         '3′ REJ module insertion site — insert the 3′ REJ module here during construct assembly.',
       stimulatory:
         'Optional stimulatory intron insertion site — insert a stimulatory intron here if including optional stimulatory introns.',
+    },
+    // CAI is a ratio in 0–1 by definition. The optimizer's MaximizeCAI entry
+    // carries its own objective score, which is negative and unbounded, so
+    // the two are never given the same name.
+    metrics: {
+      cai: 'CAI',
+      caiObjective: 'Codon usage score',
+      caiObjectiveHint:
+        'The optimizer’s internal score for codon usage — not a CAI, which runs 0–1.',
+      caiObjectiveSummary: (before: string, after: string) =>
+        `Codon usage objective score: ${before} → ${after}`,
+      caiObjectiveSummaryOnly: (after: string) =>
+        `Codon usage objective score: ${after}`,
     },
     splitAtPosition: 'Split after base',
     splitRatio: (left: number, right: number) => `(${left}% / ${right}%)`,
@@ -421,6 +477,16 @@ export const designToolCopy = {
         `Include the ${count} that held throughout`,
       groupLabel: 'Objectives, one at a time. Use the arrow keys to move.',
       position: (current: number, total: number) => `${current} of ${total}`,
+      // What a reader needs when the step changes: which objective, and how
+      // it went. "3 of 14" on its own said only that something moved.
+      announce: (
+        current: number,
+        total: number,
+        objective: string,
+        verdict: string,
+      ) => `${current} of ${total}: ${objective} — ${verdict}`,
+      atStart: 'This is the first objective.',
+      atEnd: 'This is the last objective.',
       previous: 'Previous objective',
       next: 'Next objective',
       beforeLabel: 'Before',

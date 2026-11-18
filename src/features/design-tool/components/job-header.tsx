@@ -8,6 +8,7 @@ import {
   Cloud,
   Pencil,
   Play,
+  Plus,
   RotateCw,
   Trash2,
 } from 'lucide-react'
@@ -22,6 +23,22 @@ const copy = designToolCopy.jobHeader
 const cloudCopy = designToolCopy.cloud
 
 /**
+ * Takes focus when the card appears.
+ *
+ * Starting a run unmounts the form, and with it whatever had focus — a
+ * keyboard or screen-reader user was dropped onto `<body>` with nothing
+ * said. The card that replaces the form takes focus instead, so the next
+ * Tab continues from here and its label is read out.
+ */
+function useFocusOnMount<T extends HTMLElement>() {
+  const ref = React.useRef<T>(null)
+  React.useEffect(() => {
+    ref.current?.focus()
+  }, [])
+  return ref
+}
+
+/**
  * What a cloud design shows while it runs: an estimate from its length, not
  * a progress bar. A Workflow step cannot report progress, and a bar that
  * moved on a timer would claim to know something it does not.
@@ -33,13 +50,16 @@ export function CloudRunningPlaceholder({
   bases: number
   estimateSeconds: number
 }) {
+  const ref = useFocusOnMount<HTMLDivElement>()
   return (
     <Card>
       <CardContent
+        ref={ref}
+        tabIndex={-1}
         role="status"
         aria-live="polite"
         aria-label={cloudCopy.running.title}
-        className="flex flex-col items-center justify-center gap-4 py-12"
+        className="flex flex-col items-center justify-center gap-4 py-12 focus-visible:outline-none"
       >
         <span className="flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
           <Cloud className="size-6" />
@@ -72,23 +92,47 @@ export function RunningPlaceholder({
   // Ease toward the target so the bar never feels frozen between ticks, and
   // always advances visibly when a new checkpoint lands.
   const displayedPct = useSmoothedProgress(pct)
+  const ref = useFocusOnMount<HTMLDivElement>()
   return (
     <Card>
+      {/* Not a live region as a whole: wrapping the smoothed percentage made
+          a screen reader read a new number several times a second for the
+          whole run. Only the stage announces; the number is a progress bar
+          the reader can query. */}
       <CardContent
-        role="status"
-        aria-live="polite"
+        ref={ref}
+        tabIndex={-1}
+        // A named group rather than a bare div: focused, its label is what a
+        // screen reader reads out in place of the form that just left.
+        role="group"
         aria-label={copy.running.title}
-        className="flex flex-col items-center justify-center gap-4 py-12"
+        className="flex flex-col items-center justify-center gap-4 py-12 focus-visible:outline-none"
       >
         <DnaLoader className="h-10 w-[120px]" />
         <div className="space-y-1 text-center">
           <p className="text-sm font-medium">{copy.running.title}</p>
-          <p className="h-4 text-xs text-muted-foreground">
+          <p
+            role="status"
+            aria-live="polite"
+            className="h-4 text-xs text-muted-foreground"
+          >
             {stage ?? copy.running.defaultStage}
           </p>
         </div>
         <div className="w-full max-w-xs">
-          <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-muted">
+          <div
+            role="progressbar"
+            aria-label={copy.running.progressAria}
+            // The last checkpoint the optimizer actually reported, not the
+            // eased value the bar draws.
+            aria-valuenow={pct ?? undefined}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuetext={
+              pct === null ? copy.running.defaultStage : undefined
+            }
+            className="relative h-1.5 w-full overflow-hidden rounded-full bg-muted"
+          >
             {displayedPct !== null ? (
               <div
                 className="absolute inset-y-0 left-0 w-full origin-left bg-primary transition-transform duration-700 ease-out"
@@ -106,7 +150,10 @@ export function RunningPlaceholder({
             />
           </div>
           {displayedPct !== null && (
-            <p className="mt-1.5 text-center type-micro text-muted-foreground tabular-nums">
+            <p
+              aria-hidden
+              className="mt-1.5 text-center type-micro text-muted-foreground tabular-nums"
+            >
               {displayedPct}%
             </p>
           )}
@@ -188,6 +235,11 @@ interface JobHeaderProps {
   onEdit: () => void
   onRerun: () => void
   onCancel?: () => void
+  /**
+   * There is no record of this design on this device, so there is nothing to
+   * edit: the button says what it really does, which is start a new one.
+   */
+  missing?: boolean
   /** Set for a design that ran in the cloud. */
   cloud?: {
     estimateSeconds: number
@@ -282,6 +334,7 @@ export function JobHeader({
   onEdit,
   onRerun,
   onCancel,
+  missing = false,
   cloud,
 }: JobHeaderProps) {
   const message = statusMessage({
@@ -301,9 +354,11 @@ export function JobHeader({
             <StatusDot status={status} />
             <div className="min-w-0 space-y-0.5">
               <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                <div className="truncate text-sm font-semibold">
+                {/* The page's heading once a run starts: the form, and with
+                    it the only h1, is gone by then. */}
+                <h1 className="truncate text-sm font-semibold">
                   {name || copy.untitled}
-                </div>
+                </h1>
                 {sequenceLength != null && (
                   <span className="text-xs text-muted-foreground tabular-nums">
                     · {sequenceLength.toLocaleString()} bp
@@ -355,9 +410,18 @@ export function JobHeader({
                 {copy.buttonCancel}
               </Button>
             )}
-            <Button type="button" variant="outline" size="sm" onClick={onEdit}>
-              <Pencil className="size-3.5" />
-              {copy.buttonEdit}
+            <Button
+              type="button"
+              variant={missing ? 'default' : 'outline'}
+              size="sm"
+              onClick={onEdit}
+            >
+              {missing ? (
+                <Plus className="size-3.5" />
+              ) : (
+                <Pencil className="size-3.5" />
+              )}
+              {missing ? copy.buttonNewDesign : copy.buttonEdit}
             </Button>
             {canRerun && (
               <Button type="button" size="sm" onClick={onRerun}>

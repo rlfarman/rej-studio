@@ -1,4 +1,5 @@
-import { Link } from '@tanstack/react-router'
+import { useId, useState } from 'react'
+import { Link, useParams } from '@tanstack/react-router'
 import { Grid3x3 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { IsoformListItem } from '@/features/gene-search/types/domain-types'
@@ -38,6 +39,24 @@ function binFor(pct: number) {
     if (pct >= BINS[i].min) return BINS[i]
   }
   return BINS[0]
+}
+
+/**
+ * Where each stored row goes on screen: shortest CDS first, the order the
+ * length chart above draws its bars in, so row 3 here is the third bar
+ * there. Stored order is by protein length, descending — the corpus pins it
+ * and `parseIsoformIdentity` refuses anything else — so the permutation
+ * happens at render time rather than in the data.
+ */
+function displayOrder(shown: readonly IsoformListItem[]): number[] {
+  return shown
+    .map((isoform, index) => ({ isoform, index }))
+    .sort(
+      (a, b) =>
+        a.isoform.codingSequenceLength - b.isoform.codingSequenceLength ||
+        (a.isoform.id < b.isoform.id ? -1 : 1),
+    )
+    .map(({ index }) => index)
 }
 
 /**
@@ -81,6 +100,7 @@ export function IsoformIdentityMatrix({ isoforms, identity }: Props) {
       {identity ? (
         <Matrix
           identity={identity}
+          order={displayOrder(shown)}
           total={isoforms.length}
           shown={shown.length}
         />
@@ -94,14 +114,59 @@ export function IsoformIdentityMatrix({ isoforms, identity }: Props) {
 }
 
 function Matrix({
-  identity: { ids, percent: rows },
+  identity: { ids: storedIds, percent: stored },
+  order,
   shown,
   total,
 }: {
   identity: Identities
+  /** Stored row indices in display order; see `displayOrder`. */
+  order: number[]
   shown: number
   total: number
 }) {
+  const { symbol: geneSymbol } = useParams({ from: '/genes/$symbol' })
+  const cellId = useId()
+  // The selected cell, as display indices. The grid is one tab stop and the
+  // arrow keys walk it, so a reader with no pointer (or no hover, on a
+  // phone) can still read a value: hover and a native `title` were the only
+  // way in, which left every phone and every keyboard with color alone.
+  // Null until something is chosen: the first cell is still the grid's tab
+  // stop, but the readout invites rather than asserting a value nobody picked.
+  const [selected, setSelected] = useState<[number, number] | null>(null)
+  const active = selected ?? [0, 0]
+
+  const ids = order.map((k) => storedIds[k])
+  const valueAt = (i: number, j: number) => stored[order[i]][order[j]]
+  const buttonId = (i: number, j: number) => `${cellId}-${i}-${j}`
+
+  const move = (i: number, j: number) => {
+    const row = Math.min(Math.max(i, 0), ids.length - 1)
+    // Only the lower triangle is drawn, so a column never passes its row.
+    const col = Math.min(Math.max(j, 0), row)
+    setSelected([row, col])
+    document.getElementById(buttonId(row, col))?.focus()
+  }
+
+  const onKeyDown = (event: React.KeyboardEvent) => {
+    const [i, j] = active
+    const steps: Record<string, () => void> = {
+      ArrowRight: () => move(i, j + 1),
+      ArrowLeft: () => move(i, j - 1),
+      ArrowDown: () => move(i + 1, j),
+      ArrowUp: () => move(i - 1, j),
+      Home: () => move(i, 0),
+      End: () => move(i, i),
+    }
+    const step = steps[event.key]
+    if (!step) return
+    event.preventDefault()
+    step()
+  }
+
+  const [ai, aj] = active
+  const activeValue = selected ? valueAt(ai, aj) : null
+
   return (
     <>
       {/* The one scroller the grid gets, inside the card's padding. It must
@@ -133,7 +198,7 @@ function Matrix({
                   key={`col-${id}`}
                   scope="col"
                   title={id}
-                  className="w-5 min-w-5 pb-1 text-center type-micro font-medium text-muted-foreground tabular-nums"
+                  className="w-6 min-w-6 pb-1 text-center type-micro font-medium text-muted-foreground tabular-nums"
                 >
                   <span aria-hidden>{j + 1}</span>
                   <span className="sr-only">{id}</span>
@@ -142,12 +207,34 @@ function Matrix({
             </tr>
           </thead>
           <tbody>
-            {rows.map((row, i) => (
-              <Row key={ids[i]} index={i} id={ids[i]} ids={ids} values={row} />
+            {ids.map((id, i) => (
+              <Row
+                key={id}
+                index={i}
+                id={id}
+                ids={ids}
+                values={ids.map((_, j) => valueAt(i, j))}
+                active={active}
+                buttonId={buttonId}
+                onSelect={setSelected}
+                onCellKeyDown={onKeyDown}
+              />
             ))}
           </tbody>
         </table>
       </div>
+
+      {/* The selected cell in words. Hidden from screen readers, which hear
+          the cell's own label as focus lands on it. */}
+      <p aria-hidden className="type-nano text-muted-foreground tabular-nums">
+        {activeValue === null
+          ? geneSearchCopy.identityMatrix.cellHint
+          : geneSearchCopy.identityMatrix.cellReadout(
+              activeValue.toFixed(1),
+              ids[ai],
+              ids[aj],
+            )}
+      </p>
 
       <p className="max-w-prose type-nano text-muted-foreground">
         {geneSearchCopy.identityMatrix.footnote}
@@ -165,12 +252,15 @@ function Matrix({
           ids
             .slice(i + 1)
             .map((other, j) => [
+              geneSymbol,
               id,
               other,
-              Number((rows[i]?.[i + 1 + j] ?? 0).toFixed(1)),
+              Number(valueAt(i, i + 1 + j).toFixed(1)),
             ]),
         )}
-        csvFilename="isoform-identity.csv"
+        csvFilename={geneSearchCopy.charts.identityMatrix.csvFilename(
+          geneSymbol,
+        )}
       />
     </>
   )
@@ -200,11 +290,21 @@ function Row({
   id,
   ids,
   values,
+  active,
+  buttonId,
+  onSelect,
+  onCellKeyDown,
 }: {
   index: number
   id: string
   ids: string[]
   values: number[]
+  /** The grid's one tab stop, as [row, column]. */
+  active: [number, number]
+  buttonId: (i: number, j: number) => string
+  onSelect: (cell: [number, number]) => void
+  /** Arrow keys move the grid's one tab stop; see `Matrix`. */
+  onCellKeyDown: (event: React.KeyboardEvent) => void
 }) {
   return (
     <tr>
@@ -237,20 +337,34 @@ function Row({
       </th>
       {values.map((v, j) => {
         // Lower triangle + diagonal only; the mirror would repeat every value.
-        if (j > index) return <td key={j} aria-hidden className="size-5" />
+        if (j > index) return <td key={j} aria-hidden className="size-6" />
         const bin = binFor(v)
         const label = geneSearchCopy.identityMatrix.cellLabel(
           v.toFixed(1),
           id,
           ids[j],
         )
+        const isTabStop = active[0] === index && active[1] === j
         return (
-          <td
-            key={j}
-            title={label}
-            className={cn('size-5 min-w-5 rounded-[3px]', bin.className)}
-          >
-            <span className="sr-only">{`${v.toFixed(0)}%`}</span>
+          <td key={j} className="size-6 min-w-6 p-0">
+            {/* A button, not a bare cell: tapping or focusing one puts its
+                value in the readout under the grid. 24px square so it is
+                still a tap target (WCAG 2.5.8). */}
+            <button
+              type="button"
+              id={buttonId(index, j)}
+              // Roving tabindex: the grid is one stop, the arrows do the rest.
+              tabIndex={isTabStop ? 0 : -1}
+              aria-label={label}
+              title={label}
+              onFocus={() => onSelect([index, j])}
+              onClick={() => onSelect([index, j])}
+              onKeyDown={onCellKeyDown}
+              className={cn(
+                'size-6 rounded-[3px] focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none',
+                bin.className,
+              )}
+            />
           </td>
         )
       })}

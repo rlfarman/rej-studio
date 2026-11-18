@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link, useNavigate, useSearch } from '@tanstack/react-router'
+import { Link, useNavigate, useParams, useSearch } from '@tanstack/react-router'
 import {
   Table,
   TableBody,
@@ -41,8 +41,11 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
 import { useMediaQuery } from '@/hooks/use-media-query'
-import { formatFasta } from '@/lib/bio/fasta'
 import { downloadTextFile } from '@/lib/download-file'
+import {
+  buildIsoformFasta,
+  isoformFastaFilename,
+} from '@/features/gene-search/utils/isoform-fasta'
 import {
   assessDesignSuitability,
   getSuitabilityConfig,
@@ -137,10 +140,14 @@ export default function IsoformTable({
 }: IsoformListProps) {
   const search = useSearch({ from: '/genes/$symbol' })
   const navigate = useNavigate({ from: '/genes/$symbol' })
+  // The gene the page is on, so a copied or downloaded record can say which
+  // gene it came from without the route having to pass it down.
+  const { symbol: geneSymbol } = useParams({ from: '/genes/$symbol' })
   const sort = parseIsoformSort(search)
-  const { copy: copyText, isCopied } = useCopyToClipboard({
-    showToast: false,
-  })
+  // A toast, because Base UI closes the menu on click: an item that swaps to
+  // "Copied!" swaps a label nobody is left looking at, which made a failed
+  // copy the only one that said anything.
+  const { copy: copyText } = useCopyToClipboard()
 
   const [expandedIds, setExpandedIds] = useState<Set<string>>(() =>
     highlightedIsoformId ? new Set([highlightedIsoformId]) : new Set(),
@@ -209,8 +216,15 @@ export default function IsoformTable({
 
   return (
     <>
-      <Table>
-        <TableHeader>
+      {/* The scroller is the table's own container, so the header below can
+          pin to it: a `sticky` header in a container with no height of its
+          own has nothing to stick to and scrolls away with the rows. Twenty
+          isoforms is normal (TP53 has 20), and past about ten rows the
+          numeric columns were unlabelled. */}
+      <Table containerClassName="max-h-[75svh] overflow-auto">
+        {/* Opaque and above the rows: a translucent header lets the rows it
+            is pinned over read through it. */}
+        <TableHeader className="sticky top-0 z-20 bg-background [&_th]:bg-background">
           <TableRow>
             <TableHead className="w-11 min-w-11 p-0">
               <Tooltip>
@@ -278,12 +292,15 @@ export default function IsoformTable({
               {...sortProps}
               className="hidden lg:table-cell"
             />
+            {/* Never hidden: it is the column the page exists for, and a
+                hidden header takes its sort control with it — a shared
+                `?sort=suitability` link then reordered the rows with no
+                header, no arrow and no way to clear it. */}
             <SortableHead
               label={terms.suitability.label}
               hint={terms.suitability.hint}
               sortKey="suitability"
               {...sortProps}
-              className="hidden lg:table-cell"
             />
             <TableHead className="w-px">
               <span className="sr-only">{copy.actionsHeader}</span>
@@ -309,7 +326,7 @@ export default function IsoformTable({
           isoform && (
             <IsoformMenuContent
               isoform={isoform}
-              isCopied={isCopied}
+              geneSymbol={geneSymbol}
               copyText={copyText}
             />
           )
@@ -453,9 +470,15 @@ function IsoformRow({
         <TableCell className="hidden font-mono tabular-nums lg:table-cell">
           {wggwCount.toLocaleString()}
         </TableCell>
-        <TableCell className="hidden lg:table-cell">
+        <TableCell>
+          {/* Phones get the short form ("2×") so the column fits beside the
+              transcript id; the tier's name stays in the accessible name. */}
           <Badge className={cn('text-xs', suitConfig.badgeClass)}>
-            {suitConfig.label}
+            <span className="sm:hidden" aria-hidden>
+              {suitConfig.short}
+            </span>
+            <span className="sr-only sm:hidden">{suitConfig.label}</span>
+            <span className="hidden sm:inline">{suitConfig.label}</span>
           </Badge>
         </TableCell>
         <TableCell className="py-1" onClick={(e) => e.stopPropagation()}>
@@ -562,15 +585,17 @@ function IsoformRow({
 /** The row's "more" menu, rendered once for the table by the shared root. */
 function IsoformMenuContent({
   isoform,
-  isCopied,
+  geneSymbol,
   copyText,
 }: {
   isoform: IsoformRowData
-  isCopied: (id: string) => boolean
-  copyText: (text: string, id: string) => void
+  geneSymbol: string
+  copyText: (
+    text: string,
+    id?: string,
+    options?: { successMessage?: string },
+  ) => void
 }) {
-  const cdsId = `cds-${isoform.id}`
-  const fastaId = `fasta-${isoform.id}`
   return (
     <DropdownMenuContent align="end">
       {hasPreOptimizedZip(isoform.suitability) ? (
@@ -608,23 +633,34 @@ function IsoformMenuContent({
         {copy.customizeLong}
       </DropdownMenuItem>
       <DropdownMenuSeparator />
-      <DropdownMenuItem onClick={() => copyText(isoform.codingSequence, cdsId)}>
+      <DropdownMenuItem
+        onClick={() =>
+          copyText(isoform.codingSequence, `cds-${isoform.id}`, {
+            successMessage: copy.copiedCds(isoform.id),
+          })
+        }
+      >
         <Copy className="size-4" />
-        {isCopied(cdsId) ? copy.copied : copy.copyCds}
+        {copy.copyCds}
       </DropdownMenuItem>
       <DropdownMenuItem
         onClick={() =>
-          copyText(formatFasta(isoform.id, isoform.codingSequence), fastaId)
+          copyText(
+            buildIsoformFasta(geneSymbol, isoform),
+            `fasta-${isoform.id}`,
+            { successMessage: copy.copiedFasta(isoform.id) },
+          )
         }
       >
         <FileText className="size-4" />
-        {isCopied(fastaId) ? copy.copied : copy.copyFasta}
+        {copy.copyFasta}
       </DropdownMenuItem>
       <DropdownMenuItem
+        aria-label={copy.downloadFastaAria(isoform.id)}
         onClick={() => {
           downloadTextFile(
-            `${isoform.id}.fasta`,
-            formatFasta(isoform.id, isoform.codingSequence),
+            isoformFastaFilename(geneSymbol, isoform.id),
+            buildIsoformFasta(geneSymbol, isoform),
           )
         }}
       >
@@ -650,7 +686,6 @@ function IsoformMenuContent({
 
 function ExpandedDetails({ isoform }: { isoform: IsoformRowData }) {
   const { gcPercent, cpgCount, wggwCount } = isoform
-  const suitConfig = getSuitabilityConfig(isoform.suitability)
   const zipAvailable = hasPreOptimizedZip(isoform.suitability)
   // The preview only ever proposes a *two-way* split, so it belongs to the
   // dual-AAV tier alone. Showing it for a triple-AAV sequence called a
@@ -737,16 +772,9 @@ function ExpandedDetails({ isoform }: { isoform: IsoformRowData }) {
             {wggwCount.toLocaleString()}
           </dd>
         </div>
-        <div className="col-span-2">
-          <dt className="text-muted-foreground">{terms.suitability.label}</dt>
-          <dd>
-            <Badge className={cn('text-xs', suitConfig.badgeClass)}>
-              {suitConfig.label}
-            </Badge>
-          </dd>
-        </div>
       </dl>
-      <dl className="hidden grid-cols-3 gap-x-4 gap-y-2 text-xs sm:grid md:hidden">
+      {/* AAV fit is not repeated here: its column is on every screen size. */}
+      <dl className="hidden grid-cols-2 gap-x-4 gap-y-2 text-xs sm:grid md:hidden">
         <div>
           <dt className="text-muted-foreground">CpG</dt>
           <dd className="font-mono tabular-nums">
@@ -757,14 +785,6 @@ function ExpandedDetails({ isoform }: { isoform: IsoformRowData }) {
           <dt className="text-muted-foreground">WGGW</dt>
           <dd className="font-mono tabular-nums">
             {wggwCount.toLocaleString()}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-muted-foreground">{terms.suitability.label}</dt>
-          <dd>
-            <Badge className={cn('text-xs', suitConfig.badgeClass)}>
-              {suitConfig.label}
-            </Badge>
           </dd>
         </div>
       </dl>

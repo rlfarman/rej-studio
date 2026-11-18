@@ -41,7 +41,9 @@ export function SubmitButton({
       className="min-w-56 text-base font-semibold"
       disabled={isProcessing}
       aria-busy={isProcessing}
-      aria-live="polite"
+      // No aria-live here: the stage shown on this button is the same stage
+      // the running card announces, and two live regions carrying it read it
+      // out twice. aria-busy still says the button is working.
     >
       <span className="inline-flex items-center gap-2.5">
         {isProcessing ? (

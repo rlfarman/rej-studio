@@ -19,6 +19,7 @@ import { CloudRuns } from '@/features/design-tool/components/cloud-runs'
 import { MyCloudDesigns } from '@/features/design-tool/components/my-cloud-designs'
 import { AccountMenu } from '@/components/account/account-menu'
 import { SignInDialog } from '@/components/account/sign-in-dialog'
+import { LockButton } from '@/features/auth/components/lock-button'
 import { SalkLogo } from './salk-logo'
 import { SidebarMenu } from './sidebar-menu'
 import {
@@ -128,7 +129,19 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <BrowserRuns />
       <CloudRuns />
       <SignInDialog />
-      <Sidebar collapsible="icon" {...props}>
+      {/* The sidebar is the app's navigation landmark — without one, a
+          screen-reader user has no way to jump to these links — and the
+          sheet it becomes on phones needs a name of its own. */}
+      <Sidebar
+        collapsible="icon"
+        containerProps={{
+          role: 'navigation',
+          'aria-label': commonCopy.sidebar.navLabel,
+        }}
+        sheetTitle={commonCopy.sidebar.sheetTitle}
+        sheetDescription={commonCopy.sidebar.sheetDescription}
+        {...props}
+      >
         <SidebarHeader>
           <SidebarMenuPrimitive>
             <SidebarMenuItem>
@@ -191,6 +204,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarMenuPrimitive>
           <AccountMenu />
           <SidebarMenu />
+          <LockButton />
         </SidebarFooter>
         <SidebarRail />
       </Sidebar>

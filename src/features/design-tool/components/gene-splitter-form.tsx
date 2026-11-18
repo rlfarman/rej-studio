@@ -16,7 +16,6 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import type { DesignToolSpecies } from '@/features/design-tool/types/species-options'
 import { validationSchema, FormValues } from '../types/form-schema'
-import { formatOptionsForReport } from '../utils/form-handler'
 import { withSelectedWggwSites } from '../utils/wggw-selection'
 import { useJob } from '@/features/design-tool/hooks/use-job'
 import { useAccount } from '@/lib/account/account'
@@ -47,6 +46,7 @@ const ResultsPanel = lazy(() =>
 
 const copy = designToolCopy.form
 const draftCopy = designToolCopy.draft
+const announceCopy = designToolCopy.form.announce
 
 interface GeneSplitterFormProperties {
   defaultCodingSequence?: string
@@ -194,7 +194,14 @@ export function GeneSplitterForm({
 
   // While a resumed job's entry is still loading, the job is neither new nor
   // missing: show a placeholder rather than flashing an empty form.
-  const showForm = (job.status === 'idle' && !job.isRestoring) || isEditing
+  // A submission the backend refused before it started (a cloud design over
+  // the length limit) kept the form hidden behind a red error naming a
+  // toggle that was no longer on screen, and "Run again" repeated it. The
+  // form stays up instead: the thing to change is on it.
+  const showForm =
+    (job.status === 'idle' && !job.isRestoring) ||
+    isEditing ||
+    job.failedBeforeStart
   const isRunning = job.status === 'submitting' || job.status === 'running'
   // A run (or a restored job) is under way: fetch the results UI now.
   useEffect(() => {
@@ -222,6 +229,28 @@ export function GeneSplitterForm({
         onSubmit={methods.handleSubmit(onSubmit)}
         className="flex flex-col gap-6"
       >
+        {/* Mounted for the whole life of the form, so a run settling is
+            announced: the only live region used to be inside the progress
+            card, which unmounts with the run. */}
+        <p role="status" aria-live="polite" className="sr-only">
+          {job.status === 'completed'
+            ? announceCopy.completed
+            : job.status === 'failed'
+              ? announceCopy.failed(job.error?.message ?? '')
+              : job.status === 'cancelled'
+                ? announceCopy.cancelled
+                : ''}
+        </p>
+
+        {job.failedBeforeStart && job.error && (
+          <div
+            role="alert"
+            className="rounded-2xl border border-destructive/50 bg-destructive/5 p-3 text-sm text-destructive"
+          >
+            {job.error.message}
+          </div>
+        )}
+
         {!showForm && headerStatus && (
           <JobHeader
             name={methods.getValues('name')}
@@ -233,6 +262,9 @@ export function GeneSplitterForm({
             processingTimeSeconds={result?.processing_time_seconds ?? null}
             errorMessage={job.error?.message ?? null}
             retriable={job.error?.retriable ?? true}
+            // Nothing of this design is on this device, so "Edit" would
+            // open a blank form: the header says "Start a new design".
+            missing={job.error?.code === 'not_found'}
             onEdit={() => setIsEditing(true)}
             onRerun={handleRerun}
             // A cloud run cannot be cancelled from here: it is not this
@@ -355,7 +387,10 @@ export function GeneSplitterForm({
                 )}
                 <SubmitButton
                   isJobRunning={job.isLoading}
-                  isJobComplete={job.status === 'completed'}
+                  // Not while editing: reopening a finished run's inputs
+                  // flashed "✓ Optimization complete" over a form whose
+                  // values no longer match that run.
+                  isJobComplete={job.status === 'completed' && !isEditing}
                   stage={job.stage}
                 />
               </div>
@@ -367,13 +402,30 @@ export function GeneSplitterForm({
           <Suspense
             fallback={<Skeleton className="h-[36rem] w-full rounded-2xl" />}
           >
-            <ResultsPanel
-              result={result}
-              optionsUsed={formatOptionsForReport(
-                withSelectedWggwSites(methods.getValues()),
-              )}
-              species={methods.getValues('species')}
-            />
+            {showForm ? (
+              // Results of a different set of inputs than the form above
+              // now holds: say whose they are rather than leave them to be
+              // read as the form's output.
+              <section
+                aria-labelledby="previous-run-heading"
+                className="flex flex-col gap-3"
+              >
+                <div>
+                  <h2
+                    id="previous-run-heading"
+                    className="text-base font-semibold tracking-tight"
+                  >
+                    {copy.previousRun.heading}
+                  </h2>
+                  <p className="text-sm text-muted-foreground">
+                    {copy.previousRun.description}
+                  </p>
+                </div>
+                <ResultsPanel result={result} runValues={job.formValues} />
+              </section>
+            ) : (
+              <ResultsPanel result={result} runValues={job.formValues} />
+            )}
           </Suspense>
         )}
       </form>

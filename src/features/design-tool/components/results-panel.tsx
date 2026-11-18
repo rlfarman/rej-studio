@@ -65,7 +65,10 @@ import { downloadTextFile } from '@/lib/download-file'
 import { isSpecies } from '@/lib/bio/species'
 import type { DesignToolSpecies } from '@/features/design-tool/types/species-options'
 import { computeGcPercent, countCpG } from '@/lib/bio/sequence-utils'
-import { deriveKeyMetrics } from '@/features/design-tool/utils/objective-metrics'
+import {
+  computeCai,
+  deriveKeyMetrics,
+} from '@/features/design-tool/utils/objective-metrics'
 import {
   buildObjectiveSteps,
   countOutcomes,
@@ -76,6 +79,8 @@ import {
   GC_TARGET_MAX_PERCENT,
   GC_TARGET_MIN_PERCENT,
 } from '@/features/design-tool/utils/job-constants'
+import { formatOptionsForReport } from '@/features/design-tool/utils/form-handler'
+import type { FormValues } from '@/features/design-tool/types/form-schema'
 import { designToolCopy } from '../copy'
 import { errorsCopy } from '@/copy/errors'
 
@@ -83,8 +88,13 @@ const resultsCopy = designToolCopy.results
 
 interface ResultsPanelProps {
   result: ProcessResult
-  optionsUsed: string
-  species: DesignToolSpecies
+  /**
+   * The inputs this run was submitted with, as the run recorded them — never
+   * the live form. The exported report states the options a design was made
+   * with, so reading them off a form the person has since edited made the
+   * file misdescribe itself.
+   */
+  runValues: FormValues | null
 }
 
 /** Parse the DNAChisel objectives text into a digestible summary. */
@@ -137,11 +147,20 @@ function SplitVisualization({
 const GC_TARGET = { min: GC_TARGET_MIN_PERCENT, max: GC_TARGET_MAX_PERCENT }
 
 /** Plain function — the React Compiler handles memoization. */
-function computeStats(result: ProcessResult) {
+function computeStats(result: ProcessResult, species: DesignToolSpecies) {
   const before = parseObjectives(result.objectives_before)
   const after = parseObjectives(result.objectives_after)
   const keyBefore = deriveKeyMetrics(result.objectives_report_before)
   const keyAfter = deriveKeyMetrics(result.objectives_report_after)
+  // A real codon adaptation index, from the sequence and the species' codon
+  // table. The report's MaximizeCAI entry holds the optimizer's objective
+  // score instead, which is negative and unbounded.
+  const cai = isSpecies(species)
+    ? {
+        before: computeCai(result.original_sequence, species),
+        after: computeCai(result.optimized_sequence, species),
+      }
+    : null
 
   const orig = result.original_sequence
   const opt = result.optimized_sequence
@@ -151,6 +170,7 @@ function computeStats(result: ProcessResult) {
       after,
       keyBefore,
       keyAfter,
+      cai,
       gc: null,
       cpg: null,
       identity: null,
@@ -172,20 +192,30 @@ function computeStats(result: ProcessResult) {
     after,
     keyBefore,
     keyAfter,
+    cai,
     gc: { before: gcBefore, after: gcAfter },
     cpg: { before: cpgBefore, after: cpgAfter },
     identity,
   }
 }
 
-function MetricsStrip({ result }: { result: ProcessResult }) {
-  const stats = computeStats(result)
+function MetricsStrip({
+  result,
+  species,
+}: {
+  result: ProcessResult
+  species: DesignToolSpecies
+}) {
+  const stats = computeStats(result, species)
 
   const showDonors =
     stats.keyBefore.spliceDonors > 0 || stats.keyAfter.spliceDonors > 0
   const showAcceptors =
     stats.keyBefore.spliceAcceptors > 0 || stats.keyAfter.spliceAcceptors > 0
-  const showCai = stats.keyAfter.caiScore !== null
+  // The index when it can be computed; otherwise the optimizer's own score
+  // under its own name, which is not a CAI.
+  const showCai = stats.cai?.after != null
+  const showCaiObjective = !showCai && stats.keyAfter.caiObjectiveScore !== null
 
   return (
     <div className="grid grid-cols-1 gap-px overflow-hidden rounded-2xl border bg-border sm:grid-cols-2 lg:grid-cols-4">
@@ -231,10 +261,18 @@ function MetricsStrip({ result }: { result: ProcessResult }) {
       )}
       {showCai && (
         <MetricCell
-          label="CAI"
-          before={stats.keyBefore.caiScore}
-          after={stats.keyAfter.caiScore}
+          label={resultsCopy.metrics.cai}
+          before={stats.cai?.before ?? null}
+          after={stats.cai?.after ?? null}
           formatter={(n) => n.toFixed(3)}
+        />
+      )}
+      {showCaiObjective && (
+        <MetricCell
+          label={resultsCopy.metrics.caiObjective}
+          before={stats.keyBefore.caiObjectiveScore}
+          after={stats.keyAfter.caiObjectiveScore}
+          formatter={(n) => n.toFixed(2)}
         />
       )}
     </div>
@@ -393,25 +431,32 @@ function ExpandableRow({
   const [open, setOpen] = useState(defaultOpen)
   return (
     <div className="border-t py-2 first:border-t-0">
-      <button
-        type="button"
-        aria-expanded={open}
-        onClick={() => setOpen((v) => !v)}
-        className="flex w-full cursor-pointer items-center gap-2 py-1 text-left text-sm select-none"
-      >
-        <ChevronRight
-          aria-hidden
-          className={cn(
-            'size-4 shrink-0 text-muted-foreground transition-transform duration-200',
-            open && 'rotate-90',
+      {/* The toggle lives inside a heading: a completed run then has an
+          outline a screen reader can navigate, instead of a flat run of
+          buttons. */}
+      <h3 className="text-sm font-medium">
+        <button
+          type="button"
+          aria-expanded={open}
+          onClick={() => setOpen((v) => !v)}
+          className="flex w-full cursor-pointer items-center gap-2 py-1 text-left text-sm font-medium select-none"
+        >
+          <ChevronRight
+            aria-hidden
+            className={cn(
+              'size-4 shrink-0 text-muted-foreground transition-transform duration-200',
+              open && 'rotate-90',
+            )}
+          />
+          <Icon className="size-4 shrink-0 text-muted-foreground" />
+          <span className="font-medium">{title}</span>
+          {summary && (
+            <span className="text-xs font-normal text-muted-foreground">
+              — {summary}
+            </span>
           )}
-        />
-        <Icon className="size-4 shrink-0 text-muted-foreground" />
-        <span className="font-medium">{title}</span>
-        {summary && (
-          <span className="text-xs text-muted-foreground">— {summary}</span>
-        )}
-      </button>
+        </button>
+      </h3>
       {open && <div className="pt-3 pb-2 pl-6">{children}</div>}
     </div>
   )
@@ -481,7 +526,18 @@ function aavSummary(seq5: number, seq3: number) {
   return `5' ${label(seq5 + AAV_OVERHEAD_BP)} · 3' ${label(seq3 + AAV_OVERHEAD_BP)}`
 }
 
-function ResultsPanelImpl({ result, optionsUsed, species }: ResultsPanelProps) {
+function ResultsPanelImpl({ result, runValues }: ResultsPanelProps) {
+  // Everything the panel and the export say about the run's inputs comes
+  // from the run itself. Older entries saved no inputs; the report then says
+  // so rather than describing some other set of options.
+  const species: DesignToolSpecies = runValues?.species ?? 'none'
+  // The stored inputs already carry the WGGW sites the request was built
+  // with (the form resolves them before submitting), so this is the very
+  // options block the optimizer was given.
+  const optionsUsed = runValues
+    ? formatOptionsForReport(runValues)
+    : resultsCopy.optionsUnavailable
+
   // The ZIP library loads on the first download, not with the results.
   const handleDownloadZip = async () => {
     try {
@@ -518,7 +574,19 @@ function ResultsPanelImpl({ result, optionsUsed, species }: ResultsPanelProps) {
     )
   })()
 
+  // Counted off the structured report, which is what the section itself
+  // reports. Parsing the text gave a second total three lines away from the
+  // first ("26 of 30 passed" over "26 of 32 objectives passed"): the text
+  // ticks only the objectives it prints a ✔ for.
   const objectivesSummary = (() => {
+    const entries = result.objectives_report_after.entries
+    if (entries.length > 0) {
+      return resultsCopy.summaries.objectivesPassed(
+        entries.filter((entry) => entry.passes).length,
+        entries.length,
+      )
+    }
+    // No structured report (an older result): the text is all there is.
     const after = parseObjectives(result.objectives_after)
     const total = after.passedCount + after.failedCount
     if (total === 0) return undefined
@@ -549,7 +617,13 @@ function ResultsPanelImpl({ result, optionsUsed, species }: ResultsPanelProps) {
       <CardHeader>
         <div className="flex items-center justify-between gap-3">
           <div>
-            <CardTitle>{resultsCopy.heading}</CardTitle>
+            <CardTitle
+              render={
+                <h2 className="text-lg font-semibold tracking-tight">
+                  {resultsCopy.heading}
+                </h2>
+              }
+            />
             <CardDescription className="flex items-center gap-1.5">
               <Clock className="size-3" />
               {resultsCopy.completedIn(result.processing_time_seconds)}
@@ -578,7 +652,7 @@ function ResultsPanelImpl({ result, optionsUsed, species }: ResultsPanelProps) {
           splitPoint={result.split_point}
         />
 
-        <MetricsStrip result={result} />
+        <MetricsStrip result={result} species={species} />
 
         <SequenceViewer result={result} />
 
@@ -706,6 +780,6 @@ function ResultsPanelImpl({ result, optionsUsed, species }: ResultsPanelProps) {
 }
 
 // Memoized: the parent form re-renders on every keystroke, but the result
-// object only changes when a new job completes. optionsUsed is a string
-// snapshot, so default referential equality is sufficient.
+// object and the run's stored inputs only change when a new job completes,
+// so default referential equality is sufficient.
 export const ResultsPanel = memo(ResultsPanelImpl)

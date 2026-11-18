@@ -3,6 +3,7 @@ import { act, cleanup, renderHook, waitFor } from '@testing-library/react'
 import { FormProvider, useForm, type UseFormReturn } from 'react-hook-form'
 import type { PropsWithChildren } from 'react'
 
+import { designToolCopy } from '@/features/design-tool/copy'
 import type { FormValues } from '@/features/design-tool/types/form-schema'
 import { useReverseTranslation } from './use-reverse-translation'
 
@@ -185,5 +186,49 @@ describe('useReverseTranslation', () => {
     expect(reverseTranslateInBrowser).not.toHaveBeenCalled()
     // A DNA sequence the user typed is left exactly as it is.
     expect(dna.form().getValues('codingSequence')).toBe('ATGAAGTGA')
+  })
+  it('clears the waiting-for-DNA notice once the DNA arrives', async () => {
+    reverseTranslateInBrowser.mockResolvedValue({ ok: true, CDS: 'ATGAAGTGA' })
+    const view = render()
+
+    act(() => {
+      view.form().setValue('proteinSequence', 'MK*')
+      // What a validation run during the translation does: the schema sees an
+      // empty coding sequence and marks the protein field.
+      view.form().setError('proteinSequence', {
+        type: 'custom',
+        message: designToolCopy.validation.protein.awaitingDna,
+      })
+    })
+
+    await waitFor(() => {
+      expect(view.form().getValues('codingSequence')).toBe('ATGAAGTGA')
+    })
+    // The field must not stay marked invalid once the DNA it was waiting for
+    // is here — the line under it already reports that DNA. (`formState` only
+    // reads through a subscribed render, so this asks the field itself.)
+    await waitFor(() => {
+      expect(view.form().getFieldState('proteinSequence').error).toBe(undefined)
+    })
+  })
+
+  it('leaves a complaint about the protein itself in place', async () => {
+    reverseTranslateInBrowser.mockResolvedValue({ ok: true, CDS: 'ATGAAGTGA' })
+    const view = render()
+
+    act(() => {
+      view.form().setValue('proteinSequence', 'MK*')
+      view.form().setError('proteinSequence', {
+        type: 'custom',
+        message: designToolCopy.validation.protein.internalStop,
+      })
+    })
+
+    await waitFor(() => {
+      expect(view.form().getValues('codingSequence')).toBe('ATGAAGTGA')
+    })
+    expect(view.form().getFieldState('proteinSequence').error?.message).toBe(
+      designToolCopy.validation.protein.internalStop,
+    )
   })
 })

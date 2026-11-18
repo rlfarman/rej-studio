@@ -22,7 +22,9 @@ import { toast } from '@/lib/toast'
 import { openSignIn } from '@/stores/sign-in-dialog-store'
 
 /**
- * The account entry in the sidebar footer: "Sign in" when signed out, the
+ * The account entry in the sidebar footer: an offer of cloud designs when
+ * signed out (the lab passcode is a separate thing, so this one says what an
+ * account adds rather than "Sign in" a second time), the
  * account's email (with "Sign out") when signed in, and nothing while the
  * state is unknown or accounts are not available, so the prerendered shell
  * and a deployment without accounts draw no sign-in at all.
@@ -39,9 +41,12 @@ export function AccountMenu() {
     return (
       <SidebarMenu>
         <SidebarMenuItem>
-          <SidebarMenuButton tooltip={accountCopy.signIn} onClick={openSignIn}>
+          <SidebarMenuButton
+            tooltip={accountCopy.sidebarSignIn}
+            onClick={openSignIn}
+          >
             <LogIn />
-            <span>{accountCopy.signIn}</span>
+            <span>{accountCopy.sidebarSignIn}</span>
           </SidebarMenuButton>
         </SidebarMenuItem>
       </SidebarMenu>

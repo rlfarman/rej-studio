@@ -28,6 +28,69 @@ export function LocalSequenceView({
   const [hoveredSitePosition, setHoveredSitePosition] = useState<number | null>(
     null,
   )
+  // Roving tabindex over the candidate sites. The strip holds one tab stop,
+  // and arrows / Home / End move it between sites; Enter or Space selects
+  // (the stop is a real button, so that comes for free). `basedOn` records
+  // which selection the roving stop was set against, so a selection made by
+  // any other route ([ ], a tick click, a drag) pulls the stop back onto the
+  // site the design is actually using.
+  const [roving, setRoving] = useState<{
+    site: number
+    basedOn: number | null
+  } | null>(null)
+  const sitePositions = sites.map((site) => site.position)
+  const selectedSitePosition =
+    selectedSites[activeSpliceIndex]?.position ??
+    selectedSites.find((site) => site)?.position ??
+    null
+  const rovingSitePosition =
+    roving !== null &&
+    roving.basedOn === selectedSitePosition &&
+    sitePositions.includes(roving.site)
+      ? roving.site
+      : (selectedSitePosition ?? sitePositions[0] ?? null)
+
+  const moveRoving = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (sitePositions.length === 0) return
+    const current =
+      rovingSitePosition === null
+        ? -1
+        : sitePositions.indexOf(rovingSitePosition)
+    const last = sitePositions.length - 1
+    let next: number | undefined
+    switch (event.key) {
+      case 'ArrowRight':
+      case 'ArrowDown':
+        next = sitePositions[Math.min(last, current + 1)]
+        break
+      case 'ArrowLeft':
+      case 'ArrowUp':
+        next = sitePositions[Math.max(0, current - 1)]
+        break
+      case 'Home':
+        next = sitePositions[0]
+        break
+      case 'End':
+        next = sitePositions[last]
+        break
+      default:
+        return
+    }
+    event.preventDefault()
+    // The editor's own window shortcuts and the slider track must not also
+    // act on these keys.
+    event.stopPropagation()
+    if (next === undefined) return
+    const target = stripRef.current?.querySelector<HTMLElement>(
+      `[data-site-start="${next}"]`,
+    )
+    // Only move the stop onto a site that is actually rendered as one, so
+    // the strip never ends up with no tab stop at all.
+    if (!target) return
+    setRoving({ site: next, basedOn: selectedSitePosition })
+    target.focus()
+    target.scrollIntoView({ block: 'nearest', inline: 'center' })
+  }
 
   const selectedCoverByBase = coverBySelectedSite(selectedSites)
   const otherSiteCoverByBase = coverByOtherSite(sites, selectedSites)
@@ -75,13 +138,26 @@ export function LocalSequenceView({
     // its own space below the bases — on platforms with overlay
     // scrollbars (macOS) the bar sits over padding rather than the
     // base letters at the bottom of each card.
+    //
+    // The roving-tabindex pattern: the strip owns one tab stop and routes
+    // arrow keys to the site buttons inside it, which are the interactive
+    // elements. Binding the handler to each button instead would add a
+    // listener per candidate site (457 on BRCA2) for no behavioural gain.
+    // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
     <div
       ref={stripRef}
       role="group"
       aria-label="Sequence context around WGGW split site"
+      aria-describedby="wggw-strip-keys"
       className="[scrollbar-width:none] overflow-x-auto rounded-2xl border bg-muted/40 px-5 py-1 font-mono type-nano leading-none [-ms-overflow-style:none] sm:py-2 [&::-webkit-scrollbar]:hidden"
       onPointerLeave={() => setHoveredSitePosition(null)}
+      onKeyDown={moveRoving}
     >
+      <p id="wggw-strip-keys" className="sr-only">
+        {sites.length.toLocaleString()} candidate WGGW sites. Use the left and
+        right arrow keys to move between them, Home and End for the first and
+        last, and Enter to split here.
+      </p>
       <div className="flex items-stretch">
         {ctx.codons.map((codon, codonIdx) => (
           <CodonCard
@@ -94,6 +170,7 @@ export function LocalSequenceView({
             changedBases={changedBases}
             searchMatchBases={searchMatchBases}
             hoveredSitePosition={hoveredSitePosition}
+            rovingSitePosition={rovingSitePosition}
             isLast={codonIdx === ctx.codons.length - 1}
             onHoverSite={setHoveredSitePosition}
             onSelectSite={onSelectSite}

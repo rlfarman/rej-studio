@@ -8,6 +8,7 @@ import {
 import { useNavigate } from '@tanstack/react-router'
 import { useGeneSearch } from '@/features/gene-search/hooks/use-gene-search'
 import { usePrefetchGeneIndex } from '@/features/gene-search/hooks/use-prefetch-gene-index'
+import { usePreTypedQuery } from '@/features/gene-search/hooks/use-pre-typed-query'
 import { GeneSearchCommand } from './gene-search-command'
 import { useRecentGenes } from '@/features/gene-search/stores/recent-genes-store'
 import { useFavoriteGenes } from '@/features/gene-search/stores/favorite-genes-store'
@@ -51,6 +52,9 @@ export function GeneSearch({
   // header's trigger; the worker loads it once).
   usePrefetchGeneIndex()
   const navigate = useNavigate()
+  // Text typed into the prerendered box before the app hydrated counts as
+  // the query, so it isn't wiped and is searched for on mount.
+  const initialQuery = usePreTypedQuery(defaultQuery, { enabled: !isDialog })
   const {
     query,
     setQuery,
@@ -62,7 +66,7 @@ export function GeneSearch({
     isLoading,
     error,
     retry,
-  } = useGeneSearch({ defaultQuery })
+  } = useGeneSearch({ defaultQuery: initialQuery })
   const { species } = useSpeciesContext()
   const [isOpenState, setIsOpenState] = useState(false)
   const isOpen = open ?? isOpenState

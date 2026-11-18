@@ -9,6 +9,14 @@ export const commonCopy = {
   sidebar: {
     open: 'Open sidebar',
     close: 'Close sidebar',
+    // The sidebar is the app's navigation landmark, so it carries a name a
+    // screen reader can jump to ("Main navigation").
+    navLabel: 'Main',
+    // On phones the sidebar is a dialog, which needs its own name and
+    // description; the shadcn primitive only has placeholders.
+    sheetTitle: 'Main navigation',
+    sheetDescription:
+      'Pages, starred genes, recent searches, designs and settings.',
   },
   // Header context label, shown once the page title has scrolled away.
   pageContext: {

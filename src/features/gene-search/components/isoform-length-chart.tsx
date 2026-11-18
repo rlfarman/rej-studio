@@ -1,4 +1,4 @@
-import { Link } from '@tanstack/react-router'
+import { Link, useParams } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
 import {
   assessDesignSuitability,
@@ -21,8 +21,11 @@ interface Props {
  * genes it would just restate the table's CDS column.
  */
 export function IsoformLengthChart({ isoforms }: Props) {
+  const { symbol: geneSymbol } = useParams({ from: '/genes/$symbol' })
   const rows = [...isoforms]
-    // Shortest first so the bars read as a ramp toward the limits.
+    // Shortest first so the bars read as a ramp toward the limits. The
+    // identity matrix below uses the same order, so its row numbers line up
+    // with these bars (see sortForDisplay there).
     .sort((a, b) => a.codingSequenceLength - b.codingSequenceLength)
     .map((i) => ({
       id: i.id,
@@ -135,8 +138,17 @@ export function IsoformLengthChart({ isoforms }: Props) {
         storageKey="isoforms"
         caption={geneSearchCopy.charts.isoformLengths.caption}
         columns={geneSearchCopy.charts.isoformLengths.columns}
-        rows={rows.map((row) => [row.id, row.length, row.suitability])}
-        csvFilename="isoform-lengths.csv"
+        // The tier's own label, not its slug: the legend above says
+        // "Single AAV", so the numbers behind the chart must too.
+        rows={rows.map((row) => [
+          geneSymbol,
+          row.id,
+          row.length,
+          getSuitabilityConfig(row.suitability).label,
+        ])}
+        csvFilename={geneSearchCopy.charts.isoformLengths.csvFilename(
+          geneSymbol,
+        )}
       />
     </section>
   )

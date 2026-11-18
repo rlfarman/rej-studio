@@ -1,6 +1,6 @@
 import { useEffect, useEffectEvent, useRef, useState } from 'react'
 import { cn } from '@/lib/utils'
-import { ChevronLeft, ChevronRight, Plus } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Plus, TriangleAlert } from 'lucide-react'
 import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
 import type { RewritePick } from '../types/form-schema'
@@ -177,6 +177,26 @@ export function SpliceSliderContext({
   // position: it is what the person drags and what picks the site.
   const cuts = cutPositions(selectedSites, positions)
   const activeCut = cuts[clampedActiveIndex] ?? activePosition
+
+  // Fragments are measured at the cuts, so the sizes — and the packaging
+  // verdict drawn from them — are the ones the design delivers.
+  const segments = buildSegments(cuts, seqLen)
+  // The AAV packaging limit is the editor's most consequential constraint,
+  // so an over-limit fragment gets named in text (see the notice below the
+  // track) and in the slider's value text, not only tinted in the bar.
+  const overLimitNames = segments
+    .filter((seg) => seg.end - seg.start > AAV_MAX_BP)
+    .map((seg) => seg.label || 'middle')
+  const overLimitNotice =
+    overLimitNames.length === 0
+      ? null
+      : `The ${joinNames(overLimitNames)} fragment${
+          overLimitNames.length === 1 ? '' : 's'
+        } ${
+          overLimitNames.length === 1 ? 'exceeds' : 'exceed'
+        } the ~${AAV_MAX_BP.toLocaleString()} bp AAV packaging limit, so this design will not fit a single AAV. You can still run it — move the split point to balance the fragments${
+          MULTI_SPLIT_ENABLED ? ' or add a second split point' : ''
+        }.`
 
   const frameContext = buildSequenceContext(sequence)
 
@@ -734,18 +754,21 @@ export function SpliceSliderContext({
             aria-valuemax={seqLen - 1}
             aria-valuenow={activePosition}
             aria-valuetext={
-              activeCut === activePosition
+              (activeCut === activePosition
                 ? `bp ${activePosition.toLocaleString()} of ${seqLen.toLocaleString()}`
-                : `bp ${activePosition.toLocaleString()} of ${seqLen.toLocaleString()} — cuts at bp ${activeCut.toLocaleString()}, the nearest WGGW motif`
+                : `bp ${activePosition.toLocaleString()} of ${seqLen.toLocaleString()} — cuts at bp ${activeCut.toLocaleString()}, the nearest WGGW motif`) +
+              (overLimitNames.length === 0
+                ? ''
+                : ` — ${overLimitNames.length} fragment${
+                    overLimitNames.length === 1 ? '' : 's'
+                  } over the ~${AAV_MAX_BP.toLocaleString()} bp AAV packaging limit`)
             }
             onPointerDown={handleTrackPointerDown}
             onKeyDown={handleTrackKeyDown}
             className="relative h-18 cursor-ew-resize touch-none rounded-2xl border bg-background/80 select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <div className="absolute inset-x-0 top-0 z-10 flex h-11 overflow-hidden rounded-t-2xl">
-              {/* Fragments are measured at the cuts, so the sizes are the
-                  ones the design delivers. */}
-              {buildSegments(cuts, seqLen).map((seg, i, arr) => {
+              {segments.map((seg, i, arr) => {
                 // Segments are colored by which splice "owns" them: the 5′
                 // segment uses splice 1's tone; with a 2nd splice the 3′
                 // segment uses the last splice's tone, and middle segment(s)
@@ -771,7 +794,7 @@ export function SpliceSliderContext({
                   >
                     <span
                       className={cn(
-                        'pointer-events-none truncate px-4 text-sm font-semibold tracking-[0.01em] tabular-nums',
+                        'pointer-events-none flex min-w-0 items-center gap-1 px-4 text-sm font-semibold tracking-[0.01em] tabular-nums',
                         overAAV ? 'text-danger-soft' : segTone.text,
                       )}
                       title={
@@ -780,8 +803,19 @@ export function SpliceSliderContext({
                           : `${fragmentBp.toLocaleString()} bp · within the AAV packaging limit`
                       }
                     >
-                      {seg.label && `${seg.label} · `}
-                      {fragmentBp.toLocaleString()} bp
+                      {/* A shape as well as a tint: the packaging verdict
+                          cannot be carried by colour alone. */}
+                      {overAAV && (
+                        <TriangleAlert
+                          className="size-3.5 shrink-0"
+                          aria-hidden="true"
+                        />
+                      )}
+                      <span className="truncate">
+                        {seg.label && `${seg.label} · `}
+                        {fragmentBp.toLocaleString()} bp
+                        {overAAV && ' · over limit'}
+                      </span>
                     </span>
                   </div>
                 )
@@ -921,6 +955,28 @@ export function SpliceSliderContext({
             })}
           </div>
 
+          {/* Real text, on screen, for the limit the bar only tints. Live
+              so it is announced when a move puts a fragment over (or back
+              under) the limit; the wording names the fragments rather than
+              their sizes, so dragging doesn't re-announce on every frame. */}
+          {overLimitNotice && (
+            <div
+              role="status"
+              className="flex items-start gap-2 rounded-2xl border border-danger/40 bg-danger/10 px-3 py-2 text-xs text-danger-soft"
+            >
+              <TriangleAlert
+                className="mt-0.5 size-4 shrink-0"
+                aria-hidden="true"
+              />
+              <p>
+                <span className="font-semibold">
+                  Too large to package into one AAV.{' '}
+                </span>
+                {overLimitNotice}
+              </p>
+            </div>
+          )}
+
           <LocalSequenceView
             ctx={frameContext}
             sites={wggwSites}
@@ -1034,6 +1090,12 @@ function normalizePositions(
     return src.map(clamp)
   }
   return [clamp(inputPositions[0] ?? midpoint)]
+}
+
+/** "5′", "5′ and 3′", "5′, middle and 3′". */
+function joinNames(names: string[]): string {
+  if (names.length <= 1) return names[0] ?? ''
+  return `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`
 }
 
 /** `values` padded with `fill()` or trimmed to `length`; the same array when it already fits. */

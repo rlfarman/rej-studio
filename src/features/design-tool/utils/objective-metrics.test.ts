@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vite-plus/test'
 
 import type { ObjectivesReport } from '@/features/design-tool/types/process-result'
 
-import { deriveKeyMetrics } from './objective-metrics'
+import { computeCai, deriveKeyMetrics } from './objective-metrics'
 
 function makeReport(
   entries: ObjectivesReport['entries'] = [],
@@ -16,25 +16,25 @@ describe('deriveKeyMetrics', () => {
     expect(metrics).toEqual({
       spliceDonors: 0,
       spliceAcceptors: 0,
-      caiScore: null,
+      caiObjectiveScore: null,
       kmerScore: null,
       kmerPassed: false,
     })
   })
 
-  it('extracts CAI score from MaximizeCAI entry', () => {
+  it('keeps the MaximizeCAI entry under its own name — it is a score, not a CAI', () => {
     const metrics = deriveKeyMetrics(
       makeReport([
         {
           objective: 'MaximizeCAI(human)',
-          passes: true,
-          score: 0.85,
+          passes: false,
+          score: -84.899,
           message: '',
           locations: [],
         },
       ]),
     )
-    expect(metrics.caiScore).toBe(0.85)
+    expect(metrics.caiObjectiveScore).toBe(-84.899)
   })
 
   it('extracts kmer score and pass status', () => {
@@ -105,5 +105,38 @@ describe('deriveKeyMetrics', () => {
     )
     expect(metrics.spliceDonors).toBe(0)
     expect(metrics.spliceAcceptors).toBe(0)
+  })
+})
+
+// CAI is a ratio in [0, 1]. The panel used to show the MaximizeCAI objective
+// score under that name ("CAI -84.899 → -37.699"), which reads as a broken
+// pipeline and gets copied into slides as a CAI.
+describe('computeCai', () => {
+  it('is 1 for a sequence built entirely from each species\u2019 preferred codons', () => {
+    // ATG (Met) and TGG (Trp) have no synonyms; AAG/CTG are the preferred
+    // Lys/Leu codons in both tables.
+    expect(computeCai('ATGAAGCTGTGG', 'human')).toBeCloseTo(1, 10)
+  })
+
+  it('drops below 1 for a rare synonym, and stays inside 0\u20131', () => {
+    // AAA is the rarer Lys codon (0.754 in human).
+    const cai = computeCai('ATGAAACTGTGG', 'human')
+    expect(cai).not.toBeNull()
+    expect(cai!).toBeGreaterThan(0)
+    expect(cai!).toBeLessThan(1)
+    expect(cai!).toBeCloseTo(Math.pow(0.754386, 1 / 4), 5)
+  })
+
+  it('ignores the stop codon, which has no synonymous choice to score', () => {
+    expect(computeCai('ATGAAGCTGTGGTAA', 'human')).toBeCloseTo(
+      computeCai('ATGAAGCTGTGG', 'human')!,
+      10,
+    )
+  })
+
+  it('has nothing to report for a sequence with no scorable codon', () => {
+    expect(computeCai('', 'human')).toBeNull()
+    expect(computeCai('TAA', 'human')).toBeNull()
+    expect(computeCai('NNN', 'mouse')).toBeNull()
   })
 })

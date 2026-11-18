@@ -38,13 +38,13 @@ function accountArea(page: Page) {
 
 /**
  * Signs in to the account for `email` through the dialog, as a person would:
- * the sidebar's "Sign in", the address, the emailed code. Needs a page past
+ * the sidebar's account entry, the address, the emailed code. Needs a page past
  * the passcode.
  */
 export async function signInToAccount(page: Page, email: string) {
   const dialog = accountCopy.dialog
   await accountArea(page)
-    .getByRole('button', { name: accountCopy.signIn })
+    .getByRole('button', { name: accountCopy.sidebarSignIn })
     .click()
   await page.getByLabel(dialog.emailLabel).fill(email)
   await page.getByRole('button', { name: dialog.sendCode }).click()

@@ -1,4 +1,8 @@
-import { ENSG_REGEX, ENST_REGEX } from '../utils/ensembl-regex'
+import {
+  ENSG_REGEX,
+  ENST_REGEX,
+  normalizeEnsemblId,
+} from '../utils/ensembl-regex'
 import {
   isSymbolLike,
   type GeneSearchPage,
@@ -168,17 +172,20 @@ export class GeneCorpus {
   ): Promise<GeneSearchPage> {
     const index = await this.loadIndex()
 
-    // An id names one gene, so it ignores the species filter.
+    // An id names one gene, so it ignores the species filter. The id is
+    // normalized first: the corpus keys are uppercase and unversioned, but a
+    // pasted id is often neither.
     if (ENST_REGEX.test(query)) {
-      const geneId = await this.geneIdOfTranscript(query)
+      const transcriptId = normalizeEnsemblId(query)
+      const geneId = await this.geneIdOfTranscript(transcriptId)
       const gene = geneId ? index.gene(geneId) : null
       const results: GeneSearchResult[] = gene
-        ? [{ ...gene, matchedIsoformId: query }]
+        ? [{ ...gene, matchedIsoformId: transcriptId }]
         : []
       return { results, truncated: false }
     }
     if (ENSG_REGEX.test(query)) {
-      const gene = index.gene(query)
+      const gene = index.gene(normalizeEnsemblId(query))
       return { results: gene ? [gene] : [], truncated: false }
     }
     return (await this.loadTextSearch()).search(query, species, limit)
