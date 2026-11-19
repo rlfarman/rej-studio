@@ -11,22 +11,11 @@
 @import '@fontsource-variable/source-code-pro';
 @import '@fontsource-variable/source-serif-4';
 
-/*
-  Each family names its `… fallback` sibling straight after itself. Those
-  faces do not exist in this file: fontaine generates one per family at
-  build time (vite.config.ts), reading the real .woff2 to set size-adjust
-  and the ascent/descent/line-gap overrides, so the fallback takes the same
-  room as the font it stands in for and the swap moves nothing. A family
-  reached through a CSS variable can only find its generated face if the
-  variable names it, which is what these lines are for.
-*/
 :root {
   --font-source-sans:
-    'Source Sans 3 Variable', 'Source Sans 3 Variable fallback', ui-sans-serif,
-    system-ui, -apple-system, 'Segoe UI', sans-serif;
+    'Source Sans 3 Variable', ui-sans-serif, system-ui, -apple-system,
+    'Segoe UI', sans-serif;
   --font-source-mono:
-    'Source Code Pro Variable', 'Source Code Pro Variable fallback',
-    ui-monospace, SFMono-Regular, Menlo, monospace;
-  --font-source-serif:
-    'Source Serif 4 Variable', 'Source Serif 4 Variable fallback';
+    'Source Code Pro Variable', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-source-serif: 'Source Serif 4 Variable';
 }

@@ -8,7 +8,6 @@ import { cloudflare } from '@cloudflare/vite-plugin'
 import babel from '@rolldown/plugin-babel'
 import { sentryVitePlugin } from '@sentry/vite-plugin'
 import tailwindcss from '@tailwindcss/vite'
-import { FontaineTransform } from 'fontaine'
 import { tanstackStart } from '@tanstack/react-start/plugin/vite'
 import react, { reactCompilerPreset } from '@vitejs/plugin-react'
 import { defineConfig, type Plugin } from 'vite-plus'
@@ -290,19 +289,6 @@ export default defineConfig({
     mcpAppBridge(),
     associationShards(),
     tailwindcss(),
-    // Metric-matched fallback faces for the self-hosted families, so the
-    // text that paints before a font arrives takes the same room as the
-    // text that replaces it. next/font did this automatically and the move
-    // to Fontsource lost it; Lighthouse put /design-tool at 0.467 CLS and
-    // named the Source Sans request as the culprit. It reads the metrics
-    // out of the real .woff2 files at build time, so nothing here is a
-    // guessed number. `fonts.css` names each `… fallback` family after its
-    // real one, which is how a family reached through a CSS variable finds
-    // the generated face.
-    FontaineTransform.vite({
-      fallbacks: ['ui-sans-serif', 'system-ui', 'Segoe UI', 'Arial'],
-      resolvePath: (id) => new URL(`./node_modules/${id}`, import.meta.url),
-    }),
     tanstackStart({
       // SPA mode: the build prerenders an HTML shell (the root route, with
       // the router's pending component where a page would go), which the
