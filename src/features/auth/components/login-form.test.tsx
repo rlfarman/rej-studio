@@ -26,6 +26,29 @@ describe('LoginForm', () => {
       authCopy.login.pageTitle,
     ]
     expect(passcodeWords).not.toContain(accountCopy.sidebarSignIn)
-    expect(passcodeWords).not.toContain(accountCopy.signIn)
+    // The account's own verb, wherever it is used.
+    expect(passcodeWords).not.toContain('Sign in')
+  })
+
+  // Password managers otherwise file the passcode under "no username".
+  it('gives password managers a username to file the passcode under', () => {
+    const { container } = render(<LoginForm />)
+    const username = container.querySelector<HTMLInputElement>(
+      'input[autocomplete="username"]',
+    )
+    expect(username?.value).toBe(authCopy.login.passwordManagerUsername)
+    expect(username?.hidden).toBe(true)
+    expect(username?.form?.getAttribute('action')).toBe('/api/login')
+  })
+
+  // The ?error= message renders only after hydration, so without JavaScript
+  // this note is the only thing the page can say about a refused attempt.
+  it('says what a refusal looks like without JavaScript', () => {
+    const { container } = render(<LoginForm />)
+    const note = container.querySelector('noscript')
+    expect(note?.textContent).toContain(authCopy.login.noScript)
+    // It is served for every /login URL, so it must claim nothing about this
+    // one: not that the passcode was refused, nor where the visitor was going.
+    expect(authCopy.login.noScript).not.toContain(authCopy.login.wrongPasscode)
   })
 })

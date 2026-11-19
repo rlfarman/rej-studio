@@ -7,7 +7,7 @@ import {
   AutocompleteItem,
   AutocompleteList,
 } from '@/components/ui/autocomplete'
-import { Link, useRouter } from '@tanstack/react-router'
+import { useNavigate, useRouter } from '@tanstack/react-router'
 import type { GeneSearchResult } from '@/features/gene-search/types/search'
 import type { SimilarGene } from '@/features/gene-search/types/search'
 import { SpeciesIcon } from '@/components/bio/species-icon'
@@ -43,6 +43,7 @@ import { geneSearchCopy } from '../copy'
 import { geneLink } from '../utils/search-href'
 import { matchedField, matchedLabel } from '../utils/matched-field'
 import { GENE_SEARCH_INPUT_ID } from '../hooks/use-pre-typed-query'
+import { useGeneIndexReady } from '../hooks/use-prefetch-gene-index'
 import { SearchEmptyState } from './search-empty-state'
 import { SearchShortcutHint } from '@/components/search-shortcut'
 import { SEARCH_SHORTCUT_ARIA } from '@/lib/search-shortcut'
@@ -55,18 +56,34 @@ const SPECIES_OPTIONS: { value: SpeciesFilter; label: string }[] = [
   { value: 'mouse', label: copy.speciesOptions.mouse },
 ]
 
-function SpeciesToggle() {
+/**
+ * The species filter above the results. Three toggles, named as a group (on
+ * their own, "All / Human / Mouse" said nothing about what they filter), and
+ * focus goes back to the search box after a change: it used to stay on the
+ * button, so the next Enter toggled the filter again instead of opening the
+ * highlighted gene.
+ */
+function SpeciesToggle({ onChanged }: { onChanged?: () => void }) {
   const { species, handleSpeciesChange } = useSpeciesContext()
 
   return (
-    <div className="flex gap-1 border-b px-3 py-2">
+    <div
+      role="group"
+      aria-label={copy.speciesLabel}
+      className="flex gap-1 border-b px-3 py-2"
+    >
       {SPECIES_OPTIONS.map(({ value, label }) => (
         <button
           key={value}
           type="button"
-          onClick={() => handleSpeciesChange(value)}
+          onClick={() => {
+            handleSpeciesChange(value)
+            onChanged?.()
+          }}
           aria-pressed={species === value}
-          className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition-colors ${
+          // 44px tall where a finger is the pointer; the pill itself keeps
+          // its text size, so only the row grows.
+          className={`flex min-h-11 items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none md:min-h-7 ${
             species === value
               ? 'bg-accent text-accent-foreground'
               : 'text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground'
@@ -97,7 +114,8 @@ function ExampleGenes({ onPick }: { onPick: (symbol: string) => void }) {
               type="button"
               aria-label={copy.exampleAria(symbol)}
               onClick={() => onPick(symbol)}
-              className="rounded-full border px-3 py-1 font-mono text-xs font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+              // Tall enough to tap on a phone; unchanged on a desktop.
+              className="inline-flex min-h-11 items-center rounded-full border px-3 py-1 font-mono text-xs font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none md:min-h-7"
             >
               {symbol}
             </button>
@@ -130,13 +148,23 @@ function useDelayedTrue(flag: boolean, delayMs: number) {
   return delayed
 }
 
+/**
+ * What the palette is waiting for. `query` is the query being searched for,
+ * not the one in the box — they differ by the typing debounce, and naming
+ * the half-typed one ("Searching for e…") named a search that never ran.
+ * Before the index has arrived the wait is the download, which takes long
+ * enough that saying so is the difference between slow and broken.
+ */
 function SearchingRow({
   query,
+  indexReady,
   className,
 }: {
   query: string
+  indexReady: boolean
   className?: string
 }) {
+  const trimmed = query.trim()
   return (
     <div
       role="status"
@@ -146,7 +174,9 @@ function SearchingRow({
       )}
     >
       <Loader2 className="size-4 shrink-0 animate-spin" aria-hidden />
-      <span className="truncate">{copy.searching(query.trim())}</span>
+      <span className="truncate">
+        {indexReady && trimmed ? copy.searching(trimmed) : copy.loadingIndex}
+      </span>
     </div>
   )
 }
@@ -157,6 +187,10 @@ type PaletteItem =
   // A result keeps the search's `match`, so the row can say why it is here.
   | { kind: 'result'; key: string; gene: GeneSearchResult }
   | { kind: 'job'; key: string; entry: JobSearchItem }
+  // The design-tool shortcut under a transcript match. An option of its
+  // own, because a link nested inside one is invalid markup and the arrow
+  // keys never reached it.
+  | { kind: 'customize'; key: string; isoformId: string }
   | { kind: 'see-all'; key: string }
 
 interface PaletteGroup {
@@ -172,6 +206,8 @@ function paletteItemToString(item: PaletteItem): string {
   switch (item.kind) {
     case 'job':
       return item.entry.name
+    case 'customize':
+      return item.isoformId
     case 'see-all':
       return item.key
     default:
@@ -191,6 +227,8 @@ interface GeneSearchInputProps {
   onPage?: boolean
   hasSearched: boolean
   searchResults: GeneSearchResult[]
+  /** The query a search is running for, which trails the box by the debounce. */
+  searchingQuery: string
   /** More genes matched than the palette shows. */
   truncated: boolean
   /** "Did you mean" symbols for an empty search. */
@@ -285,10 +323,12 @@ function JobRowBody({ entry, query }: { entry: JobSearchItem; query: string }) {
         <TruncatedText tooltip={entry.name} className="truncate font-medium">
           <HighlightMatch text={entry.name} query={query} />
         </TruncatedText>
+        {/* The store's status word ("failed") is a state, not a sentence;
+            the row says it the way the rest of the app does. */}
         <span className="truncate text-xs text-muted-foreground">
           {entry.sequenceLength
-            ? `${entry.sequenceLength} bp · ${entry.status}`
-            : entry.status}
+            ? copy.jobMeta(entry.sequenceLength, copy.jobStatus[entry.status])
+            : copy.jobStatus[entry.status]}
         </span>
       </div>
     </>
@@ -309,6 +349,7 @@ export function GeneSearchCommand({
   onPage = false,
   hasSearched,
   searchResults,
+  searchingQuery,
   truncated,
   suggestions,
   onSeeAll,
@@ -327,6 +368,21 @@ export function GeneSearchCommand({
   const { species, handleSpeciesChange } = useSpeciesContext()
   const isMobile = useIsMobile()
   const inputRef = useRef<HTMLInputElement>(null)
+
+  // Focus the inline search on arrival, but only with a mouse or trackpad
+  // (a fair proxy for a hardware keyboard): on a touch screen it opens the
+  // software keyboard over the page before anyone asked to search. An effect
+  // rather than `autoFocus`, so the prerendered HTML carries no attribute
+  // and hydration renders what the server did. Not when something already
+  // has focus (text typed or a Tab pressed before hydration), and never in
+  // the dialog, which focuses its first field itself and needs somewhere to
+  // hand focus back to when it closes.
+  useEffect(() => {
+    if (!onPage || !window.matchMedia('(pointer: fine)').matches) return
+    if (document.activeElement && document.activeElement !== document.body)
+      return
+    inputRef.current?.focus()
+  }, [onPage])
 
   useSearchShortcut(() => {
     if (!onPage) return
@@ -356,6 +412,8 @@ export function GeneSearchCommand({
   }
   useEffect(() => () => clearTimeout(preloadTimer.current), [])
 
+  const navigate = useNavigate()
+
   const runItem = (item: PaletteItem) => {
     if (item.kind === 'see-all') {
       onSeeAll()
@@ -363,7 +421,13 @@ export function GeneSearchCommand({
     }
     setShowList(false)
     if (item.kind === 'job') handleSelectJob(item.entry)
-    else handleSelect(item.gene)
+    else if (item.kind === 'customize') {
+      setIsOpen(false)
+      void navigate({
+        to: '/design-tool',
+        search: { isoform: item.isoformId },
+      })
+    } else handleSelect(item.gene)
   }
 
   const trimmedQuery = query.trim().toLowerCase()
@@ -432,11 +496,20 @@ export function GeneSearchCommand({
     label: copy.genes,
     items: hasGeneResults
       ? [
-          ...displayedGeneResults.map((gene) => ({
-            kind: 'result' as const,
-            key: gene.id,
-            gene,
-          })),
+          ...displayedGeneResults.flatMap((gene): PaletteItem[] => [
+            { kind: 'result', key: gene.id, gene },
+            // A transcript match knows which isoform was asked for, so the
+            // design tool is one row away.
+            ...(gene.matchedIsoformId
+              ? [
+                  {
+                    kind: 'customize' as const,
+                    key: `customize-${gene.id}`,
+                    isoformId: gene.matchedIsoformId,
+                  },
+                ]
+              : []),
+          ]),
           ...(truncated ? [{ kind: 'see-all' as const, key: 'see-all' }] : []),
         ]
       : [],
@@ -477,13 +550,30 @@ export function GeneSearchCommand({
 
   // Defer dimming the result list ~180ms so fast queries never flicker.
   const showLoader = useDelayedTrue(isLoading, 180)
+  // And hold the "Searching…" row back for the typing debounce, so a single
+  // keystroke in a fast search never flashes a row naming a partial query.
+  const showSearching = useDelayedTrue(isLoading, 250)
+  const indexReady = useGeneIndexReady()
 
   const isNavigating = Boolean(pendingGene)
 
   const renderItem = (item: PaletteItem) => (
-    <AutocompleteItem key={item.key} value={item} onClick={() => runItem(item)}>
+    <AutocompleteItem
+      key={item.key}
+      value={item}
+      onClick={() => runItem(item)}
+      // A row is a tap target on a phone; on a desktop it stays dense.
+      className="min-h-11 md:min-h-7"
+    >
       {item.kind === 'job' ? (
         <JobRowBody entry={item.entry} query={query} />
+      ) : item.kind === 'customize' ? (
+        <>
+          <ExternalLink className="size-3.5 text-muted-foreground" />
+          <span className="text-muted-foreground">
+            {copy.customizeRow(item.isoformId)}
+          </span>
+        </>
       ) : item.kind === 'see-all' ? (
         <>
           <ArrowRight className="h-4 w-4 text-muted-foreground" />
@@ -514,30 +604,6 @@ export function GeneSearchCommand({
                 : undefined
             }
           />
-          {item.kind === 'result' && item.gene.matchedIsoformId && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="ml-auto h-7 px-2"
-              nativeButton={false}
-              render={
-                <Link
-                  to="/design-tool"
-                  search={{ isoform: item.gene.matchedIsoformId }}
-                  aria-label={copy.customizeAria(item.gene.matchedIsoformId)}
-                  onClick={(e) => {
-                    // The link, not the option it sits in, handles the click.
-                    e.stopPropagation()
-                    setIsOpen(false)
-                    setShowList(false)
-                  }}
-                />
-              }
-            >
-              {copy.customize}
-              <ExternalLink className="size-3.5" />
-            </Button>
-          )}
         </>
       )}
     </AutocompleteItem>
@@ -576,13 +642,19 @@ export function GeneSearchCommand({
           aria-label={copy.inputAria}
           aria-keyshortcuts={onPage ? SEARCH_SHORTCUT_ARIA : undefined}
           endAddon={onPage ? <SearchShortcutHint /> : undefined}
-          placeholder={isMobile ? copy.placeholderMobile : copy.placeholder}
+          placeholder={isMobile ? copy.placeholderShort : copy.placeholder}
+          // In the dialog Escape closes it. On the page there is nothing to
+          // close, and Base UI never sees an inline list as closable, so
+          // Escape clears the search, as it does in a native search box.
+          onKeyDown={
+            onPage
+              ? (event) => {
+                  if (event.key === 'Escape' && query) setQuery('')
+                }
+              : undefined
+          }
           className="border-0 text-base ring-0 outline-0 focus:border-0 focus:ring-0 active:border-0 active:ring-0 sm:text-sm"
           disabled={isNavigating}
-          // Inline only. The dialog focuses its first field itself, and an
-          // input that grabs focus while the dialog mounts leaves the dialog
-          // nothing to hand focus back to when it closes.
-          autoFocus={onPage}
         />
         {isNavigating && pendingGene ? (
           <div
@@ -596,12 +668,15 @@ export function GeneSearchCommand({
             </p>
           </div>
         ) : (
-          <SpeciesToggle />
+          <SpeciesToggle onChanged={() => inputRef.current?.focus()} />
         )}
         {!isNavigating && showList && (
           <>
             {content === 'error' && (
-              <div className="flex flex-col items-center gap-2 p-4 text-center text-sm text-destructive-foreground">
+              <div
+                role="alert"
+                className="flex flex-col items-center gap-2 p-4 text-center text-sm text-destructive-foreground"
+              >
                 <span>{error}</span>
                 <Button
                   variant="ghost"
@@ -624,7 +699,9 @@ export function GeneSearchCommand({
                 }}
               />
             )}
-            {content === 'searching' && <SearchingRow query={query} />}
+            {content === 'searching' && showSearching && (
+              <SearchingRow query={searchingQuery} indexReady={indexReady} />
+            )}
             {content === 'no-results' && (
               <SearchEmptyState
                 className="items-center px-4 py-6 text-center"
@@ -676,7 +753,10 @@ export function GeneSearchCommand({
             </AutocompleteList>
             {/* Outside the listbox, which may only hold options and groups. */}
             {content === 'results' && error && !hasGeneResults && hasQuery && (
-              <div className="flex items-center justify-between gap-2 border-t px-3 py-2 text-xs text-destructive-foreground">
+              <div
+                role="alert"
+                className="flex items-center justify-between gap-2 border-t px-3 py-2 text-xs text-destructive-foreground"
+              >
                 <span>{error}</span>
                 <Button
                   variant="ghost"
@@ -692,8 +772,12 @@ export function GeneSearchCommand({
             {/* Saved genes or jobs can match before the gene search returns;
                 say the search is still running rather than implying those are
                 all the results. */}
-            {content === 'results' && isLoading && !hasGeneResults && (
-              <SearchingRow query={query} className="border-t" />
+            {content === 'results' && showSearching && !hasGeneResults && (
+              <SearchingRow
+                query={searchingQuery}
+                indexReady={indexReady}
+                className="border-t"
+              />
             )}
           </>
         )}

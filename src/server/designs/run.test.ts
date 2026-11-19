@@ -10,6 +10,8 @@ import {
   runCloudDesign,
   type CloudDesignParams,
 } from './run'
+import { createTestD1 } from '../accounts/test-utils'
+import { listDesigns } from './records'
 import { cloudStatus, describeFailure } from './service'
 import { CDS, fakeBucket, formValues, RESULT } from './test-utils'
 
@@ -94,6 +96,64 @@ describe('runCloudDesign', () => {
     expect(put).toHaveBeenCalledTimes(2)
     expect(design).toHaveBeenCalledOnce()
     expect(wait).toHaveBeenCalledWith(1000)
+  })
+
+  describe('the account’s list', () => {
+    // The step is the one place that learns the outcome without anyone
+    // asking, so it writes it where "My cloud designs" reads it from.
+    const OWNER = PARAMS.owner
+
+    function listed() {
+      const accounts = createTestD1()
+      accounts.sqlite
+        .prepare(
+          `insert into cloud_design (owner, id, name, bases, submitted_at)
+           values (?, ?, 'Cloud test', 99, ?)`,
+        )
+        .run(OWNER, ID, PARAMS.submittedAt)
+      return {
+        env: { AUTH_DB: accounts.binding },
+        read: () => listDesigns(accounts.binding, OWNER),
+      }
+    }
+
+    it('says running while the design runs, then completed', async () => {
+      const { env, read } = listed()
+      const seen: (string | null | undefined)[] = []
+      const design = vi.fn().mockImplementation(async () => {
+        seen.push((await read())[0]?.status)
+        return { ok: true, result: RESULT, seconds: 1 }
+      })
+      await runCloudDesign(ID, PARAMS, env, { design })
+      expect(seen).toEqual(['running'])
+      expect((await read())[0]?.status).toBe('completed')
+    })
+
+    it('says failed when the step gives up', async () => {
+      const { env, read } = listed()
+      const design = vi
+        .fn()
+        .mockResolvedValue({ ok: false, code: 'backend', message: 'nope' })
+      await expect(
+        runCloudDesign(ID, PARAMS, env, { design }),
+      ).rejects.toThrow()
+      expect((await read())[0]?.status).toBe('failed')
+    })
+
+    it('still runs the design when the list cannot be written', async () => {
+      const broken = {
+        prepare: () => {
+          throw new Error('D1 is down')
+        },
+      } as unknown as D1Database
+      const output = await runCloudDesign(
+        ID,
+        PARAMS,
+        { AUTH_DB: broken },
+        { design: ok() },
+      )
+      expect(output).toMatchObject({ result: RESULT })
+    })
   })
 
   it('fails clearly when a large result has no bucket to go to', async () => {

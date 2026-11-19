@@ -465,12 +465,15 @@ describe('My cloud designs', () => {
           name: 'Second',
           bases: CDS.length,
           submittedAt: '2026-11-02T10:00:00.000Z',
+          // What submitting knew: the run had not started yet.
+          status: 'queued',
         },
         {
           id: first.id,
           name: 'First',
           bases: CDS.length,
           submittedAt: '2026-11-01T10:00:00.000Z',
+          status: 'queued',
         },
       ])
     } finally {
@@ -515,6 +518,44 @@ describe('My cloud designs', () => {
     const { status, json } = await list(as(PASSCODE_ONLY))
     expect(status).toBe(401)
     expect(json.reason).toBe('account_required')
+  })
+
+  it('carries the status a read found, for every account listing the design', async () => {
+    const { json: submitted } = await submit()
+    const id = submitted.id as string
+    await submit(undefined, as(BOB))
+    complete(id)
+    // Nothing recorded the outcome: the step writes it, and no step ran
+    // here. The read is the next thing that knows, so it corrects the row.
+    expect((await read(id)).json.status).toBe('completed')
+    for (const caller of [env, as(BOB)]) {
+      expect((await list(caller)).json).toMatchObject([
+        { id, status: 'completed' },
+      ])
+    }
+  })
+
+  it('carries a failure, and leaves a status it cannot improve on', async () => {
+    const { json: submitted } = await submit()
+    const id = submitted.id as string
+    workflow.instances.get(id)!.snapshot = {
+      status: 'errored',
+      error: { name: 'Error', message: 'invalid_input: nope' },
+    }
+    await read(id)
+    expect((await list()).json).toMatchObject([{ id, status: 'failed' }])
+    // A read of a queued design says 'queued', which is what the row says.
+    workflow.instances.get(id)!.snapshot = { status: 'queued' }
+    await read(id)
+    expect((await list()).json).toMatchObject([{ id, status: 'queued' }])
+  })
+
+  it('lists a row written before the status column with no status at all', async () => {
+    const { json: submitted } = await submit()
+    accounts.sqlite.exec('update cloud_design set status = null')
+    expect((await list()).json).toMatchObject([
+      { id: submitted.id, status: null },
+    ])
   })
 
   it('still submits when the list cannot be written', async () => {

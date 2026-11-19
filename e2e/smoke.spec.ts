@@ -2,6 +2,8 @@ import { expect, test, type Page } from '@playwright/test'
 
 import { appCopy } from '../src/copy/app'
 import { commonCopy } from '../src/copy/common'
+import { SPECIES_DISPLAY_NAME } from '../src/lib/bio/species'
+import { designToolCopy } from '../src/features/design-tool/copy'
 import { diseaseAssociationsCopy } from '../src/features/disease-associations/copy'
 import { formatInheritanceLabel } from '../src/features/disease-associations/types'
 import { geneSearchCopy } from '../src/features/gene-search/copy'
@@ -87,7 +89,13 @@ test('/genes suggests other symbols when nothing matches', async ({ page }) => {
   await expect(
     page.getByText(geneSearchCopy.results.noMatchesInSpecies('EGFR', 'Mouse')),
   ).toBeVisible()
-  await expect(page.getByRole('link', { name: 'EGFR' }).first()).toBeVisible()
+  // The suggestion names its species in text, not only in an icon: these
+  // suggestions ignore the species filter, so they are nearly always the
+  // species that was filtered out, and a chip reading "EGFR" under "No mouse
+  // genes match EGFR" reads as a contradiction.
+  await expect(
+    page.getByRole('link', { name: `EGFR ${SPECIES_DISPLAY_NAME.human}` }),
+  ).toBeVisible()
 })
 
 test('a gene page lists its isoforms, with charts and phenotypes', async ({
@@ -365,12 +373,34 @@ test('the home page search opens a gene from the keyboard', async ({
   const input = page.getByRole('combobox', {
     name: geneSearchCopy.command.inputAria,
   })
-  await input.fill('tp53')
+  // With a mouse, the search is focused on arrival, so typing goes there.
+  await expect(input).toBeFocused()
+  await page.keyboard.type('tp53')
   await expect(page.getByRole('option', { name: /TP53/ }).first()).toBeVisible()
   await input.press('ArrowDown')
   await input.press('ArrowUp')
   await input.press('Enter')
   await expect(page).toHaveURL(/\/genes\/TP53/)
+})
+
+test.describe('on a touch screen', () => {
+  test.use({
+    hasTouch: true,
+    isMobile: true,
+    viewport: { width: 390, height: 844 },
+  })
+
+  test('the home page search waits to be tapped', async ({ page }) => {
+    // Focusing it on arrival would open the software keyboard over the page.
+    await page.goto('/', { waitUntil: 'networkidle' })
+    const input = page.getByRole('combobox', {
+      name: geneSearchCopy.command.inputAria,
+    })
+    await expect(input).toBeVisible()
+    await expect(input).not.toBeFocused()
+    await input.tap()
+    await expect(input).toBeFocused()
+  })
 })
 
 test('a term hint opens on click, closes on Escape, and leaves the table alone', async ({
@@ -387,4 +417,39 @@ test('a term hint opens on click, closes on Escape, and leaves the table alone',
   await expect(page.getByText(gc.hint)).toBeVisible()
   await page.keyboard.press('Escape')
   await expect(page.getByText(gc.hint)).toBeHidden()
+})
+
+test('an isoform the corpus does not have says so instead of opening a blank form', async ({
+  page,
+}) => {
+  await page.goto('/design-tool?isoform=NOT_A_REAL_ID', {
+    waitUntil: 'networkidle',
+  })
+  const notice = page.getByRole('status').filter({
+    hasText: designToolCopy.isoformNotFound.message,
+  })
+  await expect(notice).toBeVisible()
+  // The form is still usable — this explains the fallback, it isn't an error.
+  await expect(
+    page.getByRole('textbox', { name: /enter your sequence/i }),
+  ).toBeVisible()
+  await page
+    .getByRole('button', { name: designToolCopy.isoformNotFound.dismissAria })
+    .click()
+  await expect(notice).toBeHidden()
+})
+
+test('typed-in junk can be cleaned, not just pasted junk', async ({ page }) => {
+  await page.goto('/design-tool', { waitUntil: 'networkidle' })
+  const field = page.getByRole('textbox', { name: /enter your sequence/i })
+  const clean = page.getByRole('button', {
+    name: designToolCopy.sequenceInput.cleanAria,
+  })
+  // Typing, not pasting: a paste cleans itself, which was the whole asymmetry.
+  await expect(clean).toBeHidden()
+  await field.pressSequentially('ATG AAA TAA')
+  await expect(clean).toBeVisible()
+  await clean.click()
+  await expect(field).toHaveValue('ATGAAATAA')
+  await expect(clean).toBeHidden()
 })

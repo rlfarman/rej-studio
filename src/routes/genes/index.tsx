@@ -39,12 +39,21 @@ export const Route = createFileRoute('/genes/')({
       void queryClient.prefetchQuery(geneSearchPageQuery(query, species))
     }
   },
-  head: () => ({
-    meta: [
-      { title: appCopy.metadata.title(copy.metadataTitle) },
-      { name: 'description', content: copy.metadataDescription },
-    ],
-  }),
+  // The query is in the title, so a tab, a bookmark and a history entry
+  // each say which search they are.
+  head: ({ match }) => {
+    const query = match.search.q?.trim()
+    return {
+      meta: [
+        {
+          title: appCopy.metadata.title(
+            query ? copy.metadataTitleFor(query) : copy.metadataTitle,
+          ),
+        },
+        { name: 'description', content: copy.metadataDescription },
+      ],
+    }
+  },
   component: GeneSearchPage,
   errorComponent: SearchError,
 })

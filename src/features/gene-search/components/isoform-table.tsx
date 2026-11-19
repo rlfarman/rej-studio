@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams, useSearch } from '@tanstack/react-router'
 import {
   Table,
   TableBody,
+  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
@@ -17,7 +18,9 @@ import {
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
   createDropdownMenuHandle,
@@ -69,15 +72,15 @@ import {
   type IsoformSort,
   type IsoformSortKey,
 } from '@/features/gene-search/utils/isoform-sort'
+import {
+  downloadPreOptimizedZip,
+  preOptimizedZipFilename,
+  preOptimizedZipUrl,
+} from '@/features/gene-search/utils/pre-optimized-zip'
 import { geneSearchCopy } from '../copy'
 
 const copy = geneSearchCopy.isoformTable
 const terms = geneSearchCopy.terms
-
-/** Pre-optimized sequence package for an isoform (static, built offline). */
-function preOptimizedZipUrl(isoformId: string) {
-  return `https://rej-seq-1.s3.us-west-004.backblazeb2.com/rej/v1.0/zips/${isoformId}_v1.0.zip`
-}
 
 /**
  * Whether a ready-made package exists for this isoform. Every ZIP in the
@@ -87,6 +90,14 @@ function preOptimizedZipUrl(isoformId: string) {
  */
 function hasPreOptimizedZip(suitability: Suitability) {
   return suitability !== 'triple-aav'
+}
+
+/** A ZIP link's click: fetch it, so a failure is a toast, not a navigation. */
+function zipDownloadClick(isoformId: string) {
+  return (event: React.MouseEvent) => {
+    event.preventDefault()
+    void downloadPreOptimizedZip(isoformId)
+  }
 }
 
 interface IsoformListProps {
@@ -222,6 +233,12 @@ export default function IsoformTable({
           isoforms is normal (TP53 has 20), and past about ten rows the
           numeric columns were unlabelled. */}
       <Table containerClassName="max-h-[75svh] overflow-auto">
+        {/* Named, like the identity matrix below: the page has two tables, and
+            an unnamed one is a row of anonymous numbers in a screen reader's
+            table list. */}
+        <TableCaption className="sr-only">
+          {copy.caption(geneSymbol)}
+        </TableCaption>
         {/* Opaque and above the rows: a translucent header lets the rows it
             is pinned over read through it. */}
         <TableHeader className="sticky top-0 z-20 bg-background [&_th]:bg-background">
@@ -302,7 +319,7 @@ export default function IsoformTable({
               sortKey="suitability"
               {...sortProps}
             />
-            <TableHead className="w-px">
+            <TableHead className="w-px max-sm:sticky max-sm:right-0">
               <span className="sr-only">{copy.actionsHeader}</span>
             </TableHead>
           </TableRow>
@@ -481,7 +498,15 @@ function IsoformRow({
             <span className="hidden sm:inline">{suitConfig.label}</span>
           </Badge>
         </TableCell>
-        <TableCell className="py-1" onClick={(e) => e.stopPropagation()}>
+        {/* On a phone the row is wider than the screen, and the row's menu
+            is its only actions control, so the column stays pinned to the
+            right edge (as the identity matrix pins its row labels to the
+            left). Opaque, so cells scrolling under it don't show through;
+            the expanded tint is mixed in rather than layered. */}
+        <TableCell
+          className="py-1 max-sm:sticky max-sm:right-0 max-sm:bg-background max-sm:group-has-aria-expanded/row:bg-[color-mix(in_oklch,var(--muted)_50%,var(--background))]"
+          onClick={(e) => e.stopPropagation()}
+        >
           <div className="flex items-center justify-end gap-1">
             {/* Quick actions appear on row hover or keyboard focus (and stay
                 on the expanded or linked row) instead of repeating two labels
@@ -512,7 +537,8 @@ function IsoformRow({
                         render={
                           <a
                             href={preOptimizedZipUrl(isoform.id)}
-                            download={`${isoform.id}_v1.0.zip`}
+                            download={preOptimizedZipFilename(isoform.id)}
+                            onClick={zipDownloadClick(isoform.id)}
                             aria-label={copy.downloadAria(isoform.id)}
                           />
                         }
@@ -552,7 +578,9 @@ function IsoformRow({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="size-9"
+                  // 36px drawn, 44px to tap: the pseudo-element fills the
+                  // cell's padding without making the row taller.
+                  className="relative size-9 before:absolute before:-inset-1"
                   aria-label={copy.moreAria(isoform.id)}
                 />
               }
@@ -598,12 +626,22 @@ function IsoformMenuContent({
 }) {
   return (
     <DropdownMenuContent align="end">
+      {/* Which isoform this menu acts on. On a phone the menu opens over its
+          own row and leaves the row above it showing, so six unattributed
+          items read as if they belonged to the wrong transcript. Base UI
+          wants its label inside a group. */}
+      <DropdownMenuGroup>
+        <DropdownMenuLabel className="font-mono">
+          {isoform.id}
+        </DropdownMenuLabel>
+      </DropdownMenuGroup>
       {hasPreOptimizedZip(isoform.suitability) ? (
         <DropdownMenuItem
           render={
             <a
               href={preOptimizedZipUrl(isoform.id)}
-              download={`${isoform.id}_v1.0.zip`}
+              download={preOptimizedZipFilename(isoform.id)}
+              onClick={zipDownloadClick(isoform.id)}
             >
               <PackageOpen className="size-4" />
               {copy.downloadLong}
@@ -723,7 +761,8 @@ function ExpandedDetails({ isoform }: { isoform: IsoformRowData }) {
               render={
                 <a
                   href={preOptimizedZipUrl(isoform.id)}
-                  download={`${isoform.id}_v1.0.zip`}
+                  download={preOptimizedZipFilename(isoform.id)}
+                  onClick={zipDownloadClick(isoform.id)}
                   aria-label={copy.downloadAria(isoform.id)}
                 >
                   <PackageOpen className="size-4" />
@@ -749,6 +788,9 @@ function ExpandedDetails({ isoform }: { isoform: IsoformRowData }) {
         )}
       </div>
 
+      {/* Each dropped column carries the header's own infotip down with it:
+          this list is the only place a phone sees CpG or WGGW, so without
+          them those terms had no explanation on a phone at all. */}
       <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs sm:hidden">
         <div>
           <dt className="text-muted-foreground">Protein</dt>
@@ -757,17 +799,17 @@ function ExpandedDetails({ isoform }: { isoform: IsoformRowData }) {
           </dd>
         </div>
         <div>
-          <dt className="text-muted-foreground">GC</dt>
+          <MetricTerm term={terms.gc} />
           <dd className="font-mono tabular-nums">{gcPercent.toFixed(1)}%</dd>
         </div>
         <div>
-          <dt className="text-muted-foreground">CpG</dt>
+          <MetricTerm term={terms.cpg} />
           <dd className="font-mono tabular-nums">
             {cpgCount.toLocaleString()}
           </dd>
         </div>
         <div>
-          <dt className="text-muted-foreground">WGGW</dt>
+          <MetricTerm term={terms.wggw} />
           <dd className="font-mono tabular-nums">
             {wggwCount.toLocaleString()}
           </dd>
@@ -776,13 +818,13 @@ function ExpandedDetails({ isoform }: { isoform: IsoformRowData }) {
       {/* AAV fit is not repeated here: its column is on every screen size. */}
       <dl className="hidden grid-cols-2 gap-x-4 gap-y-2 text-xs sm:grid md:hidden">
         <div>
-          <dt className="text-muted-foreground">CpG</dt>
+          <MetricTerm term={terms.cpg} />
           <dd className="font-mono tabular-nums">
             {cpgCount.toLocaleString()}
           </dd>
         </div>
         <div>
-          <dt className="text-muted-foreground">WGGW</dt>
+          <MetricTerm term={terms.wggw} />
           <dd className="font-mono tabular-nums">
             {wggwCount.toLocaleString()}
           </dd>
@@ -798,6 +840,19 @@ function ExpandedDetails({ isoform }: { isoform: IsoformRowData }) {
         />
       )}
     </div>
+  )
+}
+
+/**
+ * A dropped column's label in the expanded row, with the same infotip its
+ * header carries. The label is the header's, so the two cannot drift apart.
+ */
+function MetricTerm({ term }: { term: { label: string; hint: string } }) {
+  return (
+    <dt className="flex items-center gap-0.5 text-muted-foreground">
+      {term.label}
+      <TermHint topic={term.label} hint={term.hint} />
+    </dt>
   )
 }
 

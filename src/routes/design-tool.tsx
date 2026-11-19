@@ -1,7 +1,9 @@
 import { createFileRoute, useLocation } from '@tanstack/react-router'
-import type { ReactNode } from 'react'
+import { X } from 'lucide-react'
+import { useState, type ReactNode } from 'react'
 import { z } from 'zod'
 
+import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { appCopy } from '@/copy/app'
 import { GeneSplitterForm } from '@/features/design-tool/components/gene-splitter-form'
@@ -59,6 +61,33 @@ function DesignToolLayout({ children }: { children: ReactNode }) {
  */
 type DesignToolState = { designFormKey?: string }
 
+/**
+ * Says the transcript in the URL isn't in this corpus, above the blank form
+ * it fell back to. Dismissible, and `role="status"` rather than an alert:
+ * the form is usable, so this is an explanation, not a failure.
+ */
+function IsoformNotFoundNotice() {
+  const [shown, setShown] = useState(true)
+  if (!shown) return null
+  return (
+    <div
+      role="status"
+      className="mb-4 flex flex-wrap items-center gap-2 text-xs text-muted-foreground"
+    >
+      <span>{designToolCopy.isoformNotFound.message}</span>
+      <Button
+        type="button"
+        variant="ghost"
+        size="xs"
+        aria-label={designToolCopy.isoformNotFound.dismissAria}
+        onClick={() => setShown(false)}
+      >
+        <X className="size-3.5" aria-hidden />
+      </Button>
+    </div>
+  )
+}
+
 function DesignToolPage() {
   const { job: jobId, isoform: isoformId } = Route.useSearch()
   const prefill = Route.useLoaderData()
@@ -88,6 +117,10 @@ function DesignToolPage() {
   if (!isoformId || !prefill) {
     return (
       <DesignToolLayout>
+        {/* A `?isoform=` the corpus doesn't have resolves to null and used to
+            open the blank form silently, so a stale bookmark or a link into a
+            different corpus version looked like a failed load. */}
+        {isoformId ? <IsoformNotFoundNotice /> : null}
         <GeneSplitterForm
           key={jobId ?? keptKey ?? 'new'}
           defaultJobId={jobId}
@@ -129,9 +162,10 @@ function DesignToolPage() {
 function DesignToolSkeleton() {
   return (
     <DesignToolLayout>
-      <div aria-hidden className="mx-auto w-full max-w-5xl px-4 py-8 md:py-10">
-        <Skeleton className="h-[28rem] rounded-[min(var(--radius-4xl),24px)]" />
-      </div>
+      <Skeleton
+        aria-hidden
+        className="h-[28rem] rounded-[min(var(--radius-4xl),24px)]"
+      />
     </DesignToolLayout>
   )
 }

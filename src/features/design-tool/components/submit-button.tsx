@@ -38,7 +38,9 @@ export function SubmitButton({
     <Button
       type="submit"
       size="lg"
-      className="min-w-56 text-base font-semibold"
+      // Wide enough for the longest stage label, so the button keeps its
+      // width while a run reports progress.
+      className="min-w-56"
       disabled={isProcessing}
       aria-busy={isProcessing}
       // No aria-live here: the stage shown on this button is the same stage

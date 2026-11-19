@@ -41,6 +41,7 @@ describe('settleInterruptedRuns', () => {
     const entry = useJobHistory.getState().getEntry('browser-orphan')
     expect(entry?.status).toBe('failed')
     expect(entry?.error?.retriable).toBe(true)
+    expect(entry?.error?.code).toBe('interrupted')
     expect(entry?.error?.message).toMatch(/tab closed/i)
   })
 

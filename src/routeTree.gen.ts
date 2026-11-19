@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SplatRouteImport } from './routes/$'
 import { Route as ArchitectureRouteImport } from './routes/architecture'
 import { Route as DesignToolRouteImport } from './routes/design-tool'
 import { Route as DiseaseAssociationsRouteImport } from './routes/disease-associations'
@@ -23,10 +24,16 @@ import { Route as GenesIndexRouteImport } from './routes/genes/index'
 import { Route as GenesSymbolRouteImport } from './routes/genes/$symbol'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as ApiDevSignInCodeRouteImport } from './routes/api/dev/sign-in-code'
+import { Route as ApiPreOptimizedTranscriptIdRouteImport } from './routes/api/pre-optimized.$transcriptId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SplatRoute = SplatRouteImport.update({
+  id: '/$',
+  path: '/$',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ArchitectureRoute = ArchitectureRouteImport.update({
@@ -94,10 +101,17 @@ const ApiDevSignInCodeRoute = ApiDevSignInCodeRouteImport.update({
   path: '/api/dev/sign-in-code',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPreOptimizedTranscriptIdRoute =
+  ApiPreOptimizedTranscriptIdRouteImport.update({
+    id: '/api/pre-optimized/$transcriptId',
+    path: '/api/pre-optimized/$transcriptId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/genes': typeof GenesRouteRouteWithChildren
+  '/$': typeof SplatRoute
   '/architecture': typeof ArchitectureRoute
   '/design-tool': typeof DesignToolRoute
   '/disease-associations': typeof DiseaseAssociationsRoute
@@ -110,9 +124,11 @@ export interface FileRoutesByFullPath {
   '/genes/': typeof GenesIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/dev/sign-in-code': typeof ApiDevSignInCodeRoute
+  '/api/pre-optimized/$transcriptId': typeof ApiPreOptimizedTranscriptIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/$': typeof SplatRoute
   '/architecture': typeof ArchitectureRoute
   '/design-tool': typeof DesignToolRoute
   '/disease-associations': typeof DiseaseAssociationsRoute
@@ -125,11 +141,13 @@ export interface FileRoutesByTo {
   '/genes': typeof GenesIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/dev/sign-in-code': typeof ApiDevSignInCodeRoute
+  '/api/pre-optimized/$transcriptId': typeof ApiPreOptimizedTranscriptIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/genes': typeof GenesRouteRouteWithChildren
+  '/$': typeof SplatRoute
   '/architecture': typeof ArchitectureRoute
   '/design-tool': typeof DesignToolRoute
   '/disease-associations': typeof DiseaseAssociationsRoute
@@ -142,12 +160,14 @@ export interface FileRoutesById {
   '/genes/': typeof GenesIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/dev/sign-in-code': typeof ApiDevSignInCodeRoute
+  '/api/pre-optimized/$transcriptId': typeof ApiPreOptimizedTranscriptIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/genes'
+    | '/$'
     | '/architecture'
     | '/design-tool'
     | '/disease-associations'
@@ -160,9 +180,11 @@ export interface FileRouteTypes {
     | '/genes/'
     | '/api/auth/$'
     | '/api/dev/sign-in-code'
+    | '/api/pre-optimized/$transcriptId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/$'
     | '/architecture'
     | '/design-tool'
     | '/disease-associations'
@@ -175,10 +197,12 @@ export interface FileRouteTypes {
     | '/genes'
     | '/api/auth/$'
     | '/api/dev/sign-in-code'
+    | '/api/pre-optimized/$transcriptId'
   id:
     | '__root__'
     | '/'
     | '/genes'
+    | '/$'
     | '/architecture'
     | '/design-tool'
     | '/disease-associations'
@@ -191,11 +215,13 @@ export interface FileRouteTypes {
     | '/genes/'
     | '/api/auth/$'
     | '/api/dev/sign-in-code'
+    | '/api/pre-optimized/$transcriptId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   GenesRouteRoute: typeof GenesRouteRouteWithChildren
+  SplatRoute: typeof SplatRoute
   ArchitectureRoute: typeof ArchitectureRoute
   DesignToolRoute: typeof DesignToolRoute
   DiseaseAssociationsRoute: typeof DiseaseAssociationsRoute
@@ -206,6 +232,7 @@ export interface RootRouteChildren {
   ApiVersionRoute: typeof ApiVersionRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiDevSignInCodeRoute: typeof ApiDevSignInCodeRoute
+  ApiPreOptimizedTranscriptIdRoute: typeof ApiPreOptimizedTranscriptIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -215,6 +242,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/$': {
+      id: '/$'
+      path: '/$'
+      fullPath: '/$'
+      preLoaderRoute: typeof SplatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/architecture': {
@@ -308,6 +342,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiDevSignInCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/pre-optimized/$transcriptId': {
+      id: '/api/pre-optimized/$transcriptId'
+      path: '/api/pre-optimized/$transcriptId'
+      fullPath: '/api/pre-optimized/$transcriptId'
+      preLoaderRoute: typeof ApiPreOptimizedTranscriptIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -328,6 +369,7 @@ const GenesRouteRouteWithChildren = GenesRouteRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   GenesRouteRoute: GenesRouteRouteWithChildren,
+  SplatRoute: SplatRoute,
   ArchitectureRoute: ArchitectureRoute,
   DesignToolRoute: DesignToolRoute,
   DiseaseAssociationsRoute: DiseaseAssociationsRoute,
@@ -338,6 +380,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiVersionRoute: ApiVersionRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiDevSignInCodeRoute: ApiDevSignInCodeRoute,
+  ApiPreOptimizedTranscriptIdRoute: ApiPreOptimizedTranscriptIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

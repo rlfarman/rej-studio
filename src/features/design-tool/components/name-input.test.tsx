@@ -11,10 +11,10 @@ import { NameInput } from './name-input'
  * the default failure path. The field must say so rather than fail silently.
  */
 
-function mount() {
+function mount(name = '') {
   let form!: UseFormReturn<FormValues>
   function Harness() {
-    form = useForm<FormValues>({ defaultValues: { name: '' } })
+    form = useForm<FormValues>({ defaultValues: { name } })
     return (
       <FormProvider {...form}>
         <NameInput />
@@ -57,5 +57,13 @@ describe('NameInput', () => {
       .find((id) => id.endsWith('-form-item-message'))
     expect(messageId, 'the field names no message').toBeTruthy()
     expect(document.getElementById(messageId!)).toBeTruthy()
+  })
+
+  it('shows the length counter only as the limit nears', () => {
+    mount('a'.repeat(199))
+    expect(screen.queryByText(/\/ 250/)).toBeNull()
+    cleanup()
+    mount('a'.repeat(200))
+    expect(screen.getByText('200 / 250')).toBeTruthy()
   })
 })

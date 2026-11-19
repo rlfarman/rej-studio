@@ -17,13 +17,20 @@ export const ADA: AccountUser = {
   image: null,
 }
 
-export type AccountFixture = 'signed-out' | 'signed-in' | 'unavailable'
+export type AccountFixture =
+  | 'signed-out'
+  | 'signed-in'
+  | 'unavailable'
+  /** The passcode gate answered 401 (`fetchAccount`). */
+  | 'locked'
 
 function accountState(
   fixture: AccountFixture,
   { google = false }: { google?: boolean } = {},
 ) {
+  if (fixture === 'locked') return { locked: true }
   return {
+    locked: false,
     available: fixture !== 'unavailable',
     providers: { email: fixture !== 'unavailable', google },
     user: fixture === 'signed-in' ? ADA : null,
@@ -53,7 +60,12 @@ export function renderWithAccount(
 
 /** Answers `/api/account` with `fixture` from now on (a refetch after sign-in). */
 export function serveAccount(fixture: AccountFixture) {
-  const fetch = vi.fn(async () => Response.json(accountState(fixture)))
+  const fetch = vi.fn(async () =>
+    // What the gate answers once the passcode session has run out.
+    fixture === 'locked'
+      ? new Response(null, { status: 401 })
+      : Response.json(accountState(fixture)),
+  )
   vi.stubGlobal('fetch', fetch)
   return fetch
 }

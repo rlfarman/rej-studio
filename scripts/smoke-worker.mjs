@@ -195,6 +195,20 @@ async function passcodeGate(url) {
     login.status === 200 &&
       (login.headers.get('content-type') ?? '').includes('text/html'),
   )
+  // /api/login sends a refused attempt back to /login?error=passcode. That
+  // URL has to arrive as the login page, not the shell: the shell is empty
+  // until JavaScript runs, so without it a refusal showed nothing at all.
+  const refused = await request(`${url}/login?error=passcode`)
+  const refusedHtml = refused.ok ? await refused.text() : ''
+  check(
+    'the login page, not the shell, is served for /login with a query string',
+    refused.status === 200 &&
+      // From src/features/auth/copy.ts; this script cannot import it.
+      refusedHtml.includes('Enter the lab passcode') &&
+      refusedHtml.includes('<noscript>') &&
+      refusedHtml.includes('JavaScript is off'),
+    `HTTP ${refused.status}`,
+  )
   const asset = await request(`${url}/optimizer/THIRD-PARTY-NOTICES.md`)
   check('static files load without a session', asset.status === 200)
   const wasm = await request(`${url}/optimizer/rej-optimizer.wasm?v=smoke`)
@@ -270,6 +284,15 @@ async function passcodeGate(url) {
     signedIn.status === 200 &&
       (signedIn.headers.get('content-type') ?? '').includes('text/html'),
     `HTTP ${signedIn.status}`,
+  )
+  // Only the refusal: a real package is in an external bucket, and this
+  // script runs without the network. The refusal still proves the route is
+  // wired and that it checks the id before building an upstream URL.
+  const zip = await request(`${url}/api/pre-optimized/not-a-transcript`)
+  check(
+    'the pre-optimized ZIP route refuses an id that is not a transcript',
+    zip.status === 400,
+    `HTTP ${zip.status}`,
   )
 }
 

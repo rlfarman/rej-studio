@@ -1,3 +1,5 @@
+import type { CloudDesignStatus } from './types/cloud-design'
+
 /** Human-friendly seconds formatter. Keep one decimal for short runs where
  *  precision is informative; round to int for longer ones where ".34s" is
  *  just noise. Handles sub-second runs with "<1s" to avoid "0s". */
@@ -29,7 +31,7 @@ export const designToolCopy = {
       required: 'Coding sequence is required.',
       invalidNucleotides:
         'Sequence must contain only valid nucleotides (A, C, G, T, or U).',
-      tooLong: 'Sequence must be 50,000 characters or fewer.',
+      tooLong: 'Sequence must be 50,000 bp or fewer.',
       notMultipleOfThree:
         'Sequence length must be a multiple of 3 (complete codons).',
       missingStartCodon:
@@ -114,8 +116,34 @@ export const designToolCopy = {
     myDesigns: {
       label: 'My cloud designs',
       menuAria: 'My cloud designs',
-      subline: (bp: number) =>
-        `in the cloud · ${bp.toLocaleString('en-US')} bp`,
+      // Where it got to, how long it is and when it ran, as Recent designs
+      // dates its entries: from another device the list was a name and a
+      // length, with nothing to say which design was which, how old any of
+      // them were, or whether any of them had finished.
+      //
+      // `keptDays` is the retention the status makes true, and only then:
+      // a queued or running design has no outcome to count from, and a row
+      // from before the status column (`status` null) says only that the
+      // design is in the cloud, which is all it knows.
+      state: {
+        queued: 'queued',
+        running: 'running',
+        completed: 'done',
+        failed: 'failed',
+        unknown: 'in the cloud',
+      } satisfies Record<CloudDesignStatus | 'unknown', string>,
+      subline: (
+        state: string,
+        bp: number,
+        age: string,
+        keptDays: number | null,
+      ) =>
+        [
+          state,
+          `${bp.toLocaleString('en-US')} bp`,
+          age,
+          ...(keptDays === null ? [] : [`kept ${keptDays} days`]),
+        ].join(' · '),
     },
     tooLong: (bases: number, limit: number) =>
       `That sequence is ${bases.toLocaleString('en-US')} bp; cloud designs take up to ${limit.toLocaleString('en-US')}. Turn off “Run in the cloud” to design it in this browser.`,
@@ -146,6 +174,11 @@ export const designToolCopy = {
     dismiss: 'Dismiss',
     dismissAria: 'Dismiss the restored-draft notice',
   },
+  isoformNotFound: {
+    message:
+      "That transcript isn't in this corpus — starting from a blank design.",
+    dismissAria: 'Dismiss',
+  },
   sequenceInput: {
     labelProtein: 'Enter your sequence',
     labelDna: 'Enter your sequence',
@@ -153,6 +186,10 @@ export const designToolCopy = {
     typeDna: 'DNA',
     typeProtein: 'Protein',
     uploadAria: 'Upload FASTA file',
+    // Pasting cleans itself and says what it changed; typing the same
+    // characters only gets a blocking error. This offers the same repair.
+    cleanSequence: 'Clean sequence',
+    cleanAria: 'Clean the sequence of invalid characters',
     uploadLong: 'Upload FASTA',
     uploadShort: 'FASTA',
     placeholderProtein:
@@ -173,8 +210,10 @@ export const designToolCopy = {
     charTypeNonNucleotide: 'non-nucleotide',
     reverseTranslated: (bp: string, species: string) =>
       `→ ${bp} bp DNA generated (${species} codon preferences)`,
+    // Where the species chips actually are: the "Codon usage optimization"
+    // row, under Design Objectives, behind "Customize".
     selectSpeciesHint:
-      'Select a target species in Sequence design options to generate the DNA sequence.',
+      'Pick a target species under Design Objectives (Customize, then Codon usage optimization) to generate the DNA sequence.',
     reverseTranslateButton: 'Reverse translate to continue',
     reverseTranslateSpeciesRequired:
       'Select a target species before reverse translating.',
@@ -188,11 +227,6 @@ export const designToolCopy = {
     label: 'Choose a name for your coding sequence',
     placeholder: 'My Custom Sequence',
   },
-  speciesOptions: {
-    label: 'Optimize codon usage for species',
-    noneDisabledHint:
-      'Reverse-translating protein input requires a codon table — pick Human or Mouse.',
-  },
   submit: {
     // Generic fallback shown on the submit button while the job is in flight
     // but no backend stage has arrived yet (pre-submit / first 500ms).
@@ -201,8 +235,6 @@ export const designToolCopy = {
     idle: 'Run designer',
   },
   optimizationOptions: {
-    objectivesHeading: 'Sequence objectives',
-    constraintsHeading: 'Constraints',
     summary: {
       recommendedLabel: 'Recommended settings',
       customLabel: 'Custom settings',
@@ -218,6 +250,10 @@ export const designToolCopy = {
         cpg: 'CpG',
         kmer: 'k-mer diversity',
         gc: 'GC 35–60%',
+        // Listed so "Recommended settings" never reads as complete while the
+        // headline objective is off: a blank form has no species, and species
+        // is what switches codon optimization on.
+        codonOff: 'codon usage off',
         intronsBoth: 'both stimulatory introns',
         intron5: '5′ stimulatory intron',
         intron3: '3′ stimulatory intron',
@@ -240,8 +276,6 @@ export const designToolCopy = {
     codonOptimize: {
       label: 'Codon usage optimization',
       description: 'Target species for codon-aware sequence design.',
-      enableSpeciesFirst:
-        'Enable codon usage optimization to select a species.',
     },
     removeCrypticSpliceSites: {
       label: 'Remove cryptic splice sites',
@@ -259,6 +293,8 @@ export const designToolCopy = {
     },
     enforceGc: {
       label: 'Enforce 35–60% GC content',
+      description:
+        'Holds the G+C fraction in a range that synthesizes and expresses well',
     },
   },
   weights: {
@@ -274,6 +310,70 @@ export const designToolCopy = {
     noSitesShort: 'No WGGW motif found',
     emptyTitle: 'No motif selected',
     emptyBody: 'Pick a motif on the strip above, or use ‹ › to step through.',
+    /** The hovered candidate tick, under the track. */
+    tickReadout: (motif: string, bp: string, baseChanges: number) =>
+      `${motif} at ${bp} bp · ${baseChanges} base${baseChanges === 1 ? '' : 's'} to change`,
+    /**
+     * A candidate site's button in the sequence strip — the keyboard's and a
+     * screen reader's way through the same sites the ticks draw, so it names
+     * what the tick readout names.
+     */
+    siteButtonAria: (motif: string, bp: number, baseChanges: number) =>
+      `Select WGGW ${motif} site at bp ${bp} — ${baseChanges} base${baseChanges === 1 ? '' : 's'} to change`,
+    rewrites: {
+      heading: 'Synonymous rewrites',
+      hintTopic: 'Synonymous rewrites',
+      // Which order the chips are in, and that any of them is a valid
+      // design: the order is advice, not a verdict.
+      hint: (species: 'human' | 'mouse' | null) =>
+        `Ways to write the motif in without changing the protein. ${
+          species === null
+            ? 'With no codon usage selected they are ordered by how few bases they change.'
+            : `They are ordered best first for ${species} codon usage.`
+        } Any of them designs; the order is a recommendation. "N bp" is how many bases that option changes.`,
+      /** Where the selected chip sits in the order the chips are shown in. */
+      position: (rank: number, total: number) => `${rank} of ${total}`,
+      /** On the first chip, so the ranking is visible and not just implied. */
+      best: 'Best',
+      baseChanges: (count: number) => `${count} bp`,
+      optionAria: (
+        rank: number,
+        total: number,
+        baseChanges: number,
+        score: string | null,
+      ) =>
+        [
+          `Rewrite ${rank} of ${total}`,
+          `${baseChanges} base${baseChanges === 1 ? '' : 's'} changed`,
+          score === null ? null : `codon preference ${score}`,
+        ]
+          .filter(Boolean)
+          .join(' · '),
+    },
+    goTo: {
+      label: 'Go to',
+      placeholder: 'bp number or ACGT…',
+      aria: 'Jump to bp or search sequence',
+      prevMatch: 'Previous match (Shift+Enter)',
+      nextMatch: 'Next match (Enter)',
+      midpoint: 'Midpoint',
+      midpointTitle: 'Snap caret to midpoint (m)',
+      // The way back once the caret has been dragged off a motif. It is the
+      // site the design already cuts at, so pressing it changes no design —
+      // it ends the disagreement between the caret and the cut. Shown only
+      // while the two differ, so it is never a control that does nothing.
+      snapToSite: 'Nearest site',
+      snapToSiteAria: (bp: string) =>
+        `Move the split point onto the nearest WGGW site, at ${bp} bp`,
+      // Why a query found nothing, rather than "0/0". A typed sequence is
+      // taken as typed: non-ACGT letters make it invalid instead of being
+      // silently dropped, which used to search a query nobody entered.
+      notSequence:
+        'Not a position or a DNA sequence — use digits, or A C G T U.',
+      noMatch: (query: string) => `No match for ${query} in this sequence.`,
+      outOfRange: (max: string) =>
+        `This sequence is ${max} bp — enter a position between 1 and ${max}.`,
+    },
   },
   stimulatoryIntrons: {
     fivePrime: {
@@ -302,6 +402,10 @@ export const designToolCopy = {
       // once it is here the line reports its length in bp instead.
       ready: (amount: string, unit: string, objectives: number) =>
         `${amount} ${unit} · ${objectives} objective${objectives === 1 ? '' : 's'}`,
+      // Appended to `ready`. The objectives summary lists the introns beside
+      // the objectives, but the optimizer does not score them, so the count
+      // must not absorb them — it names them separately instead.
+      introns: (count: number) => `${count} intron${count === 1 ? '' : 's'}`,
       // The split-point editor warns per fragment; this says the same thing
       // beside the Run button, so the last line read before submitting does
       // not imply the design will package.
@@ -313,18 +417,7 @@ export const designToolCopy = {
       splitAt: (bp: string) => `split near ${bp} bp`,
     },
     optimizationHeading: 'Design Objectives',
-    optimizationDescription: '',
-    accordion: {
-      codonOptimization: 'Sequence design options',
-      codonOptimizationHint:
-        'Select objectives for the codon-aware sequence designer.',
-      stimulatoryIntrons: 'Stimulatory introns',
-      stimulatoryIntronsHint:
-        'Add cis-introns up or downstream of the REJ intron to boost trans-splicing',
-      parameterWeights: 'Parameter weights',
-      parameterWeightsHint:
-        'Control how much each objective influences the result.',
-    },
+    stimulatoryIntronsHeading: 'Stimulatory introns',
     // The previous run's results stay on screen while its inputs are being
     // edited. Unlabelled, they read as the results of the inputs above.
     previousRun: {
@@ -349,7 +442,13 @@ export const designToolCopy = {
     statusCompletedIn: (seconds: number) =>
       `Completed in ${formatProcessingTime(seconds)}`,
     statusFailedDefault: 'Something went wrong — try running again.',
-    statusCancelled: 'Cancelled',
+    // A cancelled run leaves the page with nothing on it, so the one line
+    // there has to say what became of the work. Same wording as a run its
+    // tab did not live to finish (browserRun.interrupted), because the
+    // outcome is the same: nothing partial is kept, and the design is
+    // deterministic, so running it again gives exactly the same result.
+    statusCancelled:
+      'Cancelled — the partial work was discarded. Run it again for the identical design.',
     buttonCancel: 'Cancel',
     buttonEdit: 'Edit',
     buttonRunAgain: 'Run again',
@@ -369,22 +468,23 @@ export const designToolCopy = {
     },
   },
   recentJobs: {
-    label: 'Recent jobs',
-    empty: 'No recent jobs. Run an optimization to see it here.',
-    menuAria: 'Recent jobs',
+    label: 'Recent designs',
+    empty: 'No recent designs. Run a design to see it here.',
+    menuAria: 'Recent designs',
     justNow: 'just now',
     minutesAgo: (m: number) => `${m}m ago`,
     hoursAgo: (h: number) => `${h}h ago`,
     daysAgo: (d: number) => `${d}d ago`,
     running: 'running',
     cancelAria: (name: string) => `Cancel ${name}`,
-    removeAria: (name: string) => `Remove ${name} from recent jobs`,
+    removeAria: (name: string) => `Remove ${name} from recent designs`,
     cancelledMessage: 'Cancelled',
+    /** The subline for a run its tab didn't live to finish; the job page
+     *  carries the full sentence (browserRun.interrupted). */
+    interruptedSubline: 'Interrupted',
   },
   results: {
     heading: 'Results',
-    completedIn: (seconds: number) =>
-      `Completed in ${formatProcessingTime(seconds)}`,
     wggwSplitBadge: 'WGGW split',
     // In the exported report, where the options block goes. Said plainly
     // rather than filled in from the form on screen, which may have been
@@ -392,6 +492,44 @@ export const designToolCopy = {
     optionsUnavailable:
       'Not recorded — this design’s inputs are no longer stored in this browser.',
     downloadZip: 'Download Results',
+    // The report the ZIP carries, also offered here: it is the one artifact
+    // that pastes straight into a notebook, and it used to sit three
+    // interactions deep inside the objectives section.
+    copyReport: 'Copy report',
+    copyReportAria: 'Copy the design report as Markdown',
+    copiedReport: 'Copied',
+    /** The exported Markdown report (utils/design-report.ts). */
+    report: {
+      fieldColumn: 'Field',
+      valueColumn: 'Value',
+      metricColumn: 'Metric',
+      beforeColumn: 'Before',
+      afterColumn: 'After',
+      metricsHeading: 'Metrics',
+      optionsHeading: 'Options as applied',
+      wggwHeading: 'WGGW motif sites',
+      objectivesHeading: 'Optimization objectives',
+      methodsHeading: 'Methods',
+      totalScore: 'Total score:',
+      yes: 'Yes',
+      no: 'No',
+      // Codon usage was left alone, which is not the same as a species whose
+      // table happened to change nothing.
+      speciesNone: 'Not optimized for a species',
+      fields: {
+        // When the file was made. A run's own start time is only in a run
+        // record, which designs run in this browser do not carry yet.
+        exportedAt: 'Exported',
+        inputLength: 'Input sequence',
+        splitPoint: 'Split after base',
+        fivePrime: '5′ sequence',
+        threePrime: '3′ sequence',
+        wggwSplit: 'Split at a WGGW motif',
+        species: 'Codon usage',
+        runTime: 'Run time',
+        seed: 'Seed',
+      },
+    },
     intronTooltip: {
       fivePrime:
         '5′ REJ module insertion site — insert the 5′ REJ module here during construct assembly.',
@@ -621,5 +759,65 @@ export const designToolCopy = {
       tight: 'Tight',
       overLimit: 'Over limit',
     },
+  },
+  /** The split-point editor (slider, inspector, sequence strip). */
+  spliceEditor: {
+    heading: 'Split point design',
+    spliceLabel: (index: number) => `Splice ${index}`,
+    removeSplice: (label: string) => `Remove ${label}`,
+    prevSite: 'Previous WGGW site',
+    nextSite: 'Next WGGW site',
+    prevSiteShortcut: 'Previous WGGW site ([)',
+    nextSiteShortcut: 'Next WGGW site (])',
+    /** The key legend under the editor. */
+    shortcuts: {
+      focus: 'focus',
+      stepSite: 'step site',
+      midpoint: 'midpoint',
+      findJump: 'find / jump',
+    },
+    junctionAria: 'Splice junction position',
+    addSplice: 'Add Splice Point',
+    addSpliceTitle: 'Add a second splice point (for triple-AAV cassettes)',
+    reordered: 'Splices reordered to keep Splice 1 5′-most',
+    middleFragment: 'middle',
+    overLimit: (names: string, count: number, maxBp: string, multi: boolean) =>
+      `The ${names} fragment${count === 1 ? '' : 's'} ${
+        count === 1 ? 'exceeds' : 'exceed'
+      } the ~${maxBp} bp AAV packaging limit, so this design will not fit a single AAV. You can still run it — move the split point to balance the fragments${
+        multi ? ' or add a second split point' : ''
+      }.`,
+    contextHeading: 'Sequence context',
+    contextAria: 'Sequence context around WGGW split site',
+    originalRow: 'Original sequence',
+    designedRow: 'Designed sequence',
+  },
+  /** The optimizer's before/after report under a result. */
+  optimizerReport: {
+    before: 'Before',
+    after: 'After',
+    copied: 'Copied',
+    copyRaw: 'Copy raw',
+    copyMarkdown: 'Copy as MD',
+    noObjectives: 'No objectives measured',
+    showReport: 'Show full optimizer report',
+    showOutput: 'Show full optimizer output',
+    filterPlaceholder: 'Filter objectives…',
+    clearFilter: 'Clear filter',
+    newlyPassing: 'Newly passing (was failing before)',
+    newlyFailing: 'Newly failing (was passing before)',
+    scoreChange: (delta: string) => `Score change vs. before: ${delta}`,
+    kmerPassed: 'No repetitive 10-mers remaining',
+    kmerScore: (score: string) => `Kmer complexity: ${score}`,
+    kmerHint:
+      'If the current sequence is too difficult to synthesize, rerun the optimization with higher weight on reducing kmer complexity.',
+    fixed: (n: number) => `${n} objective${n === 1 ? '' : 's'} fixed`,
+    regressed: (n: number) => `${n} objective${n === 1 ? '' : 's'} regressed`,
+  },
+  codonDeltaStrip: {
+    aria: 'Codon preference delta strip',
+    cell: (codon: number) => `Codon ${codon}`,
+    cellChange: (codon: number, before: string, after: string, delta: string) =>
+      `Codon ${codon}: ${before}% → ${after}% (${delta}%)`,
   },
 } as const

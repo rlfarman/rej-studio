@@ -11,23 +11,11 @@ import { ExpandableSidebarList } from '@/components/expandable-sidebar-list'
 import { cancelBrowserRun } from '@/features/design-tool/api/browser-optimizer'
 import { Loader2, CircleAlert, Cloud, X } from 'lucide-react'
 import { estimateCloudSeconds } from '@/features/design-tool/types/cloud-design'
+import { formatTimeAgo } from '@/features/design-tool/utils/time-ago'
 import { designToolCopy } from '../copy'
 
 const copy = designToolCopy.recentJobs
 const cloudCopy = designToolCopy.cloud
-
-function formatTimeAgo(dateString: string): string {
-  const seconds = Math.floor(
-    (Date.now() - new Date(dateString).getTime()) / 1000,
-  )
-  if (seconds < 60) return copy.justNow
-  const minutes = Math.floor(seconds / 60)
-  if (minutes < 60) return copy.minutesAgo(minutes)
-  const hours = Math.floor(minutes / 60)
-  if (hours < 24) return copy.hoursAgo(hours)
-  const days = Math.floor(hours / 24)
-  return copy.daysAgo(days)
-}
 
 interface RecentJobsProps {
   onSelectJob?: (entry: JobHistoryEntry) => void
@@ -87,7 +75,9 @@ export function RecentJobs({ onSelectJob }: RecentJobsProps) {
                 ? `${Math.round(progress.progress * 100)}%`
                 : copy.running))
             : isError && entry.error
-              ? entry.error.message
+              ? entry.error.code === 'interrupted'
+                ? copy.interruptedSubline
+                : entry.error.message
               : formatTimeAgo(entry.createdAt)
         return (
           <SidebarMenuItem>

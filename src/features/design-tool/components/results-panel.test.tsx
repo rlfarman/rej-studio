@@ -101,6 +101,20 @@ describe('what the panel calls the numbers', () => {
     expect(total).toBe(32)
     expect(screen.getByText(`— ${passed} of ${total} passed`)).toBeTruthy()
   })
+
+  // A result saved before the structured report existed: no summary at all
+  // rather than a count arrived at by ticking ✔ marks in the text, which was
+  // how one row came to say "30 of 31" over the report's own "30 of 32".
+  // (The score itself still comes off the text — see result-metrics.test.ts.)
+  it('leaves the row unsummarized when there is no structured report', () => {
+    panel({
+      ...RESULT,
+      objectives_report_before: { entries: [], total_score: null },
+      objectives_report_after: { entries: [], total_score: null },
+    })
+
+    expect(screen.queryByText(/of 3\d passed/)).toBeNull()
+  })
 })
 
 describe('the exported design', () => {
@@ -112,8 +126,22 @@ describe('the exported design', () => {
     fireEvent.click(screen.getByRole('button', { name: /Download Results/ }))
 
     await waitFor(() => expect(downloadResultsZip).toHaveBeenCalled())
-    const [, optionsUsed] = vi.mocked(downloadResultsZip).mock.calls[0]
-    expect(JSON.parse(optionsUsed).split_point).toBe(RESULT.split_point)
+    const [, exported] = vi.mocked(downloadResultsZip).mock.calls[0]
+    expect(JSON.parse(exported.optionsUsed).split_point).toBe(
+      RESULT.split_point,
+    )
+    expect(exported.species).toBe('human')
+  })
+
+  // The one paper-ready artifact sat three interactions deep: inside a
+  // <details> inside the collapsed "Objectives report" row.
+  it('offers the markdown report beside the download', () => {
+    panel(RESULT)
+
+    expect(
+      screen.getByRole('button', { name: /Copy the design report as Markdown/ })
+        .parentElement!.textContent,
+    ).toContain('Download Results')
   })
 
   it('says so when the run’s inputs are no longer stored', async () => {
@@ -122,8 +150,8 @@ describe('the exported design', () => {
     fireEvent.click(screen.getByRole('button', { name: /Download Results/ }))
 
     await waitFor(() => expect(downloadResultsZip).toHaveBeenCalled())
-    const [, optionsUsed] = vi.mocked(downloadResultsZip).mock.calls[0]
-    expect(optionsUsed).toContain('Not recorded')
+    const [, exported] = vi.mocked(downloadResultsZip).mock.calls[0]
+    expect(exported.optionsUsed).toContain('Not recorded')
   })
 })
 

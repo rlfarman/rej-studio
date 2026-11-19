@@ -1,4 +1,4 @@
-import { Activity, Dna, Home, WandSparkles } from 'lucide-react'
+import { Activity, Dna, ExternalLink, Home, WandSparkles } from 'lucide-react'
 import {
   Sidebar,
   SidebarContent,
@@ -11,6 +11,7 @@ import {
   SidebarMenuButton,
   useSidebar,
 } from '@/components/ui/sidebar'
+import { Skeleton } from '@/components/ui/skeleton'
 import { FavoriteGenes } from '@/features/gene-search/components/favorites-panel'
 import { RecentGenes } from '@/features/gene-search/components/recent-genes-panel'
 import { RecentJobs } from '@/features/design-tool/components/recent-jobs-panel'
@@ -29,7 +30,8 @@ import {
 } from '@/features/design-tool/hooks/use-job-history'
 import { useFavoriteGenes } from '@/features/gene-search/stores/favorite-genes-store'
 import { useRecentGenes } from '@/features/gene-search/stores/recent-genes-store'
-import { Link, useNavigate } from '@tanstack/react-router'
+import { useNavigate } from '@tanstack/react-router'
+import { ShellLink } from './shell-link'
 import { useShellPathname } from './use-shell-pathname'
 import { useEffect, useSyncExternalStore } from 'react'
 import { appCopy } from '@/copy/app'
@@ -72,7 +74,7 @@ function NavLinks() {
           <SidebarMenuButton
             isActive={pathname !== null && isActive(pathname)}
             tooltip={label}
-            render={<Link to={href} />}
+            render={<ShellLink to={href} />}
           >
             <Icon />
             <span>{label}</span>
@@ -148,7 +150,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               <SidebarMenuButton
                 size="lg"
                 tooltip={commonCopy.brandName}
-                render={<Link to="/" />}
+                render={<ShellLink to="/" />}
               >
                 <div className="flex aspect-square size-8 items-center justify-center rounded-xl bg-spark text-spark-foreground">
                   <Dna className="size-4" />
@@ -177,6 +179,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 void navigate({ to: '/design-tool', search: { job: id } })
               }
             />
+            {/* Favorites, recents and designs all live in the browser, so
+                this column is empty until they load and then pops in. Two
+                placeholder rows hold its place instead. */}
+            {!hydrated && (
+              <div className="flex flex-col gap-2 px-4 py-3">
+                <Skeleton className="h-3 w-full" />
+                <Skeleton className="h-3 w-2/3" />
+              </div>
+            )}
             {hydrated && !hasHistory && (
               <p className="px-4 py-3 text-xs leading-relaxed text-muted-foreground">
                 {appCopy.sidebar.historyHint}
@@ -196,7 +207,21 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     rel="noopener noreferrer"
                   >
                     <SalkLogo alt={appCopy.sidebar.salkLogoAlt} />
-                    <span>{appCopy.sidebar.lab}</span>
+                    {/* Truncates itself: the primitive truncates only a
+                        span that comes last, and the icon does here. */}
+                    <span className="truncate">
+                      {appCopy.sidebar.lab}
+                      <span className="sr-only">
+                        {' '}
+                        {appCopy.sidebar.opensInNewTab}
+                      </span>
+                    </span>
+                    {/* The one link that leaves the app. `!`: the menu
+                        button sizes every svg in it to 16px. */}
+                    <ExternalLink
+                      aria-hidden
+                      className="ml-auto size-3! text-muted-foreground"
+                    />
                   </a>
                 }
               />

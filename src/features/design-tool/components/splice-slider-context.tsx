@@ -1,8 +1,10 @@
 import { useEffect, useEffectEvent, useRef, useState } from 'react'
 import { cn } from '@/lib/utils'
+import { AAV_CDS_CAPACITY_BP } from '@/lib/bio/aav'
 import { ChevronLeft, ChevronRight, Plus, TriangleAlert } from 'lucide-react'
 import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
+import { designToolCopy } from '../copy'
 import type { RewritePick } from '../types/form-schema'
 import { MULTI_SPLIT_ENABLED } from '../utils/feature-flags'
 import {
@@ -12,7 +14,6 @@ import {
   wggwSitesIn,
 } from '../utils/wggw-selection'
 import {
-  AAV_MAX_BP,
   KEYBOARD_PAGE_MIN_BP,
   KEYBOARD_SHIFT_STEP_BP,
   MIN_SEQUENCE_LENGTH,
@@ -33,7 +34,14 @@ import {
 import { Inspector } from './splice-slider/inspector'
 import { LocalSequenceView } from './splice-slider/local-sequence-view'
 import { ShortcutHint } from './splice-slider/shortcuts'
-import { Toolbar, detectQueryMode } from './splice-slider/toolbar'
+import {
+  Toolbar,
+  detectQueryMode,
+  parseBpQuery,
+  parseSequenceQuery,
+} from './splice-slider/toolbar'
+
+const editorCopy = designToolCopy.spliceEditor
 
 interface Props {
   sequence: string
@@ -101,17 +109,16 @@ export function SpliceSliderContext({
     }
   }, [seqLen])
   const queryMode = detectQueryMode(queryValue)
-  const searchValue = queryMode === 'sequence' ? queryValue : ''
+  const searchQuery =
+    queryMode === 'sequence'
+      ? parseSequenceQuery(queryValue)
+      : { bases: '', invalid: false }
 
   const wggwSites: WggwSiteCandidate[] = wggwSitesIn(sequence)
   const normalizedSequence = sequence.toUpperCase().replace(/U/g, 'T')
-  const normalizedSearch = searchValue
-    .toUpperCase()
-    .replace(/U/g, 'T')
-    .replace(/[^ACGT]/g, '')
   const searchMatches = findSequenceMatches(
     normalizedSequence,
-    normalizedSearch,
+    searchQuery.bases,
   )
   const activeSearchMatch =
     searchMatches.length > 0 ? (searchMatches[searchMatchIndex] ?? null) : null
@@ -177,6 +184,8 @@ export function SpliceSliderContext({
   // position: it is what the person drags and what picks the site.
   const cuts = cutPositions(selectedSites, positions)
   const activeCut = cuts[clampedActiveIndex] ?? activePosition
+  // The active splice's resolved site, or null where the sequence has none.
+  const activeSite = selectedSites[clampedActiveIndex] ?? null
 
   // Fragments are measured at the cuts, so the sizes — and the packaging
   // verdict drawn from them — are the ones the design delivers.
@@ -185,18 +194,17 @@ export function SpliceSliderContext({
   // so an over-limit fragment gets named in text (see the notice below the
   // track) and in the slider's value text, not only tinted in the bar.
   const overLimitNames = segments
-    .filter((seg) => seg.end - seg.start > AAV_MAX_BP)
-    .map((seg) => seg.label || 'middle')
+    .filter((seg) => seg.end - seg.start > AAV_CDS_CAPACITY_BP)
+    .map((seg) => seg.label || editorCopy.middleFragment)
   const overLimitNotice =
     overLimitNames.length === 0
       ? null
-      : `The ${joinNames(overLimitNames)} fragment${
-          overLimitNames.length === 1 ? '' : 's'
-        } ${
-          overLimitNames.length === 1 ? 'exceeds' : 'exceed'
-        } the ~${AAV_MAX_BP.toLocaleString()} bp AAV packaging limit, so this design will not fit a single AAV. You can still run it — move the split point to balance the fragments${
-          MULTI_SPLIT_ENABLED ? ' or add a second split point' : ''
-        }.`
+      : editorCopy.overLimit(
+          joinNames(overLimitNames),
+          overLimitNames.length,
+          AAV_CDS_CAPACITY_BP.toLocaleString(),
+          MULTI_SPLIT_ENABLED,
+        )
 
   const frameContext = buildSequenceContext(sequence)
 
@@ -253,7 +261,7 @@ export function SpliceSliderContext({
         window.setTimeout(() => {
           swapToastCoolingRef.current = false
         }, SWAP_TOAST_THROTTLE_MS)
-        toast('Splices reordered to keep Splice 1 5′-most', {
+        toast(editorCopy.reordered, {
           duration: SWAP_TOAST_DURATION_MS,
         })
       }
@@ -282,6 +290,13 @@ export function SpliceSliderContext({
   // variants on the tick spans render the hover decoration without React.
   const wggwStripRef = useRef<HTMLDivElement>(null)
   const hoveredTickRef = useRef<HTMLElement | null>(null)
+  // The readout under the track, written the same imperative way. What a
+  // tick is — its motif, its bp and what it costs — used to live only in a
+  // `title` on the tick spans, which are `pointer-events-none` and
+  // `aria-hidden`: the browser never hit-tests them, so that tooltip could
+  // not be seen by anyone, on any input. React has no children for this
+  // node, so it never patches the text back out.
+  const tickReadoutRef = useRef<HTMLSpanElement>(null)
   const setHoveredTick = (sitePosition: number | null) => {
     const strip = wggwStripRef.current
     if (!strip) return
@@ -296,6 +311,19 @@ export function SpliceSliderContext({
       next.dataset.tickHovered = 'true'
     }
     hoveredTickRef.current = next
+    const readout = tickReadoutRef.current
+    if (!readout) return
+    const site =
+      sitePosition === null
+        ? null
+        : wggwSites.find((s) => s.position === sitePosition)
+    readout.textContent = site
+      ? designToolCopy.splitPoint.tickReadout(
+          site.motif,
+          site.position.toLocaleString(),
+          site.baseChanges,
+        )
+      : ''
   }
 
   // When a tick is clicked without an explicit splice index, assign it to
@@ -352,6 +380,8 @@ export function SpliceSliderContext({
   // listeners below subscribe once.
   const onWindowKeyDown = useEffectEvent((event: KeyboardEvent) => {
     if (!shortcutsActive) return
+    // Cmd+[ is the browser's Back on macOS; a chord is never the editor's.
+    if (event.metaKey || event.ctrlKey || event.altKey) return
     const target = event.target as HTMLElement | null
     if (
       target &&
@@ -617,8 +647,8 @@ export function SpliceSliderContext({
 
   const handleQuerySubmit = () => {
     if (queryMode === 'bp') {
-      const parsed = Number.parseInt(queryValue, 10)
-      if (Number.isNaN(parsed)) return
+      const parsed = parseBpQuery(queryValue)
+      if (parsed === null) return
       jumpToPosition(parsed)
     } else if (queryMode === 'sequence') {
       jumpToSearchMatch(searchMatchIndex)
@@ -648,8 +678,10 @@ export function SpliceSliderContext({
       <Toolbar
         queryValue={queryValue}
         queryMode={queryMode}
+        sequenceLength={seqLen}
         searchMatchCount={searchMatches.length}
         searchMatchIndex={searchMatchIndex}
+        searchInvalid={searchQuery.invalid}
         onQueryChange={(value) => {
           setQueryValue(value)
           setSearchMatchIndex(0)
@@ -658,6 +690,18 @@ export function SpliceSliderContext({
         onSearchNext={() => jumpToSearchMatch(searchMatchIndex + 1)}
         onSearchPrev={() => jumpToSearchMatch(searchMatchIndex - 1)}
         onMidpoint={() => setPositionAt(clampedActiveIndex, midpoint)}
+        // The site the design already cuts at (`activeSite`), offered only
+        // while the caret sits somewhere else. No second notion of
+        // "nearest": this is the one `resolveWggwPicks` resolved, and
+        // pressing it takes the same path a tick click does.
+        snapToSiteBp={
+          activeSite && activeSite.position !== activePosition
+            ? activeSite.position
+            : null
+        }
+        onSnapToSite={() => {
+          if (activeSite) handleSelectSite(activeSite, clampedActiveIndex)
+        }}
       />
 
       <div className="space-y-2">
@@ -684,6 +728,9 @@ export function SpliceSliderContext({
                   style={{ left: `${pct}%` }}
                 >
                   <div className="flex items-center gap-1">
+                    {/* The chevrons draw at 16px; a pseudo-element takes
+                        each one's hit area to 24px. It stops at the 4px gap,
+                        so it never steals a drag from the readout. */}
                     {isActive && (
                       <button
                         type="button"
@@ -692,9 +739,9 @@ export function SpliceSliderContext({
                           jumpToSibling(-1)
                         }}
                         disabled={!canPrev}
-                        title="Previous WGGW site"
-                        aria-label="Previous WGGW site"
-                        className="inline-flex size-4 items-center justify-center rounded-full text-foreground/55 transition-colors hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
+                        title={editorCopy.prevSite}
+                        aria-label={editorCopy.prevSite}
+                        className="relative inline-flex size-4 items-center justify-center rounded-full text-foreground/55 transition-colors before:absolute before:-inset-1 hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
                       >
                         <ChevronLeft className="size-3" strokeWidth={2.5} />
                       </button>
@@ -733,9 +780,9 @@ export function SpliceSliderContext({
                           jumpToSibling(1)
                         }}
                         disabled={!canNext}
-                        title="Next WGGW site"
-                        aria-label="Next WGGW site"
-                        className="inline-flex size-4 items-center justify-center rounded-full text-foreground/55 transition-colors hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
+                        title={editorCopy.nextSite}
+                        aria-label={editorCopy.nextSite}
+                        className="relative inline-flex size-4 items-center justify-center rounded-full text-foreground/55 transition-colors before:absolute before:-inset-1 hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
                       >
                         <ChevronRight className="size-3" strokeWidth={2.5} />
                       </button>
@@ -749,7 +796,7 @@ export function SpliceSliderContext({
             ref={trackRef}
             role="slider"
             tabIndex={0}
-            aria-label="Splice junction position"
+            aria-label={editorCopy.junctionAria}
             aria-valuemin={1}
             aria-valuemax={seqLen - 1}
             aria-valuenow={activePosition}
@@ -761,7 +808,7 @@ export function SpliceSliderContext({
                 ? ''
                 : ` — ${overLimitNames.length} fragment${
                     overLimitNames.length === 1 ? '' : 's'
-                  } over the ~${AAV_MAX_BP.toLocaleString()} bp AAV packaging limit`)
+                  } over the ~${AAV_CDS_CAPACITY_BP.toLocaleString()} bp AAV packaging limit`)
             }
             onPointerDown={handleTrackPointerDown}
             onKeyDown={handleTrackKeyDown}
@@ -782,7 +829,7 @@ export function SpliceSliderContext({
                     : { fillSeg: 'bg-muted/50', text: 'text-muted-foreground' }
                 const widthPct = ((seg.end - seg.start) / seqLen) * 100
                 const fragmentBp = seg.end - seg.start
-                const overAAV = fragmentBp > AAV_MAX_BP
+                const overAAV = fragmentBp > AAV_CDS_CAPACITY_BP
                 return (
                   <div
                     key={`seg-${i}`}
@@ -797,11 +844,9 @@ export function SpliceSliderContext({
                         'pointer-events-none flex min-w-0 items-center gap-1 px-4 text-sm font-semibold tracking-[0.01em] tabular-nums',
                         overAAV ? 'text-danger-soft' : segTone.text,
                       )}
-                      title={
-                        overAAV
-                          ? `${fragmentBp.toLocaleString()} bp exceeds the ~${AAV_MAX_BP.toLocaleString()} bp AAV packaging limit`
-                          : `${fragmentBp.toLocaleString()} bp · within the AAV packaging limit`
-                      }
+                      // No title: this span is pointer-events-none, so one
+                      // could never be shown. The size, the icon and the
+                      // notice below the track carry the verdict instead.
                     >
                       {/* A shape as well as a tint: the packaging verdict
                           cannot be carried by colour alone. */}
@@ -851,6 +896,9 @@ export function SpliceSliderContext({
                 }
                 const pixelDist = (bestDist / seqLen) * rect.width
                 if (nearest && pixelDist <= TICK_CLICK_THRESHOLD_PX) {
+                  // Touch gets no pointermove before the tap, so name the
+                  // tick here too: the readout says what was just chosen.
+                  setHoveredTick(nearest.position)
                   handleSelectSite(nearest)
                 }
               }}
@@ -903,11 +951,17 @@ export function SpliceSliderContext({
                     key={`${site.position}-${i}`}
                     data-site-pos={site.position}
                     aria-hidden="true"
-                    title={`WGGW ${site.motif} · bp ${site.position.toLocaleString()} · ${site.baseChanges} bp change${site.baseChanges === 1 ? '' : 's'}`}
                     className={cn(
                       'pointer-events-none absolute top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full transition-all',
+                      // The halo, not just size and hue, marks the chosen
+                      // site: a hovered tick grows to the same size, and the
+                      // second splice's tone is the idle ticks' colour.
                       isSelected
-                        ? cn(spliceTone(selectedAt).tickBg, 'h-5 w-1.5')
+                        ? cn(
+                            spliceTone(selectedAt).tickBg,
+                            spliceTone(selectedAt).caretRing,
+                            'z-10 h-5 w-1.5 ring-2 ring-offset-1 ring-offset-background',
+                          )
                         : cn(
                             'bg-marker',
                             'h-4 w-1',
@@ -955,6 +1009,20 @@ export function SpliceSliderContext({
             })}
           </div>
 
+          {/* What the pointer is over on the candidate strip, in words.
+              Written imperatively (see setHoveredTick) because a sweep
+              across BRCA2's 457 ticks changes the nearest site every ~2px
+              and a re-render of the sequence strip costs far more than a
+              frame. The height is reserved so naming a tick does not
+              shift the editor. Decorative: the same facts are on each
+              site's button in the strip below, which is what a screen
+              reader and the keyboard walk. */}
+          <span
+            ref={tickReadoutRef}
+            aria-hidden="true"
+            className="block h-4 px-1 font-mono text-[10px] leading-4 text-muted-foreground tabular-nums"
+          />
+
           {/* Real text, on screen, for the limit the bar only tints. Live
               so it is announced when a move puts a fragment over (or back
               under) the limit; the wording names the fragments rather than
@@ -995,19 +1063,16 @@ export function SpliceSliderContext({
                 variant="outline"
                 size="sm"
                 onClick={addSplice}
-                title="Add a second splice point (for triple-AAV cassettes)"
+                title={editorCopy.addSpliceTitle}
                 className="text-muted-foreground hover:text-foreground"
               >
                 <Plus />
-                Add Splice Point
+                {editorCopy.addSplice}
               </Button>
             ) : (
               <span />
             )}
-            <ShortcutHint
-              active={shortcutsActive}
-              spliceCount={positions.length}
-            />
+            <ShortcutHint spliceCount={positions.length} />
           </div>
         </div>
 
@@ -1041,7 +1106,11 @@ export function SpliceSliderContext({
                 const sel = rewriteSelections[idx]
                 const site = selectedSites[idx]
                 if (!sel || !site) return 0
-                return sel.position === site.position ? sel.index : 0
+                if (sel.position !== site.position) return 0
+                // Clamped the way resolveWggwPicks clamps it, so the chip
+                // shown as pressed is the rewrite the design carries even
+                // if a restored draft names an option this site lacks.
+                return Math.min(sel.index, site.rewriteOptions.length - 1)
               })()}
               canPrevSite={
                 (selectedSiteIndices[idx] ?? -1) > 0 ||

@@ -1,4 +1,4 @@
-import { useId, useState, type FormEvent } from 'react'
+import { useId, useRef, useState, type FormEvent } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 
 import { Button } from '@/components/ui/button'
@@ -15,23 +15,29 @@ import { accountCopy } from '@/copy/account'
 import { afterAccountChange, useAccount } from '@/lib/account/account'
 import { loadAuthClient } from '@/lib/account/actions'
 import { toast } from '@/lib/toast'
-import { useSignInDialog } from '@/stores/sign-in-dialog-store'
+import {
+  resumeStep,
+  signInFinalFocus,
+  useSignInDialog,
+} from '@/stores/sign-in-dialog-store'
 
 const copy = accountCopy.dialog
 const errors = accountCopy.errors
 
+const CODE_LENGTH = 6
 const CODE_PATTERN = /^\d{6}$/
-// The browser's own check is the real one; this only catches the empty and
-// the obviously incomplete before a round trip.
+// The browser's own check is the real one; this only catches the obviously
+// incomplete before a round trip.
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+/** Wrong codes the server allows before the code itself is spent. */
+const ALLOWED_ATTEMPTS = 5
+
+// The primitive's title is body-sized; this is the app's section-title
+// scale (`type-section-title` in globals.css), as plain utilities so they
+// merge over the primitive's own size and weight.
+const TITLE_CLASS = 'text-lg leading-snug font-semibold tracking-tight'
 
 type Step = { name: 'email' } | { name: 'code'; email: string }
-
-/** A text field from a submitted form, or '' (a file is not text). */
-function field(form: HTMLFormElement, name: string): string {
-  const value = new FormData(form).get(name)
-  return typeof value === 'string' ? value : ''
-}
 
 /**
  * Signing in to an account: an emailed six-digit code, or Google where it is
@@ -51,8 +57,10 @@ export function SignInDialog() {
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent>
-        {/* Remounted per opening: every sign-in starts at the email step. */}
+      {/* No trigger to come back to, so the dialog says where focus goes. */}
+      <DialogContent finalFocus={signInFinalFocus}>
+        {/* Remounted per opening; where it starts is the store's to say, so
+            a code already emailed is not thrown away (`resumeStep`). */}
         {open && <SignInFlow onDone={() => setOpen(false)} />}
       </DialogContent>
     </Dialog>
@@ -62,45 +70,83 @@ export function SignInDialog() {
 function SignInFlow({ onDone }: { onDone: () => void }) {
   const account = useAccount()
   const queryClient = useQueryClient()
-  const [step, setStep] = useState<Step>({ name: 'email' })
+  const setProgress = useSignInDialog((s) => s.setProgress)
+  // Read once, as this component mounts: where the last attempt got to.
+  const [resumed] = useState(() =>
+    resumeStep(useSignInDialog.getState().progress),
+  )
+  const [step, setStep] = useState<Step>(
+    resumed.name === 'code'
+      ? { name: 'code', email: resumed.email }
+      : { name: 'email' },
+  )
+  const [email, setEmail] = useState(resumed.email)
+  const [code, setCode] = useState('')
   const [busy, setBusy] = useState<'code' | 'verify' | 'google' | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
+  // Wrong codes so far. The server spends the code after five, and then
+  // answers even the right one with "too many", so the fifth refusal is
+  // where this has to say so.
+  const [wrongCodes, setWrongCodes] = useState(0)
+  const emailRef = useRef<HTMLInputElement>(null)
+  const codeRef = useRef<HTMLInputElement>(null)
   const errorId = useId()
   const google = account.status === 'signed-out' && account.google
 
-  async function sendCode(email: string) {
+  /** Says why, and puts the person back in the field they have to fix. */
+  function refuse(
+    message: string,
+    input: HTMLInputElement | null,
+    { select = false }: { select?: boolean } = {},
+  ) {
+    setError(message)
+    input?.focus()
+    if (select) input?.select()
+  }
+
+  async function sendCode(address: string) {
     setError(null)
     setNotice(null)
-    if (!EMAIL_PATTERN.test(email)) {
-      setError(errors.invalidEmail)
+    if (!address) {
+      refuse(errors.invalidEmail, emailRef.current)
+      return false
+    }
+    if (!EMAIL_PATTERN.test(address)) {
+      refuse(errors.notAnEmail, emailRef.current, { select: true })
       return false
     }
     setBusy('code')
     const { sendSignInCode } = await loadAuthClient()
-    const result = await sendSignInCode(email)
+    const result = await sendSignInCode(address)
     setBusy(null)
     if (!result.ok) {
-      setError(result.message)
+      refuse(result.message, emailRef.current)
       return false
     }
+    setCode('')
+    setWrongCodes(0)
+    setProgress({ email: address, codeSentAt: Date.now() })
     return true
   }
 
   async function handleEmail(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    const email = field(event.currentTarget, 'email').trim().toLowerCase()
-    if (await sendCode(email)) setStep({ name: 'code', email })
+    // The busy buttons keep their focus, so they are only `aria-disabled`
+    // and still reachable: every handler turns a second press away itself.
+    if (busy) return
+    const address = email.trim().toLowerCase()
+    setEmail(address)
+    if (await sendCode(address)) setStep({ name: 'code', email: address })
   }
 
   async function handleCode(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (step.name !== 'code') return
-    const code = field(event.currentTarget, 'code').replace(/\s+/g, '')
+    if (busy || step.name !== 'code') return
     setError(null)
     setNotice(null)
     if (!CODE_PATTERN.test(code)) {
-      setError(errors.invalidCode)
+      refuse(errors.invalidCode, codeRef.current)
       return
     }
     setBusy('verify')
@@ -108,21 +154,42 @@ function SignInFlow({ onDone }: { onDone: () => void }) {
     const result = await signInWithCode(step.email, code)
     if (!result.ok) {
       setBusy(null)
-      setError(result.message)
+      const spent =
+        result.reason === 'too-many-attempts' ||
+        (result.reason === 'wrong-code' && wrongCodes + 1 >= ALLOWED_ATTEMPTS)
+      if (result.reason === 'wrong-code') setWrongCodes(wrongCodes + 1)
+      refuse(spent ? errors.tooManyAttempts : result.message, codeRef.current, {
+        select: result.reason === 'wrong-code',
+      })
       return
     }
     await afterAccountChange(queryClient)
     setBusy(null)
-    toast.success(accountCopy.signedIn)
+    setProgress(null)
+    toast.success(accountCopy.signedIn(step.email))
     onDone()
   }
 
   async function handleResend() {
-    if (step.name !== 'code') return
-    if (await sendCode(step.email)) setNotice(copy.resent)
+    if (busy || step.name !== 'code') return
+    if (await sendCode(step.email)) {
+      setNotice(copy.resent)
+      codeRef.current?.focus()
+    }
+  }
+
+  /** Back to the address, keeping it: a typo is one character to fix. */
+  function backToEmail() {
+    setError(null)
+    setNotice(null)
+    setCode('')
+    setStep({ name: 'email' })
+    // The code that was sent is abandoned; the address is not.
+    setProgress({ email, codeSentAt: null })
   }
 
   async function handleGoogle() {
+    if (busy) return
     setError(null)
     setBusy('google')
     const { signInWithGoogle } = await loadAuthClient()
@@ -137,6 +204,14 @@ function SignInFlow({ onDone }: { onDone: () => void }) {
     }
   }
 
+  // Busy, but still focusable: `disabled` on the button a keyboard user has
+  // just pressed sends focus to the body, and nothing in the dialog gets it
+  // back. The handlers turn a second press away themselves.
+  const busyProps = {
+    'aria-disabled': busy !== null || undefined,
+    className: 'aria-disabled:opacity-50',
+  }
+
   const errorLine = error && (
     <p id={errorId} role="alert" className="text-sm text-destructive">
       {error}
@@ -147,7 +222,7 @@ function SignInFlow({ onDone }: { onDone: () => void }) {
     return (
       <>
         <DialogHeader>
-          <DialogTitle>{copy.codeTitle}</DialogTitle>
+          <DialogTitle className={TITLE_CLASS}>{copy.codeTitle}</DialogTitle>
           <DialogDescription>{copy.codeSent(step.email)}</DialogDescription>
         </DialogHeader>
         {/* Keyed per step: both forms sit in the same place, and without
@@ -163,10 +238,20 @@ function SignInFlow({ onDone }: { onDone: () => void }) {
             <Input
               id="sign-in-code"
               name="code"
+              ref={codeRef}
               inputMode="numeric"
               autoComplete="one-time-code"
               pattern="[0-9]*"
-              maxLength={6}
+              maxLength={CODE_LENGTH}
+              placeholder={copy.codePlaceholder}
+              value={code}
+              // Only the digits, so a code pasted as "123 456" is not cut
+              // short by the length limit, and letters cannot be typed.
+              onChange={(event) =>
+                setCode(
+                  event.target.value.replace(/\D/g, '').slice(0, CODE_LENGTH),
+                )
+              }
               // The code is the only thing to do here.
               autoFocus
               className="h-10 text-center font-mono text-lg tracking-[0.4em]"
@@ -180,7 +265,7 @@ function SignInFlow({ onDone }: { onDone: () => void }) {
               {notice}
             </p>
           )}
-          <Button type="submit" size="lg" disabled={busy !== null}>
+          <Button type="submit" size="lg" {...busyProps}>
             {busy === 'verify' ? copy.verifying : copy.verify}
           </Button>
           <div className="flex flex-wrap justify-between gap-2">
@@ -189,11 +274,7 @@ function SignInFlow({ onDone }: { onDone: () => void }) {
               variant="link"
               size="sm"
               className="px-0"
-              onClick={() => {
-                setError(null)
-                setNotice(null)
-                setStep({ name: 'email' })
-              }}
+              onClick={backToEmail}
             >
               {copy.useAnotherEmail}
             </Button>
@@ -201,8 +282,8 @@ function SignInFlow({ onDone }: { onDone: () => void }) {
               type="button"
               variant="link"
               size="sm"
-              className="px-0"
-              disabled={busy !== null}
+              className="px-0 aria-disabled:opacity-50"
+              aria-disabled={busy !== null || undefined}
               onClick={() => void handleResend()}
             >
               {busy === 'code' ? copy.sending : copy.resend}
@@ -216,7 +297,7 @@ function SignInFlow({ onDone }: { onDone: () => void }) {
   return (
     <>
       <DialogHeader>
-        <DialogTitle>{copy.title}</DialogTitle>
+        <DialogTitle className={TITLE_CLASS}>{copy.title}</DialogTitle>
         <DialogDescription>{copy.description}</DialogDescription>
       </DialogHeader>
       <form
@@ -230,9 +311,12 @@ function SignInFlow({ onDone }: { onDone: () => void }) {
           <Input
             id="sign-in-email"
             name="email"
+            ref={emailRef}
             type="email"
             autoComplete="email"
             placeholder={copy.emailPlaceholder}
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
             // Opening the dialog is asking to type an address.
             autoFocus
             className="h-10"
@@ -241,7 +325,7 @@ function SignInFlow({ onDone }: { onDone: () => void }) {
           />
         </div>
         {errorLine}
-        <Button type="submit" size="lg" disabled={busy !== null}>
+        <Button type="submit" size="lg" {...busyProps}>
           {busy === 'code' ? copy.sending : copy.sendCode}
         </Button>
       </form>
@@ -256,7 +340,7 @@ function SignInFlow({ onDone }: { onDone: () => void }) {
             type="button"
             variant="outline"
             size="lg"
-            disabled={busy !== null}
+            {...busyProps}
             onClick={() => void handleGoogle()}
           >
             <GoogleMark />

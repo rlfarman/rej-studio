@@ -7,6 +7,7 @@ import { StatusPage } from '@/components/status-page'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { appCopy } from '@/copy/app'
+import { usesSampleCorpus } from '@/features/gene-search/corpus/gene-data-url'
 import { similarGenesQuery } from '@/features/gene-search/corpus/queries'
 import { geneLink } from '@/features/gene-search/utils/search-href'
 
@@ -23,14 +24,15 @@ export function GeneNotFound({ symbol }: { symbol: string }) {
     <StatusPage
       eyebrow={copy.eyebrow}
       title={symbol ? copy.title(symbol) : copy.titleUnknown}
-      description={copy.detail}
+      description={usesSampleCorpus() ? copy.detailSample : copy.detail}
       actions={
         <>
-          <Button nativeButton={false} render={<Link to="/genes" />}>
+          <Button size="lg" nativeButton={false} render={<Link to="/genes" />}>
             <SearchIcon />
             {copy.searchGenes}
           </Button>
           <Button
+            size="lg"
             variant="outline"
             nativeButton={false}
             render={<Link to="/design-tool" />}

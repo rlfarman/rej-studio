@@ -25,14 +25,19 @@ describe('summarizeObjectives', () => {
     const summary = summarizeObjectives(DEFAULTS)
     expect(summary.isDefault).toBe(true)
     expect(summary.items).toEqual([
+      // A blank form has no species, so the headline objective is off. The
+      // set says so rather than reading as a complete recommendation.
+      items.codonOff,
       items.spliceSites,
       items.cpg,
       items.kmer,
       items.gc,
       items.intronsBoth,
     ])
-    // Introns are placement, not scored objectives.
+    // Introns are placement, not scored objectives, and "codon usage off" is
+    // the absence of one — neither is counted.
     expect(summary.count).toBe(4)
+    expect(summary.intronCount).toBe(2)
   })
 
   it('names the species when codon optimization is on', () => {
@@ -47,6 +52,10 @@ describe('summarizeObjectives', () => {
       summarizeObjectives({ ...DEFAULTS, species: 'human' }).isDefault,
     ).toBe(true)
     expect(summarizeObjectives({ ...DEFAULTS, species: 'human' }).count).toBe(5)
+    // Naming a species replaces the "off" note rather than adding to it.
+    expect(
+      summarizeObjectives({ ...DEFAULTS, species: 'human' }).items,
+    ).not.toContain(items.codonOff)
   })
 
   it('marks the set custom when a toggle is off', () => {
@@ -77,7 +86,7 @@ describe('summarizeObjectives', () => {
     ).toContain(items.intron3)
   })
 
-  it('returns an empty list when everything is off', () => {
+  it('names the gap when everything scored is off', () => {
     const summary = summarizeObjectives({
       ...DEFAULTS,
       removeCrypticSpliceSites: false,
@@ -87,8 +96,17 @@ describe('summarizeObjectives', () => {
       '5PrimeStimulatoryIntron': false,
       '3PrimeStimulatoryIntron': false,
     })
-    expect(summary.items).toEqual([])
+    // Not empty: with no species there is still something true to say.
+    expect(summary.items).toEqual([items.codonOff])
     expect(summary.count).toBe(0)
+    expect(summary.intronCount).toBe(0)
     expect(summary.isDefault).toBe(false)
+  })
+
+  it('counts one intron when only one is on', () => {
+    expect(
+      summarizeObjectives({ ...DEFAULTS, '3PrimeStimulatoryIntron': false })
+        .intronCount,
+    ).toBe(1)
   })
 })

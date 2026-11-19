@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useSyncExternalStore } from 'react'
+import { useEffect, useState, useSyncExternalStore } from 'react'
 import { z } from 'zod'
 
 import { appCopy } from '@/copy/app'
@@ -34,6 +34,10 @@ const noopSubscribe = () => () => {}
 
 function LoginPage() {
   const search = Route.useSearch()
+  const navigate = Route.useNavigate()
+  // Why the last attempt was sent back, read once: the URL loses it below,
+  // and the message has to stay until the next attempt reloads the page.
+  const [error] = useState(search.error)
   // The page is prerendered without a query string, so what depends on it
   // (where to go back to, the wrong-passcode message) appears only once the
   // browser has hydrated the prerendered markup.
@@ -42,10 +46,20 @@ function LoginPage() {
     () => true,
     () => false,
   )
+  // Out of the address bar, so a reload or a bookmark doesn't bring back a
+  // wrong-passcode message for an attempt nobody just made.
+  useEffect(() => {
+    if (search.error === undefined) return
+    void navigate({
+      search: (prev) => ({ ...prev, error: undefined }),
+      replace: true,
+      resetScroll: false,
+    })
+  }, [search.error, navigate])
   return (
     <LoginForm
       returnTo={hydrated ? search.return_to : undefined}
-      error={hydrated ? search.error : undefined}
+      error={hydrated ? error : undefined}
     />
   )
 }

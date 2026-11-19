@@ -174,6 +174,10 @@ const jobErrorCodeSchema = z
     'backend',
     'too_large',
     'cancelled',
+    // Settled by this browser, not the optimizer: the tab running the design
+    // closed before it finished. Its own code so the sidebar can say so in a
+    // word instead of clamping the sentence the job page shows.
+    'interrupted',
     'not_found',
     'unknown',
   ])

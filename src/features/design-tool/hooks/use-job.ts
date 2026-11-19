@@ -242,7 +242,7 @@ export function useJob({
       const id = `${BROWSER_ID_PREFIX}${crypto.randomUUID()}`
       const controller = new AbortController()
       browserRunRef.current = { id, controller }
-      // Published for the whole tab, so the Recent jobs list can abort this
+      // Published for the whole tab, so the Recent designs list can abort this
       // run too: nothing else stops the worker.
       const unregisterRun = registerBrowserRun(id, controller)
 
@@ -296,7 +296,7 @@ export function useJob({
       // A cloud submission settles through the poller, not here.
       if (!settled) return
       const { outcome, values, id } = settled
-      // A run cancelled from elsewhere (the Recent jobs list) keeps its
+      // A run cancelled from elsewhere (the Recent designs list) keeps its
       // cancelled entry: its own late result must not turn it back into a
       // finished design nobody asked for.
       if (wasCancelled(id)) return

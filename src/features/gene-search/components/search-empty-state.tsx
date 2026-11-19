@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import type { ReactNode } from 'react'
 import { SpeciesIcon } from '@/components/bio/species-icon'
+import { isSpecies, SPECIES_DISPLAY_NAME } from '@/lib/bio/species'
 import { cn } from '@/lib/utils'
 import type { SimilarGene } from '@/features/gene-search/types/search'
 import {
@@ -56,10 +57,21 @@ export function SearchEmptyState({
                 <Link
                   {...geneLink(gene.symbol, gene.species)}
                   onClick={onNavigate}
-                  className="inline-flex min-h-8 items-center gap-1.5 rounded-full border px-3 font-mono text-xs font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                  className="inline-flex min-h-11 items-center gap-1.5 rounded-full border px-3 font-mono text-xs font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none md:min-h-8"
                 >
                   <SpeciesIcon species={gene.species} className="!size-3.5" />
                   {gene.symbol}
+                  {/* Suggestions ignore the species filter — they are what
+                      exists, not what was filtered for — so a suggestion is
+                      usually in the other species, and a chip reading just
+                      "INS" under "No mouse genes match INS" looks like the
+                      search contradicting itself. The icon alone said it,
+                      and the icon is decorative. */}
+                  <span className="font-sans font-normal text-muted-foreground">
+                    {isSpecies(gene.species)
+                      ? SPECIES_DISPLAY_NAME[gene.species]
+                      : gene.species}
+                  </span>
                 </Link>
               </li>
             ))}

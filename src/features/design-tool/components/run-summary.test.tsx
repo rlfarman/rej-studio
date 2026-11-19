@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it } from 'vite-plus/test'
 import { designToolCopy } from '../copy'
 import type { FormValues } from '../types/form-schema'
 import { RunSummary } from './run-summary'
-import { AAV_MAX_BP } from './splice-slider/constants'
+import { AAV_CDS_CAPACITY_BP } from '@/lib/bio/aav'
 
 /**
  * The last line read before pressing Run. It must count what will actually be
@@ -68,7 +68,7 @@ describe('RunSummary', () => {
       screen.getByText(
         designToolCopy.form.runSummary.overAavLimit(
           (5001).toLocaleString(),
-          AAV_MAX_BP.toLocaleString(),
+          AAV_CDS_CAPACITY_BP.toLocaleString(),
         ),
       ),
     ).toBeTruthy()

@@ -107,7 +107,7 @@ test('a cloud design shows under My cloud designs on another device', async ({
   await expect(other.getByText(/split after base/i).first()).toBeVisible({
     timeout: 60_000,
   })
-  // Now in that browser's own history: listed once, under Recent jobs.
+  // Now in that browser's own history: listed once, under Recent designs.
   await expect(
     other.locator('[data-sidebar="content"]').getByText(name),
   ).toHaveCount(1)

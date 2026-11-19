@@ -182,11 +182,12 @@ export class GeneCorpus {
       const results: GeneSearchResult[] = gene
         ? [{ ...gene, matchedIsoformId: transcriptId }]
         : []
-      return { results, truncated: false }
+      return { results, truncated: false, total: results.length }
     }
     if (ENSG_REGEX.test(query)) {
       const gene = index.gene(normalizeEnsemblId(query))
-      return { results: gene ? [gene] : [], truncated: false }
+      const results = gene ? [gene] : []
+      return { results, truncated: false, total: results.length }
     }
     return (await this.loadTextSearch()).search(query, species, limit)
   }
@@ -206,12 +207,16 @@ export async function searchCorpus(
 ): Promise<SearchGenesResult> {
   const query = q.trim()
   if (query.length === 0) {
-    return { results: [], truncated: false, suggestions: [] }
+    return { results: [], truncated: false, total: 0, suggestions: [] }
   }
-  const { results, truncated } = await corpus.searchGenes(query, species, limit)
+  const { results, truncated, total } = await corpus.searchGenes(
+    query,
+    species,
+    limit,
+  )
   const suggestions =
     results.length === 0 && isSymbolLike(query)
       ? await corpus.similarGenes(query.toLowerCase().slice(0, 20))
       : []
-  return { results, truncated, suggestions }
+  return { results, truncated, total, suggestions }
 }

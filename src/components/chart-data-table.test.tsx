@@ -148,6 +148,32 @@ describe('the numbers behind a chart', () => {
     expect(createObjectURL.mock.calls[0]?.[0]?.type).toBe('text/plain')
   })
 
+  it('prints a formatted column the same on screen and in the CSV', async () => {
+    const createObjectURL = vi.fn((_blob: Blob) => 'blob:x')
+    vi.stubGlobal('URL', { createObjectURL, revokeObjectURL: vi.fn() })
+
+    table({
+      rows: [
+        [0, 100, 52.1],
+        [30, 98.8, 49.9],
+      ],
+      columnFormat: [undefined, (cell) => Number(cell).toFixed(1)],
+      csvFilename: 'gc.csv',
+      storageKey: 'format',
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'View as table' }))
+
+    const cells = within(screen.getByRole('table'))
+      .getAllByRole('row')
+      .slice(1)
+      .map((row) => within(row).getAllByRole('cell')[1]?.textContent)
+    expect(cells).toEqual(['100.0', '98.8'])
+
+    fireEvent.click(screen.getByRole('button', { name: /Download .* as CSV/ }))
+    const csv = await createObjectURL.mock.calls[0]?.[0]?.text()
+    expect(csv?.split('\n').slice(1)).toEqual(['0,100.0,52.1', '30,98.8,49.9'])
+  })
+
   it('offers no download when none was asked for', () => {
     table()
     fireEvent.click(screen.getByRole('button', { name: 'View as table' }))

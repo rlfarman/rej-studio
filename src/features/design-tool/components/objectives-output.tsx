@@ -15,10 +15,11 @@ import type {
   ObjectivesReport,
 } from '@/features/design-tool/types/process-result'
 import { deriveKeyMetrics } from '@/features/design-tool/utils/objective-metrics'
-import { escapeMarkdownTableCell } from '@/features/design-tool/utils/markdown-table'
+import { buildObjectivesMarkdown } from '@/features/design-tool/utils/design-report'
 import { designToolCopy } from '../copy'
 
 const metricsCopy = designToolCopy.results.metrics
+const reportCopy = designToolCopy.optimizerReport
 
 // ---------- parsing the "objective" string into a nicer display ----------
 
@@ -127,8 +128,8 @@ function EntryRow({
           )}
           title={
             diff.flip === 'up'
-              ? 'Newly passing (was failing before)'
-              : 'Newly failing (was passing before)'
+              ? reportCopy.newlyPassing
+              : reportCopy.newlyFailing
           }
         >
           {diff.flip === 'up' ? (
@@ -196,7 +197,9 @@ function EntryRow({
                   ? 'bg-success/15 text-success-soft'
                   : 'bg-danger/15 text-danger-soft',
               )}
-              title={`Score change vs. before: ${diff.scoreDelta > 0 ? '+' : ''}${diff.scoreDelta.toFixed(2)}`}
+              title={reportCopy.scoreChange(
+                `${diff.scoreDelta > 0 ? '+' : ''}${diff.scoreDelta.toFixed(2)}`,
+              )}
             >
               {diff.scoreDelta > 0 ? '+' : ''}
               {diff.scoreDelta.toFixed(2)}
@@ -242,11 +245,11 @@ function ComparisonPanel({
         <span className="type-overline">{label}</span>
         <CopyButton
           text={rawText}
-          copiedLabel="Copied"
+          copiedLabel={reportCopy.copied}
           className="h-6 gap-1 px-1.5 type-micro"
           disabled={!rawText}
         >
-          Copy raw
+          {reportCopy.copyRaw}
         </CopyButton>
       </div>
       <div
@@ -347,7 +350,7 @@ function ComparisonPanel({
           })()}
           {entries.length === 0 && (
             <div className="px-3 py-4 text-center text-xs text-muted-foreground italic">
-              No objectives measured
+              {reportCopy.noObjectives}
             </div>
           )}
         </div>
@@ -477,16 +480,16 @@ function buildSummaryItems(
 
   if (afterMetrics.kmerPassed) {
     items.push({
-      label: 'No repetitive 10-mers remaining',
+      label: reportCopy.kmerPassed,
       status: 'good',
     })
   } else if (afterMetrics.kmerScore !== null) {
     const b = beforeMetrics.kmerScore
     const a = afterMetrics.kmerScore
     items.push({
-      label: `Kmer complexity: ${a.toFixed(1)}`,
+      label: reportCopy.kmerScore(a.toFixed(1)),
       status: b !== null ? deltaStatus(b, a, false) : 'neutral',
-      hint: 'If the current sequence is too difficult to synthesize, rerun the optimization with higher weight on reducing kmer complexity.',
+      hint: reportCopy.kmerHint,
     })
   }
 
@@ -502,65 +505,18 @@ function buildSummaryItems(
   }
   if (flipsUp > 0) {
     items.push({
-      label: `${flipsUp} objective${flipsUp === 1 ? '' : 's'} fixed`,
+      label: reportCopy.fixed(flipsUp),
       status: 'improved',
     })
   }
   if (flipsDown > 0) {
     items.push({
-      label: `${flipsDown} objective${flipsDown === 1 ? '' : 's'} regressed`,
+      label: reportCopy.regressed(flipsDown),
       status: 'worsened',
     })
   }
 
   return items
-}
-
-// ---------- markdown export ----------
-
-function buildMarkdownReport(
-  before: ObjectivesReport,
-  after: ObjectivesReport,
-): string {
-  const lines: string[] = []
-  lines.push('## Optimization objectives')
-  lines.push('')
-  const fmtTotal = (n: number | null) => (n === null ? '—' : n.toFixed(2))
-  lines.push(
-    `**Total score:** ${fmtTotal(before.total_score)} → ${fmtTotal(after.total_score)}`,
-  )
-  lines.push('')
-
-  const beforeMap = new Map(before.entries.map((e) => [e.objective, e]))
-  const afterMap = new Map(after.entries.map((e) => [e.objective, e]))
-  const keys = new Set<string>([...beforeMap.keys(), ...afterMap.keys()])
-
-  lines.push('| Status | Objective | Before | After | Δ | Note |')
-  lines.push('| --- | --- | ---: | ---: | ---: | --- |')
-  for (const key of keys) {
-    const b = beforeMap.get(key)
-    const a = afterMap.get(key)
-    const afterEntry = a ?? b
-    let status = '—'
-    if (a && b) {
-      if (a.passes && !b.passes) status = '↑ fixed'
-      else if (!a.passes && b.passes) status = '↓ regressed'
-      else if (a.passes) status = '✓ passing'
-      else status = '✗ failing'
-    } else if (a) {
-      status = a.passes ? '✓ passing' : '✗ failing'
-    } else if (b) {
-      status = b.passes ? '✓ passing' : '✗ failing'
-    }
-    const bs = b ? b.score.toFixed(2) : '—'
-    const as = a ? a.score.toFixed(2) : '—'
-    const delta = a && b ? (a.score - b.score).toFixed(2) : '—'
-    const msg = afterEntry?.message ?? ''
-    lines.push(
-      `| ${status} | \`${escapeMarkdownTableCell(key)}\` | ${bs} | ${as} | ${delta} | ${escapeMarkdownTableCell(msg)} |`,
-    )
-  }
-  return lines.join('\n')
 }
 
 // ---------- raw text fallback ----------
@@ -592,7 +548,7 @@ function RawReportView({ text }: { text: string }) {
   if (!text.trim()) {
     return (
       <div className="rounded-xl bg-muted p-3 text-xs text-muted-foreground italic">
-        No objectives measured
+        {reportCopy.noObjectives}
       </div>
     )
   }
@@ -658,11 +614,11 @@ function RawTextFallback({ before, after }: { before: string; after: string }) {
   return (
     <div className="grid gap-3 sm:grid-cols-2">
       <div className="space-y-1">
-        <span className="type-overline">Before</span>
+        <span className="type-overline">{reportCopy.before}</span>
         <RawReportView text={before} />
       </div>
       <div className="space-y-1">
-        <span className="type-overline">After</span>
+        <span className="type-overline">{reportCopy.after}</span>
         <RawReportView text={after} />
       </div>
     </div>
@@ -710,7 +666,7 @@ export function ObjectivesSummary({
   const afterRef = useRef<HTMLDivElement | null>(null)
   const syncingRef = useRef(false)
 
-  const markdownReport = buildMarkdownReport(reportBefore, reportAfter)
+  const markdownReport = buildObjectivesMarkdown(reportBefore, reportAfter)
 
   const syncScroll =
     (source: 'before' | 'after'): React.UIEventHandler<HTMLDivElement> =>
@@ -756,9 +712,7 @@ export function ObjectivesSummary({
       )}
       <details className="group">
         <summary className="cursor-pointer text-xs text-muted-foreground hover:underline">
-          {hasStructured
-            ? 'Show full optimizer report'
-            : 'Show full optimizer output'}
+          {hasStructured ? reportCopy.showReport : reportCopy.showOutput}
         </summary>
         <div className="mt-3 space-y-2">
           {hasStructured ? (
@@ -768,7 +722,7 @@ export function ObjectivesSummary({
                   <Search className="pointer-events-none absolute top-1/2 left-2 size-3.5 -translate-y-1/2 text-muted-foreground" />
                   <Input
                     type="text"
-                    placeholder="Filter objectives…"
+                    placeholder={reportCopy.filterPlaceholder}
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     className="h-7 pr-7 pl-7 text-xs"
@@ -776,7 +730,7 @@ export function ObjectivesSummary({
                   {search && (
                     <button
                       type="button"
-                      aria-label="Clear filter"
+                      aria-label={reportCopy.clearFilter}
                       onClick={() => setSearch('')}
                       className="absolute top-1/2 right-1.5 -translate-y-1/2 rounded-full p-0.5 text-muted-foreground hover:text-foreground"
                     >
@@ -788,15 +742,15 @@ export function ObjectivesSummary({
                   text={markdownReport}
                   icon={FileText}
                   variant="outline"
-                  copiedLabel="Copied"
+                  copiedLabel={reportCopy.copied}
                   className="h-7 shrink-0 gap-1 px-2 type-nano"
                 >
-                  Copy as MD
+                  {reportCopy.copyMarkdown}
                 </CopyButton>
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <ComparisonPanel
-                  label="Before"
+                  label={reportCopy.before}
                   entries={reportBefore.entries}
                   otherEntries={afterMap}
                   totalScore={reportBefore.total_score}
@@ -808,7 +762,7 @@ export function ObjectivesSummary({
                   onScroll={syncScroll('before')}
                 />
                 <ComparisonPanel
-                  label="After"
+                  label={reportCopy.after}
                   entries={reportAfter.entries}
                   otherEntries={beforeMap}
                   totalScore={reportAfter.total_score}

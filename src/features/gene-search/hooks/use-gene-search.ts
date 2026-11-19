@@ -92,6 +92,10 @@ export function useGeneSearch({ defaultQuery }: UseGeneSearchProps = {}) {
     // query's, which `keepPreviousData` keeps on screen while it loads.
     hasSearched: enabled && data !== undefined && !isPlaceholderData,
     searchResults: data?.results ?? EMPTY_RESULTS,
+    // What is actually being searched for, which lags the box by the typing
+    // debounce: a "Searching for e…" built from the live query named a
+    // query no search was ever run for.
+    searchingQuery: trimmed,
     truncated: data?.truncated ?? false,
     suggestions: data?.suggestions ?? EMPTY_SUGGESTIONS,
     // Covers the debounce window too, so the UI can show "Searching…" the

@@ -35,10 +35,10 @@ interface ObjectiveReplayProps {
 }
 
 const OUTCOME_STYLES: Record<ObjectiveOutcome, string> = {
-  fixed: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300',
-  broken: 'bg-red-500/15 text-red-700 dark:text-red-300',
-  unresolved: 'bg-amber-500/15 text-amber-700 dark:text-amber-300',
-  added: 'bg-sky-500/15 text-sky-700 dark:text-sky-300',
+  fixed: 'bg-success/15 text-success-soft',
+  broken: 'bg-danger/15 text-danger-soft',
+  unresolved: 'bg-warning/15 text-warning-soft',
+  added: 'bg-info/15 text-info-soft',
   held: 'bg-muted text-muted-foreground',
   dropped: 'bg-muted text-muted-foreground',
 }
@@ -87,7 +87,7 @@ function RegionTrack({
               key={`${region.start}-${region.end}-${index}`}
               className={cn(
                 'absolute inset-y-0',
-                tone === 'before' ? 'bg-amber-500/70' : 'bg-sky-500/70',
+                tone === 'before' ? 'bg-warning/70' : 'bg-info/70',
               )}
               style={{
                 left: `${(start / span) * 100}%`,

@@ -1,3 +1,11 @@
+import { AAV_CDS_TIER_LIMITS, AAV_PACKAGING_LIMIT } from '@/lib/bio/aav'
+
+// The one gene-search placeholder, and its short form for narrow boxes (a
+// phone, the header's search button). Every search box names itself with
+// these, so the same search reads the same wherever it is opened.
+const searchPlaceholder = 'Gene symbol, name, or Ensembl ID'
+const searchPlaceholderShort = 'Search genes…'
+
 export const geneSearchCopy = {
   charts: {
     isoformLengths: {
@@ -16,36 +24,50 @@ export const geneSearchCopy = {
     },
   },
   trigger: {
-    label: 'Search for genes',
+    label: searchPlaceholderShort,
     kbdHintPrefix: 'Press',
   },
   command: {
     dialogTitle: 'Search genes',
     dialogDescription:
-      'Find a gene by symbol, name or Ensembl ID, or reopen a recent gene or design job.',
+      'Find a gene by symbol, name or Ensembl ID, or reopen a recent gene or design.',
     inputAria: 'Search genes',
     // Search covers symbols, names, aliases and Ensembl IDs, not diseases;
     // the no-match state points disease searches at the associations page.
-    placeholder: 'Gene symbol, name, or Ensembl ID',
-    placeholderMobile: 'Search genes…',
+    placeholder: searchPlaceholder,
+    placeholderShort: searchPlaceholderShort,
     opening: (symbol: string) => `Opening ${symbol}…`,
     searching: (query: string) => `Searching for ${query}…`,
+    // The gene index is ~1 MB and downloads once per session; a search typed
+    // before it lands waits for it, and silence reads as a broken search.
+    loadingIndex: 'Loading gene data…',
     retry: 'Retry',
     examplesLabel: 'Try',
     examplesAria: 'Example genes',
     exampleAria: (symbol: string) => `Search for ${symbol}`,
     favorites: 'Favorites',
     recentGenes: 'Recent genes',
-    recentJobs: 'Recent jobs',
+    recentJobs: 'Recent designs',
     genes: 'Genes',
     seeAll: (query: string) => `See all results for “${query}”`,
     customize: 'Customize',
     customizeAria: (id: string) => `Customize ${id}`,
+    /** The customize row under a transcript match, as its own option. */
+    customizeRow: (id: string) => `Customize ${id} in the design tool`,
+    speciesLabel: 'Species',
     speciesOptions: {
       all: 'All',
       human: 'Human',
       mouse: 'Mouse',
     },
+    /** A design job's state, rather than the status word the store uses. */
+    jobStatus: {
+      running: 'Running',
+      completed: 'Finished',
+      failed: 'Failed',
+      cancelled: 'Cancelled',
+    },
+    jobMeta: (bases: number, status: string) => `${bases} bp · ${status}`,
   },
   /** A search whose index couldn't be loaded, on the page and in the palette. */
   searchErrors: {
@@ -56,6 +78,9 @@ export const geneSearchCopy = {
   exampleGenes: ['TP53', 'BRCA1', 'CFTR', 'EGFR'],
   searchPage: {
     metadataTitle: 'Search Genes',
+    // A tab (or a bookmark, or a history entry) per search, rather than
+    // "Search Genes" for every one of them.
+    metadataTitleFor: (query: string) => `${query} — Search Genes`,
     metadataDescription:
       'Search by gene symbol, name, alias, or Ensembl ID across human and mouse genomes. Browse isoforms and download optimized sequences.',
     ogDescription:
@@ -67,8 +92,13 @@ export const geneSearchCopy = {
     submit: 'Search',
     speciesLabel: 'Species',
     resultCount: (n: number) => (n === 1 ? '1 gene' : `${n} genes`),
-    truncated: (n: number) =>
-      `Showing the first ${n} matches. Add more of the name or symbol to narrow them down.`,
+    // The total is free: the search ranks every match before it cuts the
+    // list, so saying how many there are costs nothing and "the first 50"
+    // on its own left no way to tell 51 matches from 5,000.
+    truncated: (shown: number, total: number) =>
+      `Showing ${shown} of ${total} matches. Add more of the name or symbol to narrow them down.`,
+    showMore: 'Show more',
+    showMoreAria: (n: number) => `Show ${n} more matches`,
     loading: 'Searching…',
   },
   genePage: {
@@ -97,6 +127,10 @@ export const geneSearchCopy = {
     },
   },
   isoformTable: {
+    // The page carries two tables; a screen reader's table list named one of
+    // them and left this one anonymous.
+    caption: (geneSymbol: string) =>
+      `Isoforms of ${geneSymbol}: coding and protein length, GC, CpG, WGGW split sites and AAV fit, with per-isoform actions.`,
     actionsHeader: 'Actions',
     expandAll: 'Expand all',
     collapseAll: 'Collapse all',
@@ -110,6 +144,10 @@ export const geneSearchCopy = {
       `Download pre-optimized sequences for ${id} (ZIP)`,
     downloadHint:
       'Ready-made designs built with the default objectives, as a ZIP.',
+    downloadMissing: (id: string) =>
+      `No pre-optimized package is available for ${id}. Customize it in the design tool instead.`,
+    downloadFailed:
+      'The pre-optimized package didn’t download. Check your connection and try again.',
     // Every pre-built package in the corpus is a two-fragment (dual-vector)
     // design, so there is nothing to offer an isoform that needs three.
     downloadUnavailable: 'No pre-optimized ZIP for a triple-AAV sequence',
@@ -158,7 +196,10 @@ export const geneSearchCopy = {
     },
     suitability: {
       label: 'AAV fit',
-      hint: 'How many AAV vectors the CDS needs: Single under 4,000 bp, Dual under 8,000 bp, Triple above. Dual and triple designs are reassembled by RNA end-joining.',
+      // The thresholds come from the packaging arithmetic (see
+      // `@/lib/bio/aav`), so the hint can never quote a limit the table
+      // doesn't apply.
+      hint: `How many AAV vectors the CDS needs: Single up to ${AAV_CDS_TIER_LIMITS.single.toLocaleString()} bp, Dual up to ${AAV_CDS_TIER_LIMITS.dual.toLocaleString()} bp, Triple above. Dual and triple designs are reassembled by RNA end-joining.`,
     },
   },
   splitPreview: {
@@ -187,7 +228,7 @@ export const geneSearchCopy = {
       fromCenter: string,
     ) =>
       `${motif} at bp ${position} · 5′ ${five} bp / 3′ ${three} bp · ${fromCenter} bp from center`,
-    overLimitHint: 'One fragment + AAV overhead exceeds ~4,700 bp',
+    overLimitHint: `One fragment + AAV overhead exceeds ~${AAV_PACKAGING_LIMIT.toLocaleString()} bp`,
   },
   lengthChart: {
     title: 'CDS length vs. AAV capacity',
@@ -200,8 +241,8 @@ export const geneSearchCopy = {
     add: 'Add to favorites',
   },
   recentGenesPanel: {
-    label: 'Recent searches',
-    removeAria: (symbol: string) => `Remove ${symbol} from recent searches`,
+    label: 'Recent genes',
+    removeAria: (symbol: string) => `Remove ${symbol} from recent genes`,
   },
   favoritesPanel: {
     label: 'Favorites',
@@ -228,6 +269,10 @@ export const geneSearchCopy = {
     // Hover was the only way to read a value, which leaves out every phone
     // and every keyboard. The grid is one tab stop; arrows walk the cells.
     cellHint: 'Select a cell — or use the arrow keys — to read its identity.',
+    // Two isoforms are one number. A five-bin heatmap drawn around a single
+    // cell says less than the sentence does.
+    pairSummary: (a: string, b: string, pct: string) =>
+      `${a} and ${b} are ${pct}% identical.`,
     gridAria: 'Pairwise identity grid',
   },
 } as const

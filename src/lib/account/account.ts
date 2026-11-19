@@ -1,6 +1,5 @@
+import { useHydrated } from '@tanstack/react-router'
 import { queryOptions, useQuery, type QueryClient } from '@tanstack/react-query'
-
-import { useHydrated } from '@/hooks/use-hydrated'
 
 /**
  * Who is signed in to an account, for the page: read from `/api/account`
@@ -51,20 +50,21 @@ export async function afterAccountChange(queryClient: QueryClient) {
   })
 }
 
-async function fetchAccount(): Promise<AccountState> {
+/**
+ * What the page read: the handler's answer, or the one thing it cannot say
+ * for itself — the passcode gate refused the request.
+ */
+type AccountRead = { locked: true } | ({ locked: false } & AccountState)
+
+async function fetchAccount(): Promise<AccountRead> {
   const response = await fetch('/api/account', {
     headers: { accept: 'application/json' },
   })
-  // The passcode session ran out (401): no account can be used either.
-  if (response.status === 401) {
-    return {
-      available: false,
-      providers: { email: false, google: false },
-      user: null,
-    }
-  }
+  // The lab passcode session ran out (401). Not the same as a deployment
+  // without accounts: everything is behind the gate, not just accounts.
+  if (response.status === 401) return { locked: true }
   if (!response.ok) throw new Error(`account: HTTP ${response.status}`)
-  return (await response.json()) as AccountState
+  return { locked: false, ...((await response.json()) as AccountState) }
 }
 
 const accountQuery = queryOptions({
@@ -79,6 +79,11 @@ export type Account =
   | { status: 'loading' }
   /** No accounts on this deployment, or the account service did not answer. */
   | { status: 'unavailable' }
+  /**
+   * The lab passcode session ran out, so nothing can be read until it is
+   * entered again. A tab left open past the 30 days lands here.
+   */
+  | { status: 'locked' }
   | { status: 'signed-out'; google: boolean }
   | { status: 'signed-in'; user: AccountUser; google: boolean }
 
@@ -95,7 +100,9 @@ export function useAccount(): Account {
   const hydrated = useHydrated()
   const { data, isPending, isError } = useQuery(accountQuery)
   if (!hydrated || isPending) return { status: 'loading' }
-  if (isError || !data.available) return { status: 'unavailable' }
+  if (isError) return { status: 'unavailable' }
+  if (data.locked) return { status: 'locked' }
+  if (!data.available) return { status: 'unavailable' }
   const google = data.providers.google
   return data.user
     ? { status: 'signed-in', user: data.user, google }

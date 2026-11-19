@@ -16,6 +16,11 @@ interface ErrorStateProps {
   retry: () => void
   /** Which error boundary caught it, for the log and Sentry. */
   boundary?: string
+  /**
+   * Small label above the title. Defaults to "Unexpected error"; a boundary
+   * that can tell a load failure from a bug says so instead.
+   */
+  eyebrow?: string
   title: string
   description: string
   detail?: string
@@ -33,6 +38,7 @@ export function ErrorState({
   error,
   retry,
   boundary,
+  eyebrow = appCopy.errorBoundary.eyebrow,
   title,
   description,
   detail,
@@ -51,13 +57,15 @@ export function ErrorState({
     <StatusPage
       tone="error"
       standalone={standalone}
-      eyebrow={appCopy.errorBoundary.eyebrow}
+      eyebrow={eyebrow}
       title={title}
       description={description}
       detail={detail}
       actions={
         <>
-          <Button onClick={() => retry()}>{commonCopy.actions.tryAgain}</Button>
+          <Button size="lg" onClick={() => retry()}>
+            {commonCopy.actions.tryAgain}
+          </Button>
           {secondaryAction}
         </>
       }

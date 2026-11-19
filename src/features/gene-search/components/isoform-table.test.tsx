@@ -9,14 +9,20 @@ import {
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test'
 
+import { commonCopy } from '@/copy/common'
+import { AAV_CDS_TIER_LIMITS } from '@/lib/bio/aav'
 import { geneSearchCopy } from '../copy'
 import type { IsoformListItem } from '../types/domain-types'
 import IsoformTable from './isoform-table'
 
 const downloads: [string, string][] = []
+const blobDownloads: string[] = []
 vi.mock('@/lib/download-file', () => ({
   downloadTextFile: (name: string, text: string) => {
     downloads.push([name, text])
+  },
+  downloadBlob: (name: string) => {
+    blobDownloads.push(name)
   },
 }))
 
@@ -48,12 +54,13 @@ function isoform(id: string, cdsLength: number): IsoformListItem {
   }
 }
 
-// assessDesignSuitability: < 4,000 single, < 8,000 dual, else triple.
-const dual = isoform('ENST00000000001', 5_000)
-const triple = isoform('ENST00000356175', 9_000)
+// Lengths come from the tier limits (see assessDesignSuitability) rather than
+// fixed numbers, so these rows keep their tiers if the overhead changes.
+const dual = isoform('ENST00000000001', AAV_CDS_TIER_LIMITS.single + 1)
+const triple = isoform('ENST00000356175', AAV_CDS_TIER_LIMITS.dual + 1)
 
 function zipUrl(id: string) {
-  return `https://rej-seq-1.s3.us-west-004.backblazeb2.com/rej/v1.0/zips/${id}_v1.0.zip`
+  return `/api/pre-optimized/${id}`
 }
 
 function renderTable(props: {
@@ -100,7 +107,9 @@ function rowEl(id: string) {
 
 function zipLinks() {
   return [
-    ...document.querySelectorAll<HTMLAnchorElement>('a[href*="/zips/"]'),
+    ...document.querySelectorAll<HTMLAnchorElement>(
+      'a[href^="/api/pre-optimized/"]',
+    ),
   ].map((a) => a.getAttribute('href'))
 }
 
@@ -115,6 +124,7 @@ beforeEach(() => {
 
 afterEach(() => {
   downloads.length = 0
+  blobDownloads.length = 0
   toasts.length = 0
   vi.unstubAllGlobals()
   vi.restoreAllMocks()
@@ -153,6 +163,46 @@ describe('IsoformTable on a narrow screen', () => {
     const container = head.closest('[data-slot="table-container"]')!
     expect(container.className).toMatch(/max-h-/)
     expect(container.className).toContain('overflow-auto')
+  })
+})
+
+describe('IsoformTable naming', () => {
+  // The gene page has two tables; the identity matrix carried a caption and
+  // this one was anonymous in a screen reader's table list.
+  it('names itself after the gene', async () => {
+    renderTable({ isoforms: [dual] })
+    await flush()
+
+    expect(
+      screen.getByRole('table', { name: copy.caption('NF1') }),
+    ).toBeTruthy()
+  })
+
+  it('names the isoform its row menu acts on', async () => {
+    renderTable({ isoforms: [dual, triple] })
+    await flush()
+    openMenu(screen.getByLabelText(copy.moreAria(dual.id)))
+
+    const menu = await screen.findByRole('menu')
+    // Six items, none of which said which transcript they belonged to — and
+    // on a phone the menu covers its own row and leaves the one above it
+    // showing.
+    expect(menu.textContent).toContain(dual.id)
+    expect(menu.textContent).not.toContain(triple.id)
+  })
+
+  it('explains the columns a phone drops, where it drops them', async () => {
+    renderTable({ isoforms: [dual] })
+    await flush()
+    fireEvent.click(screen.getByLabelText(copy.expandRowAria(dual.id)))
+
+    // CpG and WGGW only appear on a phone in the expanded row, so without
+    // their infotips there they had no explanation on a phone at all.
+    for (const term of [terms.gc, terms.cpg, terms.wggw]) {
+      expect(
+        screen.getAllByLabelText(commonCopy.termHintAria(term.label)).length,
+      ).toBeGreaterThan(1)
+    }
   })
 })
 
@@ -211,6 +261,56 @@ describe('IsoformTable pre-optimized ZIP', () => {
     openMenu(screen.getByLabelText(copy.moreAria(dual.id)))
     expect(await screen.findByText(copy.downloadLong)).toBeTruthy()
     expect(screen.queryByText(copy.downloadUnavailable)).toBeNull()
+  })
+
+  it('downloads the ZIP same-origin, without leaving the page', async () => {
+    const fetchZip = vi.fn<typeof fetch>(async () => new Response('PK'))
+    vi.stubGlobal('fetch', fetchZip)
+    renderTable({ isoforms: [dual] })
+
+    const link = await screen.findByLabelText(copy.downloadAria(dual.id))
+    expect(link.getAttribute('download')).toBe(`${dual.id}_v1.0.zip`)
+    // Not cancelled by the handler would mean the browser follows the link.
+    expect(fireEvent.click(link)).toBe(false)
+    await vi.waitFor(() =>
+      expect(blobDownloads).toEqual([`${dual.id}_v1.0.zip`]),
+    )
+
+    expect(fetchZip).toHaveBeenCalledWith(zipUrl(dual.id))
+    expect(toasts).toEqual([])
+  })
+
+  it.each([
+    ['a missing package', 404, copy.downloadMissing(dual.id)],
+    ['a failed upstream', 502, copy.downloadFailed],
+  ])('says so in a toast on %s', async (_case, status, message) => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn<typeof fetch>(async () => new Response('nope', { status })),
+    )
+    renderTable({ isoforms: [dual] })
+
+    fireEvent.click(await screen.findByLabelText(copy.downloadAria(dual.id)))
+
+    await vi.waitFor(() => expect(toasts).toEqual([`error: ${message}`]))
+    expect(blobDownloads).toEqual([])
+  })
+
+  it('says so in a toast when the request fails', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn<typeof fetch>(async () => {
+        throw new TypeError('offline')
+      }),
+    )
+    renderTable({ isoforms: [dual] })
+
+    fireEvent.click(await screen.findByLabelText(copy.downloadAria(dual.id)))
+
+    await vi.waitFor(() =>
+      expect(toasts).toEqual([`error: ${copy.downloadFailed}`]),
+    )
+    expect(blobDownloads).toEqual([])
   })
 
   it('offers no ZIP download anywhere for a triple-AAV isoform', async () => {

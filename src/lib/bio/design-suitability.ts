@@ -1,3 +1,5 @@
+import { AAV_CDS_TIER_LIMITS } from '@/lib/bio/aav'
+
 export type Suitability = 'single-aav' | 'dual-aav' | 'triple-aav'
 
 /**
@@ -40,9 +42,15 @@ export function getSuitabilityConfig(suitability: Suitability) {
   return SUITABILITY_CONFIG[suitability]
 }
 
+/**
+ * How many vectors a coding sequence needs, from the packaging arithmetic in
+ * `@/lib/bio/aav`: each fragment travels in its own cassette, so a vector
+ * carries `AAV_CDS_CAPACITY_BP` of CDS and the tiers fall at one and two
+ * vectors' worth.
+ */
 export function assessDesignSuitability(cds: string): Suitability {
   const len = cds.length
-  if (len < 4000) return 'single-aav'
-  if (len < 8000) return 'dual-aav'
+  if (len <= AAV_CDS_TIER_LIMITS.single) return 'single-aav'
+  if (len <= AAV_CDS_TIER_LIMITS.dual) return 'dual-aav'
   return 'triple-aav'
 }

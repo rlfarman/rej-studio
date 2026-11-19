@@ -113,6 +113,19 @@ describe('gene search (sample corpus)', () => {
     expect(whole.results).toHaveLength(4)
     expect(whole.truncated).toBe(false)
   })
+
+  it('reports how many matched, not just how many it returned', async () => {
+    // Ranking walks every match before the cut, so the total is a length.
+    const cut = await corpus.searchGenes('a', 'both', 3)
+    const all = await corpus.searchGenes('a', 'both', 100_000)
+    expect(cut.total).toBe(all.results.length)
+    expect(cut.total).toBeGreaterThan(3)
+    expect(all.total).toBe(all.results.length)
+
+    const one = await corpus.searchGenes('ENSG00000141510', 'both', 6)
+    expect(one.total).toBe(1)
+    expect((await corpus.searchGenes('zzzzzzz', 'both', 6)).total).toBe(0)
+  })
 })
 
 describe('similar genes ("did you mean")', () => {

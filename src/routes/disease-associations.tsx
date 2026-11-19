@@ -3,6 +3,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import type { ReactNode } from 'react'
 import { z } from 'zod'
 
+import { PageTitle } from '@/components/page-title'
 import { appCopy } from '@/copy/app'
 import {
   SORT_KEYS,
@@ -70,11 +71,9 @@ function AssociationsPending() {
 
 function PageFrame({ children }: { children: ReactNode }) {
   return (
-    <div className="mx-auto flex max-w-6xl flex-col gap-6 p-6">
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8 sm:px-6 md:py-12">
       <header className="flex flex-col gap-2">
-        <h1 className="font-mono text-2xl font-bold tracking-tight md:text-3xl">
-          {diseaseAssociationsCopy.page.title}
-        </h1>
+        <PageTitle>{diseaseAssociationsCopy.page.title}</PageTitle>
         <p className="max-w-3xl text-sm text-muted-foreground">
           {diseaseAssociationsCopy.page.subtitle}
         </p>

@@ -1,4 +1,4 @@
-import { useId, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { useFormContext, useWatch } from 'react-hook-form'
 import { ChevronDown } from 'lucide-react'
 import { ToggleCard } from './toggle-card'
@@ -81,27 +81,25 @@ function CodonOptimizationRow() {
         </div>
       </label>
       <div className="flex items-center gap-1.5 self-center">
+        {/* The chips stay live while codon optimization is off: picking a
+            species *is* how the feature is turned on (setting `species`
+            checks the box above), and clicking a greyed-out chip was the
+            natural way to try. Disabled, they were also out of the tab order
+            with their only explanation in a `title` nothing could reach. */}
         {selectableSpecies.map(({ label, value }) => {
           const isActive = species === value
-          const isDisabled = !enabled
           return (
             <button
               key={value}
               type="button"
               aria-pressed={isActive}
-              aria-disabled={isDisabled}
-              disabled={isDisabled}
-              title={
-                isDisabled ? copy.codonOptimize.enableSpeciesFirst : undefined
-              }
               onClick={() => setValue('species', value)}
               className={cn(
                 'flex items-center gap-1.5 rounded-full border px-2 py-1 text-[11px] font-medium transition-colors',
+                'focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none',
                 isActive
                   ? 'border-primary bg-primary/10 text-primary'
                   : 'bg-background text-muted-foreground hover:bg-muted/60 hover:text-foreground',
-                isDisabled &&
-                  'cursor-not-allowed opacity-50 hover:bg-background hover:text-muted-foreground',
               )}
             >
               <SpeciesIcon species={value} className="size-3.5" />
@@ -127,6 +125,14 @@ export function DesignObjectives() {
   const [showAdvanced, setShowAdvanced] = useState(false)
   const panelId = useId()
   const advancedId = useId()
+  const panelRef = useRef<HTMLDivElement>(null)
+
+  // The section sits at the bottom of the page, so everything "Customize"
+  // reveals opens below the fold: without this the only visible change is the
+  // button's own label.
+  useEffect(() => {
+    if (customizing) panelRef.current?.scrollIntoView({ block: 'nearest' })
+  }, [customizing])
 
   const { control } = useFormContext<FormValues>()
   const values = useWatch({ control }) as Partial<FormValues>
@@ -188,7 +194,7 @@ export function DesignObjectives() {
       </div>
 
       {customizing && (
-        <div id={panelId} className="flex flex-col">
+        <div id={panelId} ref={panelRef} className="flex flex-col">
           <div className="flex flex-col divide-y divide-border/60">
             <CodonOptimizationRow />
             <ToggleCard
@@ -212,6 +218,7 @@ export function DesignObjectives() {
             <ToggleCard
               name="enforceGcContent"
               label={copy.enforceGc.label}
+              description={copy.enforceGc.description}
               help={copy.help.gc}
             />
           </div>
@@ -219,10 +226,10 @@ export function DesignObjectives() {
           <div className="mt-5 space-y-2">
             <div className="flex flex-wrap items-center gap-1.5">
               <h3 className="text-sm font-medium">
-                {formCopy.accordion.stimulatoryIntrons}
+                {formCopy.stimulatoryIntronsHeading}
               </h3>
               <TermHint
-                topic={formCopy.accordion.stimulatoryIntrons}
+                topic={formCopy.stimulatoryIntronsHeading}
                 hint={copy.help.stimulatoryIntrons}
               />
             </div>

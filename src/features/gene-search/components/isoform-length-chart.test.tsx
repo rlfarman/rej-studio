@@ -13,13 +13,16 @@ import {
   screen,
   within,
 } from '@testing-library/react'
+import type { ReactNode } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test'
 
 import { resetChartTablePreferencesForTests } from '@/components/chart-data-table'
 import { commonCopy } from '@/copy/common'
 import { getSuitabilityConfig } from '@/lib/bio/design-suitability'
 import { geneSearchCopy } from '../copy'
+import { parseIsoformIdentity } from '../corpus/identity'
 import type { IsoformListItem } from '../types/domain-types'
+import { IsoformIdentityMatrix } from './isoform-identity-matrix'
 import { IsoformLengthChart } from './isoform-length-chart'
 
 const downloads: [string, string][] = []
@@ -55,12 +58,12 @@ const isoforms = [
   isoform('ENST2', 5_000),
 ]
 
-function renderChart() {
+function renderChart(ui?: ReactNode) {
   const rootRoute = createRootRoute({ component: Outlet })
   const geneRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: '/genes/$symbol',
-    component: () => <IsoformLengthChart isoforms={isoforms} />,
+    component: () => ui ?? <IsoformLengthChart isoforms={isoforms} />,
   })
   const router = createRouter({
     routeTree: rootRoute.addChildren([geneRoute]),
@@ -113,5 +116,36 @@ describe('the isoform length chart’s numbers', () => {
     )
 
     expect(rows).toEqual(['ENST1', 'ENST2', 'ENST3'])
+  })
+
+  // Both charts used one `storageKey`, so opening the numbers behind the bars
+  // also expanded a 120-row identity table further down the page.
+  it('opens its own table without opening the identity matrix’s', async () => {
+    const identity = parseIsoformIdentity(
+      {
+        isoforms: ['ENST3', 'ENST2', 'ENST1'],
+        permille: [900, 800, 700],
+      },
+      isoforms,
+    )
+    renderChart(
+      <>
+        <IsoformLengthChart isoforms={isoforms} />
+        <IsoformIdentityMatrix isoforms={isoforms} identity={identity} />
+      </>,
+    )
+
+    const toggles = await screen.findAllByRole('button', {
+      name: commonChart.show,
+    })
+    expect(toggles).toHaveLength(2)
+    fireEvent.click(toggles[0])
+
+    expect(
+      screen.getAllByRole('button', { name: commonChart.hide }),
+    ).toHaveLength(1)
+    expect(
+      screen.getAllByRole('button', { name: commonChart.show }),
+    ).toHaveLength(1)
   })
 })

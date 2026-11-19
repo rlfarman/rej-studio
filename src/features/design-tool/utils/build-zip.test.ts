@@ -40,7 +40,10 @@ const RESULT: ProcessResult = {
 }
 
 function filesIn(result: ProcessResult): Record<string, string> {
-  const bytes = buildResultsZipBytes(result, 'options used')
+  const bytes = buildResultsZipBytes(result, {
+    optionsUsed: 'options used',
+    species: 'human',
+  })
   return Object.fromEntries(
     Object.entries(unzipSync(bytes)).map(([name, data]) => [
       name,
@@ -65,11 +68,24 @@ describe('the exported results', () => {
     expect(report).toContain('TP53 run_1_run_record.json')
   })
 
+  // The ZIP's only report was a text dump: no date, no split point as such,
+  // and none of the metrics the panel leads with.
+  it('carry the report as markdown as well as the legacy text dump', () => {
+    const md = filesIn(RESULT)['TP53 run_1_report.md']
+
+    expect(md).toContain('# TP53 run/1')
+    expect(md).toContain('| Exported |')
+    expect(md).toContain('| Split after base | 6 |')
+    expect(md).toContain('## Metrics')
+    expect(md).toContain('## Methods')
+  })
+
   it('still export a result that predates run records', () => {
     const { run_record: _run_record, ...older } = RESULT
     const files = filesIn(older as ProcessResult)
 
     expect(Object.keys(files)).toEqual([
+      'TP53 run_1_report.md',
       'TP53 run_1_report.txt',
       'TP53 run_1_sequences.txt',
     ])

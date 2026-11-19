@@ -33,6 +33,7 @@ import {
 } from './job-header'
 import { CloudRunToggle } from './cloud-run-toggle'
 import { toast } from '@/lib/toast'
+import { PageTitle } from '@/components/page-title'
 import { designToolCopy } from '../copy'
 
 // The results UI (the panel, objectives, replay, maps, run record) is about a
@@ -175,7 +176,16 @@ export function GeneSplitterForm({
     setIsEditing(false)
     // The split-point editor keeps only the person's WGGW picks in the form;
     // the sites they resolve to are worked out here, once, for the request.
-    await job.submitJob(withSelectedWggwSites(values), { cloud: runInCloud })
+    try {
+      await job.submitJob(withSelectedWggwSites(values), { cloud: runInCloud })
+    } catch {
+      // A refused submission is already state: useJob renders it, and a
+      // refusal that never started a run keeps the form up. Letting it out
+      // of here reached the window as an unhandled rejection (react-hook-form
+      // rethrows whatever the submit handler throws) and Sentry as a page
+      // error. The draft stays: nothing was saved to a job entry.
+      return
+    }
     // The inputs are safe in the job entry now, so the draft can go.
     draft.clear()
   }
@@ -251,13 +261,26 @@ export function GeneSplitterForm({
           </div>
         )}
 
-        {!showForm && headerStatus && (
+        {/* While a run is in flight the header stays up even over the form:
+            clicking Edit mid-run used to take the header and the progress
+            card away together, leaving a disabled "Running…" button as the
+            only sign anything was happening. */}
+        {(!showForm || isRunning) && headerStatus && (
           <JobHeader
-            name={methods.getValues('name')}
+            // The run's own inputs when it has them: the form above may be
+            // being edited while this run finishes.
+            name={job.formValues?.name ?? methods.getValues('name')}
             sequenceLength={
-              hasJobRecord ? methods.getValues('codingSequence').length : null
+              hasJobRecord
+                ? (job.formValues?.codingSequence.length ??
+                  methods.getValues('codingSequence').length)
+                : null
             }
-            species={hasJobRecord ? methods.getValues('species') : 'none'}
+            species={
+              hasJobRecord
+                ? (job.formValues?.species ?? methods.getValues('species'))
+                : 'none'
+            }
             status={headerStatus}
             processingTimeSeconds={result?.processing_time_seconds ?? null}
             errorMessage={job.error?.message ?? null}
@@ -265,7 +288,8 @@ export function GeneSplitterForm({
             // Nothing of this design is on this device, so "Edit" would
             // open a blank form: the header says "Start a new design".
             missing={job.error?.code === 'not_found'}
-            onEdit={() => setIsEditing(true)}
+            // Nothing to open when the form is already the thing on screen.
+            onEdit={showForm ? undefined : () => setIsEditing(true)}
             onRerun={handleRerun}
             // A cloud run cannot be cancelled from here: it is not this
             // tab's to stop. Deleting it from the cloud is the way out.
@@ -334,13 +358,7 @@ export function GeneSplitterForm({
             {/* ── Input + split point ── */}
             <Card>
               <CardHeader>
-                <CardTitle
-                  render={
-                    <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">
-                      {copy.title}
-                    </h1>
-                  }
-                />
+                <CardTitle render={<PageTitle>{copy.title}</PageTitle>} />
                 <CardDescription>{copy.description}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -429,6 +447,13 @@ export function GeneSplitterForm({
             )}
           </Suspense>
         )}
+
+        {/* The action bar is `sticky bottom-0`, so it hovers over the end of
+            the form: on a blank form that is the Design Objectives card, and
+            on a phone the bar is ~140px tall against the container's 48px of
+            bottom padding. A spacer rather than padding on the container,
+            because the bar's height depends on how its contents wrap. */}
+        <div aria-hidden className="h-24 md:h-10" />
       </form>
       {/* eslint-enable react-hooks/refs */}
     </Form>

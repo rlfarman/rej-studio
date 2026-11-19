@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { ChevronLeft, ChevronRight, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { TermHint } from '@/components/term-hint'
 import { translateCodon } from '@/lib/bio/genetic-code'
 import type { WggwRecodingOption } from '@/lib/bio/sequence-utils'
 import { cn } from '@/lib/utils'
@@ -12,10 +13,13 @@ import {
   buildMotifGuide,
   buildSplitContext,
   getEditedPositions,
-  scoreRewriteOption,
+  rankedRewriteOptions,
 } from './sequence-helpers'
 import type { spliceTone } from './tones'
 import type { WggwSiteCandidate } from './types'
+
+const rewriteCopy = designToolCopy.splitPoint.rewrites
+const editorCopy = designToolCopy.spliceEditor
 
 export function Inspector({
   sequence,
@@ -64,7 +68,9 @@ export function Inspector({
 }) {
   const isMulti = spliceCount > 1
   const spliceLabel =
-    isMulti && spliceIndex !== undefined ? `Splice ${spliceIndex + 1}` : null
+    isMulti && spliceIndex !== undefined
+      ? editorCopy.spliceLabel(spliceIndex + 1)
+      : null
 
   // Pin every card to the populated-state min-height so the empty and
   // selected states occupy the same footprint. Prevents the layout jump
@@ -72,7 +78,9 @@ export function Inspector({
   // In multi-split mode the inactive cards dim and gain a hover affordance
   // so it's clear which splice is being edited.
   const cardClass = cn(
-    'flex min-h-[280px] min-w-0 flex-col gap-4 rounded-2xl border px-4 pt-4 pb-3 text-xs transition-all',
+    // The floor keeps the card from jumping as a site is picked; on a phone
+    // the editor above is already tall, so the empty state goes without it.
+    'flex min-w-0 flex-col gap-4 rounded-2xl border px-4 pt-4 pb-3 text-xs transition-all md:min-h-[280px]',
     isMulti
       ? isActive
         ? cn('cursor-pointer bg-muted/40 shadow-sm ring-2', tone?.caretRing)
@@ -102,7 +110,7 @@ export function Inspector({
     </button>
   ) : (
     <h3 className="text-sm font-semibold tracking-tight text-foreground">
-      Split point design
+      {editorCopy.heading}
     </h3>
   )
 
@@ -113,9 +121,11 @@ export function Inspector({
         variant="ghost"
         size="icon"
         onClick={onRemoveSplice}
-        title={`Remove ${spliceLabel}`}
-        aria-label={`Remove ${spliceLabel}`}
-        className="size-5 text-muted-foreground hover:text-foreground"
+        title={editorCopy.removeSplice(spliceLabel ?? '')}
+        aria-label={editorCopy.removeSplice(spliceLabel ?? '')}
+        // A 20px glyph button: the pseudo-element stretches its hit area
+        // to 40px without moving the card's header.
+        className="relative size-5 text-muted-foreground before:absolute before:-inset-2.5 hover:text-foreground"
       >
         <X className="size-3" />
       </Button>
@@ -163,6 +173,13 @@ export function Inspector({
     editedPositions,
   )
 
+  // The chips and the counter beside them read one order, so they cannot
+  // disagree about which option is "2 of 6".
+  const ranked = rankedRewriteOptions(selectedSite.rewriteOptions, species)
+  const selectedRank =
+    ranked.findIndex((entry) => entry.originalIndex === selectedRewriteIndex) +
+    1
+
   return (
     <div className={cardClass} onPointerDown={onActivate}>
       <div className="flex items-center justify-between gap-3">
@@ -198,88 +215,83 @@ export function Inspector({
       <div className="space-y-3">
         <div className="space-y-1.5">
           <div className="flex items-center justify-between text-[10px] font-semibold tracking-[0.08em] text-muted-foreground uppercase">
-            <span>Synonymous rewrites</span>
-            {selectedSite.rewriteOptions.length > 1 && (
+            <span className="inline-flex items-center gap-0.5">
+              {rewriteCopy.heading}
+              {/* No size override: the trigger's 24px icon is what gives
+                  it the 44px tap target, which a smaller one would lose. */}
+              <TermHint
+                topic={rewriteCopy.hintTopic}
+                hint={rewriteCopy.hint(species === 'none' ? null : species)}
+              />
+            </span>
+            {ranked.length > 1 && (
               <span className="text-muted-foreground normal-case">
-                {selectedRewriteIndex + 1} of{' '}
-                {selectedSite.rewriteOptions.length}
+                {rewriteCopy.position(selectedRank, ranked.length)}
               </span>
             )}
           </div>
           <RewriteRow>
-            {selectedSite.rewriteOptions
-              .map((option, originalIndex) => ({
-                option,
-                originalIndex,
-                score: scoreRewriteOption(option, species),
-              }))
-              // Sort best-first by codon-preference score when available;
-              // fall back to base-change count asc otherwise (no host picked).
-              .sort((a, b) => {
-                if (a.score !== null && b.score !== null)
-                  return b.score - a.score
-                if (a.score !== null) return -1
-                if (b.score !== null) return 1
-                return a.option.baseChanges - b.option.baseChanges
-              })
-              .map(({ option, originalIndex, score }) => {
-                const active = originalIndex === selectedRewriteIndex
-                // Order alone tells the recommendation story. Hover title
-                // still surfaces the precise score for users who want it.
-                const titleParts = [
-                  `${option.baseChanges} bp synonymous change${option.baseChanges === 1 ? '' : 's'} required`,
-                  score !== null
-                    ? `codon preference ${score.toFixed(2)} (${species})`
-                    : null,
-                ].filter(Boolean)
-                return (
-                  <button
-                    type="button"
-                    key={`${option.newHexamer}-${originalIndex}`}
-                    onClick={() => onSelectRewrite(originalIndex)}
-                    aria-pressed={active}
-                    aria-label={titleParts.join(' · ')}
-                    title={titleParts.join(' · ')}
-                    className={cn(
-                      'inline-flex shrink-0 items-center gap-2 rounded-full border px-2.5 py-1.5 font-mono text-[12px] transition-colors',
-                      active
-                        ? 'border-primary bg-primary/10 text-primary'
-                        : 'text-muted-foreground hover:border-primary/30 hover:bg-background/60',
-                    )}
-                  >
-                    <span className="flex flex-col items-center gap-0.5 leading-tight">
-                      <span
-                        className="grid font-mono text-[12px] leading-none"
-                        style={{ gridTemplateColumns: 'repeat(7, 1ch)' }}
-                      >
-                        <span className="col-start-2 text-center font-medium text-muted-foreground">
-                          {translateCodon(option.newCodons[0]) ?? '?'}
-                        </span>
-                        <span className="col-start-6 text-center font-medium text-muted-foreground">
-                          {translateCodon(option.newCodons[1]) ?? '?'}
-                        </span>
+            {ranked.map(({ option, originalIndex, score }, rank) => {
+              const active = originalIndex === selectedRewriteIndex
+              return (
+                <button
+                  type="button"
+                  key={`${option.newHexamer}-${originalIndex}`}
+                  onClick={() => onSelectRewrite(originalIndex)}
+                  aria-pressed={active}
+                  aria-label={rewriteCopy.optionAria(
+                    rank + 1,
+                    ranked.length,
+                    option.baseChanges,
+                    score === null ? null : score.toFixed(2),
+                  )}
+                  className={cn(
+                    'inline-flex shrink-0 items-center gap-2 rounded-full border px-2.5 py-1.5 font-mono text-[12px] transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none',
+                    active
+                      ? 'border-primary bg-primary/10 text-primary'
+                      : 'text-muted-foreground hover:border-primary/30 hover:bg-background/60',
+                  )}
+                >
+                  <span className="flex flex-col items-center gap-0.5 leading-tight">
+                    <span
+                      className="grid font-mono text-[12px] leading-none"
+                      style={{ gridTemplateColumns: 'repeat(7, 1ch)' }}
+                    >
+                      <span className="col-start-2 text-center font-medium text-muted-foreground">
+                        {translateCodon(option.newCodons[0]) ?? '?'}
                       </span>
-                      <span
-                        className="grid font-mono leading-none font-semibold"
-                        style={{ gridTemplateColumns: 'repeat(7, 1ch)' }}
-                      >
-                        <span className="col-span-3 text-center">
-                          {option.newCodons[0]}
-                        </span>
-                        <span className="col-span-3 col-start-5 text-center">
-                          {option.newCodons[1]}
-                        </span>
+                      <span className="col-start-6 text-center font-medium text-muted-foreground">
+                        {translateCodon(option.newCodons[1]) ?? '?'}
                       </span>
                     </span>
-                  </button>
-                )
-              })}
+                    <span
+                      className="grid font-mono leading-none font-semibold"
+                      style={{ gridTemplateColumns: 'repeat(7, 1ch)' }}
+                    >
+                      <span className="col-span-3 text-center">
+                        {option.newCodons[0]}
+                      </span>
+                      <span className="col-span-3 col-start-5 text-center">
+                        {option.newCodons[1]}
+                      </span>
+                    </span>
+                    {/* The cost of the option, on the chip. It was in the
+                        title, which a touch user never sees. */}
+                    <span className="text-[9px] leading-none font-medium tracking-[0.04em] opacity-80">
+                      {rank === 0
+                        ? `${rewriteCopy.best} · ${rewriteCopy.baseChanges(option.baseChanges)}`
+                        : rewriteCopy.baseChanges(option.baseChanges)}
+                    </span>
+                  </span>
+                </button>
+              )
+            })}
           </RewriteRow>
         </div>
 
         <div className="space-y-1.5">
           <div className="text-[10px] font-semibold tracking-[0.08em] text-muted-foreground uppercase">
-            Sequence context
+            {editorCopy.contextHeading}
           </div>
           <SequenceContextTable
             rows={[
@@ -293,13 +305,13 @@ export function Inspector({
                 ),
               },
               {
-                label: 'Original sequence',
+                label: editorCopy.originalRow,
                 text: originalSplitContext.displayText,
                 boundaryIndexes: originalSplitContext.boundaryIndexes,
                 editedIndexes: originalSplitContext.displayEditedIndexes,
               },
               {
-                label: 'Designed sequence',
+                label: editorCopy.designedRow,
                 text: designedSplitContext.displayText,
                 boundaryIndexes: designedSplitContext.boundaryIndexes,
                 editedIndexes: designedSplitContext.displayEditedIndexes,
@@ -341,9 +353,9 @@ function SiteNav({
         size="icon"
         onClick={onPrev}
         disabled={!canPrev}
-        title="Previous WGGW site ([)"
-        aria-label="Previous WGGW site"
-        className="size-5 hover:text-foreground [&_svg:not([class*='size-'])]:size-3.5"
+        title={editorCopy.prevSiteShortcut}
+        aria-label={editorCopy.prevSite}
+        className="relative size-5 before:absolute before:-inset-0.5 hover:text-foreground [&_svg:not([class*='size-'])]:size-3.5"
       >
         <ChevronLeft />
       </Button>
@@ -354,9 +366,9 @@ function SiteNav({
         size="icon"
         onClick={onNext}
         disabled={!canNext}
-        title="Next WGGW site (])"
-        aria-label="Next WGGW site"
-        className="size-5 hover:text-foreground [&_svg:not([class*='size-'])]:size-3.5"
+        title={editorCopy.nextSiteShortcut}
+        aria-label={editorCopy.nextSite}
+        className="relative size-5 before:absolute before:-inset-0.5 hover:text-foreground [&_svg:not([class*='size-'])]:size-3.5"
       >
         <ChevronRight />
       </Button>

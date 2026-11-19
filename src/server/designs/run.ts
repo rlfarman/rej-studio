@@ -3,12 +3,15 @@
 // extends `cloudflare:workers`' WorkflowEntrypoint, which only exists in
 // workerd.
 
+import type { CloudDesignStatus } from '@/features/design-tool/types/cloud-design'
 import type { FormValues } from '@/features/design-tool/types/form-schema'
 import type { ProcessOptions } from '@/features/design-tool/types/optimizer-contract'
 import type { ProcessResult } from '@/features/design-tool/types/process-result'
+import { createLogger } from '@/lib/logger'
 
 import type { ServerEnv } from '../env'
 import { designOnWorker } from '../mcp/optimizer'
+import { markDesignStatus } from './records'
 
 /** What the optimizer's `process` is given. Hashed into the id (./id.ts). */
 export interface OptimizerRequest {
@@ -66,6 +69,30 @@ export class CloudDesignFailure extends Error {
   }
 }
 
+const log = createLogger('designs')
+
+/**
+ * Notes where the design got to in the account's list (./records.ts), which
+ * is where "My cloud designs" reads it from: the step is the one place that
+ * learns the outcome without anyone asking for it. The list is an index
+ * beside the Workflow, so a failed write is logged and the design carries
+ * on. The run the CPU limit kills never reaches the settling write, and its
+ * row stays 'running' until something reads the design (./handler.ts).
+ */
+async function note(
+  env: ServerEnv,
+  id: string,
+  status: CloudDesignStatus,
+): Promise<void> {
+  const db = env.AUTH_DB
+  if (!db) return
+  try {
+    await markDesignStatus(db, id, status)
+  } catch (error) {
+    log.error('could not note a cloud design’s status', error, { id, status })
+  }
+}
+
 interface RunDeps {
   design?: typeof designOnWorker
   /** Waits between R2 attempts; replaced in tests. */
@@ -78,7 +105,25 @@ export async function runCloudDesign(
   id: string,
   params: CloudDesignParams,
   env: ServerEnv,
-  { design = designOnWorker, wait = sleep }: RunDeps = {},
+  deps: RunDeps = {},
+): Promise<CloudDesignOutput> {
+  await note(env, id, 'running')
+  try {
+    const output = await runStep(id, params, env, deps)
+    await note(env, id, 'completed')
+    return output
+  } catch (error) {
+    // The step is not retried (./workflow.ts), so a throw here is final.
+    await note(env, id, 'failed')
+    throw error
+  }
+}
+
+async function runStep(
+  id: string,
+  params: CloudDesignParams,
+  env: ServerEnv,
+  { design = designOnWorker, wait = sleep }: RunDeps,
 ): Promise<CloudDesignOutput> {
   const outcome = await design(params.request)
   if (!outcome.ok) {

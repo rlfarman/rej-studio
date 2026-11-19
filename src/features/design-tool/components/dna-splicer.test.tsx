@@ -74,14 +74,22 @@ describe('DNASplicer split points', () => {
     expect(split(form)).toEqual([55])
   })
 
-  it('keep their relative place as bases are added', () => {
-    const form = mount({
-      codingSequence: CODONS.repeat(5),
-      spliceJunctionPositions: [22],
-    })
-    typeInto(form, CODONS.repeat(5))
-    expect(split(form)).toEqual([44])
-  })
+  it(
+    'keep their relative place as bases are added',
+    () => {
+      const form = mount({
+        codingSequence: CODONS.repeat(5),
+        spliceJunctionPositions: [22],
+      })
+      typeInto(form, CODONS.repeat(5))
+      expect(split(form)).toEqual([44])
+    },
+    // 110 synthetic keystrokes onto an already 110-base sequence, each one a
+    // full re-render of the editor: the slowest test in the file, and it ran
+    // 5.7s on a loaded CI runner against the 5s default. The assertion is not
+    // about time, so the limit is only there to catch a hang.
+    20_000,
+  )
 
   it('keep the split points a paste set with its sequence', () => {
     const form = mount({

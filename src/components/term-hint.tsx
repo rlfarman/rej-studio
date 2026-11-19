@@ -28,9 +28,10 @@ interface TermHintProps {
  * explanation lives here and nowhere else. A popover opens on hover, on
  * focus-and-Enter, and on tap, and closes on Escape or an outside press.
  *
- * The trigger draws at 24px to sit on a line of text, but its hit area is
- * stretched to 44px by a pseudo-element, which costs no layout space. The
- * icon is small; the thing you tap is not.
+ * The trigger draws at 24px so it sits on a line of text, and a
+ * pseudo-element stretches its hit area to the 44px touch minimum at no
+ * cost in layout — the same way `checkbox.tsx` and the sidebar's controls
+ * do it. The icon is small; the thing you tap is not.
  */
 export function TermHint({ topic, hint, className }: TermHintProps) {
   return (
@@ -47,7 +48,7 @@ export function TermHint({ topic, hint, className }: TermHintProps) {
             // expand a row or toggle the checkbox.
             onClick={(e) => e.stopPropagation()}
             className={cn(
-              'relative inline-flex size-6 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors before:absolute before:top-1/2 before:left-1/2 before:size-11 before:-translate-x-1/2 before:-translate-y-1/2 before:content-[""] hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none',
+              'relative inline-flex size-6 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors before:absolute before:-inset-2.5 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none',
               className,
             )}
           >

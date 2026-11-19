@@ -1,6 +1,4 @@
-import { useLocation } from '@tanstack/react-router'
-
-import { useHydrated } from '@/hooks/use-hydrated'
+import { useHydrated, useLocation } from '@tanstack/react-router'
 
 /**
  * The current pathname, or null in the prerendered SPA shell and while the

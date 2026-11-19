@@ -369,7 +369,11 @@ export class GeneTextSearch {
     }
   }
 
-  /** Ranked text search; `truncated` when more than `limit` genes matched. */
+  /**
+   * Ranked text search; `truncated` when more than `limit` genes matched,
+   * and `total` however many did. Ranking already walks every match, so the
+   * total is a length, not a second search.
+   */
   search(query: string, species: string, limit: number): GeneSearchPage {
     const ranked = this.rank(query, species, { names: true }).sort(
       compareRanked,
@@ -379,6 +383,7 @@ export class GeneTextSearch {
         .slice(0, limit)
         .map((r) => ({ ...toResult(r.gene), match: matchOf(r) })),
       truncated: ranked.length > limit,
+      total: ranked.length,
     }
   }
 

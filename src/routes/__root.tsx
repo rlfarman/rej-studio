@@ -1,10 +1,8 @@
 import {
   HeadContent,
-  Link,
   Outlet,
   Scripts,
   createRootRouteWithContext,
-  useRouter,
   type ErrorComponentProps,
 } from '@tanstack/react-router'
 import type { QueryClient } from '@tanstack/react-query'
@@ -12,18 +10,24 @@ import { ThemeProvider } from 'next-themes'
 import type { ReactNode } from 'react'
 
 import { MaintenanceBanner } from '@/components/maintenance-banner'
-import { StatusPage } from '@/components/status-page'
-import { Button } from '@/components/ui/button'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { LazyToaster } from '@/components/lazy-toaster'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { appCopy } from '@/copy/app'
-import { commonCopy } from '@/copy/common'
 import { AppSidebar } from './-components/layout/app-sidebar'
 import { Header } from './-components/layout/header'
+import { RouteAnnouncer } from './-components/layout/route-announcer'
+import { NotFoundPage } from './-components/not-found-page'
 import { RouteError } from './-components/route-error'
+import { useDocumentTitle } from './-components/layout/use-document-title'
 import { useShellPathname } from './-components/layout/use-shell-pathname'
 import globalsCss from '@/styles/globals.css?url'
+// The three families' Latin subsets, imported for their hashed URLs so the
+// document can ask for them in `links` below. Vite emits one copy per file:
+// these are the same assets the stylesheet's @font-face rules point at.
+import sourceSansLatin from '@fontsource-variable/source-sans-3/files/source-sans-3-latin-wght-normal.woff2?url'
+import sourceSerifLatin from '@fontsource-variable/source-serif-4/files/source-serif-4-latin-wght-normal.woff2?url'
+import sourceMonoLatin from '@fontsource-variable/source-code-pro/files/source-code-pro-latin-wght-normal.woff2?url'
 import { geneDataUrl } from '@/features/gene-search/corpus/gene-data-url'
 
 /**
@@ -62,6 +66,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         // Pages set their own title; this is the fallback.
         { title: appCopy.metadata.siteName },
         { name: 'description', content: appCopy.metadata.description },
+
         { property: 'og:type', content: 'website' },
         { property: 'og:site_name', content: appCopy.metadata.siteName },
         { property: 'og:locale', content: 'en_US' },
@@ -78,6 +83,25 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       ],
       links: [
         { rel: 'stylesheet', href: globalsCss },
+        // The fonts are declared inside that stylesheet, so without this the
+        // browser only learns they exist after fetching and parsing it: it
+        // paints in a fallback, then reflows every line when they arrive.
+        // That was 0.33 of 0.467 CLS on the design tool, which Lighthouse
+        // scored 0.19. Asking for them here starts them with the stylesheet
+        // instead, and the swap lands before the first paint.
+        //
+        // Only the Latin subsets, and only the upright weights: they are
+        // what every page renders. The other subsets stay lazy, which is the
+        // point of @font-face carrying a unicode-range.
+        ...[sourceSansLatin, sourceSerifLatin, sourceMonoLatin].map((href) => ({
+          rel: 'preload',
+          href,
+          as: 'font',
+          type: 'font/woff2',
+          // Fonts are fetched in CORS mode whatever the origin, so a
+          // preload without this is a second, unused request.
+          crossOrigin: 'anonymous' as const,
+        })),
         { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
         { rel: 'manifest', href: '/manifest.webmanifest' },
         ...(geneDataOrigin
@@ -94,7 +118,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     shellComponent: RootDocument,
     component: AppLayout,
     errorComponent: RootError,
-    notFoundComponent: NotFound,
+    notFoundComponent: RootNotFound,
   },
 )
 
@@ -106,6 +130,20 @@ function RootDocument({ children }: { children: ReactNode }) {
       <head>
         <script dangerouslySetInnerHTML={{ __html: SIDEBAR_PRELOAD_SCRIPT }} />
         <script dangerouslySetInnerHTML={{ __html: LOGIN_PRELOAD_SCRIPT }} />
+        {/* Phone browsers tint their toolbar with this: the --background
+            tokens in globals.css. It follows the system's scheme, not a
+            theme picked in the app. Written here, not in head(): HeadContent
+            keeps one meta per name, and this needs one per scheme. */}
+        <meta
+          name="theme-color"
+          media="(prefers-color-scheme: light)"
+          content="#f5f7fa"
+        />
+        <meta
+          name="theme-color"
+          media="(prefers-color-scheme: dark)"
+          content="#0d0f15"
+        />
         <HeadContent />
       </head>
       <body>
@@ -147,6 +185,7 @@ function AppLayout() {
       >
         <AppSidebar />
         <SidebarInset className="relative flex h-svh min-h-0 max-w-full flex-1 flex-col overflow-hidden">
+          <RouteAnnouncer />
           {maintenanceMessage && (
             <MaintenanceBanner
               message={maintenanceMessage}
@@ -156,7 +195,10 @@ function AppLayout() {
           <Header />
           <main
             id="main-content"
-            className="relative flex h-full w-full flex-1 flex-col overflow-auto"
+            // Focusable only programmatically: the skip link and
+            // RouteAnnouncer both move the keyboard here.
+            tabIndex={-1}
+            className="relative flex h-full w-full flex-1 flex-col overflow-auto outline-none"
           >
             <div className="flex-1">
               <Outlet />
@@ -174,26 +216,12 @@ function RootError(props: ErrorComponentProps) {
 }
 
 /**
- * Unmatched URLs. TanStack Router renders the root's not-found component in
- * the page slot, so the sidebar and header stay around it.
+ * A `notFound()` thrown by a loader whose route has no not-found component
+ * of its own. Unmatched URLs never get here: the catch-all route (`$.tsx`)
+ * matches them. This runs after the route has set its title, so it says what
+ * the page is itself.
  */
-function NotFound() {
-  const router = useRouter()
-  return (
-    <StatusPage
-      eyebrow={appCopy.notFound.eyebrow}
-      title={appCopy.notFound.description}
-      description={appCopy.notFound.detail}
-      actions={
-        <>
-          <Button nativeButton={false} render={<Link to="/" />}>
-            {commonCopy.actions.goHome}
-          </Button>
-          <Button variant="outline" onClick={() => router.history.back()}>
-            {commonCopy.actions.goBack}
-          </Button>
-        </>
-      }
-    />
-  )
+function RootNotFound() {
+  useDocumentTitle(appCopy.metadata.title(appCopy.notFound.pageTitle))
+  return <NotFoundPage />
 }

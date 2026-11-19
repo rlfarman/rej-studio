@@ -12,11 +12,13 @@ import { CodingSequenceInput } from './coding-sequence-input'
  * 50,000 bp. Every keystroke re-segments the sequence and re-renders the
  * highlight layer, and the cost of that layer is per highlighted run, not per
  * base: a sequence typed out of frame has an in-frame stop every few codons,
- * so the worst case is thousands of runs. The budget below is the point of
- * the test — it fails if the layer goes back to mounting a component per run.
+ * so the worst case is thousands of runs. What this test holds is the node
+ * count per run — it fails if the layer goes back to mounting a component
+ * per run, which is what made typing slow.
  *
- * The numbers are happy-dom's, so they are a fraction of a browser's; what
- * matters is that they stop growing with the sequence.
+ * The timings it prints are happy-dom's, so they are a fraction of a
+ * browser's, and nothing asserts them (see ELEMENTS_PER_MARK). They are here
+ * to be read when this file is being worked on.
  */
 
 // The hook asks the optimizer worker for DNA; this measures DNA mode, where it
@@ -63,7 +65,16 @@ function mount(initial: string) {
   return { textarea, backdrop }
 }
 
-/** Median ms of synchronous work per keystroke typed at the end. */
+/**
+ * The cheapest of `keystrokes` keystrokes typed at the end, in ms.
+ *
+ * The fastest sample, not the median: every sample is this machine's work plus
+ * whatever else it was doing, and only the floor of that distribution
+ * estimates the work. The median of nine samples read 24 ms here idle and 76 ms
+ * with three agents and a full suite running beside it — the same code, a
+ * budget that passed alone and failed in `pnpm verify`. The minimum moved from
+ * 21 ms to 18 ms across those same two runs.
+ */
 function typeAtEnd(textarea: HTMLTextAreaElement, keystrokes: number): number {
   const times: number[] = []
   for (let i = 0; i < keystrokes; i++) {
@@ -74,27 +85,39 @@ function typeAtEnd(textarea: HTMLTextAreaElement, keystrokes: number): number {
     })
     times.push(performance.now() - start)
   }
-  times.sort((a, b) => a - b)
-  return times[Math.floor(times.length / 2)]
+  return Math.min(...times)
 }
 
 /**
- * Generous: the measurement was ~19 ms at 14.4 kb after this layer stopped
- * mounting a tooltip per highlighted run, and ~138 ms before. A loaded CI
- * runner may be several times slower than a laptop and still pass; a
- * regression to a component per run will not.
+ * Elements the layer draws per highlighted run: a `mark` and the `span` inside
+ * it. This is what the test asserts, because it is the fault itself — a
+ * component per run — and it reads the same on any machine. It is a ceiling
+ * rather than an equality: the trailing incomplete codon is marked without an
+ * inner span.
+ *
+ * There is no wall-clock budget. One stood here at 60 ms and failed twice on
+ * loaded CI runners while passing locally: the floor of nine keystrokes at
+ * 14.4 kb measures ~21 ms on this laptop, ~24 ms as a median, and 76 ms as a
+ * median with three agents running beside it. A number that depends on what
+ * else the machine is doing cannot tell a regression from a busy runner, and
+ * the timing is still printed below for anyone watching it.
  */
-const BUDGET_MS = 60
+const ELEMENTS_PER_MARK = 2
 
 afterEach(cleanup)
 
 describe('CodingSequenceInput typing cost', () => {
   for (const bp of [306, 3600, 7200, 14400]) {
-    it(`stays inside the keystroke budget at ${bp} bp`, () => {
-      const { textarea } = mount(outOfFrameSequence(bp))
-      const median = typeAtEnd(textarea, 9)
-      console.log(`[perf] ${bp} bp: ${median.toFixed(1)} ms per keystroke`)
-      expect(median).toBeLessThan(BUDGET_MS)
+    it(`draws a flat number of nodes per run at ${bp} bp`, () => {
+      const { textarea, backdrop } = mount(outOfFrameSequence(bp))
+      const floorMs = typeAtEnd(textarea, 9)
+      console.log(`[perf] ${bp} bp: ${floorMs.toFixed(1)} ms per keystroke`)
+
+      const marks = backdrop.querySelectorAll('mark').length
+      expect(marks).toBeGreaterThan(1)
+      expect(backdrop.querySelectorAll('*').length).toBeLessThanOrEqual(
+        marks * ELEMENTS_PER_MARK,
+      )
     })
   }
 

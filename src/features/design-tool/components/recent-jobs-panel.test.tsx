@@ -1,4 +1,4 @@
-// The X on a running entry in Recent jobs. Writing a cancelled history entry
+// The X on a running entry in Recent designs. Writing a cancelled history entry
 // is not cancelling: only aborting the run stops the worker, and without that
 // the result arrives seconds later and replaces what the person just stopped.
 
@@ -14,6 +14,7 @@ import {
 import { registerBrowserRun } from '@/features/design-tool/api/browser-optimizer'
 import type { FormValues } from '@/features/design-tool/types/form-schema'
 
+import { designToolCopy } from '../copy'
 import { RecentJobs } from './recent-jobs-panel'
 
 const RUNNING_ID = `${BROWSER_ID_PREFIX}running-one`
@@ -48,7 +49,7 @@ function startRun(id = RUNNING_ID, name = 'BRCA2 run') {
   return { controller, release }
 }
 
-describe('cancelling a run from Recent jobs', () => {
+describe('cancelling a run from Recent designs', () => {
   it('aborts the run, not just its history entry', () => {
     const { controller, release } = startRun()
     showPanel()
@@ -85,10 +86,31 @@ describe('cancelling a run from Recent jobs', () => {
 
     fireEvent.click(
       screen.getByRole('button', {
-        name: 'Remove Done run from recent jobs',
+        name: 'Remove Done run from recent designs',
       }),
     )
 
     expect(useJobHistory.getState().getEntry('done-one')).toBeNull()
+  })
+})
+
+describe('a run its tab did not live to finish', () => {
+  it('says so in a word, not the job page’s sentence', () => {
+    useJobHistory.getState().upsertEntry({
+      id: `${BROWSER_ID_PREFIX}orphan`,
+      status: 'failed',
+      formValues: named('Orphan run'),
+      error: {
+        code: 'interrupted',
+        message: designToolCopy.browserRun.interrupted,
+        retriable: true,
+      },
+    })
+    showPanel()
+
+    expect(
+      screen.getByText(designToolCopy.recentJobs.interruptedSubline),
+    ).toBeTruthy()
+    expect(screen.queryByText(designToolCopy.browserRun.interrupted)).toBeNull()
   })
 })

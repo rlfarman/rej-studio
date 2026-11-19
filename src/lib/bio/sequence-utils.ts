@@ -21,6 +21,36 @@ export function detectSequenceType(text: string): 'dna' | 'protein' {
   return proteinOnly / seq.length > 0.01 ? 'protein' : 'dna'
 }
 
+/**
+ * A design name from a FASTA header.
+ *
+ * Database headers are machine-readable, not names: UniProt's
+ * `sp|P04637|P53_HUMAN Cellular tumor antigen p53 OS=Homo sapiens OX=9606
+ * GN=TP53 PE=1 SV=4` would otherwise become the design's name in history, in
+ * the cloud list and in the exported report. Keep the descriptive part — drop
+ * a leading `db|accession|entry` prefix and everything from the first `KEY=`
+ * tag — and cap the length, preferring a word boundary near the cap.
+ */
+export function designNameFromFastaHeader(header: string, cap = 60): string {
+  const trimmed = header.trim()
+  let name = trimmed
+
+  // `sp|P04637|P53_HUMAN Cellular tumor antigen p53` → the description, or
+  // the entry name when the header is the identifier and nothing else.
+  const piped = /^[^|\s]*\|[^|\s]*\|(\S*)\s*(.*)$/.exec(name)
+  if (piped) name = piped[2] || piped[1]
+
+  // ` OS=Homo sapiens OX=9606 GN=TP53` — the first tag ends the description.
+  name = name.replace(/\s+[A-Za-z][A-Za-z0-9_]*=.*$/, '').trim()
+
+  if (!name) name = trimmed
+  if (name.length <= cap) return name
+
+  const cut = name.slice(0, cap)
+  const lastSpace = cut.lastIndexOf(' ')
+  return (lastSpace >= cap * 0.6 ? cut.slice(0, lastSpace) : cut).trim()
+}
+
 export function computeGcPercent(seq: string): number {
   if (seq.length === 0) return 0
   const gc = seq.split('').filter((c) => c === 'G' || c === 'C').length
@@ -317,12 +347,53 @@ export function countCpG(seq: string): number {
   return count
 }
 
+const NUCLEOTIDE = /[ACGTUacgtu]/
+const NON_NUCLEOTIDE = /[^ACGTUacgtu]/
+
+/**
+ * Whether anything in the sequence is not a nucleotide.
+ *
+ * Separate from `findInvalidChars` because the answer to "is there any" is
+ * wanted on every render of the sequence field, which is the hot path while
+ * someone types: one regex that stops at the first match, rather than a
+ * per-character loop building a Set over as much as 50,000 bases.
+ */
+export function hasInvalidChars(seq: string): boolean {
+  return NON_NUCLEOTIDE.test(seq)
+}
+
+/** The distinct non-nucleotide characters in the sequence, in first-seen order. */
 export function findInvalidChars(seq: string): string[] {
   const invalid = new Set<string>()
   for (const c of seq) {
-    if (!/[ACGTUacgtu]/.test(c)) invalid.add(c)
+    if (!NUCLEOTIDE.test(c)) invalid.add(c)
   }
   return [...invalid]
+}
+
+/**
+ * How many characters are not nucleotides — occurrences, not distinct kinds.
+ * `findInvalidChars` answers *which*; a count of "invalid characters" has to
+ * answer *how many*, or `ATGxxTAA` reports one.
+ */
+export function countInvalidChars(seq: string): number {
+  let count = 0
+  for (const c of seq) {
+    if (!NUCLEOTIDE.test(c)) count++
+  }
+  return count
+}
+
+/**
+ * Length counting nucleotides only, so a sequence with stray characters is
+ * not reported as that many bases long.
+ */
+export function countNucleotides(seq: string): number {
+  let count = 0
+  for (const c of seq) {
+    if (NUCLEOTIDE.test(c)) count++
+  }
+  return count
 }
 
 // ---------------------------------------------------------------------------

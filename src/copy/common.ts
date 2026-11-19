@@ -19,13 +19,13 @@ export const commonCopy = {
     // description; the shadcn primitive only has placeholders.
     sheetTitle: 'Main navigation',
     sheetDescription:
-      'Pages, starred genes, recent searches, designs and settings.',
+      'Pages, favorite genes, recent genes, designs and settings.',
   },
   // Header context label, shown once the page title has scrolled away.
   pageContext: {
     genes: 'Gene search',
-    designTool: 'Design tool',
-    diseaseAssociations: 'Disease-associated genes',
+    designTool: 'Design Tool',
+    diseaseAssociations: 'Disease-Associated Genes',
     architecture: 'Architecture',
   },
   actions: {
@@ -44,9 +44,11 @@ export const commonCopy = {
       dark: 'Dark',
       system: 'System',
     },
-    importUserData: 'Import user data',
-    exportData: 'Export data',
-    importData: 'Import data',
+    // Named for what moves: "data" alone could be anything, designs
+    // included or not. Import opens a file picker, hence the ellipsis.
+    importUserData: 'Import favorites and history',
+    exportData: 'Export favorites and history',
+    importData: 'Import favorites and history…',
     seedData: 'Seed data',
     clearSeedData: 'Clear seed data',
     seedResult: (favorites: number, recents: number, jobs: number) =>

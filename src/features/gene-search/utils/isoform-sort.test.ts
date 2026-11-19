@@ -126,6 +126,23 @@ describe('sortIsoforms', () => {
     )
   })
 
+  it('orders ties within an AAV tier by CDS length, then id', () => {
+    const tied = [
+      row('ENST9', { codingSequenceLength: 1782 }),
+      row('ENST5', { codingSequenceLength: 522 }),
+      row('ENST7', { codingSequenceLength: 3138 }),
+      row('ENST6', { codingSequenceLength: 522 }),
+      row('ENST8', { codingSequenceLength: 8457, suitability: 'triple-aav' }),
+      row('ENST4', { codingSequenceLength: 8550, suitability: 'triple-aav' }),
+    ]
+    expect(ids(sortIsoforms(tied, { key: 'suitability', dir: 'asc' }))).toEqual(
+      ['ENST5', 'ENST6', 'ENST9', 'ENST7', 'ENST8', 'ENST4'],
+    )
+    expect(
+      ids(sortIsoforms(tied, { key: 'suitability', dir: 'desc' })),
+    ).toEqual(['ENST4', 'ENST8', 'ENST7', 'ENST9', 'ENST6', 'ENST5'])
+  })
+
   it("doesn't mutate the input", () => {
     sortIsoforms(rows, { key: 'enst', dir: 'asc' })
     expect(ids(rows)).toEqual(['ENST3', 'ENST1', 'ENST2'])

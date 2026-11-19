@@ -180,15 +180,20 @@ function FormMessage({ className, ...props }: React.ComponentProps<'p'>) {
   const { error, formMessageId } = useFormField()
   const body = error ? String(error?.message ?? '') : props.children
 
-  if (!body) {
-    return null
-  }
-
+  // The element stays mounted so the live region exists before the message
+  // lands in it: a validation error appears on blur or on submit, and a
+  // region created together with its text is not reliably announced. Empty,
+  // it is `sr-only` — out of flow, so it adds no row to the FormItem grid.
   return (
     <p
       data-slot="form-message"
       id={formMessageId}
-      className={cn('text-sm leading-5 text-destructive-foreground', className)}
+      aria-live="polite"
+      className={cn(
+        'text-sm leading-5 text-destructive-foreground',
+        !body && 'sr-only',
+        className,
+      )}
       {...props}
     >
       {body}

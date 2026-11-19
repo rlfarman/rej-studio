@@ -112,6 +112,57 @@ describe('the run card, for a screen reader', () => {
   })
 })
 
+describe('a cancelled run', () => {
+  // "Cancelled" over 900px of empty space: nothing said the partial work was
+  // gone, or that running again gives exactly the same design.
+  it('says what became of the work, and offers the identical run', () => {
+    const { container } = render(
+      <JobHeader {...baseProps} status="cancelled" />,
+    )
+
+    expect(container.textContent).toContain('discarded')
+    expect(container.textContent).toContain('identical design')
+    expect(screen.getByRole('button', { name: 'Run again' })).toBeTruthy()
+  })
+})
+
+describe('stopping a run', () => {
+  // Cancel was a 32px ghost text button beside an outlined Edit: the lowest
+  // affordance in the row was the only way to stop the work, and under the
+  // 44px touch target.
+  it('draws Cancel like the other actions, with a touch-sized hit area', () => {
+    render(<JobHeader {...baseProps} status="running" onCancel={vi.fn()} />)
+
+    const cancel = screen.getByRole('button', { name: 'Cancel' })
+    // The outline variant's border, not ghost text, and the repo's own
+    // hit-area stretch for a small control.
+    expect(cancel.className).toContain('border-border')
+    expect(cancel.className).toContain('before:-inset-2.5')
+  })
+
+  it('leaves Cancel out when there is nothing to cancel', () => {
+    render(<JobHeader {...baseProps} status="running" />)
+
+    expect(screen.queryByRole('button', { name: 'Cancel' })).toBeNull()
+  })
+
+  // Editing a run's inputs while it finishes keeps the header above the form,
+  // where "Edit" would be a button for opening what is already open.
+  it('leaves Edit out when the form is already on screen', () => {
+    render(
+      <JobHeader
+        {...baseProps}
+        status="running"
+        onEdit={undefined}
+        onCancel={vi.fn()}
+      />,
+    )
+
+    expect(screen.queryByRole('button', { name: 'Edit' })).toBeNull()
+    expect(screen.getByRole('button', { name: 'Cancel' })).toBeTruthy()
+  })
+})
+
 describe('a design this device has no record of', () => {
   // "No longer available" offered an Edit button that opened a blank form.
   it('offers a new design rather than editing nothing', () => {

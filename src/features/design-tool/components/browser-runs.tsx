@@ -40,7 +40,11 @@ export async function settleInterruptedRuns(): Promise<string[]> {
       useJobHistory.getState().upsertEntry({
         id,
         status: 'failed',
-        error: { code: 'unknown', message: copy.interrupted, retriable: true },
+        error: {
+          code: 'interrupted',
+          message: copy.interrupted,
+          retriable: true,
+        },
       })
       settled.push(id)
     })

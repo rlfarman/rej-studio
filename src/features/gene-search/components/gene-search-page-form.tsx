@@ -98,7 +98,9 @@ export function GeneSearchPageForm({
               {...searchPageLink(query, value)}
               aria-current={active ? 'page' : undefined}
               className={cn(
-                'flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none',
+                // The same pill as the palette's species toggle: 44px tall where a
+                // finger is the pointer, 28px with a mouse.
+                'flex min-h-11 items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none md:min-h-7',
                 active
                   ? 'bg-accent text-accent-foreground'
                   : 'text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground',

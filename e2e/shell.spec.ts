@@ -108,6 +108,30 @@ test('serves the optimizer as application/wasm', async ({ request }) => {
   expect(notices.status()).toBe(200)
 })
 
+test('the header search waits for the URL it belongs to', async ({
+  page,
+  request,
+}) => {
+  // The prerendered shell and the prerendered pages share their markup, so
+  // the header cannot know the path yet. It used to draw the search anyway:
+  // on home that was a second search field that vanished on hydration.
+  const served = await request.get('/')
+  expect(await served.text()).not.toContain(geneSearchCopy.trigger.label)
+
+  const headerSearch = page
+    .locator('header')
+    .getByRole('button', { name: geneSearchCopy.trigger.label })
+
+  await page.goto('/')
+  await expect(sidebarLink(page, nav.home)).toHaveAttribute('data-active', '')
+  // Home has its own search box in the page.
+  await expect(headerSearch).toHaveCount(0)
+
+  // Elsewhere it appears once the app knows where it is.
+  await page.goto('/design-tool')
+  await expect(headerSearch).toBeVisible()
+})
+
 test('the theme toggles and persists across a reload', async ({ page }) => {
   await page.goto('/')
   const html = page.locator('html')
@@ -132,15 +156,39 @@ test('the theme toggles and persists across a reload', async ({ page }) => {
 })
 
 test('an unknown URL shows the not-found page', async ({ page }) => {
+  // Served the shell like any other page; the catch-all route (`$.tsx`)
+  // makes it hydrate through the same pending path, so no hydration errors.
+  const errors: string[] = []
+  page.on('pageerror', (error) => errors.push(error.message))
+  page.on('console', (message) => {
+    if (message.type() === 'error') errors.push(message.text())
+  })
+
   await page.goto('/no-such-page')
   await expect(
-    page.getByRole('heading', { name: appCopy.notFound.description }),
+    page.getByRole('heading', { name: appCopy.notFound.title }),
   ).toBeVisible()
+  // The tab says so too, rather than reading like a page that loaded.
+  await expect(page).toHaveTitle(
+    appCopy.metadata.title(appCopy.notFound.pageTitle),
+  )
+  expect(errors).toEqual([])
   // In the page slot, with the sidebar still there to navigate away.
   await expect(page.locator('main#main-content h1')).toHaveText(
-    appCopy.notFound.description,
+    appCopy.notFound.title,
   )
   await expect(page.locator('main')).toHaveCount(1)
   await sidebarLink(page, nav.home).click()
   await expect(page).toHaveURL('/')
+
+  // Back to it without a page load: the router matches it in the browser.
+  await page.goBack()
+  await expect(page).toHaveURL('/no-such-page')
+  await expect(
+    page.getByRole('heading', { name: appCopy.notFound.title }),
+  ).toBeVisible()
+  await expect(page).toHaveTitle(
+    appCopy.metadata.title(appCopy.notFound.pageTitle),
+  )
+  expect(errors).toEqual([])
 })

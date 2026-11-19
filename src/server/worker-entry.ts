@@ -17,23 +17,23 @@ import { capServerFnBody } from './body-cap'
 import { handleLogin, handleLogout } from './auth/login'
 import { sentryOptions } from './sentry'
 
-import { SHELL_PATH, isPrerenderedPage } from './prerendered-pages'
+import { SHELL_PATH, needsShell } from './prerendered-pages'
 
 export { DesignWorkflow } from './designs/workflow'
 
 /**
  * A file, a prerendered page, or the SPA shell.
  *
- * - A prerendered page without a query string is its own HTML file.
+ * - A prerendered page is its own HTML file, with a query string only when
+ *   the page renders the same either way (`/login`; prerendered-pages.ts).
  * - Any other navigation gets the shell, which the client fills in. That
- *   includes a prerendered page with a query string, whose content depends
- *   on it (prerendered-pages.ts).
+ *   includes a prerendered page with a query string its content depends on.
  * - Where there is no shell file yet (`vp dev`, and the build's prerender,
  *   which fetches its pages through this Worker), Start renders the page.
  */
 async function servePage(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url)
-  if (!(url.search && isPrerenderedPage(url.pathname))) {
+  if (!needsShell(url.pathname, url.search)) {
     const asset = await env.ASSETS.fetch(request)
     if (asset.status !== 404) return asset
   }

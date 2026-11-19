@@ -5,6 +5,10 @@ import {
   changeDensity,
   computeGcPercent,
   countCpG,
+  countInvalidChars,
+  hasInvalidChars,
+  countNucleotides,
+  designNameFromFastaHeader,
   detectSequenceType,
   findInvalidChars,
   findWggwMotifs,
@@ -240,6 +244,90 @@ describe('findInvalidChars', () => {
     const invalid = findInvalidChars('ATG 123')
     expect(invalid).toContain(' ')
     expect(invalid).toContain('1')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// countInvalidChars / countNucleotides
+// ---------------------------------------------------------------------------
+describe('countInvalidChars', () => {
+  it('is zero for a valid sequence', () => {
+    expect(countInvalidChars('ATGCatgcUu')).toBe(0)
+  })
+  it('counts occurrences, not distinct characters', () => {
+    expect(countInvalidChars('ATGxxTAACCCTAA')).toBe(2)
+    expect(findInvalidChars('ATGxxTAACCCTAA')).toEqual(['x'])
+  })
+  it('counts whitespace and digits', () => {
+    // 15 characters, 11 distinct, not one of them a base.
+    expect(countInvalidChars('hello world 123')).toBe(15)
+    expect(findInvalidChars('hello world 123')).toHaveLength(11)
+  })
+})
+
+describe('hasInvalidChars', () => {
+  it('agrees with findInvalidChars on whether there is anything to clean', () => {
+    for (const seq of ['ATGCatgcUu', '', 'ATGxxTAA', 'ATG AAA TAA', 'hello']) {
+      expect(hasInvalidChars(seq)).toBe(findInvalidChars(seq).length > 0)
+    }
+  })
+
+  it('is the cheap check the sequence field renders with', () => {
+    // It exists so the field does not walk 50,000 characters building a Set
+    // on every keystroke; a clean sequence of that size is the worst case,
+    // because there is no early match to stop at.
+    const clean = 'ATG'.repeat(16_666)
+    expect(hasInvalidChars(clean)).toBe(false)
+    expect(hasInvalidChars(`${clean} `)).toBe(true)
+  })
+})
+
+describe('countNucleotides', () => {
+  it('counts every base of a clean sequence', () => {
+    expect(countNucleotides('ATGAAATAA')).toBe(9)
+  })
+  it('ignores non-nucleotides', () => {
+    expect(countNucleotides('ATG AAA TAA')).toBe(9)
+    expect(countNucleotides('ATGxxTAA')).toBe(6)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// designNameFromFastaHeader
+// ---------------------------------------------------------------------------
+describe('designNameFromFastaHeader', () => {
+  it('keeps the description out of a UniProt header', () => {
+    expect(
+      designNameFromFastaHeader(
+        'sp|P04637|P53_HUMAN Cellular tumor antigen p53 OS=Homo sapiens OX=9606 GN=TP53 PE=1 SV=4',
+      ),
+    ).toBe('Cellular tumor antigen p53')
+  })
+
+  it('falls back to the entry name when there is no description', () => {
+    expect(designNameFromFastaHeader('sp|P04637|P53_HUMAN')).toBe('P53_HUMAN')
+  })
+
+  it('leaves a plain header alone', () => {
+    expect(designNameFromFastaHeader('TP53 transcript variant 1')).toBe(
+      'TP53 transcript variant 1',
+    )
+  })
+
+  it('caps the length on a word boundary', () => {
+    const name = designNameFromFastaHeader(
+      'Cellular tumor antigen p53 isoform one of a very long descriptive label',
+    )
+    expect(name.length).toBeLessThanOrEqual(60)
+    expect(name.endsWith(' ')).toBe(false)
+    expect(name.startsWith('Cellular tumor antigen p53')).toBe(true)
+  })
+
+  it('never returns empty for a non-empty header', () => {
+    expect(designNameFromFastaHeader('sp|P04637|')).toBe('sp|P04637|')
+    expect(designNameFromFastaHeader('  ENST00000269305  ')).toBe(
+      'ENST00000269305',
+    )
   })
 })
 

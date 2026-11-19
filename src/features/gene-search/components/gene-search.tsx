@@ -61,6 +61,7 @@ export function GeneSearch({
     searchNow,
     hasSearched,
     searchResults,
+    searchingQuery,
     truncated,
     suggestions,
     isLoading,
@@ -108,7 +109,11 @@ export function GeneSearch({
       <>
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogContent
-            className="top-1/3 translate-y-0 overflow-hidden rounded-3xl! p-0"
+            // Near the top on a phone, where the software keyboard takes
+            // the bottom half of the screen and a third of the way down
+            // left the results under it. (Worked out from the layout, not
+            // seen: the emulator has no keyboard.)
+            className="top-4 translate-y-0 overflow-hidden rounded-3xl! p-0 md:top-1/3"
             showCloseButton={false}
           >
             <DialogTitle className="sr-only">
@@ -123,6 +128,7 @@ export function GeneSearch({
               searchNow={searchNow}
               hasSearched={hasSearched}
               searchResults={searchResults}
+              searchingQuery={searchingQuery}
               truncated={truncated}
               suggestions={suggestions}
               onSeeAll={handleSeeAll}
@@ -151,6 +157,7 @@ export function GeneSearch({
       onPage
       hasSearched={hasSearched}
       searchResults={searchResults}
+      searchingQuery={searchingQuery}
       truncated={truncated}
       suggestions={suggestions}
       onSeeAll={handleSeeAll}

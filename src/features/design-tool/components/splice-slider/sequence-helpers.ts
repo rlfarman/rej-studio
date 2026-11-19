@@ -12,7 +12,7 @@ import type { CodonRole, SequenceContext, WggwSiteCandidate } from './types'
 // 1 = both codons are the most-preferred synonyms for their AA. Returns
 // null when the host isn't picked (species === 'none' or unknown) or
 // the codons aren't in the table.
-export function scoreRewriteOption(
+function scoreRewriteOption(
   option: WggwRecodingOption,
   species: Species | 'none',
 ): number | null {
@@ -21,6 +21,40 @@ export function scoreRewriteOption(
   const b = getRelativePreference(option.newCodons[1], species)
   if (a === null || b === null) return null
   return a * b
+}
+
+interface RankedRewrite {
+  option: WggwRecodingOption
+  /** The option's index in the site's own list, which is what a pick stores. */
+  originalIndex: number
+  score: number | null
+}
+
+/**
+ * A site's synonymous rewrites, best first: by codon-preference score when
+ * the host is known, otherwise by how few bases they change.
+ *
+ * The one place the order is decided, because the chips and the "N of M"
+ * counter beside them both read it. They used to disagree — the chips were
+ * sorted here and the counter reported the unsorted index, so clicking the
+ * second chip said "3 of 6".
+ */
+export function rankedRewriteOptions(
+  options: WggwRecodingOption[],
+  species: Species | 'none',
+): RankedRewrite[] {
+  return options
+    .map((option, originalIndex) => ({
+      option,
+      originalIndex,
+      score: scoreRewriteOption(option, species),
+    }))
+    .sort((a, b) => {
+      if (a.score !== null && b.score !== null) return b.score - a.score
+      if (a.score !== null) return -1
+      if (b.score !== null) return 1
+      return a.option.baseChanges - b.option.baseChanges
+    })
 }
 
 export function buildSegments(

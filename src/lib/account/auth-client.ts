@@ -17,26 +17,39 @@ const client = createAuthClient({
   plugins: [emailOTPClient()],
 })
 
-export type AuthResult = { ok: true } | { ok: false; message: string }
+/**
+ * Why a call was refused, where the caller does something with it: a wrong
+ * code is counted towards the five the server allows (the dialog), anything
+ * else only has its message shown.
+ */
+export type AuthFailure = 'wrong-code' | 'too-many-attempts' | 'other'
+
+export type AuthResult =
+  | { ok: true }
+  | { ok: false; message: string; reason: AuthFailure }
 
 const copy = accountCopy.errors
 
-/** The person-readable message for a Better Auth error. */
-function describe(error: { code?: string; message?: string; status?: number }) {
+/** The person-readable message for a Better Auth error, and why. */
+function describe(error: {
+  code?: string
+  message?: string
+  status?: number
+}): { message: string; reason: AuthFailure } {
   switch (error.code) {
     case 'INVALID_OTP':
     case 'OTP_EXPIRED':
-      return copy.wrongCode
+      return { message: copy.wrongCode, reason: 'wrong-code' }
     case 'TOO_MANY_ATTEMPTS':
-      return copy.tooManyAttempts
+      return { message: copy.tooManyAttempts, reason: 'too-many-attempts' }
     case 'INVALID_EMAIL':
-      return copy.invalidEmail
+      return { message: copy.invalidEmail, reason: 'other' }
     // Our own refusals (src/server/accounts/handler.ts) carry their message.
     case 'RATE_LIMITED':
     case 'ACCOUNTS_UNAVAILABLE':
-      return error.message ?? copy.generic
+      return { message: error.message ?? copy.generic, reason: 'other' }
     default:
-      return copy.generic
+      return { message: copy.generic, reason: 'other' }
   }
 }
 
@@ -48,10 +61,10 @@ async function attempt(
     if (!error) return { ok: true }
     return {
       ok: false,
-      message: describe(error as Parameters<typeof describe>[0]),
+      ...describe(error as Parameters<typeof describe>[0]),
     }
   } catch {
-    return { ok: false, message: copy.unreachable }
+    return { ok: false, message: copy.unreachable, reason: 'other' }
   }
 }
 

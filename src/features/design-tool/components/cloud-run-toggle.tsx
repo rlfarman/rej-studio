@@ -2,6 +2,7 @@ import { useId } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
+import { accountCopy } from '@/copy/account'
 import { useAccount } from '@/lib/account/account'
 import { openSignIn } from '@/stores/sign-in-dialog-store'
 import { designToolCopy } from '../copy'
@@ -47,7 +48,13 @@ export function CloudRunToggle({
         <label htmlFor={id} className="text-sm leading-none font-medium">
           {copy.toggleLabel}
         </label>
-        <p id={hintId} className="text-xs text-muted-foreground">
+        {/* Four hints of different lengths share this box, and which one it
+            is arrives after the account is read — on a prerendered page,
+            after hydration. Without a floor the box collapsed from three
+            lines to one and pulled Run designer up 32px under the pointer
+            (Lighthouse scored it 0.19 CLS). The column is `max-w-xs`, so
+            the longest hint wraps to the same three lines at every width. */}
+        <p id={hintId} className="min-h-[3lh] text-xs text-muted-foreground">
           {account.status === 'signed-out' ? (
             <>
               {copy.signInHint}{' '}
@@ -55,12 +62,18 @@ export function CloudRunToggle({
                 type="button"
                 variant="link"
                 size="xs"
-                className="h-auto px-0 text-xs"
+                // An 18px-tall text link that can wrap onto its own line:
+                // the pseudo-element gives it a 38px tap target in place.
+                className="relative h-auto px-0 text-xs before:absolute before:-inset-2.5"
                 onClick={openSignIn}
               >
                 {copy.signInAction}
               </Button>
             </>
+          ) : account.status === 'locked' ? (
+            // The lab passcode ran out, which is not the same as a
+            // deployment without cloud runs.
+            accountCopy.locked.hint
           ) : account.status === 'unavailable' ? (
             copy.unavailableHint
           ) : (
