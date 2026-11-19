@@ -22,6 +22,12 @@ import { RouteError } from './-components/route-error'
 import { useDocumentTitle } from './-components/layout/use-document-title'
 import { useShellPathname } from './-components/layout/use-shell-pathname'
 import globalsCss from '@/styles/globals.css?url'
+// The three families' Latin subsets, imported for their hashed URLs so the
+// document can ask for them in `links` below. Vite emits one copy per file:
+// these are the same assets the stylesheet's @font-face rules point at.
+import sourceSansLatin from '@fontsource-variable/source-sans-3/files/source-sans-3-latin-wght-normal.woff2?url'
+import sourceSerifLatin from '@fontsource-variable/source-serif-4/files/source-serif-4-latin-wght-normal.woff2?url'
+import sourceMonoLatin from '@fontsource-variable/source-code-pro/files/source-code-pro-latin-wght-normal.woff2?url'
 import { geneDataUrl } from '@/features/gene-search/corpus/gene-data-url'
 
 /**
@@ -77,6 +83,25 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       ],
       links: [
         { rel: 'stylesheet', href: globalsCss },
+        // The fonts are declared inside that stylesheet, so without this the
+        // browser only learns they exist after fetching and parsing it: it
+        // paints in a fallback, then reflows every line when they arrive.
+        // That was 0.33 of 0.467 CLS on the design tool, which Lighthouse
+        // scored 0.19. Asking for them here starts them with the stylesheet
+        // instead, and the swap lands before the first paint.
+        //
+        // Only the Latin subsets, and only the upright weights: they are
+        // what every page renders. The other subsets stay lazy, which is the
+        // point of @font-face carrying a unicode-range.
+        ...[sourceSansLatin, sourceSerifLatin, sourceMonoLatin].map((href) => ({
+          rel: 'preload',
+          href,
+          as: 'font',
+          type: 'font/woff2',
+          // Fonts are fetched in CORS mode whatever the origin, so a
+          // preload without this is a second, unused request.
+          crossOrigin: 'anonymous' as const,
+        })),
         { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
         { rel: 'manifest', href: '/manifest.webmanifest' },
         ...(geneDataOrigin
