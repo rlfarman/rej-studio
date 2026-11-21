@@ -38,7 +38,7 @@ click==8.5.1
 detect-installer==0.2.1
     # via fastapi-cloud-cli
 dnachisel==3.2.16
-    # via -r python/requirements.in
+    # via -r requirements.in
 dnspython==2.9.2
     # via email-validator
 docopt==0.6.2
@@ -49,7 +49,7 @@ email-validator==2.4.0
     #   pydantic
 fastapi==0.163.1
     # via
-    #   -r python/requirements.in
+    #   -r requirements.in
     #   sentry-sdk
 fastapi-cli==0.0.34
     # via fastapi
@@ -101,7 +101,7 @@ numpy==2.4.6
     #   dnachisel
 opentelemetry-api==1.45.2
     # via
-    #   -r python/requirements.in
+    #   -r requirements.in
     #   fastapi
     #   opentelemetry-exporter-http-transport
     #   opentelemetry-exporter-otlp-proto-http
@@ -118,7 +118,7 @@ opentelemetry-exporter-otlp-proto-common==1.45.2
     # via opentelemetry-exporter-otlp-proto-http
 opentelemetry-exporter-otlp-proto-http==1.45.2
     # via
-    #   -r python/requirements.in
+    #   -r requirements.in
     #   fastapi
 opentelemetry-instrumentation==0.66b2
     # via
@@ -127,14 +127,14 @@ opentelemetry-instrumentation==0.66b2
 opentelemetry-instrumentation-asgi==0.66b2
     # via opentelemetry-instrumentation-fastapi
 opentelemetry-instrumentation-fastapi==0.66b2
-    # via -r python/requirements.in
+    # via -r requirements.in
 opentelemetry-proto==1.45.2
     # via
     #   opentelemetry-exporter-otlp-proto-common
     #   opentelemetry-exporter-otlp-proto-http
 opentelemetry-sdk==1.45.2
     # via
-    #   -r python/requirements.in
+    #   -r requirements.in
     #   fastapi
     #   opentelemetry-exporter-otlp-common
     #   opentelemetry-exporter-otlp-proto-http
@@ -152,7 +152,7 @@ packaging==26.3
     # via opentelemetry-instrumentation
 proglog==0.1.12
     # via
-    #   -r python/requirements.in
+    #   -r requirements.in
     #   dnachisel
 protobuf==7.36.2
     # via
@@ -160,7 +160,7 @@ protobuf==7.36.2
     #   opentelemetry-proto
 pydantic==2.14.3
     # via
-    #   -r python/requirements.in
+    #   -r requirements.in
     #   fastapi
     #   fastapi-cloud-cli
     #   pydantic-extra-types
@@ -180,9 +180,9 @@ python-dotenv==1.2.4
     # via
     #   pydantic-settings
     #   uvicorn
-python-multipart==0.0.33
+python-multipart==0.0.34
     # via
-    #   -r python/requirements.in
+    #   -r requirements.in
     #   fastapi
 pyyaml==6.0.3
     # via uvicorn
@@ -202,7 +202,7 @@ rignore==0.8.1
     # via fastapi-cloud-cli
 sentry-sdk==2.75.0
     # via
-    #   -r python/requirements.in
+    #   -r requirements.in
     #   fastapi-cloud-cli
 shellingham==1.5.4
     # via typer
@@ -245,7 +245,7 @@ urllib3==2.8.0
     #   sentry-sdk
 uvicorn==0.54.0
     # via
-    #   -r python/requirements.in
+    #   -r requirements.in
     #   fastapi
     #   fastapi-cli
     #   fastapi-cloud-cli

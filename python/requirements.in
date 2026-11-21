@@ -26,4 +26,4 @@ opentelemetry-exporter-otlp-proto-http
 opentelemetry-instrumentation-fastapi
 
 # Security floor (form-parsing advisories in earlier releases)
-python-multipart>=0.0.26
+python-multipart>=0.0.34
